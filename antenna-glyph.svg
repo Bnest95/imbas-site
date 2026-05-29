@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" fill="none" aria-hidden="true">
+  <!--
+    Imbas antenna glyph — biologically inspired.
+    Two thin curved filaments rising from a small base node, each
+    terminating in a small sensor club. Slight asymmetry between
+    left and right, the way moth or beetle antennae carry themselves.
+    Not a tower. Not a radio mast. An organism sensing.
+
+    Designed for currentColor inheritance and scale-invariance.
+    Version: nocturnal-observatory, May 2026.
+  -->
+
+  <!-- Left filament -->
+  <path
+    d="M40 90 C 39 72, 32 56, 19 14"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <!-- Left sensor club -->
+  <circle cx="18" cy="11" r="4.4" fill="currentColor"/>
+  <!-- Left filament node — subtle segment mark -->
+  <circle cx="26" cy="48" r="1.6" fill="currentColor" opacity="0.42"/>
+
+  <!-- Right filament — different curvature, slightly higher reach -->
+  <path
+    d="M40 90 C 42 73, 52 56, 62 10"
+    stroke="currentColor"
+    stroke-width="2.6"
+    stroke-linecap="round"
+    fill="none"
+  />
+  <!-- Right sensor club -->
+  <circle cx="63" cy="7" r="4.4" fill="currentColor"/>
+  <!-- Right filament node -->
+  <circle cx="54" cy="46" r="1.6" fill="currentColor" opacity="0.42"/>
+
+  <!-- Base node — the "head" point the filaments rise from -->
+  <circle cx="40" cy="90" r="2.4" fill="currentColor"/>
+</svg>
