@@ -15,7 +15,10 @@
   --bg-bloom:       #2A3A56;
   --bg-glass:       rgba(23, 36, 56, 0.58);
   --bg-deep-rgb:    15, 13, 11;
+  --bg-base-rgb:    27, 24, 20;
+  --bg-surface-rgb: 16, 26, 42;
   --bg-elevated-rgb: 23, 36, 56;
+  --section-aurora-fade: 12%;
 
   /* Text — warm off-light on base; cool-muted secondary for navy panels */
   --ink-luminous:   #FCF8EC;
@@ -113,30 +116,28 @@ img, svg { display: block; max-width: 100%; }
   content: "";
   position: absolute;
   inset: 0;
-  filter: blur(140px);
-  opacity: 0.85;
-  will-change: transform;
+  filter: blur(120px);
+  opacity: 0.42;
 }
 .field-noise::before {
   background:
-    radial-gradient(60vw 60vw at 18% 24%, var(--aurora-a), transparent 65%),
-    radial-gradient(50vw 50vw at 82% 78%, var(--aurora-b), transparent 65%);
-  animation: aurora-a 144s ease-in-out infinite alternate;
+    radial-gradient(55vw 55vw at 14% 28%, var(--aurora-a), transparent 68%),
+    radial-gradient(48vw 48vw at 86% 74%, var(--aurora-b), transparent 68%);
+  animation: aurora-a 220s ease-in-out infinite alternate;
 }
 .field-noise::after {
   background:
-    radial-gradient(45vw 45vw at 68% 18%, var(--aurora-c), transparent 70%),
-    radial-gradient(55vw 55vw at 22% 82%, var(--aurora-b), transparent 70%);
-  animation: aurora-b 188s ease-in-out infinite alternate;
-  mix-blend-mode: screen;
+    radial-gradient(40vw 40vw at 72% 16%, var(--aurora-c), transparent 72%),
+    radial-gradient(50vw 50vw at 18% 84%, var(--aurora-b), transparent 72%);
+  animation: aurora-b 280s ease-in-out infinite alternate;
 }
 @keyframes aurora-a {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  100% { transform: translate(6vw, -3vh) rotate(180deg) scale(1.08); }
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(2vw, -1vh) scale(1.03); }
 }
 @keyframes aurora-b {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  100% { transform: translate(-5vw, 4vh) rotate(-180deg) scale(1.06); }
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-1.5vw, 1.5vh) scale(1.02); }
 }
 
 /* Typography */
@@ -306,22 +307,21 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   overflow: hidden;
 }
 
-/* Strong focal bloom centered on the monolith */
+/* Single warm focal event behind the wordmark — deep field, not a wash */
 .hero::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 42% at 50% 44%, var(--slate-bloom), transparent 65%),
-    radial-gradient(680px 480px at 82% 22%, var(--slate-glow), transparent 65%),
-    radial-gradient(540px 420px at 10% 88%, var(--ember-trace), transparent 70%);
+    radial-gradient(ellipse 36% 30% at 26% 46%, rgba(var(--ember-rgb), 0.16), transparent 72%),
+    radial-gradient(ellipse 48% 38% at 28% 48%, rgba(var(--ember-rgb), 0.06), transparent 78%);
   pointer-events: none;
   z-index: 0;
-  animation: ambient-breathe 28s ease-in-out infinite;
+  animation: ambient-breathe 48s ease-in-out infinite;
 }
 @keyframes ambient-breathe {
-  0%, 100% { opacity: 1;    transform: translate(0, 0); }
-  50%      { opacity: 0.85; transform: translate(-1.5%, 0.8%); }
+  0%, 100% { opacity: 0.88; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.015); }
 }
 
 .hero__fog {
@@ -641,16 +641,51 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   border-top: 1px solid var(--line-faint);
   border-bottom: 1px solid var(--line-faint);
   overflow: hidden;
+  isolation: isolate;
 }
-.what-imbas::before {
+/* Stakes — warm human layer, darker center, warmth from edges */
+.what-imbas[aria-label="The stakes"] {
+  background: var(--bg-base);
+  border-top: none;
+}
+.what-imbas[aria-label="The stakes"]::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 50% 70% at 50% 50%, var(--slate-haze), transparent 70%);
   pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 38% 85% at 0% 50%, rgba(var(--ember-rgb), 0.09), transparent 62%),
+    radial-gradient(ellipse 38% 85% at 100% 50%, rgba(var(--ember-rgb), 0.07), transparent 62%),
+    radial-gradient(ellipse 65% 55% at 50% 50%, rgba(var(--bg-deep-rgb), 0.42), transparent 72%);
+}
+/* What Imbas is — moonlit clarity, faint cool light */
+#what-imbas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 52% 42% at 50% 14%, var(--slate-haze), transparent 68%),
+    radial-gradient(ellipse 70% 45% at 50% 100%, rgba(var(--bg-surface-rgb), 0.28), transparent 72%);
+  opacity: 0.82;
+}
+/* Vision tease — transitional bridge toward thesis */
+.what-imbas[aria-label="Where Imbas is headed"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 48% 38% at 72% 28%, var(--slate-deeper), transparent 72%),
+    radial-gradient(ellipse 32% 34% at 12% 68%, var(--ember-trace), transparent 76%);
+  opacity: 0.72;
 }
 .what-imbas__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-mid);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -683,9 +718,22 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   position: relative;
   padding: var(--space-7) 0 var(--space-7);
   overflow: hidden;
+  isolation: isolate;
+}
+.value::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 34% 88% at 40% -5%, var(--ember-trace), transparent 58%),
+    radial-gradient(ellipse 28% 55% at 46% 58%, rgba(var(--ember-rgb), 0.05), transparent 68%);
+  animation: aurora-descend 96s ease-in-out infinite alternate;
 }
 .value__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-mid);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -724,23 +772,24 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .gap {
   position: relative;
   padding: var(--space-8) 0;
-  background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-surface) 50%, var(--bg-base) 100%);
+  background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-deep) 48%, var(--bg-base) 100%);
   border-top: 1px solid var(--line-faint);
   border-bottom: 1px solid var(--line-faint);
   overflow: hidden;
+  isolation: isolate;
 }
+/* Detection chamber — almost nothing; room for Pass 6 firefly */
 .gap::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse 60% 70% at 50% 50%, var(--slate-bloom), transparent 65%),
-    radial-gradient(40% 40% at 80% 20%, var(--ember-trace), transparent 70%);
+  background: radial-gradient(ellipse 42% 38% at 50% 50%, rgba(var(--bg-surface-rgb), 0.12), transparent 72%);
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.3;
 }
 .gap__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-mid);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -813,6 +862,24 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .categories {
   padding: var(--space-7) 0;
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bg-base);
+}
+.categories::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 75% 38% at 50% 0%, rgba(var(--ember-rgb), 0.045), transparent 64%),
+    linear-gradient(180deg, rgba(var(--bg-elevated-rgb), 0.07) 0%, transparent 38%);
+}
+.categories__head,
+.categories__grid {
+  position: relative;
+  z-index: 1;
 }
 .categories__head {
   max-width: var(--container-wide);
@@ -882,17 +949,20 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: var(--bg-surface);
   border-top: 1px solid var(--line-faint);
   overflow: hidden;
+  isolation: isolate;
 }
+/* Instrument glow — cool, focused on the diagram chamber */
 .compounding::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 70% 60% at 50% 50%, var(--slate-bloom), transparent 70%);
+  background: radial-gradient(ellipse 48% 58% at 76% 52%, var(--slate-bloom), transparent 68%);
   pointer-events: none;
-  opacity: 0.7;
+  opacity: 0.48;
 }
 .compounding__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-wide);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -931,8 +1001,10 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 100% 50%, var(--slate-bloom), transparent 65%);
+    radial-gradient(ellipse 68% 62% at 50% 50%, rgba(155, 188, 228, 0.11), transparent 72%),
+    radial-gradient(ellipse 85% 55% at 100% 50%, var(--slate-bloom), transparent 62%);
   pointer-events: none;
+  opacity: 0.82;
 }
 .divergence__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .divergence__label {
@@ -957,22 +1029,27 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .audiences {
   padding: var(--space-7) 0;
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 .audiences::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 50%, var(--slate-deeper), transparent 75%);
+  background: radial-gradient(ellipse 58% 48% at 28% 62%, var(--slate-deeper), transparent 76%);
   pointer-events: none;
+  opacity: 0.45;
 }
 .audiences__head {
   position: relative;
+  z-index: 2;
   max-width: var(--container-wide);
   margin: 0 auto var(--space-5);
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 .audiences__grid {
   position: relative;
+  z-index: 2;
   max-width: var(--container-wide);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -981,11 +1058,36 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   gap: clamp(1.5rem, 3vw, 2.5rem);
 }
 .audience {
+  position: relative;
+  overflow: hidden;
   padding: var(--space-5);
   background: var(--bg-lift);
   border: 1px solid var(--line-faint);
   border-radius: 2px;
   transition: border-color .6s ease, background .6s ease, transform .6s ease;
+}
+.audience::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.audience:not(.audience--primary)::before {
+  background: radial-gradient(ellipse 72% 58% at 50% 100%, var(--slate-deeper), transparent 76%);
+  opacity: 0.55;
+}
+.audience--primary::before {
+  background:
+    radial-gradient(ellipse 78% 68% at 100% 0%, rgba(var(--ember-rgb), 0.07), transparent 58%),
+    radial-gradient(ellipse 58% 75% at 0% 100%, var(--slate-deeper), transparent 70%);
+  opacity: 0.85;
+}
+.audience h3,
+.audience p,
+.audience a {
+  position: relative;
+  z-index: 1;
 }
 .audience:hover {
   border-color: var(--line-strong);
@@ -1037,16 +1139,20 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   overflow: hidden;
   background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-surface) 100%);
   border-top: 1px solid var(--line-faint);
+  isolation: isolate;
 }
 .origin::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 60% 70% at 50% 50%, var(--slate-haze), transparent 70%);
+  background: radial-gradient(ellipse 48% 38% at 50% 88%, rgba(var(--ember-rgb), 0.055), transparent 72%);
   pointer-events: none;
+  animation: aurora-distant 130s ease-in-out infinite alternate;
+  opacity: 0.65;
 }
 .origin__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-mid);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -1090,18 +1196,22 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: var(--bg-surface);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
+/* Mineral record — cool aurora rising from below */
 .archive::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 30%, var(--slate-bloom), transparent 70%),
-    radial-gradient(700px 480px at 92% 8%, var(--slate-deeper), transparent 75%);
+    radial-gradient(ellipse 82% 46% at 50% 108%, var(--slate-bloom), transparent 66%),
+    radial-gradient(ellipse 48% 32% at 18% 18%, var(--slate-deeper), transparent 74%);
   pointer-events: none;
+  opacity: 0.68;
 }
 .archive__inner {
   position: relative;
+  z-index: 2;
   max-width: var(--container-wide);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
@@ -1315,13 +1425,15 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   border-top: 1px solid var(--line-faint);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 .field-notes::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--slate-deeper), transparent 70%);
+  background: radial-gradient(ellipse 44% 34% at 50% 50%, rgba(var(--ember-rgb), 0.045), transparent 72%);
   pointer-events: none;
+  animation: aurora-transmit 52s ease-in-out infinite;
 }
 .field-notes__inner {
   position: relative;
@@ -1487,6 +1599,91 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .field-notes .subscribe button {
     padding-left: 0;
     align-self: stretch;
+  }
+}
+
+/* =============================================================
+   PASS 5 — AURORA: section seams & ambient motion
+   Soft atmospheric joins between sections; sparse drift only.
+   ============================================================= */
+@keyframes aurora-descend {
+  0%   { transform: translateY(-1.5%); opacity: 0.72; }
+  100% { transform: translateY(3%);    opacity: 0.88; }
+}
+@keyframes aurora-distant {
+  0%, 100% { opacity: 0.52; }
+  50%      { opacity: 0.72; }
+}
+@keyframes aurora-transmit {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.62; }
+}
+
+/* Atmospheric edge bleeds — 8–15% fade at section boundaries */
+.hero::after,
+.what-imbas[aria-label="The stakes"]::after,
+#what-imbas::after,
+.value::after,
+.what-imbas[aria-label="Where Imbas is headed"]::after,
+.compounding::after,
+.audiences::after,
+.gap::after,
+.categories::after,
+.archive::after,
+.origin::after,
+.field-notes::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero::after,
+.what-imbas[aria-label="The stakes"]::after,
+.value::after,
+.categories::after,
+.origin::after,
+.field-notes::after {
+  background:
+    linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.52) 0%, transparent var(--section-aurora-fade)),
+    linear-gradient(0deg, rgba(var(--bg-deep-rgb), 0.58) 0%, transparent 14%);
+}
+
+#what-imbas::after,
+.what-imbas[aria-label="Where Imbas is headed"]::after,
+.compounding::after,
+.archive::after {
+  background:
+    linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.46) 0%, transparent 11%),
+    linear-gradient(0deg, rgba(var(--bg-surface-rgb), 0.38) 0%, transparent 13%);
+}
+
+.audiences::after {
+  background:
+    linear-gradient(180deg, rgba(var(--bg-surface-rgb), 0.32) 0%, transparent 10%),
+    linear-gradient(0deg, rgba(var(--bg-deep-rgb), 0.5) 0%, transparent 13%);
+}
+
+.gap::after {
+  background:
+    linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.62) 0%, transparent 10%),
+    linear-gradient(0deg, rgba(var(--bg-deep-rgb), 0.68) 0%, transparent 11%);
+}
+
+@media (max-width: 768px) {
+  body { background-attachment: scroll; }
+  .field-noise::before,
+  .field-noise::after {
+    filter: blur(72px);
+    opacity: 0.28;
+    animation: none;
+  }
+  .hero::before,
+  .value::before,
+  .origin::before,
+  .field-notes::before {
+    animation: none;
   }
 }
 
