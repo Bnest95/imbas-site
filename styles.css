@@ -774,7 +774,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 .gap__line--knows { color: var(--ink-luminous); }
 .gap__line--surfaces { color: var(--ink-soft); }
-.gap__line--leaves { color: var(--ink-secondary); font-style: italic; }
+.gap__line--leaves {
+  position: relative;
+  color: var(--ink-secondary);
+  font-style: italic;
+}
 .gap__line--resolution {
   color: var(--ink-primary);
   margin-top: var(--space-2);
@@ -785,6 +789,10 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  transition: filter 1.2s ease;
+}
+.gap__line--leaves.is-visible ~ .gap__line--resolution.is-visible strong {
+  filter: drop-shadow(0 0 14px rgba(var(--ember-rgb), 0.28));
 }
 
 .gap__definition {
@@ -1699,12 +1707,47 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   44%      { opacity: 0.55; transform: scale(1.05); }
   52%      { opacity: 0.35; transform: scale(0.95); }
 }
+
+/* Volunteer Gap — firefly catches on "what it leaves out" */
+.firefly--gap {
+  left: -1.25rem;
+  top: 0.52em;
+  opacity: 0;
+}
+.gap__line--leaves.is-visible .firefly--gap {
+  opacity: 1;
+  animation: firefly-catch 8.5s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+.gap__line--leaves.is-visible .firefly--gap .firefly__halo {
+  animation: firefly-halo-catch 8.5s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+@keyframes firefly-catch {
+  0%, 68%, 100% { opacity: 0.14; }
+  76%           { opacity: 0.52; }
+  82%           { opacity: 0.44; }
+}
+@keyframes firefly-halo-catch {
+  0%, 68%, 100% { opacity: 0;    transform: scale(0.8); }
+  76%           { opacity: 0.75; transform: scale(1.15); }
+  82%           { opacity: 0.5;  transform: scale(1); }
+}
+.gap__line--leaves.is-visible .firefly--gap .firefly__core {
+  box-shadow:
+    0 0 0 0.5px rgba(var(--ember-rgb), 0.75),
+    0 0 8px rgba(var(--ember-rgb), 0.45);
+}
+
 @media (max-width: 768px) {
   .firefly--hero {
     animation: none;
     opacity: 0.24;
   }
   .firefly--hero .firefly__halo { opacity: 0.35; animation: none; }
+  .gap__line--leaves.is-visible .firefly--gap {
+    animation-duration: 11s;
+  }
 }
 
 /* =============================================================
@@ -1786,6 +1829,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .hero__field, .hero__motes { transform: none !important; }
   .firefly--hero { opacity: 0.3; animation: none !important; }
   .firefly--hero .firefly__halo { animation: none !important; opacity: 0.4; }
+  .gap__line--leaves.is-visible .firefly--gap { opacity: 0.42; animation: none !important; }
+  .gap__line--leaves.is-visible .firefly--gap .firefly__halo { animation: none !important; opacity: 0.5; }
 }
 
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 1px; }
