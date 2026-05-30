@@ -135,7 +135,7 @@
 
       <div class="hero__meta">
         <span class="dot" aria-hidden="true"></span>
-        <span>Imbas Labs &nbsp;/&nbsp; Field Station 01</span>
+        <span>Observing frontier AI behavior</span>
       </div>
 
       <div class="hero__center">
@@ -185,69 +185,77 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       STAKES — why this matters now
-       ============================================================ -->
-  <section class="what-imbas" aria-label="The stakes">
-    <div class="what-imbas__inner reveal">
-      <blockquote class="stakes__quote">
-        <p>AI is going to be making a huge amount of our decisions, or being consulted on them &nbsp;&mdash;&nbsp; a layer over nearly all of society. Consulted, trusted, repeated, built into the workflows we live in. We know very little about how it thinks or behaves, and it&rsquo;s changing every day. That&rsquo;s what Imbas is here to help with.</p>
-      </blockquote>
+  <!-- BRIDGE — stakes + what Imbas is, two-column thesis plate -->
+  <section class="bridge" id="what-imbas" aria-labelledby="bridge-statement">
+    <div class="bridge__inner reveal">
+      <div class="bridge__grid">
+        <blockquote class="bridge__stakes">
+          <p>AI is becoming a layer over decision-making. Consulted, trusted, repeated, built into workflows. We know very little about how these systems behave&nbsp;&mdash;&nbsp;and they change every day.</p>
+        </blockquote>
+        <h2 class="bridge__statement" id="bridge-statement">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
+      </div>
+      <p class="bridge__support">That is what Imbas is here to measure.</p>
     </div>
   </section>
 
-  <!-- ============================================================
-       WHAT IMBAS IS — crisp one-line value, near the top
-       ============================================================ -->
-  <section class="what-imbas" id="what-imbas" aria-labelledby="what-h2">
-    <div class="what-imbas__inner reveal">
-      <span class="what-imbas__overline">what imbas is</span>
-      <h2 id="what-h2">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound over time.</h2>
+  <!-- VOLUNTEER GAP — core wedge, promoted early -->
+  <section class="gap" aria-labelledby="gap-h2">
+    <div class="gap__inner">
+      <div class="gap__sequence">
+        <p class="gap__line gap__line--knows reveal" style="--reveal-delay: 80ms;">What the model knows.</p>
+        <p class="gap__line gap__line--surfaces reveal" style="--reveal-delay: 240ms;">What it surfaces.</p>
+        <p class="gap__line gap__line--leaves reveal" style="--reveal-delay: 400ms;"><span class="firefly firefly--gap" aria-hidden="true"><span class="firefly__halo"></span><span class="firefly__core"></span></span>What it leaves out.</p>
+        <p class="gap__line gap__line--resolution reveal" style="--reveal-delay: 600ms;">That difference is the <strong>Volunteer Gap</strong>.</p>
+      </div>
+
+      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the difference between what an AI model gives you from an open question and what it gives you when asked directly.</p>
+
+      <p class="gap__support reveal" style="--reveal-delay: 900ms;">If a model can surface a named mechanism when prompted directly but does not include it in a related open answer, Imbas records the gap.</p>
+
+      <a href="/volunteer-gap.html" class="gap__link reveal" style="--reveal-delay: 1000ms;">
+        <span>How Imbas measures it</span>
+        <span class="arrow" aria-hidden="true">&rarr;</span>
+      </a>
     </div>
   </section>
 
-  <!-- ============================================================
-       VALUE BEATS — what you actually get, short and scannable
-       ============================================================ -->
-  <section class="value" aria-labelledby="value-h2">
+  <!-- VALUE FLOW — horizontal process sequence -->
+  <section class="value value--flow" aria-labelledby="value-h2">
     <h2 id="value-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">What Imbas does for you</h2>
     <div class="value__inner">
-      <ul class="value__beats">
+      <ol class="value__beats">
         <li class="reveal-l">AI answers shape what you see.</li>
         <li class="reveal-l value__beat--signal" style="--reveal-delay: 120ms;">Imbas shows where the answer may have gone thin.</li>
         <li class="reveal-l" style="--reveal-delay: 240ms;">You inspect the signal.</li>
         <li class="reveal-l" style="--reveal-delay: 360ms;">You decide what matters.</li>
         <li class="reveal-l" style="--reveal-delay: 480ms;">You push further if needed.</li>
-      </ul>
+      </ol>
     </div>
   </section>
 
-  <!-- ============================================================
-       VISION TEASE — where Imbas is headed
-       ============================================================ -->
-  <section class="what-imbas vision-tease" aria-label="Where Imbas is headed">
-    <div class="what-imbas__inner reveal">
-      <div class="vision-tease__grid">
-        <div class="vision-tease__item">
-          <span class="vision-tease__label">Now</span>
+  <!-- ROADMAP — Now / Next / Why -->
+  <section class="roadmap" aria-labelledby="roadmap-h2">
+    <div class="roadmap__inner reveal">
+      <span class="section-label"><span>Roadmap</span></span>
+      <h2 id="roadmap-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Roadmap</h2>
+      <div class="roadmap__grid">
+        <div class="roadmap__item">
+          <span class="roadmap__label">Now</span>
           <p>Imbas documents how these systems behave, one case at a time.</p>
         </div>
-        <div class="vision-tease__item">
-          <span class="vision-tease__label">Next</span>
+        <div class="roadmap__item">
+          <span class="roadmap__label">Next</span>
           <p>A tool that rides alongside your AI and flags the gap in the moment&nbsp;&mdash;&nbsp;so you see what&rsquo;s missing while you&rsquo;re reading, not after it matters.</p>
         </div>
-        <div class="vision-tease__item vision-tease__item--why">
-          <span class="vision-tease__label">Why</span>
-          <p class="vision-tease__emphasis">Because you have the right to know.</p>
+        <div class="roadmap__item roadmap__item--why">
+          <span class="roadmap__label">Why</span>
+          <p class="roadmap__emphasis">Because you have the right to know.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ============================================================
-       COMPOUNDING — direction & degree, course-deviation visual
-       Two diverging lines, not a literal boat.
-       ============================================================ -->
+  <!-- THESIS — direction & degree diagram -->
   <section class="compounding" aria-labelledby="compound-h2">
     <div class="compounding__inner">
 
@@ -271,7 +279,6 @@
             </linearGradient>
           </defs>
 
-          <!-- Faint grid (instrument feel) -->
           <g stroke="rgba(140,176,210,0.06)" stroke-width="0.5">
             <line x1="0" y1="76"  x2="600" y2="76"/>
             <line x1="0" y1="152" x2="600" y2="152"/>
@@ -284,21 +291,17 @@
             <line x1="480" y1="0" x2="480" y2="380"/>
           </g>
 
-          <!-- Origin marker -->
           <circle class="divergence__origin divergence__origin-core" cx="40" cy="190" r="4" fill="rgba(252,248,236,0.85)"/>
           <circle class="divergence__origin divergence__origin-ring" cx="40" cy="190" r="10" fill="none" stroke="rgba(252,248,236,0.4)" stroke-width="1"/>
 
-          <!-- Intended course (slate) -->
           <path class="divergence__path divergence__path--intended" d="M40 190 L580 86"
                 stroke="url(#div-grad-top)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
           <circle class="divergence__endpoint divergence__endpoint--top" cx="580" cy="86" r="3" fill="rgba(208,224,240,0.9)"/>
 
-          <!-- Actual course (ember — the drift) -->
           <path class="divergence__path divergence__path--drift" d="M40 190 L580 312"
                 stroke="url(#div-grad-bot)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
           <circle class="divergence__endpoint divergence__endpoint--bot" cx="580" cy="312" r="4" fill="rgba(232,165,116,0.95)"/>
 
-          <!-- Small instrumentation degree tick -->
           <path d="M88 174 A 60 60 0 0 1 88 206" stroke="rgba(160,184,210,0.4)" stroke-width="0.7" fill="none"/>
         </svg>
 
@@ -310,9 +313,7 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       AUDIENCES — branching paths
-       ============================================================ -->
+  <!-- AUDIENCES -->
   <section class="audiences" aria-labelledby="audiences-h2">
     <div class="audiences__head reveal">
       <span class="section-label"><span>II &nbsp;/&nbsp; Audiences</span></span>
@@ -340,37 +341,10 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       VOLUNTEER GAP — simple sequence + two short lines
-       ============================================================ -->
-  <section class="gap" aria-labelledby="gap-h2">
-    <div class="gap__inner">
-      <span class="section-label reveal"><span>III &nbsp;/&nbsp; How it works</span></span>
-
-      <div class="gap__sequence">
-        <p class="gap__line gap__line--knows reveal" style="--reveal-delay: 80ms;">What the model knows.</p>
-        <p class="gap__line gap__line--surfaces reveal" style="--reveal-delay: 240ms;">What it surfaces.</p>
-        <p class="gap__line gap__line--leaves reveal" style="--reveal-delay: 400ms;"><span class="firefly firefly--gap" aria-hidden="true"><span class="firefly__halo"></span><span class="firefly__core"></span></span>What it leaves out.</p>
-        <p class="gap__line gap__line--resolution reveal" style="--reveal-delay: 600ms;">That difference is the <strong>Volunteer Gap</strong>.</p>
-      </div>
-
-      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the difference between what an AI model gives you from an open question and what it gives you when asked directly.</p>
-
-      <p class="gap__support reveal" style="--reveal-delay: 900ms;">If a model can surface a named mechanism when prompted directly but does not include it in a related open answer, Imbas records the gap.</p>
-
-      <a href="/volunteer-gap.html" class="gap__link reveal" style="--reveal-delay: 1000ms;">
-        <span>How Imbas measures it</span>
-        <span class="arrow" aria-hidden="true">&rarr;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       WHAT IMBAS TRACKS — three categories, still and scannable
-       ============================================================ -->
+  <!-- CATEGORIES -->
   <section class="categories" aria-labelledby="cat-h2">
     <div class="categories__head reveal">
-      <span class="section-label"><span>IV &nbsp;/&nbsp; What Imbas tracks</span></span>
+      <span class="section-label"><span>III &nbsp;/&nbsp; Categories</span></span>
       <h2 id="cat-h2">Three things the model can do with what it knows.</h2>
     </div>
 
@@ -405,20 +379,18 @@
           <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         <div class="cat__id">03 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Topic Foreclosure</h3>
-        <p>A topic is redirected away from the underlying concern before it is addressed.</p>
+        <h3>Deflection</h3>
+        <p>The model redirects away from the underlying concern before addressing it.</p>
       </article>
     </div>
   </section>
 
-  <!-- ============================================================
-       CASE ARCHIVE — proof lives here
-       ============================================================ -->
+  <!-- CASE ARCHIVE -->
   <section class="archive" aria-labelledby="archive-h2">
     <div class="archive__inner">
       <header class="archive__head reveal">
         <div>
-          <span class="section-label"><span>V &nbsp;/&nbsp; Archive</span></span>
+          <span class="section-label"><span>IV &nbsp;/&nbsp; Archive</span></span>
           <h2 id="archive-h2">Case Archive</h2>
         </div>
       </header>
@@ -428,8 +400,8 @@
       </div>
 
       <div class="archive__measure archive__measure--primary reveal" style="--reveal-delay: 160ms;">
-        <div class="stat stat--phrase"><span class="stat__num">13</span> cases recorded</div>
-        <div class="stat stat--phrase"><span class="stat__num">4</span> frontier models</div>
+        <div class="stat stat--phrase"><span class="stat__num">25</span> cases recorded</div>
+        <div class="stat stat--phrase"><span class="stat__num">4</span> frontier models observed</div>
         <div class="stat stat--phrase">archive growing</div>
       </div>
 
@@ -492,19 +464,8 @@
     </div>
   </section>
 
-  <!-- ============================================================
-       ORIGIN — restrained name origin moment
-       ============================================================ -->
-  <section class="origin" aria-label="Name origin">
-    <div class="origin__inner reveal">
-      <p class="origin__inscription">Imbas. From the old Irish&nbsp;&mdash;&nbsp;a word for illumination, for sudden knowing. Carried by poets and seers who trained for twelve years before they spoke.</p>
-    </div>
-  </section>
-
-  <!-- ============================================================
-       FIELD NOTES — secondary capture + haunted archive
-       ============================================================ -->
-  <section class="field-notes" aria-labelledby="fn-h2">
+  <!-- CLOSE — origin inscription + field notes -->
+  <section class="close" aria-labelledby="fn-h2">
     <div class="fn-archive" aria-hidden="true">
       <span class="e1">2026-04-29 &middot; obs 001 &middot; control</span>
       <span class="e2">2026-05-04 &middot; obs 003 &middot; hypothesis</span>
@@ -517,35 +478,38 @@
       <span class="e9">2026-05-27 &middot; obs 021 &middot; transmitting</span>
     </div>
 
-    <div class="field-notes__inner">
-      <div class="reveal">
-        <span class="section-label"><span>VI &nbsp;/&nbsp; Field Notes</span></span>
-        <h2 id="fn-h2">Field Notes</h2>
-        <p class="field-notes__caption">Occasional observations from Imbas on AI behavioral measurement.</p>
-        <span class="field-notes__transmit"><span class="dot"></span> Transmissions live from the field</span>
-      </div>
+    <div class="close__inner">
+      <div class="close__grid">
+        <div class="close__origin reveal">
+          <p class="origin__inscription">Imbas. From the old Irish&nbsp;&mdash;&nbsp;part of a Celtic inheritance of illumination, sudden knowing, and the hidden thing brought into view.</p>
+        </div>
 
-      <div class="reveal" style="--reveal-delay: 120ms;">
-        <form
-          class="subscribe"
-          id="field-notes-form"
-          action="/briefing/members/api/send-magic-link"
-          method="POST"
-          novalidate
-        >
-          <input type="hidden" name="emailType" value="signup">
-          <input type="hidden" name="labels" value="field-notes">
-          <input
-            type="email"
-            name="email"
-            placeholder="you@email.com"
-            autocomplete="email"
-            required
-            aria-label="Email address"
+        <div class="close__signup reveal" style="--reveal-delay: 120ms;">
+          <span class="section-label"><span>Field Notes</span></span>
+          <h2 id="fn-h2">Field Notes</h2>
+          <p class="field-notes__caption">Occasional observations from Imbas on AI behavioral measurement.</p>
+          <span class="field-notes__transmit"><span class="dot"></span> Transmissions live from the field</span>
+          <form
+            class="subscribe"
+            id="field-notes-form"
+            action="/briefing/members/api/send-magic-link"
+            method="POST"
+            novalidate
           >
-          <button type="submit">Receive notes &rarr;</button>
-        </form>
-        <p class="subscribe__msg" id="field-notes-msg" role="status">Check your inbox for a confirmation link.</p>
+            <input type="hidden" name="emailType" value="signup">
+            <input type="hidden" name="labels" value="field-notes">
+            <input
+              type="email"
+              name="email"
+              placeholder="you@email.com"
+              autocomplete="email"
+              required
+              aria-label="Email address"
+            >
+            <button type="submit">Receive notes &rarr;</button>
+          </form>
+          <p class="subscribe__msg" id="field-notes-msg" role="status">Check your inbox for a confirmation link.</p>
+        </div>
       </div>
     </div>
   </section>
