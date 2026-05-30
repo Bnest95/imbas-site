@@ -6,47 +6,50 @@
    ============================================================= */
 
 :root {
-  /* Surfaces — lifted off black; slate/blue-graphite throughout */
-  --bg-deep:        #0D1422;
-  --bg-base:        #131D2D;
-  --bg-surface:     #1A2538;
-  --bg-elevated:    #213049;
-  --bg-lift:        #283A55;     /* moonlit mineral panel */
-  --bg-bloom:       #2F4264;     /* illuminated zones */
-  --bg-glass:       rgba(33,48,73,0.55);
+  /* Surfaces — warm foundation; cool navy on lifted panels for temperature contrast */
+  --bg-deep:        #0F0D0B;
+  --bg-base:        #1B1814;
+  --bg-surface:     #101A2A;
+  --bg-elevated:    #172438;
+  --bg-lift:        #22304A;
+  --bg-bloom:       #2A3A56;
+  --bg-glass:       rgba(23, 36, 56, 0.58);
+  --bg-deep-rgb:    15, 13, 11;
+  --bg-elevated-rgb: 23, 36, 56;
 
-  /* Text — warm off-light */
+  /* Text — warm off-light on base; cool-muted secondary for navy panels */
   --ink-luminous:   #FCF8EC;
-  --ink-primary:    #ECE6D8;
-  --ink-soft:       #CFC9BC;
-  --ink-secondary:  #98A4B6;
-  --ink-muted:      #6B7689;
-  --ink-faint:      #45516A;
-  --ink-ghost:      #2D384E;
+  --ink-primary:    #EDE8DC;
+  --ink-soft:       #D4CFC2;
+  --ink-secondary:  #94A0B4;
+  --ink-muted:      #6E7688;
+  --ink-faint:      #4A5568;
+  --ink-ghost:      #2E3848;
 
-  /* Lines */
-  --line-faint:     rgba(236,230,216,0.08);
-  --line-soft:      rgba(236,230,216,0.14);
-  --line-strong:    rgba(236,230,216,0.22);
-  --line-luminous:  rgba(252,248,236,0.36);
+  /* Lines — parchment tint on warm ground */
+  --line-faint:     rgba(237, 228, 210, 0.09);
+  --line-soft:      rgba(237, 228, 210, 0.15);
+  --line-strong:    rgba(237, 228, 210, 0.24);
+  --line-luminous:  rgba(252, 248, 236, 0.38);
 
-  /* Ember — restrained signal, never identity */
-  --ember:          #C97A4A;
-  --ember-soft:     #D89668;
-  --ember-bright:   #E8A574;
-  --ember-glow:     rgba(201,122,74,0.22);
-  --ember-trace:    rgba(201,122,74,0.10);
-  --ember-pulse:    rgba(216,150,104,0.55);
-  --ember-bloom:    rgba(216,150,104,0.32);
+  /* Ember — saturated signal; stronger presence against cool panels */
+  --ember:          #DE6F38;
+  --ember-soft:     #F08F58;
+  --ember-bright:   #F8A866;
+  --ember-glow:     rgba(222, 111, 56, 0.30);
+  --ember-trace:    rgba(222, 111, 56, 0.14);
+  --ember-pulse:    rgba(248, 168, 102, 0.62);
+  --ember-bloom:    rgba(240, 143, 88, 0.36);
+  --ember-rgb:      222, 111, 56;
 
-  /* Cool atmospheric — moonlit slate, aurora */
-  --slate-glow:     rgba(140,176,210,0.16);
-  --slate-deeper:   rgba(140,176,210,0.10);
-  --slate-haze:     rgba(160,184,210,0.08);
-  --slate-bloom:    rgba(180,208,232,0.18);
-  --aurora-a:       rgba(108,148,184,0.10);
-  --aurora-b:       rgba(140,196,210,0.08);
-  --aurora-c:       rgba(201,122,74,0.06);
+  /* Cool atmospheric — moonlit slate on warm base; navy panels read colder */
+  --slate-glow:     rgba(110, 150, 195, 0.18);
+  --slate-deeper:   rgba(110, 150, 195, 0.11);
+  --slate-haze:     rgba(130, 168, 210, 0.09);
+  --slate-bloom:    rgba(155, 188, 228, 0.20);
+  --aurora-a:       rgba(90, 130, 175, 0.09);
+  --aurora-b:       rgba(120, 175, 205, 0.07);
+  --aurora-c:       rgba(222, 111, 56, 0.08);
 
   /* Cursor presence */
   --cx: 0.5;
@@ -195,16 +198,16 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .bio-node    { transform-origin: center; transform-box: fill-box; }
 
 @keyframes bio-tip-l {
-  0%, 12%, 100% { opacity: 0.7; filter: drop-shadow(0 0 2px rgba(201,122,74,0.25)); }
-  58% { opacity: 1; filter: drop-shadow(0 0 8px rgba(216,150,104,0.65)) drop-shadow(0 0 18px rgba(201,122,74,0.28)); }
-  65% { opacity: 0.85; filter: drop-shadow(0 0 4px rgba(201,122,74,0.35)); }
+  0%, 12%, 100% { opacity: 0.7; filter: drop-shadow(0 0 2px rgba(var(--ember-rgb), 0.28)); }
+  58% { opacity: 1; filter: drop-shadow(0 0 8px rgba(248, 168, 102, 0.68)) drop-shadow(0 0 18px rgba(var(--ember-rgb), 0.32)); }
+  65% { opacity: 0.85; filter: drop-shadow(0 0 4px rgba(var(--ember-rgb), 0.38)); }
   72% { opacity: 0.72; }
 }
 @keyframes bio-tip-r {
-  0%, 10%, 100% { opacity: 0.66; filter: drop-shadow(0 0 2px rgba(201,122,74,0.22)); }
-  38% { opacity: 0.96; filter: drop-shadow(0 0 7px rgba(216,150,104,0.55)) drop-shadow(0 0 16px rgba(201,122,74,0.25)); }
-  45% { opacity: 0.78; filter: drop-shadow(0 0 4px rgba(201,122,74,0.3)); }
-  78% { opacity: 0.82; filter: drop-shadow(0 0 4px rgba(201,122,74,0.32)); }
+  0%, 10%, 100% { opacity: 0.66; filter: drop-shadow(0 0 2px rgba(var(--ember-rgb), 0.24)); }
+  38% { opacity: 0.96; filter: drop-shadow(0 0 7px rgba(248, 168, 102, 0.58)) drop-shadow(0 0 16px rgba(var(--ember-rgb), 0.28)); }
+  45% { opacity: 0.78; filter: drop-shadow(0 0 4px rgba(var(--ember-rgb), 0.34)); }
+  78% { opacity: 0.82; filter: drop-shadow(0 0 4px rgba(var(--ember-rgb), 0.36)); }
   83% { opacity: 0.7; }
 }
 
@@ -217,7 +220,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   z-index: 50;
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
-  background: linear-gradient(180deg, rgba(13,20,34,0.86), rgba(13,20,34,0.55));
+  background: linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.86), rgba(var(--bg-deep-rgb), 0.55));
   border-bottom: 1px solid var(--line-faint);
 }
 .site-header__inner {
@@ -327,7 +330,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(180deg, rgba(13,20,34,0.45) 0%, transparent 18%, transparent 78%, rgba(13,20,34,0.55) 100%);
+    linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.45) 0%, transparent 18%, transparent 78%, rgba(var(--bg-deep-rgb), 0.55) 100%);
 }
 
 /* Deep-field starpoints */
@@ -349,7 +352,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   opacity: 0.4;
 }
 .hero__field .pt--bright { background: var(--ink-soft); opacity: 0.6; }
-.hero__field .pt--ember  { background: var(--ember); opacity: 0.55; box-shadow: 0 0 4px rgba(201,122,74,0.45); }
+.hero__field .pt--ember  { background: var(--ember); opacity: 0.58; box-shadow: 0 0 5px rgba(var(--ember-rgb), 0.5); }
 
 /* Drifting motes */
 .hero__motes {
@@ -484,7 +487,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   -webkit-text-fill-color: transparent;
   color: transparent;
   position: relative;
-  filter: drop-shadow(0 0 calc(var(--cursor-prox) * 24px) rgba(216,150,104, calc(var(--cursor-prox) * 0.18)));
+  filter: drop-shadow(0 0 calc(var(--cursor-prox) * 24px) rgba(var(--ember-rgb), calc(var(--cursor-prox) * 0.22)));
   transition: filter 1.4s ease;
 }
 /* Faint ember stroke overlay for a hint of bioluminescence inside the type */
@@ -492,8 +495,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   content: "IMBAS";
   position: absolute;
   inset: 0;
-  -webkit-text-stroke: 0.6px rgba(216,150,104,0.18);
-  text-stroke: 0.6px rgba(216,150,104,0.18);
+  -webkit-text-stroke: 0.6px rgba(var(--ember-rgb), 0.22);
+  text-stroke: 0.6px rgba(var(--ember-rgb), 0.22);
   -webkit-text-fill-color: transparent;
   color: transparent;
   pointer-events: none;
@@ -532,7 +535,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  background: rgba(33,48,73,0.55);
+  background: var(--bg-glass);
   border: 1px solid var(--line-soft);
   border-radius: 2px;
   padding: 0.25rem 0.25rem 0.25rem 1rem;
@@ -919,7 +922,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   position: relative;
   width: 100%;
   aspect-ratio: 1.6;
-  background: linear-gradient(180deg, transparent 0%, rgba(33,48,73,0.4) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(var(--bg-elevated-rgb), 0.42) 100%);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -1374,7 +1377,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 @keyframes archive-glow {
   0%, 38%, 100% { color: var(--ink-faint); text-shadow: none; }
-  44% { color: var(--ink-muted); text-shadow: 0 0 4px rgba(201,122,74,0.2); }
+  44% { color: var(--ink-muted); text-shadow: 0 0 4px rgba(var(--ember-rgb), 0.24); }
   52% { color: var(--ink-faint); text-shadow: none; }
 }
 
