@@ -992,14 +992,6 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: var(--bg-elevated);
   transform: translateY(-2px);
 }
-.audience__label {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ember);
-  margin-bottom: var(--space-2);
-}
 .audience h3 {
   font-family: var(--font-display);
   font-size: 1.65rem;
@@ -1217,12 +1209,34 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   border-bottom: 1px solid var(--line-faint);
   margin-bottom: var(--space-4);
 }
+.archive__measure--primary {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: none;
+}
 .archive__measure .stat {
   font-family: var(--font-mono);
   font-size: 0.64rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-muted);
+}
+.archive__measure--primary .stat--phrase {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  line-height: 1.45;
+}
+.archive__measure--primary .stat__num {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  color: var(--ink-luminous);
+  text-transform: none;
+  margin-right: 0.2rem;
 }
 .archive__measure .stat strong {
   display: block;
@@ -1236,12 +1250,37 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   line-height: 1;
 }
 .archive__measure .stat--ember strong { color: var(--ember-soft); }
-.archive__measure .stat--label {
-  display: grid;
-  grid-template-rows: 2.35rem auto;
-  align-content: end;
+.archive__footnote {
+  margin: 0 0 0.25rem;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--ink-faint);
 }
-@media (max-width: 700px) { .archive__measure { grid-template-columns: repeat(2, 1fr); } }
+.archive__footnote::before {
+  content: "// ";
+  color: var(--ink-ghost);
+}
+.archive__legend {
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line-faint);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--ink-faint);
+}
+.archive__legend::before {
+  content: "// ";
+  color: var(--ink-ghost);
+}
+@media (max-width: 700px) {
+  .archive__measure { grid-template-columns: repeat(2, 1fr); }
+  .archive__measure--primary { grid-template-columns: 1fr; }
+}
 
 .archive__foot {
   display: flex;
