@@ -979,16 +979,61 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   opacity: 0.82;
 }
 .divergence__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.divergence__path {
+  stroke-dasharray: var(--path-len, 600);
+  stroke-dashoffset: var(--path-len, 600);
+  transition: stroke-dashoffset 2.6s cubic-bezier(.22,.72,.18,1);
+}
+.divergence.is-drawn .divergence__path--intended { stroke-dashoffset: 0; }
+.divergence.is-drawn .divergence__path--drift {
+  stroke-dashoffset: 0;
+  transition-delay: 0.22s;
+}
+.divergence__endpoint { opacity: 0; }
+.divergence.is-drawn .divergence__endpoint--top {
+  opacity: 1;
+  transition: opacity 0.45s ease 2.35s;
+}
+.divergence.is-drawn .divergence__endpoint--bot {
+  opacity: 1;
+  transition: opacity 0.45s ease 2.6s;
+}
+.divergence.is-drawn .divergence__origin-ring {
+  animation: divergence-origin-pulse 1.8s ease-out;
+}
+@keyframes divergence-origin-pulse {
+  0%   { opacity: 0.12; stroke-width: 0.6; }
+  28%  { opacity: 0.9;  stroke-width: 1.6; }
+  100% { opacity: 0.4;  stroke-width: 1; }
+}
 .divergence__label {
   position: absolute;
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.5s ease;
 }
-.divergence__label--start { left: 2%; top: 50%; transform: translateY(-50%); color: var(--ink-muted); }
+.divergence__label--start {
+  left: 7%;
+  top: 57%;
+  color: var(--ink-muted);
+}
+.divergence.is-drawn .divergence__label--start {
+  opacity: 1;
+  transition-delay: 0.2s;
+}
 .divergence__label--top   { right: 2%; top: 12%; color: var(--ink-soft); }
+.divergence.is-drawn .divergence__label--top {
+  opacity: 1;
+  transition-delay: 2.45s;
+}
 .divergence__label--bot   { right: 2%; bottom: 12%; color: var(--ember-soft); }
+.divergence.is-drawn .divergence__label--bot {
+  opacity: 1;
+  transition-delay: 2.7s;
+}
 
 @media (max-width: 800px) {
   .compounding__inner { grid-template-columns: 1fr; }
@@ -1660,7 +1705,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 
 /* =============================================================
-   PASS 6 — FIREFLY: hero ambient blink
+   PASS 6 — FIREFLY: discrete detection events
    ============================================================= */
 .firefly {
   position: absolute;
@@ -1748,6 +1793,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .gap__line--leaves.is-visible .firefly--gap {
     animation-duration: 11s;
   }
+  .divergence__path { transition-duration: 1.9s; }
+  .divergence.is-drawn .divergence__path--drift { transition-delay: 0.15s; }
 }
 
 /* =============================================================
@@ -1831,6 +1878,9 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .firefly--hero .firefly__halo { animation: none !important; opacity: 0.4; }
   .gap__line--leaves.is-visible .firefly--gap { opacity: 0.42; animation: none !important; }
   .gap__line--leaves.is-visible .firefly--gap .firefly__halo { animation: none !important; opacity: 0.5; }
+  .divergence__path { stroke-dashoffset: 0 !important; }
+  .divergence__endpoint,
+  .divergence.is-drawn .divergence__label { opacity: 1 !important; }
 }
 
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 1px; }

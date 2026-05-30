@@ -263,18 +263,18 @@
           </g>
 
           <!-- Origin marker -->
-          <circle cx="40" cy="190" r="4" fill="rgba(252,248,236,0.85)"/>
-          <circle cx="40" cy="190" r="10" fill="none" stroke="rgba(252,248,236,0.4)" stroke-width="1"/>
+          <circle class="divergence__origin divergence__origin-core" cx="40" cy="190" r="4" fill="rgba(252,248,236,0.85)"/>
+          <circle class="divergence__origin divergence__origin-ring" cx="40" cy="190" r="10" fill="none" stroke="rgba(252,248,236,0.4)" stroke-width="1"/>
 
           <!-- Intended course (slate) -->
-          <path d="M40 190 L580 86"
+          <path class="divergence__path divergence__path--intended" d="M40 190 L580 86"
                 stroke="url(#div-grad-top)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-          <circle cx="580" cy="86" r="3" fill="rgba(208,224,240,0.9)"/>
+          <circle class="divergence__endpoint divergence__endpoint--top" cx="580" cy="86" r="3" fill="rgba(208,224,240,0.9)"/>
 
           <!-- Actual course (ember — the drift) -->
-          <path d="M40 190 L580 312"
+          <path class="divergence__path divergence__path--drift" d="M40 190 L580 312"
                 stroke="url(#div-grad-bot)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <circle cx="580" cy="312" r="4" fill="rgba(232,165,116,0.95)"/>
+          <circle class="divergence__endpoint divergence__endpoint--bot" cx="580" cy="312" r="4" fill="rgba(232,165,116,0.95)"/>
 
           <!-- Small instrumentation degree tick -->
           <path d="M88 174 A 60 60 0 0 1 88 206" stroke="rgba(160,184,210,0.4)" stroke-width="0.7" fill="none"/>
@@ -566,6 +566,8 @@
       });
     }
 
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // Scroll reveal
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (entries) {
@@ -580,6 +582,46 @@
     } else {
       document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) { el.classList.add('is-visible'); });
     }
+
+    // Thesis diagram — draw diverging lines on viewport entry
+    (function initDivergenceDraw() {
+      var divergence = document.querySelector('.divergence');
+      if (!divergence) return;
+
+      var paths = divergence.querySelectorAll('.divergence__path');
+      paths.forEach(function (path) {
+        var len = path.getTotalLength();
+        path.style.setProperty('--path-len', len);
+        path.style.strokeDasharray = len;
+        path.style.strokeDashoffset = len;
+      });
+
+      function drawDiagram() {
+        divergence.classList.add('is-drawn');
+        paths.forEach(function (path) {
+          path.style.strokeDashoffset = '0';
+        });
+      }
+
+      if (prefersReducedMotion) {
+        drawDiagram();
+        return;
+      }
+
+      if ('IntersectionObserver' in window) {
+        var divIo = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              drawDiagram();
+              divIo.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.32, rootMargin: '0px 0px -6% 0px' });
+        divIo.observe(divergence);
+      } else {
+        drawDiagram();
+      }
+    })();
 
     // Capture form handlers — both hero and field notes
     function wireForm(formId, msgId, fallbackMsg) {
@@ -602,7 +644,7 @@
     wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
 
     // Cursor sensing — parallax + monolith proximity glow
-    var prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var prefersReduced = prefersReducedMotion;
     var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     var monolith = document.getElementById('hero-monolith');
     var body = document.body;
