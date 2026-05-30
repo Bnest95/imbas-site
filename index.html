@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imbas — Inspect what AI surfaces. And what it doesn't.</title>
-  <meta name="description" content="Imbas measures what frontier AI systems surface, what they don't, and how those patterns compound. Signal, not verdict.">
+  <title>Imbas — Inspect what AI surfaces. And what it leaves out.</title>
+  <meta name="description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
   <link rel="canonical" href="https://imbaslabs.com/">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -14,12 +14,12 @@
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://imbaslabs.com/">
-  <meta property="og:title" content="Imbas — Inspect what AI surfaces. And what it doesn't.">
-  <meta property="og:description" content="Imbas measures what frontier AI systems surface, what they don't, and how those patterns compound. Signal, not verdict.">
+  <meta property="og:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
+  <meta property="og:description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
   <meta property="og:image" content="https://imbaslabs.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Imbas — Inspect what AI surfaces. And what it doesn't.">
-  <meta name="twitter:description" content="Imbas measures what frontier AI systems surface, what they don't, and how those patterns compound. Signal, not verdict.">
+  <meta name="twitter:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
+  <meta name="twitter:description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
   <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -189,12 +189,31 @@
   </section>
 
   <!-- ============================================================
+       STAKES — why this matters now
+       ============================================================ -->
+  <section class="what-imbas" aria-label="The stakes">
+    <div class="what-imbas__inner reveal">
+      <p>AI is going to be making a huge amount of our decisions, or being consulted on them &mdash; a layer over nearly all of society. We know very little about how it thinks or behaves, and it&rsquo;s changing every day. That&rsquo;s what Imbas is here to help with.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
        WHAT IMBAS IS — crisp one-line value, near the top
        ============================================================ -->
   <section class="what-imbas" id="what-imbas" aria-labelledby="what-h2">
     <div class="what-imbas__inner reveal">
       <span class="what-imbas__overline">what imbas is</span>
-      <h2 id="what-h2">Imbas measures what frontier AI systems surface, what they don&rsquo;t, and how those patterns compound over time.</h2>
+      <h2 id="what-h2">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound over time.</h2>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIRECTION — where Imbas is headed
+       ============================================================ -->
+  <section class="what-imbas" aria-label="Where Imbas is headed">
+    <div class="what-imbas__inner reveal">
+      <p>Right now Imbas documents how these systems behave, one case at a time. Where it&rsquo;s going: a tool that rides alongside your AI and flags the gap in the moment &mdash; so you see what&rsquo;s missing while you&rsquo;re reading, not after it matters.</p>
+      <p class="origin__line">Because you have the right to know.</p>
     </div>
   </section>
 
@@ -295,7 +314,7 @@
       <div class="compounding__copy reveal-l">
         <span class="section-label"><span>III &nbsp;/&nbsp; Thesis</span></span>
         <h2 id="compound-h2">A few degrees off course, compounded, ends somewhere else.</h2>
-        <p>AI is becoming a layer of understanding. Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
+        <p>Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
         <p>Imbas measures the direction and degree of that drift.</p>
       </div>
 
@@ -374,7 +393,7 @@
       <article class="audience reveal-r" style="--reveal-delay: 100ms;">
         <div class="audience__label">Path B</div>
         <h3>For institutions</h3>
-        <p>Regulated institutions deploying AI need third-party behavioral measurement. Cross-vendor, trustless, citable in audit workpapers.</p>
+        <p>Regulated institutions deploying AI need third-party behavioral measurement. Cross-vendor, independent, citable in audit workpapers.</p>
         <a href="/institutions.html">
           <span>For institutions</span>
           <span class="arrow" aria-hidden="true">&rarr;</span>
@@ -388,7 +407,7 @@
        ============================================================ -->
   <section class="origin" aria-label="Name origin">
     <div class="origin__inner reveal">
-      <span class="origin__label">a note on the name</span>
+      <span class="origin__label">Origin of the signal</span>
       <p class="origin__line">Imbas comes from an Old Irish idea of illuminated knowledge.</p>
       <p class="origin__follow">The name fits the work: sensing what did not surface, and bringing more of the field into view.</p>
     </div>
@@ -412,11 +431,16 @@
       </div>
 
       <div class="archive__measure reveal" style="--reveal-delay: 160ms;">
-        <div class="stat"><strong>13</strong>cases observed</div>
+        <div class="stat"><strong>13</strong>cases recorded</div>
         <div class="stat"><strong>4</strong>frontier models</div>
-        <div class="stat stat--ember"><strong>1.65</strong>mean &Delta; · hypothesis</div>
-        <div class="stat"><strong>1.17</strong>mean &Delta; · control</div>
+        <div class="stat stat--label">archive growing</div>
       </div>
+
+      <div class="archive__measure reveal" style="--reveal-delay: 200ms;">
+        <div class="stat stat--ember"><strong>1.65</strong>mean &Delta; &middot; hypothesis</div>
+        <div class="stat"><strong>1.17</strong>mean &Delta; &middot; control</div>
+      </div>
+      <p class="archive__next reveal" style="--reveal-delay: 240ms;">mean gap, 0&ndash;3 scale, higher means more left out.</p>
 
       <div class="archive__ledger reveal" style="--reveal-delay: 240ms;">
         <div class="ledger__head" role="presentation">

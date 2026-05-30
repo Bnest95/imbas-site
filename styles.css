@@ -1224,6 +1224,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   line-height: 1;
 }
 .archive__measure .stat--ember strong { color: var(--ember-soft); }
+.archive__measure .stat--label {
+  display: grid;
+  grid-template-rows: 2.35rem auto;
+  align-content: end;
+}
 @media (max-width: 700px) { .archive__measure { grid-template-columns: repeat(2, 1fr); } }
 
 .archive__foot {
