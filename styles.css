@@ -1020,6 +1020,15 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   padding-bottom: 0.3rem;
 }
 .audience a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
+@media (min-width: 761px) {
+  .audiences__grid { grid-template-columns: 1.2fr 0.8fr; }
+  .audience--primary {
+    padding: var(--space-6);
+    background: var(--bg-elevated);
+    border-color: var(--line-soft);
+  }
+  .audience--primary h3 { font-size: 1.85rem; }
+}
 @media (max-width: 760px) {
   .audiences__grid { grid-template-columns: 1fr; }
 }
