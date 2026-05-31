@@ -399,8 +399,8 @@
       <div class="archive__rubric reveal" data-stagger="support">
         <p class="archive__rubric-lead">Cases are scored from 0 to 3 on the Volunteer Gap scale.</p>
         <div class="archive__rubric-scale">
-          <span class="archive__rubric-end archive__rubric-end--low"><strong>0</strong> no meaningful gap</span>
-          <span class="archive__rubric-end archive__rubric-end--high"><strong>3</strong> major information was left out of the open answer</span>
+          <span class="archive__rubric-end archive__rubric-end--low"><strong>0</strong> means no meaningful gap.</span>
+          <span class="archive__rubric-end archive__rubric-end--high"><strong>3</strong> means major information was left out of the open answer.</span>
         </div>
       </div>
 
@@ -804,7 +804,7 @@
       if (!gapSection || !lines.length) return;
 
       var thresholdsDesktop = [0.06, 0.20, 0.34, 0.48];
-      var thresholdsMobile = [0.03, 0.14, 0.25, 0.36];
+      var thresholdsMobile = [0.03, 0.12, 0.22, 0.32];
 
       function getGapThresholds() {
         return window.innerWidth <= 900 ? thresholdsMobile : thresholdsDesktop;

@@ -102,6 +102,11 @@ body {
 img, svg { display: block; max-width: 100%; }
 ::selection { background: var(--ember-glow); color: var(--ink-luminous); }
 
+main {
+  min-width: 0;
+  overflow-x: clip;
+}
+
 /* =============================================================
    AURORA — soft moving signal field behind everything
    Three large blurred bands shift slowly. Edge of perception.
@@ -992,12 +997,21 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 
 @media (max-width: 520px) {
-  .hero__monolith-text { font-size: clamp(2.85rem, 14vw, 4.2rem); }
+  .hero__monolith-text {
+    font-size: clamp(2.85rem, 14vw, 4.2rem);
+    max-width: 100%;
+  }
   .hero__capture { padding: 0.4rem 0.55rem; }
   .hero__capture input[type="email"] { padding: 0.55rem 0; font-size: 0.9375rem; }
-  .hero__capture button { padding: 0.5rem 0.85rem; font-size: 0.625rem; letter-spacing: 0.12em; }
+  .hero__capture button {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+  }
   .hero__center { gap: 1rem; }
   .hero__secondary { margin-top: 0.25rem; }
+  .hero__subhead-line { padding-inline: 0; }
+  .hero__capture-block { max-width: min(460px, calc(100vw - 2rem)); }
 }
 
 /* =============================================================
@@ -1490,6 +1504,23 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .gap__link .arrow { transition: transform .35s ease; }
 .gap__link:hover .arrow { transform: translateX(4px); }
 
+@media (max-width: 900px) {
+  .gap {
+    padding: var(--space-6) 0;
+  }
+  .gap__inner {
+    padding-inline: clamp(1rem, 4vw, 1.25rem);
+  }
+  .gap__line {
+    font-size: clamp(1.75rem, 7.5vw, 2.75rem);
+    overflow-wrap: break-word;
+  }
+  .gap__definition,
+  .gap__support {
+    max-width: none;
+  }
+}
+
 /* =============================================================
    PASS 10 — PROOF STRIP: archive stats between gap and value flow
    ============================================================= */
@@ -1527,6 +1558,15 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: var(--ember);
   box-shadow: 0 0 10px var(--ember-glow);
   flex-shrink: 0;
+}
+@media (max-width: 520px) {
+  .proof-strip__meta {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.35rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+  }
 }
 
 /* =============================================================
@@ -2012,7 +2052,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   border-top: 1px solid var(--line-faint);
   background: var(--bg-surface);
   position: relative;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   isolation: isolate;
 }
 /* Mineral record — cool aurora rising from below */
@@ -2032,6 +2073,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   max-width: var(--container-wide);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
+  min-width: 0;
 }
 .archive__head {
   display: grid;
@@ -2141,6 +2183,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   letter-spacing: -0.005em;
   color: var(--ink-primary);
   text-transform: none;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 .record__type  { color: rgba(180, 192, 210, 0.92); text-transform: uppercase; letter-spacing: 0.16em; }
 .record__delta {
@@ -2153,37 +2197,6 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .record--hypothesis .record__delta { color: var(--ember-soft); }
 .record--hint { color: rgba(180, 192, 210, 0.9); font-style: italic; }
 .record--hint .record__id { color: rgba(180, 192, 210, 0.92); }
-
-@media (max-width: 800px) {
-  .archive__head { grid-template-columns: 1fr; align-items: start; }
-  .archive__stamp { text-align: left; }
-  .archive__inner { padding-inline: clamp(1rem, 4vw, 1.25rem); }
-  .archive__featured { padding: var(--space-3); }
-  .archive__featured-prompts { grid-template-columns: 1fr; }
-  .archive__rubric { padding: var(--space-3); }
-  .archive__rubric-scale { grid-template-columns: 1fr; gap: var(--space-2); }
-  .archive__ledger-scroll {
-    margin-inline: calc(-1 * clamp(1rem, 4vw, 1.25rem));
-    padding-inline: clamp(1rem, 4vw, 1.25rem);
-  }
-  .archive__ledger { min-width: 0; }
-  .ledger__head { display: none; }
-  .record {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "id    delta"
-      "title title"
-      "date  type";
-    gap: 0.45rem 1rem;
-    padding: 1rem 0.25rem;
-    font-size: 0.8125rem;
-  }
-  .record__id    { grid-area: id; font-size: 0.8125rem; }
-  .record__title { grid-area: title; font-size: 1.05rem; line-height: 1.35; }
-  .record__date  { grid-area: date; font-size: 0.8125rem; }
-  .record__type  { grid-area: type; text-align: right; font-size: 0.8125rem; }
-  .record__delta { grid-area: delta; font-size: 1.05rem; }
-}
 
 .archive__measure {
   display: grid;
@@ -2241,6 +2254,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   padding: var(--space-4);
   border: 1px solid var(--line-soft);
   background: rgba(var(--bg-elevated-rgb), 0.15);
+  min-width: 0;
 }
 .archive__featured-body {
   display: grid;
@@ -2263,6 +2277,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   color: var(--ink-luminous);
   margin: 0 0 var(--space-4);
   line-height: 1.2;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .archive__featured-prompts {
   display: grid;
@@ -2338,9 +2354,73 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .archive__featured-link:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .archive__featured-link .arrow { transition: transform .35s ease; }
 .archive__featured-link:hover .arrow { transform: translateX(4px); }
+@media (max-width: 900px) {
+  .archive__head { grid-template-columns: 1fr; align-items: start; }
+  .archive__inner { padding-inline: clamp(1rem, 4vw, 1.25rem); }
+  .archive__measure--primary { grid-template-columns: 1fr; gap: var(--space-3); }
+  .archive__rubric { padding: var(--space-3); }
+  .archive__rubric-scale { grid-template-columns: 1fr; gap: var(--space-2); }
+  .archive__featured { padding: var(--space-3); }
+  .archive__featured-prompts { grid-template-columns: 1fr; }
+  .archive__prompt p,
+  .archive__finding p { overflow-wrap: break-word; }
+  .archive__ledger-scroll {
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow-x: visible;
+    width: 100%;
+  }
+  .archive__ledger {
+    min-width: 0;
+    width: 100%;
+  }
+  .ledger__head { display: none; }
+  .record {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "id    delta"
+      "title title"
+      "date  type";
+    gap: 0.4rem 0.75rem;
+    padding: 1rem 0;
+    font-size: 0.8125rem;
+    align-items: start;
+  }
+  .record__id {
+    grid-area: id;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    overflow-wrap: anywhere;
+  }
+  .record__title {
+    grid-area: title;
+    font-size: 1rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .record__date {
+    grid-area: date;
+    font-size: 0.75rem;
+    color: rgba(180, 192, 210, 0.95);
+  }
+  .record__type {
+    grid-area: type;
+    text-align: right;
+    font-size: 0.6875rem;
+    letter-spacing: 0.12em;
+    overflow-wrap: anywhere;
+  }
+  .record__delta {
+    grid-area: delta;
+    font-size: 1.05rem;
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
 @media (max-width: 700px) {
   .archive__measure { grid-template-columns: repeat(2, 1fr); }
-  .archive__measure--primary { grid-template-columns: 1fr; }
 }
 
 .archive__foot {
@@ -2464,6 +2544,12 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 @media (max-width: 760px) {
   .close__grid { grid-template-columns: 1fr; gap: var(--space-5); }
   .close__origin { padding: var(--space-2) 0 var(--space-4); }
+  .origin__bloom {
+    inset: -25% -10%;
+    filter: blur(44px);
+    opacity: 0.42;
+  }
+  .origin__inscription-wrap { max-width: min(38ch, 100%); }
   .close .subscribe {
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -2471,6 +2557,12 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .close .subscribe button {
     padding-left: 0;
     align-self: stretch;
+  }
+  .field-notes__recent {
+    margin-top: var(--space-3);
+  }
+  .field-notes__recent-list a {
+    font-size: 0.9rem;
   }
 }
 
@@ -2566,7 +2658,13 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
     animation: none;
   }
   .value__beats::after { left: 0.72rem; }
+  .value__beat-dot:not(.is-active) {
+    opacity: 0.3;
+    box-shadow: none;
+  }
   .roadmap__item p { max-width: none; }
+  .roadmap__title { max-width: none; }
+  .bridge__thesis { max-width: none; }
   .divergence__path { transition-duration: 1.9s; }
   .divergence.is-drawn .divergence__path--drift { transition-delay: 0.15s; }
 }
