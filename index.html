@@ -91,6 +91,7 @@
     </div>
 
     <div class="hero__aurora-focal" aria-hidden="true"></div>
+    <div class="hero__aurora-edge" aria-hidden="true"></div>
     <div class="hero__dust" aria-hidden="true"></div>
 
     <div class="hero__horizon" aria-hidden="true"></div>
@@ -104,7 +105,10 @@
 
       <div class="hero__center">
 
-        <p class="hero__tagline">Cleaner inputs &middot; Better outputs &middot; Sharper thinking</p>
+        <p class="hero__tagline">
+          <span class="hero__tagline-part hero__tagline-part--a">Cleaner inputs &middot; Better outputs</span>
+          <span class="hero__tagline-part hero__tagline-part--b"><span class="hero__tagline-sep" aria-hidden="true"> &middot; </span>Sharper thinking</span>
+        </p>
 
         <div class="hero__monolith" id="hero-monolith">
           <span class="hero__monolith-text" data-text="IMBAS">IMBAS</span>
@@ -149,16 +153,21 @@
     </div>
   </section>
 
-  <!-- BRIDGE — stakes + what Imbas is, two-column thesis plate -->
-  <section class="bridge section-scene" id="what-imbas" aria-labelledby="bridge-statement" data-reveal-section>
+  <!-- BRIDGE — thesis plate with paired supporting blocks -->
+  <section class="bridge section-scene" id="what-imbas" aria-labelledby="bridge-thesis" data-reveal-section>
     <div class="bridge__inner">
-      <div class="bridge__grid">
-        <blockquote class="bridge__stakes reveal" data-stagger="body">
-          <p>AI is becoming a layer over decision-making. Consulted, trusted, repeated, built into workflows. We know very little about how these systems behave&nbsp;&mdash;&nbsp;and they change every day.</p>
-        </blockquote>
-        <h2 class="bridge__statement reveal" id="bridge-statement" data-stagger="heading">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
+      <div class="bridge__frame reveal" data-stagger="body">
+        <h2 id="bridge-thesis" class="bridge__thesis reveal" data-stagger="heading">Imbas turns invisible AI behavior into a record.</h2>
+        <div class="bridge__connector" aria-hidden="true"></div>
+        <div class="bridge__plates">
+          <blockquote class="bridge__plate bridge__plate--stakes reveal" data-stagger="body">
+            <p>AI is becoming a layer over decision-making. Consulted, trusted, repeated, built into workflows. We know very little about how these systems behave&nbsp;&mdash;&nbsp;and they change every day.</p>
+          </blockquote>
+          <div class="bridge__plate bridge__plate--measure reveal" data-stagger="support">
+            <p id="bridge-statement">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</p>
+          </div>
+        </div>
       </div>
-      <p class="bridge__support reveal" data-stagger="body">Imbas turns that invisible behavior into a record.</p>
     </div>
   </section>
 
@@ -389,26 +398,32 @@
         <div class="stat stat--phrase"><span class="stat__num">4</span> frontier models observed</div>
       </div>
 
-      <div class="archive__stats-meta reveal" data-stagger="support">
-        <p>Each case is scored 0 to 3 on the Volunteer Gap scale. 0 means no gap. 3 means major information left out of the open answer.</p>
+      <div class="archive__rubric reveal" data-stagger="support">
+        <p class="archive__rubric-lead">Cases are scored from 0 to 3 on the Volunteer Gap scale.</p>
+        <div class="archive__rubric-scale">
+          <span class="archive__rubric-end archive__rubric-end--low"><strong>0</strong> no meaningful gap</span>
+          <span class="archive__rubric-end archive__rubric-end--high"><strong>3</strong> major information was left out of the open answer</span>
+        </div>
       </div>
 
       <article class="archive__featured reveal" data-stagger="support" aria-labelledby="archive-featured-title">
         <span class="archive__featured-label">Featured case</span>
         <h3 class="archive__featured-title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h3>
-        <div class="archive__featured-prompts">
-          <div class="archive__prompt">
-            <span class="archive__prompt-label">Open prompt</span>
-            <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+        <div class="archive__featured-body">
+          <div class="archive__featured-prompts">
+            <div class="archive__prompt archive__prompt-card">
+              <span class="archive__prompt-label">Open prompt</span>
+              <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+            </div>
+            <div class="archive__prompt archive__prompt-card">
+              <span class="archive__prompt-label">Targeted prompt</span>
+              <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+            </div>
           </div>
-          <div class="archive__prompt">
-            <span class="archive__prompt-label">Targeted prompt</span>
-            <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+          <div class="archive__finding archive__finding-card">
+            <span class="archive__finding-label">Volunteer Gap &middot; 2.50</span>
+            <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &nbsp;&mdash;&nbsp; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
           </div>
-        </div>
-        <div class="archive__finding">
-          <span class="archive__finding-label">Volunteer Gap &middot; 2.50</span>
-          <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &nbsp;&mdash;&nbsp; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
         </div>
         <a href="/v1.html" class="archive__featured-link">
           <span>Read the full case</span>
@@ -416,7 +431,8 @@
         </a>
       </article>
 
-      <div class="archive__ledger reveal" data-stagger="support">
+      <div class="archive__ledger-scroll reveal" data-stagger="support">
+      <div class="archive__ledger">
         <div class="ledger__head" role="presentation">
           <span>Date</span>
           <span>Record</span>
@@ -462,6 +478,7 @@
           </li>
         </ul>
       </div>
+      </div>
 
       <div class="archive__foot reveal" data-stagger="support">
         <a href="/v1.html" class="archive__cta">
@@ -484,15 +501,13 @@
         <div class="close__origin reveal reveal--inscription">
           <div class="origin__bloom" aria-hidden="true"></div>
           <div class="origin__inscription-wrap">
-            <span class="origin__illumination" aria-hidden="true"></span>
-            <p class="origin__inscription">Imbas. From the old Irish: illumination, sudden knowing, knowledge brought to speech.</p>
+            <p class="origin__inscription">Imbas. From the old Irish: illumination of knowledge &amp; enlightenment.</p>
           </div>
         </div>
 
         <div class="close__signup">
           <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
           <p class="field-notes__caption reveal" data-stagger="body">Occasional observations from Imbas on AI behavioral measurement.</p>
-          <span class="field-notes__transmit reveal" data-stagger="body"><span class="dot"></span> Transmissions live from the field</span>
           <form
             class="subscribe reveal"
             data-stagger="support"
@@ -646,11 +661,69 @@
       updateScenes();
     })();
 
-    // Value flow — section inview + signal trace draw
+    // Value flow — section inview + signal trace draw + sequential dot emphasis
     (function initValueFlow() {
       var valueSection = document.querySelector('.value--flow');
       var valueBeats = document.querySelector('.value__beats');
+      var dots = valueBeats ? Array.prototype.slice.call(valueBeats.querySelectorAll('.value__beat-dot')) : [];
       if (!valueSection || !valueBeats) return;
+
+      var dotDurations = [2500, 3500, 2500, 2500, 2500];
+      var dotPauseAll = 600;
+      var dotIndex = 0;
+      var dotTimer = null;
+      var dotRunning = false;
+
+      function clearDots() {
+        dots.forEach(function (dot) { dot.classList.remove('is-active'); });
+      }
+
+      function setDotActive(i) {
+        dots.forEach(function (dot, n) {
+          dot.classList.toggle('is-active', n === i);
+        });
+      }
+
+      function stopDotSequence() {
+        if (dotTimer) window.clearTimeout(dotTimer);
+        dotTimer = null;
+        clearDots();
+        dotRunning = false;
+        dotIndex = 0;
+      }
+
+      function scheduleDotStep() {
+        if (!valueSection.classList.contains('is-inview') || prefersReducedMotion) {
+          stopDotSequence();
+          return;
+        }
+        setDotActive(dotIndex);
+        var dur = dotDurations[dotIndex];
+        var next = (dotIndex + 1) % dots.length;
+        dotIndex = next;
+        if (next === 0) {
+          dotTimer = window.setTimeout(function () {
+            clearDots();
+            dotTimer = window.setTimeout(scheduleDotStep, dotPauseAll);
+          }, dur);
+        } else {
+          dotTimer = window.setTimeout(scheduleDotStep, dur);
+        }
+      }
+
+      function startDotSequence() {
+        if (prefersReducedMotion || dotRunning || !dots.length) return;
+        dotRunning = true;
+        dotIndex = 0;
+        scheduleDotStep();
+      }
+
+      if (prefersReducedMotion) {
+        dots.forEach(function (dot) {
+          dot.style.opacity = '0.85';
+          dot.style.boxShadow = '0 0 8px rgba(222, 111, 56, 0.35)';
+        });
+      }
 
       if ('IntersectionObserver' in window) {
         var valueIo = new IntersectionObserver(function (entries) {
@@ -658,6 +731,9 @@
             valueSection.classList.toggle('is-inview', entry.isIntersecting);
             if (entry.isIntersecting) {
               valueBeats.classList.add('is-traced');
+              startDotSequence();
+            } else {
+              stopDotSequence();
             }
           });
         }, { threshold: [0, 0.3] });
@@ -665,6 +741,7 @@
       } else {
         valueSection.classList.add('is-inview');
         valueBeats.classList.add('is-traced');
+        startDotSequence();
       }
     })();
 
@@ -751,24 +828,6 @@
         p.style.setProperty('--drift-y', ((Math.random() - 0.5) * 22).toFixed(1) + 'px');
         dust.appendChild(p);
       }
-    })();
-
-    // Origin inscription — single illumination pass
-    (function initOriginIllumination() {
-      if (prefersReducedMotion) return;
-      var origin = document.querySelector('.close__origin');
-      if (!origin || !('IntersectionObserver' in window)) return;
-      var fired = false;
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting && !fired) {
-            fired = true;
-            origin.classList.add('is-illuminated');
-            io.unobserve(origin);
-          }
-        });
-      }, { threshold: 0.45 });
-      io.observe(origin);
     })();
 
     // Cursor sensing — monolith proximity glow
