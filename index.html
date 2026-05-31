@@ -183,6 +183,13 @@
     </div>
   </section>
 
+  <div class="proof-strip" aria-hidden="false">
+    <p class="proof-strip__meta reveal">
+      <span class="dot" aria-hidden="true"></span>
+      <span>25 cases recorded &middot; 4 frontier models &middot; archive growing</span>
+    </p>
+  </div>
+
   <!-- VALUE FLOW — horizontal process sequence -->
   <section class="value value--flow" aria-labelledby="value-h2">
     <h2 id="value-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">What Imbas does for you</h2>
@@ -294,7 +301,8 @@
     <div class="audiences__grid">
       <article class="audience audience--primary reveal">
         <h3>For institutions</h3>
-        <p>Regulated teams are deploying AI faster than they can verify how it behaves. Imbas gives you independent, cross-vendor measurement of what these systems surface and leave out &nbsp;&mdash;&nbsp; documented, citable, built to sit in an audit file. Not another model to trust. A way to check the ones you already use.</p>
+        <p class="audience__callout">Not another model to trust. A way to check the ones you already use.</p>
+        <p>Regulated teams are deploying AI faster than they can verify how it behaves. Imbas gives you independent, cross-vendor measurement of what these systems surface and leave out &nbsp;&mdash;&nbsp; documented, citable, built to sit in an audit file.</p>
         <a href="/institutions.html">
           <span>For institutions</span>
           <span class="arrow" aria-hidden="true">&rarr;</span>
@@ -384,7 +392,30 @@
       <p class="archive__footnote reveal" style="--reveal-delay: 200ms;">mean &Delta; &middot; hypothesis 1.65 &middot; mean &Delta; &middot; control 1.17</p>
       <p class="archive__legend reveal" style="--reveal-delay: 240ms;">mean gap, 0&ndash;3 scale, higher means more left out.</p>
 
-      <div class="archive__ledger reveal" style="--reveal-delay: 240ms;">
+      <article class="archive__featured reveal" style="--reveal-delay: 280ms;" aria-labelledby="archive-featured-title">
+        <span class="archive__featured-label">Featured case</span>
+        <h3 class="archive__featured-title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h3>
+        <div class="archive__featured-prompts">
+          <div class="archive__prompt">
+            <span class="archive__prompt-label">Open prompt</span>
+            <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+          </div>
+          <div class="archive__prompt">
+            <span class="archive__prompt-label">Targeted prompt</span>
+            <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+          </div>
+        </div>
+        <div class="archive__finding">
+          <span class="archive__finding-label">Volunteer Gap &middot; 2.50</span>
+          <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &nbsp;&mdash;&nbsp; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
+        </div>
+        <a href="/v1.html" class="archive__featured-link">
+          <span>Read the full case</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </article>
+
+      <div class="archive__ledger reveal" style="--reveal-delay: 320ms;">
         <div class="ledger__head" role="presentation">
           <span>Date</span>
           <span>Record</span>
@@ -478,6 +509,14 @@
             <button type="submit">Receive notes &rarr;</button>
           </form>
           <p class="subscribe__msg" id="field-notes-msg" role="status">Check your inbox for a confirmation link.</p>
+          <div class="field-notes__recent">
+            <span class="field-notes__recent-label">Recent notes</span>
+            <ul class="field-notes__recent-list">
+              <li><a href="/briefing/post-1">On methodology hygiene and prompt design</a></li>
+              <li><a href="/briefing/post-2">The Volunteer Gap, explained</a></li>
+              <li><a href="/briefing/post-3">Why we measure behavior, not intent</a></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

@@ -1151,6 +1151,37 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .gap__link:hover .arrow { transform: translateX(4px); }
 
 /* =============================================================
+   PASS 10 — PROOF STRIP: archive stats between gap and value flow
+   ============================================================= */
+.proof-strip {
+  padding: var(--space-4) clamp(1.25rem, 4vw, 3rem);
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--line-faint);
+}
+.proof-strip__meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0 auto;
+  max-width: var(--container-wide);
+  text-align: center;
+}
+.proof-strip__meta .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ember);
+  box-shadow: 0 0 10px var(--ember-glow);
+  flex-shrink: 0;
+}
+
+/* =============================================================
    WHAT IMBAS TRACKS — categories (still, scannable)
    ============================================================= */
 .categories {
@@ -1491,6 +1522,16 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   color: var(--ink-luminous);
 }
 .audience p { color: var(--ink-soft); font-size: 1rem; }
+.audience__callout {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.4rem;
+  line-height: 1.38;
+  letter-spacing: -0.008em;
+  color: var(--ink-soft);
+  margin: 0 0 1rem;
+}
 .audience a {
   display: inline-flex;
   align-items: center;
@@ -1797,6 +1838,92 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   content: "// ";
   color: var(--ink-ghost);
 }
+
+/* Pass 10 — featured case preview */
+.archive__featured {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--line-faint);
+}
+.archive__featured-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 0.65rem;
+}
+.archive__featured-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  letter-spacing: -0.012em;
+  color: var(--ink-luminous);
+  margin: 0 0 var(--space-4);
+  line-height: 1.2;
+}
+.archive__featured-prompts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  margin-bottom: var(--space-4);
+}
+.archive__prompt-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 0.55rem;
+}
+.archive__prompt p {
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.archive__finding {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  background: rgba(var(--bg-elevated-rgb), 0.35);
+  margin-bottom: var(--space-3);
+}
+.archive__finding-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ember-soft);
+  margin-bottom: 0.65rem;
+}
+.archive__finding p {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.archive__featured-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 0.25rem;
+}
+.archive__featured-link:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
+.archive__featured-link .arrow { transition: transform .35s ease; }
+.archive__featured-link:hover .arrow { transform: translateX(4px); }
+@media (max-width: 700px) {
+  .archive__featured-prompts { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 700px) {
   .archive__measure { grid-template-columns: repeat(2, 1fr); }
   .archive__measure--primary { grid-template-columns: 1fr; }
@@ -1854,6 +1981,38 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: var(--ember);
   animation: pulse 6.7s ease-in-out infinite;
 }
+.field-notes__recent {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+}
+.field-notes__recent-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 0.75rem;
+}
+.field-notes__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.field-notes__recent-list a {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--ink-secondary);
+  border: none;
+  padding: 0;
+}
+.field-notes__recent-list a:hover { color: var(--ink-soft); border: none; }
 
 .close .subscribe {
   display: flex;
