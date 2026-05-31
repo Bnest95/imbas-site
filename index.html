@@ -47,10 +47,10 @@
   <div class="site-header__inner">
     <a href="/" class="brand" aria-label="Imbas, home">
       <svg class="glyph" viewBox="0 0 80 100" fill="none" aria-hidden="true">
-        <path d="M40 90 C 38.5 76, 30 60, 22 44 C 18.5 32, 17 22, 18 11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <circle cx="18" cy="10" r="3.2" fill="currentColor"/>
-        <path d="M40 90 C 42 74, 50 60, 56 44 C 60.5 30, 62 18, 63 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-        <circle cx="63" cy="7.5" r="3.2" fill="currentColor"/>
+        <path class="glyph__feeler" d="M40 90 C 38.5 76, 30 60, 22 44 C 18.5 32, 17 22, 18 11" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+        <circle class="v-antenna__tip" cx="18" cy="10" r="3.5"/>
+        <path class="glyph__feeler" d="M40 90 C 42 74, 50 60, 56 44 C 60.5 30, 62 18, 63 8" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+        <circle class="v-antenna__tip" cx="63" cy="7.5" r="3.5"/>
         <circle cx="40" cy="90" r="2" fill="currentColor"/>
       </svg>
       <span>Imbas</span>
@@ -81,52 +81,11 @@
 
     <div class="hero__fog" aria-hidden="true"></div>
 
-    <div class="hero__field" aria-hidden="true">
-      <span class="pt" style="top:14%; left:6%;"></span>
-      <span class="pt" style="top:8%;  left:24%;"></span>
-      <span class="pt pt--bright" style="top:21%; left:41%;"></span>
-      <span class="pt" style="top:6%;  left:58%;"></span>
-      <span class="pt" style="top:16%; left:73%;"></span>
-      <span class="pt pt--ember" style="top:11%; left:87%;"></span>
-      <span class="pt" style="top:34%; left:15%;"></span>
-      <span class="pt" style="top:44%; left:31%;"></span>
-      <span class="pt pt--bright" style="top:38%; left:52%;"></span>
-      <span class="pt" style="top:48%; left:68%;"></span>
-      <span class="pt" style="top:33%; left:84%;"></span>
-      <span class="pt" style="top:62%; left:9%;"></span>
-      <span class="pt pt--ember" style="top:58%; left:25%;"></span>
-      <span class="pt" style="top:67%; left:42%;"></span>
-      <span class="pt" style="top:71%; left:59%;"></span>
-      <span class="pt pt--bright" style="top:64%; left:81%;"></span>
-      <span class="pt" style="top:82%; left:17%;"></span>
-      <span class="pt" style="top:88%; left:34%;"></span>
-      <span class="pt" style="top:85%; left:55%;"></span>
-      <span class="pt pt--bright" style="top:91%; left:72%;"></span>
-      <span class="pt" style="top:79%; left:91%;"></span>
-    </div>
-
-    <div class="hero__motes" aria-hidden="true">
-      <span class="mote mote--1"></span>
-      <span class="mote mote--2 mote--lg"></span>
-      <span class="mote mote--3 mote--sm mote--cool"></span>
-      <span class="mote mote--4"></span>
-      <span class="mote mote--5 mote--sm"></span>
-      <span class="mote mote--6"></span>
-      <span class="mote mote--7 mote--sm mote--cool"></span>
-      <span class="mote mote--8 mote--lg"></span>
-      <span class="mote mote--9 mote--sm"></span>
-      <span class="mote mote--10"></span>
-      <span class="mote mote--11 mote--sm mote--cool"></span>
-    </div>
-
-    <div class="hero-antenna" aria-hidden="true">
-      <svg class="hero-antenna__svg" viewBox="0 0 80 100" fill="none">
-        <path class="hero-antenna__feeler hero-antenna__feeler--l" d="M40 96 C 39 78, 33 60, 24 42 C 18 28, 17 18, 19 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <circle class="hero-antenna__tip hero-antenna__tip--l" cx="19" cy="6" r="2.2" fill="currentColor"/>
-        <path class="hero-antenna__feeler hero-antenna__feeler--r" d="M40 96 C 41 78, 48 60, 56 42 C 62 28, 63 18, 62 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        <circle class="hero-antenna__tip hero-antenna__tip--r" cx="62" cy="6" r="2.2" fill="currentColor"/>
-        <circle class="hero-antenna__base" cx="40" cy="96" r="1.4" fill="currentColor" opacity="0.55"/>
-      </svg>
+    <div class="aurora-field aurora-field--warm" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+      <span class="aurora-field__layer aurora-field__layer--c"></span>
+      <span class="aurora-field__layer aurora-field__layer--d"></span>
     </div>
 
     <div class="hero__horizon" aria-hidden="true"></div>
@@ -187,24 +146,29 @@
 
   <!-- BRIDGE — stakes + what Imbas is, two-column thesis plate -->
   <section class="bridge" id="what-imbas" aria-labelledby="bridge-statement">
-    <div class="bridge__inner reveal">
+    <div class="bridge__inner">
       <div class="bridge__grid">
-        <blockquote class="bridge__stakes">
+        <blockquote class="bridge__stakes reveal">
           <p>AI is becoming a layer over decision-making. Consulted, trusted, repeated, built into workflows. We know very little about how these systems behave&nbsp;&mdash;&nbsp;and they change every day.</p>
         </blockquote>
-        <h2 class="bridge__statement" id="bridge-statement">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
+        <h2 class="bridge__statement reveal" id="bridge-statement" style="--reveal-delay: 200ms;">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
       </div>
-      <p class="bridge__support">That is what Imbas is here to measure.</p>
+      <p class="bridge__support reveal" style="--reveal-delay: 400ms;">That is what Imbas is here to measure.</p>
     </div>
   </section>
 
   <!-- VOLUNTEER GAP — core wedge, promoted early -->
   <section class="gap" aria-labelledby="gap-h2">
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+      <span class="aurora-field__layer aurora-field__layer--c"></span>
+    </div>
     <div class="gap__inner">
       <div class="gap__sequence">
         <p class="gap__line gap__line--knows reveal" style="--reveal-delay: 80ms;">What the model knows.</p>
         <p class="gap__line gap__line--surfaces reveal" style="--reveal-delay: 240ms;">What it surfaces.</p>
-        <p class="gap__line gap__line--leaves reveal" style="--reveal-delay: 400ms;"><span class="firefly firefly--gap" aria-hidden="true"><span class="firefly__halo"></span><span class="firefly__core"></span></span>What it leaves out.</p>
+        <p class="gap__line gap__line--leaves reveal" style="--reveal-delay: 400ms;">What it leaves out.</p>
         <p class="gap__line gap__line--resolution reveal" style="--reveal-delay: 600ms;">That difference is the <strong>Volunteer Gap</strong>.</p>
       </div>
 
@@ -224,30 +188,30 @@
     <h2 id="value-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">What Imbas does for you</h2>
     <div class="value__inner">
       <ol class="value__beats">
-        <li class="reveal-l">AI answers shape what you see.</li>
-        <li class="reveal-l value__beat--signal" style="--reveal-delay: 120ms;">Imbas shows where the answer may have gone thin.</li>
-        <li class="reveal-l" style="--reveal-delay: 240ms;">You inspect the signal.</li>
-        <li class="reveal-l" style="--reveal-delay: 360ms;">You decide what matters.</li>
-        <li class="reveal-l" style="--reveal-delay: 480ms;">You push further if needed.</li>
+        <li class="reveal">AI answers shape what you see.</li>
+        <li class="reveal value__beat--signal" style="--reveal-delay: 150ms;">Imbas shows where the answer may have gone thin.</li>
+        <li class="reveal" style="--reveal-delay: 300ms;">You inspect the signal.</li>
+        <li class="reveal" style="--reveal-delay: 450ms;">You decide what matters.</li>
+        <li class="reveal" style="--reveal-delay: 600ms;">You push further if needed.</li>
       </ol>
     </div>
   </section>
 
   <!-- ROADMAP — Now / Next / Why -->
   <section class="roadmap" aria-labelledby="roadmap-h2">
-    <div class="roadmap__inner reveal">
-      <span class="section-label"><span>Roadmap</span></span>
+    <div class="roadmap__inner">
+      <span class="section-label reveal"><span>Roadmap</span></span>
       <h2 id="roadmap-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Roadmap</h2>
       <div class="roadmap__grid">
-        <div class="roadmap__item">
+        <div class="roadmap__item reveal">
           <span class="roadmap__label">Now</span>
           <p>Imbas documents how these systems behave, one case at a time.</p>
         </div>
-        <div class="roadmap__item">
+        <div class="roadmap__item reveal" style="--reveal-delay: 200ms;">
           <span class="roadmap__label">Next</span>
           <p>A tool that rides alongside your AI and flags the gap in the moment&nbsp;&mdash;&nbsp;so you see what&rsquo;s missing while you&rsquo;re reading, not after it matters.</p>
         </div>
-        <div class="roadmap__item roadmap__item--why">
+        <div class="roadmap__item roadmap__item--why reveal" style="--reveal-delay: 400ms;">
           <span class="roadmap__label">Why</span>
           <p class="roadmap__emphasis">Because you have the right to know.</p>
         </div>
@@ -257,16 +221,21 @@
 
   <!-- THESIS — direction & degree diagram -->
   <section class="compounding" aria-labelledby="compound-h2">
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+      <span class="aurora-field__layer aurora-field__layer--c"></span>
+    </div>
     <div class="compounding__inner">
 
-      <div class="compounding__copy reveal-l">
-        <span class="section-label"><span>I &nbsp;/&nbsp; Thesis</span></span>
-        <h2 id="compound-h2">A few degrees of drift can change the destination.</h2>
-        <p>Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
-        <p>Imbas measures the direction and degree of that drift.</p>
+      <div class="compounding__copy">
+        <span class="section-label reveal"><span>I &nbsp;/&nbsp; Thesis</span></span>
+        <h2 id="compound-h2" class="reveal" style="--reveal-delay: 100ms;">A few degrees of drift can change the destination.</h2>
+        <p class="reveal" style="--reveal-delay: 200ms;">Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
+        <p class="reveal" style="--reveal-delay: 320ms;">Imbas measures the direction and degree of that drift.</p>
       </div>
 
-      <div class="divergence reveal-r" aria-hidden="true">
+      <div class="divergence reveal" aria-hidden="true">
         <svg class="divergence__svg" viewBox="0 0 600 380" preserveAspectRatio="none">
           <defs>
             <linearGradient id="div-grad-top" x1="0" y1="0" x2="1" y2="0">
@@ -305,6 +274,8 @@
           <path d="M88 174 A 60 60 0 0 1 88 206" stroke="rgba(160,184,210,0.4)" stroke-width="0.7" fill="none"/>
         </svg>
 
+        <span class="divergence__travel-dot" aria-hidden="true"></span>
+
         <span class="divergence__label divergence__label--start">Origin</span>
         <span class="divergence__label divergence__label--top">Intended</span>
         <span class="divergence__label divergence__label--bot">Drift</span>
@@ -321,7 +292,7 @@
     </div>
 
     <div class="audiences__grid">
-      <article class="audience audience--primary reveal-l">
+      <article class="audience audience--primary reveal">
         <h3>For institutions</h3>
         <p>Regulated teams are deploying AI faster than they can verify how it behaves. Imbas gives you independent, cross-vendor measurement of what these systems surface and leave out &nbsp;&mdash;&nbsp; documented, citable, built to sit in an audit file. Not another model to trust. A way to check the ones you already use.</p>
         <a href="/institutions.html">
@@ -330,7 +301,7 @@
         </a>
       </article>
 
-      <article class="audience reveal-r" style="--reveal-delay: 100ms;">
+      <article class="audience reveal" style="--reveal-delay: 250ms;">
         <h3>For readers</h3>
         <p>You read AI answers all day. You don&rsquo;t see what they leave out. Imbas catches where the answer went thin and shows you the evidence, so you decide what matters &nbsp;&mdash;&nbsp; not the model. Today in the archive. Soon, live as you read.</p>
         <a href="/for-readers.html">
@@ -360,7 +331,7 @@
         <p>A specific named mechanism the model knows but does not surface.</p>
       </article>
 
-      <article class="cat reveal" style="--reveal-delay: 100ms;">
+      <article class="cat reveal" style="--reveal-delay: 200ms;">
         <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <line x1="4" y1="9" x2="28" y2="9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
           <line x1="6" y1="16" x2="26" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
@@ -373,7 +344,7 @@
         <p>Information present but sourced or attributed one-sided.</p>
       </article>
 
-      <article class="cat reveal" style="--reveal-delay: 200ms;">
+      <article class="cat reveal" style="--reveal-delay: 400ms;">
         <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path d="M6 6 L13 11 L13 21 L6 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
           <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -387,6 +358,11 @@
 
   <!-- CASE ARCHIVE -->
   <section class="archive" aria-labelledby="archive-h2">
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+      <span class="aurora-field__layer aurora-field__layer--c"></span>
+    </div>
     <div class="archive__inner">
       <header class="archive__head reveal">
         <div>
@@ -466,22 +442,15 @@
 
   <!-- CLOSE — origin inscription + field notes -->
   <section class="close" aria-labelledby="fn-h2">
-    <div class="fn-archive" aria-hidden="true">
-      <span class="e1">2026-04-29 &middot; obs 001 &middot; control</span>
-      <span class="e2">2026-05-04 &middot; obs 003 &middot; hypothesis</span>
-      <span class="e3">2026-05-09 &middot; obs 005 &middot; &Delta;&nbsp;2.50</span>
-      <span class="e4">2026-05-14 &middot; obs 008 &middot; framing drift</span>
-      <span class="e5">2026-05-17 &middot; obs 011 &middot; control &middot; &Delta;&nbsp;1.25</span>
-      <span class="e6">2026-05-21 &middot; obs 013 &middot; oxycontin &middot; &Delta;&nbsp;0.75</span>
-      <span class="e7">2026-05-24 &middot; obs 016 &middot; foreclosure</span>
-      <span class="e8">2026-05-25 &middot; obs 018 &middot; cross-model</span>
-      <span class="e9">2026-05-27 &middot; obs 021 &middot; transmitting</span>
+    <div class="aurora-field aurora-field--warm" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+      <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
-
     <div class="close__inner">
       <div class="close__grid">
-        <div class="close__origin reveal">
-          <p class="origin__inscription">Imbas. From the old Irish&nbsp;&mdash;&nbsp;part of a Celtic inheritance of illumination, sudden knowing, and the hidden thing brought into view.</p>
+        <div class="close__origin reveal reveal--inscription">
+          <p class="origin__inscription">Imbas. A Celtic word for the illumination of knowledge.</p>
         </div>
 
         <div class="close__signup reveal" style="--reveal-delay: 120ms;">
@@ -552,7 +521,7 @@
 
     var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Scroll reveal
+    // Scroll reveal — 30% viewport threshold, progressive section build
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
@@ -561,13 +530,35 @@
             io.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+      }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
       document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) { io.observe(el); });
     } else {
       document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) { el.classList.add('is-visible'); });
     }
 
-    // Thesis diagram — draw diverging lines on viewport entry
+    // Value flow — section inview + signal trace draw
+    (function initValueFlow() {
+      var valueSection = document.querySelector('.value--flow');
+      var valueBeats = document.querySelector('.value__beats');
+      if (!valueSection || !valueBeats) return;
+
+      if ('IntersectionObserver' in window) {
+        var valueIo = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            valueSection.classList.toggle('is-inview', entry.isIntersecting);
+            if (entry.isIntersecting) {
+              valueBeats.classList.add('is-traced');
+            }
+          });
+        }, { threshold: [0, 0.3] });
+        valueIo.observe(valueSection);
+      } else {
+        valueSection.classList.add('is-inview');
+        valueBeats.classList.add('is-traced');
+      }
+    })();
+
+    // Thesis diagram — draw diverging lines on viewport entry, then live pulses
     (function initDivergenceDraw() {
       var divergence = document.querySelector('.divergence');
       if (!divergence) return;
@@ -585,10 +576,16 @@
         paths.forEach(function (path) {
           path.style.strokeDashoffset = '0';
         });
+        if (!prefersReducedMotion) {
+          window.setTimeout(function () {
+            divergence.classList.add('is-live');
+          }, 2900);
+        }
       }
 
       if (prefersReducedMotion) {
         drawDiagram();
+        divergence.classList.add('is-live');
         return;
       }
 
@@ -600,7 +597,7 @@
               divIo.unobserve(entry.target);
             }
           });
-        }, { threshold: 0.32, rootMargin: '0px 0px -6% 0px' });
+        }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
         divIo.observe(divergence);
       } else {
         drawDiagram();
@@ -627,29 +624,22 @@
     wireForm('hero-capture', 'hero-capture-msg', 'Check your inbox for a confirmation link.');
     wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
 
-    // Cursor sensing — parallax + monolith proximity glow
+    // Cursor sensing — monolith proximity glow
     var prefersReduced = prefersReducedMotion;
     var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     var monolith = document.getElementById('hero-monolith');
-    var body = document.body;
 
-    if (!prefersReduced && !isTouch) {
-      var cx = 0.5, cy = 0.5, tcx = 0.5, tcy = 0.5;
+    if (!prefersReduced && !isTouch && monolith) {
       var prox = 0, tprox = 0;
       var maxRadius = 720;
       var rafId = null;
+      var monolithText = monolith.querySelector('.hero__monolith-text');
 
       function step() {
-        var dcx = tcx - cx, dcy = tcy - cy, dp = tprox - prox;
-        cx += dcx * 0.07;
-        cy += dcy * 0.07;
+        var dp = tprox - prox;
         prox += dp * 0.06;
-        body.style.setProperty('--cx', cx.toFixed(4));
-        body.style.setProperty('--cy', cy.toFixed(4));
-        if (monolith) {
-          monolith.querySelector('.hero__monolith-text').style.setProperty('--cursor-prox', prox.toFixed(4));
-        }
-        if (Math.abs(dcx) > 0.0005 || Math.abs(dcy) > 0.0005 || Math.abs(dp) > 0.005) {
+        monolithText.style.setProperty('--cursor-prox', prox.toFixed(4));
+        if (Math.abs(dp) > 0.005) {
           rafId = requestAnimationFrame(step);
         } else {
           rafId = null;
@@ -657,21 +647,17 @@
       }
 
       window.addEventListener('mousemove', function (e) {
-        tcx = e.clientX / window.innerWidth;
-        tcy = e.clientY / window.innerHeight;
-        if (monolith) {
-          var rect = monolith.getBoundingClientRect();
-          var ix = rect.left + rect.width / 2;
-          var iy = rect.top + rect.height / 2;
-          var dx = e.clientX - ix, dy = e.clientY - iy;
-          var dist = Math.sqrt(dx*dx + dy*dy);
-          tprox = Math.max(0, Math.min(0.7, 1 - dist / maxRadius));
-        }
+        var rect = monolith.getBoundingClientRect();
+        var ix = rect.left + rect.width / 2;
+        var iy = rect.top + rect.height / 2;
+        var dx = e.clientX - ix, dy = e.clientY - iy;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+        tprox = Math.max(0, Math.min(0.7, 1 - dist / maxRadius));
         if (!rafId) rafId = requestAnimationFrame(step);
       }, { passive: true });
 
       window.addEventListener('mouseleave', function () {
-        tcx = 0.5; tcy = 0.5; tprox = 0;
+        tprox = 0;
         if (!rafId) rafId = requestAnimationFrame(step);
       });
     }
