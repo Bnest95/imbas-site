@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Imbas — Inspect what AI surfaces. And what it leaves out.</title>
-  <meta name="description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
+  <meta name="description" content="Imbas is an independent AI behavioral measurement project documenting what frontier AI systems surface, what they leave out, and how those patterns compound.">
   <link rel="canonical" href="https://imbaslabs.com/">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -15,11 +15,11 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://imbaslabs.com/">
   <meta property="og:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
-  <meta property="og:description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
+  <meta property="og:description" content="Imbas is an independent AI behavioral measurement project documenting what frontier AI systems surface, what they leave out, and how those patterns compound.">
   <meta property="og:image" content="https://imbaslabs.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
-  <meta name="twitter:description" content="Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound. Signal, not verdict.">
+  <meta name="twitter:description" content="Imbas is an independent AI behavioral measurement project documenting what frontier AI systems surface, what they leave out, and how those patterns compound.">
   <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,7 @@
 <body>
 
 <div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
 
 <header class="site-header">
   <div class="site-header__inner">
@@ -77,7 +78,7 @@
        NOT a giant graphic over the wordmark. Above-the-fold email
        capture with "Get early access". Secondary CTA to /case/005.
        ============================================================ -->
-  <section class="hero" aria-labelledby="hero-h1">
+  <section class="hero section-scene" aria-labelledby="hero-h1">
 
     <div class="hero__fog" aria-hidden="true"></div>
 
@@ -86,7 +87,11 @@
       <span class="aurora-field__layer aurora-field__layer--b"></span>
       <span class="aurora-field__layer aurora-field__layer--c"></span>
       <span class="aurora-field__layer aurora-field__layer--d"></span>
+      <span class="aurora-field__layer aurora-field__layer--cool"></span>
     </div>
+
+    <div class="hero__aurora-focal" aria-hidden="true"></div>
+    <div class="hero__dust" aria-hidden="true"></div>
 
     <div class="hero__horizon" aria-hidden="true"></div>
 
@@ -145,20 +150,21 @@
   </section>
 
   <!-- BRIDGE — stakes + what Imbas is, two-column thesis plate -->
-  <section class="bridge" id="what-imbas" aria-labelledby="bridge-statement">
+  <section class="bridge section-scene" id="what-imbas" aria-labelledby="bridge-statement" data-reveal-section>
     <div class="bridge__inner">
       <div class="bridge__grid">
-        <blockquote class="bridge__stakes reveal">
+        <blockquote class="bridge__stakes reveal" data-stagger="body">
           <p>AI is becoming a layer over decision-making. Consulted, trusted, repeated, built into workflows. We know very little about how these systems behave&nbsp;&mdash;&nbsp;and they change every day.</p>
         </blockquote>
-        <h2 class="bridge__statement reveal" id="bridge-statement" style="--reveal-delay: 200ms;">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
+        <h2 class="bridge__statement reveal" id="bridge-statement" data-stagger="heading">Imbas measures what frontier AI systems surface, what they leave out, and how those patterns compound.</h2>
       </div>
-      <p class="bridge__support reveal" style="--reveal-delay: 400ms;">That is what Imbas is here to measure.</p>
+      <div class="bridge__divider reveal" data-stagger="support" aria-hidden="true"></div>
+      <p class="bridge__support reveal" data-stagger="body">Imbas turns that invisible behavior into a record.</p>
     </div>
   </section>
 
   <!-- VOLUNTEER GAP — core wedge, promoted early -->
-  <section class="gap" aria-labelledby="gap-h2">
+  <section class="gap section-scene" aria-labelledby="gap-h2">
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
@@ -172,9 +178,9 @@
         <p class="gap__line gap__line--resolution reveal" style="--reveal-delay: 600ms;">That difference is the <strong>Volunteer Gap</strong>.</p>
       </div>
 
-      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the difference between what an AI model gives you from an open question and what it gives you when asked directly.</p>
+      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the distance between what a model volunteers in an open answer and what it surfaces when asked directly.</p>
 
-      <p class="gap__support reveal" style="--reveal-delay: 900ms;">If a model can surface a named mechanism when prompted directly but does not include it in a related open answer, Imbas records the gap.</p>
+      <p class="gap__support reveal" style="--reveal-delay: 900ms;">If a named mechanism appears only after direct prompting, Imbas records the gap.</p>
 
       <a href="/volunteer-gap.html" class="gap__link reveal" style="--reveal-delay: 1000ms;">
         <span>How Imbas measures it</span>
@@ -186,48 +192,56 @@
   <div class="proof-strip" aria-hidden="false">
     <p class="proof-strip__meta reveal">
       <span class="dot" aria-hidden="true"></span>
-      <span>25 cases recorded &middot; 4 frontier models &middot; archive growing</span>
+      <span><span class="proof-strip__num">25</span> cases recorded &middot; <span class="proof-strip__num">4</span> frontier models &middot; archive growing</span>
     </p>
   </div>
 
-  <!-- VALUE FLOW — horizontal process sequence -->
-  <section class="value value--flow" aria-labelledby="value-h2">
-    <h2 id="value-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">What Imbas does for you</h2>
-    <div class="value__inner">
-      <ol class="value__beats">
-        <li class="reveal">AI answers shape what you see.</li>
-        <li class="reveal value__beat--signal" style="--reveal-delay: 150ms;">Imbas shows where the answer may have gone thin.</li>
-        <li class="reveal" style="--reveal-delay: 300ms;">You inspect the signal.</li>
-        <li class="reveal" style="--reveal-delay: 450ms;">You decide what matters.</li>
-        <li class="reveal" style="--reveal-delay: 600ms;">You push further if needed.</li>
-      </ol>
+  <!-- CATEGORIES -->
+  <section class="categories section-scene" aria-labelledby="cat-h2" data-reveal-section>
+    <div class="categories__head">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Patterns</span></span>
+      <h2 id="cat-h2" class="reveal" data-stagger="heading">Three signal patterns Imbas tracks.</h2>
     </div>
-  </section>
 
-  <!-- ROADMAP — Now / Next / Why -->
-  <section class="roadmap" aria-labelledby="roadmap-h2">
-    <div class="roadmap__inner">
-      <span class="section-label reveal"><span>Roadmap</span></span>
-      <h2 id="roadmap-h2" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Roadmap</h2>
-      <div class="roadmap__grid">
-        <div class="roadmap__item reveal">
-          <span class="roadmap__label">Now</span>
-          <p>Imbas documents how these systems behave, one case at a time.</p>
-        </div>
-        <div class="roadmap__item reveal" style="--reveal-delay: 200ms;">
-          <span class="roadmap__label">Next</span>
-          <p>A tool that rides alongside your AI and flags the gap in the moment&nbsp;&mdash;&nbsp;so you see what&rsquo;s missing while you&rsquo;re reading, not after it matters.</p>
-        </div>
-        <div class="roadmap__item roadmap__item--why reveal" style="--reveal-delay: 400ms;">
-          <span class="roadmap__label">Why</span>
-          <p class="roadmap__emphasis">Because you have the right to know.</p>
-        </div>
-      </div>
+    <div class="categories__grid">
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 4 A12 12 0 1 1 7.5 23.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          <circle cx="16" cy="4" r="1.2" fill="currentColor"/>
+          <circle cx="7.5" cy="23.5" r="1.2" fill="currentColor"/>
+        </svg>
+        <div class="cat__id">01 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Omission</h3>
+        <p>A specific named mechanism the model knows but does not surface.</p>
+      </article>
+
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <line x1="4" y1="9" x2="28" y2="9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          <line x1="6" y1="16" x2="26" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
+          <line x1="4" y1="23" x2="28" y2="23" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          <circle cx="6" cy="16" r="1" fill="currentColor"/>
+          <circle cx="26" cy="14" r="1" fill="currentColor"/>
+        </svg>
+        <div class="cat__id">02 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Framing Drift</h3>
+        <p>Information present but sourced or attributed one-sided.</p>
+      </article>
+
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6 6 L13 11 L13 21 L6 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <div class="cat__id">03 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Deflection</h3>
+        <p>The model redirects away from the underlying concern before addressing it.</p>
+      </article>
     </div>
   </section>
 
   <!-- THESIS — direction & degree diagram -->
-  <section class="compounding" aria-labelledby="compound-h2">
+  <section class="compounding section-scene" aria-labelledby="compound-h2" data-reveal-section>
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
@@ -236,13 +250,13 @@
     <div class="compounding__inner">
 
       <div class="compounding__copy">
-        <span class="section-label reveal"><span>I &nbsp;/&nbsp; Thesis</span></span>
-        <h2 id="compound-h2" class="reveal" style="--reveal-delay: 100ms;">A few degrees of drift can change the destination.</h2>
-        <p class="reveal" style="--reveal-delay: 200ms;">Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
-        <p class="reveal" style="--reveal-delay: 320ms;">Imbas measures the direction and degree of that drift.</p>
+        <span class="section-label section-label--named reveal" data-stagger="label"><span>Thesis</span></span>
+        <h2 id="compound-h2" class="reveal" data-stagger="heading">A few degrees of drift can change the destination.</h2>
+        <p class="reveal" data-stagger="body">Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
+        <p class="compounding__punchline reveal" data-stagger="body">Imbas measures the direction and degree of that drift.</p>
       </div>
 
-      <div class="divergence reveal" aria-hidden="true">
+      <div class="divergence reveal" data-stagger="support" aria-hidden="true">
         <svg class="divergence__svg" viewBox="0 0 600 380" preserveAspectRatio="none">
           <defs>
             <linearGradient id="div-grad-top" x1="0" y1="0" x2="1" y2="0">
@@ -291,15 +305,56 @@
     </div>
   </section>
 
+  <!-- VALUE FLOW — horizontal process sequence -->
+  <section class="value value--flow section-scene" aria-labelledby="value-h2" data-reveal-section>
+    <div class="value__inner">
+      <div class="value__head">
+        <h2 id="value-h2" class="value__title reveal" data-stagger="heading">How the signal works.</h2>
+      </div>
+      <ol class="value__beats">
+        <li class="reveal" data-stagger="body">AI answers shape what you see.</li>
+        <li class="reveal value__beat--signal" data-stagger="body">
+          <span class="value__beat-marker" aria-hidden="true"></span>
+          Imbas shows where the answer may have gone thin.
+        </li>
+        <li class="reveal" data-stagger="body">You inspect the signal.</li>
+        <li class="reveal" data-stagger="body">You decide what matters.</li>
+        <li class="reveal" data-stagger="body">You press where the answer went thin.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ROADMAP — Now / Next / Why -->
+  <section class="roadmap section-scene" aria-labelledby="roadmap-h2" data-reveal-section>
+    <div class="roadmap__inner">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Roadmap</span></span>
+      <h2 id="roadmap-h2" class="roadmap__title reveal" data-stagger="heading">From archive to live signal.</h2>
+      <div class="roadmap__grid">
+        <div class="roadmap__item reveal" data-stagger="support">
+          <span class="roadmap__label roadmap__label--now"><span class="roadmap__label-dot" aria-hidden="true"></span>Now</span>
+          <p>Imbas documents how these systems behave, one case at a time.</p>
+        </div>
+        <div class="roadmap__item reveal" data-stagger="support">
+          <span class="roadmap__label">Next</span>
+          <p>A tool that rides alongside your AI and flags the gap in the moment&nbsp;&mdash;&nbsp;so you see what&rsquo;s missing while you&rsquo;re reading, not after it matters.</p>
+        </div>
+        <div class="roadmap__item roadmap__item--why reveal" data-stagger="support">
+          <span class="roadmap__label">Why</span>
+          <p class="roadmap__emphasis">Because you have the right to know.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- AUDIENCES -->
-  <section class="audiences" aria-labelledby="audiences-h2">
-    <div class="audiences__head reveal">
-      <span class="section-label"><span>II &nbsp;/&nbsp; Audiences</span></span>
-      <h2 id="audiences-h2">Who Imbas is for.</h2>
+  <section class="audiences section-scene" aria-labelledby="audiences-h2" data-reveal-section>
+    <div class="audiences__head">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Audiences</span></span>
+      <h2 id="audiences-h2" class="reveal" data-stagger="heading">Who Imbas is for.</h2>
     </div>
 
     <div class="audiences__grid">
-      <article class="audience audience--primary reveal">
+      <article class="audience audience--primary reveal" data-stagger="support">
         <h3>For institutions</h3>
         <p class="audience__callout">Not another model to trust. A way to check the ones you already use.</p>
         <p>Regulated teams are deploying AI faster than they can verify how it behaves. Imbas gives you independent, cross-vendor measurement of what these systems surface and leave out &nbsp;&mdash;&nbsp; documented, citable, built to sit in an audit file.</p>
@@ -309,7 +364,7 @@
         </a>
       </article>
 
-      <article class="audience reveal" style="--reveal-delay: 250ms;">
+      <article class="audience reveal" data-stagger="support">
         <h3>For readers</h3>
         <p>You read AI answers all day. You don&rsquo;t see what they leave out. Imbas catches where the answer went thin and shows you the evidence, so you decide what matters &nbsp;&mdash;&nbsp; not the model. Today in the archive. Soon, live as you read.</p>
         <a href="/for-readers.html">
@@ -320,79 +375,35 @@
     </div>
   </section>
 
-  <!-- CATEGORIES -->
-  <section class="categories" aria-labelledby="cat-h2">
-    <div class="categories__head reveal">
-      <span class="section-label"><span>III &nbsp;/&nbsp; Categories</span></span>
-      <h2 id="cat-h2">Three things the model can do with what it knows.</h2>
-    </div>
-
-    <div class="categories__grid">
-      <article class="cat reveal">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M16 4 A12 12 0 1 1 7.5 23.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-          <circle cx="16" cy="4" r="1.2" fill="currentColor"/>
-          <circle cx="7.5" cy="23.5" r="1.2" fill="currentColor"/>
-        </svg>
-        <div class="cat__id">01 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Omission</h3>
-        <p>A specific named mechanism the model knows but does not surface.</p>
-      </article>
-
-      <article class="cat reveal" style="--reveal-delay: 200ms;">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <line x1="4" y1="9" x2="28" y2="9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-          <line x1="6" y1="16" x2="26" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
-          <line x1="4" y1="23" x2="28" y2="23" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-          <circle cx="6" cy="16" r="1" fill="currentColor"/>
-          <circle cx="26" cy="14" r="1" fill="currentColor"/>
-        </svg>
-        <div class="cat__id">02 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Framing Drift</h3>
-        <p>Information present but sourced or attributed one-sided.</p>
-      </article>
-
-      <article class="cat reveal" style="--reveal-delay: 400ms;">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 6 L13 11 L13 21 L6 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-        <div class="cat__id">03 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Deflection</h3>
-        <p>The model redirects away from the underlying concern before addressing it.</p>
-      </article>
-    </div>
-  </section>
-
   <!-- CASE ARCHIVE -->
-  <section class="archive" aria-labelledby="archive-h2">
+  <section class="archive section-scene" aria-labelledby="archive-h2" data-reveal-section>
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
       <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
     <div class="archive__inner">
-      <header class="archive__head reveal">
+      <header class="archive__head">
         <div>
-          <span class="section-label"><span>IV &nbsp;/&nbsp; Archive</span></span>
-          <h2 id="archive-h2">Case Archive</h2>
+          <span class="section-label section-label--named reveal" data-stagger="label"><span>Archive</span></span>
+          <h2 id="archive-h2" class="reveal" data-stagger="heading">Case Archive</h2>
         </div>
       </header>
 
-      <div class="archive__intro reveal" style="--reveal-delay: 80ms;">
+      <div class="archive__intro reveal" data-stagger="body">
         <p>The archive measures how frontier models surface information across live cases. New records are added as they&rsquo;re captured and scored.</p>
       </div>
 
-      <div class="archive__measure archive__measure--primary reveal" style="--reveal-delay: 160ms;">
+      <div class="archive__measure archive__measure--primary reveal" data-stagger="support">
         <div class="stat stat--phrase"><span class="stat__num">25</span> cases recorded</div>
         <div class="stat stat--phrase"><span class="stat__num">4</span> frontier models observed</div>
         <div class="stat stat--phrase">archive growing</div>
       </div>
 
-      <p class="archive__footnote reveal" style="--reveal-delay: 200ms;">mean &Delta; &middot; hypothesis 1.65 &middot; mean &Delta; &middot; control 1.17</p>
-      <p class="archive__legend reveal" style="--reveal-delay: 240ms;">mean gap, 0&ndash;3 scale, higher means more left out.</p>
+      <p class="archive__footnote reveal" data-stagger="support">mean &Delta; &middot; hypothesis 1.65 &middot; mean &Delta; &middot; control 1.17</p>
+      <p class="archive__legend reveal" data-stagger="support">mean gap, 0&ndash;3 scale, higher means more left out.</p>
 
-      <article class="archive__featured reveal" style="--reveal-delay: 280ms;" aria-labelledby="archive-featured-title">
+      <article class="archive__featured reveal" data-stagger="support" aria-labelledby="archive-featured-title">
         <span class="archive__featured-label">Featured case</span>
         <h3 class="archive__featured-title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h3>
         <div class="archive__featured-prompts">
@@ -415,7 +426,7 @@
         </a>
       </article>
 
-      <div class="archive__ledger reveal" style="--reveal-delay: 320ms;">
+      <div class="archive__ledger reveal" data-stagger="support">
         <div class="ledger__head" role="presentation">
           <span>Date</span>
           <span>Record</span>
@@ -462,7 +473,7 @@
         </ul>
       </div>
 
-      <div class="archive__foot reveal" style="--reveal-delay: 320ms;">
+      <div class="archive__foot reveal" data-stagger="support">
         <a href="/v1.html" class="archive__cta">
           <span>Explore the Case Archive</span>
           <span class="arrow" aria-hidden="true">&rarr;</span>
@@ -472,7 +483,7 @@
   </section>
 
   <!-- CLOSE — origin inscription + field notes -->
-  <section class="close" aria-labelledby="fn-h2">
+  <section class="close section-scene" aria-labelledby="fn-h2" data-reveal-section>
     <div class="aurora-field aurora-field--warm" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
@@ -481,16 +492,21 @@
     <div class="close__inner">
       <div class="close__grid">
         <div class="close__origin reveal reveal--inscription">
-          <p class="origin__inscription">Imbas. A Celtic word for the illumination of knowledge.</p>
+          <div class="origin__bloom" aria-hidden="true"></div>
+          <div class="origin__inscription-wrap">
+            <span class="origin__illumination" aria-hidden="true"></span>
+            <p class="origin__inscription">Imbas. From the old Irish: illumination, sudden knowing, knowledge brought to speech.</p>
+          </div>
         </div>
 
-        <div class="close__signup reveal" style="--reveal-delay: 120ms;">
-          <span class="section-label"><span>Field Notes</span></span>
-          <h2 id="fn-h2">Field Notes</h2>
-          <p class="field-notes__caption">Occasional observations from Imbas on AI behavioral measurement.</p>
-          <span class="field-notes__transmit"><span class="dot"></span> Transmissions live from the field</span>
+        <div class="close__signup">
+          <span class="section-label section-label--named reveal" data-stagger="label"><span>Field notes</span></span>
+          <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
+          <p class="field-notes__caption reveal" data-stagger="body">Occasional observations from Imbas on AI behavioral measurement.</p>
+          <span class="field-notes__transmit reveal" data-stagger="body"><span class="dot"></span> Transmissions live from the field</span>
           <form
-            class="subscribe"
+            class="subscribe reveal"
+            data-stagger="support"
             id="field-notes-form"
             action="/briefing/members/api/send-magic-link"
             method="POST"
@@ -509,7 +525,7 @@
             <button type="submit">Receive notes &rarr;</button>
           </form>
           <p class="subscribe__msg" id="field-notes-msg" role="status">Check your inbox for a confirmation link.</p>
-          <div class="field-notes__recent">
+          <div class="field-notes__recent reveal" data-stagger="support">
             <span class="field-notes__recent-label">Recent notes</span>
             <ul class="field-notes__recent-list">
               <li><a href="/briefing/post-1">On methodology hygiene and prompt design</a></li>
@@ -560,8 +576,27 @@
 
     var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Scroll reveal — 30% viewport threshold, progressive section build
-    if ('IntersectionObserver' in window) {
+    // Scroll reveal — section stagger + standalone elements (gap, hero, proof strip)
+    if (prefersReducedMotion) {
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        section.classList.add('is-revealed');
+      });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        el.classList.add('is-visible');
+      });
+    } else if ('IntersectionObserver' in window) {
+      var sectionIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            sectionIo.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        sectionIo.observe(section);
+      });
+
       var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
@@ -570,10 +605,58 @@
           }
         });
       }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
-      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) { io.observe(el); });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        if (el.closest('[data-reveal-section]')) return;
+        io.observe(el);
+      });
     } else {
-      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) { el.classList.add('is-visible'); });
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        section.classList.add('is-revealed');
+      });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        el.classList.add('is-visible');
+      });
     }
+
+    // Scroll-linked aurora intensity — sections wake at viewport center
+    (function initSectionAuroraIntensity() {
+      if (prefersReducedMotion) return;
+      var scenes = document.querySelectorAll('.section-scene');
+      if (!scenes.length) return;
+
+      function updateScenes() {
+        var mid = window.innerHeight * 0.5;
+        scenes.forEach(function (section) {
+          var rect = section.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > window.innerHeight) {
+            section.classList.remove('is-aurora-peak', 'is-aurora-settle');
+            return;
+          }
+          var center = rect.top + rect.height * 0.5;
+          var dist = Math.abs(center - mid);
+          var band = Math.min(window.innerHeight * 0.28, Math.max(rect.height * 0.35, 120));
+          section.classList.remove('is-aurora-peak', 'is-aurora-settle');
+          if (dist < band * 0.4) {
+            section.classList.add('is-aurora-peak');
+          } else if (dist < band) {
+            section.classList.add('is-aurora-settle');
+          }
+        });
+      }
+
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (!ticking) {
+          requestAnimationFrame(function () {
+            updateScenes();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', updateScenes, { passive: true });
+      updateScenes();
+    })();
 
     // Value flow — section inview + signal trace draw
     (function initValueFlow() {
@@ -662,6 +745,43 @@
     }
     wireForm('hero-capture', 'hero-capture-msg', 'Check your inbox for a confirmation link.');
     wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
+
+    // Hero particulate texture
+    (function initHeroDust() {
+      if (prefersReducedMotion) return;
+      if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
+      var dust = document.querySelector('.hero__dust');
+      if (!dust) return;
+      for (var i = 0; i < 50; i++) {
+        var p = document.createElement('span');
+        p.className = 'hero__particle';
+        p.style.setProperty('--px', (8 + Math.random() * 84).toFixed(2) + '%');
+        p.style.setProperty('--py', (6 + Math.random() * 88).toFixed(2) + '%');
+        p.style.setProperty('--pd', (-Math.random() * 90).toFixed(1) + 's');
+        p.style.setProperty('--dur', (70 + Math.random() * 80).toFixed(0) + 's');
+        p.style.setProperty('--drift-x', ((Math.random() - 0.5) * 28).toFixed(1) + 'px');
+        p.style.setProperty('--drift-y', ((Math.random() - 0.5) * 22).toFixed(1) + 'px');
+        dust.appendChild(p);
+      }
+    })();
+
+    // Origin inscription — single illumination pass
+    (function initOriginIllumination() {
+      if (prefersReducedMotion) return;
+      var origin = document.querySelector('.close__origin');
+      if (!origin || !('IntersectionObserver' in window)) return;
+      var fired = false;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && !fired) {
+            fired = true;
+            origin.classList.add('is-illuminated');
+            io.unobserve(origin);
+          }
+        });
+      }, { threshold: 0.45 });
+      io.observe(origin);
+    })();
 
     // Cursor sensing — monolith proximity glow
     var prefersReduced = prefersReducedMotion;
