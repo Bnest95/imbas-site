@@ -85,9 +85,6 @@
     <div class="aurora-field aurora-field--warm" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
-      <span class="aurora-field__layer aurora-field__layer--c"></span>
-      <span class="aurora-field__layer aurora-field__layer--d"></span>
-      <span class="aurora-field__layer aurora-field__layer--cool"></span>
     </div>
 
     <div class="hero__aurora-focal" aria-hidden="true"></div>
@@ -139,7 +136,7 @@
             >
             <button type="submit">Get early access</button>
           </form>
-          <p class="hero__microcopy">Launch updates, early access, and first reports from Imbas.</p>
+          <p class="hero__microcopy">Launch updates, early access, and first reports.</p>
           <p class="hero__capture-msg" id="hero-capture-msg" role="status">Check your inbox for a confirmation link.</p>
         </div>
 
@@ -155,6 +152,10 @@
 
   <!-- BRIDGE — thesis plate with paired supporting blocks -->
   <section class="bridge section-scene" id="what-imbas" aria-labelledby="bridge-thesis" data-reveal-section>
+    <div class="aurora-field aurora-field--warm" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+    </div>
     <div class="bridge__inner">
       <div class="bridge__frame reveal" data-stagger="body">
         <h2 id="bridge-thesis" class="bridge__thesis reveal" data-stagger="heading">Imbas turns invisible AI behavior into a record.</h2>
@@ -176,14 +177,13 @@
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
-      <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
     <div class="gap__inner">
       <div class="gap__sequence">
-        <p class="gap__line gap__line--knows reveal" style="--reveal-delay: 80ms;">What the model knows.</p>
-        <p class="gap__line gap__line--surfaces reveal" style="--reveal-delay: 240ms;">What it surfaces.</p>
-        <p class="gap__line gap__line--leaves reveal" style="--reveal-delay: 400ms;">What it leaves out.</p>
-        <p class="gap__line gap__line--resolution reveal" style="--reveal-delay: 600ms;">That difference is the <strong>Volunteer Gap</strong>.</p>
+        <p class="gap__line gap__line--knows gap__line--scroll">What the model knows.</p>
+        <p class="gap__line gap__line--surfaces gap__line--scroll">What it surfaces.</p>
+        <p class="gap__line gap__line--leaves gap__line--scroll">What it leaves out.</p>
+        <p class="gap__line gap__line--resolution gap__line--scroll">That difference is the <strong>Volunteer Gap</strong>.</p>
       </div>
 
       <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the distance between what a model volunteers in an open answer and what it surfaces when asked directly.</p>
@@ -253,7 +253,6 @@
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
-      <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
     <div class="compounding__inner">
 
@@ -383,7 +382,6 @@
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
-      <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
     <div class="archive__inner">
       <header class="archive__head">
@@ -494,7 +492,6 @@
     <div class="aurora-field aurora-field--warm" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
-      <span class="aurora-field__layer aurora-field__layer--c"></span>
     </div>
     <div class="close__inner">
       <div class="close__grid">
@@ -759,19 +756,28 @@
       });
 
       function drawDiagram() {
+        var intended = divergence.querySelector('.divergence__path--intended');
+        var drift = divergence.querySelector('.divergence__path--drift');
         divergence.classList.add('is-drawn');
-        paths.forEach(function (path) {
-          path.style.strokeDashoffset = '0';
-        });
+        if (intended) intended.style.strokeDashoffset = '0';
+        if (drift) {
+          window.setTimeout(function () {
+            drift.style.strokeDashoffset = '0';
+            divergence.classList.add('is-drift-drawn');
+          }, 1400);
+        }
         if (!prefersReducedMotion) {
           window.setTimeout(function () {
             divergence.classList.add('is-live');
-          }, 2900);
+          }, 4200);
         }
       }
 
       if (prefersReducedMotion) {
-        drawDiagram();
+        divergence.classList.add('is-drawn', 'is-drift-drawn');
+        paths.forEach(function (path) {
+          path.style.strokeDashoffset = '0';
+        });
         divergence.classList.add('is-live');
         return;
       }
@@ -789,6 +795,53 @@
       } else {
         drawDiagram();
       }
+    })();
+
+    // Volunteer Gap — scroll-linked line reveal within section
+    (function initGapScrollReveal() {
+      var gapSection = document.querySelector('.gap');
+      var lines = gapSection ? Array.prototype.slice.call(gapSection.querySelectorAll('.gap__line--scroll')) : [];
+      if (!gapSection || !lines.length) return;
+
+      var thresholdsDesktop = [0.06, 0.20, 0.34, 0.48];
+      var thresholdsMobile = [0.03, 0.14, 0.25, 0.36];
+
+      function getGapThresholds() {
+        return window.innerWidth <= 900 ? thresholdsMobile : thresholdsDesktop;
+      }
+
+      function updateGapLines() {
+        var rect = gapSection.getBoundingClientRect();
+        var vh = window.innerHeight;
+        var travel = Math.max(rect.height + vh * 0.35, 1);
+        var scrolled = vh * 0.82 - rect.top;
+        var progress = Math.max(0, Math.min(1, scrolled / travel));
+        var thresholds = getGapThresholds();
+
+        lines.forEach(function (line, i) {
+          if (progress >= thresholds[i]) {
+            line.classList.add('is-visible');
+          }
+        });
+      }
+
+      if (prefersReducedMotion) {
+        lines.forEach(function (line) { line.classList.add('is-visible'); });
+        return;
+      }
+
+      var gapTicking = false;
+      window.addEventListener('scroll', function () {
+        if (!gapTicking) {
+          requestAnimationFrame(function () {
+            updateGapLines();
+            gapTicking = false;
+          });
+          gapTicking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', updateGapLines, { passive: true });
+      updateGapLines();
     })();
 
     // Capture form handlers — both hero and field notes
