@@ -2869,7 +2869,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   padding-top: var(--space-4);
   border-top: 1px solid var(--line-faint);
 }
-.page__cta-row a {
+.page__cta-row a,
+.page__cta-link {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -2881,7 +2882,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   border-bottom: 1px solid var(--line-soft);
   padding-bottom: 0.3rem;
 }
-.page__cta-row a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
+.page__cta-row a:hover,
+.page__cta-link:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page__plate {
   margin: var(--space-3) 0;
   padding: var(--space-3) var(--space-4);
@@ -2914,12 +2916,20 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   color: var(--ink-luminous);
   margin: var(--space-4) 0 var(--space-2);
 }
-.page__faq dt:first-child { margin-top: 0; }
+.page__faq-block + .page__faq-block {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-faint);
+}
+.page__faq-block dt:first-child { margin-top: 0; }
 .page__faq dd {
   margin: 0 0 var(--space-2);
   color: var(--ink-soft);
   max-width: 62ch;
   line-height: 1.55;
+}
+.page__faq dd:last-child {
+  margin-bottom: 0;
 }
 .page__placeholder {
   font-family: var(--font-mono);
@@ -2929,8 +2939,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   font-style: italic;
 }
 .page--archive .archive__inner {
-  padding: 0;
   max-width: none;
+}
+.page--archive .archive__head {
+  grid-template-columns: 1fr;
+  align-items: start;
 }
 .gap-page__sequence {
   display: grid;
@@ -2996,8 +3009,12 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   font-size: 0.875rem;
   letter-spacing: 0.04em;
 }
-@media (min-width: 700px) {
+@media (min-width: 900px) {
   .page__cards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 700px) and (max-width: 899px) {
+  .page__cards { grid-template-columns: repeat(2, 1fr); }
+  .page__card:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 699px) {
   .page__cards { grid-template-columns: 1fr; }
