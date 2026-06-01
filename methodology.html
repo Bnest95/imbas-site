@@ -37,6 +37,8 @@
 <div class="field-noise" aria-hidden="true"></div>
 <div class="film-grain" aria-hidden="true"></div>
 
+<a href="#main-content" class="skip-link">Skip to content</a>
+
 <header class="site-header">
   <div class="site-header__inner">
     <a href="/" class="brand" aria-label="Imbas, home">
@@ -61,7 +63,7 @@
   </div>
 </header>
 
-<main class="page page--methodology">
+<main id="main-content" class="page page--methodology">
   <div class="page__inner">
     <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
     <h1>Methodology</h1>
@@ -214,6 +216,7 @@
       <a href="/contact.html">Contact</a>
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">
@@ -231,6 +234,13 @@
       btn.addEventListener('click', function () {
         var open = nav.classList.toggle('is-open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+          nav.classList.remove('is-open');
+          btn.setAttribute('aria-expanded', 'false');
+          btn.focus();
+        }
       });
     }
   })();

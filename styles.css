@@ -3019,6 +3019,31 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 @media (max-width: 699px) {
   .page__cards { grid-template-columns: 1fr; }
 }
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+  padding: 0.55rem 1rem;
+  background: var(--bg-base);
+  color: var(--ink-luminous);
+  border: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
 .page--methodology .page__section h2 {
   font-size: clamp(1.25rem, 1.8vw, 1.5rem);
 }
