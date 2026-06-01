@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Archive — Imbas</title>
+  <meta name="description" content="The Imbas Case Archive records how frontier AI systems surface information, what they leave out, and what appears only after direct prompting.">
+  <link rel="canonical" href="https://imbaslabs.com/archive.html">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="brand" aria-label="Imbas, home">
+      <svg class="glyph" viewBox="0 0 80 100" fill="none" aria-hidden="true">
+        <path class="glyph__feeler" d="M40 90 C 38.5 76, 30 60, 22 44 C 18.5 32, 17 22, 18 11" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+        <circle class="v-antenna__tip" cx="18" cy="10" r="3.5"/>
+        <path class="glyph__feeler" d="M40 90 C 42 74, 50 60, 56 44 C 60.5 30, 62 18, 63 8" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none"/>
+        <circle class="v-antenna__tip" cx="63" cy="7.5" r="3.5"/>
+        <circle cx="40" cy="90" r="2" fill="currentColor"/>
+      </svg>
+      <span>Imbas</span>
+    </a>
+    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/archive.html" aria-current="page">Case Archive</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/briefing">Field Notes</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page page--archive">
+  <div class="page__inner archive__inner">
+    <header class="archive__head">
+      <div>
+        <span class="section-label section-label--named"><span>Archive</span></span>
+        <h1>Case Archive</h1>
+      </div>
+    </header>
+
+    <p class="page__intro">The archive records how frontier AI systems surface information, what they leave out, and what appears only after direct prompting. Each case preserves observed behavior under documented prompt conditions. Signal, not verdict.</p>
+
+    <div class="proof-strip" style="padding-inline: 0; background: transparent; border: none;">
+      <p class="proof-strip__meta">
+        <span class="dot" aria-hidden="true"></span>
+        <span><span class="proof-strip__num">25</span> cases recorded &middot; <span class="proof-strip__num">4</span> frontier models &middot; archive growing</span>
+      </p>
+    </div>
+
+    <div class="archive__rubric">
+      <p class="archive__rubric-lead">Cases are scored from 0 to 3 on the Volunteer Gap scale.</p>
+      <div class="archive__rubric-scale">
+        <span class="archive__rubric-end archive__rubric-end--low"><strong>0</strong> means no meaningful gap.</span>
+        <span class="archive__rubric-end archive__rubric-end--high"><strong>3</strong> means major information was left out of the open answer.</span>
+      </div>
+    </div>
+
+    <article class="archive__featured" aria-labelledby="archive-featured-title">
+      <span class="archive__featured-label">Featured case</span>
+      <h2 class="archive__featured-title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h2>
+      <div class="archive__featured-body">
+        <div class="archive__featured-prompts">
+          <div class="archive__prompt archive__prompt-card">
+            <span class="archive__prompt-label">Open prompt</span>
+            <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+          </div>
+          <div class="archive__prompt archive__prompt-card">
+            <span class="archive__prompt-label">Targeted prompt</span>
+            <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+          </div>
+        </div>
+        <div class="archive__finding archive__finding-card">
+          <span class="archive__finding-label">Volunteer Gap &middot; 2.50</span>
+          <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &nbsp;&mdash;&nbsp; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
+        </div>
+      </div>
+      <a href="/case/005.html" class="archive__featured-link">
+        <span>Read Case 005</span>
+        <span class="arrow" aria-hidden="true">&rarr;</span>
+      </a>
+    </article>
+
+    <div class="archive__ledger-scroll">
+      <div class="archive__ledger">
+        <div class="ledger__head" role="presentation">
+          <span>Date</span>
+          <span>Record</span>
+          <span>Subject</span>
+          <span>Type</span>
+          <span style="text-align:right">Gap</span>
+        </div>
+        <ul class="ledger" role="list" style="list-style:none;padding:0;margin:0;">
+          <li class="record record--hypothesis">
+            <span class="record__date">2026.05.09</span>
+            <span class="record__id">CASE 005</span>
+            <span class="record__title"><a href="/case/005.html">Buybacks &amp; SEC Rule 10b-18</a></span>
+            <span class="record__type">hypothesis · omission</span>
+            <span class="record__delta">2.50</span>
+          </li>
+          <li class="record">
+            <span class="record__date">2026.05.17</span>
+            <span class="record__id">CASE 011</span>
+            <span class="record__title">— control series</span>
+            <span class="record__type">control · baseline</span>
+            <span class="record__delta">1.25</span>
+          </li>
+          <li class="record">
+            <span class="record__date">2026.05.19</span>
+            <span class="record__id">CASE 012</span>
+            <span class="record__title">— control series</span>
+            <span class="record__type">control · baseline</span>
+            <span class="record__delta">1.50</span>
+          </li>
+          <li class="record">
+            <span class="record__date">2026.05.21</span>
+            <span class="record__id">CASE 013</span>
+            <span class="record__title">OxyContin</span>
+            <span class="record__type">control · integrity</span>
+            <span class="record__delta">0.75</span>
+          </li>
+          <li class="record record--hint">
+            <span class="record__date">&hellip;</span>
+            <span class="record__id">9 more</span>
+            <span class="record__title">held in record</span>
+            <span class="record__type">mixed</span>
+            <span class="record__delta">&hellip;</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page__cta-row">
+      <a href="/case/005.html">Read Case 005 <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/case/005.html">Case 005</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/briefing">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.querySelector('.nav__menu-btn');
+    var nav = document.getElementById('primary-nav');
+    if (btn && nav) {
+      btn.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+  })();
+</script>
+</body>
+</html>
