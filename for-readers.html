@@ -3,11 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>For Readers — Imbas</title>
-  <meta name="description" content="You see the AI answer. You do not automatically see what was left out. Imbas helps readers inspect where an answer may have gone thin.">
+  <title>Imbas for Readers — See what AI answers leave out</title>
+  <meta name="description" content="Imbas helps readers inspect AI answers by showing what surfaced, what was left out, and what appeared only after direct prompting. Decide for yourself.">
   <link rel="canonical" href="https://imbaslabs.com/for-readers.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://imbaslabs.com/for-readers.html">
+  <meta property="og:title" content="Imbas for Readers — See what AI leaves out">
+  <meta property="og:description" content="Inspect AI answers, compare open prompts against direct prompts, and decide what matters.">
+  <meta property="og:image" content="https://imbaslabs.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Imbas for Readers — See what AI leaves out">
+  <meta name="twitter:description" content="Inspect AI answers, compare open prompts against direct prompts, and decide what matters.">
+  <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -44,39 +53,61 @@
 
 <main class="page">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Readers</span></span>
+    <span class="section-label section-label--named"><span>See the gap</span></span>
     <h1>For Readers</h1>
     <p class="page__lede">You see the answer. You do not automatically see what was left out.</p>
-    <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide. Imbas helps readers inspect where an answer may have gone thin.</p>
+    <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide.</p>
+    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">Imbas helps you inspect where an answer may have gone thin: what surfaced, what did not, and what appeared only after direct prompting.</p>
+
+    <blockquote class="page__pullquote">We don&rsquo;t tell you what&rsquo;s true. But you deserve to decide for yourself.</blockquote>
+    <p class="page__intro" style="margin-top:0;">Most AI tools are built to decide things for you. Imbas is built so you can decide for yourself. Think better.</p>
 
     <section class="page__section">
-      <h2>What Imbas helps you notice</h2>
-      <ul>
-        <li><strong>Missing named mechanisms</strong> &mdash; regulations, sources, or events the model did not mention until asked directly.</li>
-        <li><strong>One-sided framing</strong> &mdash; an answer that emphasizes one perspective while omitting context that would complicate it.</li>
-        <li><strong>Deflection</strong> &mdash; a response that redirects away from the concern rather than addressing it.</li>
-      </ul>
+      <h2>What Imbas does and does not do</h2>
+      <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
     </section>
 
     <section class="page__section">
-      <h2>How to use the archive</h2>
-      <ol style="padding-left: 1.25rem; color: var(--ink-soft); max-width: 62ch;">
-        <li>Read a case &mdash; start with the open prompt and finding.</li>
-        <li>Compare open and targeted prompts side by side.</li>
-        <li>Inspect the Volunteer Gap score and what it means in plain language.</li>
-        <li>Decide what matters for your question; Imbas records behavior, not verdicts.</li>
-      </ol>
+      <h2>Why open questions matter</h2>
+      <p>Most people do not ask AI like lawyers cross-examining a witness. They ask normal questions.</p>
+      <p>Is this medication safe?<br>
+      What caused this crisis?<br>
+      How does this policy work?<br>
+      What are the tradeoffs?<br>
+      Who benefits?<br>
+      What should I know?</p>
+      <p>Users do not know what they do not know to ask. That is where the gap opens.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>How to inspect the archive</h2>
+      <p>Read a case.<br>
+      Compare the open prompt against the targeted prompt.<br>
+      Inspect the score.<br>
+      Look at what surfaced.<br>
+      Look at what did not.<br>
+      Decide what matters.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>What Imbas measures</h2>
+      <ul>
+        <li>Missing named mechanisms (Omission)</li>
+        <li>One-sided attribution or framing (Framing Drift)</li>
+        <li>Redirection away from the concern (Deflection)</li>
+      </ul>
+      <p>The point is not to tell you what to think. The point is to show you where to look again.</p>
     </section>
 
     <section class="page__section">
       <h2>Field Notes</h2>
-      <p>New observations and methodology notes are published in Field Notes. Follow there for updates as the archive grows.</p>
+      <p>Field Notes carries observations from the edge of the archive. No trend-chasing. No &ldquo;five ways AI is biased&rdquo; filler. Observations only.</p>
     </section>
 
     <div class="page__cta-row">
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/volunteer-gap.html">The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/briefing">Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/briefing">Follow Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </main>
@@ -95,6 +126,7 @@
       <a href="/for-readers.html">For Readers</a>
       <a href="/public-interest.html">Public Interest</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">

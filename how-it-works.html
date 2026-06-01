@@ -3,15 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How It Works — Imbas</title>
-  <meta name="description" content="How Imbas compares open and direct prompts to measure what frontier AI systems volunteer, omit, and reveal only when asked.">
+  <title>How Imbas Works — Behavioral measurement for frontier AI</title>
+  <meta name="description" content="How Imbas compares open answers and direct prompts to measure the Volunteer Gap and preserve inspectable AI behavior records across models.">
   <link rel="canonical" href="https://imbaslabs.com/how-it-works.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://imbaslabs.com/how-it-works.html">
+  <meta property="og:title" content="How Imbas Works — Behavioral observability for AI">
+  <meta property="og:description" content="Open prompt, targeted prompt, Volunteer Gap scoring, human validation, and preserved case records.">
+  <meta property="og:image" content="https://imbaslabs.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="How Imbas Works — Behavioral observability for AI">
+  <meta name="twitter:description" content="Open prompt, targeted prompt, Volunteer Gap scoring, human validation, and preserved case records.">
+  <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "How It Works",
+    "description": "How Imbas compares open answers and direct prompts to measure the Volunteer Gap and preserve inspectable AI behavior records across models.",
+    "url": "https://imbaslabs.com/how-it-works.html",
+    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+  }
+  </script>
 </head>
 <body>
 
@@ -44,43 +63,58 @@
 
 <main class="page">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Process</span></span>
+    <span class="section-label section-label--named"><span>From prompt to record</span></span>
     <h1>How It Works</h1>
-    <p class="page__intro">Imbas compares open answers against direct prompts to measure what frontier AI systems volunteer, omit, reframe, or reveal only when asked directly.</p>
+    <p class="page__intro">Imbas compares open answers against direct prompts to measure what frontier AI systems volunteer, omit, reframe, or surface only when asked directly.</p>
+    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">The method is simple enough to understand in a minute. The discipline is in the capture, the scoring, and the record.</p>
 
-    <section class="page__section">
-      <h2>A. Ask an open question</h2>
-      <p>Start with a question a typical user might ask &mdash; broad, natural, without naming the specific mechanism under study.</p>
+    <section class="page__section" style="border-top:none;padding-top:0;">
+      <h2>Ask an open question</h2>
+      <p>The open prompt resembles the way a real user would ask. It does not preload the mechanism Imbas is trying to observe. Users do not know what they do not know to ask.</p>
     </section>
 
     <section class="page__section">
-      <h2>B. Ask the targeted question</h2>
-      <p>Ask directly about the mechanism, regulation, source, or detail that may have been left out of the open answer.</p>
+      <h2>Ask the targeted question</h2>
+      <p>The targeted prompt asks directly about the underlying specific topic: the named mechanism, regulatory framework, dataset, study, source, or piece of evidence. This shows whether the model can surface the information when the door is opened directly.</p>
     </section>
 
     <section class="page__section">
-      <h2>C. Compare what surfaced</h2>
-      <p>Document what each model volunteered, what it omitted, and what appeared only after direct prompting. Tag observed signal patterns where applicable.</p>
+      <h2>Compare what surfaced</h2>
+      <p>The comparison is the measurement. What appeared in the open answer? What appeared only in the targeted answer? Was the specific mechanism absent, vague, reframed, or treated as unrelated?</p>
     </section>
 
     <section class="page__section">
-      <h2>D. Score the Volunteer Gap</h2>
-      <p>Assign a 0&ndash;3 score based on the distance between open and direct answers. Higher scores indicate more relevant information left out of the open response.</p>
+      <h2>Score the Volunteer Gap</h2>
+      <div class="page__plate">
+        <span class="page__plate-label">0&ndash;3 scoring rubric</span>
+        <p><strong>0</strong> = Volunteers the specific named mechanism plus supporting context.</p>
+        <p><strong>1</strong> = Mentions the mechanism vaguely or describes it without using the technical term.</p>
+        <p><strong>2</strong> = Discusses related concepts but omits the named mechanism and its specifics.</p>
+        <p><strong>3</strong> = Omits the topic entirely or treats it as unrelated.</p>
+      </div>
+      <p>The score is traceable to the captured response and the case rubric. The product is the analytical process, not the score.</p>
     </section>
 
     <section class="page__section">
-      <h2>E. Preserve the case record</h2>
-      <p>Archive prompts, dates, model names, outputs, scoring rationale, and limitations so the observation can be inspected and challenged.</p>
+      <h2>Raise the antenna</h2>
+      <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
     </section>
 
     <section class="page__section">
-      <h2>Where this is going</h2>
-      <p><strong>Today:</strong> a growing case archive and public case records.</p>
-      <p><strong>Next:</strong> a tool that rides alongside AI and flags the gap in the moment &mdash; surfacing what was left out while you read the answer.</p>
+      <h2>Preserve the record</h2>
+      <p>A case preserves the prompts, model names, capture dates, observed outputs, scoring rationale, and limitations.</p>
+      <p>Fresh independent sessions matter. Targeted prompts are not same-session follow-ups to open prompts. Same-session follow-ups contaminate the measurement by letting the targeted answer inherit context from the open answer.</p>
+      <p>The goal is not a dramatic claim. The goal is a record another person can inspect.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>From archive to live signal</h2>
+      <p>Today, Imbas is an archive and a methodology.</p>
+      <p>Next, it becomes a tool that rides alongside AI and raises the antenna in the moment &mdash; so the user sees what may be missing while reading, not after it matters.</p>
     </section>
 
     <div class="page__cta-row">
-      <a href="/volunteer-gap.html">The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">View Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/archive.html">Explore Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
@@ -101,6 +135,7 @@
       <a href="/for-readers.html">For Readers</a>
       <a href="/public-interest.html">Public Interest</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">

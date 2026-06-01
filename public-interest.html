@@ -3,15 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Public Interest — Imbas</title>
-  <meta name="description" content="As AI becomes a layer over search, work, and policy, the public needs records of what these systems surface — and what they do not.">
+  <title>Public Interest — AI behavioral records — Imbas</title>
+  <meta name="description" content="As AI becomes a layer over search, work, and policy, the public needs inspectable records of what these systems surface — and what they do not.">
   <link rel="canonical" href="https://imbaslabs.com/public-interest.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://imbaslabs.com/public-interest.html">
+  <meta property="og:title" content="Public Interest — Imbas">
+  <meta property="og:description" content="Public-interest measurement of observed AI surfacing behavior — signal, not verdict.">
+  <meta property="og:image" content="https://imbaslabs.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Public Interest — Imbas">
+  <meta name="twitter:description" content="Public-interest measurement of observed AI surfacing behavior — signal, not verdict.">
+  <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Public Interest",
+    "description": "As AI becomes a layer over search, work, and policy, the public needs inspectable records of what these systems surface — and what they do not.",
+    "url": "https://imbaslabs.com/public-interest.html",
+    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+  }
+  </script>
 </head>
 <body>
 
@@ -48,7 +67,7 @@
     <h1>Public Interest</h1>
     <p class="page__intro">As AI becomes a layer over search, work, education, policy, medicine, and finance, the public needs records of what these systems surface &mdash; and what they do not.</p>
 
-    <section class="page__section">
+    <section class="page__section" style="border-top:none;padding-top:0;">
       <h2>Why records matter</h2>
       <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted. Imbas preserves observations under documented conditions so patterns can be inspected over time.</p>
     </section>
@@ -60,7 +79,8 @@
 
     <section class="page__section">
       <h2>Not a verdict system</h2>
-      <p>Imbas does not declare intent, bias, or truth. It records what surfaced, what did not, and under what prompt conditions. Interpretation belongs to readers; the archive provides inspectable signal.</p>
+      <p>Imbas does not declare intent. It does not decide truth for the reader. It does not render moral judgment. It records behavior.</p>
+      <p>The public-interest value comes from making the record inspectable. A reader can examine the captured response, the rubric, and the cited evidence and reach their own conclusion. That is the point of public records: not to settle the question, but to make the question inspectable.</p>
     </section>
 
     <section class="page__section">
@@ -75,10 +95,12 @@
       </ul>
     </section>
 
+    <p class="page__intro">A measurement system that cannot produce small gaps, null findings, and ambiguous results is not a measurement system. It is a conclusion engine. Imbas is not trying to be a conclusion engine. The v1 dataset contains controls that produced gaps as low as 0.75, including one model that scored a perfect 0 on Case 013 (OxyContin). That variance is the credibility.</p>
+
     <div class="page__cta-row">
       <a href="/archive.html">Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="mailto:brendan@imbaslabs.com">Contact <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/contact.html">Contact <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </main>
@@ -97,6 +119,7 @@
       <a href="/for-readers.html">For Readers</a>
       <a href="/public-interest.html">Public Interest</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">

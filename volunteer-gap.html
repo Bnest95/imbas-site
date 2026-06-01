@@ -3,15 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Volunteer Gap — Imbas</title>
-  <meta name="description" content="The Volunteer Gap measures the distance between what AI models volunteer in open answers and what they surface when asked directly.">
+  <title>The Volunteer Gap — What AI surfaces and what it leaves out</title>
+  <meta name="description" content="The Volunteer Gap measures the difference between what an AI model surfaces on an open question and what it surfaces when asked directly. A core Imbas measurement primitive.">
   <link rel="canonical" href="https://imbaslabs.com/volunteer-gap.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://imbaslabs.com/volunteer-gap.html">
+  <meta property="og:title" content="The Volunteer Gap — What AI leaves out">
+  <meta property="og:description" content="A core Imbas concept: what users see versus what models know under open prompts and direct prompts.">
+  <meta property="og:image" content="https://imbaslabs.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Volunteer Gap — What AI leaves out">
+  <meta name="twitter:description" content="A core Imbas concept: what users see versus what models know under open prompts and direct prompts.">
+  <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The Volunteer Gap",
+    "description": "The Volunteer Gap measures the difference between what an AI model surfaces on an open question and what it surfaces when asked directly.",
+    "url": "https://imbaslabs.com/volunteer-gap.html",
+    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+  }
+  </script>
 </head>
 <body>
 
@@ -44,7 +63,7 @@
 
 <main class="page">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Concept</span></span>
+    <span class="section-label section-label--named"><span>Core measurement</span></span>
     <h1>The Volunteer Gap</h1>
 
     <div class="gap-page__sequence" aria-label="The Volunteer Gap concept">
@@ -54,31 +73,28 @@
       <p class="gap__line gap__line--resolution">That difference is the Volunteer Gap.</p>
     </div>
 
-    <p class="page__lede">The Volunteer Gap measures the distance between what a model volunteers in an open answer and what it surfaces when asked directly.</p>
+    <div class="page__plate">
+      <p class="page__lede" style="margin:0;max-width:none;">The Volunteer Gap is the difference between what a model surfaces on an innocent open-ended question versus what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
+    </div>
 
     <section class="page__section">
-      <h2>Example pattern</h2>
-      <div class="page__plate">
-        <span class="page__plate-label">Open question</span>
-        <p>The model gives a broad answer about a topic &mdash; common explanations, current debate, general context.</p>
-      </div>
-      <div class="page__plate">
-        <span class="page__plate-label">Direct question</span>
-        <p>The model surfaces a specific mechanism, regulation, date, or named source it did not mention in the open answer.</p>
-      </div>
-      <div class="page__plate">
-        <span class="page__plate-label">Gap</span>
-        <p>The mechanism was available to the model, but not volunteered. That measurable distance is the Volunteer Gap.</p>
-      </div>
+      <h2>Why open prompts matter</h2>
+      <p>Users making decisions about medications, investments, policy, technology, history, and institutions usually ask natural-language questions. They do not know what they do not know to ask.</p>
+      <p>That is the point.</p>
+      <p>If the model can surface a specific named mechanism, regulatory framework, dataset, or piece of evidence when asked directly, but does not include it in a related open answer, the gap is not imaginary. It can be recorded.</p>
     </section>
 
     <section class="page__section">
-      <h2>Signal patterns</h2>
-      <ul>
-        <li><strong>Omission</strong> &mdash; relevant information absent from the open answer.</li>
-        <li><strong>Framing Drift</strong> &mdash; the open answer emphasizes a different frame than direct prompting reveals.</li>
-        <li><strong>Deflection</strong> &mdash; the open answer redirects rather than addresses the underlying concern.</li>
-      </ul>
+      <h2>How Imbas reads the signal</h2>
+      <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
+      <p>The antenna goes up. You decide whether to open the door.</p>
+      <p>The signal points to one of three things: a specific named mechanism that wasn&rsquo;t surfaced (Omission), information present but attribution or framing shifted (Framing Drift), or the answer redirected away from the underlying concern before addressing it (Deflection).</p>
+    </section>
+
+    <section class="page__section">
+      <h2>Signal, not verdict</h2>
+      <p>The Volunteer Gap is not automatically a claim about intent, harm, bias, or censorship. It does not say what the model wanted to do. It says what happened.</p>
+      <p class="page__tagline">Behavior, not intent.<br>Signal, not verdict.</p>
     </section>
 
     <div class="page__cta-row">
@@ -102,6 +118,7 @@
       <a href="/for-readers.html">For Readers</a>
       <a href="/public-interest.html">Public Interest</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">

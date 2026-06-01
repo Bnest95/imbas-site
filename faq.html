@@ -3,15 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FAQ — Imbas</title>
-  <meta name="description" content="Frequently asked questions about Imbas, the Volunteer Gap, and how observed AI behavior is measured and recorded.">
+  <title>FAQ — Imbas Volunteer Gap measurement</title>
+  <meta name="description" content="Answers about Imbas, the Volunteer Gap, observed AI behavior, the antenna metaphor, and how scoring works under documented prompt conditions.">
   <link rel="canonical" href="https://imbaslabs.com/faq.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://imbaslabs.com/faq.html">
+  <meta property="og:title" content="FAQ — Imbas">
+  <meta property="og:description" content="Common questions about Imbas, the Volunteer Gap, and behavioral measurement for frontier AI.">
+  <meta property="og:image" content="https://imbaslabs.com/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FAQ — Imbas">
+  <meta name="twitter:description" content="Common questions about Imbas, the Volunteer Gap, and behavioral measurement for frontier AI.">
+  <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is Imbas a fact-checking site?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Imbas measures what AI systems surface or leave out under documented prompt conditions." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the Volunteer Gap a claim about intent?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. It measures observed behavior, not model intent." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is this the same as AI bias?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why compare open prompts and direct prompts?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Because users often do not know the specific mechanism to ask about. The gap between open and direct answers is measurable." }
+      },
+      {
+        "@type": "Question",
+        "name": "What does 0–3 mean?",
+        "acceptedAnswer": { "@type": "Answer", "text": "0 means no meaningful gap. 3 means major relevant information was left out of the open answer." }
+      },
+      {
+        "@type": "Question",
+        "name": "Who is Imbas for?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is the methodology final?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. It is versioned and will evolve as the archive grows." }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the antenna metaphor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Imbas raises an antenna when documented context wasn't surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn't matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does Imbas refuse to say \"this AI is biased\"?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Because the moment a measurement system says \"this AI is wrong\" or \"this answer is biased,\" it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there an inter-rater reliability number for the v1 scoring?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated." }
+      },
+      {
+        "@type": "Question",
+        "name": "What does Imbas mean by \"behavioral observability\"?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why does Imbas use multiple models?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger." }
+      },
+      {
+        "@type": "Question",
+        "name": "Why do documented prompt conditions matter?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can Imbas be wrong?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens next?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading." }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -68,6 +160,30 @@
 
       <dt>Is the methodology final?</dt>
       <dd>No. It is versioned and will evolve as the archive grows.</dd>
+
+      <dt>What is the antenna metaphor?</dt>
+      <dd>Imbas raises an antenna when documented context wasn&rsquo;t surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours.</dd>
+
+      <dt>Why does Imbas refuse to say &ldquo;this AI is biased&rdquo;?</dt>
+      <dd>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
+
+      <dt>Is there an inter-rater reliability number for the v1 scoring?</dt>
+      <dd>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
+
+      <dt>What does Imbas mean by &ldquo;behavioral observability&rdquo;?</dt>
+      <dd>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
+
+      <dt>Why does Imbas use multiple models?</dt>
+      <dd>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
+
+      <dt>Why do documented prompt conditions matter?</dt>
+      <dd>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
+
+      <dt>Can Imbas be wrong?</dt>
+      <dd>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
+
+      <dt>What happens next?</dt>
+      <dd>Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading.</dd>
     </dl>
 
     <div class="page__cta-row">
@@ -92,6 +208,7 @@
       <a href="/for-readers.html">For Readers</a>
       <a href="/public-interest.html">Public Interest</a>
       <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
       <a href="/briefing">Field Notes</a>
     </nav>
     <div class="site-footer__meta">
