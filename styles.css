@@ -4507,14 +4507,15 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--archive .arc-stat-strip__meta {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.875rem;
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   line-height: 1.5;
   color: rgba(212, 207, 194, 0.92);
   text-transform: lowercase;
 }
 .page--archive .arc-stat-strip__num {
+  font-size: 1rem;
   font-weight: 500;
   color: var(--ember-soft);
 }
@@ -4554,7 +4555,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--archive .arc-rubric__end strong {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
   color: rgba(180, 192, 210, 0.95);
 }
 .page--archive .arc-rubric__end--high strong {
@@ -4574,10 +4576,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: block;
   margin-bottom: 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: rgba(var(--ember-rgb), 0.72);
 }
 .page--archive .arc-featured__title {
@@ -4600,10 +4603,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--archive .arc-featured__meta-item dt {
   margin: 0 0 0.25rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: rgba(var(--ember-rgb), 0.65);
 }
 .page--archive .arc-featured__meta-item dd {
@@ -4635,10 +4639,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: block;
   margin-bottom: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: rgba(var(--ember-rgb), 0.68);
 }
 .page--archive .arc-prompt-field p {
@@ -4658,10 +4663,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: block;
   margin-bottom: 0.45rem;
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: rgba(var(--ember-rgb), 0.75);
 }
 .page--archive .arc-featured__finding p {
@@ -4738,10 +4744,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 .page--archive .arc-ledger__head {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.25;
   color: rgba(var(--ember-rgb), 0.65);
   background: rgba(var(--bg-surface-rgb), 0.2);
   border-bottom: 1px solid var(--line-soft);
@@ -4778,11 +4785,11 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: block;
   margin-bottom: 0.2rem;
   font-family: var(--font-mono);
-  font-size: 0.52rem;
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  line-height: 1.2;
+  line-height: 1.25;
   color: rgba(180, 192, 210, 0.62);
 }
 .page--archive .arc-record--public .arc-record__status {
@@ -4950,12 +4957,30 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   .page--archive .arc-masthead .page__intro {
     max-width: none;
   }
+  .page--archive .arc-stat-strip__meta {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+  }
+  .page--archive .arc-stat-strip__num {
+    font-size: 0.875rem;
+  }
   .page--archive .arc-rubric__scale {
     grid-template-columns: 1fr;
   }
+  .page--archive .arc-featured__label,
+  .page--archive .arc-featured__meta-item dt,
+  .page--archive .arc-prompt-field__label,
+  .page--archive .arc-featured__finding-label {
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
+  }
   .page--archive .arc-featured__meta {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-1);
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .page--archive .arc-record__status {
+    font-size: 0.875rem;
+    letter-spacing: 0.04em;
   }
   .page--archive .arc-featured__prompts {
     grid-template-columns: 1fr;
