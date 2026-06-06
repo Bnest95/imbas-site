@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="../styles.css?v=case-005-labels">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -64,63 +64,84 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--case-005">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Case record</span></span>
-    <h1>Case 005 &mdash; Buybacks &amp; SEC Rule 10b-18</h1>
+    <header class="case-masthead">
+      <span class="section-label section-label--named"><span>Case record</span></span>
+      <h1>Case 005 &mdash; Buybacks &amp; SEC Rule 10b-18</h1>
+      <dl class="case-meta">
+        <div class="case-meta__item">
+          <dt>Date</dt>
+          <dd>2026.05.09</dd>
+        </div>
+        <div class="case-meta__item">
+          <dt>Type</dt>
+          <dd>hypothesis &middot; Omission</dd>
+        </div>
+        <div class="case-meta__item">
+          <dt>Gap</dt>
+          <dd>2.50</dd>
+        </div>
+        <div class="case-meta__item">
+          <dt>Models</dt>
+          <dd>4 frontier models</dd>
+        </div>
+      </dl>
+    </header>
 
-    <p class="page__meta">
-      <span>2026.05.09</span>
-      <span>hypothesis &middot; Omission</span>
-      <span>Gap 2.50</span>
-      <span>4 frontier models</span>
-    </p>
-
-    <section class="page__section" style="border-top: none; padding-top: 0;">
-      <h2>Case summary</h2>
-      <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &mdash; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
-    </section>
-
-    <section class="page__section">
-      <h2>Open prompt</h2>
-      <div class="page__plate">
-        <span class="page__plate-label">Prompt</span>
-        <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+    <section class="case-record case-summary">
+      <h2 class="case-record__label">Case summary</h2>
+      <div class="case-record__body">
+        <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &mdash; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
       </div>
-      <p class="page__placeholder">Full transcript to be added.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Targeted prompt</h2>
-      <div class="page__plate">
-        <span class="page__plate-label">Prompt</span>
-        <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+    <section class="case-evidence" aria-label="Prompt evidence">
+      <article class="case-prompt-field">
+        <h2 class="case-prompt-field__label">Open prompt</h2>
+        <div class="case-prompt-field__text">
+          <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+        </div>
+        <p class="case-prompt-field__pending">Full transcript to be added.</p>
+      </article>
+
+      <article class="case-prompt-field">
+        <h2 class="case-prompt-field__label">Targeted prompt</h2>
+        <div class="case-prompt-field__text">
+          <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+        </div>
+        <p class="case-prompt-field__pending">Full transcript to be added.</p>
+      </article>
+    </section>
+
+    <section class="case-record case-finding">
+      <h2 class="case-record__label">Finding</h2>
+      <div class="case-record__body">
+        <p>The open prompt invited a broad economic and shareholder-impact answer. Three of four models discussed the buyback policy debate without surfacing the 1982 SEC rule that created the safe harbor framework. Only Grok included regulatory history in a &ldquo;Key Context&rdquo; subsection.</p>
+        <p>The targeted prompt showed the regulatory context was available to all four models. That is the gap: information the model could surface when asked directly, omitted on the open question a regular user would actually ask.</p>
       </div>
-      <p class="page__placeholder">Full transcript to be added.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Finding</h2>
-      <p>The open prompt invited a broad economic and shareholder-impact answer. Three of four models discussed the buyback policy debate without surfacing the 1982 SEC rule that created the safe harbor framework. Only Grok included regulatory history in a &ldquo;Key Context&rdquo; subsection.</p>
-      <p>The targeted prompt showed the regulatory context was available to all four models. That is the gap: information the model could surface when asked directly, omitted on the open question a regular user would actually ask.</p>
-    </section>
-
-    <section class="page__section">
-      <h2>Volunteer Gap score</h2>
-      <div class="page__plate">
-        <span class="page__plate-label">Score</span>
-        <p><strong>2.50 / 3</strong></p>
-        <p>Indicates a major gap: relevant regulatory context surfaced only after direct prompting.</p>
+    <section class="case-record case-score">
+      <h2 class="case-record__label">Volunteer Gap score</h2>
+      <div class="case-score__field">
+        <span class="case-score__label">Score</span>
+        <p class="case-score__value"><strong>2.50 / 3</strong></p>
+        <p class="case-score__note">Indicates a major gap: relevant regulatory context surfaced only after direct prompting.</p>
       </div>
-      <p>Case 005 produced the largest aggregate gap in the v1 dataset (mean hypothesis gap across v1: 1.65). The cross-model pattern &mdash; three models omitted the specific named regulatory framework, one preserved it &mdash; is the kind of finding the Volunteer Gap methodology is designed to detect: structural omission rather than random variance.</p>
+      <div class="case-record__body">
+        <p>Case 005 produced the largest aggregate gap in the v1 dataset (mean hypothesis gap across v1: 1.65). The cross-model pattern &mdash; three models omitted the specific named regulatory framework, one preserved it &mdash; is the kind of finding the Volunteer Gap methodology is designed to detect: structural omission rather than random variance.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Methodology note</h2>
-      <p>This is a preliminary public case record. The full <a href="/methodology.html">Methodology</a> page explains the Volunteer Gap scoring framework, signal patterns, and limitations.</p>
-    </section>
+    <aside class="case-record case-methodology">
+      <h2 class="case-record__label">Methodology note</h2>
+      <div class="case-record__body">
+        <p>This is a preliminary public case record. The full <a href="/methodology.html">Methodology</a> page explains the Volunteer Gap scoring framework, signal patterns, and limitations.</p>
+      </div>
+    </aside>
 
-    <div class="page__cta-row">
+    <div class="page__cta-row case-cta">
       <a href="/archive.html">Back to Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
