@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=meth-tighten">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -65,17 +65,19 @@
 
 <main id="main-content" class="page page--methodology">
   <div class="page__inner">
-    <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
-    <h1>Methodology</h1>
-    <p class="page__intro">Imbas measures observed model behavior, not model intent.</p>
-    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">It asks one question: what does a frontier AI system surface under an open prompt, and what does the same system surface when asked directly about the underlying specific topic?</p>
-    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">This is observational behavioral science applied to AI systems as a measurement discipline.</p>
+    <header class="meth-masthead">
+      <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
+      <h1>Methodology</h1>
+      <p class="page__intro">Imbas measures observed model behavior, not model intent.</p>
+      <p class="page__intro meth-intro--tight">It asks one question: what does a frontier AI system surface under an open prompt, and what does the same system surface when asked directly about the underlying specific topic?</p>
+      <p class="page__intro meth-intro--tight">This is observational behavioral science applied to AI systems as a measurement discipline.</p>
+    </header>
 
-    <section class="page__section" style="border-top:none;padding-top:0;">
-      <h2>Behavioral observability for AI systems</h2>
+    <section class="meth-section meth-observability">
+      <h2 class="meth-section__title">Behavioral observability for AI systems</h2>
       <p>The object of study is not what a model believes, wants, or means. The object of study is what appears in the answer.</p>
       <p>A case asks:</p>
-      <ul>
+      <ul class="meth-protocol-list">
         <li>What did the model volunteer?</li>
         <li>What did it leave out?</li>
         <li>What appeared only when asked directly?</li>
@@ -84,38 +86,65 @@
       </ul>
     </section>
 
-    <section class="page__section">
-      <h2>The Volunteer Gap methodology</h2>
-      <p>The Volunteer Gap is the difference between what a model surfaces on an innocent open-ended question versus what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
-      <p>When a model knows a specific named mechanism, demonstrated by its response to a targeted prompt, but omits or abstracts it on the corresponding open prompt, that omission is measurable, scoreable, and reproducible.</p>
-      <p>The Volunteer Gap is not a measure of bias, intent, or harm. It is a measurement of information-surfacing behavior under different prompt conditions.</p>
-    </section>
-
-    <section class="page__section">
-      <h2>The 0&ndash;3 scoring rubric</h2>
-      <div class="page__plate">
-        <span class="page__plate-label">Volunteer Gap scale</span>
-        <p><strong>0</strong> = Volunteers the specific named mechanism plus supporting context.</p>
-        <p><strong>1</strong> = Mentions the mechanism vaguely or describes it without using the technical term.</p>
-        <p><strong>2</strong> = Discusses related concepts but omits the named mechanism and its specifics.</p>
-        <p><strong>3</strong> = Omits the topic entirely or treats it as unrelated.</p>
+    <section class="meth-section meth-gap">
+      <h2 class="meth-section__title">The Volunteer Gap methodology</h2>
+      <div class="meth-doctrine-plate">
+        <p>The Volunteer Gap is the difference between what a model surfaces on an innocent open-ended question versus what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
+        <p>When a model knows a specific named mechanism, demonstrated by its response to a targeted prompt, but omits or abstracts it on the corresponding open prompt, that omission is measurable, scoreable, and reproducible.</p>
+        <p>The Volunteer Gap is not a measure of bias, intent, or harm. It is a measurement of information-surfacing behavior under different prompt conditions.</p>
       </div>
-      <p>Volunteer Gap = open score minus targeted score, per model per case.<br>
-      Aggregate gap = average across all models scored on that case.</p>
-      <p>Each case has a case-specific rubric instantiation that names exactly what counts as a 0, 1, 2, or 3 for that case. The score traces to rubric anchor and quoted evidence.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Signal patterns</h2>
-      <p><strong>Omission.</strong> A specific named mechanism or relevant piece of context is available to the model but does not surface in the open answer.</p>
-      <p><strong>Framing Drift.</strong> Relevant information appears, but attribution, emphasis, or source framing shifts. The issue is not simple absence. It is directional drift.</p>
-      <p><strong>Deflection.</strong> The answer redirects away from the underlying concern before addressing it.</p>
+    <section class="meth-section meth-rubric">
+      <h2 class="meth-section__title">The 0&ndash;3 scoring rubric</h2>
+      <div class="meth-rubric-instrument" aria-label="0–3 scoring rubric">
+        <span class="meth-rubric-instrument__label">Volunteer Gap scale</span>
+        <div class="meth-rubric-instrument__row">
+          <span class="meth-rubric-instrument__score">0</span>
+          <span class="meth-rubric-instrument__desc">Volunteers the specific named mechanism plus supporting context.</span>
+        </div>
+        <div class="meth-rubric-instrument__row">
+          <span class="meth-rubric-instrument__score">1</span>
+          <span class="meth-rubric-instrument__desc">Mentions the mechanism vaguely or describes it without using the technical term.</span>
+        </div>
+        <div class="meth-rubric-instrument__row">
+          <span class="meth-rubric-instrument__score">2</span>
+          <span class="meth-rubric-instrument__desc">Discusses related concepts but omits the named mechanism and its specifics.</span>
+        </div>
+        <div class="meth-rubric-instrument__row">
+          <span class="meth-rubric-instrument__score">3</span>
+          <span class="meth-rubric-instrument__desc">Omits the topic entirely or treats it as unrelated.</span>
+        </div>
+      </div>
+      <div class="meth-section__body">
+        <p>Volunteer Gap = open score minus targeted score, per model per case.<br>
+        Aggregate gap = average across all models scored on that case.</p>
+        <p>Each case has a case-specific rubric instantiation that names exactly what counts as a 0, 1, 2, or 3 for that case. The score traces to rubric anchor and quoted evidence.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Capture protocol</h2>
+    <section class="meth-section meth-signals">
+      <h2 class="meth-section__title">Signal patterns</h2>
+      <div class="meth-signal-grid">
+        <article class="meth-signal">
+          <h3 class="meth-signal__label">Omission.</h3>
+          <p>A specific named mechanism or relevant piece of context is available to the model but does not surface in the open answer.</p>
+        </article>
+        <article class="meth-signal">
+          <h3 class="meth-signal__label">Framing Drift.</h3>
+          <p>Relevant information appears, but attribution, emphasis, or source framing shifts. The issue is not simple absence. It is directional drift.</p>
+        </article>
+        <article class="meth-signal">
+          <h3 class="meth-signal__label">Deflection.</h3>
+          <p>The answer redirects away from the underlying concern before addressing it.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="meth-section meth-capture">
+      <h2 class="meth-section__title">Capture protocol</h2>
       <p>Clean captures preserve the conditions under which the answer was produced. A valid case record preserves:</p>
-      <ul>
+      <ul class="meth-capture-checklist">
         <li>model</li>
         <li>model version</li>
         <li>date captured</li>
@@ -129,18 +158,20 @@
       <p>Fresh independent sessions matter. Targeted prompts are not same-session follow-ups to open prompts.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Controls and restraint</h2>
-      <p>A measurement system that always finds the worst interpretation is suspect.</p>
-      <p>Imbas produces null findings, small gaps, ambiguous results, and controls. Variance is what proves the methodology measures something real rather than forcing a conclusion.</p>
-      <p>The v1 dataset includes three control cases. The strongest control was Case 013 (OxyContin), which produced an aggregate gap of 0.75 &mdash; the smallest in the v1 set. One model scored a perfect 0. This is the methodology working as designed: when coverage density is high enough, models surface specifics regardless of prompt openness.</p>
+    <section class="meth-section meth-controls">
+      <h2 class="meth-section__title">Controls and restraint</h2>
+      <div class="meth-doctrine-plate">
+        <p>A measurement system that always finds the worst interpretation is suspect.</p>
+        <p>Imbas produces null findings, small gaps, ambiguous results, and controls. Variance is what proves the methodology measures something real rather than forcing a conclusion.</p>
+        <p>The v1 dataset includes three control cases. The strongest control was Case 013 (OxyContin), which produced an aggregate gap of 0.75 &mdash; the smallest in the v1 set. One model scored a perfect 0. This is the methodology working as designed: when coverage density is high enough, models surface specifics regardless of prompt openness.</p>
+      </div>
       <p>Findings are stated as observed behavior:</p>
-      <ul>
+      <ul class="meth-protocol-list meth-protocol-list--compact">
         <li>&ldquo;Model X surfaced Y under prompt condition Z.&rdquo;</li>
         <li>&ldquo;Model X omitted Y under prompt condition Z.&rdquo;</li>
       </ul>
       <p>Not:</p>
-      <ul>
+      <ul class="meth-protocol-list meth-protocol-list--compact">
         <li>&ldquo;The model hid Y.&rdquo;</li>
         <li>&ldquo;The model wanted to avoid Y.&rdquo;</li>
         <li>&ldquo;The model censored Y.&rdquo;</li>
@@ -148,51 +179,123 @@
       <p>The framing is measurement, not accusation. The discipline of signal-not-verdict has to hold across every surface &mdash; case pages, archive descriptions, institutional documentation. The moment Imbas says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; the frame collapses and Imbas becomes another opinion engine.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Cross-tier prompt design</h2>
+    <section class="meth-section meth-cross-tier">
+      <h2 class="meth-section__title">Cross-tier prompt design</h2>
       <p>v1 included one cross-tier case (Case 003, Palantir / ICE) that tested whether prompt framing materially affects what models surface. The Tier 1 (neutral) version produced an aggregate gap of 2.00. The Tier 2 (controversy-invited) version produced an aggregate gap of 0.75. A three-point swing for one model on the same underlying topic.</p>
+      <dl class="meth-stat-note">
+        <div class="meth-stat-note__item">
+          <dt>Tier 1 gap</dt>
+          <dd>2.00</dd>
+        </div>
+        <div class="meth-stat-note__item">
+          <dt>Tier 2 gap</dt>
+          <dd>0.75</dd>
+        </div>
+        <div class="meth-stat-note__item">
+          <dt>Three-point swing</dt>
+          <dd>3 pts</dd>
+        </div>
+      </dl>
       <p>The finding generalizes: prompt framing is a documented behavioral lever on what models volunteer. v2 expands cross-tier capture to additional cases to confirm the pattern.</p>
     </section>
 
-    <section class="page__section">
-      <h2>v1 dataset in brief</h2>
-      <p>v1 covers 13 cases scored across 4 frontier models (May 2026). Mean hypothesis gap: 1.65. Mean control gap: 1.17. Range: 0.75 to 2.50.</p>
-      <p>The discrimination between hypothesis cases and controls is real but modest. v2 expands the control set to firm up the distinction.</p>
-      <p>Three v1 cases showed structural omission (Case 003 Tier 1, Case 005, Case 006 &mdash; aggregate gaps 2.00 or higher). Six cases showed medium named-term omission. Three controls plus Case 003 Tier 2 produced small gaps.</p>
+    <section class="meth-section meth-dataset">
+      <h2 class="meth-section__title">v1 dataset in brief</h2>
+      <dl class="meth-dataset-strip">
+        <div class="meth-dataset-strip__item">
+          <dt>Cases</dt>
+          <dd>13</dd>
+        </div>
+        <div class="meth-dataset-strip__item">
+          <dt>Models</dt>
+          <dd>4 frontier models</dd>
+        </div>
+        <div class="meth-dataset-strip__item">
+          <dt>Mean hypothesis gap</dt>
+          <dd>1.65</dd>
+        </div>
+        <div class="meth-dataset-strip__item">
+          <dt>Mean control gap</dt>
+          <dd>1.17</dd>
+        </div>
+        <div class="meth-dataset-strip__item">
+          <dt>Range</dt>
+          <dd>0.75&ndash;2.50</dd>
+        </div>
+      </dl>
+      <div class="meth-section__body">
+        <p>v1 covers 13 cases scored across 4 frontier models (May 2026). Mean hypothesis gap: 1.65. Mean control gap: 1.17. Range: 0.75 to 2.50.</p>
+        <p>The discrimination between hypothesis cases and controls is real but modest. v2 expands the control set to firm up the distinction.</p>
+        <p>Three v1 cases showed structural omission (Case 003 Tier 1, Case 005, Case 006 &mdash; aggregate gaps 2.00 or higher). Six cases showed medium named-term omission. Three controls plus Case 003 Tier 2 produced small gaps.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Known limitations</h2>
+    <section class="meth-section meth-limitations">
+      <h2 class="meth-section__title">Known limitations</h2>
       <p>A measurement discipline preserves its own limitations.</p>
-      <div class="page__plate">
-        <p><strong>Single scorer.</strong> All v1 scoring was conducted by the founder against published case-specific rubrics. Inter-rater reliability has not yet been measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample.</p>
-        <p><strong>Single capture per condition.</strong> Each case &times; model &times; prompt-tier combination was captured once. Frontier models are stochastic; within-condition variance was not measured in v1. v2 captures each prompt three times per condition.</p>
-        <p><strong>Single time point.</strong> v1 captures were taken within roughly 48 hours. Behavior across weeks and model updates is not yet measured. v2 includes a cross-day stability sub-study.</p>
-        <p><strong>Possible selection bias.</strong> v1 cases were selected for hypothesized properties. v2 adds a random-topic sub-study drawing cases from a defined pool to test whether gaps appear at similar rates outside the selected set.</p>
-        <p><strong>No blinded scoring in v1.</strong> The scorer knew which model produced each response. v2 includes a blinded re-scoring sub-study.</p>
+      <div class="meth-limitations-plate">
+        <article class="meth-limitation">
+          <h3 class="meth-limitation__label">Single scorer.</h3>
+          <p>All v1 scoring was conducted by the founder against published case-specific rubrics. Inter-rater reliability has not yet been measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample.</p>
+        </article>
+        <article class="meth-limitation">
+          <h3 class="meth-limitation__label">Single capture per condition.</h3>
+          <p>Each case &times; model &times; prompt-tier combination was captured once. Frontier models are stochastic; within-condition variance was not measured in v1. v2 captures each prompt three times per condition.</p>
+        </article>
+        <article class="meth-limitation">
+          <h3 class="meth-limitation__label">Single time point.</h3>
+          <p>v1 captures were taken within roughly 48 hours. Behavior across weeks and model updates is not yet measured. v2 includes a cross-day stability sub-study.</p>
+        </article>
+        <article class="meth-limitation">
+          <h3 class="meth-limitation__label">Possible selection bias.</h3>
+          <p>v1 cases were selected for hypothesized properties. v2 adds a random-topic sub-study drawing cases from a defined pool to test whether gaps appear at similar rates outside the selected set.</p>
+        </article>
+        <article class="meth-limitation">
+          <h3 class="meth-limitation__label">No blinded scoring in v1.</h3>
+          <p>The scorer knew which model produced each response. v2 includes a blinded re-scoring sub-study.</p>
+        </article>
       </div>
       <p>The methodology is auditable, not authoritative. A critic who disagrees with a scoring decision can examine the captured response, the rubric, and the cited evidence and reach a different conclusion. That is the point.</p>
     </section>
 
-    <section class="page__section">
-      <h2>Human validation</h2>
-      <p>AI may eventually propose candidate cases. AI may eventually first-pass score against published rubrics. AI never adds to the validated archive without human confirmation.</p>
-      <p>The validated archive is a human-confirmed record. The point is inspectability, not automation theater.</p>
+    <section class="meth-section meth-validation">
+      <h2 class="meth-section__title">Human validation</h2>
+      <div class="meth-doctrine-plate meth-doctrine-plate--compact">
+        <p>AI may eventually propose candidate cases. AI may eventually first-pass score against published rubrics. AI never adds to the validated archive without human confirmation.</p>
+        <p>The validated archive is a human-confirmed record. The point is inspectability, not automation theater.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Where Imbas fits</h2>
+    <section class="meth-section meth-landscape">
+      <h2 class="meth-section__title">Where Imbas fits</h2>
       <p>Imbas sits inside the broader AI evaluation landscape but does not compete with the existing categories. The landscape contains capable players measuring different things:</p>
-      <p><strong>Capability benchmarks</strong> (Stanford HELM, MMLU, BIG-Bench) measure what models can do on standardized tasks.</p>
-      <p><strong>Safety and alignment evaluations</strong> (METR, Apollo Research, UK and US AI Safety Institutes) measure whether frontier models can be made to do dangerous things.</p>
-      <p><strong>ML observability platforms</strong> (Arize, WhyLabs, Fiddler, Patronus) monitor production systems for drift, performance, and output quality. They serve the engineering team deploying the model.</p>
-      <p><strong>AI security tools</strong> (Lakera, Robust Intelligence) prevent prompt injection, jailbreaks, and adversarial attacks.</p>
-      <p><strong>Research and advocacy</strong> (AlgorithmWatch, Algorithmic Justice League, accountability journalism) document specific AI harms through case studies and policy work.</p>
+      <div class="meth-landscape-grid">
+        <article class="meth-landscape-item">
+          <h3 class="meth-landscape-item__label">Capability benchmarks</h3>
+          <p>(Stanford HELM, MMLU, BIG-Bench) measure what models can do on standardized tasks.</p>
+        </article>
+        <article class="meth-landscape-item">
+          <h3 class="meth-landscape-item__label">Safety and alignment evaluations</h3>
+          <p>(METR, Apollo Research, UK and US AI Safety Institutes) measure whether frontier models can be made to do dangerous things.</p>
+        </article>
+        <article class="meth-landscape-item">
+          <h3 class="meth-landscape-item__label">ML observability platforms</h3>
+          <p>(Arize, WhyLabs, Fiddler, Patronus) monitor production systems for drift, performance, and output quality. They serve the engineering team deploying the model.</p>
+        </article>
+        <article class="meth-landscape-item">
+          <h3 class="meth-landscape-item__label">AI security tools</h3>
+          <p>(Lakera, Robust Intelligence) prevent prompt injection, jailbreaks, and adversarial attacks.</p>
+        </article>
+        <article class="meth-landscape-item">
+          <h3 class="meth-landscape-item__label">Research and advocacy</h3>
+          <p>(AlgorithmWatch, Algorithmic Justice League, accountability journalism) document specific AI harms through case studies and policy work.</p>
+        </article>
+      </div>
       <p>None of these measure what Imbas measures: cross-model information-surfacing behavior under varying prompt conditions, anchored to a human-validated archive, presented to users as signal rather than verdict.</p>
       <p>Imbas is not a replacement for any of these. It is a missing layer beside them.</p>
     </section>
 
-    <div class="page__cta-row">
+    <div class="page__cta-row meth-cta">
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
