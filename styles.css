@@ -5872,3 +5872,173 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
     letter-spacing: 0.1em;
   }
 }
+
+/* === contact routing page === */
+
+.page--contact {
+  --ct-prose-width: 42rem;
+}
+
+/* Masthead */
+.page--contact .ct-masthead {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.12);
+}
+.page--contact .ct-masthead .section-label {
+  margin-bottom: var(--space-3);
+  color: rgba(180, 192, 210, 0.95);
+}
+.page--contact .ct-masthead .section-label--named::before {
+  color: rgba(var(--ember-rgb), 0.6);
+}
+.page--contact .ct-masthead h1 {
+  margin-bottom: var(--space-3);
+}
+.page--contact .ct-masthead .page__intro {
+  margin: 0;
+  max-width: 62ch;
+  line-height: 1.58;
+}
+
+/* Route blocks */
+.page--contact .ct-routes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: var(--ct-prose-width);
+}
+.page--contact .ct-route {
+  margin: 0;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--line-faint);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.26);
+  background: rgba(var(--bg-base-rgb), 0.18);
+}
+.page--contact .ct-route__label {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.25;
+  color: rgba(var(--ember-rgb), 0.78);
+}
+.page--contact .ct-route__title {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: none;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.7vw, 1.35rem);
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--ink-luminous);
+}
+.page--contact .ct-route__desc {
+  margin: 0 0 var(--space-3);
+  max-width: 62ch;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+
+/* Record field strips */
+.page--contact .ct-field-strip {
+  margin: 0;
+  padding: var(--space-2) 0 0 var(--space-3);
+  border-top: 1px solid var(--line-faint);
+  border-left: 1px solid rgba(var(--ember-rgb), 0.18);
+}
+.page--contact .ct-record-field {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  line-height: 1.55;
+  color: rgba(180, 192, 210, 0.9);
+}
+.page--contact .ct-record-field:last-child {
+  margin-bottom: 0;
+}
+.page--contact .ct-record-field a {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.03em;
+  color: var(--ink-primary);
+  border-bottom: 1px solid var(--line-soft);
+  text-decoration: none;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+.page--contact .ct-record-field a:hover,
+.page--contact .ct-record-field a:focus-visible {
+  color: var(--ember-soft);
+  border-bottom-color: var(--ember);
+  outline: none;
+}
+.page--contact .ct-record-field--action {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) 0 0 var(--space-3);
+  border-top: 1px solid var(--line-faint);
+  border-left: 1px solid rgba(var(--ember-rgb), 0.18);
+}
+.page--contact .ct-route__action {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+  border-bottom: 1px solid var(--line-soft);
+}
+.page--contact .ct-route__action:hover,
+.page--contact .ct-route__action:focus-visible {
+  color: var(--ember-soft);
+  border-bottom-color: var(--ember);
+  outline: none;
+}
+.page--contact .ct-route__action .arrow {
+  color: var(--ember-soft);
+  transition: transform 0.3s ease, color 0.25s ease;
+}
+.page--contact .ct-route__action:hover .arrow,
+.page--contact .ct-route__action:focus-visible .arrow {
+  transform: translateX(4px);
+  color: var(--ember-bright);
+}
+
+@media (max-width: 699px) {
+  .page--contact {
+    --ct-prose-width: 100%;
+  }
+  .page--contact .ct-masthead {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+  }
+  .page--contact .ct-masthead .page__intro {
+    max-width: none;
+  }
+  .page--contact .ct-routes {
+    gap: var(--space-3);
+  }
+  .page--contact .ct-route {
+    padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  }
+  .page--contact .ct-route__label {
+    font-size: 0.875rem;
+  }
+  .page--contact .ct-route__title {
+    font-size: 1.15rem;
+  }
+  .page--contact .ct-route__desc {
+    max-width: none;
+    font-size: 0.9rem;
+  }
+  .page--contact .ct-record-field,
+  .page--contact .ct-record-field a {
+    font-size: 0.78rem;
+    overflow-wrap: break-word;
+  }
+}

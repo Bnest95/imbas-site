@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=ct-routes-split">
 </head>
 <body>
 
@@ -53,33 +53,48 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--contact">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Get in touch</span></span>
-    <h1>Contact</h1>
-    <p class="page__intro">Imbas is a measurement institution being built in public. Three useful next steps below, depending on what brought you here.</p>
+    <header class="ct-masthead">
+      <span class="section-label section-label--named"><span>Get in touch</span></span>
+      <h1>Contact</h1>
+      <p class="page__intro">Imbas is a measurement institution being built in public. Three useful next steps below, depending on what brought you here.</p>
+    </header>
 
-    <div class="page__cards">
-      <article class="page__plate page__card">
-        <h2>For Institutions</h2>
-        <p>Discuss institutional pilots, audit-ready documentation, or cross-vendor measurement for your team.</p>
-        <p class="page__card-email">Email: <a href="mailto:brendan@imbaslabs.com?subject=Institutional%20use">brendan@imbaslabs.com</a></p>
-        <p class="page__card-email">Subject line: &ldquo;Institutional use&rdquo;</p>
-      </article>
+    <section class="ct-section ct-routes" aria-label="Contact routes">
+        <article class="ct-route">
+          <div class="ct-route__label">Institutions</div>
+          <div class="ct-route__body">
+            <h2 class="ct-route__title">For Institutions</h2>
+            <p class="ct-route__desc">Discuss institutional pilots, audit-ready documentation, or cross-vendor measurement for your team.</p>
+            <div class="ct-field-strip">
+              <p class="ct-record-field">Email: <a href="mailto:brendan@imbaslabs.com?subject=Institutional%20use">brendan@imbaslabs.com</a></p>
+              <p class="ct-record-field">Subject line: &ldquo;Institutional use&rdquo;</p>
+            </div>
+          </div>
+        </article>
 
-      <article class="page__plate page__card">
-        <h2>For researchers</h2>
-        <p>Request methodology notes, the v1 dataset summary, or collaboration on the v2 inter-rater reliability sub-study.</p>
-        <p class="page__card-email">Email: <a href="mailto:brendan@imbaslabs.com?subject=Methodology">brendan@imbaslabs.com</a></p>
-        <p class="page__card-email">Subject line: &ldquo;Methodology&rdquo;</p>
-      </article>
+        <article class="ct-route">
+          <div class="ct-route__label">Research</div>
+          <div class="ct-route__body">
+            <h2 class="ct-route__title">For researchers</h2>
+            <p class="ct-route__desc">Request methodology notes, the v1 dataset summary, or collaboration on the v2 inter-rater reliability sub-study.</p>
+            <div class="ct-field-strip">
+              <p class="ct-record-field">Email: <a href="mailto:brendan@imbaslabs.com?subject=Methodology">brendan@imbaslabs.com</a></p>
+              <p class="ct-record-field">Subject line: &ldquo;Methodology&rdquo;</p>
+            </div>
+          </div>
+        </article>
 
-      <article class="page__plate page__card">
-        <h2>For everyone else</h2>
-        <p>Follow Field Notes for observations from the edge of the archive. Occasional, observational, no filler.</p>
-        <p><a href="/briefing" class="page__cta-link">Follow Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
-      </article>
-    </div>
+        <article class="ct-route">
+          <div class="ct-route__label">Field Notes</div>
+          <div class="ct-route__body">
+            <h2 class="ct-route__title">For everyone else</h2>
+            <p class="ct-route__desc">Follow Field Notes for observations from the edge of the archive. Occasional, observational, no filler.</p>
+            <p class="ct-record-field ct-record-field--action"><a href="/briefing" class="page__cta-link ct-route__action">Follow Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
+          </div>
+        </article>
+    </section>
   </div>
 </main>
 
