@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=pi-output-ledger">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -63,43 +63,73 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--public-interest">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Public interest</span></span>
-    <h1>Public Interest</h1>
-    <p class="page__intro">As AI becomes a layer over search, work, education, policy, medicine, and finance, the public needs records of what these systems surface &mdash; and what they do not.</p>
+    <header class="pi-masthead">
+      <span class="section-label section-label--named"><span>Public interest</span></span>
+      <h1>Public Interest</h1>
+      <p class="page__intro">As AI becomes a layer over search, work, education, policy, medicine, and finance, the public needs records of what these systems surface &mdash; and what they do not.</p>
+    </header>
 
-    <section class="page__section" style="border-top:none;padding-top:0;">
-      <h2>Why records matter</h2>
-      <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted. Imbas preserves observations under documented conditions so patterns can be inspected over time.</p>
+    <section class="pi-section pi-records">
+      <h2 class="pi-section__title">Why records matter</h2>
+      <div class="pi-record-note">
+        <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted. Imbas preserves observations under documented conditions so patterns can be inspected over time.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Public-interest measurement</h2>
-      <p>Imbas documents observable behavior so researchers, journalists, institutions, and citizens can inspect surfacing patterns without relying on vendor claims or anecdote.</p>
+    <section class="pi-section pi-measurement">
+      <h2 class="pi-section__title">Public-interest measurement</h2>
+      <div class="pi-record-note">
+        <p>Imbas documents observable behavior so researchers, journalists, institutions, and citizens can inspect surfacing patterns without relying on vendor claims or anecdote.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Not a verdict system</h2>
-      <p>Imbas does not declare intent. It does not decide truth for the reader. It does not render moral judgment. It records behavior.</p>
-      <p>The public-interest value comes from making the record inspectable. A reader can examine the captured response, the rubric, and the cited evidence and reach their own conclusion. That is the point of public records: not to settle the question, but to make the question inspectable.</p>
+    <section class="pi-section pi-doctrine">
+      <h2 class="pi-section__title">Not a verdict system</h2>
+      <div class="pi-doctrine-plate">
+        <p>Imbas does not declare intent. It does not decide truth for the reader. It does not render moral judgment. It records behavior.</p>
+        <p>The public-interest value comes from making the record inspectable. A reader can examine the captured response, the rubric, and the cited evidence and reach their own conclusion. That is the point of public records: not to settle the question, but to make the question inspectable.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>What public support can produce</h2>
-      <ul>
-        <li>Expanded case archive across topics and models</li>
-        <li>Methodology development and versioned documentation</li>
-        <li>Public case reports with full prompt transcripts</li>
-        <li>Public datasets for independent analysis</li>
-        <li>Field Notes on emerging patterns</li>
-        <li>Live signal prototype for in-the-moment gap detection</li>
-      </ul>
+    <section class="pi-section pi-support">
+      <h2 class="pi-section__title">What public support can produce</h2>
+      <dl class="pi-output-ledger">
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Expanded case archive across topics and models</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Methodology development and versioned documentation</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Public case reports with full prompt transcripts</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Public datasets for independent analysis</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Field Notes on emerging patterns</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Output</dt>
+          <dd class="pi-output-ledger__desc">Live signal prototype for in-the-moment gap detection</dd>
+        </div>
+      </dl>
     </section>
 
-    <p class="page__intro">A measurement system that cannot produce small gaps, null findings, and ambiguous results is not a measurement system. It is a conclusion engine. Imbas is not trying to be a conclusion engine. The v1 dataset contains controls that produced gaps as low as 0.75, including one model that scored a perfect 0 on Case 013 (OxyContin). That variance is the credibility.</p>
+    <section class="pi-section pi-credibility">
+      <div class="pi-record-note pi-record-note--closing">
+        <p>A measurement system that cannot produce small gaps, null findings, and ambiguous results is not a measurement system. It is a conclusion engine. Imbas is not trying to be a conclusion engine. The v1 dataset contains controls that produced gaps as low as 0.75, including one model that scored a perfect 0 on Case 013 (OxyContin). That variance is the credibility.</p>
+      </div>
+    </section>
 
-    <div class="page__cta-row">
+    <div class="page__cta-row pi-cta">
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/contact.html">Contact <span class="arrow" aria-hidden="true">&rarr;</span></a>
