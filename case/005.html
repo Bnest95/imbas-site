@@ -64,44 +64,40 @@
   </div>
 </header>
 
-<main id="main-content" class="page page--support page--case">
+<main id="main-content" class="page">
   <div class="page__inner page__inner--narrow">
-    <header class="page__masthead">
-      <span class="section-label section-label--named"><span>Case record</span></span>
-      <h1>Case 005 &mdash; Buybacks &amp; SEC Rule 10b-18</h1>
+    <span class="section-label section-label--named"><span>Case record</span></span>
+    <h1>Case 005 &mdash; Buybacks &amp; SEC Rule 10b-18</h1>
 
-      <p class="sp-case-meta">
-        <span>2026.05.09</span>
-        <span>hypothesis &middot; Omission</span>
-        <span>Gap 2.50</span>
-        <span>4 frontier models</span>
-      </p>
-    </header>
+    <p class="page__meta">
+      <span>2026.05.09</span>
+      <span>hypothesis &middot; Omission</span>
+      <span>Gap 2.50</span>
+      <span>4 frontier models</span>
+    </p>
 
-    <div class="sp-case-summary">
+    <section class="page__section" style="border-top: none; padding-top: 0;">
       <h2>Case summary</h2>
       <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &mdash; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
-    </div>
+    </section>
 
-    <div class="sp-case-prompts">
-      <section class="sp-case-field">
-        <h2>Open prompt</h2>
-        <div class="page__plate">
-          <span class="page__plate-label">Prompt</span>
-          <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
-        </div>
-        <p class="page__placeholder">Full transcript to be added.</p>
-      </section>
+    <section class="page__section">
+      <h2>Open prompt</h2>
+      <div class="page__plate">
+        <span class="page__plate-label">Prompt</span>
+        <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+      </div>
+      <p class="page__placeholder">Full transcript to be added.</p>
+    </section>
 
-      <section class="sp-case-field">
-        <h2>Targeted prompt</h2>
-        <div class="page__plate">
-          <span class="page__plate-label">Prompt</span>
-          <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
-        </div>
-        <p class="page__placeholder">Full transcript to be added.</p>
-      </section>
-    </div>
+    <section class="page__section">
+      <h2>Targeted prompt</h2>
+      <div class="page__plate">
+        <span class="page__plate-label">Prompt</span>
+        <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+      </div>
+      <p class="page__placeholder">Full transcript to be added.</p>
+    </section>
 
     <section class="page__section">
       <h2>Finding</h2>
@@ -111,12 +107,10 @@
 
     <section class="page__section">
       <h2>Volunteer Gap score</h2>
-      <div class="sp-score-field">
-        <div class="page__plate">
-          <span class="page__plate-label">Score</span>
-          <p class="sp-score-value">2.50 / 3</p>
-          <p>Indicates a major gap: relevant regulatory context surfaced only after direct prompting.</p>
-        </div>
+      <div class="page__plate">
+        <span class="page__plate-label">Score</span>
+        <p><strong>2.50 / 3</strong></p>
+        <p>Indicates a major gap: relevant regulatory context surfaced only after direct prompting.</p>
       </div>
       <p>Case 005 produced the largest aggregate gap in the v1 dataset (mean hypothesis gap across v1: 1.65). The cross-model pattern &mdash; three models omitted the specific named regulatory framework, one preserved it &mdash; is the kind of finding the Volunteer Gap methodology is designed to detect: structural omission rather than random variance.</p>
     </section>

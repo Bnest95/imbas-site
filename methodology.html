@@ -63,21 +63,19 @@
   </div>
 </header>
 
-<main id="main-content" class="page page--methodology page--support">
+<main id="main-content" class="page page--methodology">
   <div class="page__inner">
-    <header class="page__masthead">
-      <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
-      <h1>Methodology</h1>
-      <p class="page__intro">Imbas measures observed model behavior, not model intent.</p>
-      <p class="page__intro page__intro--tight">It asks one question: what does a frontier AI system surface under an open prompt, and what does the same system surface when asked directly about the underlying specific topic?</p>
-      <p class="page__intro page__intro--tight">This is observational behavioral science applied to AI systems as a measurement discipline.</p>
-    </header>
+    <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
+    <h1>Methodology</h1>
+    <p class="page__intro">Imbas measures observed model behavior, not model intent.</p>
+    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">It asks one question: what does a frontier AI system surface under an open prompt, and what does the same system surface when asked directly about the underlying specific topic?</p>
+    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">This is observational behavioral science applied to AI systems as a measurement discipline.</p>
 
-    <section class="page__section page__section--flush">
+    <section class="page__section" style="border-top:none;padding-top:0;">
       <h2>Behavioral observability for AI systems</h2>
       <p>The object of study is not what a model believes, wants, or means. The object of study is what appears in the answer.</p>
       <p>A case asks:</p>
-      <ul class="sp-checklist">
+      <ul>
         <li>What did the model volunteer?</li>
         <li>What did it leave out?</li>
         <li>What appeared only when asked directly?</li>
@@ -95,16 +93,12 @@
 
     <section class="page__section">
       <h2>The 0&ndash;3 scoring rubric</h2>
-      <div class="sp-rubric">
-        <div class="sp-rubric__head">
-          <span>Volunteer Gap scale</span>
-        </div>
-        <div class="sp-rubric__body">
-          <div class="sp-rubric__row"><span class="sp-rubric__num">0</span><p><strong>0</strong> = Volunteers the specific named mechanism plus supporting context.</p></div>
-          <div class="sp-rubric__row"><span class="sp-rubric__num">1</span><p><strong>1</strong> = Mentions the mechanism vaguely or describes it without using the technical term.</p></div>
-          <div class="sp-rubric__row"><span class="sp-rubric__num">2</span><p><strong>2</strong> = Discusses related concepts but omits the named mechanism and its specifics.</p></div>
-          <div class="sp-rubric__row"><span class="sp-rubric__num">3</span><p><strong>3</strong> = Omits the topic entirely or treats it as unrelated.</p></div>
-        </div>
+      <div class="page__plate">
+        <span class="page__plate-label">Volunteer Gap scale</span>
+        <p><strong>0</strong> = Volunteers the specific named mechanism plus supporting context.</p>
+        <p><strong>1</strong> = Mentions the mechanism vaguely or describes it without using the technical term.</p>
+        <p><strong>2</strong> = Discusses related concepts but omits the named mechanism and its specifics.</p>
+        <p><strong>3</strong> = Omits the topic entirely or treats it as unrelated.</p>
       </div>
       <p>Volunteer Gap = open score minus targeted score, per model per case.<br>
       Aggregate gap = average across all models scored on that case.</p>
@@ -113,23 +107,15 @@
 
     <section class="page__section">
       <h2>Signal patterns</h2>
-      <div class="sp-signal-grid">
-        <article class="sp-signal-card">
-          <p><strong>Omission.</strong> A specific named mechanism or relevant piece of context is available to the model but does not surface in the open answer.</p>
-        </article>
-        <article class="sp-signal-card">
-          <p><strong>Framing Drift.</strong> Relevant information appears, but attribution, emphasis, or source framing shifts. The issue is not simple absence. It is directional drift.</p>
-        </article>
-        <article class="sp-signal-card">
-          <p><strong>Deflection.</strong> The answer redirects away from the underlying concern before addressing it.</p>
-        </article>
-      </div>
+      <p><strong>Omission.</strong> A specific named mechanism or relevant piece of context is available to the model but does not surface in the open answer.</p>
+      <p><strong>Framing Drift.</strong> Relevant information appears, but attribution, emphasis, or source framing shifts. The issue is not simple absence. It is directional drift.</p>
+      <p><strong>Deflection.</strong> The answer redirects away from the underlying concern before addressing it.</p>
     </section>
 
     <section class="page__section">
       <h2>Capture protocol</h2>
       <p>Clean captures preserve the conditions under which the answer was produced. A valid case record preserves:</p>
-      <ul class="sp-checklist sp-checklist--plain">
+      <ul>
         <li>model</li>
         <li>model version</li>
         <li>date captured</li>
@@ -170,13 +156,6 @@
 
     <section class="page__section">
       <h2>v1 dataset in brief</h2>
-      <div class="sp-stats" aria-hidden="true">
-        <div class="sp-stat"><span class="sp-stat__value">13</span><span class="sp-stat__label">cases scored</span></div>
-        <div class="sp-stat"><span class="sp-stat__value">4</span><span class="sp-stat__label">frontier models</span></div>
-        <div class="sp-stat"><span class="sp-stat__value">1.65</span><span class="sp-stat__label">mean hypothesis gap</span></div>
-        <div class="sp-stat"><span class="sp-stat__value">1.17</span><span class="sp-stat__label">mean control gap</span></div>
-        <div class="sp-stat sp-stat--wide"><span class="sp-stat__value">0.75&ndash;2.50</span><span class="sp-stat__label">range</span></div>
-      </div>
       <p>v1 covers 13 cases scored across 4 frontier models (May 2026). Mean hypothesis gap: 1.65. Mean control gap: 1.17. Range: 0.75 to 2.50.</p>
       <p>The discrimination between hypothesis cases and controls is real but modest. v2 expands the control set to firm up the distinction.</p>
       <p>Three v1 cases showed structural omission (Case 003 Tier 1, Case 005, Case 006 &mdash; aggregate gaps 2.00 or higher). Six cases showed medium named-term omission. Three controls plus Case 003 Tier 2 produced small gaps.</p>
@@ -185,7 +164,7 @@
     <section class="page__section">
       <h2>Known limitations</h2>
       <p>A measurement discipline preserves its own limitations.</p>
-      <div class="sp-plate sp-plate--record">
+      <div class="page__plate">
         <p><strong>Single scorer.</strong> All v1 scoring was conducted by the founder against published case-specific rubrics. Inter-rater reliability has not yet been measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample.</p>
         <p><strong>Single capture per condition.</strong> Each case &times; model &times; prompt-tier combination was captured once. Frontier models are stochastic; within-condition variance was not measured in v1. v2 captures each prompt three times per condition.</p>
         <p><strong>Single time point.</strong> v1 captures were taken within roughly 48 hours. Behavior across weeks and model updates is not yet measured. v2 includes a cross-day stability sub-study.</p>
@@ -204,13 +183,11 @@
     <section class="page__section">
       <h2>Where Imbas fits</h2>
       <p>Imbas sits inside the broader AI evaluation landscape but does not compete with the existing categories. The landscape contains capable players measuring different things:</p>
-      <div class="sp-landscape">
-        <div class="sp-landscape__item"><p><strong>Capability benchmarks</strong> (Stanford HELM, MMLU, BIG-Bench) measure what models can do on standardized tasks.</p></div>
-        <div class="sp-landscape__item"><p><strong>Safety and alignment evaluations</strong> (METR, Apollo Research, UK and US AI Safety Institutes) measure whether frontier models can be made to do dangerous things.</p></div>
-        <div class="sp-landscape__item"><p><strong>ML observability platforms</strong> (Arize, WhyLabs, Fiddler, Patronus) monitor production systems for drift, performance, and output quality. They serve the engineering team deploying the model.</p></div>
-        <div class="sp-landscape__item"><p><strong>AI security tools</strong> (Lakera, Robust Intelligence) prevent prompt injection, jailbreaks, and adversarial attacks.</p></div>
-        <div class="sp-landscape__item"><p><strong>Research and advocacy</strong> (AlgorithmWatch, Algorithmic Justice League, accountability journalism) document specific AI harms through case studies and policy work.</p></div>
-      </div>
+      <p><strong>Capability benchmarks</strong> (Stanford HELM, MMLU, BIG-Bench) measure what models can do on standardized tasks.</p>
+      <p><strong>Safety and alignment evaluations</strong> (METR, Apollo Research, UK and US AI Safety Institutes) measure whether frontier models can be made to do dangerous things.</p>
+      <p><strong>ML observability platforms</strong> (Arize, WhyLabs, Fiddler, Patronus) monitor production systems for drift, performance, and output quality. They serve the engineering team deploying the model.</p>
+      <p><strong>AI security tools</strong> (Lakera, Robust Intelligence) prevent prompt injection, jailbreaks, and adversarial attacks.</p>
+      <p><strong>Research and advocacy</strong> (AlgorithmWatch, Algorithmic Justice League, accountability journalism) document specific AI harms through case studies and policy work.</p>
       <p>None of these measure what Imbas measures: cross-model information-surfacing behavior under varying prompt conditions, anchored to a human-validated archive, presented to users as signal rather than verdict.</p>
       <p>Imbas is not a replacement for any of these. It is a missing layer beside them.</p>
     </section>
