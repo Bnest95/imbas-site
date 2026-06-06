@@ -4254,166 +4254,392 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--institutions {
   --inst-prose-width: 42rem;
 }
+.page--institutions ul,
+.page--institutions ol {
+  list-style: none;
+  padding-left: 0;
+}
+.page--institutions li::marker {
+  content: "";
+}
+
+/* Masthead — hero block */
 .page--institutions .inst-masthead {
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--line-soft);
-  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.12);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(var(--ember-rgb), 0.22);
+  box-shadow: inset 0 -2px 0 rgba(var(--ember-rgb), 0.1);
 }
 .page--institutions .inst-masthead .section-label {
   margin-bottom: var(--space-3);
   color: rgba(180, 192, 210, 0.95);
 }
 .page--institutions .inst-masthead .section-label--named::before {
-  color: rgba(var(--ember-rgb), 0.6);
+  color: rgba(var(--ember-rgb), 0.62);
 }
 .page--institutions .inst-masthead h1 {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: rgba(242, 232, 220, 0.98);
 }
-.page--institutions .inst-masthead .page__lede {
-  margin-bottom: var(--space-3);
-  max-width: 62ch;
+.page--institutions .inst-masthead__thesis {
+  margin: 0 0 var(--space-5);
+  max-width: 52ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+  line-height: 1.34;
+  letter-spacing: -0.012em;
+  color: rgba(242, 232, 220, 0.96);
+}
+.page--institutions .inst-masthead__briefing {
+  max-width: var(--inst-prose-width);
+  padding: var(--space-4) var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.2);
+  border-left: 3px solid rgba(var(--ember-rgb), 0.34);
+  background: rgba(var(--bg-base-rgb), 0.32);
+  box-shadow: inset 0 1px 0 rgba(var(--ember-rgb), 0.06);
 }
 .page--institutions .inst-masthead .page__intro {
   margin: 0 0 var(--space-2);
   max-width: 62ch;
-  line-height: 1.55;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: rgba(212, 207, 194, 0.88);
 }
-.page--institutions .inst-masthead .page__intro:last-of-type {
+.page--institutions .inst-masthead .page__intro:last-child {
   margin-bottom: 0;
 }
 .page--institutions .inst-intro--tight {
-  margin-top: 0;
-  margin-bottom: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.14);
+  color: rgba(212, 207, 194, 0.94);
 }
 
-/* Section blocks */
+/* Section blocks — varied rhythm */
 .page--institutions .inst-section {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.page--institutions .inst-deliverables {
+  margin-bottom: var(--space-5);
+}
+.page--institutions .inst-restraint {
+  margin-top: var(--space-4);
   margin-bottom: var(--space-5);
   padding-top: var(--space-4);
   border-top: 1px solid var(--line-faint);
 }
-.page--institutions .inst-deliverables {
-  padding-top: 0;
-  border-top: none;
+.page--institutions .inst-oversight {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+.page--institutions .inst-stack {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+}
+.page--institutions .inst-posture {
+  margin-top: var(--space-7);
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.2);
+}
+.page--institutions .inst-near-term {
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
 }
 .page--institutions .inst-section__title {
-  margin: 0 0 var(--space-3);
-  padding: 0;
+  margin: 0 0 var(--space-4);
+  padding: 0 0 var(--space-3);
+  max-width: var(--inst-prose-width);
   border: none;
+  border-bottom: 1px solid var(--line-faint);
+  box-shadow: 0 1px 0 rgba(var(--ember-rgb), 0.07);
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 1.8vw, 1.45rem);
-  font-weight: 450;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
+  font-size: clamp(1.35rem, 2.1vw, 1.65rem);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.28;
   color: var(--ink-luminous);
 }
 
-/* Workpaper deliverable checklist */
-.page--institutions .inst-workpaper-list {
-  margin: 0;
-  padding: 0;
-  max-width: var(--inst-prose-width);
-  list-style: none;
-  border: 1px solid var(--line-faint);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.28);
-  background: rgba(var(--bg-surface-rgb), 0.1);
-}
-.page--institutions .inst-workpaper-list li {
-  position: relative;
-  margin: 0;
-  padding: 0.7rem var(--space-3) 0.7rem 2rem;
-  border-bottom: 1px solid var(--line-faint);
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  line-height: 1.55;
-  color: var(--ink-primary);
-}
-.page--institutions .inst-workpaper-list li:last-child {
-  border-bottom: none;
-}
-.page--institutions .inst-workpaper-list li::before {
-  content: "//";
-  position: absolute;
-  left: var(--space-3);
-  top: 0.78rem;
-  font-family: var(--font-mono);
-  font-size: 0.5rem;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: rgba(var(--ember-rgb), 0.38);
-}
-.page--institutions .inst-workpaper-list--compact li {
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  color: rgba(212, 207, 194, 0.94);
-  padding-top: 0.6rem;
-  padding-bottom: 0.6rem;
-}
-.page--institutions .inst-workpaper-list--compact li::before {
-  top: 0.68rem;
-}
-
-/* Governance restraint plate */
+/* Shared ledger shell */
+.page--institutions .inst-output-ledger,
 .page--institutions .inst-restraint-plate {
   max-width: var(--inst-prose-width);
-  border: 1px solid var(--line-faint);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.22);
-  background: rgba(var(--bg-surface-rgb), 0.08);
+  border: 1px solid var(--line-soft);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.22);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.3);
+  background: rgba(var(--bg-base-rgb), 0.28);
+  overflow: hidden;
 }
+
+/* Output deliverables ledger */
+.page--institutions .inst-deliverables .inst-output-ledger {
+  border-left-width: 3px;
+  border-left-color: rgba(var(--ember-rgb), 0.38);
+  background: rgba(var(--bg-base-rgb), 0.34);
+  box-shadow: inset 0 1px 0 rgba(var(--ember-rgb), 0.08);
+}
+.page--institutions .inst-output-ledger {
+  margin: 0;
+  padding: 0;
+  counter-reset: inst-output;
+}
+.page--institutions .inst-output-ledger__row {
+  display: grid;
+  grid-template-columns: 6.75rem minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+  margin: 0;
+  counter-increment: inst-output;
+  padding: 0.85rem var(--space-3);
+  border-bottom: 1px solid var(--line-faint);
+}
+.page--institutions .inst-output-ledger__row::before {
+  content: "Output " counter(inst-output, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: rgba(var(--ember-rgb), 0.78);
+}
+.page--institutions .inst-output-ledger__row:nth-child(even) {
+  background: rgba(var(--bg-surface-rgb), 0.12);
+}
+.page--institutions .inst-output-ledger__row:last-child {
+  border-bottom: none;
+}
+.page--institutions .inst-output-ledger__text {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(212, 207, 194, 0.94);
+}
+
+/* Restraint ledger */
 .page--institutions .inst-restraint-list {
   margin: 0;
   padding: 0;
-  list-style: none;
 }
-.page--institutions .inst-restraint-list li {
+.page--institutions .inst-restraint-list__row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
   margin: 0;
-  padding: 0.65rem var(--space-3) 0.65rem var(--space-4);
+  padding: 0.8rem var(--space-3);
   border-bottom: 1px solid var(--line-faint);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: rgba(212, 207, 194, 0.94);
 }
-.page--institutions .inst-restraint-list li:last-child {
+.page--institutions .inst-restraint-list__row::before {
+  content: "Does not";
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: rgba(var(--ember-rgb), 0.68);
+}
+.page--institutions .inst-restraint-list__row:nth-child(even) {
+  background: rgba(var(--bg-surface-rgb), 0.08);
+}
+.page--institutions .inst-restraint-list__row--records {
+  margin-top: 0.15rem;
+  padding: 1rem var(--space-3);
+  border-top: 1px dashed rgba(var(--ember-rgb), 0.32);
   border-bottom: none;
-  color: var(--ink-soft);
+  background: rgba(var(--ember-rgb), 0.1);
+  box-shadow: inset 0 1px 0 rgba(var(--ember-rgb), 0.1);
+}
+.page--institutions .inst-restraint-list__row--records::before {
+  content: "Records";
+  font-size: 0.875rem;
+  color: var(--ember-bright);
+}
+.page--institutions .inst-restraint-list__text {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.58;
+  color: rgba(212, 207, 194, 0.92);
+}
+.page--institutions .inst-restraint-list__row--records .inst-restraint-list__text {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(242, 232, 220, 0.96);
 }
 
 /* Record notes */
 .page--institutions .inst-record-note {
   max-width: var(--inst-prose-width);
-  padding: var(--space-2) 0 0 var(--space-3);
-  border-left: 1px solid rgba(var(--ember-rgb), 0.18);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--line-faint);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.26);
+  background: rgba(var(--bg-surface-rgb), 0.12);
 }
 .page--institutions .inst-record-note p {
-  margin: 0 0 0.85em;
+  margin: 0;
   max-width: 62ch;
   font-family: var(--font-body);
   font-size: 0.9375rem;
-  line-height: 1.62;
-  color: var(--ink-soft);
+  line-height: 1.65;
+  color: rgba(212, 207, 194, 0.9);
 }
-.page--institutions .inst-record-note p:last-child {
-  margin-bottom: 0;
+.page--institutions .inst-briefing-note {
+  padding: var(--space-4) var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid rgba(var(--ember-rgb), 0.42);
+  background: rgba(var(--bg-surface-rgb), 0.2);
+  box-shadow: inset 0 1px 0 rgba(var(--ember-rgb), 0.08);
+}
+.page--institutions .inst-briefing-note p {
+  font-size: 1rem;
+  line-height: 1.68;
+  color: rgba(212, 207, 194, 0.94);
+}
+.page--institutions .inst-record-note__pull {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.18);
+  max-width: 52ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.6vw, 1.15rem);
+  line-height: 1.42;
+  color: rgba(var(--ember-rgb), 0.92);
 }
 
-/* Operating posture tagline */
-.page--institutions .inst-posture__tagline {
-  margin: 0 0 var(--space-3);
-  max-width: var(--inst-prose-width);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--line-faint);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.26);
-  background: rgba(var(--bg-base-rgb), 0.25);
+/* Stack observations */
+.page--institutions .inst-observations {
+  display: grid;
+  gap: var(--space-3);
+  counter-reset: inst-observation;
+}
+.page--institutions .inst-observation {
+  counter-increment: inst-observation;
+}
+.page--institutions .inst-observation::before {
+  content: "Observation " counter(inst-observation, decimal-leading-zero);
+  display: block;
+  margin-bottom: var(--space-2);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: rgba(var(--ember-rgb), 0.58);
+}
+.page--institutions .inst-observation.inst-record-note {
+  padding-top: var(--space-2);
+  background: rgba(var(--bg-base-rgb), 0.2);
+}
+
+/* Operating posture — doctrine object */
+.page--institutions .inst-doctrine-object {
+  max-width: var(--inst-prose-width);
+  padding: var(--space-4) var(--space-4) var(--space-5);
+  background:
+    radial-gradient(ellipse 80% 60% at 12% 0%, rgba(var(--ember-rgb), 0.1), transparent 55%),
+    rgba(var(--bg-base-rgb), 0.22);
+  border: none;
+  border-left: 3px solid rgba(var(--ember-rgb), 0.48);
+  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.08);
+}
+.page--institutions .inst-doctrine-object__setup {
+  margin: 0 0 var(--space-4);
+  max-width: 58ch;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px dashed rgba(var(--ember-rgb), 0.22);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: rgba(180, 192, 210, 0.9);
+}
+.page--institutions .inst-posture .inst-doctrine-plate {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+.page--institutions .inst-doctrine-plate__line {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
   font-weight: 500;
   letter-spacing: 0.1em;
-  line-height: 1.65;
+  line-height: 1.45;
   text-transform: uppercase;
-  color: rgba(var(--ember-rgb), 0.78);
+  color: rgba(var(--ember-rgb), 0.94);
+}
+.page--institutions .inst-doctrine-plate__line + .inst-doctrine-plate__line {
+  margin-top: 0.65rem;
+}
+
+/* Near-term deliverables — roadmap */
+.page--institutions .inst-roadmap {
+  max-width: var(--inst-prose-width);
+  padding: 0 0 0 var(--space-4);
+  border-left: 1px solid rgba(var(--ember-rgb), 0.28);
+  display: grid;
+  gap: var(--space-4);
+}
+.page--institutions .inst-roadmap__stage {
+  position: relative;
+  padding-left: var(--space-2);
+}
+.page--institutions .inst-roadmap__stage::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--space-4) - 4px);
+  top: 0.42rem;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(var(--ember-rgb), 0.72);
+  box-shadow: 0 0 0 3px rgba(var(--ember-rgb), 0.12);
+}
+.page--institutions .inst-roadmap__stage--later::before {
+  background: rgba(180, 192, 210, 0.55);
+  box-shadow: 0 0 0 3px rgba(180, 192, 210, 0.1);
+}
+.page--institutions .inst-roadmap__label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: rgba(var(--ember-rgb), 0.76);
+}
+.page--institutions .inst-roadmap__stage--later .inst-roadmap__label {
+  color: rgba(180, 192, 210, 0.72);
+}
+.page--institutions .inst-roadmap__items {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+.page--institutions .inst-roadmap__items li {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(212, 207, 194, 0.92);
+}
+.page--institutions .inst-roadmap__stage--later .inst-roadmap__items li {
+  font-style: italic;
+  color: rgba(180, 192, 210, 0.85);
 }
 
 /* CTA row */
@@ -4436,30 +4662,115 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
     --inst-prose-width: 100%;
   }
   .page--institutions .inst-masthead {
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-5);
   }
-  .page--institutions .inst-masthead .page__lede,
+  .page--institutions .inst-masthead .inst-masthead__thesis,
   .page--institutions .inst-masthead .page__intro {
     max-width: none;
   }
-  .page--institutions .inst-section {
+  .page--institutions .inst-masthead__thesis {
     margin-bottom: var(--space-4);
+    font-size: 1.3rem;
+  }
+  .page--institutions .inst-masthead__briefing {
+    padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  }
+  .page--institutions .inst-restraint {
+    margin-top: var(--space-3);
     padding-top: var(--space-3);
   }
-  .page--institutions .inst-section__title {
-    font-size: 1.15rem;
+  .page--institutions .inst-oversight {
+    margin-top: var(--space-5);
   }
-  .page--institutions .inst-workpaper-list li,
-  .page--institutions .inst-restraint-list li {
+  .page--institutions .inst-posture {
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
+  }
+  .page--institutions .inst-section__title {
+    font-size: 1.28rem;
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    max-width: none;
+  }
+  .page--institutions .inst-output-ledger__row,
+  .page--institutions .inst-restraint-list__row {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    padding: 0.75rem var(--space-2);
+  }
+  .page--institutions .inst-output-ledger__row::before,
+  .page--institutions .inst-restraint-list__row::before {
+    font-size: 0.75rem;
+  }
+  .page--institutions .inst-output-ledger__text,
+  .page--institutions .inst-restraint-list__text {
+    font-size: 0.875rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .page--institutions .inst-doctrine-object {
+    padding: var(--space-3) var(--space-2) var(--space-4) var(--space-3);
+  }
+  .page--institutions .inst-doctrine-object__setup {
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    font-size: 0.875rem;
+  }
+  .page--institutions .inst-doctrine-plate__line {
+    font-size: 0.875rem;
+    letter-spacing: 0.08em;
     overflow-wrap: break-word;
   }
-  .page--institutions .inst-record-note p {
-    max-width: none;
-    font-size: 0.9rem;
+  .page--institutions .inst-roadmap {
+    padding-left: var(--space-3);
+    gap: var(--space-3);
   }
-  .page--institutions .inst-posture__tagline {
-    font-size: 0.72rem;
+  .page--institutions .inst-roadmap__stage {
+    padding-left: var(--space-1);
+  }
+  .page--institutions .inst-roadmap__stage::before {
+    left: calc(-1 * var(--space-3) - 4px);
+  }
+  .page--institutions .inst-roadmap__label {
+    font-size: 0.75rem;
+  }
+  .page--institutions .inst-roadmap__items li {
+    font-size: 0.875rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .page--institutions .inst-record-note,
+  .page--institutions .inst-briefing-note {
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  }
+  .page--institutions .inst-record-note p,
+  .page--institutions .inst-briefing-note p {
+    max-width: none;
+    font-size: 0.875rem;
+  }
+  .page--institutions .inst-record-note__pull {
+    font-size: 1rem;
+  }
+  .page--institutions .inst-observations {
+    gap: var(--space-2);
+  }
+  .page--institutions .inst-restraint-list__row--records {
+    padding: 0.85rem var(--space-2);
+  }
+  .page--institutions .inst-restraint-list__row--records .inst-restraint-list__text {
+    font-size: 0.9375rem;
+  }
+  .page--institutions .inst-doctrine-plate__line {
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+    padding: 0.85rem var(--space-2) 0.85rem var(--space-3);
+  }
+  .page--institutions .inst-cta {
+    margin-top: var(--space-5);
+  }
+  .page--institutions .inst-cta {
+    gap: 1rem 1.5rem;
   }
 }
 
