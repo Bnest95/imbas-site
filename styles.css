@@ -3050,3 +3050,250 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--methodology .page__plate p {
   max-width: none;
 }
+
+/* === how-it-works process page === */
+
+.page--how-it-works .hiw-masthead {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.12);
+}
+.page--how-it-works .hiw-masthead .section-label {
+  margin-bottom: var(--space-3);
+  color: rgba(180, 192, 210, 0.95);
+}
+.page--how-it-works .hiw-masthead .section-label--named::before {
+  color: rgba(var(--ember-rgb), 0.6);
+}
+.page--how-it-works .hiw-masthead h1 {
+  margin-bottom: var(--space-3);
+}
+.page--how-it-works .hiw-intro--tight {
+  margin-top: calc(-1 * var(--space-3));
+  margin-bottom: 0;
+}
+
+/* Process container */
+.page--how-it-works .hiw-process {
+  margin: 0 0 var(--space-6);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid rgba(var(--ember-rgb), 0.45);
+  background: rgba(var(--bg-surface-rgb), 0.28);
+}
+
+/* Step record rows */
+.page--how-it-works .hiw-step {
+  display: grid;
+  grid-template-columns: 4.25rem 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-3);
+  border-bottom: 1px solid var(--line-soft);
+  background: rgba(var(--bg-elevated-rgb), 0.14);
+}
+.page--how-it-works .hiw-step:last-child {
+  border-bottom: none;
+}
+.page--how-it-works .hiw-step:nth-child(even) {
+  background: rgba(var(--bg-surface-rgb), 0.22);
+}
+
+/* Number cell — attached to step, never floating */
+.page--how-it-works .hiw-step__num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  min-width: 3rem;
+  height: 3rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ember-soft);
+  line-height: 1;
+  border: 1px solid rgba(var(--ember-rgb), 0.5);
+  background: rgba(var(--bg-base-rgb), 0.95);
+  flex-shrink: 0;
+}
+
+/* Step body — grouped with number */
+.page--how-it-works .hiw-step__body {
+  min-width: 0;
+  padding: 0.15rem 0 0;
+  border-left: 1px solid rgba(var(--ember-rgb), 0.2);
+  padding-left: var(--space-4);
+}
+.page--how-it-works .hiw-step__body h2 {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 450;
+  letter-spacing: -0.008em;
+  color: var(--ink-luminous);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: none;
+  line-height: 1.3;
+}
+.page--how-it-works .hiw-step__body p {
+  margin: 0 0 0.85em;
+  max-width: 56ch;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+.page--how-it-works .hiw-step__body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Rubric table instrument */
+.page--how-it-works .hiw-rubric {
+  margin: var(--space-3) 0 var(--space-2);
+  border: 1px solid var(--line-soft);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.28);
+  background: rgba(var(--bg-base-rgb), 0.55);
+  overflow: hidden;
+}
+.page--how-it-works .hiw-rubric__label {
+  padding: 0.7rem var(--space-3);
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(var(--ember-rgb), 0.82);
+  background: rgba(var(--bg-surface-rgb), 0.35);
+}
+.page--how-it-works .hiw-rubric__row {
+  display: grid;
+  grid-template-columns: 3.25rem 1fr;
+  gap: var(--space-3);
+  padding: 0.85rem var(--space-3);
+  border-bottom: 1px solid var(--line-faint);
+  align-items: start;
+}
+.page--how-it-works .hiw-rubric__row:last-child {
+  border-bottom: none;
+}
+.page--how-it-works .hiw-rubric__row:nth-child(even) {
+  background: rgba(var(--bg-elevated-rgb), 0.12);
+}
+.page--how-it-works .hiw-rubric__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--ember-soft);
+  line-height: 1;
+  border: 1px solid rgba(var(--ember-rgb), 0.45);
+  background: rgba(var(--ember-rgb), 0.08);
+}
+.page--how-it-works .hiw-rubric__text {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.58;
+  color: var(--ink-soft);
+  padding-top: 0.25rem;
+}
+
+/* Closing block */
+.page--how-it-works .hiw-closing {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-left: 3px solid rgba(var(--ember-rgb), 0.45);
+  background: rgba(var(--bg-elevated-rgb), 0.18);
+}
+.page--how-it-works .hiw-closing h2 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 450;
+  letter-spacing: -0.008em;
+  color: var(--ink-luminous);
+  margin: 0 0 var(--space-3);
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--line-faint);
+}
+.page--how-it-works .hiw-closing p {
+  margin: 0 0 0.85em;
+  max-width: 58ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.page--how-it-works .hiw-closing p:last-child {
+  margin-bottom: 0;
+}
+
+/* CTA row */
+.page--how-it-works .hiw-cta {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+.page--how-it-works .hiw-cta a .arrow {
+  color: var(--ember-soft);
+  transition: transform 0.3s ease, color 0.25s ease;
+}
+.page--how-it-works .hiw-cta a:hover .arrow {
+  transform: translateX(4px);
+  color: var(--ember-bright);
+}
+
+@media (max-width: 699px) {
+  .page--how-it-works .hiw-masthead {
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+  }
+  .page--how-it-works .hiw-step {
+    grid-template-columns: 3.25rem 1fr;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+  .page--how-it-works .hiw-step__num {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    font-size: 0.7rem;
+  }
+  .page--how-it-works .hiw-step__body {
+    padding-left: var(--space-3);
+  }
+  .page--how-it-works .hiw-step__body h2 {
+    font-size: 1rem;
+    overflow-wrap: break-word;
+  }
+  .page--how-it-works .hiw-step__body p {
+    max-width: none;
+  }
+  .page--how-it-works .hiw-rubric__row {
+    grid-template-columns: 2.75rem 1fr;
+    gap: var(--space-2);
+    padding: 0.75rem var(--space-2);
+  }
+  .page--how-it-works .hiw-rubric__score {
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+  .page--how-it-works .hiw-rubric__text {
+    font-size: 0.875rem;
+  }
+  .page--how-it-works .hiw-closing {
+    padding: var(--space-3);
+  }
+  .page--how-it-works .hiw-closing h2 {
+    font-size: 1.0625rem;
+    overflow-wrap: break-word;
+  }
+}
