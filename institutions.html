@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=inst-workpaper">
 </head>
 <body>
 
@@ -53,17 +53,19 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--institutions">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>Independent measurement</span></span>
-    <h1>For Institutions</h1>
-    <p class="page__lede">Not another model to trust. A way to check the ones you already use.</p>
-    <p class="page__intro">Regulated teams are deploying AI faster than they can verify how it behaves.</p>
-    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">Imbas produces independent, cross-vendor records of what systems surface and leave out under documented prompt conditions. The value is not another black box. The value is a citable record.</p>
+    <header class="inst-masthead">
+      <span class="section-label section-label--named"><span>Independent measurement</span></span>
+      <h1>For Institutions</h1>
+      <p class="page__lede">Not another model to trust. A way to check the ones you already use.</p>
+      <p class="page__intro">Regulated teams are deploying AI faster than they can verify how it behaves.</p>
+      <p class="page__intro inst-intro--tight">Imbas produces independent, cross-vendor records of what systems surface and leave out under documented prompt conditions. The value is not another black box. The value is a citable record.</p>
+    </header>
 
-    <section class="page__section" style="border-top:none;padding-top:0;">
-      <h2>What Imbas can produce for an institution</h2>
-      <ul>
+    <section class="inst-section inst-deliverables">
+      <h2 class="inst-section__title">What Imbas can produce for an institution</h2>
+      <ul class="inst-workpaper-list">
         <li>Independent behavioral measurement across multiple frontier models</li>
         <li>Cross-model comparison on the same prompt conditions</li>
         <li>Citable case records with rubric anchors and quoted evidence</li>
@@ -73,36 +75,46 @@
       </ul>
     </section>
 
-    <section class="page__section">
-      <h2>What Imbas does not claim</h2>
-      <p>Imbas does not infer model intent.<br>
-      It does not replace internal governance.<br>
-      It does not certify model safety.<br>
-      It does not declare a model biased, safe, unsafe, truthful, or false.<br>
-      It records observed behavior under documented prompt conditions.</p>
+    <section class="inst-section inst-restraint">
+      <h2 class="inst-section__title">What Imbas does not claim</h2>
+      <div class="inst-restraint-plate">
+        <ul class="inst-restraint-list">
+          <li>Imbas does not infer model intent.</li>
+          <li>It does not replace internal governance.</li>
+          <li>It does not certify model safety.</li>
+          <li>It does not declare a model biased, safe, unsafe, truthful, or false.</li>
+          <li>It records observed behavior under documented prompt conditions.</li>
+        </ul>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Why this matters for AI oversight</h2>
-      <p>AI answers are entering workflows, research, compliance, customer support, policy analysis, and decision support. Institutions need to know not only whether a model can answer a question, but what kind of answer it tends to volunteer when the user does not already know the right term to ask about.</p>
-      <p>That is the institutional form of the Volunteer Gap.</p>
+    <section class="inst-section inst-oversight">
+      <h2 class="inst-section__title">Why this matters for AI oversight</h2>
+      <div class="inst-record-note">
+        <p>AI answers are entering workflows, research, compliance, customer support, policy analysis, and decision support. Institutions need to know not only whether a model can answer a question, but what kind of answer it tends to volunteer when the user does not already know the right term to ask about.</p>
+        <p>That is the institutional form of the Volunteer Gap.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Where this sits in your existing AI stack</h2>
-      <p>Imbas sits alongside the tools you already use. It does not compete with ML observability platforms that monitor your production systems, AI security tools that catch adversarial attacks, or internal compliance audits. It fills a layer none of those tools fill: third-party behavioral observability that can be cited.</p>
-      <p>Compliance professionals in regulated industries already operate inside gap-detection taxonomies &mdash; documentation gaps, validation gaps, findings suppression, governance theater. Imbas&rsquo;s three behavioral categories (Omission, Framing Drift, Deflection) map cleanly into that vocabulary. The framework is legible to examiner-side professionals before any explanation is required.</p>
+    <section class="inst-section inst-stack">
+      <h2 class="inst-section__title">Where this sits in your existing AI stack</h2>
+      <div class="inst-record-note">
+        <p>Imbas sits alongside the tools you already use. It does not compete with ML observability platforms that monitor your production systems, AI security tools that catch adversarial attacks, or internal compliance audits. It fills a layer none of those tools fill: third-party behavioral observability that can be cited.</p>
+        <p>Compliance professionals in regulated industries already operate inside gap-detection taxonomies &mdash; documentation gaps, validation gaps, findings suppression, governance theater. Imbas&rsquo;s three behavioral categories (Omission, Framing Drift, Deflection) map cleanly into that vocabulary. The framework is legible to examiner-side professionals before any explanation is required.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Operating posture</h2>
-      <p class="page__tagline">Behavior, not intent.<br>Signal, not verdict.<br>Documented, citable, inspectable.</p>
-      <p>If a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. Imbas refuses that move. The discipline of surface-not-judge is the institutional credibility.</p>
+    <section class="inst-section inst-posture">
+      <h2 class="inst-section__title">Operating posture</h2>
+      <p class="page__tagline inst-posture__tagline">Behavior, not intent.<br>Signal, not verdict.<br>Documented, citable, inspectable.</p>
+      <div class="inst-record-note">
+        <p>If a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. Imbas refuses that move. The discipline of surface-not-judge is the institutional credibility.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Near-term deliverables</h2>
-      <ul>
+    <section class="inst-section inst-near-term">
+      <h2 class="inst-section__title">Near-term deliverables</h2>
+      <ul class="inst-workpaper-list inst-workpaper-list--compact">
         <li>Case records</li>
         <li>Methodology notes</li>
         <li>Archive reports</li>
@@ -112,7 +124,7 @@
       </ul>
     </section>
 
-    <div class="page__cta-row">
+    <div class="page__cta-row inst-cta">
       <a href="/contact.html">Discuss institutional use <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
