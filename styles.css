@@ -5193,3 +5193,223 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
     overflow-wrap: break-word;
   }
 }
+
+/* === readers guide page === */
+
+.page--readers {
+  --rd-prose-width: 42rem;
+}
+.page--readers .rd-masthead {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.12);
+}
+.page--readers .rd-masthead .section-label {
+  margin-bottom: var(--space-3);
+  color: rgba(180, 192, 210, 0.95);
+}
+.page--readers .rd-masthead .section-label--named::before {
+  color: rgba(var(--ember-rgb), 0.6);
+}
+.page--readers .rd-masthead h1 {
+  margin-bottom: var(--space-3);
+}
+.page--readers .rd-masthead .page__lede {
+  margin-bottom: var(--space-3);
+  max-width: 62ch;
+}
+.page--readers .rd-masthead .page__intro {
+  margin: 0 0 var(--space-2);
+  max-width: 62ch;
+  line-height: 1.58;
+}
+.page--readers .rd-intro--tight {
+  margin-top: calc(-1 * var(--space-3));
+}
+.page--readers .rd-intro--after-thesis {
+  margin-top: 0;
+}
+
+/* Reader thesis plate */
+.page--readers .rd-thesis-plate {
+  margin: var(--space-3) 0 var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
+  max-width: var(--rd-prose-width);
+  border: none;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.32);
+  background: rgba(var(--bg-surface-rgb), 0.1);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 1.7vw, 1.3rem);
+  font-weight: 450;
+  line-height: 1.45;
+  letter-spacing: -0.006em;
+  color: #F2E8DC;
+}
+
+/* Section blocks */
+.page--readers .rd-section {
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-faint);
+}
+.page--readers .rd-section__title {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: none;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 1.8vw, 1.45rem);
+  font-weight: 450;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--ink-luminous);
+}
+
+/* Record notes */
+.page--readers .rd-record-note {
+  max-width: var(--rd-prose-width);
+  padding: var(--space-2) 0 var(--space-2) var(--space-3);
+  border-left: 1px solid rgba(var(--ember-rgb), 0.22);
+}
+.page--readers .rd-record-note--follow {
+  margin-top: var(--space-3);
+}
+.page--readers .rd-record-note p {
+  margin: 0;
+  max-width: 62ch;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+
+/* Doctrine / restraint plate */
+.page--readers .rd-doctrine-plate {
+  max-width: var(--rd-prose-width);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--line-faint);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.3);
+  background: rgba(var(--bg-surface-rgb), 0.1);
+}
+.page--readers .rd-doctrine-plate p {
+  margin: 0;
+  max-width: 62ch;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  line-height: 1.55;
+  color: rgba(212, 207, 194, 0.94);
+}
+
+/* Shared ledger base */
+.page--readers .rd-question-ledger,
+.page--readers .rd-inspect-ledger,
+.page--readers .rd-signal-ledger {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  max-width: var(--rd-prose-width);
+  border: 1px solid var(--line-soft);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.22);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.24);
+  background: rgba(var(--bg-base-rgb), 0.28);
+  overflow: hidden;
+}
+.page--readers .rd-question-ledger__row,
+.page--readers .rd-inspect-ledger__row,
+.page--readers .rd-signal-ledger__row {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0.65rem var(--space-3);
+  align-items: baseline;
+  border-bottom: 1px solid var(--line-faint);
+}
+.page--readers .rd-question-ledger__row:last-child,
+.page--readers .rd-inspect-ledger__row:last-child,
+.page--readers .rd-signal-ledger__row:last-child {
+  border-bottom: none;
+}
+.page--readers .rd-question-ledger__row:nth-child(even),
+.page--readers .rd-inspect-ledger__row:nth-child(even),
+.page--readers .rd-signal-ledger__row:nth-child(even) {
+  background: rgba(var(--bg-surface-rgb), 0.12);
+}
+.page--readers .rd-question-ledger__label,
+.page--readers .rd-inspect-ledger__label,
+.page--readers .rd-signal-ledger__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  color: rgba(var(--ember-rgb), 0.72);
+}
+.page--readers .rd-question-ledger__desc,
+.page--readers .rd-inspect-ledger__desc,
+.page--readers .rd-signal-ledger__desc {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--ink-primary);
+}
+
+/* CTA row */
+.page--readers .rd-cta {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+.page--readers .rd-cta a .arrow {
+  color: var(--ember-soft);
+  transition: transform 0.3s ease, color 0.25s ease;
+}
+.page--readers .rd-cta a:hover .arrow {
+  transform: translateX(4px);
+  color: var(--ember-bright);
+}
+
+@media (max-width: 699px) {
+  .page--readers {
+    --rd-prose-width: 100%;
+  }
+  .page--readers .rd-masthead {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+  }
+  .page--readers .rd-masthead .page__lede,
+  .page--readers .rd-masthead .page__intro {
+    max-width: none;
+  }
+  .page--readers .rd-thesis-plate {
+    font-size: 1.1rem;
+  }
+  .page--readers .rd-section {
+    margin-bottom: var(--space-4);
+    padding-top: var(--space-3);
+  }
+  .page--readers .rd-section__title {
+    font-size: 1.15rem;
+  }
+  .page--readers .rd-record-note p,
+  .page--readers .rd-doctrine-plate p {
+    max-width: none;
+    font-size: 0.9rem;
+  }
+  .page--readers .rd-question-ledger__row,
+  .page--readers .rd-inspect-ledger__row,
+  .page--readers .rd-signal-ledger__row {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: 0.6rem var(--space-2);
+  }
+  .page--readers .rd-question-ledger__desc,
+  .page--readers .rd-inspect-ledger__desc,
+  .page--readers .rd-signal-ledger__desc {
+    font-size: 0.875rem;
+    overflow-wrap: break-word;
+  }
+}

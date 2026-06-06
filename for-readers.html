@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="styles.css?v=rd-guide">
 </head>
 <body>
 
@@ -53,60 +53,120 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--readers">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>See the gap</span></span>
-    <h1>For Readers</h1>
-    <p class="page__lede">You see the answer. You do not automatically see what was left out.</p>
-    <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide.</p>
-    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">Imbas helps you inspect where an answer may have gone thin: what surfaced, what did not, and what appeared only after direct prompting.</p>
+    <header class="rd-masthead">
+      <span class="section-label section-label--named"><span>See the gap</span></span>
+      <h1>For Readers</h1>
+      <p class="page__lede">You see the answer. You do not automatically see what was left out.</p>
+      <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide.</p>
+      <p class="page__intro rd-intro--tight">Imbas helps you inspect where an answer may have gone thin: what surfaced, what did not, and what appeared only after direct prompting.</p>
+      <blockquote class="rd-thesis-plate">We don&rsquo;t tell you what&rsquo;s true. But you deserve to decide for yourself.</blockquote>
+      <p class="page__intro rd-intro--after-thesis">Most AI tools are built to decide things for you. Imbas is built so you can decide for yourself. Think better.</p>
+    </header>
 
-    <blockquote class="page__pullquote">We don&rsquo;t tell you what&rsquo;s true. But you deserve to decide for yourself.</blockquote>
-    <p class="page__intro" style="margin-top:0;">Most AI tools are built to decide things for you. Imbas is built so you can decide for yourself. Think better.</p>
-
-    <section class="page__section">
-      <h2>What Imbas does and does not do</h2>
-      <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
+    <section class="rd-section rd-doctrine">
+      <h2 class="rd-section__title">What Imbas does and does not do</h2>
+      <div class="rd-doctrine-plate">
+        <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Why open questions matter</h2>
-      <p>Most people do not ask AI like lawyers cross-examining a witness. They ask normal questions.</p>
-      <p>Is this medication safe?<br>
-      What caused this crisis?<br>
-      How does this policy work?<br>
-      What are the tradeoffs?<br>
-      Who benefits?<br>
-      What should I know?</p>
-      <p>Users do not know what they do not know to ask. That is where the gap opens.</p>
+    <section class="rd-section rd-questions">
+      <h2 class="rd-section__title">Why open questions matter</h2>
+      <div class="rd-record-note">
+        <p>Most people do not ask AI like lawyers cross-examining a witness. They ask normal questions.</p>
+      </div>
+      <dl class="rd-question-ledger">
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">Is this medication safe?</dd>
+        </div>
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">What caused this crisis?</dd>
+        </div>
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">How does this policy work?</dd>
+        </div>
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">What are the tradeoffs?</dd>
+        </div>
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">Who benefits?</dd>
+        </div>
+        <div class="rd-question-ledger__row">
+          <dt class="rd-question-ledger__label">Question</dt>
+          <dd class="rd-question-ledger__desc">What should I know?</dd>
+        </div>
+      </dl>
+      <div class="rd-record-note rd-record-note--follow">
+        <p>Users do not know what they do not know to ask. That is where the gap opens.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>How to inspect the archive</h2>
-      <p>Read a case.<br>
-      Compare the open prompt against the targeted prompt.<br>
-      Inspect the score.<br>
-      Look at what surfaced.<br>
-      Look at what did not.<br>
-      Decide what matters.</p>
+    <section class="rd-section rd-inspect">
+      <h2 class="rd-section__title">How to inspect the archive</h2>
+      <dl class="rd-inspect-ledger">
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Read a case.</dd>
+        </div>
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Compare the open prompt against the targeted prompt.</dd>
+        </div>
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Inspect the score.</dd>
+        </div>
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Look at what surfaced.</dd>
+        </div>
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Look at what did not.</dd>
+        </div>
+        <div class="rd-inspect-ledger__row">
+          <dt class="rd-inspect-ledger__label">Inspect</dt>
+          <dd class="rd-inspect-ledger__desc">Decide what matters.</dd>
+        </div>
+      </dl>
     </section>
 
-    <section class="page__section">
-      <h2>What Imbas measures</h2>
-      <ul>
-        <li>Missing named mechanisms (Omission)</li>
-        <li>One-sided attribution or framing (Framing Drift)</li>
-        <li>Redirection away from the concern (Deflection)</li>
-      </ul>
-      <p>The point is not to tell you what to think. The point is to show you where to look again.</p>
+    <section class="rd-section rd-signals">
+      <h2 class="rd-section__title">What Imbas measures</h2>
+      <dl class="rd-signal-ledger">
+        <div class="rd-signal-ledger__row">
+          <dt class="rd-signal-ledger__label">Signal</dt>
+          <dd class="rd-signal-ledger__desc">Missing named mechanisms (Omission)</dd>
+        </div>
+        <div class="rd-signal-ledger__row">
+          <dt class="rd-signal-ledger__label">Signal</dt>
+          <dd class="rd-signal-ledger__desc">One-sided attribution or framing (Framing Drift)</dd>
+        </div>
+        <div class="rd-signal-ledger__row">
+          <dt class="rd-signal-ledger__label">Signal</dt>
+          <dd class="rd-signal-ledger__desc">Redirection away from the concern (Deflection)</dd>
+        </div>
+      </dl>
+      <div class="rd-record-note rd-record-note--follow">
+        <p>The point is not to tell you what to think. The point is to show you where to look again.</p>
+      </div>
     </section>
 
-    <section class="page__section">
-      <h2>Field Notes</h2>
-      <p>Field Notes carries observations from the edge of the archive. No trend-chasing. No &ldquo;five ways AI is biased&rdquo; filler. Observations only.</p>
+    <section class="rd-section rd-field-notes">
+      <h2 class="rd-section__title">Field Notes</h2>
+      <div class="rd-record-note">
+        <p>Field Notes carries observations from the edge of the archive. No trend-chasing. No &ldquo;five ways AI is biased&rdquo; filler. Observations only.</p>
+      </div>
     </section>
 
-    <div class="page__cta-row">
+    <div class="page__cta-row rd-cta">
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/briefing">Follow Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
