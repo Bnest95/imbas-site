@@ -53,26 +53,28 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--support page--readers">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>See the gap</span></span>
-    <h1>For Readers</h1>
-    <p class="page__lede">You see the answer. You do not automatically see what was left out.</p>
-    <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide.</p>
-    <p class="page__intro" style="margin-top: calc(-1 * var(--space-3));">Imbas helps you inspect where an answer may have gone thin: what surfaced, what did not, and what appeared only after direct prompting.</p>
+    <header class="page__masthead">
+      <span class="section-label section-label--named"><span>See the gap</span></span>
+      <h1>For Readers</h1>
+      <p class="page__lede">You see the answer. You do not automatically see what was left out.</p>
+      <p class="page__intro">AI answers increasingly shape what people see, search, write, and decide.</p>
+      <p class="page__intro page__intro--tight">Imbas helps you inspect where an answer may have gone thin: what surfaced, what did not, and what appeared only after direct prompting.</p>
 
-    <blockquote class="page__pullquote">We don&rsquo;t tell you what&rsquo;s true. But you deserve to decide for yourself.</blockquote>
-    <p class="page__intro" style="margin-top:0;">Most AI tools are built to decide things for you. Imbas is built so you can decide for yourself. Think better.</p>
+      <blockquote class="page__pullquote">We don&rsquo;t tell you what&rsquo;s true. But you deserve to decide for yourself.</blockquote>
+      <p class="page__intro" style="margin-top:0;">Most AI tools are built to decide things for you. Imbas is built so you can decide for yourself. Think better.</p>
+    </header>
 
     <section class="page__section">
       <h2>What Imbas does and does not do</h2>
       <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
     </section>
 
-    <section class="page__section">
+    <section class="page__section page__section--flush">
       <h2>Why open questions matter</h2>
       <p>Most people do not ask AI like lawyers cross-examining a witness. They ask normal questions.</p>
-      <p>Is this medication safe?<br>
+      <p class="sp-questions">Is this medication safe?<br>
       What caused this crisis?<br>
       How does this policy work?<br>
       What are the tradeoffs?<br>
@@ -83,7 +85,7 @@
 
     <section class="page__section">
       <h2>How to inspect the archive</h2>
-      <p>Read a case.<br>
+      <p class="sp-guide-steps">Read a case.<br>
       Compare the open prompt against the targeted prompt.<br>
       Inspect the score.<br>
       Look at what surfaced.<br>
@@ -93,11 +95,11 @@
 
     <section class="page__section">
       <h2>What Imbas measures</h2>
-      <ul>
-        <li>Missing named mechanisms (Omission)</li>
-        <li>One-sided attribution or framing (Framing Drift)</li>
-        <li>Redirection away from the concern (Deflection)</li>
-      </ul>
+      <div class="sp-signal-grid">
+        <article class="sp-signal-card"><p>Missing named mechanisms (Omission)</p></article>
+        <article class="sp-signal-card"><p>One-sided attribution or framing (Framing Drift)</p></article>
+        <article class="sp-signal-card"><p>Redirection away from the concern (Deflection)</p></article>
+      </div>
       <p>The point is not to tell you what to think. The point is to show you where to look again.</p>
     </section>
 

@@ -136,61 +136,93 @@
   </div>
 </header>
 
-<main id="main-content" class="page">
+<main id="main-content" class="page page--support page--faq">
   <div class="page__inner page__inner--narrow">
-    <span class="section-label section-label--named"><span>FAQ</span></span>
-    <h1>FAQ</h1>
+    <header class="page__masthead">
+      <span class="section-label section-label--named"><span>FAQ</span></span>
+      <h1>FAQ</h1>
+    </header>
 
     <dl class="page__faq">
       <div class="page__faq-block">
-        <dt>Is Imbas a fact-checking site?</dt>
-        <dd>No. Imbas measures what AI systems surface or leave out under documented prompt conditions.</dd>
+        <div class="page__faq-entry">
+          <dt>Is Imbas a fact-checking site?</dt>
+          <dd>No. Imbas measures what AI systems surface or leave out under documented prompt conditions.</dd>
+        </div>
 
-        <dt>Is the Volunteer Gap a claim about intent?</dt>
-        <dd>No. It measures observed behavior, not model intent.</dd>
+        <div class="page__faq-entry">
+          <dt>Is the Volunteer Gap a claim about intent?</dt>
+          <dd>No. It measures observed behavior, not model intent.</dd>
+        </div>
 
-        <dt>Is this the same as AI bias?</dt>
-        <dd>No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior.</dd>
+        <div class="page__faq-entry">
+          <dt>Is this the same as AI bias?</dt>
+          <dd>No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior.</dd>
+        </div>
 
-        <dt>Why compare open prompts and direct prompts?</dt>
-        <dd>Because users often do not know the specific mechanism to ask about. The gap between open and direct answers is measurable.</dd>
+        <div class="page__faq-entry">
+          <dt>Why compare open prompts and direct prompts?</dt>
+          <dd>Because users often do not know the specific mechanism to ask about. The gap between open and direct answers is measurable.</dd>
+        </div>
 
-        <dt>What does 0&ndash;3 mean?</dt>
-        <dd>0 means no meaningful gap. 3 means major relevant information was left out of the open answer.</dd>
+        <div class="page__faq-entry">
+          <dt>What does 0&ndash;3 mean?</dt>
+          <dd>0 means no meaningful gap. 3 means major relevant information was left out of the open answer.</dd>
+        </div>
 
-        <dt>Who is Imbas for?</dt>
-        <dd>Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave.</dd>
+        <div class="page__faq-entry">
+          <dt>Who is Imbas for?</dt>
+          <dd>Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave.</dd>
+        </div>
 
-        <dt>Is the methodology final?</dt>
-        <dd>No. It is versioned and will evolve as the archive grows.</dd>
+        <div class="page__faq-entry">
+          <dt>Is the methodology final?</dt>
+          <dd>No. It is versioned and will evolve as the archive grows.</dd>
+        </div>
       </div>
 
       <div class="page__faq-block">
-        <dt>What is the antenna metaphor?</dt>
-        <dd>Imbas raises an antenna when documented context wasn&rsquo;t surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours.</dd>
+        <div class="page__faq-entry">
+          <dt>What is the antenna metaphor?</dt>
+          <dd>Imbas raises an antenna when documented context wasn&rsquo;t surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours.</dd>
+        </div>
 
-        <dt>Why does Imbas refuse to say &ldquo;this AI is biased&rdquo;?</dt>
-        <dd>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
+        <div class="page__faq-entry">
+          <dt>Why does Imbas refuse to say &ldquo;this AI is biased&rdquo;?</dt>
+          <dd>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
+        </div>
 
-        <dt>Is there an inter-rater reliability number for the v1 scoring?</dt>
-        <dd>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
+        <div class="page__faq-entry">
+          <dt>Is there an inter-rater reliability number for the v1 scoring?</dt>
+          <dd>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
+        </div>
       </div>
 
       <div class="page__faq-block">
-        <dt>What does Imbas mean by &ldquo;behavioral observability&rdquo;?</dt>
-        <dd>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
+        <div class="page__faq-entry">
+          <dt>What does Imbas mean by &ldquo;behavioral observability&rdquo;?</dt>
+          <dd>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
+        </div>
 
-        <dt>Why does Imbas use multiple models?</dt>
-        <dd>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
+        <div class="page__faq-entry">
+          <dt>Why does Imbas use multiple models?</dt>
+          <dd>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
+        </div>
 
-        <dt>Why do documented prompt conditions matter?</dt>
-        <dd>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
+        <div class="page__faq-entry">
+          <dt>Why do documented prompt conditions matter?</dt>
+          <dd>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
+        </div>
 
-        <dt>Can Imbas be wrong?</dt>
-        <dd>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
+        <div class="page__faq-entry">
+          <dt>Can Imbas be wrong?</dt>
+          <dd>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
+        </div>
 
-        <dt>What happens next?</dt>
-        <dd>Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading.</dd>
+        <div class="page__faq-entry">
+          <dt>What happens next?</dt>
+          <dd>Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading.</dd>
+        </div>
       </div>
     </dl>
 
