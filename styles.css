@@ -5534,107 +5534,129 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 
 .page--readers {
   --rd-prose-width: 42rem;
+  --rd-type-thesis: clamp(1.4rem, 2.5vw, 1.75rem);
+  --rd-type-section: clamp(1.75rem, 2.75vw, 2.125rem);
+  --rd-type-body: 0.9375rem;
+  --rd-type-label: 0.8125rem;
+  --rd-type-support: 1rem;
 }
+
+/* Masthead */
 .page--readers .rd-masthead {
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--line-soft);
-  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.12);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(var(--ember-rgb), 0.22);
+  box-shadow: inset 0 -2px 0 rgba(var(--ember-rgb), 0.1);
 }
 .page--readers .rd-masthead .section-label {
   margin-bottom: var(--space-3);
   color: rgba(180, 192, 210, 0.95);
 }
 .page--readers .rd-masthead .section-label--named::before {
-  color: rgba(var(--ember-rgb), 0.6);
+  color: rgba(var(--ember-rgb), 0.62);
 }
 .page--readers .rd-masthead h1 {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: rgba(242, 232, 220, 0.98);
 }
-.page--readers .rd-masthead .page__lede {
-  margin-bottom: var(--space-3);
-  max-width: 62ch;
+.page--readers .rd-masthead__thesis {
+  margin: 0 0 var(--space-5);
+  max-width: 48ch;
+  font-family: var(--font-display);
+  font-size: var(--rd-type-thesis);
+  line-height: 1.34;
+  letter-spacing: -0.012em;
+  color: rgba(242, 232, 220, 0.98);
 }
 .page--readers .rd-masthead .page__intro {
   margin: 0 0 var(--space-2);
-  max-width: 62ch;
-  line-height: 1.58;
+  max-width: 58ch;
+  font-family: var(--font-body);
+  font-size: var(--rd-type-body);
+  line-height: 1.62;
+  color: rgba(212, 207, 194, 0.92);
 }
-.page--readers .rd-intro--tight {
-  margin-top: calc(-1 * var(--space-3));
-}
-.page--readers .rd-intro--after-thesis {
-  margin-top: 0;
-}
-
-/* Reader thesis plate */
-.page--readers .rd-thesis-plate {
-  margin: var(--space-3) 0 var(--space-2);
-  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
-  max-width: var(--rd-prose-width);
-  border: none;
-  border-left: 2px solid rgba(var(--ember-rgb), 0.32);
-  background: rgba(var(--bg-surface-rgb), 0.1);
-  font-family: var(--font-display);
-  font-size: clamp(1.1rem, 1.7vw, 1.3rem);
-  font-weight: 450;
-  line-height: 1.45;
-  letter-spacing: -0.006em;
-  color: #F2E8DC;
+.page--readers .rd-masthead__support {
+  margin-bottom: 0;
+  max-width: 56ch;
+  color: rgba(212, 207, 194, 0.88);
 }
 
-/* Section blocks */
+/* Section blocks — chapter breaks */
 .page--readers .rd-section {
-  margin-bottom: var(--space-5);
-  padding-top: var(--space-4);
+  margin-bottom: var(--space-6);
+  padding-top: var(--space-6);
   border-top: 1px solid var(--line-faint);
 }
+.page--readers .rd-masthead + .rd-section {
+  padding-top: var(--space-5);
+}
 .page--readers .rd-section__title {
-  margin: 0 0 var(--space-3);
-  padding: 0;
+  margin: 0 0 var(--space-5);
+  padding: 0 0 var(--space-3);
+  max-width: var(--rd-prose-width);
   border: none;
+  border-bottom: 1px solid rgba(var(--ember-rgb), 0.16);
+  box-shadow: 0 2px 0 rgba(var(--ember-rgb), 0.08);
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 1.8vw, 1.45rem);
-  font-weight: 450;
-  letter-spacing: -0.01em;
-  line-height: 1.3;
-  color: var(--ink-luminous);
+  font-size: var(--rd-type-section);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.22;
+  color: rgba(242, 232, 220, 0.98);
+}
+.page--readers .rd-section__title + .rd-doctrine-plate,
+.page--readers .rd-section__title + .rd-record-note,
+.page--readers .rd-section__title + .rd-question-ledger,
+.page--readers .rd-section__title + .rd-inspect-ledger,
+.page--readers .rd-section__title + .rd-signal-ledger {
+  margin-top: var(--space-5);
 }
 
-/* Record notes */
+/* Record notes — archival, subordinate to section title */
 .page--readers .rd-record-note {
   max-width: var(--rd-prose-width);
-  padding: var(--space-2) 0 var(--space-2) var(--space-3);
-  border-left: 1px solid rgba(var(--ember-rgb), 0.22);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border: none;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.24);
+  background: rgba(var(--bg-surface-rgb), 0.06);
+}
+.page--readers .rd-record-note:not(.rd-record-note--follow) {
+  margin-bottom: var(--space-3);
 }
 .page--readers .rd-record-note--follow {
   margin-top: var(--space-3);
 }
 .page--readers .rd-record-note p {
   margin: 0;
-  max-width: 62ch;
+  max-width: 60ch;
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: var(--rd-type-body);
   line-height: 1.62;
-  color: var(--ink-soft);
+  color: rgba(212, 207, 194, 0.9);
+}
+.page--readers .rd-record-note:not(.rd-record-note--follow) + .rd-question-ledger,
+.page--readers .rd-record-note:not(.rd-record-note--follow) + .rd-inspect-ledger,
+.page--readers .rd-record-note:not(.rd-record-note--follow) + .rd-signal-ledger {
+  margin-top: var(--space-3);
 }
 
-/* Doctrine / restraint plate */
+/* Doctrine plate — archival note, not terminal block */
 .page--readers .rd-doctrine-plate {
   max-width: var(--rd-prose-width);
-  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
-  border: 1px solid var(--line-faint);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.3);
-  background: rgba(var(--bg-surface-rgb), 0.1);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border: none;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.26);
+  background: rgba(var(--bg-surface-rgb), 0.06);
 }
 .page--readers .rd-doctrine-plate p {
   margin: 0;
-  max-width: 62ch;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
-  line-height: 1.55;
-  color: rgba(212, 207, 194, 0.94);
+  max-width: 60ch;
+  font-family: var(--font-body);
+  font-size: var(--rd-type-body);
+  letter-spacing: normal;
+  line-height: 1.62;
+  color: rgba(212, 207, 194, 0.92);
 }
 
 /* Shared ledger base */
@@ -5645,9 +5667,9 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   padding: 0;
   max-width: var(--rd-prose-width);
   border: 1px solid var(--line-soft);
-  border-top: 1px solid rgba(var(--ember-rgb), 0.22);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.24);
-  background: rgba(var(--bg-base-rgb), 0.28);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.18);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.22);
+  background: rgba(var(--bg-base-rgb), 0.22);
   overflow: hidden;
 }
 .page--readers .rd-question-ledger__row,
@@ -5655,10 +5677,10 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--readers .rd-signal-ledger__row {
   display: grid;
   grid-template-columns: 5.25rem minmax(0, 1fr);
-  gap: var(--space-2);
+  gap: var(--space-2) var(--space-3);
   margin: 0;
-  padding: 0.65rem var(--space-3);
-  align-items: baseline;
+  padding: 0.8rem var(--space-3);
+  align-items: start;
   border-bottom: 1px solid var(--line-faint);
 }
 .page--readers .rd-question-ledger__row:last-child,
@@ -5669,16 +5691,17 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--readers .rd-question-ledger__row:nth-child(even),
 .page--readers .rd-inspect-ledger__row:nth-child(even),
 .page--readers .rd-signal-ledger__row:nth-child(even) {
-  background: rgba(var(--bg-surface-rgb), 0.12);
+  background: rgba(var(--bg-surface-rgb), 0.08);
 }
 .page--readers .rd-question-ledger__label,
 .page--readers .rd-inspect-ledger__label,
 .page--readers .rd-signal-ledger__label {
   margin: 0;
+  padding-top: 0.15rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--rd-type-label);
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.3;
   color: rgba(var(--ember-rgb), 0.72);
@@ -5688,9 +5711,9 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .page--readers .rd-signal-ledger__desc {
   margin: 0;
   font-family: var(--font-body);
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--ink-primary);
+  font-size: var(--rd-type-body);
+  line-height: 1.58;
+  color: rgba(212, 207, 194, 0.94);
 }
 
 /* CTA row */
@@ -5711,36 +5734,58 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 @media (max-width: 699px) {
   .page--readers {
     --rd-prose-width: 100%;
+    --rd-type-section: 1.45rem;
   }
   .page--readers .rd-masthead {
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-5);
   }
-  .page--readers .rd-masthead .page__lede,
-  .page--readers .rd-masthead .page__intro {
+  .page--readers .rd-masthead__thesis,
+  .page--readers .rd-masthead .page__intro,
+  .page--readers .rd-masthead__support {
     max-width: none;
   }
-  .page--readers .rd-thesis-plate {
-    font-size: 1.1rem;
+  .page--readers .rd-masthead__thesis {
+    margin-bottom: var(--space-4);
+    font-size: 1.35rem;
   }
   .page--readers .rd-section {
-    margin-bottom: var(--space-4);
-    padding-top: var(--space-3);
+    margin-bottom: var(--space-5);
+    padding-top: var(--space-5);
+  }
+  .page--readers .rd-masthead + .rd-section {
+    padding-top: var(--space-4);
   }
   .page--readers .rd-section__title {
-    font-size: 1.15rem;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    max-width: none;
+  }
+  .page--readers .rd-section__title + .rd-doctrine-plate,
+  .page--readers .rd-section__title + .rd-record-note,
+  .page--readers .rd-section__title + .rd-question-ledger,
+  .page--readers .rd-section__title + .rd-inspect-ledger,
+  .page--readers .rd-section__title + .rd-signal-ledger {
+    margin-top: var(--space-4);
   }
   .page--readers .rd-record-note p,
   .page--readers .rd-doctrine-plate p {
     max-width: none;
-    font-size: 0.9rem;
+    font-size: 0.875rem;
   }
   .page--readers .rd-question-ledger__row,
   .page--readers .rd-inspect-ledger__row,
   .page--readers .rd-signal-ledger__row {
-    grid-template-columns: 4.75rem minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: 0.6rem var(--space-2);
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+    padding: 0.75rem var(--space-2);
+  }
+  .page--readers .rd-question-ledger__label,
+  .page--readers .rd-inspect-ledger__label,
+  .page--readers .rd-signal-ledger__label {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    padding-top: 0;
   }
   .page--readers .rd-question-ledger__desc,
   .page--readers .rd-inspect-ledger__desc,
