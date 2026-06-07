@@ -202,7 +202,7 @@
   <div class="proof-strip">
     <p class="proof-strip__meta reveal">
       <span class="dot" aria-hidden="true"></span>
-      <span><span class="proof-strip__num">13</span> cases recorded &middot; <span class="proof-strip__num">4</span> frontier models &middot; archive growing</span>
+      <span><span class="proof-strip__num">25</span> cases recorded &middot; <span class="proof-strip__num">250+</span> captures &middot; <span class="proof-strip__num">4</span> frontier models</span>
     </p>
   </div>
 
@@ -906,9 +906,9 @@
       var msg  = document.getElementById(msgId);
       if (!form || !msg) return;
       form.addEventListener('submit', function (e) {
+        e.preventDefault();
         var email = form.querySelector('input[type="email"]');
         if (!email || !email.value || !email.checkValidity()) {
-          e.preventDefault();
           msg.textContent = 'Please enter a valid email.';
           msg.setAttribute('aria-hidden', 'false');
           msg.classList.add('is-visible');

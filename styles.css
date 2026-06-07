@@ -5666,12 +5666,12 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 .page--archive .arc-ledger__head {
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  line-height: 1.25;
-  color: rgba(var(--ember-rgb), 0.65);
+  line-height: 1.35;
+  color: rgba(var(--ember-rgb), 0.78);
   background: rgba(var(--bg-surface-rgb), 0.2);
   border-bottom: 1px solid var(--line-soft);
 }
@@ -5687,7 +5687,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   margin: 0;
   padding: 0;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.04em;
   line-height: 1.35;
 }
@@ -5707,31 +5707,33 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   display: block;
   margin-bottom: 0.2rem;
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  line-height: 1.25;
-  color: rgba(180, 192, 210, 0.62);
+  line-height: 1.35;
+  color: rgba(180, 192, 210, 0.72);
 }
 .page--archive .arc-record--public .arc-record__status {
-  color: rgba(var(--ember-rgb), 0.62);
+  color: rgba(var(--ember-rgb), 0.72);
 }
 .page--archive .arc-record--held .arc-record__status {
-  color: rgba(180, 192, 210, 0.55);
+  color: rgba(180, 192, 210, 0.65);
 }
 .page--archive .arc-record--tail .arc-record__status {
-  color: rgba(180, 192, 210, 0.5);
+  color: rgba(180, 192, 210, 0.58);
   font-style: italic;
 }
 .page--archive .arc-record__date {
+  font-size: 0.8125rem;
   color: rgba(180, 192, 210, 0.88);
 }
 .page--archive .arc-record__id {
+  font-size: 0.8125rem;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgba(212, 207, 194, 0.9);
+  color: rgba(212, 207, 194, 0.92);
 }
 .page--archive .arc-record__title {
   display: block;
@@ -5766,20 +5768,20 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
   background: rgba(var(--ember-rgb), 0.06);
 }
 .page--archive .arc-record__type {
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: rgba(180, 192, 210, 0.82);
+  color: rgba(180, 192, 210, 0.85);
 }
 .page--archive .arc-record__type-tag {
-  color: rgba(180, 192, 210, 0.7);
+  color: rgba(180, 192, 210, 0.75);
 }
 .page--archive .arc-record__gap {
   text-align: right;
   font-family: var(--font-mono);
-  font-size: 0.82rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: rgba(180, 192, 210, 0.85);
+  color: rgba(212, 207, 194, 0.9);
 }
 
 /* Hypothesis / lead record */
@@ -5815,14 +5817,15 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 .page--archive .arc-record--control .arc-record__title,
 .page--archive .arc-record--held .arc-record__title {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
-  color: rgba(180, 192, 210, 0.78);
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 450;
+  letter-spacing: -0.005em;
+  color: rgba(212, 207, 194, 0.88);
 }
 .page--archive .arc-record--control .arc-record__gap,
 .page--archive .arc-record--held .arc-record__gap {
-  color: rgba(180, 192, 210, 0.68);
+  color: rgba(180, 192, 210, 0.78);
 }
 
 /* Continuation row */
