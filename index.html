@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 
-  <link rel="stylesheet" href="/styles.css?v=hp-archive-fix">
+  <link rel="stylesheet" href="/styles.css?v=hp-proof-strip-dot-align">
 
   <script type="application/ld+json">
   {
@@ -97,17 +97,11 @@
 
     <div class="hero__stage">
 
-      <div class="hero__meta">
-        <span class="dot" aria-hidden="true"></span>
-        <span>Observing frontier AI behavior</span>
+      <div class="hero__meta hero__meta--instrument reveal">
+        <span class="hero__meta-copy">Observing frontier AI behavior</span>
       </div>
 
       <div class="hero__center">
-
-        <p class="hero__tagline">
-          <span class="hero__tagline-part hero__tagline-part--a">Cleaner inputs &middot; Better outputs</span>
-          <span class="hero__tagline-part hero__tagline-part--b"><span class="hero__tagline-sep" aria-hidden="true"> &middot; </span>Sharper thinking</span>
-        </p>
 
         <div class="hero__monolith" id="hero-monolith">
           <span class="hero__monolith-text" data-text="IMBAS">IMBAS</span>
@@ -138,7 +132,6 @@
             >
             <button type="submit">Get early access</button>
           </form>
-          <p class="hero__microcopy">Launch updates, early access, and first reports.</p>
           <p class="hero__capture-msg" id="hero-capture-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">Check your inbox for a confirmation link.</p>
         </div>
 
@@ -151,6 +144,21 @@
 
     </div>
   </section>
+
+  <div class="proof-strip proof-strip--landing">
+    <p class="proof-strip__meta reveal">
+      <span class="proof-strip__metrics">
+        <span class="proof-strip__lead">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="proof-strip__metric"><span class="proof-strip__num">25</span> cases recorded</span>
+        </span>
+        <span class="proof-strip__sep" aria-hidden="true">&middot;</span>
+        <span class="proof-strip__metric"><span class="proof-strip__num">250+</span> captures</span>
+        <span class="proof-strip__sep" aria-hidden="true">&middot;</span>
+        <span class="proof-strip__metric"><span class="proof-strip__num">4</span> frontier models</span>
+      </span>
+    </p>
+  </div>
 
   <!-- BRIDGE — thesis plate with paired supporting blocks -->
   <section class="bridge section-scene" id="what-imbas" aria-labelledby="bridge-thesis" data-reveal-section>
@@ -198,13 +206,6 @@
       </a>
     </div>
   </section>
-
-  <div class="proof-strip">
-    <p class="proof-strip__meta reveal">
-      <span class="dot" aria-hidden="true"></span>
-      <span><span class="proof-strip__num">25</span> cases recorded &middot; <span class="proof-strip__num">250+</span> captures &middot; <span class="proof-strip__num">4</span> frontier models</span>
-    </p>
-  </div>
 
   <!-- CATEGORIES -->
   <section class="categories section-scene" aria-labelledby="cat-h2" data-reveal-section>
@@ -945,7 +946,6 @@
     var prefersReduced = prefersReducedMotion;
     var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     var monolith = document.getElementById('hero-monolith');
-
     if (!prefersReduced && !isTouch && monolith) {
       var prox = 0, tprox = 0;
       var maxRadius = 720;
