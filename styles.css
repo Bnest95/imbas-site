@@ -950,9 +950,9 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .hero__capture input::placeholder { color: rgba(180, 192, 210, 0.88); }
 .hero__capture button {
-  background: linear-gradient(180deg, var(--ember-soft), var(--ember));
-  color: var(--bg-deep);
-  border: none;
+  background: #B46A5A;
+  color: var(--ink-luminous);
+  border: 1px solid #B46A5A;
   border-radius: 2px;
   font-family: var(--font-mono);
   font-size: clamp(0.625rem, 1.5vw, 0.74rem);
@@ -961,7 +961,7 @@ body:has(main > section.hero) .nav__menu-btn {
   padding: 0.65rem 1rem;
   cursor: pointer;
   font-weight: 500;
-  transition: filter .25s ease, transform .25s ease;
+  transition: background .25s ease, border-color .25s ease, transform .25s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1014,7 +1014,11 @@ body:has(main > section.hero) .nav__menu-btn {
 .hero__secondary .arrow { transition: transform .35s ease; }
 .hero__secondary:hover .arrow { transform: translateX(4px); }
 
-.hero__capture button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.hero__capture button:hover {
+  background: #A85A4F;
+  border-color: #A85A4F;
+  transform: translateY(-1px);
+}
 .hero__capture button:active { transform: translateY(0); }
 
 @media (max-width: 1200px) {
