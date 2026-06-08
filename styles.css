@@ -1571,6 +1571,40 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 
 /* =============================================================
+   STAKES — quiet context beat after hero
+   ============================================================= */
+.stakes {
+  position: relative;
+  padding: clamp(var(--space-5), 8vw, var(--space-7)) 0;
+  background: var(--bg-base);
+  overflow: hidden;
+  isolation: isolate;
+}
+.stakes__inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--container-mid);
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+  text-align: center;
+}
+.stakes__copy {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+  line-height: 1.4;
+  color: var(--ink-luminous);
+  max-width: 62ch;
+  margin: 0 auto;
+  text-align: center;
+}
+@media (max-width: 800px) {
+  .stakes {
+    padding: var(--space-5) 0;
+  }
+}
+
+/* =============================================================
    PASS 10 — PROOF STRIP: archive stats (homepage landing placement)
    ============================================================= */
 .proof-strip {
@@ -1585,7 +1619,7 @@ body:has(main > section.hero) .nav__menu-btn {
   padding-top: var(--space-3);
   padding-bottom: var(--space-3);
   border-top: none;
-  border-bottom: none;
+  border-bottom: 1px solid var(--line-faint);
   background: transparent;
 }
 .hero:has(+ .proof-strip--landing) {
