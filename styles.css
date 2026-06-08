@@ -6898,6 +6898,9 @@ body:has(main > section.hero) .nav__menu-btn {
   line-height: 1.3;
   color: var(--ink-luminous);
 }
+.page--volunteer-gap .vg-ephemeral .vg-section__title {
+  font-size: clamp(1.65rem, 2.5vw, 2.05rem);
+}
 
 /* Mechanism ledger */
 .page--volunteer-gap .vg-mechanism-ledger {
@@ -7137,6 +7140,9 @@ body:has(main > section.hero) .nav__menu-btn {
   }
   .page--volunteer-gap .vg-section__title {
     font-size: 1.15rem;
+  }
+  .page--volunteer-gap .vg-ephemeral .vg-section__title {
+    font-size: 1.6rem;
   }
   .page--volunteer-gap .vg-hero__definition::before {
     font-size: 0.875rem;
