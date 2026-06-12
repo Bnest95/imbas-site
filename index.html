@@ -28,6 +28,21 @@
 
   <link rel="stylesheet" href="/styles.css?v=hp-legibility-floors">
 
+  <style>
+    .bridge__lede {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: clamp(1rem, 1.35vw, 1.15rem);
+      line-height: 1.55;
+      letter-spacing: -0.004em;
+      color: var(--ink-soft);
+      text-align: center;
+      max-width: 52ch;
+      margin: 0 auto;
+      padding-bottom: var(--space-2);
+    }
+  </style>
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -99,7 +114,7 @@
     <div class="hero__stage">
 
       <div class="hero__meta hero__meta--instrument reveal">
-        <span class="hero__meta-copy">Observing frontier AI behavior</span>
+        <span class="hero__meta-copy">Measuring frontier AI behavior</span>
       </div>
 
       <div class="hero__center">
@@ -168,6 +183,7 @@
     <div class="bridge__inner">
       <div class="bridge__frame reveal" data-stagger="body">
         <h2 id="bridge-thesis" class="bridge__thesis reveal" data-stagger="heading">Imbas turns invisible AI behavior into a measurable record.</h2>
+        <p class="bridge__lede reveal" data-stagger="body">Imbas builds independent measurement instruments for AI behavior — what these systems surface, what they leave out, how they frame it, and how that drifts over time. The Volunteer Gap is the first.</p>
         <div class="bridge__connector" aria-hidden="true"></div>
         <div class="bridge__plates">
           <blockquote class="bridge__plate bridge__plate--stakes reveal" data-stagger="body">
@@ -351,16 +367,16 @@
       <div class="roadmap__grid">
         <div class="roadmap__item reveal" data-stagger="support">
           <span class="roadmap__label roadmap__label--now"><span class="roadmap__label-dot" aria-hidden="true"></span>Now</span>
-          <p>Imbas documents how frontier models behave, one case at a time.</p>
+          <p>The validated record, and the Workbench — run measured cases on your own AI.</p>
         </div>
         <div class="roadmap__item reveal" data-stagger="support">
           <span class="roadmap__label">Next</span>
-          <p>Live measurement while you read. Surface what appeared, what didn&rsquo;t, and where the answer narrowed.</p>
+          <p>Live measurement while you read.</p>
         </div>
-        <div class="roadmap__item roadmap__item--why reveal" data-stagger="support">
-          <span class="roadmap__label">Why</span>
-          <p class="roadmap__emphasis">Because AI shapes human judgment.</p>
-        </div>
+        <a href="/institutions.html" class="roadmap__item roadmap__item--why reveal" data-stagger="support">
+          <span class="roadmap__label">For Institutions</span>
+          <p>Independent, citable measurement of the systems you already use. Pilot inquiries open.</p>
+        </a>
       </div>
     </div>
   </section>
