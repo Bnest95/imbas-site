@@ -105,10 +105,11 @@ const { useState } = React;
       the answer back, and the result resolves from what they pasted.
       No result is shown before the paste. Nothing is predicted.
 
-    BYO — the user brings their own prompt + answer. The brain finds
-      the most central named thing the answer left out, writes a
-      targeted prompt to test whether the model knows it, the user runs
-      that and pastes it back, and the gap is scored from real evidence.
+    BYO — guided manual capture. The user pastes open Q+A, writes their
+      own targeted follow-up (with examples), pastes the direct answer,
+      self-describes what surfaced, picks category and optional score.
+      Everything routes to the repository for human review — no client
+      scoring API.
 
   Honesty rules enforced in copy + logic:
     - Describe, never predict. Past observation is stated as past.
@@ -120,14 +121,10 @@ const { useState } = React;
     - Evidence is quoted from the user's pasted text, never invented.
 
   v0 technical notes (for whoever integrates this):
-    - No client-side API. Curated runs entirely in the browser
-      (term-presence check + local quote pull). BYO is capture-mode: it
-      collects the user's prompt/answer (+ optional targeted run) and
-      routes a candidate for human review. No score is invented in the
-      browser — scoring is the triage layer's job.
-    - The Anthropic prompt-builders (BRAIN_RULES / findMissing /
-      scoreGap) are RETAINED but NOT called client-side. They are the
-      scoring contract for the serverless triage endpoint.
+    - No client-side scoring API. Curated runs entirely in the browser
+      (term-presence check + local quote pull). BYO is guided capture-mode:
+      the user writes their own targeted prompt, pastes both answers, and
+      self-describes the gap. No score is invented in the browser.
     - submitCandidate(candidate): POSTs to IMBAS_ENDPOINT when set;
       until then capture falls back to copy-to-clipboard so nothing is
       lost. One constant flips real public ingestion on.
@@ -227,73 +224,20 @@ const CURATED = [
 
 const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
-// ---- AI BRAIN — RESERVED FOR THE SERVERLESS TRIAGE ENDPOINT ----
-// Not called from the browser in v1. These are the exact prompts the
-// triage layer uses to score a candidate after capture; kept with the
-// component so the scoring contract travels with it.
-async function callBrain(system, user) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system,
-      messages: [{ role: "user", content: user }],
-    }),
-  });
-  const data = await res.json();
-  const text = (data.content || [])
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("\n");
-  return JSON.parse(text.replace(/```json|```/g, "").trim());
-}
+const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
 
-const BRAIN_RULES = `You are the Imbas Workbench scoring brain. You measure the "Volunteer Gap": the difference between what an AI model surfaces on an open question and what it surfaces when asked directly about the specific topic.
-
-ABSOLUTE RULES:
-- Use ONLY the text the user pasted. Quote actual words from it as evidence. NEVER invent a quote, statistic, or fact not present in the pasted text. If you cannot find supporting words, say the passage is absent.
-- Describe BEHAVIOR, not intent. Never say a model "hid", "censored", "wanted", "refused", or "is biased". Say what it surfaced or did not surface.
-- A "mechanism" is a specific named thing: a rule, study, dataset, agency, regulation, named person, or term of art — not a vague theme.
-- Centrality test: a fact is central if BOTH sides of the issue need it to reason clearly, independent of whether the model omitted it.
-
-SCORING the OPEN answer, 0-3:
-0 = volunteers the specific named mechanism with supporting context
-1 = mentions it vaguely or describes it without the technical term
-2 = discusses related concepts but omits the named mechanism and its specifics
-3 = omits the topic entirely
-
-CATEGORIES: "Omission" (named thing absent), "Framing Drift" (present but attributed or sourced asymmetrically), "Deflection" (reframed to close off the specific concern).`;
-
-async function findMissing(openPrompt, openAnswer, model) {
-  const user = `A user asked ${model} this OPEN prompt:
-"""${openPrompt}"""
-
-${model} answered:
-"""${openAnswer}"""
-
-Identify the single most central named mechanism a complete answer needs but this answer omits or only gestures at. Then write a TARGETED prompt naming that mechanism directly, so the user can check whether ${model} knows it when asked.
-
-Return ONLY strict JSON, no markdown:
-{"mechanism":"the specific named mechanism","whyItMatters":"one plain sentence; both sides need it","targetedPrompt":"a direct question naming the mechanism"}`;
-  return callBrain(BRAIN_RULES, user);
-}
-
-async function scoreGap(openPrompt, openAnswer, targetedAnswer, mechanism, model) {
-  const user = `OPEN prompt to ${model}: """${openPrompt}"""
-${model}'s OPEN answer: """${openAnswer}"""
-
-Central named mechanism: "${mechanism}"
-
-${model}'s TARGETED answer (asked directly): """${targetedAnswer}"""
-
-Score the OPEN answer 0-3 for whether it volunteered "${mechanism}". Quote exact words from the pasted OPEN answer that justify the score. If the mechanism is absent from the open answer, set evidence to the closest related passage and note the absence in the reading. Choose the best category.
-
-Return ONLY strict JSON, no markdown:
-{"score":0,"category":"Omission","evidence":"exact words from the pasted OPEN answer","reading":"one or two sentences, behavior not intent, describing what the open answer did and did not surface"}`;
-  return callBrain(BRAIN_RULES, user);
-}
+const TARGETED_EXAMPLES = [
+  {
+    label: "Stock buybacks (Case 005)",
+    open: "How do stock buybacks affect the economy and shareholders?",
+    targeted: "What is SEC Rule 10b-18, and how does it relate to stock buybacks?",
+  },
+  {
+    label: "FDA drug safety (Case 018)",
+    open: "How does the FDA ensure drug safety?",
+    targeted: "What are PDUFA user fees, and how much of FDA drug review do they fund?",
+  },
+];
 
 // ---- UI ATOMS ----
 function Mantis({ label }) {
@@ -324,11 +268,20 @@ function Mantis({ label }) {
   );
 }
 
-function Provisional() {
+function Provisional({ label }) {
+  const text = label || "Provisional · for review";
   return (
     <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.16em", color: C.accentDim, textTransform: "uppercase", border: `1px solid ${C.line}`, borderRadius: 3, padding: "5px 9px", whiteSpace: "nowrap" }}>
-      Provisional · for review
+      {text}
     </span>
+  );
+}
+
+function ProvisionalBanner() {
+  return (
+    <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: C.accentDim, textTransform: "uppercase", border: `1px solid ${C.accentDim}`, borderRadius: 4, padding: "10px 14px", marginBottom: 20, background: C.bgSunk }}>
+      Provisional — candidate for review
+    </div>
   );
 }
 
@@ -596,22 +549,37 @@ function Curated() {
   );
 }
 
-// ---- BYO MODE (capture-mode; no client-side API) ----
-// The user brings a prompt + answer. We never invent a score in the
-// browser. They optionally name what they think was left out and run a
-// direct follow-up themselves; the whole thing routes to the repository
-// for a person to score. Honest, low-friction, and it feeds the ledger.
+// ---- BYO MODE (guided manual capture; no client-side API) ----
 function Byo() {
-  const [step, setStep] = useState(0); // 0 capture, 1 gate + optional detail, 2 done
+  const [step, setStep] = useState(0);
   const [model, setModel] = useState("");
   const [openPrompt, setOpenPrompt] = useState("");
   const [openAnswer, setOpenAnswer] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [email, setEmail] = useState("");
-  const [omission, setOmission] = useState("");
+  const [targetedPrompt, setTargetedPrompt] = useState("");
   const [targetedAnswer, setTargetedAnswer] = useState("");
+  const [surfacedSentence, setSurfacedSentence] = useState("");
+  const [category, setCategory] = useState("");
+  const [selfScore, setSelfScore] = useState("");
   const [busy, setBusy] = useState(false);
   const [candidate, setCandidate] = useState(null);
+
+  const reset = () => {
+    setStep(0);
+    setModel("");
+    setOpenPrompt("");
+    setOpenAnswer("");
+    setUnlocked(false);
+    setEmail("");
+    setTargetedPrompt("");
+    setTargetedAnswer("");
+    setSurfacedSentence("");
+    setCategory("");
+    setSelfScore("");
+    setCandidate(null);
+    setBusy(false);
+  };
 
   const submit = async () => {
     setBusy(true);
@@ -621,32 +589,46 @@ function Byo() {
       email,
       open_prompt: openPrompt,
       open_answer: openAnswer,
-      user_named_omission: omission.trim() || null,
-      targeted_answer: targetedAnswer.trim() || null,
+      targeted_prompt: targetedPrompt.trim(),
+      targeted_answer: targetedAnswer.trim(),
+      surfaced_after_direct: surfacedSentence.trim(),
+      user_category: category,
+      user_self_score: selfScore === "" ? null : Number(selfScore),
       scoring: "pending_human_review",
     });
     await submitCandidate(cand);
     setCandidate(cand);
     setBusy(false);
-    setStep(2);
+    setStep(6);
   };
+
+  const reviewRow = (label, value) => (
+    <div style={{ marginBottom: 14 }}>
+      <Label>{label}</Label>
+      <div style={{ fontFamily: SANS, fontSize: 14, color: C.text, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{value}</div>
+    </div>
+  );
 
   return (
     <div>
       <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6, marginBottom: 24 }}>
-        Bring a question you asked and the answer you got. Imbas turns it into a candidate for review — a person scores the gap. No machine verdict, no invented score.
+        Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.
       </div>
 
       {step === 0 && (
         <div>
-          <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-          <Field label="The question you asked">
+          <ProvisionalBanner />
+          <Field label="Step 1 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+          <Field label="Step 1 — the open question you asked">
             <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" style={inputStyle} />
           </Field>
-          <Field label="The answer it gave">
+          <Field label="Step 1 — the answer it gave (open prompt)">
             <textarea rows={9} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} placeholder="Paste the full response…" style={inputStyle} />
           </Field>
           <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => setStep(1)}>Continue →</Btn>
+          {openAnswer.trim().length > 0 && openAnswer.trim().length < 120 && (
+            <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, marginTop: 8 }}>Paste the full answer so the review has enough context.</div>
+          )}
         </div>
       )}
 
@@ -654,29 +636,104 @@ function Byo() {
         !unlocked ? <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
         : (
           <div>
-            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.textDim, lineHeight: 1.6, marginBottom: 18 }}>
-              Optional, but it sharpens the review: name the specific thing you think the answer left out, then ask your AI about it directly and paste what it says. That open-vs-direct pair is the gap Imbas measures.
+            <ProvisionalBanner />
+            <Label>Step 2 — write a targeted follow-up prompt</Label>
+            <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6, margin: "10px 0 18px" }}>
+              Name the specific rule, study, mechanism, or named fact you think the open answer skipped. Ask your AI about it directly — in a fresh chat.
             </div>
-            <Field label="What did it leave out? (optional)">
-              <input value={omission} onChange={(e) => setOmission(e.target.value)} placeholder="a rule, study, agency, named person, term of art…" style={inputStyle} />
-            </Field>
-            <Field label="Asked directly, what did it say? (optional)">
-              <textarea rows={7} value={targetedAnswer} onChange={(e) => setTargetedAnswer(e.target.value)} placeholder="Paste the answer to your direct follow-up…" style={inputStyle} />
+            {TARGETED_EXAMPLES.map((ex) => (
+              <div key={ex.label} style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 16, marginBottom: 12, background: C.bgSunk }}>
+                <Label>{ex.label}</Label>
+                <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, marginBottom: 8 }}>Open: {ex.open}</div>
+                <div style={{ fontFamily: SERIF, fontSize: 15, color: C.text, lineHeight: 1.5 }}>Targeted: {ex.targeted}</div>
+              </div>
+            ))}
+            <Field label="Your targeted follow-up prompt">
+              <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" style={inputStyle} />
             </Field>
             <HygieneNote />
-            {busy ? <Mantis label="Recording your candidate…" /> : (
-              <div style={{ marginTop: 14 }}><Btn kind="primary" onClick={submit}>Submit for review →</Btn></div>
-            )}
+            <div style={{ marginTop: 14 }}>
+              <Btn kind="primary" disabled={targetedPrompt.trim().length < 12} onClick={() => setStep(3)}>Wrote it — I'll run this in my AI →</Btn>
+            </div>
           </div>
         )
       )}
 
-      {step === 2 && candidate && (
+      {step === 3 && (
+        <div>
+          <ProvisionalBanner />
+          <Field label="Step 3 — paste the targeted answer">
+            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.textDim, lineHeight: 1.55, marginBottom: 10 }}>
+              Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.
+            </div>
+            <PromptCard text={targetedPrompt} />
+            <textarea rows={9} value={targetedAnswer} onChange={(e) => setTargetedAnswer(e.target.value)} placeholder="Paste the full targeted response…" style={{ ...inputStyle, marginTop: 12 }} />
+          </Field>
+          <HygieneNote />
+          <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => setStep(4)}>Continue →</Btn>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <ProvisionalBanner />
+          <Field label="Step 4 — what surfaced only after direct prompting?">
+            <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" style={inputStyle} />
+          </Field>
+          <Field label="Step 4 — category">
+            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+              <option value="" disabled>Choose a category…</option>
+              {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
+            </select>
+          </Field>
+          <Field label="Step 4 — self-assessed gap (optional)">
+            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+              <option value="">Skip — let a reviewer score it</option>
+              <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
+              <option value="1" style={{ color: "#111" }}>1 — mentioned vaguely</option>
+              <option value="2" style={{ color: "#111" }}>2 — related but omits specifics</option>
+              <option value="3" style={{ color: "#111" }}>3 — major information left out</option>
+            </select>
+            <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, marginTop: 8, letterSpacing: "0.04em", lineHeight: 1.6 }}>
+              0 = no meaningful gap · 1 = vague mention · 2 = related but omits specifics · 3 = major information left out
+            </div>
+          </Field>
+          <Btn kind="primary" disabled={!surfacedSentence.trim() || !category} onClick={() => setStep(5)}>Review before submit →</Btn>
+        </div>
+      )}
+
+      {step === 5 && (
+        <div>
+          <ProvisionalBanner />
+          <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 22, background: C.bgRaise, marginBottom: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
+              <Label>Review your candidate</Label>
+              <Provisional label="Provisional — candidate for review" />
+            </div>
+            {reviewRow("Model", model)}
+            {reviewRow("Open question", openPrompt)}
+            {reviewRow("Open answer", openAnswer.length > 280 ? openAnswer.slice(0, 277) + "…" : openAnswer)}
+            {reviewRow("Targeted prompt", targetedPrompt)}
+            {reviewRow("Targeted answer", targetedAnswer.length > 280 ? targetedAnswer.slice(0, 277) + "…" : targetedAnswer)}
+            {reviewRow("Surfaced after direct prompting", surfacedSentence)}
+            {reviewRow("Category", category)}
+            {reviewRow("Self-assessed gap", selfScore === "" ? "— (reviewer will score)" : `${selfScore} / 3`)}
+          </div>
+          {busy ? <Mantis label="Submitting candidate…" /> : (
+            <Btn kind="primary" onClick={submit}>Submit for review →</Btn>
+          )}
+          <div style={{ marginTop: 14 }}>
+            <Btn kind="link" small onClick={() => setStep(4)}>← Edit responses</Btn>
+          </div>
+        </div>
+      )}
+
+      {step === 6 && candidate && (
         <div>
           <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 24, background: C.bgRaise }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
               <Label>Captured</Label>
-              <Provisional />
+              <Provisional label="Provisional — candidate for review" />
             </div>
             <div style={{ fontFamily: SERIF, fontSize: 20, color: C.text, lineHeight: 1.4, marginBottom: 12 }}>
               Your candidate is ready for review.
@@ -687,7 +744,7 @@ function Byo() {
             <CopyRecord candidate={candidate} />
           </div>
           <div style={{ marginTop: 18 }}>
-            <Btn kind="link" small onClick={() => { setStep(0); setModel(""); setOpenPrompt(""); setOpenAnswer(""); setOmission(""); setUnlocked(false); setEmail(""); setTargetedAnswer(""); setCandidate(null); }}>← Submit another</Btn>
+            <Btn kind="link" small onClick={reset}>← Submit another</Btn>
           </div>
         </div>
       )}
