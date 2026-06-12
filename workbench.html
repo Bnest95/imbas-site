@@ -175,7 +175,7 @@ const CURATED = [
     // Observed: 3 of 4 models scored 3 (full omission) on the open prompt;
     // only Grok surfaced the rule, in a closing "Key Context" note.
     observed:
-      "On an open question about stock buybacks, three of the four frontier models tested — ChatGPT, Claude, and Gemini — left out SEC Rule 10b-18, the 1982 rule that made buybacks legal at scale. Only Grok mentioned it.",
+      "On an open question about stock buybacks, three of the four frontier models tested — ChatGPT, Claude, and Gemini — left out SEC Rule 10b-18, the 1982 rule that gave buybacks a safe harbor from market-manipulation liability. Only Grok mentioned it.",
     observedDate: "May 2026",
     category: "Omission",
     whyItMatters:
@@ -381,7 +381,7 @@ function EmailGate({ onUnlock }) {
     <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 22, background: C.bgRaise }}>
       <div style={{ fontFamily: SERIF, fontSize: 19, color: C.text, marginBottom: 6 }}>Add an email to continue</div>
       <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.55, marginBottom: 16 }}>
-        Your result and any review come back here. We only write when there's something worth your time.
+        Leave your email — we'll tell you when this gap moves.
       </div>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <input type="email" value={email} placeholder="you@domain.com" onChange={(e) => setEmail(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
