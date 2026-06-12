@@ -1,0 +1,21 @@
+# Markdown / internal docs (not served)
+*.md
+
+# React sources — Workbench is inlined in workbench.html; no page loads .jsx
+*.jsx
+
+# Extensionless working docs
+Context_*
+Imbas_*
+Way_back
+Way_back_idea
+Way_back*
+Article_*
+
+# QA / local capture artifacts
+qa-screenshots-*/
+pass14-screenshots/
+pass15-screenshots/
+
+# Unreferenced static assets
+antenna-glyph.svg
