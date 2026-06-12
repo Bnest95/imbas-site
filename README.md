@@ -1,6 +1,6 @@
 # Imbas
 
-Imbas is an independent AI behavioral measurement project. The public site documents observed frontier AI surfacing behavior, the Volunteer Gap methodology, a case archive, and supporting pages for readers, researchers, and institutions.
+Imbas is an independent AI behavioral measurement company. The public site documents observed frontier AI surfacing behavior, the Volunteer Gap methodology, a case archive, and supporting pages for readers, researchers, and institutions.
 
 ## Static site
 
