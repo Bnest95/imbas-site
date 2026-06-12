@@ -490,11 +490,44 @@ function buildCandidate(p) {
   return { schema: "imbas.candidate.v0", pool: "repository", status: "provisional_for_review", captured_at: new Date().toISOString(), ...p };
 }
 async function submitCandidate(candidate) {
-  if (!IMBAS_ENDPOINT) return { ok: false, fallback: "manual" }; // Path A: copy-to-clipboard via CopyRecord
+  if (!IMBAS_ENDPOINT) return { ok: false };
   try {
     const res = await fetch(IMBAS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(candidate) });
-    return { ok: res.ok };
-  } catch { return { ok: false }; }
+    let data = null;
+    try { data = await res.json(); } catch {}
+    if (!res.ok || (data && data.ok === false)) return { ok: false };
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+}
+
+function SubmitFailure({ candidate }) {
+  const [copied, setCopied] = useState(false);
+  const record = JSON.stringify(candidate, null, 2);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(record);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {}
+  };
+  return (
+    <div style={{ marginTop: 22, border: `1px solid ${C.accentDim}`, borderRadius: 6, padding: 18, background: C.bgSunk }}>
+      <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.text, lineHeight: 1.55, marginBottom: 14 }}>
+        Couldn't send — copy your record below and email it to brendan@imbaslabs.com
+      </div>
+      <pre style={{ margin: "0 0 14px", padding: "12px 14px", background: C.bgRaise, border: `1px solid ${C.line}`, borderRadius: 4, fontFamily: MONO, fontSize: 11.5, lineHeight: 1.5, color: C.textDim, whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 280, overflow: "auto" }}>
+        {record}
+      </pre>
+      <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy record"}</Btn>
+    </div>
+  );
+}
+
+function RepositoryActions({ candidate, submitOk }) {
+  if (submitOk) return <CopyRecord candidate={candidate} />;
+  return <SubmitFailure candidate={candidate} />;
 }
 
 function CopyRecord({ candidate }) {
@@ -538,7 +571,7 @@ function ShareResult({ caseId, caseTitle, model, anchors, runDate }) {
   );
 }
 
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate }) {
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate, submitOk }) {
   return (
     <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 24, background: C.bgRaise }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
@@ -568,7 +601,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
         Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
       </div>
       <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
-      <CopyRecord candidate={candidate} />
+      <RepositoryActions candidate={candidate} submitOk={submitOk} />
     </div>
   );
 }
@@ -611,8 +644,8 @@ function Curated() {
       gap_held: gapHeld,
       detect_verdict: anchors.verdict,
     });
-    await submitCandidate(cand);
-    setResult(res); setCandidate(cand); setBusy(false); setStep(2);
+    const submitResult = await submitCandidate(cand);
+    setResult({ ...res, submitOk: submitResult.ok }); setCandidate(cand); setBusy(false); setStep(2);
   };
 
   return (
@@ -733,6 +766,7 @@ function Byo() {
   const [selfScore, setSelfScore] = useState("");
   const [busy, setBusy] = useState(false);
   const [candidate, setCandidate] = useState(null);
+  const [submitOk, setSubmitOk] = useState(true);
 
   const reset = () => {
     setStep(0);
@@ -747,6 +781,7 @@ function Byo() {
     setCategory("");
     setSelfScore("");
     setCandidate(null);
+    setSubmitOk(true);
     setBusy(false);
   };
 
@@ -765,8 +800,9 @@ function Byo() {
       user_self_score: selfScore === "" ? null : Number(selfScore),
       scoring: "pending_human_review",
     });
-    await submitCandidate(cand);
+    const submitResult = await submitCandidate(cand);
     setCandidate(cand);
+    setSubmitOk(submitResult.ok);
     setBusy(false);
     setStep(6);
   };
@@ -905,12 +941,14 @@ function Byo() {
               <Provisional label="Provisional — candidate for review" />
             </div>
             <div style={{ fontFamily: SERIF, fontSize: 20, color: C.text, lineHeight: 1.4, marginBottom: 12 }}>
-              Your candidate is ready for review.
+              {submitOk ? "Your candidate is ready for review." : "Your record is saved here — we couldn't reach the server."}
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6 }}>
-              A person reviews and scores every submission before anything enters the public archive. Nothing here is a verdict.
-            </div>
-            <CopyRecord candidate={candidate} />
+            {submitOk ? (
+              <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6 }}>
+                A person reviews and scores every submission before anything enters the public archive. Nothing here is a verdict.
+              </div>
+            ) : null}
+            <RepositoryActions candidate={candidate} submitOk={submitOk} />
           </div>
           <div style={{ marginTop: 18 }}>
             <Btn kind="link" small onClick={reset}>← Submit another</Btn>
