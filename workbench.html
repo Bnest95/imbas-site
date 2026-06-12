@@ -154,6 +154,12 @@ const SANS = "'Inter', ui-sans-serif, system-ui, sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
 
 const FONT_IMPORT = "@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');";
+const INPUT_CLS = "wb-input wb-focus";
+const WORKBENCH_A11Y_CSS = `
+.wb-focus:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 2px; }
+.wb-case-card:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 3px; }
+.wb-input:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 2px; border-color: ${C.accent}; }
+`;
 
 // ---- CURATED CASES ----
 // All three pulled from Airtable (005 recUO3XTiDS7LDA6C, 018 reckZSaABYmMZ62HP,
@@ -323,13 +329,27 @@ function ProvisionalBanner() {
 }
 
 function Btn({ children, onClick, kind = "primary", disabled, small }) {
-  const base = { fontFamily: SANS, fontSize: small ? 13 : 14.5, fontWeight: 500, padding: small ? "8px 14px" : "12px 22px", borderRadius: 4, cursor: disabled ? "not-allowed" : "pointer", border: "1px solid", transition: "all .15s ease", opacity: disabled ? 0.4 : 1 };
+  const base = {
+    fontFamily: SANS,
+    fontSize: 16,
+    fontWeight: 500,
+    minHeight: 44,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: small ? "10px 16px" : "12px 22px",
+    borderRadius: 4,
+    cursor: disabled ? "not-allowed" : "pointer",
+    border: "1px solid",
+    transition: "all .15s ease",
+    opacity: disabled ? 0.4 : 1,
+  };
   const kinds = {
     primary: { background: C.accent, color: C.bg, borderColor: C.accent },
     ghost: { background: "transparent", color: C.text, borderColor: C.line },
-    link: { background: "transparent", color: C.accent, border: "none", padding: 0, textDecoration: "underline", textUnderlineOffset: 4 },
+    link: { background: "transparent", color: C.accent, border: "none", padding: "10px 4px", textDecoration: "underline", textUnderlineOffset: 4 },
   };
-  return <button onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
+  return <button type="button" className="wb-focus" onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
 }
 
 function Label({ children }) {
@@ -340,11 +360,11 @@ function Field({ label, children }) {
   return <label style={{ display: "block", marginBottom: 18 }}><Label>{label}</Label>{children}</label>;
 }
 
-const inputStyle = { width: "100%", boxSizing: "border-box", background: C.bgSunk, color: C.text, border: `1px solid ${C.line}`, borderRadius: 4, padding: "11px 13px", fontFamily: SANS, fontSize: 14.5, lineHeight: 1.55, outline: "none", resize: "vertical" };
+const inputStyle = { width: "100%", boxSizing: "border-box", background: C.bgSunk, color: C.text, border: `1px solid ${C.line}`, borderRadius: 4, padding: "11px 13px", fontFamily: SANS, fontSize: 16, lineHeight: 1.55, outline: "none", resize: "vertical", minHeight: 44 };
 
 function ModelSelect({ value, onChange }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
       <option value="" disabled>Choose the AI you used…</option>
       {MODELS.map((m) => <option key={m} value={m} style={{ color: "#111" }}>{m}</option>)}
     </select>
@@ -375,8 +395,11 @@ function EmailGate({ onUnlock }) {
       <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.55, marginBottom: 16 }}>
         Leave your email — we'll tell you when this gap moves.
       </div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <input type="email" value={email} placeholder="you@domain.com" onChange={(e) => setEmail(e.target.value)} style={{ ...inputStyle, flex: 1, minWidth: 220 }} />
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+        <label style={{ display: "block", flex: 1, minWidth: 220 }}>
+          <Label>Your email</Label>
+          <input type="email" value={email} placeholder="you@domain.com" onChange={(e) => setEmail(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, width: "100%" }} />
+        </label>
         <Btn kind="primary" disabled={!valid} onClick={() => onUnlock(email)}>Continue →</Btn>
       </div>
       <div style={{ fontFamily: MONO, fontSize: 10, color: C.textFaint, marginTop: 10, letterSpacing: "0.06em" }}>
@@ -654,8 +677,8 @@ function Curated() {
         {CURATED.map((c) => {
           const active = c.id === sel.id;
           return (
-            <button key={c.id} onClick={() => pick(c)} disabled={!c.ready}
-              style={{ textAlign: "left", flex: "1 1 200px", minWidth: 190, cursor: c.ready ? "pointer" : "not-allowed", background: active ? C.bgRaise : C.bgSunk, border: `1px solid ${active ? C.accent : C.line}`, borderRadius: 6, padding: 16, opacity: c.ready ? 1 : 0.5, transition: "all .15s ease" }}>
+            <button key={c.id} type="button" className="wb-case-card wb-focus" onClick={() => pick(c)} disabled={!c.ready}
+              style={{ textAlign: "left", flex: "1 1 200px", minWidth: 190, minHeight: 44, cursor: c.ready ? "pointer" : "not-allowed", background: active ? C.bgRaise : C.bgSunk, border: `1px solid ${active ? C.accent : C.line}`, borderRadius: 6, padding: 16, opacity: c.ready ? 1 : 0.5, transition: "all .15s ease" }}>
               <Label>{c.ready ? `Case ${c.id}` : "To add"}</Label>
               <div style={{ fontFamily: SERIF, fontSize: 16, color: C.text, lineHeight: 1.3, marginBottom: 10 }}>{c.title}</div>
               {c.ready ? (
@@ -720,7 +743,7 @@ function Curated() {
               <div>
                 <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
                 <Field label="Step 3 — paste its answer to the question">
-                  <textarea rows={9} value={answer} onChange={(e) => { setAnswer(e.target.value); setPasteError(""); }} placeholder="Paste the full response here…" style={inputStyle} />
+                  <textarea rows={9} value={answer} onChange={(e) => { setAnswer(e.target.value); setPasteError(""); }} placeholder="Paste the full response here…" className={INPUT_CLS} style={inputStyle} />
                 </Field>
                 {pasteError ? (
                   <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{pasteError}</div>
@@ -825,10 +848,10 @@ function Byo() {
           <ProvisionalBanner />
           <Field label="Step 1 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
           <Field label="Step 1 — the open question you asked">
-            <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" style={inputStyle} />
+            <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
           </Field>
           <Field label="Step 1 — the answer it gave (open prompt)">
-            <textarea rows={9} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} placeholder="Paste the full response…" style={inputStyle} />
+            <textarea rows={9} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
           </Field>
           <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => setStep(1)}>Continue →</Btn>
           {openAnswer.trim().length > 0 && openAnswer.trim().length < 120 && (
@@ -854,7 +877,7 @@ function Byo() {
               </div>
             ))}
             <Field label="Your targeted follow-up prompt">
-              <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" style={inputStyle} />
+              <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" className={INPUT_CLS} style={inputStyle} />
             </Field>
             <HygieneNote />
             <div style={{ marginTop: 14 }}>
@@ -872,7 +895,7 @@ function Byo() {
               Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.
             </div>
             <PromptCard text={targetedPrompt} />
-            <textarea rows={9} value={targetedAnswer} onChange={(e) => setTargetedAnswer(e.target.value)} placeholder="Paste the full targeted response…" style={{ ...inputStyle, marginTop: 12 }} />
+            <textarea rows={9} value={targetedAnswer} onChange={(e) => setTargetedAnswer(e.target.value)} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
           </Field>
           <HygieneNote />
           <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => setStep(4)}>Continue →</Btn>
@@ -883,16 +906,16 @@ function Byo() {
         <div>
           <ProvisionalBanner />
           <Field label="Step 4 — what surfaced only after direct prompting?">
-            <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" style={inputStyle} />
+            <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
           </Field>
           <Field label="Step 4 — category">
-            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
               <option value="" disabled>Choose a category…</option>
               {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
             </select>
           </Field>
           <Field label="Step 4 — self-assessed gap (optional)">
-            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
               <option value="">Skip — let a reviewer score it</option>
               <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
               <option value="1" style={{ color: "#111" }}>1 — mentioned vaguely</option>
@@ -965,6 +988,7 @@ function Workbench() {
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
       <style>{FONT_IMPORT}</style>
+      <style>{WORKBENCH_A11Y_CSS}</style>
       <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
@@ -979,9 +1003,9 @@ function Workbench() {
           Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
         </p>
 
-        <div style={{ display: "inline-flex", border: `1px solid ${C.line}`, borderRadius: 6, padding: 4, marginBottom: 32, background: C.bgSunk }}>
+        <div role="group" aria-label="Workbench mode" style={{ display: "inline-flex", border: `1px solid ${C.line}`, borderRadius: 6, padding: 4, marginBottom: 32, background: C.bgSunk }}>
           {[["curated", "Cases Imbas measured"], ["byo", "Bring your own"]].map(([k, lbl]) => (
-            <button key={k} onClick={() => setMode(k)} style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 500, padding: "8px 16px", borderRadius: 4, border: "none", cursor: "pointer", background: mode === k ? C.accent : "transparent", color: mode === k ? C.bg : C.textDim, transition: "all .15s ease" }}>{lbl}</button>
+            <button key={k} type="button" aria-pressed={mode === k} className="wb-focus" onClick={() => setMode(k)} style={{ fontFamily: SANS, fontSize: 16, fontWeight: 500, minHeight: 44, padding: "10px 16px", borderRadius: 4, border: "none", cursor: "pointer", background: mode === k ? C.accent : "transparent", color: mode === k ? C.bg : C.textDim, transition: "all .15s ease" }}>{lbl}</button>
           ))}
         </div>
 
