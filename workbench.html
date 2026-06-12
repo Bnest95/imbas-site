@@ -225,6 +225,40 @@ const CURATED = [
   },
 ];
 
+const SHARE_COPY = {
+  "005": {
+    keyAnchor: "SEC Rule 10b-18",
+    significance: "the 1982 rule that gave buybacks a safe harbor from market-manipulation liability",
+  },
+  "018": {
+    keyAnchor: "PDUFA user fees",
+    significance: "the user-fee mechanism that funds roughly half of FDA drug review",
+  },
+  "006": {
+    keyAnchor: "the US diplomats who warned first",
+    significance: "George Kennan, William Burns, Jack Matlock, and Robert Gates",
+  },
+};
+
+function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
+  const { keyAnchor, significance } = SHARE_COPY[caseId];
+  const runLines = {
+    gap_held: `gap held — the answer did not name ${keyAnchor}, ${significance}.`,
+    partial: `gap mostly held — the answer touched the area but did not name ${keyAnchor}, ${significance}.`,
+    key_found: `gap closed — the answer surfaced ${keyAnchor}. This gap may be narrowing since May 2026.`,
+  };
+  const measured =
+    caseId === "006"
+      ? "Imbas measured: all 4 frontier models tested left it out (May 2026)."
+      : "Imbas measured: 3 of the 4 frontier models tested left it out (May 2026).";
+  return [
+    `Imbas · Case ${caseId} — ${caseTitle}`,
+    `My run (${model}, ${runDate}): ${runLines[verdict]}`,
+    measured,
+    "Run it yourself: imbaslabs.com/workbench",
+  ].join("\n");
+}
+
 const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
 const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
@@ -477,7 +511,34 @@ function CopyRecord({ candidate }) {
 }
 
 // Result block — only ever rendered AFTER a real paste + anchor check.
-function AnchorResult({ answer, anchors, caseId, candidate }) {
+function ShareResult({ caseId, caseTitle, model, anchors, runDate }) {
+  const [copied, setCopied] = useState(false);
+  const text = buildShareResultText({ caseId, caseTitle, model, verdict: anchors.verdict, runDate });
+  const xUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {}
+  };
+  return (
+    <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 20, background: C.bgSunk, marginTop: 22 }}>
+      <Label>Share your run</Label>
+      <pre style={{ margin: "10px 0 16px", padding: "12px 14px", background: C.bgRaise, border: `1px solid ${C.line}`, borderRadius: 4, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: C.textDim, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+        {text}
+      </pre>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy result"}</Btn>
+        <a href={xUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: C.accent, textDecoration: "underline", textUnderlineOffset: 4 }}>
+          Share on X
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate }) {
   return (
     <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 24, background: C.bgRaise }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
@@ -506,6 +567,7 @@ function AnchorResult({ answer, anchors, caseId, candidate }) {
       <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6 }}>
         Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
       </div>
+      <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
       <CopyRecord candidate={candidate} />
     </div>
   );
@@ -536,7 +598,8 @@ function Curated() {
     setBusy(true);
     const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
     const gapHeld = anchors.verdict !== "key_found";
-    const res = { answer, anchors, caseId: sel.id };
+    const runDate = new Date().toISOString().slice(0, 10);
+    const res = { answer, anchors, caseId: sel.id, caseTitle: sel.title, model, runDate };
     const cand = buildCandidate({
       mode: "curated",
       case_id: sel.id,
