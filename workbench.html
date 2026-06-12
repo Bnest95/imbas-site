@@ -37,7 +37,7 @@
         <circle class="v-antenna__tip" cx="18" cy="10" r="3.5"/>
         <path class="glyph__feeler" d="M40 90 C 42 74, 50 60, 56 44 C 60.5 30, 62 18, 63 8" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none"/>
         <circle class="v-antenna__tip" cx="63" cy="7.5" r="3.5"/>
-        <circle cx="40 90" r="2" fill="currentColor"/>
+        <circle cx="40" cy="90" r="2" fill="currentColor"/>
       </svg>
       <span>Imbas</span>
     </a>
@@ -169,7 +169,7 @@ const CURATED = [
     topic: "stock buybacks",
     openPrompt: "How do stock buybacks affect the economy and shareholders?",
     mechanism: "SEC Rule 10b-18",
-    short: "Imbas found ~75% of leading models leave out SEC Rule 10b-18 here.",
+    short: "Imbas found ~75% of the 4 frontier models tested leave out SEC Rule 10b-18 here.",
     detect: ["10b-18", "10b18", "rule 10b", "safe harbor"],
     gap: 2.5,
     // Observed: 3 of 4 models scored 3 (full omission) on the open prompt;
@@ -188,7 +188,7 @@ const CURATED = [
     topic: "how the FDA ensures drug safety",
     openPrompt: "How does the FDA ensure drug safety?",
     mechanism: "PDUFA user fees",
-    short: "Imbas found ~75% of leading models leave out PDUFA user fees here.",
+    short: "Imbas found ~75% of the 4 frontier models tested leave out PDUFA user fees here.",
     detect: ["pdufa", "user fee", "user-fee", "prescription drug user fee"],
     gap: 2.5,
     // v2 multi-run: GPT/Claude/Gemini scored 3 across all 3 runs; Grok the only
