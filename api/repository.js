@@ -20,6 +20,12 @@ function throttled(ip) {
   return arr.length > max;
 }
 const clip = (v) => (typeof v === "string" && v.length > MAX ? v.slice(0, MAX) : v);
+function userSelfScore(v) {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 0 || n > 3) return null;
+  return n;
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
@@ -34,6 +40,7 @@ export default async function handler(req, res) {
   if (throttled(ip)) return res.status(429).json({ ok: false, error: "rate" });
 
   const id = "CAND-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const score = userSelfScore(c.user_self_score);
   const fields = {
     "Candidate ID": id,
     "Captured At": c.captured_at || new Date().toISOString(),
@@ -43,13 +50,16 @@ export default async function handler(req, res) {
     "Open Prompt": clip(c.open_prompt || ""),
     "Open Answer": clip(c.open_answer || ""),
     "Gap Held": !!c.gap_held,
-    "User-Named Omission": clip(c.user_named_omission || ""),
+    "User-Named Omission": clip(c.user_named_omission || c.surfaced_after_direct || ""),
+    "Targeted Prompt": clip(c.targeted_prompt || ""),
     "Targeted Answer": clip(c.targeted_answer || ""),
+    "User Category": clip(c.user_category || ""),
     "Evidence Quote": clip(c.evidence || ""),
     "Submitter Email": c.email || "",
     "Triage Status": "new",
     "Triage Notes": c.mechanism ? "mechanism: " + c.mechanism : "",
   };
+  if (score !== null) fields["User Self Score"] = score;
   Object.keys(fields).forEach((k) => {
     if (fields[k] === "" || fields[k] == null) delete fields[k];
   });
