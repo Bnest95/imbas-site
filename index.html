@@ -113,30 +113,13 @@
         </h1>
 
         <div class="hero__capture-block">
-          <form
-            class="hero__capture"
-            id="hero-capture"
-            action="/briefing/members/api/send-magic-link"
-            method="POST"
-            novalidate
-          >
-            <input type="hidden" name="emailType" value="signup">
-            <input type="hidden" name="labels" value="early-access">
-            <input
-              type="email"
-              name="email"
-              placeholder="you@email.com"
-              autocomplete="email"
-              required
-              aria-label="Email address"
-            >
-            <button type="submit">Get early access</button>
+          <form class="hero__capture" action="/workbench.html" method="get">
+            <button type="submit">Try Imbas</button>
           </form>
-          <p class="hero__capture-msg" id="hero-capture-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">Check your inbox for a confirmation link.</p>
         </div>
 
-        <a href="#what-imbas" class="hero__secondary">
-          <span>See what Imbas measures</span>
+        <a href="#archive" class="hero__secondary">
+          <span>Explore the record</span>
           <span class="arrow" aria-hidden="true">&rarr;</span>
         </a>
 
@@ -413,7 +396,7 @@
   </section>
 
   <!-- CASE ARCHIVE -->
-  <section class="archive archive--home-preview section-scene" aria-labelledby="archive-h2" data-reveal-section>
+  <section id="archive" class="archive archive--home-preview section-scene" aria-labelledby="archive-h2" data-reveal-section>
     <div class="aurora-field aurora-field--cool" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
@@ -582,7 +565,7 @@
 
         <div class="close__signup">
           <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
-          <p class="field-notes__caption reveal" data-stagger="body">Occasional observations from Imbas on AI behavioral measurement.</p>
+          <p class="field-notes__caption reveal" data-stagger="body">Follow new records and product releases.</p>
           <form
             class="subscribe reveal"
             data-stagger="support"
@@ -601,7 +584,7 @@
               required
               aria-label="Email address"
             >
-            <button type="submit"><span class="subscribe__btn-text">Subscribe</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span></button>
+            <button type="submit"><span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span></button>
           </form>
           <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">Check your inbox for a confirmation link.</p>
           <div class="field-notes__recent reveal" data-stagger="support">
@@ -952,7 +935,6 @@
         msg.classList.add('is-visible');
       });
     }
-    wireForm('hero-capture', 'hero-capture-msg', 'Check your inbox for a confirmation link.');
     wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
 
     // Hero particulate texture
