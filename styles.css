@@ -7453,3 +7453,246 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   .proof-strip__meta { font-size: max(0.75rem, var(--mono-min)); }
   .hero__capture button { font-size: max(0.8rem, var(--mono-min)); }
 }
+
+/* =============================================================
+   WORKBENCH — Pass 15 instrument atmosphere + specimen framing
+   ============================================================= */
+.wb-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100vh - 4rem);
+  overflow: hidden;
+}
+.wb-stage__content {
+  position: relative;
+  z-index: 2;
+}
+.wb-shell {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Aurora + focal — dimmer lab read vs homepage hero */
+.wb-stage > .aurora-field {
+  opacity: 0.38;
+}
+.wb-stage > .aurora-field .aurora-field__layer {
+  opacity: 0.42;
+  filter: blur(58px);
+}
+.wb-stage > .hero__aurora-focal {
+  opacity: 0.22;
+  filter: blur(72px);
+}
+.wb-stage > .wb-stage__dust {
+  opacity: 0.55;
+}
+
+/* Specimen plate — corner tick + top rule (bridge plate pattern) */
+.wb-specimen-plate {
+  position: relative;
+  border: 1px solid rgba(242, 232, 220, 0.16);
+  background: rgba(51, 40, 35, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(252, 248, 236, 0.04);
+}
+.wb-specimen-plate::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(180, 106, 90, 0.38), transparent);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.wb-specimen-plate::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid rgba(180, 106, 90, 0.38);
+  border-left: 1px solid rgba(180, 106, 90, 0.38);
+  opacity: 0.72;
+  pointer-events: none;
+}
+.wb-specimen-plate__label {
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(185, 168, 147, 0.95);
+  line-height: 1.45;
+  margin-bottom: 0.65rem;
+}
+
+/* Case cards */
+.wb-case-card {
+  text-align: left;
+  flex: 1 1 200px;
+  min-width: 190px;
+  min-height: 44px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 1rem;
+  opacity: 1;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+.wb-case-card:not(:disabled):hover {
+  transform: translateY(-2px);
+  opacity: 0.96;
+}
+.wb-case-card.is-active {
+  border-color: rgba(180, 106, 90, 0.62);
+  background: rgba(51, 40, 35, 0.88);
+}
+.wb-case-card.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.wb-case-card__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #F2E8DC;
+  line-height: 1.3;
+}
+
+/* Active curated case view */
+.wb-active-case {
+  border-radius: 6px;
+  padding: 1.35rem 1.25rem 1.25rem;
+  margin-bottom: 1.75rem;
+}
+.wb-active-case__headline {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 4vw, 1.875rem);
+  line-height: 1.3;
+  color: #F2E8DC;
+  margin: 0.65rem 0 0.5rem;
+}
+.wb-active-case__probe {
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #B46A5A;
+  margin: 0 0 0.85rem;
+}
+.wb-result-plate {
+  border-radius: 6px;
+  padding: 1.5rem 1.25rem;
+}
+
+/* Instrument stage progress */
+.wb-stage-progress {
+  margin-bottom: 0.65rem;
+}
+.wb-stage-progress__track {
+  height: 1px;
+  background: rgba(71, 58, 51, 0.85);
+  overflow: hidden;
+}
+.wb-stage-progress__fill {
+  height: 100%;
+  width: 100%;
+  background: #B46A5A;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.45s ease;
+  will-change: transform;
+}
+.wb-instrument-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  color: rgba(140, 124, 107, 0.95);
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.wb-instrument-header__num {
+  color: #B46A5A;
+}
+
+/* Mode toggle — instrument stages */
+.wb-mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  border: 1px solid rgba(71, 58, 51, 0.95);
+  border-radius: 6px;
+  padding: 0.25rem;
+  margin-bottom: 2rem;
+  margin-top: 0.5rem;
+  background: rgba(36, 29, 26, 0.82);
+}
+.wb-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  min-height: 44px;
+  padding: 0.625rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(185, 168, 147, 0.95);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  flex: 1 1 auto;
+}
+.wb-mode-btn__num {
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  opacity: 0.85;
+}
+.wb-mode-btn.is-active {
+  background: #B46A5A;
+  color: #2A211E;
+}
+.wb-mode-btn.is-active .wb-mode-btn__num {
+  color: #2A211E;
+  opacity: 0.88;
+}
+.wb-mode-btn:not(.is-active):hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-stage > .aurora-field,
+  .wb-stage > .hero__aurora-focal {
+    opacity: 0.32 !important;
+    animation: none !important;
+  }
+  .wb-stage > .aurora-field .aurora-field__layer {
+    animation: none !important;
+    transform: none !important;
+    opacity: 0.38 !important;
+  }
+  .wb-stage > .wb-stage__dust,
+  .wb-stage .hero__particle {
+    display: none !important;
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .wb-case-card,
+  .wb-mode-btn,
+  .wb-stage-progress__fill {
+    transition: none !important;
+  }
+  .wb-case-card:not(:disabled):hover,
+  .wb-mode-btn:not(.is-active):hover {
+    transform: none !important;
+  }
+}
