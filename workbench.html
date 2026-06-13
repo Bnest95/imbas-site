@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=workbench-pass16">
+  <link rel="stylesheet" href="/styles.css?v=workbench-pass17">
 </head>
 <body>
 
@@ -61,6 +61,7 @@
     <span class="aurora-field__layer aurora-field__layer--b"></span>
   </div>
   <div class="hero__aurora-focal" aria-hidden="true"></div>
+  <div class="wb-stage__grid" aria-hidden="true"></div>
   <div class="hero__dust wb-stage__dust" aria-hidden="true"></div>
   <div id="workbench-root" class="wb-stage__content"></div>
 </main>
@@ -319,6 +320,20 @@ function InstrumentStageHeader({ num, total }) {
   );
 }
 
+function AntennaMark({ signal }) {
+  return (
+    <svg className={`wb-antenna${signal ? " is-signal" : ""}`} width="32" height="40" viewBox="0 0 80 100" fill="none" aria-hidden="true">
+      <path d="M40 90 C 39 72, 32 56, 19 14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <circle className="wb-antenna__tip wb-antenna__tip--left" cx="18" cy="11" r="4.4" fill="currentColor" />
+      <circle cx="26" cy="48" r="1.6" fill="currentColor" opacity="0.42" />
+      <path d="M40 90 C 42 73, 52 56, 62 10" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+      <circle className="wb-antenna__tip wb-antenna__tip--right" cx="63" cy="7" r="4.4" fill="currentColor" />
+      <circle cx="54" cy="46" r="1.6" fill="currentColor" opacity="0.42" />
+      <circle cx="40" cy="90" r="2.4" fill="currentColor" />
+    </svg>
+  );
+}
+
 // ---- UI ATOMS ----
 function Mantis({ label }) {
   return (
@@ -508,7 +523,25 @@ function caseOnPageTexts(sel) {
   return [sel.observed, sel.short, sel.whyItMatters, sel.openPrompt].filter(Boolean);
 }
 
+const PASTE_COHERENCE_MSG = "This doesn't look like a model's answer — paste the full response text from your chat.";
+
+function validatePasteCoherence(text) {
+  const words = (text || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length < 20) return PASTE_COHERENCE_MSG;
+  if (words.some((w) => w.length > 40)) return PASTE_COHERENCE_MSG;
+  return "";
+}
+
+function findTermIndex(text, term) {
+  const esc = term.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(?:^|[^a-z0-9])${esc}(?:[^a-z0-9]|$)`, "i");
+  const m = re.exec(text || "");
+  return m ? m.index : -1;
+}
+
 function validateCuratedPaste(text, sel) {
+  const coherence = validatePasteCoherence(text);
+  if (coherence) return coherence;
   const t = (text || "").trim();
   if (t.length < 200) {
     return "Paste the full answer — we need enough text to check reliably (200 characters minimum).";
@@ -520,8 +553,9 @@ function validateCuratedPaste(text, sel) {
   return "";
 }
 
-function HighlightedAnswer({ text, terms }) {
-  const foundTerms = terms.filter((t) => t.found).map((t) => t.term);
+function HighlightedAnswer({ text, terms, litTerms }) {
+  const litSet = litTerms || new Set(terms.filter((t) => t.found).map((t) => t.term));
+  const foundTerms = terms.filter((t) => t.found && litSet.has(t.term)).map((t) => t.term);
   const spans = anchorSpans(text, foundTerms);
   if (!spans.length) {
     return <div style={{ whiteSpace: "pre-wrap", fontFamily: SERIF, fontSize: 15, lineHeight: 1.55, color: C.text }}>{text}</div>;
@@ -639,83 +673,113 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
   const meta = caseMeta(caseId);
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
-  const [visibleTokens, setVisibleTokens] = useState(reduced.current ? tokens.length : 0);
+  const answerWrapRef = useRef(null);
+  const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
+  const [sweeping, setSweeping] = useState(!reduced.current);
+  const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
   const [showVerdict, setShowVerdict] = useState(reduced.current);
-  const [verdictPulse, setVerdictPulse] = useState(false);
-  const [showAnswerBlock, setShowAnswerBlock] = useState(reduced.current);
-  const [showShareBlock, setShowShareBlock] = useState(reduced.current);
+  const [verdictPulse, setVerdictPulse] = useState(reduced.current);
+  const [showShare, setShowShare] = useState(reduced.current);
+  const [antennaSignal, setAntennaSignal] = useState(reduced.current && tokens.some((t) => t.isKey && t.found));
 
   useEffect(() => {
-    if (reduced.current) {
-      setVisibleTokens(tokens.length);
-      setShowVerdict(true);
-      setShowAnswerBlock(true);
-      setShowShareBlock(true);
-      return;
+    if (answerWrapRef.current) {
+      answerWrapRef.current.style.setProperty("--sweep-travel", `${answerWrapRef.current.offsetHeight}px`);
     }
-    setVisibleTokens(0);
+  }, [answer]);
+
+  useEffect(() => {
+    const SWEEP_MS = 700;
+    const CHIP_STAGGER = 200;
+    const BEAT_MS = 600;
+    if (reduced.current) {
+      setLitTerms(new Set(tokens.filter((t) => t.found).map((t) => t.term)));
+      setSweeping(false);
+      setVisibleChips(tokens.length);
+      setShowVerdict(true);
+      setVerdictPulse(true);
+      setShowShare(true);
+      setAntennaSignal(tokens.some((t) => t.isKey && t.found));
+      const t = setTimeout(() => setVerdictPulse(false), 50);
+      return () => clearTimeout(t);
+    }
+
+    setLitTerms(new Set());
+    setSweeping(true);
+    setVisibleChips(0);
     setShowVerdict(false);
     setVerdictPulse(false);
-    setShowAnswerBlock(false);
-    setShowShareBlock(false);
+    setShowShare(false);
+    setAntennaSignal(false);
 
     const timers = [];
     const schedule = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
-    const tokenStagger = 150;
-    const afterTokens = tokens.length * tokenStagger;
 
-    tokens.forEach((_, i) => {
-      schedule(() => setVisibleTokens(i + 1), i * tokenStagger);
+    tokens.forEach((t) => {
+      if (!t.found) return;
+      const idx = findTermIndex(answer, t.term);
+      const at = idx >= 0 ? (idx / Math.max(answer.length, 1)) * SWEEP_MS : SWEEP_MS;
+      schedule(() => {
+        setLitTerms((prev) => new Set([...prev, t.term]));
+        if (t.isKey) setAntennaSignal(true);
+      }, at);
     });
+
+    schedule(() => setSweeping(false), SWEEP_MS);
+    tokens.forEach((_, i) => {
+      schedule(() => setVisibleChips(i + 1), SWEEP_MS + i * CHIP_STAGGER);
+    });
+
+    const afterChips = SWEEP_MS + tokens.length * CHIP_STAGGER;
     schedule(() => {
       setShowVerdict(true);
       setVerdictPulse(true);
-    }, afterTokens + 400);
-    schedule(() => setShowAnswerBlock(true), afterTokens + 400 + 380);
-    schedule(() => setShowShareBlock(true), afterTokens + 400 + 380 + 200);
-    schedule(() => setVerdictPulse(false), afterTokens + 400 + 720);
+    }, afterChips + BEAT_MS);
+    schedule(() => setShowShare(true), afterChips + BEAT_MS + 400);
+    schedule(() => setVerdictPulse(false), afterChips + BEAT_MS + 720);
 
     return () => { timers.forEach(clearTimeout); };
-  }, [tokens.length, caseId]);
+  }, [tokens.length, caseId, answer]);
 
   const plateCls = `wb-specimen-plate wb-result-plate${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   return (
     <div className={plateCls}>
+      <AntennaMark signal={antennaSignal} />
       {meta ? <div className="wb-specimen-plate__label">{specimenLabel(meta)}</div> : null}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
+        <Label>From the answer you pasted</Label>
+        <Provisional />
+      </div>
+      <div ref={answerWrapRef} className={`wb-answer-sweep${sweeping ? " is-sweeping" : ""}`} style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", marginBottom: 20 }}>
+        <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
+        <div className="wb-sweep-line" aria-hidden="true" />
+      </div>
       <Label>Looked for</Label>
-      <ul className="wb-token-list" style={{ listStyle: "none", margin: "8px 0 18px", padding: 0 }}>
+      <ul className="wb-token-chips" style={{ listStyle: "none", margin: "8px 0 10px", padding: 0 }}>
         {tokens.map((t, i) => {
-          const visible = i < visibleTokens;
-          const cls = `wb-token-row${visible ? " is-visible" : ""}${t.found ? " is-found" : " is-missing"}`;
+          const visible = i < visibleChips;
+          const cls = `wb-token-chip${visible ? " is-visible" : ""}${t.found ? " is-found" : " is-missing"}`;
           return (
             <li key={t.term} className={cls}>
-              {t.found ? "✓" : "·"} {t.term}{t.isKey ? " (key)" : ""} — {t.found ? "found" : "missing"}
+              {t.term}{t.isKey ? " (key)" : ""} · {t.found ? "found" : "missing"}
             </li>
           );
         })}
       </ul>
+      <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6, marginBottom: 18 }}>
+        Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
+      </div>
+      <div className={`wb-verdict-rule${showVerdict ? " is-visible" : ""}`} aria-hidden="true" />
       <div className={`wb-verdict-line${showVerdict ? " is-landed" : ""}${anchors.verdict === "key_found" ? " is-key-found" : ""}`}>
         {anchors.verdictLine}
       </div>
-      <div className={`wb-reveal-rise wb-result-answer${showAnswerBlock ? " is-visible" : ""}`}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16, marginTop: 18 }}>
-          <Label>From the answer you pasted</Label>
-          <Provisional />
+      {caseId === "006" && showVerdict ? (
+        <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, lineHeight: 1.55, marginTop: 14, marginBottom: 14, borderLeft: `2px solid ${C.line}`, paddingLeft: 14 }}>
+          This case measures attribution. Detection here checks whether the named US diplomats appear at all.
         </div>
-        <div style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", marginBottom: 20 }}>
-          <HighlightedAnswer text={answer} terms={anchors.tokens} />
-        </div>
-        {caseId === "006" ? (
-          <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, lineHeight: 1.55, marginBottom: 14, borderLeft: `2px solid ${C.line}`, paddingLeft: 14 }}>
-            This case measures attribution. Detection here checks whether the named US diplomats appear at all.
-          </div>
-        ) : null}
-        <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6 }}>
-          Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
-        </div>
-      </div>
-      <div className={`wb-reveal-rise wb-result-share${showShareBlock ? " is-visible" : ""}`}>
+      ) : null}
+      <div className={`wb-reveal-rise wb-result-share${showShare ? " is-visible" : ""}`}>
         <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
         <RepositoryActions candidate={candidate} submitOk={submitOk} />
       </div>
@@ -792,6 +856,7 @@ function Curated() {
           {step === 0 && (
             <div>
               <div className="wb-specimen-plate wb-active-case">
+                <AntennaMark signal={false} />
                 <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
                 <Label>What Imbas measured</Label>
                 <div className="wb-active-case__headline">{sel.short}</div>
@@ -833,9 +898,7 @@ function Curated() {
                 {pasteError ? (
                   <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{pasteError}</div>
                 ) : null}
-                {busy ? <Mantis label="Checking what it surfaced…" /> : (
-                  <Btn kind="primary" disabled={!model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
-                )}
+                <Btn kind="primary" disabled={busy || !model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
                 {!busy && !pasteError && answer.trim().length > 0 && answer.trim().length < 200 && (
                   <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, marginTop: 8, lineHeight: 1.5 }}>
                     Paste the full answer — we need enough text to check reliably (200 characters minimum).
@@ -875,6 +938,7 @@ function Byo() {
   const [busy, setBusy] = useState(false);
   const [candidate, setCandidate] = useState(null);
   const [submitOk, setSubmitOk] = useState(true);
+  const [byoPasteError, setByoPasteError] = useState("");
 
   const reset = () => {
     setStep(0);
@@ -891,6 +955,7 @@ function Byo() {
     setCandidate(null);
     setSubmitOk(true);
     setBusy(false);
+    setByoPasteError("");
   };
 
   const submit = async () => {
@@ -940,9 +1005,17 @@ function Byo() {
             <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
           </Field>
           <Field label="The answer it gave (open prompt)">
-            <textarea rows={9} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
+            <textarea rows={9} value={openAnswer} onChange={(e) => { setOpenAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
           </Field>
-          <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => setStep(1)}>Continue →</Btn>
+          {byoPasteError ? (
+            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{byoPasteError}</div>
+          ) : null}
+          <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => {
+            const err = validatePasteCoherence(openAnswer);
+            if (err) { setByoPasteError(err); return; }
+            setByoPasteError("");
+            setStep(1);
+          }}>Continue →</Btn>
           {openAnswer.trim().length > 0 && openAnswer.trim().length < 120 && (
             <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, marginTop: 8 }}>Paste the full answer so the review has enough context.</div>
           )}
@@ -984,10 +1057,18 @@ function Byo() {
               Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.
             </div>
             <PromptCard text={targetedPrompt} />
-            <textarea rows={9} value={targetedAnswer} onChange={(e) => setTargetedAnswer(e.target.value)} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
+            <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
           </Field>
+          {byoPasteError ? (
+            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{byoPasteError}</div>
+          ) : null}
           <HygieneNote />
-          <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => setStep(4)}>Continue →</Btn>
+          <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => {
+            const err = validatePasteCoherence(targetedAnswer);
+            if (err) { setByoPasteError(err); return; }
+            setByoPasteError("");
+            setStep(4);
+          }}>Continue →</Btn>
         </div>
       )}
 

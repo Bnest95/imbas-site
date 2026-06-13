@@ -7473,20 +7473,51 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   background: transparent;
 }
 
-/* Aurora + focal — dimmer lab read vs homepage hero */
+/* Aurora + focal — lab bench: warmer focal (~65% of hero), grid texture */
 .wb-stage > .aurora-field {
-  opacity: 0.38;
+  opacity: 0.42;
 }
 .wb-stage > .aurora-field .aurora-field__layer {
-  opacity: 0.42;
+  opacity: 0.48;
   filter: blur(58px);
 }
 .wb-stage > .hero__aurora-focal {
-  opacity: 0.22;
-  filter: blur(72px);
+  opacity: 0.32;
+  filter: blur(68px);
 }
 .wb-stage > .wb-stage__dust {
   opacity: 0.55;
+}
+.wb-stage__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    linear-gradient(rgba(140, 176, 210, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 176, 210, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 88% 72% at 50% 42%, black 35%, transparent 92%);
+}
+
+.wb-antenna {
+  display: block;
+  width: 32px;
+  height: 40px;
+  margin: 0 0 0.75rem;
+  color: rgba(185, 168, 147, 0.55);
+}
+.wb-antenna__tip {
+  color: rgba(185, 168, 147, 0.45);
+  transition: opacity 0.35s ease, fill 0.35s ease;
+}
+.wb-antenna.is-signal {
+  color: rgba(242, 232, 220, 0.82);
+}
+.wb-antenna.is-signal .wb-antenna__tip {
+  color: #B46A5A;
+  filter: drop-shadow(0 0 6px rgba(180, 106, 90, 0.42));
 }
 
 /* Specimen plate — corner tick + top rule (bridge plate pattern) */
@@ -7723,8 +7754,8 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 
 .wb-verdict-line {
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 3.2vw, 1.625rem);
-  line-height: 1.35;
+  font-size: clamp(1.375rem, 4vw, 1.875rem);
+  line-height: 1.3;
   color: #F2E8DC;
   margin: 0 0 0.25rem;
   opacity: 0;
@@ -7753,11 +7784,17 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 
 .wb-result-plate.is-reveal-instant .wb-token-row,
+.wb-result-plate.is-reveal-instant .wb-token-chip,
 .wb-result-plate.is-reveal-instant .wb-verdict-line,
-.wb-result-plate.is-reveal-instant .wb-reveal-rise {
+.wb-result-plate.is-reveal-instant .wb-verdict-rule,
+.wb-result-plate.is-reveal-instant .wb-reveal-rise,
+.wb-result-plate.is-reveal-instant .wb-sweep-line {
   opacity: 1;
   transform: none;
   animation: none;
+}
+.wb-result-plate.is-reveal-instant.wb-answer-sweep.is-sweeping .wb-sweep-line {
+  display: none;
 }
 
 @keyframes wb-token-resolve {
@@ -7789,14 +7826,107 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 
 @media (prefers-reduced-motion: reduce) {
   .wb-token-row,
+  .wb-token-chip,
   .wb-verdict-line,
-  .wb-reveal-rise {
+  .wb-verdict-rule,
+  .wb-reveal-rise,
+  .wb-sweep-line {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
+  }
+  .wb-answer-sweep.is-sweeping .wb-sweep-line {
+    display: none !important;
+  }
+  .wb-antenna.is-signal .wb-antenna__tip {
+    transition: none !important;
   }
   .wb-result-plate.is-verdict-pulse,
   .wb-result-plate.is-verdict-pulse::after {
     animation: none !important;
   }
+}
+
+/* =============================================================
+   WORKBENCH — Pass 17 sweep, chips, verdict rule (animation only)
+   ============================================================= */
+.wb-answer-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.wb-sweep-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: #B46A5A;
+  opacity: 0;
+  transform: translateY(0);
+  pointer-events: none;
+  box-shadow: 0 0 10px rgba(180, 106, 90, 0.38);
+}
+.wb-answer-sweep.is-sweeping .wb-sweep-line {
+  opacity: 0.88;
+  animation: wb-sweep-down 700ms linear forwards;
+}
+
+.wb-token-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.wb-token-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(71, 58, 51, 0.85);
+  color: rgba(140, 124, 107, 0.85);
+  opacity: 0;
+  transform: translateY(4px);
+}
+.wb-token-chip.is-visible {
+  animation: wb-chip-resolve 0.28s ease forwards;
+}
+.wb-token-chip.is-visible.is-found {
+  border-color: rgba(180, 106, 90, 0.72);
+  color: #B46A5A;
+}
+.wb-token-chip.is-visible.is-missing {
+  border-color: rgba(71, 58, 51, 0.75);
+  color: rgba(140, 124, 107, 0.78);
+}
+
+.wb-verdict-rule {
+  height: 1px;
+  width: 100%;
+  max-width: 12rem;
+  background: #B46A5A;
+  margin: 0.35rem 0 0.85rem;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.wb-verdict-rule.is-visible {
+  animation: wb-verdict-rule-in 0.35s ease forwards;
+}
+
+@keyframes wb-sweep-down {
+  from { transform: translateY(0); opacity: 0.88; }
+  to   { transform: translateY(var(--sweep-travel, 180px)); opacity: 0.25; }
+}
+
+@keyframes wb-chip-resolve {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wb-verdict-rule-in {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
 }
