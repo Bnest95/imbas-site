@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=workbench-pass17">
+  <link rel="stylesheet" href="/styles.css?v=workbench-pass18">
 </head>
 <body>
 
@@ -298,14 +298,26 @@ function caseMeta(caseId) {
   return CURATED.find((c) => c.id === caseId);
 }
 
+function countWords(text) {
+  return (text || "").trim().split(/\s+/).filter(Boolean).length;
+}
+
 function StageProgress({ value, max }) {
   const pct = max > 1 ? (value - 1) / (max - 1) : 0;
   const clamped = Math.max(0, Math.min(1, pct));
+  const steps = Array.from({ length: max }, (_, i) => i + 1);
   return (
     <div className="wb-stage-progress" aria-hidden="true">
       <div className="wb-stage-progress__track">
         <div className="wb-stage-progress__fill" style={{ transform: `scaleX(${clamped})` }} />
       </div>
+      <ol className="wb-stage-progress__steps">
+        {steps.map((n) => (
+          <li key={n} className={`wb-stage-progress__step${n < value ? " is-done" : ""}${n === value ? " is-current" : ""}`}>
+            {n < value ? <span className="wb-stage-progress__tick" aria-hidden="true">✓</span> : String(n).padStart(2, "0")}
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -380,7 +392,7 @@ function ProvisionalBanner() {
   );
 }
 
-function Btn({ children, onClick, kind = "primary", disabled, small }) {
+function Btn({ children, onClick, kind = "primary", disabled, small, className = "" }) {
   const base = {
     fontFamily: SANS,
     fontSize: 16,
@@ -401,15 +413,67 @@ function Btn({ children, onClick, kind = "primary", disabled, small }) {
     ghost: { background: "transparent", color: C.text, borderColor: C.line },
     link: { background: "transparent", color: C.accent, border: "none", padding: "10px 4px", textDecoration: "underline", textUnderlineOffset: 4 },
   };
-  return <button type="button" className="wb-focus" onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
+  return <button type="button" className={`wb-focus wb-btn${className ? ` ${className}` : ""}`} onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
 }
 
 function Label({ children }) {
-  return <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", color: C.textFaint, textTransform: "uppercase", marginBottom: 8 }}>{children}</div>;
+  return <div className="wb-field-label">{children}</div>;
 }
 
 function Field({ label, children }) {
   return <label style={{ display: "block", marginBottom: 18 }}><Label>{label}</Label>{children}</label>;
+}
+
+function CollapsedAnswerRow({ text, terms, litTerms, showHighlights = false, defaultExpanded = false }) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const words = countWords(text);
+  return (
+    <div className={`wb-answer-row${expanded ? " is-expanded" : ""}`}>
+      <button type="button" className="wb-answer-row__toggle wb-focus" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
+        <span className="wb-answer-row__label">Your answer · {words} words</span>
+        <span className={`wb-answer-row__chevron${expanded ? " is-open" : ""}`} aria-hidden="true" />
+      </button>
+      <div className={`wb-answer-row__body${expanded ? " is-open" : ""}`}>
+        {showHighlights && terms ? (
+          <HighlightedAnswer text={text} terms={terms} litTerms={litTerms} />
+        ) : (
+          <div className="wb-answer-row__text">{text}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PasteField({ label, value, onChange, error, placeholder, rows = 9, style, minAckLength = 1 }) {
+  const [received, setReceived] = useState(false);
+  const [ackWords, setAckWords] = useState(null);
+  const handleChange = (e) => {
+    const v = e.target.value;
+    onChange(v);
+    const coherent = !validatePasteCoherence(v);
+    if (coherent && v.trim().length >= minAckLength) {
+      setAckWords(countWords(v));
+      setReceived(true);
+    } else {
+      setAckWords(null);
+      setReceived(false);
+    }
+  };
+  return (
+    <Field label={label}>
+      <textarea
+        rows={rows}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={`${INPUT_CLS}${received ? " is-paste-received" : ""}`}
+        style={style || inputStyle}
+      />
+      {ackWords && !error ? (
+        <div className="wb-paste-ack">{ackWords} words received</div>
+      ) : null}
+    </Field>
+  );
 }
 
 const inputStyle = { width: "100%", boxSizing: "border-box", background: C.bgSunk, color: C.text, border: `1px solid ${C.line}`, borderRadius: 4, padding: "11px 13px", fontFamily: SANS, fontSize: 16, lineHeight: 1.55, outline: "none", resize: "vertical", minHeight: 44 };
@@ -669,26 +733,31 @@ function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate, submitOk }) {
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
   const meta = caseMeta(caseId);
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
-  const answerWrapRef = useRef(null);
+  const measureRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
   const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
-  const [sweeping, setSweeping] = useState(!reduced.current);
+  const [sweeping, setSweeping] = useState(false);
   const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
   const [showVerdict, setShowVerdict] = useState(reduced.current);
-  const [verdictPulse, setVerdictPulse] = useState(reduced.current);
+  const [verdictPulse, setVerdictPulse] = useState(false);
   const [showShare, setShowShare] = useState(reduced.current);
   const [antennaSignal, setAntennaSignal] = useState(reduced.current && tokens.some((t) => t.isKey && t.found));
+  const words = countWords(answer);
 
   useEffect(() => {
-    if (answerWrapRef.current) {
-      answerWrapRef.current.style.setProperty("--sweep-travel", `${answerWrapRef.current.offsetHeight}px`);
+    if (!measureRef.current) return;
+    const bar = measureRef.current.closest(".wb-answer-row")?.querySelector(".wb-answer-row__bar");
+    if (bar) {
+      bar.style.setProperty("--sweep-travel", `${Math.max(bar.offsetHeight - 2, 40)}px`);
     }
-  }, [answer]);
+  }, [answer, sequenceReady]);
 
   useEffect(() => {
+    if (!sequenceReady) return undefined;
     const SWEEP_MS = 700;
     const CHIP_STAGGER = 200;
     const BEAT_MS = 600;
@@ -739,24 +808,35 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
     schedule(() => setVerdictPulse(false), afterChips + BEAT_MS + 720);
 
     return () => { timers.forEach(clearTimeout); };
-  }, [tokens.length, caseId, answer]);
+  }, [tokens.length, caseId, answer, sequenceReady]);
 
-  const plateCls = `wb-specimen-plate wb-result-plate${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
+  const innerCls = `wb-result-inner${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   return (
-    <div className={plateCls}>
+    <div className={innerCls}>
       <AntennaMark signal={antennaSignal} />
       {meta ? <div className="wb-specimen-plate__label">{specimenLabel(meta)}</div> : null}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
-        <Label>From the answer you pasted</Label>
+      <div className="wb-result-header">
+        <Label>Result</Label>
         <Provisional />
       </div>
-      <div ref={answerWrapRef} className={`wb-answer-sweep${sweeping ? " is-sweeping" : ""}`} style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", marginBottom: 20 }}>
-        <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
-        <div className="wb-sweep-line" aria-hidden="true" />
+      <div className={`wb-answer-row${expanded ? " is-expanded" : ""}`}>
+        <div ref={measureRef} className="wb-answer-sweep-measure" aria-hidden="true">
+          <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
+        </div>
+        <div className={`wb-answer-row__bar wb-answer-sweep${sweeping ? " is-sweeping" : ""}`}>
+          <button type="button" className="wb-answer-row__toggle wb-focus" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
+            <span className="wb-answer-row__label">Your answer · {words} words</span>
+            <span className={`wb-answer-row__chevron${expanded ? " is-open" : ""}`} aria-hidden="true" />
+          </button>
+          <div className="wb-sweep-line" aria-hidden="true" />
+        </div>
+        <div className={`wb-answer-row__body${expanded ? " is-open" : ""}`}>
+          <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
+        </div>
       </div>
       <Label>Looked for</Label>
-      <ul className="wb-token-chips" style={{ listStyle: "none", margin: "8px 0 10px", padding: 0 }}>
+      <ul className="wb-token-chips">
         {tokens.map((t, i) => {
           const visible = i < visibleChips;
           const cls = `wb-token-chip${visible ? " is-visible" : ""}${t.found ? " is-found" : " is-missing"}`;
@@ -767,22 +847,27 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
           );
         })}
       </ul>
-      <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6, marginBottom: 18 }}>
+      <p className="wb-plate-caption">
         Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
-      </div>
+      </p>
       <div className={`wb-verdict-rule${showVerdict ? " is-visible" : ""}`} aria-hidden="true" />
-      <div className={`wb-verdict-line${showVerdict ? " is-landed" : ""}${anchors.verdict === "key_found" ? " is-key-found" : ""}`}>
+      <div className={`wb-verdict-line${showVerdict ? " is-landed" : ""}`}>
         {anchors.verdictLine}
       </div>
       {caseId === "006" && showVerdict ? (
-        <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, lineHeight: 1.55, marginTop: 14, marginBottom: 14, borderLeft: `2px solid ${C.line}`, paddingLeft: 14 }}>
+        <p className="wb-plate-note">
           This case measures attribution. Detection here checks whether the named US diplomats appear at all.
-        </div>
+        </p>
       ) : null}
       <div className={`wb-reveal-rise wb-result-share${showShare ? " is-visible" : ""}`}>
         <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
         <RepositoryActions candidate={candidate} submitOk={submitOk} />
       </div>
+      {onAnotherCase ? (
+        <div className="wb-result-actions">
+          <button type="button" className="wb-another-case wb-focus" onClick={onAnotherCase}>Test another case ↺</button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -799,17 +884,71 @@ function Curated() {
   const [result, setResult] = useState(null);
   const [candidate, setCandidate] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [why, setWhy] = useState(false);
   const [pasteError, setPasteError] = useState("");
+  const [sequenceReady, setSequenceReady] = useState(false);
+  const [plateFade, setPlateFade] = useState("idle");
+  const plateRef = useRef(null);
 
-  const pick = (c) => { setSel(c); setStep(0); setWhy(false); setUnlocked(false); setEmail(""); setModel(""); setAnswer(""); setResult(null); setCandidate(null); setPasteError(""); };
-  const copyPrompt = async () => { try { await navigator.clipboard.writeText(sel.openPrompt); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch {} };
+  const resetRun = () => {
+    setStep(0);
+    setUnlocked(false);
+    setEmail("");
+    setModel("");
+    setAnswer("");
+    setResult(null);
+    setCandidate(null);
+    setPasteError("");
+    setSequenceReady(false);
+    setBusy(false);
+  };
+
+  const pick = (c) => {
+    if (!c.ready || c.id === sel.id) return;
+    const reduced = prefersReducedMotion();
+    const apply = () => {
+      setSel(c);
+      resetRun();
+      setPlateFade("in");
+      window.setTimeout(() => setPlateFade("idle"), reduced ? 0 : 200);
+    };
+    if (reduced) {
+      apply();
+      return;
+    }
+    setPlateFade("out");
+    window.setTimeout(apply, 200);
+  };
+
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(sel.openPrompt);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
+  const scrollPlateThenReveal = () => {
+    const reduced = prefersReducedMotion();
+    const startReveal = () => setSequenceReady(true);
+    if (!plateRef.current) {
+      startReveal();
+      return;
+    }
+    const rect = plateRef.current.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+      plateRef.current.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      window.setTimeout(startReveal, reduced ? 0 : 380);
+    } else {
+      startReveal();
+    }
+  };
 
   const check = async () => {
     const err = validateCuratedPaste(answer, sel);
     if (err) { setPasteError(err); return; }
     setPasteError("");
     setBusy(true);
+    setSequenceReady(false);
     const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
     const gapHeld = anchors.verdict !== "key_found";
     const runDate = new Date().toISOString().slice(0, 10);
@@ -826,8 +965,20 @@ function Curated() {
       detect_verdict: anchors.verdict,
     });
     const submitResult = await submitCandidate(cand);
-    setResult({ ...res, submitOk: submitResult.ok }); setCandidate(cand); setBusy(false); setStep(2);
+    setResult({ ...res, submitOk: submitResult.ok });
+    setCandidate(cand);
+    setBusy(false);
+    setStep(2);
+    window.requestAnimationFrame(scrollPlateThenReveal);
   };
+
+  const plateCls = [
+    "wb-specimen-plate",
+    "wb-run-plate",
+    step === 2 ? "is-result" : "",
+    plateFade === "out" ? "is-crossfade-out" : "",
+    plateFade === "in" ? "is-crossfade-in" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <div>
@@ -850,70 +1001,73 @@ function Curated() {
       </div>
 
       {!sel.ready ? (
-        <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6, border: `1px dashed ${C.line}`, borderRadius: 6, padding: 22 }}>{sel.note}</div>
+        <div className="wb-plate-note wb-plate-note--dashed">{sel.note}</div>
       ) : (
         <>
-          {step === 0 && (
-            <div>
-              <div className="wb-specimen-plate wb-active-case">
+          <div ref={plateRef} className={plateCls}>
+            {step === 2 && result ? (
+              <AnchorResult
+                {...result}
+                candidate={candidate}
+                sequenceReady={sequenceReady}
+                onAnotherCase={resetRun}
+              />
+            ) : step === 1 && unlocked ? (
+              <>
+                <AntennaMark signal={false} />
+                <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
+                <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+                <PasteField
+                  label="Step 3 — paste its answer to the question"
+                  value={answer}
+                  onChange={(v) => { setAnswer(v); setPasteError(""); }}
+                  error={pasteError}
+                  placeholder="Paste the full response here…"
+                  minAckLength={20}
+                />
+                {pasteError ? (
+                  <div className="wb-field-error">{pasteError}</div>
+                ) : null}
+                <Btn kind="primary" disabled={busy || !model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
+                {!busy && !pasteError && answer.trim().length > 0 && answer.trim().length < 200 ? (
+                  <p className="wb-plate-hint">Paste the full answer — we need enough text to check reliably (200 characters minimum).</p>
+                ) : null}
+              </>
+            ) : (
+              <>
                 <AntennaMark signal={false} />
                 <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
                 <Label>What Imbas measured</Label>
                 <div className="wb-active-case__headline">{sel.short}</div>
                 <p className="wb-active-case__probe">Will your model surface it?</p>
-                <div style={{ display: "flex", gap: 20, flexWrap: "wrap", fontFamily: MONO, fontSize: 12, color: C.textDim, letterSpacing: "0.04em" }}>
+                <div className="wb-active-case__meta">
                   <span>gap {sel.gap.toFixed(1)} / 3</span>
                   <span>{sel.category}</span>
                   <span>4 models · observed {sel.observedDate}</span>
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 14, color: C.textFaint, lineHeight: 1.6, marginTop: 14 }}>
-                  {sel.whyItMatters}
-                </div>
-              </div>
+                <p className="wb-plate-support">{sel.whyItMatters}</p>
+              </>
+            )}
+          </div>
 
-              {/* Confirm it yourself — secondary */}
+          {step === 0 && (
+            <div className="wb-confirm-block">
               <Label>Confirm it yourself</Label>
               <div style={{ marginTop: 10 }}>
                 <PromptCard text={sel.openPrompt} />
               </div>
               <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 12, marginBottom: 4 }}>
-                <Btn kind="ghost" small onClick={copyPrompt}>{copied ? "Copied ✓" : "Copy question"}</Btn>
+                <Btn kind="ghost" small onClick={copyPrompt} className={copied ? "is-copied" : ""}>{copied ? "Copied ✓" : "Copy question"}</Btn>
                 <Btn kind="primary" onClick={() => setStep(1)}>Ran it — paste the answer →</Btn>
               </div>
               <HygieneNote />
-              <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.textFaint, marginTop: 10 }}>
-                Models change, so your run may differ — a closed gap is a result too.
-              </div>
+              <p className="wb-plate-hint">Models change, so your run may differ — a closed gap is a result too.</p>
             </div>
           )}
 
-          {step === 1 && (
-            !unlocked ? <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
-            : (
-              <div>
-                <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-                <Field label="Step 3 — paste its answer to the question">
-                  <textarea rows={9} value={answer} onChange={(e) => { setAnswer(e.target.value); setPasteError(""); }} placeholder="Paste the full response here…" className={INPUT_CLS} style={inputStyle} />
-                </Field>
-                {pasteError ? (
-                  <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{pasteError}</div>
-                ) : null}
-                <Btn kind="primary" disabled={busy || !model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
-                {!busy && !pasteError && answer.trim().length > 0 && answer.trim().length < 200 && (
-                  <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, marginTop: 8, lineHeight: 1.5 }}>
-                    Paste the full answer — we need enough text to check reliably (200 characters minimum).
-                  </div>
-                )}
-              </div>
-            )
-          )}
-
-          {step === 2 && result && (
-            <div>
-              <AnchorResult {...result} candidate={candidate} />
-              <div style={{ marginTop: 18 }}>
-                <Btn kind="link" small onClick={() => { setStep(0); setUnlocked(false); setModel(""); setAnswer(""); setResult(null); setCandidate(null); setPasteError(""); }}>← Try another model, or another case</Btn>
-              </div>
+          {step === 1 && !unlocked && (
+            <div className="wb-gate-block">
+              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
             </div>
           )}
         </>
@@ -980,10 +1134,14 @@ function Byo() {
     setStep(6);
   };
 
-  const reviewRow = (label, value) => (
+  const reviewRow = (label, value, collapsible = false) => (
     <div style={{ marginBottom: 14 }}>
       <Label>{label}</Label>
-      <div style={{ fontFamily: SANS, fontSize: 14, color: C.text, lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{value}</div>
+      {collapsible && value && value.trim().length > 120 ? (
+        <CollapsedAnswerRow text={value} />
+      ) : (
+        <div className="wb-plate-support wb-review-value">{value}</div>
+      )}
     </div>
   );
 
@@ -1110,9 +1268,9 @@ function Byo() {
             </div>
             {reviewRow("Model", model)}
             {reviewRow("Open question", openPrompt)}
-            {reviewRow("Open answer", openAnswer.length > 280 ? openAnswer.slice(0, 277) + "…" : openAnswer)}
+            {reviewRow("Open answer", openAnswer, true)}
             {reviewRow("Targeted prompt", targetedPrompt)}
-            {reviewRow("Targeted answer", targetedAnswer.length > 280 ? targetedAnswer.slice(0, 277) + "…" : targetedAnswer)}
+            {reviewRow("Targeted answer", targetedAnswer, true)}
             {reviewRow("Surfaced after direct prompting", surfacedSentence)}
             {reviewRow("Category", category)}
             {reviewRow("Self-assessed gap", selfScore === "" ? "— (reviewer will score)" : `${selfScore} / 3`)}
