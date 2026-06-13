@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=workbench-pass15">
+  <link rel="stylesheet" href="/styles.css?v=workbench-pass16">
 </head>
 <body>
 
@@ -97,7 +97,7 @@
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script type="text/babel" data-presets="react">
-const { useState } = React;
+const { useState, useEffect, useRef } = React;
 
 /*
   IMBAS — WORKBENCH v0
@@ -631,39 +631,94 @@ function ShareResult({ caseId, caseTitle, model, anchors, runDate }) {
   );
 }
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate, submitOk }) {
   const meta = caseMeta(caseId);
+  const tokens = anchors.tokens;
+  const reduced = useRef(prefersReducedMotion());
+  const [visibleTokens, setVisibleTokens] = useState(reduced.current ? tokens.length : 0);
+  const [showVerdict, setShowVerdict] = useState(reduced.current);
+  const [verdictPulse, setVerdictPulse] = useState(false);
+  const [showAnswerBlock, setShowAnswerBlock] = useState(reduced.current);
+  const [showShareBlock, setShowShareBlock] = useState(reduced.current);
+
+  useEffect(() => {
+    if (reduced.current) {
+      setVisibleTokens(tokens.length);
+      setShowVerdict(true);
+      setShowAnswerBlock(true);
+      setShowShareBlock(true);
+      return;
+    }
+    setVisibleTokens(0);
+    setShowVerdict(false);
+    setVerdictPulse(false);
+    setShowAnswerBlock(false);
+    setShowShareBlock(false);
+
+    const timers = [];
+    const schedule = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
+    const tokenStagger = 150;
+    const afterTokens = tokens.length * tokenStagger;
+
+    tokens.forEach((_, i) => {
+      schedule(() => setVisibleTokens(i + 1), i * tokenStagger);
+    });
+    schedule(() => {
+      setShowVerdict(true);
+      setVerdictPulse(true);
+    }, afterTokens + 400);
+    schedule(() => setShowAnswerBlock(true), afterTokens + 400 + 380);
+    schedule(() => setShowShareBlock(true), afterTokens + 400 + 380 + 200);
+    schedule(() => setVerdictPulse(false), afterTokens + 400 + 720);
+
+    return () => { timers.forEach(clearTimeout); };
+  }, [tokens.length, caseId]);
+
+  const plateCls = `wb-specimen-plate wb-result-plate${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
+
   return (
-    <div className="wb-specimen-plate wb-result-plate">
+    <div className={plateCls}>
       {meta ? <div className="wb-specimen-plate__label">{specimenLabel(meta)}</div> : null}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
-        <Label>From the answer you pasted</Label>
-        <Provisional />
-      </div>
-      <div style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", marginBottom: 20 }}>
-        <HighlightedAnswer text={answer} terms={anchors.tokens} />
-      </div>
       <Label>Looked for</Label>
-      <ul style={{ listStyle: "none", margin: "8px 0 18px", padding: 0, fontFamily: MONO, fontSize: 12, lineHeight: 1.8 }}>
-        {anchors.tokens.map((t) => (
-          <li key={t.term} style={{ color: t.found ? C.good : C.textFaint }}>
-            {t.found ? "✓" : "·"} {t.term}{t.isKey ? " (key)" : ""} — {t.found ? "found" : "missing"}
-          </li>
-        ))}
+      <ul className="wb-token-list" style={{ listStyle: "none", margin: "8px 0 18px", padding: 0 }}>
+        {tokens.map((t, i) => {
+          const visible = i < visibleTokens;
+          const cls = `wb-token-row${visible ? " is-visible" : ""}${t.found ? " is-found" : " is-missing"}`;
+          return (
+            <li key={t.term} className={cls}>
+              {t.found ? "✓" : "·"} {t.term}{t.isKey ? " (key)" : ""} — {t.found ? "found" : "missing"}
+            </li>
+          );
+        })}
       </ul>
-      <div style={{ fontFamily: SERIF, fontSize: 20, color: anchors.verdict === "key_found" ? C.good : C.text, lineHeight: 1.4, marginBottom: 14 }}>
+      <div className={`wb-verdict-line${showVerdict ? " is-landed" : ""}${anchors.verdict === "key_found" ? " is-key-found" : ""}`}>
         {anchors.verdictLine}
       </div>
-      {caseId === "006" ? (
-        <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, lineHeight: 1.55, marginBottom: 14, borderLeft: `2px solid ${C.line}`, paddingLeft: 14 }}>
-          This case measures attribution. Detection here checks whether the named US diplomats appear at all.
+      <div className={`wb-reveal-rise wb-result-answer${showAnswerBlock ? " is-visible" : ""}`}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16, marginTop: 18 }}>
+          <Label>From the answer you pasted</Label>
+          <Provisional />
         </div>
-      ) : null}
-      <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6 }}>
-        Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
+        <div style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", marginBottom: 20 }}>
+          <HighlightedAnswer text={answer} terms={anchors.tokens} />
+        </div>
+        {caseId === "006" ? (
+          <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, lineHeight: 1.55, marginBottom: 14, borderLeft: `2px solid ${C.line}`, paddingLeft: 14 }}>
+            This case measures attribution. Detection here checks whether the named US diplomats appear at all.
+          </div>
+        ) : null}
+        <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.04em", lineHeight: 1.6 }}>
+          Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
+        </div>
       </div>
-      <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
-      <RepositoryActions candidate={candidate} submitOk={submitOk} />
+      <div className={`wb-reveal-rise wb-result-share${showShareBlock ? " is-visible" : ""}`}>
+        <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
+        <RepositoryActions candidate={candidate} submitOk={submitOk} />
+      </div>
     </div>
   );
 }
@@ -880,11 +935,11 @@ function Byo() {
       {step === 0 && (
         <div>
           <ProvisionalBanner />
-          <Field label="Step 1 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-          <Field label="Step 1 — the open question you asked">
+          <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+          <Field label="The open question you asked">
             <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
           </Field>
-          <Field label="Step 1 — the answer it gave (open prompt)">
+          <Field label="The answer it gave (open prompt)">
             <textarea rows={9} value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
           </Field>
           <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => setStep(1)}>Continue →</Btn>
