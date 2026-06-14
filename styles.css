@@ -600,7 +600,7 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.42rem;
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 500;
@@ -610,29 +610,18 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 }
 .brand:hover { color: var(--ember-soft); border: none; }
 .brand .glyph {
-  width: 29px; height: 41px;
-  color: var(--ember);
+  width: auto;
+  height: 47px;
+  max-width: 43px;
+  aspect-ratio: 906 / 991;
   flex-shrink: 0;
-  transform: none;
-  transition: color .3s ease;
+  display: block;
+  object-fit: contain;
+  transition: opacity .3s ease;
 }
-.brand .glyph__feeler,
-.brand .glyph > circle:not(.v-antenna__tip) {
-  animation: none;
-  transform: none;
+.brand:hover .glyph {
+  opacity: 0.88;
 }
-.brand .glyph .v-antenna__tip {
-  fill: var(--ember);
-  opacity: 0.35;
-  animation: v-antenna-tip-pulse 5s ease-in-out infinite;
-}
-@keyframes v-antenna-tip-pulse {
-  0%        { opacity: 0.35; }
-  14%       { opacity: 1; }
-  28%, 100% { opacity: 0.35; }
-}
-.brand:hover .glyph { color: var(--ember-soft); }
-.brand:hover .glyph .v-antenna__tip { fill: var(--ember); }
 
 .nav { display: flex; align-items: center; gap: 1.6rem; }
 .nav a {
@@ -3662,7 +3651,6 @@ body:has(main > section.hero) .nav__menu-btn {
   .hero__meta--instrument::before,
   .hero__meta--instrument::after { opacity: 0.65 !important; }
   .hero__meta--instrument.reveal { opacity: 1; transform: none; }
-  .brand .glyph .v-antenna__tip { animation: none !important; opacity: 0.7; }
   .aurora-field__layer { animation: none !important; opacity: 0.55 !important; transform: none !important; filter: blur(48px) !important; }
   .hero .aurora-field__layer { opacity: 0.65 !important; filter: blur(57px) !important; }
   .hero__aurora-focal { animation: none !important; opacity: 0.48 !important; transform: translate(-50%, -50%) !important; }
@@ -7512,18 +7500,13 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   width: 32px;
   height: 40px;
   margin: 0 0 0.75rem;
-  color: rgba(185, 168, 147, 0.55);
-}
-.wb-antenna__tip {
-  color: rgba(185, 168, 147, 0.45);
-  transition: opacity 0.35s ease, fill 0.35s ease;
+  object-fit: contain;
+  opacity: 0.72;
+  transition: opacity 0.35s ease, filter 0.35s ease;
 }
 .wb-antenna.is-signal {
-  color: rgba(242, 232, 220, 0.82);
-}
-.wb-antenna.is-signal .wb-antenna__tip {
-  color: #B46A5A;
-  filter: drop-shadow(0 0 6px rgba(180, 106, 90, 0.42));
+  opacity: 1;
+  filter: brightness(1.08) drop-shadow(0 0 6px rgba(180, 106, 90, 0.28));
 }
 
 /* Specimen plate — corner tick + top rule (bridge plate pattern) */
@@ -7870,9 +7853,6 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   }
   .wb-answer-sweep.is-sweeping .wb-sweep-line {
     display: none !important;
-  }
-  .wb-antenna.is-signal .wb-antenna__tip {
-    transition: none !important;
   }
   .wb-result-inner.is-verdict-pulse,
   .wb-run-plate.is-result:has(.wb-result-inner.is-verdict-pulse),
