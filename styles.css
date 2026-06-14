@@ -2035,6 +2035,8 @@ body:has(main > section.hero) .nav__menu-btn {
 @media (max-width: 800px) {
   .compounding__inner { grid-template-columns: 1fr; }
   .divergence { aspect-ratio: 2; }
+  .divergence__label--top { top: 2%; }
+  .divergence__label--bot { bottom: 2%; }
 }
 
 /* =============================================================
