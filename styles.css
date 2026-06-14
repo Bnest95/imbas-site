@@ -3321,19 +3321,13 @@ body:has(main > section.hero) .nav__menu-btn {
   align-items: center;
   width: 100%;
   max-width: 100%;
-  gap: 0.5rem;
+  gap: 0.65rem;
   margin-top: var(--space-2);
-  padding: 0.2rem 0.2rem 0.2rem 0.9rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 2px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color .3s ease, background .3s ease;
-}
-.close .subscribe:focus-within {
-  border-color: rgba(var(--ember-rgb), 0.45);
-  background: rgba(40, 58, 85, 0.55);
+  padding: 0;
+  border: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .subscribe {
   display: flex;
@@ -3369,7 +3363,20 @@ body:has(main > section.hero) .nav__menu-btn {
   transition: color .25s ease;
 }
 .close .subscribe input[type="email"] {
-  padding: 0.85rem 0;
+  flex: 1;
+  min-width: 0;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color .3s ease, background .3s ease;
+}
+.close .subscribe input[type="email"]:focus {
+  border-color: rgba(var(--ember-rgb), 0.45);
+  background: rgba(40, 58, 85, 0.55);
+  outline: none;
 }
 .close .subscribe button {
   background: rgba(var(--ember-rgb), 0.3);
@@ -3415,14 +3422,13 @@ body:has(main > section.hero) .nav__menu-btn {
   .close .subscribe {
     flex-direction: column;
     align-items: stretch;
-    padding: 0.45rem 0.65rem;
     gap: 0.5rem;
   }
   .close .subscribe input[type="email"] {
-    padding: 0.55rem 0;
+    padding: 0.65rem 0.85rem;
   }
   .close .subscribe button {
-    align-self: center;
+    align-self: flex-start;
     width: auto;
     max-width: 100%;
     padding: 0.65rem 1rem;
