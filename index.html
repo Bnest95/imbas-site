@@ -41,36 +41,6 @@
       margin: 0 auto;
       padding-bottom: var(--space-2);
     }
-    /* GHOST-FORM: restore when Ghost live */
-    .close a.subscribe.subscribe__cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: auto;
-      max-width: 100%;
-      margin-top: var(--space-2);
-      text-decoration: none;
-      background: rgba(var(--ember-rgb), 0.3);
-      border: 1px solid rgba(var(--ember-rgb), 0.52);
-      border-radius: 2px;
-      color: var(--ink-luminous);
-      font-family: var(--font-mono);
-      font-size: max(0.74rem, var(--mono-min));
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 0.7rem 1.1rem;
-      transition: background .25s ease, border-color .25s ease, color .25s ease;
-    }
-    .close a.subscribe.subscribe__cta:hover {
-      background: rgba(var(--ember-rgb), 0.42);
-      border-color: var(--ember-soft);
-      color: var(--ink-luminous);
-    }
-    .close a.subscribe.subscribe__cta:focus-visible {
-      outline: 2px solid rgba(var(--ember-rgb), 0.55);
-      outline-offset: 2px;
-    }
-    /* GHOST-FORM: restore when Ghost live */
   </style>
 
   <script type="application/ld+json">
@@ -613,13 +583,27 @@
         <div class="close__signup">
           <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
           <p class="field-notes__caption reveal" data-stagger="body">Follow new records and product releases.</p>
-          <!-- GHOST-FORM: restore when Ghost live -->
-          <a
-            href="mailto:brendan@imbaslabs.com?subject=Follow%20Imbas%20%E2%80%94%20Field%20Notes"
-            class="subscribe subscribe__cta reveal"
+          <form
+            class="subscribe reveal"
             data-stagger="support"
-          ><span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span></a>
-          <!-- GHOST-FORM: restore when Ghost live -->
+            id="field-notes-form"
+            action="/briefing/members/api/send-magic-link"
+            method="POST"
+            novalidate
+          >
+            <input type="hidden" name="emailType" value="signup">
+            <input type="hidden" name="labels" value="field-notes">
+            <input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+              aria-label="Email address"
+            >
+            <button type="submit"><span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span></button>
+          </form>
+          <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">Check your inbox for a confirmation link.</p>
           <div class="field-notes__recent reveal" data-stagger="support">
             <ul class="field-notes__recent-list">
               <li><a href="/briefing/post-1">On methodology hygiene and prompt design</a></li>
@@ -950,7 +934,26 @@
       updateGapLines();
     })();
 
-    /* GHOST-FORM: restore wireForm('field-notes-form', …) when Ghost live */
+    // Capture form handlers — field notes signup
+    function wireForm(formId, msgId, fallbackMsg) {
+      var form = document.getElementById(formId);
+      var msg  = document.getElementById(msgId);
+      if (!form || !msg) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = form.querySelector('input[type="email"]');
+        if (!email || !email.value || !email.checkValidity()) {
+          msg.textContent = 'Please enter a valid email.';
+          msg.setAttribute('aria-hidden', 'false');
+          msg.classList.add('is-visible');
+          return;
+        }
+        msg.textContent = fallbackMsg;
+        msg.setAttribute('aria-hidden', 'false');
+        msg.classList.add('is-visible');
+      });
+    }
+    wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
 
     // Hero particulate texture
     (function initHeroDust() {
