@@ -174,7 +174,7 @@ main {
   100% { background-position: 200px 200px; }
 }
 @media (max-width: 900px) {
-  .film-grain { animation: none; }
+  .film-grain { animation: none; opacity: 0.035; }
 }
 
 /* Pass 12 — scroll-linked aurora intensity per section */
@@ -499,16 +499,21 @@ main {
   .section-scene:not(.hero) > .aurora-field .aurora-field__layer {
     animation: none !important;
     opacity: 0.38 !important;
-    filter: blur(44px) !important;
+    filter: blur(64px) !important;
     transform: none !important;
   }
   .hero .aurora-field__layer {
-    filter: blur(64px) !important;
+    filter: blur(80px) !important;
+    opacity: 0.5 !important;
   }
   .hero__dust { display: none !important; }
   .hero__aurora-focal {
     display: block !important;
     filter: blur(60px) !important;
+  }
+  .hero__aurora-edge {
+    opacity: 0.3 !important;
+    filter: blur(80px) !important;
   }
   .divergence.is-live .divergence__origin-core,
   .divergence.is-live .divergence__endpoint--bot,
