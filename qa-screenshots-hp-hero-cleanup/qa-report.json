@@ -1,0 +1,26 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "hasHorizontalOverflow": false
+    },
+    "mobile-375": {
+      "hasHorizontalOverflow": false
+    }
+  },
+  "checks": {
+    "microcopyGone": true,
+    "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+    "stripBorderTop": "0px",
+    "horizonDisplay": "none",
+    "secondaryMarginTop": "16px",
+    "secondaryMarginBottom": "24px"
+  },
+  "landing": {
+    "desktop-1440": {
+      "gapSecondaryToStrip": 60
+    },
+    "mobile-375": {
+      "gapSecondaryToStrip": 56
+    }
+  }
+}

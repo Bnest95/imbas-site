@@ -1,0 +1,54 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "pageOverflow": false
+    },
+    "mobile-375": {
+      "pageOverflow": false
+    }
+  },
+  "checks": {
+    "desktop-1440": {
+      "hasDot": false,
+      "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+      "stripTop": 777,
+      "stripHeight": 70,
+      "marginTop": "24px",
+      "spaceAbove": 31,
+      "spaceBelow": 39,
+      "verticalDelta": -4,
+      "metricsTransform": "matrix(1, 0, 0, 1, 0, -4)",
+      "gapNumLabelPx": [
+        6.72,
+        6.72,
+        6.72
+      ],
+      "metricTexts": [
+        "25 CASES RECORDED",
+        "250+ CAPTURES",
+        "4 FRONTIER MODELS"
+      ]
+    },
+    "mobile-375": {
+      "hasDot": false,
+      "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+      "stripTop": 700,
+      "stripHeight": 89,
+      "marginTop": "24px",
+      "spaceAbove": 37,
+      "spaceBelow": 53,
+      "verticalDelta": -8,
+      "metricsTransform": "matrix(1, 0, 0, 1, 0, -4)",
+      "gapNumLabelPx": [
+        6,
+        6,
+        6
+      ],
+      "metricTexts": [
+        "25 CASES RECORDED",
+        "250+ CAPTURES",
+        "4 FRONTIER MODELS"
+      ]
+    }
+  }
+}

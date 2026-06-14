@@ -1,0 +1,60 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "heroScrollWidth": 1555,
+      "heroClientWidth": 1440,
+      "hasHorizontalOverflow": false,
+      "heroOverflow": true
+    },
+    "mobile-375": {
+      "scrollWidth": 375,
+      "clientWidth": 375,
+      "heroScrollWidth": 405,
+      "heroClientWidth": 375,
+      "hasHorizontalOverflow": false,
+      "heroOverflow": true
+    }
+  },
+  "hero": {
+    "order": [
+      "hero__primary hero__primary--pending",
+      "hero__capture-block hero__capture-block--secondary",
+      "hero__secondary"
+    ],
+    "primaryText": "TRY IMBAS\n→",
+    "captureLabel": "GET EARLY ACCESS",
+    "captureButton": "SUBSCRIBE",
+    "primaryBox": {
+      "x": 642.03125,
+      "y": 548.796875,
+      "width": 155.921875,
+      "height": 40.96875
+    },
+    "captureBox": {
+      "x": 520,
+      "y": 639.484375,
+      "width": 400,
+      "height": 50.75
+    },
+    "primaryDominant": false,
+    "primaryStyles": {
+      "bg": "linear-gradient(rgb(240, 143, 88), rgb(222, 111, 56))",
+      "padding": "13.6px 24.8px",
+      "fontSize": "13.12px"
+    },
+    "captureBtnStyles": {
+      "bg": "rgba(0, 0, 0, 0)",
+      "border": "1px solid rgba(237, 228, 210, 0.15)",
+      "color": "rgb(212, 207, 194)"
+    }
+  },
+  "checks": {
+    "workbenchLinks": [],
+    "tryImbasLink": false,
+    "primaryIsLink": "SPAN",
+    "primaryAriaDisabled": "true",
+    "hasWorkbenchHref": false
+  }
+}

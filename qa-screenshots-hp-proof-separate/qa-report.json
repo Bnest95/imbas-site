@@ -1,0 +1,27 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "hasHorizontalOverflow": false
+    },
+    "mobile-375": {
+      "hasHorizontalOverflow": false
+    }
+  },
+  "landing": {
+    "desktop-1440": {
+      "gapSecondaryToStrip": 44,
+      "stripFullyVisible": true,
+      "stripTop": 696,
+      "viewportHeight": 900
+    },
+    "mobile-375": {
+      "gapSecondaryToStrip": 40,
+      "stripFullyVisible": false,
+      "stripTop": 703,
+      "viewportHeight": 812
+    }
+  },
+  "stats": {
+    "text": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS"
+  }
+}

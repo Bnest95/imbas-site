@@ -1,0 +1,26 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "hasHorizontalOverflow": false
+    },
+    "mobile-375": {
+      "hasHorizontalOverflow": false
+    }
+  },
+  "checks": {
+    "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+    "borderTop": "0px",
+    "borderBottom": "0px",
+    "background": "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(15, 13, 11, 0.18) 42%, rgba(0, 0, 0, 0) 100%)"
+  },
+  "landing": {
+    "desktop-1440": {
+      "gapSecondaryToStrip": 60,
+      "stripTop": 684
+    },
+    "mobile-375": {
+      "gapSecondaryToStrip": 56,
+      "stripTop": 676
+    }
+  }
+}

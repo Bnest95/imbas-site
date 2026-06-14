@@ -41,12 +41,26 @@ Still needed:
 
 ## Hosting headers
 
-Configure at the host/CDN layer once platform is chosen:
+Platform: Vercel. Headers ship in `vercel.json` (repo root). CSP is per-route: a
+near-strict policy on every page, plus a relaxed block scoped to `/workbench.html`
+only (it loads React/Babel from cdnjs and compiles in the browser, which needs
+`'unsafe-eval'` + cdnjs).
+
+Note: the site embeds an inline `<script>` on every page (nav menu; index also has
+scroll-reveal) and a few inline `style="..."` attributes, so the shipped policy
+includes `'unsafe-inline'` for script and style. This is a deliberate downgrade from
+a pure `script-src 'self'`. To recover strict `script-src 'self'` later: externalize
+the per-page inline script into a self-hosted `/site.js` (`<script src="/site.js"
+defer>`) and convert the inline `style=` attributes to classes, then drop
+`'unsafe-inline'` from script-src. Not required for launch.
+
+Values below are the GLOBAL (non-workbench) policy. The workbench block is the same
+but with `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com`.
 
 Content-Security-Policy:
 
 ```
-default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://imbaslabs.com/briefing/members/api/send-magic-link
+default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://imbaslabs.com/briefing/members/api/send-magic-link
 ```
 
 X-Content-Type-Options:
@@ -73,7 +87,9 @@ Strict-Transport-Security:
 max-age=31536000; includeSubDomains
 ```
 
-Only enable HSTS after HTTPS is confirmed.
+HSTS is intentionally NOT in the initial vercel.json. Add it only after the custom
+domain serves HTTPS cleanly on Vercel — HSTS pins browsers and is hard to undo if the
+cert/DNS cutover hiccups.
 
 ## Domain
 

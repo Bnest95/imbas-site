@@ -1,0 +1,20 @@
+[
+  {
+    "viewport": "desktop",
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "overflow": false
+  },
+  {
+    "viewport": "tablet",
+    "scrollWidth": 768,
+    "clientWidth": 768,
+    "overflow": false
+  },
+  {
+    "viewport": "mobile",
+    "scrollWidth": 375,
+    "clientWidth": 375,
+    "overflow": false
+  }
+]

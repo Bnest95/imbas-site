@@ -1,0 +1,34 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "pageOverflow": false
+    },
+    "mobile-375": {
+      "pageOverflow": false
+    }
+  },
+  "checks": {
+    "desktop-1440": {
+      "hasDot": false,
+      "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+      "stripHeight": 70,
+      "spaceAbove": 35,
+      "spaceBelow": 35,
+      "verticalDelta": 0,
+      "textCenter": 720,
+      "stripCenter": 720,
+      "hCenterDelta": -0.01
+    },
+    "mobile-375": {
+      "hasDot": false,
+      "stats": "25 CASES RECORDED · 250+ CAPTURES · 4 FRONTIER MODELS",
+      "stripHeight": 81,
+      "spaceAbove": 36,
+      "spaceBelow": 44,
+      "verticalDelta": -4,
+      "textCenter": 188,
+      "stripCenter": 188,
+      "hCenterDelta": 0
+    }
+  }
+}

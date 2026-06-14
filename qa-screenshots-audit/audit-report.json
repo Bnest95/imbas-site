@@ -1,0 +1,305 @@
+{
+  "overflow": {
+    "index_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "archive_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "case-005_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "for-readers_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "institutions_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "public-interest_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "faq_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "methodology_desktop": {
+      "ox": false,
+      "sw": 1440,
+      "cw": 1440
+    },
+    "index_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "archive_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "case-005_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "for-readers_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "institutions_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "public-interest_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "faq_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "methodology_tablet": {
+      "ox": false,
+      "sw": 768,
+      "cw": 768
+    },
+    "index_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "archive_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "case-005_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "for-readers_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "institutions_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "public-interest_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "faq_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "methodology_mobile": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    }
+  },
+  "consoleErrors": [
+    {
+      "vp": "desktop",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 501 (Unsupported method ('POST'))"
+      ]
+    },
+    {
+      "vp": "tablet",
+      "errors": []
+    },
+    {
+      "vp": "mobile",
+      "errors": []
+    }
+  ],
+  "stats": {
+    "home": {
+      "metrics": [
+        "25 cases recorded",
+        "250+ captures",
+        "4 frontier models"
+      ],
+      "proof": "13 cases recorded · 4 frontier models · archive growing",
+      "archiveGrowing": true,
+      "ledger": {
+        "dateInset": 30,
+        "gapInset": 29
+      }
+    },
+    "archive": {
+      "strip": "13 cases recorded · 4 frontier models · archive growing",
+      "archiveGrowing": true
+    }
+  },
+  "links": [
+    {
+      "r": "/",
+      "status": 200
+    },
+    {
+      "r": "/archive.html",
+      "status": 200
+    },
+    {
+      "r": "/case/005.html",
+      "status": 200
+    },
+    {
+      "r": "/for-readers.html",
+      "status": 200
+    },
+    {
+      "r": "/institutions.html",
+      "status": 200
+    },
+    {
+      "r": "/public-interest.html",
+      "status": 200
+    },
+    {
+      "r": "/faq.html",
+      "status": 200
+    },
+    {
+      "r": "/methodology.html",
+      "status": 200
+    },
+    {
+      "r": "/briefing",
+      "status": 404
+    },
+    {
+      "r": "/briefing/post-1",
+      "status": 404
+    },
+    {
+      "r": "/contact.html",
+      "status": 200
+    }
+  ],
+  "forms": {
+    "hero": {}
+  },
+  "navFooter": {
+    "index": {
+      "nav": [],
+      "footer": []
+    },
+    "archive": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "case-005": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "for-readers": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "institutions": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "public-interest": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "faq": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    },
+    "methodology": {
+      "nav": [],
+      "footer": [
+        "Home",
+        "The Volunteer Gap",
+        "How It Works",
+        "Methodology",
+        "Case Archive",
+        "Case 005",
+        "For Institutions",
+        "For Readers"
+      ]
+    }
+  }
+}

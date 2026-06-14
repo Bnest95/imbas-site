@@ -1,0 +1,8 @@
+{
+  "name": "qa-screenshots-pass18-state",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^23.11.1"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "desktop-1440": {
+    "order": [
+      "hero: hero",
+      "proof-strip: 25 cases recorded · 250+ captures · 4 frontier models",
+      "bridge: Imbas turns invisible AI behavior into a record.",
+      "value: How Imbas Works.",
+      "gap: The Volunteer Gap measures the distance between what a model",
+      "categories: Three signal patterns Imbas tracks.",
+      "compounding: A few degrees of drift can change the destination.",
+      "roadmap: From Observation to Measurement.",
+      "audiences: Who Imbas is for.",
+      "archive: Case Archive",
+      "close: Field Notes"
+    ],
+    "bridgeAfterProof": true,
+    "valueAfterBridge": true,
+    "valueBeforeGap": true,
+    "gapAfterValue": true,
+    "whatImbasExists": true,
+    "overflow": false
+  },
+  "mobile-375": {
+    "order": [
+      "hero: hero",
+      "proof-strip: 25 cases recorded · 250+ captures · 4 frontier models",
+      "bridge: Imbas turns invisible AI behavior into a record.",
+      "value: How Imbas Works.",
+      "gap: The Volunteer Gap measures the distance between what a model",
+      "categories: Three signal patterns Imbas tracks.",
+      "compounding: A few degrees of drift can change the destination.",
+      "roadmap: From Observation to Measurement.",
+      "audiences: Who Imbas is for.",
+      "archive: Case Archive",
+      "close: Field Notes"
+    ],
+    "bridgeAfterProof": true,
+    "valueAfterBridge": true,
+    "valueBeforeGap": true,
+    "gapAfterValue": true,
+    "whatImbasExists": true,
+    "overflow": false
+  }
+}

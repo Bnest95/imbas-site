@@ -1,0 +1,24 @@
+{
+  "overflow": {
+    "desktop-1440": {
+      "pageOverflow": false
+    },
+    "mobile-375": {
+      "pageOverflow": false
+    }
+  },
+  "checks": {
+    "desktop-1440": {
+      "copy": "Observing frontier AI behavior",
+      "dotW": 7,
+      "hasInstrument": true,
+      "gapToMonolith": 26
+    },
+    "mobile-375": {
+      "copy": "Observing frontier AI behavior",
+      "dotW": 7,
+      "hasInstrument": true,
+      "gapToMonolith": 24
+    }
+  }
+}

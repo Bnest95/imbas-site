@@ -1,0 +1,56 @@
+{
+  "stats": {
+    "proof": "25 cases recorded · 250+ captures · 4 frontier models",
+    "metrics": [
+      "25 cases recorded",
+      "250+ captures",
+      "4 frontier models"
+    ],
+    "archiveGrowing": false,
+    "archive": {
+      "strip": "25 cases recorded · 250+ captures · 4 frontier models",
+      "archiveGrowing": false
+    }
+  },
+  "links": [
+    {
+      "r": "/briefing",
+      "status": 200
+    },
+    {
+      "r": "/briefing/post-1",
+      "status": 200
+    },
+    {
+      "r": "/briefing/post-2",
+      "status": 200
+    },
+    {
+      "r": "/briefing/post-3",
+      "status": 200
+    }
+  ],
+  "forms": {
+    "hero": {
+      "ariaHidden": "false",
+      "visible": true
+    },
+    "fieldNotes": {
+      "ariaHidden": "false",
+      "visible": true
+    }
+  },
+  "overflow": {
+    "index": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    },
+    "archive": {
+      "ox": false,
+      "sw": 375,
+      "cw": 375
+    }
+  },
+  "consoleErrors": []
+}
