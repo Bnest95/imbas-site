@@ -160,6 +160,68 @@
     </div>
   </section>
 
+  <!-- THESIS — direction & degree diagram -->
+  <section class="compounding section-scene" aria-labelledby="compound-h2" data-reveal-section>
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+    </div>
+    <div class="compounding__inner">
+
+      <div class="compounding__copy">
+        <span class="section-label section-label--named reveal" data-stagger="label"><span>Thesis</span></span>
+        <h2 id="compound-h2" class="reveal" data-stagger="heading">A few degrees of drift can change the destination.</h2>
+        <p class="reveal" data-stagger="body">Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
+        <p class="compounding__punchline reveal" data-stagger="body">Imbas measures the direction and degree of that drift.</p>
+      </div>
+
+      <div class="divergence reveal" data-stagger="support" aria-hidden="true">
+        <svg class="divergence__svg" viewBox="0 0 600 380" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="div-grad-top" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(180,208,232,0.5)"/>
+              <stop offset="100%" stop-color="rgba(180,208,232,0.85)"/>
+            </linearGradient>
+            <linearGradient id="div-grad-bot" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="rgba(216,150,104,0.5)"/>
+              <stop offset="100%" stop-color="rgba(232,165,116,0.9)"/>
+            </linearGradient>
+          </defs>
+
+          <g stroke="rgba(140,176,210,0.06)" stroke-width="0.5">
+            <line x1="0" y1="76"  x2="600" y2="76"/>
+            <line x1="0" y1="152" x2="600" y2="152"/>
+            <line x1="0" y1="190" x2="600" y2="190" stroke="rgba(140,176,210,0.14)"/>
+            <line x1="0" y1="228" x2="600" y2="228"/>
+            <line x1="0" y1="304" x2="600" y2="304"/>
+            <line x1="120" y1="0" x2="120" y2="380"/>
+            <line x1="240" y1="0" x2="240" y2="380"/>
+            <line x1="360" y1="0" x2="360" y2="380"/>
+            <line x1="480" y1="0" x2="480" y2="380"/>
+          </g>
+
+          <circle class="divergence__origin divergence__origin-core" cx="40" cy="190" r="4" fill="rgba(252,248,236,0.85)"/>
+          <circle class="divergence__origin divergence__origin-ring" cx="40" cy="190" r="10" fill="none" stroke="rgba(252,248,236,0.4)" stroke-width="1"/>
+
+          <path class="divergence__path divergence__path--intended" d="M40 190 L580 86"
+                stroke="url(#div-grad-top)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+          <circle class="divergence__endpoint divergence__endpoint--top" cx="580" cy="86" r="3" fill="rgba(208,224,240,0.9)"/>
+
+          <path class="divergence__path divergence__path--drift" d="M40 190 L580 312"
+                stroke="url(#div-grad-bot)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <circle class="divergence__endpoint divergence__endpoint--bot" cx="580" cy="312" r="4" fill="rgba(232,165,116,0.95)"/>
+
+          <path d="M88 174 A 60 60 0 0 1 88 206" stroke="rgba(160,184,210,0.4)" stroke-width="0.7" fill="none"/>
+        </svg>
+
+        <span class="divergence__label divergence__label--start">Origin</span>
+        <span class="divergence__label divergence__label--top">Intended</span>
+        <span class="divergence__label divergence__label--bot">Drift</span>
+      </div>
+
+    </div>
+  </section>
+
   <!-- EPHEMERAL BY DEFAULT — uncaptured answers beat -->
   <section class="stakes section-scene" data-reveal-section aria-labelledby="ephemeral-h2">
     <div class="stakes__inner">
@@ -276,68 +338,6 @@
         <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Measure &mdash; Score the distance on the 0&ndash;3 Volunteer Gap scale.</li>
         <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Record &mdash; Preserve the prompts, answers, models, date, and gap as a case.</li>
       </ol>
-    </div>
-  </section>
-
-  <!-- THESIS — direction & degree diagram -->
-  <section class="compounding section-scene" aria-labelledby="compound-h2" data-reveal-section>
-    <div class="aurora-field aurora-field--cool" aria-hidden="true">
-      <span class="aurora-field__layer aurora-field__layer--a"></span>
-      <span class="aurora-field__layer aurora-field__layer--b"></span>
-    </div>
-    <div class="compounding__inner">
-
-      <div class="compounding__copy">
-        <span class="section-label section-label--named reveal" data-stagger="label"><span>Thesis</span></span>
-        <h2 id="compound-h2" class="reveal" data-stagger="heading">A few degrees of drift can change the destination.</h2>
-        <p class="reveal" data-stagger="body">Small differences in what a model surfaces, omits, emphasizes, or reframes can compound across millions of answers.</p>
-        <p class="compounding__punchline reveal" data-stagger="body">Imbas measures the direction and degree of that drift.</p>
-      </div>
-
-      <div class="divergence reveal" data-stagger="support" aria-hidden="true">
-        <svg class="divergence__svg" viewBox="0 0 600 380" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="div-grad-top" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="rgba(180,208,232,0.5)"/>
-              <stop offset="100%" stop-color="rgba(180,208,232,0.85)"/>
-            </linearGradient>
-            <linearGradient id="div-grad-bot" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stop-color="rgba(216,150,104,0.5)"/>
-              <stop offset="100%" stop-color="rgba(232,165,116,0.9)"/>
-            </linearGradient>
-          </defs>
-
-          <g stroke="rgba(140,176,210,0.06)" stroke-width="0.5">
-            <line x1="0" y1="76"  x2="600" y2="76"/>
-            <line x1="0" y1="152" x2="600" y2="152"/>
-            <line x1="0" y1="190" x2="600" y2="190" stroke="rgba(140,176,210,0.14)"/>
-            <line x1="0" y1="228" x2="600" y2="228"/>
-            <line x1="0" y1="304" x2="600" y2="304"/>
-            <line x1="120" y1="0" x2="120" y2="380"/>
-            <line x1="240" y1="0" x2="240" y2="380"/>
-            <line x1="360" y1="0" x2="360" y2="380"/>
-            <line x1="480" y1="0" x2="480" y2="380"/>
-          </g>
-
-          <circle class="divergence__origin divergence__origin-core" cx="40" cy="190" r="4" fill="rgba(252,248,236,0.85)"/>
-          <circle class="divergence__origin divergence__origin-ring" cx="40" cy="190" r="10" fill="none" stroke="rgba(252,248,236,0.4)" stroke-width="1"/>
-
-          <path class="divergence__path divergence__path--intended" d="M40 190 L580 86"
-                stroke="url(#div-grad-top)" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-          <circle class="divergence__endpoint divergence__endpoint--top" cx="580" cy="86" r="3" fill="rgba(208,224,240,0.9)"/>
-
-          <path class="divergence__path divergence__path--drift" d="M40 190 L580 312"
-                stroke="url(#div-grad-bot)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-          <circle class="divergence__endpoint divergence__endpoint--bot" cx="580" cy="312" r="4" fill="rgba(232,165,116,0.95)"/>
-
-          <path d="M88 174 A 60 60 0 0 1 88 206" stroke="rgba(160,184,210,0.4)" stroke-width="0.7" fill="none"/>
-        </svg>
-
-        <span class="divergence__label divergence__label--start">Origin</span>
-        <span class="divergence__label divergence__label--top">Intended</span>
-        <span class="divergence__label divergence__label--bot">Drift</span>
-      </div>
-
     </div>
   </section>
 
