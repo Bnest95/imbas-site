@@ -1632,7 +1632,7 @@ body:has(main > section.hero) .nav__menu-btn {
   text-transform: uppercase;
 }
 .exists-bridge__heading-accent {
-  color: var(--ember-soft);
+  color: var(--ink-luminous);
 }
 .exists-bridge__label-rule {
   width: clamp(2.25rem, 4.5vw, 3rem);
@@ -1661,7 +1661,7 @@ body:has(main > section.hero) .nav__menu-btn {
   font-weight: 400;
   font-size: clamp(1.12rem, 1.36vw, 1.2rem);
   line-height: 1.54;
-  color: rgba(180, 192, 210, 1);
+  color: var(--ink-soft);
   max-width: 46ch;
   text-align: center;
   text-wrap: balance;
