@@ -1905,15 +1905,23 @@ body:has(main > section.hero) .nav__menu-btn {
   display: inline-flex;
   align-items: baseline;
   gap: 0.5em;
+  white-space: nowrap;
 }
 .proof-strip--landing .proof-strip__num {
   line-height: 1;
   flex-shrink: 0;
 }
 .proof-strip--landing .proof-strip__sep {
+  display: none;
+}
+.proof-strip--landing .proof-strip__metric::after {
+  content: "\00a0·";
   color: rgba(180, 192, 210, 0.78);
   line-height: 1;
   user-select: none;
+}
+.proof-strip--landing .proof-strip__metrics > .proof-strip__metric:last-child::after {
+  content: none;
 }
 .proof-strip__meta {
   font-family: var(--font-mono);
@@ -5918,8 +5926,14 @@ main, .site-footer { position: relative; z-index: 2; }
   color: var(--ember-soft);
 }
 .page--archive .arc-stat-strip__sep {
-  margin: 0;
+  display: none;
+}
+.page--archive .arc-stat-strip__metric::after {
+  content: "\00a0·";
   color: rgba(180, 192, 210, 0.5);
+}
+.page--archive .arc-stat-strip__metric:last-child::after {
+  content: none;
 }
 
 /* Rubric note */
@@ -6368,8 +6382,8 @@ main, .site-footer { position: relative; z-index: 2; }
   .page--archive .arc-stat-strip__metric {
     white-space: normal;
   }
-  .page--archive .arc-stat-strip__sep {
-    display: none;
+  .page--archive .arc-stat-strip__metric::after {
+    content: none;
   }
   .page--archive .arc-stat-strip__num {
     font-size: 0.875rem;
