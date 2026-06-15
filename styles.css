@@ -7611,6 +7611,66 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 
 /* =============================================================
+   MOBILE POST-HERO SCALE — landing hierarchy below hero (≤768px)
+   ============================================================= */
+@media (max-width: 768px) {
+  .proof-strip--landing .proof-strip__meta {
+    font-size: max(0.72rem, 0.735rem);
+    letter-spacing: 0.19em;
+  }
+  .proof-strip--landing .proof-strip__num {
+    font-size: 1.19rem;
+  }
+
+  .stakes.stakes--context-lead .exists-bridge__heading {
+    font-size: clamp(0.94rem, 3.5vw, 1.06rem);
+    letter-spacing: 0.04em;
+  }
+  .stakes.stakes--context-lead .exists-bridge__thesis {
+    font-size: clamp(1rem, 3.5vw, 1.12rem);
+    line-height: 1.28;
+  }
+  .stakes.stakes--context-lead .exists-bridge__problem,
+  .stakes.stakes--context-lead .exists-bridge__payoff {
+    font-size: clamp(0.93rem, 3.35vw, 1.02rem);
+    line-height: 1.34;
+  }
+  .stakes.stakes--context-lead .exists-bridge__payoff {
+    font-size: clamp(0.93rem, 3.35vw, 1.04rem);
+  }
+
+  .compounding__copy .section-label {
+    font-size: max(0.79rem, var(--mono-min));
+  }
+  .compounding__copy h2 {
+    font-size: clamp(1.78rem, 8vw, 2.22rem);
+    line-height: 1.1;
+  }
+  .compounding__copy p {
+    font-size: clamp(0.98rem, 3.85vw, 1.1rem);
+  }
+  .compounding__copy .compounding__punchline {
+    font-size: clamp(1.22rem, 4.8vw, 1.38rem);
+    line-height: 1.38;
+  }
+
+  main > section.stakes:not(.stakes--context-lead) .section-label {
+    font-size: max(0.79rem, var(--mono-min));
+  }
+  main > section.stakes:not(.stakes--context-lead) .bridge__thesis {
+    font-size: clamp(1.48rem, 5.6vw, 1.82rem);
+    line-height: 1.22;
+  }
+  main > section.stakes:not(.stakes--context-lead) .stakes__copy {
+    font-size: clamp(1.02rem, 3.9vw, 1.18rem);
+    line-height: 1.38;
+  }
+  main > section.bridge .bridge__thesis {
+    font-size: clamp(1.48rem, 5.6vw, 1.85rem);
+  }
+}
+
+/* =============================================================
    WORKBENCH — Pass 15 instrument atmosphere + specimen framing
    ============================================================= */
 .wb-stage {
