@@ -379,10 +379,11 @@ main {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse 76% 66% at 50% 48%, rgba(var(--ember-rgb), 0.38) 0%, rgba(var(--ember-rgb), 0.08) 52%, transparent 78%);
+  background: radial-gradient(ellipse 70% 58% at 50% 56%, rgba(var(--ember-rgb), 0.42) 0%, rgba(var(--ember-rgb), 0.12) 38%, transparent 66%);
   filter: blur(68px);
   opacity: 0.48;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, black 20%, black 78%, rgba(0,0,0,0.45) 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 68% at 50% 54%, black 0%, black 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse 75% 68% at 50% 54%, black 0%, black 30%, transparent 80%);
 }
 .hero__aurora-edge {
   position: absolute;
@@ -509,7 +510,9 @@ main {
   .hero__dust { display: none !important; }
   .hero__aurora-focal {
     display: block !important;
-    filter: blur(60px) !important;
+    width: 116vw !important;
+    height: 78vh !important;
+    filter: blur(85px) !important;
   }
   .hero__aurora-edge {
     opacity: 0.3 !important;
