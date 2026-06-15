@@ -7602,6 +7602,8 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 @media (max-width: 520px) {
   .proof-strip__meta { font-size: max(0.75rem, var(--mono-min)); }
   .hero__capture button { font-size: max(0.8rem, var(--mono-min)); }
+  .hero__meta { font-size: 0.65rem; }
+  .hero__subhead-line { font-size: clamp(1.02rem, 3.85vw, 1.55rem); }
 }
 
 /* =============================================================
