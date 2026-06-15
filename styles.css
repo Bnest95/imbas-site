@@ -1930,6 +1930,7 @@ body:has(main > section.hero) .nav__menu-btn {
   }
   .proof-strip--landing .proof-strip__metrics {
     column-gap: 0.45em;
+    row-gap: 0.45rem;
   }
 }
 
@@ -2870,9 +2871,9 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .archive--home-preview .hp-arc-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: baseline;
-  gap: var(--space-3) clamp(var(--space-4), 3vw, var(--space-5));
+  gap: var(--space-3) clamp(var(--space-3), 2vw, var(--space-4));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3354,8 +3355,11 @@ body:has(main > section.hero) .nav__menu-btn {
 
 @media (max-width: 900px) {
   .archive--home-preview .hp-arc-metrics {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-3);
+  }
+  .archive--home-preview .hp-arc-metrics__item {
+    white-space: normal;
   }
   .archive--home-preview .hp-arc-intro {
     grid-template-columns: 1fr;
@@ -5865,6 +5869,10 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .page--archive .arc-stat-strip__meta {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
   font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 400;
@@ -5873,13 +5881,19 @@ main, .site-footer { position: relative; z-index: 2; }
   color: rgba(212, 207, 194, 0.92);
   text-transform: lowercase;
 }
+.page--archive .arc-stat-strip__metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
 .page--archive .arc-stat-strip__num {
   font-size: 1rem;
   font-weight: 500;
   color: var(--ember-soft);
 }
 .page--archive .arc-stat-strip__sep {
-  margin: 0 0.35rem;
+  margin: 0;
   color: rgba(180, 192, 210, 0.5);
 }
 
@@ -6320,8 +6334,17 @@ main, .site-footer { position: relative; z-index: 2; }
     max-width: none;
   }
   .page--archive .arc-stat-strip__meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
     font-size: 0.8125rem;
     letter-spacing: 0.04em;
+  }
+  .page--archive .arc-stat-strip__metric {
+    white-space: normal;
+  }
+  .page--archive .arc-stat-strip__sep {
+    display: none;
   }
   .page--archive .arc-stat-strip__num {
     font-size: 0.875rem;
