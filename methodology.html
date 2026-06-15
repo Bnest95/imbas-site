@@ -24,11 +24,56 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "Methodology",
-    "description": "The Imbas methodology for measuring observed AI behavior: Volunteer Gap scoring, capture protocol, controls, limitations, and where this fits in the AI evaluation landscape.",
-    "url": "https://imbaslabs.com/methodology.html",
-    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com"
+      },
+      {
+        "@type": "Article",
+        "@id": "https://imbaslabs.com/methodology.html#methodology",
+        "headline": "Methodology",
+        "description": "The Imbas methodology for measuring observed AI behavior: Volunteer Gap scoring, capture protocol, controls, limitations, and where this fits in the AI evaluation landscape.",
+        "url": "https://imbaslabs.com/methodology.html",
+        "about": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "isRelatedTo": { "@id": "https://imbaslabs.com/archive.html#collection" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://imbaslabs.com/methodology.html#webpage",
+        "url": "https://imbaslabs.com/methodology.html",
+        "name": "Methodology",
+        "about": { "@id": "https://imbaslabs.com/methodology.html#methodology" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://imbaslabs.com/methodology.html#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://imbaslabs.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Methodology",
+            "item": "https://imbaslabs.com/methodology.html"
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>

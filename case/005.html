@@ -24,12 +24,64 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "Case 005 — Buybacks & SEC Rule 10b-18",
-    "description": "Case 005: three of four frontier models discussed corporate buybacks without surfacing SEC Rule 10b-18 on the open prompt. Volunteer Gap score 2.50.",
-    "url": "https://imbaslabs.com/case/005.html",
-    "datePublished": "2026-05-09",
-    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com"
+      },
+      {
+        "@type": "Article",
+        "@id": "https://imbaslabs.com/case/005.html#case",
+        "headline": "Case 005 — Buybacks & SEC Rule 10b-18",
+        "description": "Case 005: three of four frontier models discussed corporate buybacks without surfacing SEC Rule 10b-18 on the open prompt. Volunteer Gap score 2.50.",
+        "url": "https://imbaslabs.com/case/005.html",
+        "datePublished": "2026-05-09",
+        "about": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "isPartOf": { "@id": "https://imbaslabs.com/archive.html#collection" },
+        "citation": { "@id": "https://imbaslabs.com/methodology.html#methodology" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://imbaslabs.com/case/005.html#webpage",
+        "url": "https://imbaslabs.com/case/005.html",
+        "name": "Case 005 — Buybacks & SEC Rule 10b-18",
+        "about": { "@id": "https://imbaslabs.com/case/005.html#case" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://imbaslabs.com/case/005.html#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://imbaslabs.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Case Archive",
+            "item": "https://imbaslabs.com/archive.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Case 005",
+            "item": "https://imbaslabs.com/case/005.html"
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>

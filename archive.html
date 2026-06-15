@@ -21,6 +21,43 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css?v=arc-readability">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com"
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": "https://imbaslabs.com/archive.html#collection",
+        "url": "https://imbaslabs.com/archive.html",
+        "name": "Case Archive",
+        "description": "A growing public record of observed AI surfacing behavior across frontier models and documented prompt conditions. The archive ledger lists additional held records; only cases with public pages appear in this list.",
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "about": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" },
+        "mainEntity": { "@id": "https://imbaslabs.com/archive.html#public-case-list" }
+      },
+      {
+        "@type": "ItemList",
+        "@id": "https://imbaslabs.com/archive.html#public-case-list",
+        "name": "Public case records",
+        "description": "Case records with published pages in the Imbas Case Archive.",
+        "numberOfItems": 1,
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "item": { "@id": "https://imbaslabs.com/case/005.html#case" }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
