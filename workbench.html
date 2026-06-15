@@ -1326,6 +1326,12 @@ function Workbench() {
           Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
         </p>
 
+        <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 32, paddingTop: 0, borderTop: "none" }}>
+          <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
+          <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+          <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
+
         <StageProgress value={modeStep} max={2} />
         <div role="group" aria-label="Workbench mode" className="wb-mode-toggle">
           {[["curated", "01", "Cases Imbas measured"], ["byo", "02", "Bring your own"]].map(([k, num, lbl]) => (
