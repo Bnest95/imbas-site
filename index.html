@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imbas — Inspect what AI surfaces. And what it leaves out.</title>
-  <meta name="description" content="Imbas builds independent measurement instruments for AI behavior — what frontier systems surface, what they leave out, and how that changes over time.">
+  <title>Imbas — Measure AI behavior through the Volunteer Gap</title>
+  <meta name="description" content="Imbas builds independent measurement instruments for frontier AI behavior. The Volunteer Gap — Imbas's core primitive — records what models surface on open prompts versus direct prompts.">
   <link rel="canonical" href="https://imbaslabs.com/">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -14,12 +14,12 @@
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://imbaslabs.com/">
-  <meta property="og:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
-  <meta property="og:description" content="Imbas builds independent measurement instruments for AI behavior — what frontier systems surface, what they leave out, and how that changes over time.">
+  <meta property="og:title" content="Imbas — Measure AI behavior through the Volunteer Gap">
+  <meta property="og:description" content="Measure, track, and better understand AI behaviors. Imbas's Volunteer Gap compares open and direct prompt surfacing under documented conditions — signal, not verdict.">
   <meta property="og:image" content="https://imbaslabs.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Imbas — Inspect what AI surfaces. And what it leaves out.">
-  <meta name="twitter:description" content="Imbas builds independent measurement instruments for AI behavior — what frontier systems surface, what they leave out, and how that changes over time.">
+  <meta name="twitter:title" content="Imbas — Measure AI behavior through the Volunteer Gap">
+  <meta name="twitter:description" content="Measure, track, and better understand AI behaviors. Imbas's Volunteer Gap compares open and direct prompt surfacing under documented conditions — signal, not verdict.">
   <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,11 +46,24 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "Imbas",
-    "url": "https://imbaslabs.com",
-    "email": "brendan@imbaslabs.com",
-    "description": "Imbas measures how frontier AI systems surface information."
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com",
+        "email": "brendan@imbaslabs.com",
+        "description": "Imbas builds independent measurement instruments for frontier AI behavior.",
+        "knowsAbout": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://imbaslabs.com/#website",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com",
+        "publisher": { "@id": "https://imbaslabs.com/#organization" }
+      }
+    ]
   }
   </script>
 </head>
@@ -274,7 +287,7 @@
         <p class="gap__line gap__line--resolution gap__line--scroll">That difference is the <strong>Volunteer Gap</strong>.</p>
       </div>
 
-      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures the distance between what a model volunteers in an open answer and what it surfaces when asked directly.</p>
+      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
 
       <p class="gap__support reveal" style="--reveal-delay: 900ms;">If a named mechanism appears only after direct prompting, Imbas records the gap.</p>
 

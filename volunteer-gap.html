@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Volunteer Gap — What AI surfaces and what it leaves out</title>
-  <meta name="description" content="The Volunteer Gap measures the difference between what an AI model surfaces on an open question and what it surfaces when asked directly. A core Imbas measurement primitive.">
+  <meta name="description" content="The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what it surfaces when directly asked about the underlying specific topic. Imbas's core measurement primitive.">
   <link rel="canonical" href="https://imbaslabs.com/volunteer-gap.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://imbaslabs.com/volunteer-gap.html">
   <meta property="og:title" content="The Volunteer Gap — What AI leaves out">
-  <meta property="og:description" content="A core Imbas concept: what users see versus what models know under open prompts and direct prompts.">
+  <meta property="og:description" content="The Volunteer Gap — Imbas's core measurement primitive. What users see versus what models know under open and direct prompts.">
   <meta property="og:image" content="https://imbaslabs.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="The Volunteer Gap — What AI leaves out">
-  <meta name="twitter:description" content="A core Imbas concept: what users see versus what models know under open prompts and direct prompts.">
+  <meta name="twitter:description" content="The Volunteer Gap — Imbas's core measurement primitive. What users see versus what models know under open and direct prompts.">
   <meta name="twitter:image" content="https://imbaslabs.com/og-image.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,11 +24,52 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "The Volunteer Gap",
-    "description": "The Volunteer Gap measures the difference between what an AI model surfaces on an open question and what it surfaces when asked directly.",
-    "url": "https://imbaslabs.com/volunteer-gap.html",
-    "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://imbaslabs.com" }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://imbaslabs.com",
+        "email": "brendan@imbaslabs.com"
+      },
+      {
+        "@type": "DefinedTerm",
+        "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap",
+        "name": "Volunteer Gap",
+        "description": "The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what it surfaces when directly asked about the underlying specific topic.",
+        "url": "https://imbaslabs.com/volunteer-gap.html",
+        "inDefinedTermSet": {
+          "@type": "DefinedTermSet",
+          "@id": "https://imbaslabs.com/volunteer-gap.html#imbas-measurement-primitives",
+          "name": "Imbas measurement primitives",
+          "url": "https://imbaslabs.com/volunteer-gap.html",
+          "publisher": { "@id": "https://imbaslabs.com/#organization" }
+        }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://imbaslabs.com/volunteer-gap.html#webpage",
+        "url": "https://imbaslabs.com/volunteer-gap.html",
+        "name": "The Volunteer Gap",
+        "about": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://imbaslabs.com"
+        }
+      },
+      {
+        "@type": "Article",
+        "@id": "https://imbaslabs.com/volunteer-gap.html#article",
+        "headline": "The Volunteer Gap",
+        "url": "https://imbaslabs.com/volunteer-gap.html",
+        "mainEntityOfPage": { "@id": "https://imbaslabs.com/volunteer-gap.html#webpage" },
+        "about": { "@id": "https://imbaslabs.com/volunteer-gap.html#volunteer-gap" },
+        "publisher": { "@id": "https://imbaslabs.com/#organization" }
+      }
+    ]
   }
   </script>
 </head>
@@ -76,7 +117,8 @@
         <div class="vg-hero__horizon" aria-hidden="true"></div>
 
         <div class="vg-definition-plate vg-hero__definition">
-          <p class="page__lede">The Volunteer Gap is the difference between what a model surfaces on an innocent open-ended question versus what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
+          <p class="page__lede">The Volunteer Gap is Imbas&rsquo;s core measurement primitive for observed AI surfacing behavior.</p>
+          <p class="page__lede">The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
         </div>
       </div>
     </header>
