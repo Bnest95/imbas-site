@@ -1167,8 +1167,16 @@ body:has(main > section.hero) .nav__menu-btn {
   .bridge { padding: var(--space-5) 0; }
   .bridge__frame { padding: var(--space-4) var(--space-3); }
   .bridge__thesis { max-width: 28ch; }
+  .bridge__lede {
+    text-align: left !important;
+    margin-inline: 0;
+    max-width: none;
+  }
+  .bridge__plate p {
+    max-width: none;
+    text-align: left;
+  }
   .bridge__plates { grid-template-columns: 1fr; gap: var(--space-3); }
-  .bridge__plate p { max-width: none; }
 }
 
 /* =============================================================
@@ -1760,6 +1768,23 @@ body:has(main > section.hero) .nav__menu-btn {
     font-size: clamp(1.06rem, 3.85vw, 1.18rem);
     line-height: 1.38;
     margin-top: clamp(1.375rem, 2.5vw, 1.75rem);
+  }
+  .exists-bridge__thesis,
+  .exists-bridge__problem,
+  .exists-bridge__payoff {
+    text-align: left;
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+  .stakes__copy {
+    text-align: left;
+    max-width: none;
+    margin-inline: 0;
+  }
+  .audience p,
+  .audience__callout {
+    text-align: left;
   }
   .stakes--context-lead + .compounding {
     padding-top: clamp(var(--space-6), 10vw, var(--space-7));
