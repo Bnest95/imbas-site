@@ -38,6 +38,7 @@
 
   /* Ember — saturated signal; stronger presence against cool panels */
   --ember:          #DE6F38;
+  --ember-deep:     #C85830;
   --ember-soft:     #F08F58;
   --ember-bright:   #F8A866;
   --ember-glow:     rgba(222, 111, 56, 0.30);
@@ -950,9 +951,9 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .hero__capture input::placeholder { color: rgba(180, 192, 210, 0.88); }
 .hero__capture button {
-  background: #B46A5A;
+  background: var(--ember);
   color: #F2E8DC;
-  border: 1px solid rgba(242, 232, 220, 0.22);
+  border: 1px solid var(--ember);
   border-radius: 2px;
   font-family: var(--font-mono);
   font-size: clamp(0.875rem, 1.9vw, 1rem);
@@ -1015,8 +1016,8 @@ body:has(main > section.hero) .nav__menu-btn {
 .hero__secondary:hover .arrow { transform: translateX(4px); }
 
 .hero__capture button:hover {
-  background: #A85A4F;
-  border-color: rgba(242, 232, 220, 0.28);
+  background: var(--ember-deep);
+  border-color: var(--ember-deep);
   box-shadow: 0 6px 26px rgba(180, 106, 90, 0.42);
   transform: translateY(-1px);
 }
@@ -1724,7 +1725,7 @@ body:has(main > section.hero) .nav__menu-btn {
   }
 }
 .ember {
-  color: #B46A5A;
+  color: var(--ember);
   opacity: 1;
   animation: ember-signal-glow 3.75s ease-in-out infinite;
 }
@@ -7884,7 +7885,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   font-size: max(0.6875rem, var(--mono-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #B46A5A;
+  color: var(--ember);
   margin: 0 0 0.85rem;
 }
 .wb-result-plate {
@@ -7904,7 +7905,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 .wb-stage-progress__fill {
   height: 100%;
   width: 100%;
-  background: #B46A5A;
+  background: var(--ember);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
@@ -7925,13 +7926,13 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   min-width: 1.35rem;
 }
 .wb-stage-progress__step.is-current {
-  color: #B46A5A;
+  color: var(--ember);
 }
 .wb-stage-progress__step.is-done {
   color: #C9B8A5;
 }
 .wb-stage-progress__tick {
-  color: #B46A5A;
+  color: var(--ember);
 }
 .wb-instrument-header {
   display: flex;
@@ -7945,7 +7946,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   margin-bottom: 0.35rem;
 }
 .wb-instrument-header__num {
-  color: #B46A5A;
+  color: var(--ember);
 }
 
 /* Mode toggle — instrument stages */
@@ -7984,7 +7985,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   opacity: 0.85;
 }
 .wb-mode-btn.is-active {
-  background: #B46A5A;
+  background: var(--ember);
   color: #2A211E;
 }
 .wb-mode-btn.is-active .wb-mode-btn__num {
@@ -8158,7 +8159,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   right: 0;
   top: 0;
   height: 2px;
-  background: #B46A5A;
+  background: var(--ember);
   opacity: 0;
   transform: translateY(0);
   pointer-events: none;
@@ -8204,7 +8205,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   height: 1px;
   width: 100%;
   max-width: 12rem;
-  background: #B46A5A;
+  background: var(--ember);
   margin: 0.35rem 0 0.85rem;
   opacity: 0;
   transform: scaleX(0);
@@ -8300,7 +8301,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 .wb-field-error {
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  color: #B46A5A;
+  color: var(--ember);
   line-height: 1.5;
   margin-bottom: 0.75rem;
 }
@@ -8333,7 +8334,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   font-family: var(--font-mono);
   font-size: max(0.6875rem, var(--mono-min));
   letter-spacing: 0.08em;
-  color: #B46A5A;
+  color: var(--ember);
   margin-top: 0.45rem;
 }
 @keyframes wb-paste-tick {
@@ -8343,7 +8344,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 
 .wb-btn.is-copied {
-  color: #B46A5A !important;
+  color: var(--ember) !important;
   border-color: rgba(180, 106, 90, 0.72) !important;
   animation: wb-copy-flash 2s ease forwards;
 }
@@ -8440,7 +8441,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 500;
-  color: #B46A5A;
+  color: var(--ember);
   background: transparent;
   border: none;
   padding: 0.65rem 0;
