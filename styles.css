@@ -619,8 +619,8 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 .brand:hover { color: var(--ember-soft); border: none; }
 .brand .glyph {
   width: auto;
-  height: 47px;
-  max-width: 43px;
+  height: 42px;
+  max-width: 39px;
   aspect-ratio: 906 / 991;
   flex-shrink: 0;
   display: block;
@@ -677,6 +677,10 @@ body:has(main > section.hero) .nav__menu-btn {
     background: var(--bg-base); border-bottom: 1px solid var(--line-faint);
   }
   .nav__menu-btn { display: inline-block; }
+  .brand .glyph {
+    height: 38px;
+    max-width: 34px;
+  }
 }
 
 /* =============================================================
