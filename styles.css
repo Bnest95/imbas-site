@@ -1586,76 +1586,85 @@ body:has(main > section.hero) .nav__menu-btn {
   margin-bottom: var(--space-4);
 }
 
-.stakes--context-lead {
-  padding-top: clamp(var(--space-4), 4.8vw, var(--space-5));
-  padding-bottom: clamp(var(--space-3), 4vw, var(--space-4));
+.stakes.stakes--context-lead {
+  padding-top: clamp(var(--space-3), 4vw, var(--space-4));
+  padding-bottom: clamp(var(--space-4), 4.8vw, calc(var(--space-4) + 0.75rem));
   background:
     radial-gradient(ellipse 70% 44% at 50% 22%, rgba(var(--ember-rgb), 0.045), transparent 74%),
     linear-gradient(180deg, var(--bg-base) 0%, var(--bg-base) 50%, rgba(var(--bg-surface-rgb), 0.34) 100%);
 }
 .stakes__inner--exists {
   max-width: var(--container-mid);
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
   text-align: center;
 }
 .exists-bridge {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  max-width: 46ch;
+  margin-inline: auto;
+  text-align: center;
 }
 .exists-bridge__heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.4em;
+  width: 100%;
   margin: 0 0 var(--space-2);
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.42rem, 1.95vw, 1.68rem);
+  font-size: clamp(1.72rem, 2.4vw, 2.02rem);
   line-height: 1.12;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--ink-luminous);
+  text-align: center;
 }
-.exists-bridge__heading::before {
-  content: "// ";
+.exists-bridge__heading-prefix {
   font-family: var(--font-mono);
-  font-size: 0.68em;
+  font-size: 0.62em;
   letter-spacing: 0.16em;
-  color: rgba(180, 192, 210, 0.82);
+  color: rgba(180, 192, 210, 0.95);
+  text-transform: uppercase;
+}
+.exists-bridge__heading-accent {
+  color: var(--ember-soft);
 }
 .exists-bridge__label-rule {
-  width: clamp(2.5rem, 5vw, 3.5rem);
+  width: clamp(2.25rem, 4.5vw, 3rem);
   height: 1px;
-  margin: 0 auto var(--space-3);
-  background: linear-gradient(90deg, transparent, rgba(var(--ember-rgb), 0.52), transparent);
-  opacity: 0.8;
+  margin: 0 auto var(--space-2);
+  background: linear-gradient(90deg, transparent, rgba(var(--ember-rgb), 0.28), transparent);
+  opacity: 0.7;
 }
 .exists-bridge__lead {
-  margin: 0;
+  width: 100%;
+  margin: var(--space-2) auto 0;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.48rem, 2.15vw, 1.88rem);
-  line-height: 1.36;
-  letter-spacing: -0.01em;
-  color: var(--ink-luminous);
-  max-width: 40ch;
+  font-size: clamp(1.1rem, 1.42vw, 1.22rem);
+  line-height: 1.5;
+  letter-spacing: -0.004em;
+  color: var(--ink-primary);
+  max-width: 44ch;
   text-align: center;
+  text-wrap: balance;
 }
 .exists-bridge__copy {
-  margin: clamp(1.1rem, 2vw, 1.35rem) 0 0;
+  width: 100%;
+  margin: clamp(1rem, 1.85vw, 1.2rem) auto 0;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.08rem, 1.35vw, 1.22rem);
-  line-height: 1.5;
-  color: var(--ink-soft);
-  max-width: 52ch;
+  font-size: clamp(1.12rem, 1.36vw, 1.2rem);
+  line-height: 1.54;
+  color: rgba(180, 192, 210, 1);
+  max-width: 46ch;
   text-align: center;
-}
-.exists-bridge__copy .ember {
-  animation: none;
-  text-shadow: none;
-  font-weight: 400;
-  background: linear-gradient(180deg, var(--ember-soft) 0%, var(--ember) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: var(--ember);
+  text-wrap: balance;
 }
 .stakes--context-lead + .compounding {
   padding-top: clamp(var(--space-7), 9vw, var(--space-8));
@@ -1706,23 +1715,26 @@ body:has(main > section.hero) .nav__menu-btn {
   .stakes {
     padding: var(--space-5) 0;
   }
-  .stakes--context-lead {
-    padding-top: var(--space-4);
-    padding-bottom: var(--space-3);
+  .stakes.stakes--context-lead {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-4);
+  }
+  .exists-bridge {
+    max-width: none;
   }
   .exists-bridge__heading {
-    font-size: clamp(1.22rem, 4.8vw, 1.38rem);
-    letter-spacing: 0.05em;
+    font-size: clamp(1.36rem, 5.2vw, 1.54rem);
+    letter-spacing: 0.045em;
   }
   .exists-bridge__lead {
-    font-size: clamp(1.28rem, 4.8vw, 1.48rem);
-    line-height: 1.38;
+    font-size: clamp(1.06rem, 3.9vw, 1.14rem);
+    line-height: 1.48;
     max-width: none;
   }
   .exists-bridge__copy {
-    margin-top: var(--space-3);
-    font-size: clamp(1.02rem, 3.8vw, 1.12rem);
-    line-height: 1.48;
+    margin-top: var(--space-2);
+    font-size: clamp(1.04rem, 3.85vw, 1.12rem);
+    line-height: 1.52;
     max-width: none;
   }
   .stakes--context-lead + .compounding {
