@@ -1101,10 +1101,10 @@ body:has(main > section.hero) .nav__menu-btn {
   position: relative;
 }
 .bridge__connector {
-  width: 1px;
-  height: clamp(1.25rem, 2.5vw, 2rem);
-  margin: 0 auto var(--space-2);
-  background: linear-gradient(180deg, rgba(var(--ember-rgb), 0.55), rgba(var(--ember-rgb), 0.08));
+  width: 96px;
+  height: 2px;
+  margin: 34px auto 42px;
+  background: var(--accent-orange, #d97845);
   opacity: 0.85;
 }
 .bridge__plates {
