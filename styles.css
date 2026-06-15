@@ -807,7 +807,7 @@ body:has(main > section.hero) .nav__menu-btn {
 /* ---------- The center stack ---------- */
 .hero__center {
   display: grid;
-  gap: clamp(1.4rem, 3vh, 2.25rem);
+  gap: clamp(1.25rem, 2.7vh, 2rem);
   align-content: center;
   justify-items: center;
   text-align: center;
@@ -855,7 +855,7 @@ body:has(main > section.hero) .nav__menu-btn {
 /* The monolith — IMBAS wordmark at full weight */
 .hero__monolith {
   position: relative;
-  margin: clamp(0.1rem, 0.35vh, 0.25rem) 0 clamp(0.25rem, 0.65vh, 0.5rem);
+  margin: clamp(0.1rem, 0.35vh, 0.25rem) 0 clamp(0.2rem, 0.55vh, 0.44rem);
   user-select: none;
   line-height: 0.83;
   text-align: center;
@@ -925,7 +925,7 @@ body:has(main > section.hero) .nav__menu-btn {
   max-width: min(460px, calc(100vw - 2.5rem));
   justify-items: center;
   box-sizing: border-box;
-  margin-top: clamp(0.55rem, 1.35vh, 1rem);
+  margin-top: clamp(0.48rem, 1.2vh, 0.88rem);
   margin-bottom: clamp(0.35rem, 0.9vh, 0.65rem);
 }
 .hero__capture {
@@ -1041,7 +1041,7 @@ body:has(main > section.hero) .nav__menu-btn {
     font-size: max(0.8rem, var(--mono-min));
     letter-spacing: 0.14em;
   }
-  .hero__center { gap: 1.2rem; }
+  .hero__center { gap: 1.08rem; }
   .hero__secondary { margin-top: 1rem; }
   .hero__subhead-line { padding-inline: 0; }
   .hero__capture-block { max-width: min(460px, calc(100vw - 2rem)); }
@@ -1834,6 +1834,7 @@ body:has(main > section.hero) .nav__menu-btn {
   padding: 0;
   line-height: 1;
   text-align: center;
+  color: rgba(188, 198, 214, 0.97);
 }
 .proof-strip--landing .proof-strip__metrics {
   display: inline-flex;
@@ -1881,7 +1882,7 @@ body:has(main > section.hero) .nav__menu-btn {
   flex-shrink: 0;
 }
 .proof-strip--landing .proof-strip__sep {
-  color: rgba(180, 192, 210, 0.7);
+  color: rgba(180, 192, 210, 0.78);
   line-height: 1;
   user-select: none;
 }
