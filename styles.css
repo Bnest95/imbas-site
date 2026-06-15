@@ -1673,6 +1673,10 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 
 /* Ephemeral beat — fade + ember enactment */
+#ephemeral-h2 + .stakes__copy {
+  max-width: 54ch;
+  text-wrap: pretty;
+}
 .ephemeral-fade {
   display: inline;
   opacity: 0;
