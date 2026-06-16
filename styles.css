@@ -767,7 +767,7 @@ body:has(main > section.hero) .nav__menu-btn {
 
 .hero__meta {
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(180, 192, 210, 0.95);
@@ -881,7 +881,7 @@ body:has(main > section.hero) .nav__menu-btn {
 /* The monolith — IMBAS wordmark at full weight */
 .hero__monolith {
   position: relative;
-  margin: clamp(0.1rem, 0.35vh, 0.25rem) 0 clamp(0.2rem, 0.55vh, 0.44rem);
+  margin: clamp(0.35rem, 0.95vh, 0.75rem) 0 clamp(0.45rem, 1.1vh, 0.85rem);
   user-select: none;
   line-height: 0.83;
   text-align: center;
@@ -892,7 +892,7 @@ body:has(main > section.hero) .nav__menu-btn {
 .hero__monolith-text {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(4.65rem, 13.2vw, 16.25rem);
+  font-size: clamp(5.35rem, 15.2vw, 18.7rem);
   letter-spacing: -0.044em;
   line-height: 0.83;
   background: linear-gradient(180deg, var(--ink-luminous) 0%, var(--ink-primary) 55%, rgba(180,196,220,0.4) 100%);
@@ -921,7 +921,7 @@ body:has(main > section.hero) .nav__menu-btn {
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 400;
-  font-size: clamp(1.22rem, 2.15vw, 1.88rem);
+  font-size: clamp(1.12rem, 1.98vw, 1.73rem);
   line-height: 1.38;
   letter-spacing: -0.008em;
   color: var(--ink-primary);
@@ -1046,20 +1046,20 @@ body:has(main > section.hero) .nav__menu-btn {
 
 @media (max-width: 1200px) {
   .hero__monolith-text {
-    font-size: clamp(4.125rem, 12.1vw, 9.35rem);
+    font-size: clamp(4.74rem, 13.9vw, 10.75rem);
     letter-spacing: -0.04em;
   }
 }
 
 @media (max-width: 900px) {
   .hero__stage { min-height: auto; padding-top: clamp(3.75rem, 9vh, 5.25rem); padding-bottom: clamp(2rem, 5vh, 3rem); }
-  .hero__monolith-text { font-size: clamp(3.7rem, 13.75vw, 6.875rem); }
+  .hero__monolith-text { font-size: clamp(4.26rem, 15.8vw, 7.91rem); }
   .hero__subhead { max-width: min(32ch, 94vw); }
 }
 
 @media (max-width: 520px) {
   .hero__monolith-text {
-    font-size: clamp(3.4rem, 17vw, 5.225rem);
+    font-size: clamp(3.91rem, 19.6vw, 6.01rem);
     max-width: 100%;
   }
   .hero__capture button {
@@ -7643,7 +7643,7 @@ main, .site-footer { position: relative; z-index: 2; }
 .roadmap__label { font-size: max(0.8125rem, var(--mono-min)); }
 .cat__id { font-size: max(0.8125rem, var(--mono-min)); }
 
-.hero__meta { font-size: max(0.8125rem, var(--mono-min)); }
+.hero__meta { font-size: max(0.75rem, var(--mono-min)); }
 .hero__tagline { font-size: max(var(--mono-min), clamp(0.6875rem, 1.4vw, 0.8125rem)); }
 .hero__capture button { font-size: max(var(--mono-min), clamp(0.875rem, 1.9vw, 1rem)); }
 .hero__capture-msg { font-size: max(0.7rem, var(--mono-min)); }
@@ -7690,8 +7690,8 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 @media (max-width: 520px) {
   .proof-strip__meta { font-size: max(0.75rem, var(--mono-min)); }
   .hero__capture button { font-size: max(0.8rem, var(--mono-min)); }
-  .hero__meta { font-size: 0.65rem; }
-  .hero__subhead-line { font-size: clamp(1.02rem, 3.85vw, 1.55rem); }
+  .hero__meta { font-size: 0.6rem; }
+  .hero__subhead-line { font-size: clamp(0.94rem, 3.54vw, 1.43rem); }
 }
 
 /* =============================================================
