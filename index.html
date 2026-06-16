@@ -42,31 +42,6 @@
       padding-bottom: var(--space-2);
     }
 
-    body.nav-open {
-      overflow: hidden;
-    }
-
-    @media (max-width: 900px) {
-      #primary-nav.is-open {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.25rem;
-        position: fixed;
-        inset: 0;
-        height: 100dvh;
-        z-index: 40;
-        margin: 0;
-        padding:
-          calc(4.75rem + env(safe-area-inset-top, 0px))
-          clamp(1.25rem, 4vw, 3rem)
-          calc(1.5rem + env(safe-area-inset-bottom, 0px));
-        background: var(--bg-base);
-        border: none;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-    }
   </style>
 
   <script type="application/ld+json">
@@ -708,18 +683,28 @@
     var btn = document.querySelector('.nav__menu-btn');
     var nav = document.getElementById('primary-nav');
     if (btn && nav) {
+      function closeMenu() {
+        nav.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = 'Menu';
+        document.body.classList.remove('nav-open');
+      }
+
       btn.addEventListener('click', function () {
         var open = nav.classList.toggle('is-open');
         btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.textContent = open ? 'Close' : 'Menu';
         document.body.classList.toggle('nav-open', open);
       });
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && nav.classList.contains('is-open')) {
-          nav.classList.remove('is-open');
-          document.body.classList.remove('nav-open');
-          btn.setAttribute('aria-expanded', 'false');
+          btn.textContent = 'Menu';
+          closeMenu();
           btn.focus();
         }
+      });
+      nav.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', closeMenu);
       });
     }
 
