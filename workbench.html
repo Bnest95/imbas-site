@@ -217,6 +217,7 @@ const WORKBENCH_RESULT_GAP_CSS = `
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
   color: ${C.text};
   margin: 0 0 0.65rem;
 }
@@ -233,7 +234,7 @@ const WORKBENCH_RESULT_GAP_CSS = `
 .wb-result-run-note.is-visible {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition: opacity 0.45s ease, transform 0.45s ease;
 }
 .wb-result-inner.is-reveal-instant .wb-result-run-note { opacity: 1; transform: none; transition: none; }
 `;
@@ -814,6 +815,12 @@ function scrollWorkbenchAnchor(el, after) {
   if (after) window.setTimeout(after, reduced ? 0 : 420);
 }
 
+const RESULT_GAP_COUNT_MS = 800;
+const RESULT_CHIP_STAGGER_MS = 120;
+const RESULT_VERDICT_BEAT_MS = 80;
+const RESULT_SHARE_DELAY_MS = 400;
+const RESULT_ANSWER_SWEEP_MS = 700;
+
 function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
   const meta = caseMeta(caseId);
   const gapVal = gap ?? meta?.gap;
@@ -823,6 +830,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   const reduced = useRef(prefersReducedMotion());
   const measureRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
+  const [displayGap, setDisplayGap] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
   const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
   const [sweeping, setSweeping] = useState(false);
   const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
@@ -841,10 +849,26 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   }, [answer, sequenceReady]);
 
   useEffect(() => {
+    if (!sequenceReady || gapVal == null) return undefined;
+    if (reduced.current) {
+      setDisplayGap(gapVal);
+      return undefined;
+    }
+    setDisplayGap(0);
+    const start = performance.now();
+    let raf = 0;
+    const easeOutCubic = (t) => 1 - (1 - t) ** 3;
+    const tick = (now) => {
+      const progress = Math.min(1, (now - start) / RESULT_GAP_COUNT_MS);
+      setDisplayGap(Math.round(easeOutCubic(progress) * gapVal * 10) / 10);
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [sequenceReady, gapVal, caseId]);
+
+  useEffect(() => {
     if (!sequenceReady) return undefined;
-    const SWEEP_MS = 700;
-    const CHIP_STAGGER = 200;
-    const BEAT_MS = 600;
     if (reduced.current) {
       setLitTerms(new Set(tokens.filter((t) => t.found).map((t) => t.term)));
       setSweeping(false);
@@ -858,7 +882,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
     }
 
     setLitTerms(new Set());
-    setSweeping(true);
+    setSweeping(false);
     setVisibleChips(0);
     setShowVerdict(false);
     setVerdictPulse(false);
@@ -868,28 +892,33 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
     const timers = [];
     const schedule = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
 
-    tokens.forEach((t) => {
-      if (!t.found) return;
-      const idx = findTermIndex(answer, t.term);
-      const at = idx >= 0 ? (idx / Math.max(answer.length, 1)) * SWEEP_MS : SWEEP_MS;
+    tokens.forEach((t, i) => {
       schedule(() => {
-        setLitTerms((prev) => new Set([...prev, t.term]));
-        if (t.isKey) setAntennaSignal(true);
-      }, at);
+        setVisibleChips(i + 1);
+        if (t.isKey && t.found) setAntennaSignal(true);
+      }, RESULT_GAP_COUNT_MS + i * RESULT_CHIP_STAGGER_MS);
     });
 
-    schedule(() => setSweeping(false), SWEEP_MS);
-    tokens.forEach((_, i) => {
-      schedule(() => setVisibleChips(i + 1), SWEEP_MS + i * CHIP_STAGGER);
-    });
-
-    const afterChips = SWEEP_MS + tokens.length * CHIP_STAGGER;
+    const afterRows = RESULT_GAP_COUNT_MS + tokens.length * RESULT_CHIP_STAGGER_MS;
+    const verdictAt = afterRows + RESULT_VERDICT_BEAT_MS;
     schedule(() => {
       setShowVerdict(true);
       setVerdictPulse(true);
-    }, afterChips + BEAT_MS);
-    schedule(() => setShowShare(true), afterChips + BEAT_MS + 400);
-    schedule(() => setVerdictPulse(false), afterChips + BEAT_MS + 720);
+    }, verdictAt);
+    schedule(() => setShowShare(true), verdictAt + RESULT_SHARE_DELAY_MS);
+    schedule(() => setVerdictPulse(false), verdictAt + 720);
+
+    const sweepStart = verdictAt + RESULT_SHARE_DELAY_MS + 120;
+    schedule(() => setSweeping(true), sweepStart);
+    tokens.forEach((t) => {
+      if (!t.found) return;
+      const idx = findTermIndex(answer, t.term);
+      const at = idx >= 0 ? (idx / Math.max(answer.length, 1)) * RESULT_ANSWER_SWEEP_MS : RESULT_ANSWER_SWEEP_MS;
+      schedule(() => {
+        setLitTerms((prev) => new Set([...prev, t.term]));
+      }, sweepStart + at);
+    });
+    schedule(() => setSweeping(false), sweepStart + RESULT_ANSWER_SWEEP_MS);
 
     return () => { timers.forEach(clearTimeout); };
   }, [tokens.length, caseId, answer, sequenceReady]);
@@ -910,7 +939,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       {gapVal != null ? (
         <div className="wb-result-gap-hero">
           <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
-            {gapVal.toFixed(1)} / 3
+            {displayGap.toFixed(1)} / 3
           </div>
           <div className="wb-readout__run-strip">
             {categoryLabel ? <span>{categoryLabel}</span> : null}
