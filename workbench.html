@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=workbench-pass19">
+  <link rel="stylesheet" href="/styles.css?v=workbench-parity">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -417,16 +417,14 @@ function Mantis({ label }) {
 function Provisional({ label }) {
   const text = label || "Provisional · for review";
   return (
-    <span style={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.16em", color: C.accentDim, textTransform: "uppercase", border: `1px solid ${C.line}`, borderRadius: 3, padding: "5px 9px", whiteSpace: "nowrap" }}>
-      {text}
-    </span>
+    <span className="wb-status-readout__badge">{text}</span>
   );
 }
 
 function ProvisionalBanner() {
   return (
-    <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.14em", color: C.accentDim, textTransform: "uppercase", border: `1px solid ${C.accentDim}`, borderRadius: 4, padding: "10px 14px", marginBottom: 20, background: C.bgSunk }}>
-      Provisional — candidate for review
+    <div className="wb-status-readout wb-status-readout--banner" role="status">
+      <span className="wb-status-readout__value">Provisional — candidate for review</span>
     </div>
   );
 }
@@ -460,7 +458,7 @@ function Label({ children }) {
 }
 
 function Field({ label, children }) {
-  return <label style={{ display: "block", marginBottom: 18 }}><Label>{label}</Label>{children}</label>;
+  return <label className="wb-field"><Label>{label}</Label>{children}</label>;
 }
 
 function CollapsedAnswerRow({ text, terms, litTerms, showHighlights = false, defaultExpanded = false }) {
@@ -527,16 +525,14 @@ function ModelSelect({ value, onChange }) {
 }
 
 function PromptCard({ text }) {
-  return <div style={{ background: C.bgSunk, border: `1px solid ${C.line}`, borderRadius: 4, padding: "14px 16px", fontFamily: SERIF, fontSize: 16, color: C.text, lineHeight: 1.5 }}>{text}</div>;
+  return <div className="wb-prompt-well">{text}</div>;
 }
 
 // Question-hygiene note — shown where the user is about to run a prompt.
 // Tied to a documented v1 failure (same-session follow-up contamination).
 function HygieneNote() {
   return (
-    <div style={{ fontFamily: SANS, fontSize: 12.5, color: C.textFaint, lineHeight: 1.5, marginTop: 10 }}>
-      Use a fresh chat, not a follow-up — past messages skew the answer.
-    </div>
+    <p className="wb-plate-hint wb-hygiene-note">Use a fresh chat, not a follow-up — past messages skew the answer.</p>
   );
 }
 
@@ -545,21 +541,21 @@ function EmailGate({ onUnlock }) {
   const [email, setEmail] = useState("");
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
   return (
-    <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 22, background: C.bgRaise }}>
-      <div style={{ fontFamily: SERIF, fontSize: 19, color: C.text, marginBottom: 6 }}>Add an email to continue</div>
-      <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.55, marginBottom: 16 }}>
-        Leave your email — we'll tell you when this gap moves.
+    <div className="wb-status-readout wb-email-gate">
+      <div className="wb-status-readout__head">
+        <span className="wb-status-readout__title">Add an email to continue</span>
+        <p className="wb-status-readout__body">Leave your email — we'll tell you when this gap moves.</p>
       </div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
-        <label style={{ display: "block", flex: 1, minWidth: 220 }}>
+      <div className="wb-input-bay wb-input-bay--gate">
+        <label className="wb-field wb-field--inline">
           <Label>Your email</Label>
           <input type="email" value={email} placeholder="you@domain.com" onChange={(e) => setEmail(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, width: "100%" }} />
         </label>
+      </div>
+      <div className="wb-action-row">
         <Btn kind="primary" disabled={!valid} onClick={() => onUnlock(email)}>Continue →</Btn>
       </div>
-      <div style={{ fontFamily: MONO, fontSize: 10, color: C.textFaint, marginTop: 10, letterSpacing: "0.06em" }}>
-        We don't share your email.
-      </div>
+      <p className="wb-status-readout__note">We don't share your email.</p>
     </div>
   );
 }
@@ -710,14 +706,12 @@ function SubmitFailure({ candidate }) {
     } catch {}
   };
   return (
-    <div style={{ marginTop: 22, border: `1px solid ${C.accentDim}`, borderRadius: 6, padding: 18, background: C.bgSunk }}>
-      <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.text, lineHeight: 1.55, marginBottom: 14 }}>
-        Couldn't send — copy your record below and email it to brendan@imbaslabs.com
+    <div className="wb-status-readout wb-status-readout--failure">
+      <p className="wb-status-readout__body">Couldn't send — copy your record below and email it to brendan@imbaslabs.com</p>
+      <pre className="wb-status-readout__record">{record}</pre>
+      <div className="wb-action-row">
+        <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy record"}</Btn>
       </div>
-      <pre style={{ margin: "0 0 14px", padding: "12px 14px", background: C.bgRaise, border: `1px solid ${C.line}`, borderRadius: 4, fontFamily: MONO, fontSize: 11.5, lineHeight: 1.5, color: C.textDim, whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 280, overflow: "auto" }}>
-        {record}
-      </pre>
-      <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy record"}</Btn>
     </div>
   );
 }
@@ -731,11 +725,9 @@ function CopyRecord({ candidate }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => { try { await navigator.clipboard.writeText(JSON.stringify(candidate, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {} };
   return (
-    <div style={{ marginTop: 22, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+    <div className="wb-action-row wb-action-row--record">
       <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy this result"}</Btn>
-      <span style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, letterSpacing: "0.06em" }}>
-        Goes to the repository · reviewed by a person before the archive
-      </span>
+      <span className="wb-action-row__note">Goes to the repository · reviewed by a person before the archive</span>
     </div>
   );
 }
@@ -849,16 +841,19 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
     return () => { timers.forEach(clearTimeout); };
   }, [tokens.length, caseId, answer, sequenceReady]);
 
-  const innerCls = `wb-result-inner${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
+  const innerCls = `wb-result-inner wb-output-module${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   return (
     <div className={innerCls}>
-      <AntennaMark signal={antennaSignal} />
-      {meta ? <div className="wb-specimen-plate__label">{specimenLabel(meta)}</div> : null}
-      <div className="wb-result-header">
-        <Label>Result</Label>
-        <Provisional />
+      <div className="wb-output-module__head">
+        <AntennaMark signal={antennaSignal} />
+        {meta ? <div className="wb-specimen-plate__label">{specimenLabel(meta)}</div> : null}
+        <div className="wb-result-header">
+          <Label>Measurement output</Label>
+          <Provisional />
+        </div>
       </div>
+      <div className="wb-output-module__body">
       <div className={`wb-answer-row${expanded ? " is-expanded" : ""}`}>
         <div ref={measureRef} className="wb-answer-sweep-measure" aria-hidden="true">
           <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
@@ -898,7 +893,8 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
           This case measures attribution. Detection here checks whether the named US diplomats appear at all.
         </p>
       ) : null}
-      <div className={`wb-reveal-rise wb-result-share${showShare ? " is-visible" : ""}`}>
+      </div>
+      <div className={`wb-output-module__footer wb-reveal-rise wb-result-share${showShare ? " is-visible" : ""}`}>
         <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
         <RepositoryActions candidate={candidate} submitOk={submitOk} />
       </div>
@@ -911,7 +907,38 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
   );
 }
 
-// ---- CURATED MODE ----
+function ByoModeReadoutRail() {
+  return (
+    <aside className="wb-readout-rail wb-readout-rail--byo" aria-hidden="true">
+      <div className="wb-readout-rail__head">Mode readout</div>
+      <dl className="wb-readout-rail__grid">
+        <div><dt>Mode</dt><dd>Custom run</dd></div>
+        <div><dt>Status</dt><dd>Candidate</dd></div>
+        <div><dt>Inputs</dt><dd>03</dd></div>
+        <div><dt>Review</dt><dd>Human</dd></div>
+        <div><dt>Archive</dt><dd>Provisional</dd></div>
+      </dl>
+    </aside>
+  );
+}
+
+function CaseReadoutRail({ sel }) {
+  if (!sel?.ready) return null;
+  return (
+    <aside className="wb-readout-rail" aria-hidden="true">
+      <div className="wb-readout-rail__head">Channel readout</div>
+      <dl className="wb-readout-rail__grid">
+        <div><dt>Case</dt><dd>{sel.id}</dd></div>
+        <div><dt>Gap</dt><dd>{sel.gap.toFixed(1)} / 3</dd></div>
+        <div><dt>Signal</dt><dd>{sel.category.toUpperCase()}</dd></div>
+        <div><dt>Models</dt><dd>4</dd></div>
+        <div><dt>Observed</dt><dd>{sel.observedDate.toUpperCase()}</dd></div>
+        <div><dt>Status</dt><dd>Verified</dd></div>
+      </dl>
+    </aside>
+  );
+}
+
 function Curated() {
   const [sel, setSel] = useState(CURATED[0]);
   const [step, setStep] = useState(0); // 0 observe+copy, 1 gate+paste, 2 result
@@ -1014,13 +1041,15 @@ function Curated() {
   const plateCls = [
     "wb-specimen-plate",
     "wb-run-plate",
+    "wb-measure-channel",
     step === 2 ? "is-result" : "",
     plateFade === "out" ? "is-crossfade-out" : "",
     plateFade === "in" ? "is-crossfade-in" : "",
   ].filter(Boolean).join(" ");
 
   return (
-    <div>
+    <div className="wb-console">
+      <div className="wb-console__main">
       <StageProgress value={step + 1} max={3} />
       <InstrumentStageHeader num={step + 1} total={3} />
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
@@ -1028,7 +1057,7 @@ function Curated() {
         {CURATED.map((c) => {
           const active = c.id === sel.id;
           return (
-            <button key={c.id} type="button" className={`wb-case-card wb-specimen-plate wb-focus${active ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`} onClick={() => pick(c)} disabled={!c.ready}>
+            <button key={c.id} type="button" className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${active ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`} onClick={() => pick(c)} disabled={!c.ready}>
               {c.ready ? (
                 <div className="wb-specimen-plate__label">{specimenLabel(c)}</div>
               ) : (
@@ -1043,75 +1072,94 @@ function Curated() {
       {!sel.ready ? (
         <div className="wb-plate-note wb-plate-note--dashed">{sel.note}</div>
       ) : (
-        <>
-          <div ref={plateRef} className={plateCls}>
-            {step === 2 && result ? (
-              <AnchorResult
-                {...result}
-                candidate={candidate}
-                sequenceReady={sequenceReady}
-                onAnotherCase={resetRun}
-              />
-            ) : step === 1 && unlocked ? (
-              <>
-                <AntennaMark signal={false} />
-                <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
-                <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-                <PasteField
-                  label="Step 3 — paste its answer to the question"
-                  value={answer}
-                  onChange={(v) => { setAnswer(v); setPasteError(""); }}
-                  error={pasteError}
-                  placeholder="Paste the full response here…"
-                  minAckLength={20}
+        <div className="wb-console__measure">
+          <div className="wb-console__measure-main">
+            <div ref={plateRef} className={plateCls}>
+              {step === 2 && result ? (
+                <AnchorResult
+                  {...result}
+                  candidate={candidate}
+                  sequenceReady={sequenceReady}
+                  onAnotherCase={resetRun}
                 />
-                {pasteError ? (
-                  <div className="wb-field-error">{pasteError}</div>
-                ) : null}
-                <Btn kind="primary" disabled={busy || !model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
-                {!busy && !pasteError && answer.trim().length > 0 && answer.trim().length < 200 ? (
-                  <p className="wb-plate-hint">Paste the full answer — we need enough text to check reliably (200 characters minimum).</p>
-                ) : null}
-              </>
-            ) : (
-              <>
-                <AntennaMark signal={false} />
-                <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
-                <Label>What Imbas measured</Label>
-                <div className="wb-active-case__headline">{sel.short}</div>
-                <p className="wb-active-case__probe">Will your model surface it?</p>
-                <div className="wb-active-case__meta">
-                  <span>gap {sel.gap.toFixed(1)} / 3</span>
-                  <span>{sel.category}</span>
-                  <span>4 models · observed {sel.observedDate}</span>
+              ) : step === 1 && unlocked ? (
+                <>
+                  <AntennaMark signal={false} />
+                  <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
+                  <div className="wb-input-bay">
+                    <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+                  </div>
+                  <div className="wb-input-bay">
+                    <PasteField
+                      label="Step 3 — paste its answer to the question"
+                      value={answer}
+                      onChange={(v) => { setAnswer(v); setPasteError(""); }}
+                      error={pasteError}
+                      placeholder="Paste the full response here…"
+                      minAckLength={20}
+                    />
+                  </div>
+                  {pasteError ? (
+                    <div className="wb-field-error">{pasteError}</div>
+                  ) : null}
+                  <div className="wb-action-row">
+                    <Btn kind="primary" disabled={busy || !model || answer.trim().length < 200} onClick={check}>Compare with what Imbas observed →</Btn>
+                  </div>
+                  {!busy && !pasteError && answer.trim().length > 0 && answer.trim().length < 200 ? (
+                    <p className="wb-plate-hint">Paste the full answer — we need enough text to check reliably (200 characters minimum).</p>
+                  ) : null}
+                </>
+              ) : (
+                <div className="wb-readout">
+                  <div className="wb-readout__specimen">
+                    <AntennaMark signal={false} />
+                    <div className="wb-specimen-plate__label">{specimenLabel(sel)}</div>
+                  </div>
+                  <div className="wb-readout__rule" aria-hidden="true" />
+                  <div className="wb-readout__section">
+                    <Label>What Imbas measured</Label>
+                    <div className="wb-active-case__headline">{sel.short}</div>
+                  </div>
+                  <div className="wb-readout__signal">
+                    <p className="wb-active-case__probe">Will your model surface it?</p>
+                  </div>
+                  <div className="wb-readout__run-strip">
+                    <span>gap {sel.gap.toFixed(1)} / 3</span>
+                    <span>{sel.category}</span>
+                    <span>4 models · observed {sel.observedDate}</span>
+                  </div>
+                  <div className="wb-readout__rule" aria-hidden="true" />
+                  <p className="wb-plate-support wb-readout__notes">{sel.whyItMatters}</p>
                 </div>
-                <p className="wb-plate-support">{sel.whyItMatters}</p>
-              </>
+              )}
+            </div>
+
+            {step === 0 && (
+              <div className="wb-confirm-block">
+                <Label>Confirm it yourself</Label>
+                <div className="wb-input-bay">
+                  <span className="wb-input-bay__tag">Open prompt</span>
+                  <PromptCard text={sel.openPrompt} />
+                </div>
+                <div className="wb-action-row">
+                  <Btn kind="ghost" small onClick={copyPrompt} className={copied ? "is-copied" : ""}>{copied ? "Copied ✓" : "Copy question"}</Btn>
+                  <Btn kind="primary" onClick={() => setStep(1)}>Ran it — paste the answer →</Btn>
+                </div>
+                <HygieneNote />
+                <p className="wb-plate-hint">Models change, so your run may differ — a closed gap is a result too.</p>
+              </div>
+            )}
+
+            {step === 1 && !unlocked && (
+              <div className="wb-gate-block">
+                <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
+              </div>
             )}
           </div>
-
-          {step === 0 && (
-            <div className="wb-confirm-block">
-              <Label>Confirm it yourself</Label>
-              <div style={{ marginTop: 10 }}>
-                <PromptCard text={sel.openPrompt} />
-              </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 12, marginBottom: 4 }}>
-                <Btn kind="ghost" small onClick={copyPrompt} className={copied ? "is-copied" : ""}>{copied ? "Copied ✓" : "Copy question"}</Btn>
-                <Btn kind="primary" onClick={() => setStep(1)}>Ran it — paste the answer →</Btn>
-              </div>
-              <HygieneNote />
-              <p className="wb-plate-hint">Models change, so your run may differ — a closed gap is a result too.</p>
-            </div>
-          )}
-
-          {step === 1 && !unlocked && (
-            <div className="wb-gate-block">
-              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
-            </div>
-          )}
-        </>
+          <CaseReadoutRail sel={sel} />
+        </div>
       )}
+      </div>
     </div>
   );
 }
@@ -1175,7 +1223,7 @@ function Byo() {
   };
 
   const reviewRow = (label, value, collapsible = false) => (
-    <div style={{ marginBottom: 14 }}>
+    <div className="wb-review-row">
       <Label>{label}</Label>
       {collapsible && value && value.trim().length > 120 ? (
         <CollapsedAnswerRow text={value} />
@@ -1186,126 +1234,146 @@ function Byo() {
   );
 
   const byoStepNum = { 0: 1, 1: 2, 3: 3, 4: 4, 5: 5, 6: 6 }[step] || 1;
+  const plateCls = [
+    "wb-panel",
+    "wb-specimen-plate",
+    "wb-run-plate",
+    "wb-measure-channel",
+    step === 6 ? "is-result" : "",
+  ].filter(Boolean).join(" ");
 
   return (
-    <div>
+    <div className="wb-console">
+      <div className="wb-console__main">
       <StageProgress value={byoStepNum} max={6} />
       <InstrumentStageHeader num={byoStepNum} total={6} />
-      <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6, marginBottom: 24, marginTop: 16 }}>
-        Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.
-      </div>
+      <p className="wb-plate-note">Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.</p>
 
+      <div className="wb-console__measure">
+        <div className="wb-console__measure-main">
+          {step === 1 && !unlocked ? (
+            <div className="wb-gate-block">
+              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
+            </div>
+          ) : (
+            <>
+              {step <= 5 ? <ProvisionalBanner /> : null}
+              <div className={plateCls}>
       {step === 0 && (
-        <div>
-          <ProvisionalBanner />
-          <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-          <Field label="The open question you asked">
-            <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
-          </Field>
-          <Field label="The answer it gave (open prompt)">
-            <textarea rows={9} value={openAnswer} onChange={(e) => { setOpenAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
-          </Field>
+        <>
+          <div className="wb-input-bay">
+            <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+          </div>
+          <div className="wb-input-bay">
+            <Field label="The open question you asked">
+              <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
+            </Field>
+            <Field label="The answer it gave (open prompt)">
+              <textarea rows={9} value={openAnswer} onChange={(e) => { setOpenAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
+            </Field>
+          </div>
           {byoPasteError ? (
-            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{byoPasteError}</div>
+            <div className="wb-field-error">{byoPasteError}</div>
           ) : null}
-          <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => {
-            const err = validatePasteCoherence(openAnswer);
-            if (err) { setByoPasteError(err); return; }
-            setByoPasteError("");
-            setStep(1);
-          }}>Continue →</Btn>
+          <div className="wb-action-row">
+            <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => {
+              const err = validatePasteCoherence(openAnswer);
+              if (err) { setByoPasteError(err); return; }
+              setByoPasteError("");
+              setStep(1);
+            }}>Continue →</Btn>
+          </div>
           {openAnswer.trim().length > 0 && openAnswer.trim().length < 120 && (
-            <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, marginTop: 8 }}>Paste the full answer so the review has enough context.</div>
+            <p className="wb-plate-hint">Paste the full answer so the review has enough context.</p>
           )}
-        </div>
+        </>
       )}
 
-      {step === 1 && (
-        !unlocked ? <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
-        : (
-          <div>
-            <ProvisionalBanner />
-            <Label>Step 2 — write a targeted follow-up prompt</Label>
-            <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6, margin: "10px 0 18px" }}>
-              Name the specific rule, study, mechanism, or named fact you think the open answer skipped. Ask your AI about it directly — in a fresh chat.
+      {step === 1 && unlocked && (
+        <>
+          <Label>Step 2 — write a targeted follow-up prompt</Label>
+          <p className="wb-plate-support">Name the specific rule, study, mechanism, or named fact you think the open answer skipped. Ask your AI about it directly — in a fresh chat.</p>
+          {TARGETED_EXAMPLES.map((ex) => (
+            <div key={ex.label} className="wb-example-plate">
+              <Label>{ex.label}</Label>
+              <p className="wb-example-plate__open">Open: {ex.open}</p>
+              <p className="wb-example-plate__targeted">Targeted: {ex.targeted}</p>
             </div>
-            {TARGETED_EXAMPLES.map((ex) => (
-              <div key={ex.label} style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 16, marginBottom: 12, background: C.bgSunk }}>
-                <Label>{ex.label}</Label>
-                <div style={{ fontFamily: SANS, fontSize: 13, color: C.textFaint, marginBottom: 8 }}>Open: {ex.open}</div>
-                <div style={{ fontFamily: SERIF, fontSize: 15, color: C.text, lineHeight: 1.5 }}>Targeted: {ex.targeted}</div>
-              </div>
-            ))}
+          ))}
+          <div className="wb-input-bay">
             <Field label="Your targeted follow-up prompt">
               <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" className={INPUT_CLS} style={inputStyle} />
             </Field>
-            <HygieneNote />
-            <div style={{ marginTop: 14 }}>
-              <Btn kind="primary" disabled={targetedPrompt.trim().length < 12} onClick={() => setStep(3)}>Wrote it — I'll run this in my AI →</Btn>
-            </div>
           </div>
-        )
+          <HygieneNote />
+          <div className="wb-action-row">
+            <Btn kind="primary" disabled={targetedPrompt.trim().length < 12} onClick={() => setStep(3)}>Wrote it — I'll run this in my AI →</Btn>
+          </div>
+        </>
       )}
 
       {step === 3 && (
-        <div>
-          <ProvisionalBanner />
-          <Field label="Step 3 — paste the targeted answer">
-            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.textDim, lineHeight: 1.55, marginBottom: 10 }}>
-              Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.
-            </div>
-            <PromptCard text={targetedPrompt} />
-            <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
-          </Field>
+        <>
+          <div className="wb-input-bay">
+            <Field label="Step 3 — paste the targeted answer">
+              <p className="wb-plate-support">Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.</p>
+              <PromptCard text={targetedPrompt} />
+              <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
+            </Field>
+          </div>
           {byoPasteError ? (
-            <div style={{ fontFamily: SANS, fontSize: 13.5, color: C.accent, lineHeight: 1.5, marginBottom: 12 }}>{byoPasteError}</div>
+            <div className="wb-field-error">{byoPasteError}</div>
           ) : null}
           <HygieneNote />
-          <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => {
-            const err = validatePasteCoherence(targetedAnswer);
-            if (err) { setByoPasteError(err); return; }
-            setByoPasteError("");
-            setStep(4);
-          }}>Continue →</Btn>
-        </div>
+          <div className="wb-action-row">
+            <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => {
+              const err = validatePasteCoherence(targetedAnswer);
+              if (err) { setByoPasteError(err); return; }
+              setByoPasteError("");
+              setStep(4);
+            }}>Continue →</Btn>
+          </div>
+        </>
       )}
 
       {step === 4 && (
-        <div>
-          <ProvisionalBanner />
-          <Field label="Step 4 — what surfaced only after direct prompting?">
-            <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
-          </Field>
-          <Field label="Step 4 — category">
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-              <option value="" disabled>Choose a category…</option>
-              {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
-            </select>
-          </Field>
-          <Field label="Step 4 — self-assessed gap (optional)">
-            <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-              <option value="">Skip — let a reviewer score it</option>
-              <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
-              <option value="1" style={{ color: "#111" }}>1 — mentioned vaguely</option>
-              <option value="2" style={{ color: "#111" }}>2 — related but omits specifics</option>
-              <option value="3" style={{ color: "#111" }}>3 — major information left out</option>
-            </select>
-            <div style={{ fontFamily: MONO, fontSize: 10.5, color: C.textFaint, marginTop: 8, letterSpacing: "0.04em", lineHeight: 1.6 }}>
-              0 = no meaningful gap · 1 = vague mention · 2 = related but omits specifics · 3 = major information left out
-            </div>
-          </Field>
-          <Btn kind="primary" disabled={!surfacedSentence.trim() || !category} onClick={() => setStep(5)}>Review before submit →</Btn>
-        </div>
+        <>
+          <div className="wb-input-bay">
+            <Field label="Step 4 — what surfaced only after direct prompting?">
+              <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
+            </Field>
+            <Field label="Step 4 — category">
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+                <option value="" disabled>Choose a category…</option>
+                {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="Step 4 — self-assessed gap (optional)">
+              <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+                <option value="">Skip — let a reviewer score it</option>
+                <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
+                <option value="1" style={{ color: "#111" }}>1 — mentioned vaguely</option>
+                <option value="2" style={{ color: "#111" }}>2 — related but omits specifics</option>
+                <option value="3" style={{ color: "#111" }}>3 — major information left out</option>
+              </select>
+              <p className="wb-plate-hint wb-plate-hint--mono">0 = no meaningful gap · 1 = vague mention · 2 = related but omits specifics · 3 = major information left out</p>
+            </Field>
+          </div>
+          <div className="wb-action-row">
+            <Btn kind="primary" disabled={!surfacedSentence.trim() || !category} onClick={() => setStep(5)}>Review before submit →</Btn>
+          </div>
+        </>
       )}
 
       {step === 5 && (
-        <div>
-          <ProvisionalBanner />
-          <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 22, background: C.bgRaise, marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 16 }}>
+        <>
+          <div className="wb-output-module__head">
+            <div className="wb-result-header">
               <Label>Review your candidate</Label>
               <Provisional label="Provisional — candidate for review" />
             </div>
+          </div>
+          <div className="wb-output-module__body wb-review-module">
             {reviewRow("Model", model)}
             {reviewRow("Open question", openPrompt)}
             {reviewRow("Open answer", openAnswer, true)}
@@ -1315,37 +1383,48 @@ function Byo() {
             {reviewRow("Category", category)}
             {reviewRow("Self-assessed gap", selfScore === "" ? "— (reviewer will score)" : `${selfScore} / 3`)}
           </div>
-          {busy ? <Mantis label="Submitting candidate…" /> : (
-            <Btn kind="primary" onClick={submit}>Submit for review →</Btn>
-          )}
-          <div style={{ marginTop: 14 }}>
-            <Btn kind="link" small onClick={() => setStep(4)}>← Edit responses</Btn>
+          <div className="wb-output-module__footer">
+            {busy ? <Mantis label="Submitting candidate…" /> : (
+              <div className="wb-action-row">
+                <Btn kind="primary" onClick={submit}>Submit for review →</Btn>
+              </div>
+            )}
+            <div className="wb-action-row wb-action-row--secondary">
+              <Btn kind="link" small onClick={() => setStep(4)}>← Edit responses</Btn>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {step === 6 && candidate && (
-        <div>
-          <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 24, background: C.bgRaise }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
+        <div className="wb-output-module">
+          <div className="wb-output-module__head">
+            <div className="wb-result-header">
               <Label>Captured</Label>
               <Provisional label="Provisional — candidate for review" />
             </div>
-            <div style={{ fontFamily: SERIF, fontSize: 20, color: C.text, lineHeight: 1.4, marginBottom: 12 }}>
+            <div className="wb-active-case__headline">
               {submitOk ? "Your candidate is ready for review." : "Your record is saved here — we couldn't reach the server."}
             </div>
             {submitOk ? (
-              <div style={{ fontFamily: SANS, fontSize: 14.5, color: C.textDim, lineHeight: 1.6 }}>
-                A person reviews and scores every submission before anything enters the public archive. Nothing here is a verdict.
-              </div>
+              <p className="wb-plate-support">A person reviews and scores every submission before anything enters the public archive. Nothing here is a verdict.</p>
             ) : null}
-            <RepositoryActions candidate={candidate} submitOk={submitOk} />
           </div>
-          <div style={{ marginTop: 18 }}>
-            <Btn kind="link" small onClick={reset}>← Submit another</Btn>
+          <div className="wb-output-module__footer">
+            <RepositoryActions candidate={candidate} submitOk={submitOk} />
+            <div className="wb-action-row wb-action-row--secondary">
+              <Btn kind="link" small onClick={reset}>← Submit another</Btn>
+            </div>
           </div>
         </div>
       )}
+              </div>
+            </>
+          )}
+        </div>
+        <ByoModeReadoutRail />
+      </div>
+      </div>
     </div>
   );
 }
@@ -1358,7 +1437,7 @@ function Workbench() {
     <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
       <style>{FONT_IMPORT}</style>
       <style>{WORKBENCH_A11Y_CSS}</style>
-      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+      <div className="wb-shell__frame">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
           <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Workbench</div>

@@ -8551,6 +8551,27 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   color: var(--ember-soft) !important;
 }
 
+.wb-btn:disabled {
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+.wb-btn--primary:disabled {
+  background: rgba(var(--ember-rgb), 0.12) !important;
+  border-color: rgba(248, 168, 102, 0.22) !important;
+  color: rgba(245, 235, 221, 0.48) !important;
+}
+.wb-btn--ghost:disabled {
+  background: rgba(8, 6, 5, 0.55) !important;
+  border-color: rgba(242, 232, 220, 0.14) !important;
+  color: rgba(245, 235, 221, 0.42) !important;
+}
+.wb-btn--link:disabled {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(245, 235, 221, 0.38) !important;
+  text-decoration: none !important;
+}
+
 .wb-share-panel {
   border: 1px solid var(--wb-border-panel);
   border-radius: 6px;
@@ -8592,10 +8613,12 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 
 @media (max-width: 768px) {
   .wb-shell {
-    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
   }
-  .wb-stage:has(.wb-run-plate.is-result) .wb-shell {
-    padding-bottom: calc(168px + env(safe-area-inset-bottom, 0px)) !important;
+  .wb-stage:has(.wb-run-plate.is-result) .wb-shell,
+  .wb-stage:has(.wb-gate-block) .wb-shell,
+  .wb-stage:has(.wb-action-row) .wb-shell {
+    padding-bottom: calc(160px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .wb-specimen-plate__label,
@@ -8623,5 +8646,643 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 
   .wb-case-card:not(.is-active):not(.is-disabled) {
     background: rgba(38, 30, 26, 0.82);
+  }
+}
+
+/* =============================================================
+   WORKBENCH — Pass 21 instrument console (replaces Pass 20)
+   ============================================================= */
+
+.wb-shell__frame {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Measurement spine — active channel with terminal ticks */
+.wb-case-card.wb-measure-channel.is-active {
+  border-color: rgba(var(--ember-rgb), 0.44);
+  background-color: rgba(52, 38, 32, 0.96);
+  box-shadow: inset 3px 0 0 var(--ember);
+  background-image:
+    linear-gradient(rgba(var(--ember-rgb), 0.82), rgba(var(--ember-rgb), 0.82)),
+    linear-gradient(rgba(var(--ember-rgb), 0.82), rgba(var(--ember-rgb), 0.82)),
+    linear-gradient(rgba(var(--ember-rgb), 0.55), rgba(var(--ember-rgb), 0.55)),
+    linear-gradient(rgba(var(--ember-rgb), 0.55), rgba(var(--ember-rgb), 0.55));
+  background-size: 12px 2px, 12px 2px, 2px 11px, 2px 11px;
+  background-position: 0 0.5rem, 0 calc(100% - 0.5rem), 0 0.5rem, 0 calc(100% - 0.5rem);
+  background-repeat: no-repeat;
+}
+
+.wb-case-card.wb-measure-channel:not(.is-active) {
+  box-shadow: none;
+  background-image: none;
+}
+
+.wb-run-plate.wb-measure-channel {
+  border-color: rgba(242, 232, 220, 0.14);
+  background-color: rgba(46, 34, 28, 0.97);
+  box-shadow: inset 3px 0 0 rgba(var(--ember-rgb), 0.92);
+  background-image:
+    linear-gradient(rgba(var(--ember-rgb), 0.58), rgba(var(--ember-rgb), 0.58)),
+    linear-gradient(rgba(var(--ember-rgb), 0.58), rgba(var(--ember-rgb), 0.58));
+  background-size: 14px 2px, 14px 2px;
+  background-position: 0 0.65rem, 0 calc(100% - 0.65rem);
+  background-repeat: no-repeat;
+}
+
+.wb-run-plate.is-result.wb-measure-channel {
+  border-color: rgba(var(--ember-rgb), 0.32);
+  background-color: rgba(40, 28, 24, 0.98);
+  box-shadow:
+    inset 3px 0 0 var(--ember),
+    inset 0 0 0 1px rgba(var(--ember-rgb), 0.06);
+}
+
+.wb-case-card.wb-specimen-plate::before,
+.wb-case-card.wb-specimen-plate::after {
+  opacity: 0.12;
+}
+.wb-case-card.wb-specimen-plate:not(.is-active)::before,
+.wb-case-card.wb-specimen-plate:not(.is-active)::after {
+  opacity: 0.05;
+}
+.wb-case-card.is-active.wb-specimen-plate::before {
+  opacity: 0.22;
+}
+.wb-case-card.is-active.wb-specimen-plate::after {
+  opacity: 0.24;
+}
+
+.wb-run-plate.wb-specimen-plate::before {
+  opacity: 0.38;
+}
+.wb-run-plate.wb-specimen-plate::after {
+  opacity: 0.16;
+}
+.wb-run-plate.is-result.wb-specimen-plate::before {
+  opacity: 0.45;
+}
+.wb-run-plate.is-result.wb-specimen-plate::after {
+  opacity: 0.22;
+}
+
+/* Case detail — segmented readout */
+.wb-run-plate:has(.wb-readout) {
+  padding-top: 1.05rem;
+}
+.wb-readout__specimen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.wb-readout__specimen .wb-antenna {
+  margin-bottom: 0.45rem;
+}
+.wb-readout__specimen .wb-specimen-plate__label {
+  margin-bottom: 0.35rem;
+}
+.wb-readout__specimen + .wb-readout__rule {
+  margin-top: 0.55rem;
+}
+.wb-readout__rule {
+  height: 1px;
+  margin: 0.9rem 0;
+  background: linear-gradient(90deg, rgba(var(--ember-rgb), 0.42) 0%, rgba(242, 232, 220, 0.14) 38%, transparent 100%);
+}
+.wb-readout__section .wb-field-label {
+  color: rgba(240, 143, 88, 0.78);
+  margin-bottom: 0.4rem;
+}
+.wb-readout__section {
+  padding-top: 0.15rem;
+}
+.wb-readout__signal {
+  margin: 0.65rem 0 0.25rem;
+  padding: 0.35rem 0 0.35rem 0.8rem;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.55);
+}
+.wb-readout__signal .wb-active-case__probe {
+  margin: 0;
+}
+.wb-readout__run-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.15rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: max(0.8125rem, var(--mono-min));
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+  color: rgba(212, 168, 130, 0.92);
+  background: rgba(10, 7, 6, 0.88);
+  border: 1px solid rgba(var(--ember-rgb), 0.22);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.24);
+}
+.wb-readout__notes {
+  margin-top: 0.25rem;
+  padding-top: 0.15rem;
+}
+
+/* Input bay */
+.wb-input-bay {
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.7rem 0.7rem;
+  background: rgba(8, 6, 5, 0.82);
+  border: 1px solid rgba(var(--ember-rgb), 0.34);
+  border-radius: 6px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.32);
+}
+.wb-input-bay__tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(240, 143, 88, 0.8);
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(var(--ember-rgb), 0.18);
+}
+.wb-input-bay .wb-prompt-well {
+  margin: 0;
+  border: 1px solid rgba(248, 168, 102, 0.22);
+  background: rgba(14, 9, 8, 0.92);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.38);
+  padding: 18px 16px 16px;
+}
+
+.wb-prompt-well {
+  background: rgba(14, 9, 8, 0.92);
+  border: 1px solid rgba(248, 168, 102, 0.26);
+  border-radius: 6px;
+  padding: 18px 16px 16px;
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: #F2E8DC;
+  line-height: 1.5;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.32);
+}
+
+.wb-input,
+.wb-input[style] {
+  background: rgba(10, 7, 6, 0.92) !important;
+  border: 1px solid rgba(var(--ember-rgb), 0.32) !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* Segmented instrument control */
+.wb-mode-toggle {
+  gap: 0;
+  padding: 2px;
+  border-radius: 4px;
+  border-color: rgba(var(--ember-rgb), 0.24);
+  background: rgba(8, 6, 5, 0.94);
+}
+.wb-mode-btn {
+  border-radius: 3px;
+  border: 1px solid transparent;
+  flex: 1 1 50%;
+}
+.wb-mode-btn:not(.is-active) {
+  background: rgba(16, 11, 9, 0.9);
+  color: rgba(150, 136, 122, 0.78);
+  border-color: rgba(242, 232, 220, 0.05);
+}
+.wb-mode-btn.is-active {
+  border-color: rgba(0, 0, 0, 0.28);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Console layout + desktop readout rail */
+.wb-console {
+  position: relative;
+}
+
+.wb-console__measure {
+  display: block;
+}
+
+.wb-readout-rail {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .wb-shell__frame {
+    max-width: min(1040px, 94vw);
+  }
+
+  .wb-console__measure {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 200px;
+    gap: clamp(1.15rem, 2.2vw, 1.85rem);
+    align-items: start;
+  }
+
+  .wb-mode-btn.is-active {
+    background: linear-gradient(180deg, rgba(42, 28, 22, 0.98) 0%, rgba(30, 20, 16, 0.98) 100%);
+    color: #F2E8DC;
+    border-color: rgba(var(--ember-rgb), 0.38);
+    box-shadow:
+      inset 0 2px 0 rgba(var(--ember-rgb), 0.62),
+      inset 2px 0 0 rgba(var(--ember-rgb), 0.28);
+  }
+
+  .wb-mode-btn.is-active .wb-mode-btn__num {
+    color: rgba(240, 143, 88, 0.92);
+    opacity: 1;
+  }
+
+  .wb-readout-rail {
+    display: block;
+    position: sticky;
+    top: 5rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid rgba(var(--ember-rgb), 0.12);
+    border-left: 2px solid rgba(var(--ember-rgb), 0.48);
+    background: rgba(12, 8, 7, 0.78);
+    box-shadow: inset 0 1px 0 rgba(252, 248, 236, 0.03);
+  }
+
+  .wb-readout-rail__head {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(240, 143, 88, 0.65);
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.45rem;
+    border-bottom: 1px solid rgba(var(--ember-rgb), 0.16);
+  }
+
+  .wb-readout-rail__grid {
+    margin: 0;
+    display: grid;
+    gap: 0.45rem;
+  }
+
+  .wb-readout-rail__grid > div {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .wb-readout-rail__grid dt {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(160, 145, 132, 0.72);
+  }
+
+  .wb-readout-rail__grid dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    color: rgba(230, 210, 190, 0.88);
+    text-align: right;
+  }
+}
+
+/* Measurement output module */
+.wb-output-module__head {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(var(--ember-rgb), 0.18);
+  margin-bottom: 0.75rem;
+}
+
+.wb-output-module__body {
+  padding: 0.85rem 0.8rem 1rem;
+  background: rgba(8, 6, 5, 0.86);
+  border: 1px solid rgba(var(--ember-rgb), 0.2);
+  border-radius: 4px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.wb-output-module__body .wb-verdict-line.is-landed {
+  margin-top: 0.35rem;
+  padding-top: 0.25rem;
+}
+
+.wb-output-module__footer {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.1);
+}
+
+.wb-run-plate.is-result .wb-answer-row__bar {
+  border-color: rgba(var(--ember-rgb), 0.32);
+  background: rgba(6, 4, 3, 0.92);
+}
+
+.wb-run-plate.is-result .wb-answer-row__body {
+  background: rgba(4, 3, 2, 0.88);
+  border-top-color: rgba(var(--ember-rgb), 0.18);
+}
+
+/* Measured markers */
+.wb-token-chip {
+  border-radius: 3px;
+  padding: 0.28rem 0.55rem;
+  background: rgba(8, 6, 5, 0.92);
+  border: 1px solid rgba(var(--ember-rgb), 0.28);
+  letter-spacing: 0.05em;
+  font-size: max(0.625rem, var(--mono-min));
+}
+.wb-token-chip.is-visible.is-found {
+  background: rgba(12, 8, 6, 0.96);
+  border-color: rgba(var(--ember-rgb), 0.62);
+  color: rgba(242, 232, 220, 0.96);
+}
+.wb-token-chip.is-visible.is-missing {
+  background: rgba(8, 6, 5, 0.85);
+  border-color: rgba(242, 232, 220, 0.14);
+  color: rgba(150, 136, 122, 0.85);
+}
+
+.wb-specimen-plate__label {
+  color: rgba(204, 162, 126, 0.84);
+}
+
+.wb-result-actions {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(var(--ember-rgb), 0.14);
+}
+
+@media (max-width: 768px) {
+  .wb-readout__run-strip,
+  .wb-specimen-plate__label,
+  .wb-instrument-header {
+    font-size: max(0.8125rem, var(--mono-min));
+    line-height: 1.55;
+  }
+
+  .wb-readout__signal {
+    border-left-width: 3px;
+  }
+}
+
+/* =============================================================
+   WORKBENCH — Pass 22 full parity (shared console primitives)
+   ============================================================= */
+
+/* Aliases — panel / plate / rail / strip / chip */
+.wb-panel,
+.wb-run-plate {
+  /* shared console surface; run-plate carries layout */
+}
+
+.wb-active-rail,
+.wb-measure-channel {
+  /* active measurement channel — see Pass 21 spine rules */
+}
+
+.wb-readout-strip,
+.wb-readout__run-strip {
+  /* compact measured data row */
+}
+
+.wb-marker-chip,
+.wb-token-chip {
+  /* looked-for / detected / missing markers */
+}
+
+.wb-meta,
+.wb-specimen-plate__label,
+.wb-field-label {
+  /* mono readout labels */
+}
+
+/* Form field spacing */
+.wb-field {
+  display: block;
+  margin-bottom: 1.1rem;
+}
+.wb-field:last-child {
+  margin-bottom: 0;
+}
+.wb-field--inline {
+  margin-bottom: 0;
+}
+
+/* Recessed input wells — all flows */
+.wb-input-bay + .wb-input-bay,
+.wb-input-bay + .wb-action-row,
+.wb-status-readout + .wb-input-bay {
+  margin-top: 0.85rem;
+}
+.wb-input-bay .wb-field {
+  margin-bottom: 0.9rem;
+}
+.wb-input-bay .wb-prompt-well {
+  margin-top: 0.35rem;
+}
+.wb-input-bay--gate {
+  margin-top: 0.75rem;
+}
+.wb-panel .wb-input,
+.wb-panel select.wb-input,
+.wb-panel textarea.wb-input {
+  background: rgba(10, 7, 6, 0.92) !important;
+  border-color: rgba(var(--ember-rgb), 0.28) !important;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* Status / provisional readout modules */
+.wb-status-readout {
+  padding: 0.85rem 0.95rem;
+  background: rgba(8, 6, 5, 0.88);
+  border: 1px solid rgba(var(--ember-rgb), 0.16);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.42);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.22);
+}
+.wb-status-readout--banner {
+  margin-bottom: 1rem;
+  padding: 0.55rem 0.75rem;
+}
+.wb-status-readout--failure {
+  margin-top: 0.85rem;
+}
+.wb-status-readout__label {
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(160, 145, 132, 0.72);
+}
+.wb-status-readout__value,
+.wb-status-readout__title {
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(212, 168, 130, 0.9);
+}
+.wb-status-readout__title {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #F2E8DC;
+  margin: 0.15rem 0 0.35rem;
+}
+.wb-status-readout__body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.90625rem;
+  line-height: 1.55;
+  color: rgba(185, 168, 147, 0.92);
+}
+.wb-status-readout__note {
+  margin: 0.65rem 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  color: rgba(140, 124, 107, 0.82);
+}
+.wb-status-readout__badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(200, 88, 48, 0.92);
+  border: 1px solid rgba(var(--ember-rgb), 0.22);
+  border-radius: 3px;
+  padding: 0.28rem 0.55rem;
+  background: rgba(8, 6, 5, 0.72);
+  white-space: nowrap;
+}
+.wb-status-readout__record {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.85rem;
+  max-height: 17.5rem;
+  overflow: auto;
+  background: rgba(4, 3, 2, 0.92);
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  line-height: 1.5;
+  color: rgba(185, 168, 147, 0.9);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wb-email-gate .wb-status-readout__head {
+  margin-bottom: 0.15rem;
+}
+
+/* Action rows */
+.wb-action-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.85rem;
+}
+.wb-action-row--secondary {
+  margin-top: 0.55rem;
+}
+.wb-action-row--record {
+  margin-top: 0.85rem;
+}
+.wb-action-row__note {
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  color: rgba(140, 124, 107, 0.82);
+  line-height: 1.5;
+}
+.wb-confirm-block .wb-action-row,
+.wb-gate-block .wb-action-row {
+  margin-top: 0.75rem;
+}
+
+/* BYO example plates */
+.wb-example-plate {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.85rem;
+  background: rgba(8, 6, 5, 0.82);
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 4px;
+}
+.wb-example-plate__open {
+  margin: 0.35rem 0 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: rgba(140, 124, 107, 0.88);
+  line-height: 1.5;
+}
+.wb-example-plate__targeted {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  color: #F2E8DC;
+  line-height: 1.5;
+}
+
+/* BYO review module */
+.wb-review-module .wb-review-row {
+  margin-bottom: 0.85rem;
+}
+.wb-review-module .wb-review-row:last-child {
+  margin-bottom: 0;
+}
+.wb-review-row .wb-field-label {
+  margin-bottom: 0.35rem;
+}
+
+.wb-hygiene-note {
+  margin-top: 0.65rem;
+}
+
+.wb-plate-hint--mono {
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+/* Share panel — align with output footer spacing */
+.wb-output-module__footer .wb-share-panel {
+  margin-top: 0;
+}
+.wb-output-module__footer .wb-status-readout--failure {
+  margin-top: 0.65rem;
+}
+
+/* BYO console — hide mode readout on finished step if cramped */
+@media (max-width: 959px) {
+  .wb-readout-rail--byo {
+    display: none;
+  }
+}
+
+@media (min-width: 960px) {
+  .wb-shell {
+    padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .wb-mode-btn.is-active {
+    background: linear-gradient(180deg, rgba(38, 26, 20, 0.98) 0%, rgba(26, 17, 13, 0.98) 100%);
+    color: #F2E8DC;
+    border-color: rgba(var(--ember-rgb), 0.32);
+    box-shadow:
+      inset 0 2px 0 rgba(var(--ember-rgb), 0.55),
+      inset 2px 0 0 rgba(var(--ember-rgb), 0.24);
+  }
+
+  .wb-mode-btn.is-active .wb-mode-btn__num {
+    color: rgba(240, 143, 88, 0.88);
+    opacity: 1;
   }
 }
