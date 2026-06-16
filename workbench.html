@@ -795,6 +795,25 @@ function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function syncWorkbenchHeaderOffset() {
+  if (typeof document === "undefined") return 84;
+  const header = document.querySelector(".site-header");
+  const height = header ? Math.ceil(header.getBoundingClientRect().height) + 12 : 84;
+  document.documentElement.style.setProperty("--wb-header-offset", `${height}px`);
+  return height;
+}
+
+function scrollWorkbenchAnchor(el, after) {
+  if (typeof window === "undefined" || !el) {
+    after?.();
+    return;
+  }
+  syncWorkbenchHeaderOffset();
+  const reduced = prefersReducedMotion();
+  el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  if (after) window.setTimeout(after, reduced ? 0 : 420);
+}
+
 function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
   const meta = caseMeta(caseId);
   const gapVal = gap ?? meta?.gap;
@@ -998,6 +1017,23 @@ function Curated() {
   const [sequenceReady, setSequenceReady] = useState(false);
   const [plateFade, setPlateFade] = useState("idle");
   const plateRef = useRef(null);
+  const stepAnchorRef = useRef(null);
+  const gateRef = useRef(null);
+  const stepScrollReady = useRef(false);
+
+  useEffect(() => {
+    if (!stepScrollReady.current) {
+      stepScrollReady.current = true;
+      syncWorkbenchHeaderOffset();
+      return undefined;
+    }
+    if (step === 2) return undefined;
+    let el = stepAnchorRef.current;
+    if (step === 1 && !unlocked) el = gateRef.current;
+    else if (step === 1) el = plateRef.current;
+    const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(el));
+    return () => window.cancelAnimationFrame(id);
+  }, [step, unlocked]);
 
   const resetRun = () => {
     setStep(0);
@@ -1038,19 +1074,7 @@ function Curated() {
   };
 
   const scrollPlateThenReveal = () => {
-    const reduced = prefersReducedMotion();
-    const startReveal = () => setSequenceReady(true);
-    if (!plateRef.current) {
-      startReveal();
-      return;
-    }
-    const rect = plateRef.current.getBoundingClientRect();
-    if (rect.top < 0 || rect.bottom > window.innerHeight) {
-      plateRef.current.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-      window.setTimeout(startReveal, reduced ? 0 : 380);
-    } else {
-      startReveal();
-    }
+    scrollWorkbenchAnchor(plateRef.current, () => setSequenceReady(true));
   };
 
   const check = async () => {
@@ -1086,6 +1110,7 @@ function Curated() {
     "wb-specimen-plate",
     "wb-run-plate",
     "wb-measure-channel",
+    "wb-scroll-anchor",
     step === 2 ? "is-result" : "",
     plateFade === "out" ? "is-crossfade-out" : "",
     plateFade === "in" ? "is-crossfade-in" : "",
@@ -1095,7 +1120,9 @@ function Curated() {
     <div className="wb-console">
       <div className="wb-console__main">
       <StageProgress value={step + 1} max={3} />
-      <InstrumentStageHeader num={step + 1} total={3} />
+      <div ref={stepAnchorRef} className="wb-scroll-anchor">
+        <InstrumentStageHeader num={step + 1} total={3} />
+      </div>
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28, marginTop: 16 }}>
         {CURATED.map((c) => {
@@ -1195,7 +1222,7 @@ function Curated() {
             )}
 
             {step === 1 && !unlocked && (
-              <div className="wb-gate-block">
+              <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
                 <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
               </div>
             )}
@@ -1225,6 +1252,23 @@ function Byo() {
   const [candidate, setCandidate] = useState(null);
   const [submitOk, setSubmitOk] = useState(true);
   const [byoPasteError, setByoPasteError] = useState("");
+  const stepAnchorRef = useRef(null);
+  const gateRef = useRef(null);
+  const plateRef = useRef(null);
+  const stepScrollReady = useRef(false);
+
+  useEffect(() => {
+    if (!stepScrollReady.current) {
+      stepScrollReady.current = true;
+      syncWorkbenchHeaderOffset();
+      return undefined;
+    }
+    let el = stepAnchorRef.current;
+    if (step === 1 && !unlocked) el = gateRef.current;
+    else if (plateRef.current) el = plateRef.current;
+    const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(el));
+    return () => window.cancelAnimationFrame(id);
+  }, [step, unlocked]);
 
   const reset = () => {
     setStep(0);
@@ -1283,6 +1327,7 @@ function Byo() {
     "wb-specimen-plate",
     "wb-run-plate",
     "wb-measure-channel",
+    "wb-scroll-anchor",
     step === 6 ? "is-result" : "",
   ].filter(Boolean).join(" ");
 
@@ -1290,19 +1335,21 @@ function Byo() {
     <div className="wb-console">
       <div className="wb-console__main">
       <StageProgress value={byoStepNum} max={6} />
-      <InstrumentStageHeader num={byoStepNum} total={6} />
+      <div ref={stepAnchorRef} className="wb-scroll-anchor">
+        <InstrumentStageHeader num={byoStepNum} total={6} />
+      </div>
       <p className="wb-plate-note">Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.</p>
 
       <div className="wb-console__measure">
         <div className="wb-console__measure-main">
           {step === 1 && !unlocked ? (
-            <div className="wb-gate-block">
+            <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
               <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
             </div>
           ) : (
             <>
               {step <= 5 ? <ProvisionalBanner /> : null}
-              <div className={plateCls}>
+              <div ref={plateRef} className={plateCls}>
       {step === 0 && (
         <>
           <div className="wb-input-bay">
@@ -1492,6 +1539,14 @@ function Byo() {
 function Workbench() {
   const [mode, setMode] = useState("curated");
   const modeStep = mode === "curated" ? 1 : 2;
+  const headingRef = useRef(null);
+
+  useEffect(() => {
+    syncWorkbenchHeaderOffset();
+    const onResize = () => syncWorkbenchHeaderOffset();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   return (
     <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
       <style>{FONT_IMPORT}</style>
@@ -1503,7 +1558,7 @@ function Workbench() {
         </div>
         <div style={{ height: 1, background: C.line, marginBottom: 30 }} />
 
-        <h1 style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 14px" }}>
+        <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 14px" }}>
           See what your AI leaves out.
         </h1>
         <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.6, color: C.textDim, margin: "0 0 32px", maxWidth: 560 }}>

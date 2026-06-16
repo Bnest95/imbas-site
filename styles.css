@@ -9286,3 +9286,11 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
     opacity: 1;
   }
 }
+
+/* =============================================================
+   WORKBENCH — Pass 2 scroll anchors (sticky header clearance)
+   ============================================================= */
+
+.wb-scroll-anchor {
+  scroll-margin-top: calc(var(--wb-header-offset, 72px) + 0.75rem);
+}
