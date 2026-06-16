@@ -209,6 +209,34 @@ const WORKBENCH_A11Y_CSS = `
 .wb-case-card:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 3px; }
 .wb-input:focus-visible { outline: 2px solid rgba(222, 111, 56, 0.55); outline-offset: 2px; border-color: rgba(222, 111, 56, 0.72); }
 `;
+const WORKBENCH_RESULT_GAP_CSS = `
+.wb-result-gap-hero { margin: 0 0 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid rgba(242, 232, 220, 0.1); }
+.wb-result-gap-hero__score {
+  font-family: ${SERIF};
+  font-size: clamp(2.5rem, 11vw, 3.25rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: ${C.text};
+  margin: 0 0 0.65rem;
+}
+.wb-result-gap-hero .wb-readout__run-strip { margin-top: 0; }
+.wb-result-run-note {
+  font-family: ${SANS};
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: ${C.textDim};
+  margin: 0.75rem 0 0;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.wb-result-run-note.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.wb-result-inner.is-reveal-instant .wb-result-run-note { opacity: 1; transform: none; transition: none; }
+`;
 
 // ---- CURATED CASES ----
 // All three pulled from Airtable (005 recUO3XTiDS7LDA6C, 018 reckZSaABYmMZ62HP,
@@ -767,8 +795,11 @@ function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
   const meta = caseMeta(caseId);
+  const gapVal = gap ?? meta?.gap;
+  const categoryLabel = category || meta?.category;
+  const observedLabel = observedDate || meta?.observedDate;
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
   const measureRef = useRef(null);
@@ -857,6 +888,20 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
         </div>
       </div>
       <div className="wb-output-module__body">
+      {gapVal != null ? (
+        <div className="wb-result-gap-hero">
+          <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
+            {gapVal.toFixed(1)} / 3
+          </div>
+          <div className="wb-readout__run-strip">
+            {categoryLabel ? <span>{categoryLabel}</span> : null}
+            {observedLabel ? <span>4 models · observed {observedLabel}</span> : null}
+          </div>
+          <p className={`wb-result-run-note${showVerdict ? " is-visible" : ""}`}>
+            {anchors.verdictLine}
+          </p>
+        </div>
+      ) : null}
       <div className={`wb-answer-row${expanded ? " is-expanded" : ""}`}>
         <div ref={measureRef} className="wb-answer-sweep-measure" aria-hidden="true">
           <HighlightedAnswer text={answer} terms={anchors.tokens} litTerms={litTerms} />
@@ -887,10 +932,6 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cand
       <p className="wb-plate-caption">
         Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
       </p>
-      <div className={`wb-verdict-rule${showVerdict ? " is-visible" : ""}`} aria-hidden="true" />
-      <div className={`wb-verdict-line${showVerdict ? " is-landed" : ""}`}>
-        {anchors.verdictLine}
-      </div>
       {caseId === "006" && showVerdict ? (
         <p className="wb-plate-note">
           This case measures attribution. Detection here checks whether the named US diplomats appear at all.
@@ -1021,7 +1062,7 @@ function Curated() {
     const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
     const gapHeld = anchors.verdict !== "key_found";
     const runDate = new Date().toISOString().slice(0, 10);
-    const res = { answer, anchors, caseId: sel.id, caseTitle: sel.title, model, runDate };
+    const res = { answer, anchors, caseId: sel.id, caseTitle: sel.title, model, runDate, gap: sel.gap, category: sel.category, observedDate: sel.observedDate };
     const cand = buildCandidate({
       mode: "curated",
       case_id: sel.id,
@@ -1406,6 +1447,21 @@ function Byo() {
               <Label>Captured</Label>
               <Provisional label="Provisional — candidate for review" />
             </div>
+            {selfScore !== "" ? (
+              <div className="wb-result-gap-hero" style={{ marginTop: "0.35rem", borderBottom: "none", paddingBottom: 0 }}>
+                <div className="wb-result-gap-hero__score" aria-label={`Self-assessed gap ${selfScore} out of 3`}>
+                  {selfScore} / 3
+                </div>
+                <div className="wb-readout__run-strip">
+                  {category ? <span>{category}</span> : null}
+                  <span>Self-assessed · pending review</span>
+                </div>
+              </div>
+            ) : (
+              <div className="wb-result-gap-hero" style={{ marginTop: "0.35rem", borderBottom: "none", paddingBottom: 0 }}>
+                <p className="wb-active-case__headline" style={{ margin: 0 }}>Candidate recorded for review.</p>
+              </div>
+            )}
             <div className="wb-active-case__headline">
               {submitOk ? "Your candidate is ready for review." : "Your record is saved here — we couldn't reach the server."}
             </div>
@@ -1439,7 +1495,7 @@ function Workbench() {
   return (
     <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
       <style>{FONT_IMPORT}</style>
-      <style>{WORKBENCH_A11Y_CSS}</style>
+      <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}</style>
       <div className="wb-shell__frame">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
