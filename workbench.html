@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=workbench-pass18">
+  <link rel="stylesheet" href="/styles.css?v=workbench-pass19">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -179,15 +179,17 @@ const { useState, useEffect, useRef } = React;
 
 // ---- THEME (local for preview; swap to site CSS vars at integration) ----
 const C = {
-  bg: "#2A211E",
-  bgRaise: "#332823",
-  bgSunk: "#241D1A",
+  bg: "#1E1815",
+  bgRaise: "#352A24",
+  bgSunk: "#140E0C",
   text: "#F2E8DC",
   textDim: "#B9A893",
   textFaint: "#8C7C6B",
-  accent: "#B46A5A",
-  accentDim: "#7E4C42",
-  line: "#473A33",
+  accent: "#DE6F38",
+  accentDim: "#C85830",
+  accentSoft: "#F08F58",
+  line: "rgba(242, 232, 220, 0.15)",
+  lineControl: "rgba(248, 168, 102, 0.28)",
   good: "#9BAE7E",
 };
 // Brand-locked fonts (Notion source of truth): Fraunces / Inter / JetBrains Mono.
@@ -202,7 +204,7 @@ const INPUT_CLS = "wb-input wb-focus";
 const WORKBENCH_A11Y_CSS = `
 .wb-focus:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 2px; }
 .wb-case-card:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 3px; }
-.wb-input:focus-visible { outline: 2px solid ${C.accent}; outline-offset: 2px; border-color: ${C.accent}; }
+.wb-input:focus-visible { outline: 2px solid rgba(222, 111, 56, 0.55); outline-offset: 2px; border-color: rgba(222, 111, 56, 0.72); }
 `;
 
 // ---- CURATED CASES ----
@@ -439,18 +441,18 @@ function Btn({ children, onClick, kind = "primary", disabled, small, className =
     alignItems: "center",
     justifyContent: "center",
     padding: small ? "10px 16px" : "12px 22px",
-    borderRadius: 4,
+    borderRadius: 6,
     cursor: disabled ? "not-allowed" : "pointer",
     border: "1px solid",
-    transition: "all .15s ease",
+    transition: "background .15s ease, border-color .15s ease, color .15s ease",
     opacity: disabled ? 0.4 : 1,
   };
   const kinds = {
-    primary: { background: C.accent, color: C.bg, borderColor: C.accent },
-    ghost: { background: "transparent", color: C.text, borderColor: C.line },
-    link: { background: "transparent", color: C.accent, border: "none", padding: "10px 4px", textDecoration: "underline", textUnderlineOffset: 4 },
+    primary: { background: "transparent", color: "inherit", borderColor: "transparent" },
+    ghost: { background: "transparent", color: "inherit", borderColor: "transparent" },
+    link: { background: "transparent", color: "inherit", border: "none", padding: "10px 4px", textDecoration: "underline", textUnderlineOffset: 4 },
   };
-  return <button type="button" className={`wb-focus wb-btn${className ? ` ${className}` : ""}`} onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
+  return <button type="button" className={`wb-focus wb-btn wb-btn--${kind}${small ? " wb-btn--small" : ""}${className ? ` ${className}` : ""}`} onClick={disabled ? undefined : onClick} disabled={disabled} style={{ ...base, ...kinds[kind] }}>{children}</button>;
 }
 
 function Label({ children }) {
@@ -513,7 +515,7 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
   );
 }
 
-const inputStyle = { width: "100%", boxSizing: "border-box", background: C.bgSunk, color: C.text, border: `1px solid ${C.line}`, borderRadius: 4, padding: "11px 13px", fontFamily: SANS, fontSize: 16, lineHeight: 1.55, outline: "none", resize: "vertical", minHeight: 44 };
+const inputStyle = { width: "100%", boxSizing: "border-box", background: "rgba(20, 14, 12, 0.85)", color: C.text, border: `1px solid ${C.lineControl}`, borderRadius: 7, padding: "18px 18px 16px", fontFamily: SANS, fontSize: 16, lineHeight: 1.5, outline: "none", resize: "vertical", minHeight: 44 };
 
 function ModelSelect({ value, onChange }) {
   return (
@@ -751,14 +753,14 @@ function ShareResult({ caseId, caseTitle, model, anchors, runDate }) {
     } catch {}
   };
   return (
-    <div style={{ border: `1px solid ${C.line}`, borderRadius: 6, padding: 20, background: C.bgSunk, marginTop: 22 }}>
+    <div className="wb-share-panel">
       <Label>Share your run</Label>
-      <pre style={{ margin: "10px 0 16px", padding: "12px 14px", background: C.bgRaise, border: `1px solid ${C.line}`, borderRadius: 4, fontFamily: SANS, fontSize: 13.5, lineHeight: 1.55, color: C.textDim, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+      <pre className="wb-share-panel__text">
         {text}
       </pre>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+      <div className="wb-share-panel__actions">
         <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy result"}</Btn>
-        <a href={xUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: C.accent, textDecoration: "underline", textUnderlineOffset: 4 }}>
+        <a href={xUrl} target="_blank" rel="noopener noreferrer" className="wb-share-panel__link">
           Share on X
         </a>
       </div>
