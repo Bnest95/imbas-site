@@ -1185,6 +1185,17 @@ body:has(main > section.hero) .nav__menu-btn {
 .bridge__plate--stakes p { max-width: 38ch; }
 .bridge__plate--measure p { max-width: 34ch; }
 
+@media (min-width: 801px) {
+  .bridge__plates:has(> .bridge__plate:only-child) {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .bridge__plates:has(> .bridge__plate:only-child) > .bridge__plate {
+    width: min(100%, calc((100% - clamp(1rem, 2.5vw, 1.35rem)) / 2));
+  }
+}
+
 @media (max-width: 800px) {
   .bridge { padding: var(--space-5) 0; }
   .bridge__frame { padding: var(--space-4) var(--space-3); }
