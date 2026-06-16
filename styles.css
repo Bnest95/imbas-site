@@ -2937,9 +2937,9 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .archive--home-preview .hp-arc-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: baseline;
-  gap: var(--space-3) clamp(var(--space-3), 2vw, var(--space-4));
+  gap: var(--space-3) clamp(var(--space-4), 3vw, var(--space-5));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -3421,11 +3421,8 @@ body:has(main > section.hero) .nav__menu-btn {
 
 @media (max-width: 900px) {
   .archive--home-preview .hp-arc-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2) var(--space-3);
-  }
-  .archive--home-preview .hp-arc-metrics__item {
-    white-space: normal;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
   }
   .archive--home-preview .hp-arc-intro {
     grid-template-columns: 1fr;
@@ -6404,14 +6401,8 @@ main, .site-footer { position: relative; z-index: 2; }
     max-width: none;
   }
   .page--archive .arc-stat-strip__meta {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem 0.75rem;
     font-size: 0.8125rem;
     letter-spacing: 0.04em;
-  }
-  .page--archive .arc-stat-strip__metric {
-    white-space: normal;
   }
   .page--archive .arc-stat-strip__metric::after {
     content: none;
