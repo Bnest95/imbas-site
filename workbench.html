@@ -569,6 +569,23 @@ function HygieneNote() {
 }
 
 // ---- EMAIL GATE (fires at "run your own", never at the door) ----
+const WB_EMAIL_STORAGE_KEY = "imbas_wb_email";
+
+function readStoredWorkbenchEmail() {
+  try {
+    return localStorage.getItem(WB_EMAIL_STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function persistWorkbenchEmail(email) {
+  try {
+    if (email) localStorage.setItem(WB_EMAIL_STORAGE_KEY, email);
+    else localStorage.removeItem(WB_EMAIL_STORAGE_KEY);
+  } catch {}
+}
+
 function EmailGate({ onUnlock }) {
   const [email, setEmail] = useState("");
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
@@ -1034,8 +1051,8 @@ function CaseReadoutRail({ sel }) {
 function Curated() {
   const [sel, setSel] = useState(CURATED[0]);
   const [step, setStep] = useState(0); // 0 observe+copy, 1 gate+paste, 2 result
-  const [unlocked, setUnlocked] = useState(false);
-  const [email, setEmail] = useState("");
+  const [unlocked, setUnlocked] = useState(() => !!readStoredWorkbenchEmail());
+  const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
   const [model, setModel] = useState("");
   const [answer, setAnswer] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1066,8 +1083,6 @@ function Curated() {
 
   const resetRun = () => {
     setStep(0);
-    setUnlocked(false);
-    setEmail("");
     setModel("");
     setAnswer("");
     setResult(null);
@@ -1252,7 +1267,7 @@ function Curated() {
 
             {step === 1 && !unlocked && (
               <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
-                <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
+                <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); persistWorkbenchEmail(e); }} />
               </div>
             )}
           </div>
@@ -1270,8 +1285,8 @@ function Byo() {
   const [model, setModel] = useState("");
   const [openPrompt, setOpenPrompt] = useState("");
   const [openAnswer, setOpenAnswer] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
-  const [email, setEmail] = useState("");
+  const [unlocked, setUnlocked] = useState(() => !!readStoredWorkbenchEmail());
+  const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
   const [targetedPrompt, setTargetedPrompt] = useState("");
   const [targetedAnswer, setTargetedAnswer] = useState("");
   const [surfacedSentence, setSurfacedSentence] = useState("");
@@ -1304,8 +1319,6 @@ function Byo() {
     setModel("");
     setOpenPrompt("");
     setOpenAnswer("");
-    setUnlocked(false);
-    setEmail("");
     setTargetedPrompt("");
     setTargetedAnswer("");
     setSurfacedSentence("");
@@ -1373,7 +1386,7 @@ function Byo() {
         <div className="wb-console__measure-main">
           {step === 1 && !unlocked ? (
             <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
-              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); }} />
+              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); persistWorkbenchEmail(e); }} />
             </div>
           ) : (
             <>
