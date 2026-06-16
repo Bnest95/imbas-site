@@ -1,0 +1,8 @@
+{
+  "name": "qa-screenshots-post-hero-mobile-scale",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^23.11.1"
+  }
+}

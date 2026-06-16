@@ -1,0 +1,8 @@
+{
+  "name": "qa-screenshots-stat-strip-4col",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^24.0.0"
+  }
+}
