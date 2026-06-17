@@ -638,6 +638,30 @@ const WORKBENCH_FLOW_CSS = `
   margin: 0 0 0.35rem;
   text-transform: uppercase;
 }
+.wb-byo-nudge {
+  font-family: ${SANS};
+  font-size: 0.8125rem;
+  line-height: 1.42;
+  color: rgba(200, 186, 170, 0.88);
+  margin: 0.45rem 0 0;
+  padding: 0.38rem 0.48rem;
+  border-left: 2px solid rgba(222, 111, 56, 0.38);
+  background: rgba(14, 10, 8, 0.55);
+  border-radius: 0 3px 3px 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.wb-byo-nudge__short {
+  display: none;
+}
+@media (max-width: 480px) {
+  .wb-byo-nudge__full {
+    display: none;
+  }
+  .wb-byo-nudge__short {
+    display: inline;
+  }
+}
 @media (max-width: 480px) {
   .wb-shell .wb-build-note {
     margin-bottom: 0.65rem;
@@ -645,6 +669,11 @@ const WORKBENCH_FLOW_CSS = `
   .wb-flow-module {
     margin-top: 0.38rem;
     padding: 0.4rem 0.42rem;
+  }
+  .wb-byo-nudge {
+    font-size: 0.78rem;
+    line-height: 1.38;
+    padding: 0.34rem 0.42rem;
   }
 }
 `;
@@ -1175,6 +1204,69 @@ function caseOnPageTexts(sel) {
 }
 
 const PASTE_COHERENCE_MSG = "This doesn't look like a model's answer — paste the full response text from your chat.";
+
+const BYO_PROMPT_SIMILARITY_NUDGE =
+  "Open and direct prompts should differ. The gap is measured by comparing what the model volunteers against what it gives when asked directly.";
+const BYO_PROMPT_SIMILARITY_NUDGE_SHORT =
+  "Open and direct prompts should differ. That contrast is the measurement.";
+const BYO_SURFACED_TRIVIAL_MSG = "Paste the model's actual answer before measuring.";
+
+const TRIVIAL_SURFACED_ANSWERS = new Set([
+  "yes", "no", "yes sir", "yes maam", "yes madam", "nothing", "idk", "n/a", "na", "none",
+  "ok", "okay", "test", "yeah", "nope", "sure", "maybe", "unknown", "null", "nil",
+  "not sure", "dont know", "don't know", "no idea", "same", "same thing", "placeholder",
+]);
+
+function normalizePromptCompare(s) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function byoPromptSimilarityNudge(openPrompt, targetedPrompt) {
+  const open = normalizePromptCompare(openPrompt);
+  const targeted = normalizePromptCompare(targetedPrompt);
+  if (!open || targeted.length < 12) return "";
+  if (open === targeted) return BYO_PROMPT_SIMILARITY_NUDGE;
+  if (open.includes(targeted) || targeted.includes(open)) {
+    const shorter = Math.min(open.length, targeted.length);
+    const longer = Math.max(open.length, targeted.length);
+    if (shorter / longer >= 0.88) return BYO_PROMPT_SIMILARITY_NUDGE;
+  }
+  const openWords = open.split(" ").filter((w) => w.length > 2);
+  const targetedWords = targeted.split(" ").filter((w) => w.length > 2);
+  if (openWords.length >= 3 && targetedWords.length >= 3) {
+    const openSet = new Set(openWords);
+    const overlap = targetedWords.filter((w) => openSet.has(w)).length;
+    if (overlap / targetedWords.length >= 0.92 && Math.abs(openWords.length - targetedWords.length) <= 1) {
+      return BYO_PROMPT_SIMILARITY_NUDGE;
+    }
+  }
+  return "";
+}
+
+function validateSurfacedAnswer(text) {
+  const raw = (text || "").trim();
+  if (!raw) return BYO_SURFACED_TRIVIAL_MSG;
+  const norm = raw
+    .toLowerCase()
+    .replace(/[^a-z0-9\s']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!norm) return BYO_SURFACED_TRIVIAL_MSG;
+  if (TRIVIAL_SURFACED_ANSWERS.has(norm)) return BYO_SURFACED_TRIVIAL_MSG;
+  if (norm.length < 15) {
+    const placeholderWords = new Set([
+      "yes", "no", "ok", "okay", "yeah", "nope", "sure", "maybe", "idk", "na", "none",
+      "nothing", "test", "sir", "madam", "maam", "thanks", "thank", "you", "same", "placeholder",
+    ]);
+    const words = norm.split(" ").filter(Boolean);
+    if (words.every((w) => placeholderWords.has(w) || w.length <= 2)) return BYO_SURFACED_TRIVIAL_MSG;
+  }
+  return "";
+}
 
 function validatePasteCoherence(text) {
   const words = (text || "").trim().split(/\s+/).filter(Boolean);
@@ -1933,6 +2025,7 @@ function Byo() {
   const [candidate, setCandidate] = useState(null);
   const [submitOk, setSubmitOk] = useState(true);
   const [byoPasteError, setByoPasteError] = useState("");
+  const [byoSurfacedError, setByoSurfacedError] = useState("");
   const stepAnchorRef = useRef(null);
   const gateRef = useRef(null);
   const plateRef = useRef(null);
@@ -1965,7 +2058,10 @@ function Byo() {
     setSubmitOk(true);
     setBusy(false);
     setByoPasteError("");
+    setByoSurfacedError("");
   };
+
+  const promptSimilarityNudge = byoPromptSimilarityNudge(openPrompt, targetedPrompt);
 
   const submit = async () => {
     setBusy(true);
@@ -2069,6 +2165,12 @@ function Byo() {
             <Field label="Your targeted follow-up prompt">
               <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" className={INPUT_CLS} style={inputStyle} />
             </Field>
+            {promptSimilarityNudge ? (
+              <p className="wb-byo-nudge wb-byo-nudge--prompt">
+                <span className="wb-byo-nudge__full">{BYO_PROMPT_SIMILARITY_NUDGE}</span>
+                <span className="wb-byo-nudge__short">{BYO_PROMPT_SIMILARITY_NUDGE_SHORT}</span>
+              </p>
+            ) : null}
           </div>
           <HygieneNote />
           <div className="wb-action-row">
@@ -2086,6 +2188,12 @@ function Byo() {
               <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
             </Field>
           </div>
+          {promptSimilarityNudge ? (
+            <p className="wb-byo-nudge wb-byo-nudge--prompt">
+              <span className="wb-byo-nudge__full">{BYO_PROMPT_SIMILARITY_NUDGE}</span>
+              <span className="wb-byo-nudge__short">{BYO_PROMPT_SIMILARITY_NUDGE_SHORT}</span>
+            </p>
+          ) : null}
           {byoPasteError ? (
             <div className="wb-field-error">{byoPasteError}</div>
           ) : null}
@@ -2105,7 +2213,10 @@ function Byo() {
         <>
           <div className="wb-input-bay">
             <Field label="Step 4 — what surfaced only after direct prompting?">
-              <input value={surfacedSentence} onChange={(e) => setSurfacedSentence(e.target.value)} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
+              <input value={surfacedSentence} onChange={(e) => { setSurfacedSentence(e.target.value); setByoSurfacedError(""); }} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
+              {byoSurfacedError ? (
+                <div className="wb-field-error">{byoSurfacedError}</div>
+              ) : null}
             </Field>
             <Field label="Step 4 — category">
               <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
@@ -2125,7 +2236,12 @@ function Byo() {
             </Field>
           </div>
           <div className="wb-action-row">
-            <Btn kind="primary" disabled={!surfacedSentence.trim() || !category} onClick={() => setStep(5)}>Review before submit →</Btn>
+            <Btn kind="primary" disabled={!category} onClick={() => {
+              const err = validateSurfacedAnswer(surfacedSentence);
+              if (err) { setByoSurfacedError(err); return; }
+              setByoSurfacedError("");
+              setStep(5);
+            }}>Review before submit →</Btn>
           </div>
         </>
       )}
