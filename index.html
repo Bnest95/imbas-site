@@ -95,7 +95,7 @@
       <a href="/public-interest.html">Public Interest</a>
       <a href="/institutions.html">For Institutions</a>
       <a href="/for-readers.html">For Readers</a>
-      <a href="/briefing">Field Notes</a>
+      <a href="/field-notes/">Field Notes</a>
     </nav>
   </div>
 </header>
@@ -607,34 +607,10 @@
         <div class="close__signup">
           <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
           <p class="field-notes__caption reveal" data-stagger="body">Follow new records and product releases.</p>
-          <form
-            class="subscribe reveal"
-            data-stagger="support"
-            id="field-notes-form"
-            action="/briefing/members/api/send-magic-link"
-            method="POST"
-            novalidate
-          >
-            <input type="hidden" name="emailType" value="signup">
-            <input type="hidden" name="labels" value="field-notes">
-            <button type="submit"><span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span></button>
-            <input
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              autocomplete="email"
-              required
-              aria-label="Email address"
-            >
-          </form>
-          <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true">Check your inbox for a confirmation link.</p>
-          <div class="field-notes__recent reveal" data-stagger="support">
-            <ul class="field-notes__recent-list">
-              <li><a href="/briefing/post-1">On methodology hygiene and prompt design</a></li>
-              <li><a href="/briefing/post-2">The Volunteer Gap, explained</a></li>
-              <li><a href="/briefing/post-3">Why we measure behavior, not intent</a></li>
-            </ul>
-          </div>
+          <p class="field-notes__signup-pending reveal" data-stagger="support">Email signup is being wired. For early updates, contact <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.</p>
+          <p class="field-notes__recent reveal" data-stagger="support">
+            <a href="/field-notes/">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          </p>
         </div>
       </div>
     </div>
@@ -661,7 +637,7 @@
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Use</a>
       <a href="/accessibility.html">Accessibility</a>
-      <a href="/briefing">Field Notes</a>
+      <a href="/field-notes/">Field Notes</a>
     </nav>
     <div class="site-footer__meta">
       <span>brendan@imbaslabs.com</span>
@@ -969,27 +945,6 @@
       window.addEventListener('resize', updateGapLines, { passive: true });
       updateGapLines();
     })();
-
-    // Capture form handlers — field notes signup
-    function wireForm(formId, msgId, fallbackMsg) {
-      var form = document.getElementById(formId);
-      var msg  = document.getElementById(msgId);
-      if (!form || !msg) return;
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var email = form.querySelector('input[type="email"]');
-        if (!email || !email.value || !email.checkValidity()) {
-          msg.textContent = 'Please enter a valid email.';
-          msg.setAttribute('aria-hidden', 'false');
-          msg.classList.add('is-visible');
-          return;
-        }
-        msg.textContent = fallbackMsg;
-        msg.setAttribute('aria-hidden', 'false');
-        msg.classList.add('is-visible');
-      });
-    }
-    wireForm('field-notes-form', 'field-notes-msg', 'Check your inbox for a confirmation link.');
 
     // Hero particulate texture
     (function initHeroDust() {
