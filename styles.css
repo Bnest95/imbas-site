@@ -9294,3 +9294,60 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 .wb-scroll-anchor {
   scroll-margin-top: calc(var(--wb-header-offset, 72px) + 0.75rem);
 }
+
+/* =============================================================
+   WORKBENCH — Result score readout mobile stack (≤480px)
+   ============================================================= */
+
+@media (max-width: 480px) {
+  .wb-result-inner.wb-output-module .wb-output-module__head {
+    padding-bottom: 0.38rem;
+    margin-bottom: 0.48rem;
+  }
+
+  .wb-result-inner.wb-output-module .wb-output-module__body {
+    padding: 0.4rem 0.52rem 0.5rem;
+  }
+
+  .wb-result-inner .wb-result-gap-hero {
+    margin-top: -0.05rem;
+  }
+
+  .wb-result-inner .wb-answer-row {
+    margin-top: 0.05rem;
+  }
+
+  .wb-result-inner .wb-output-module__head .wb-antenna {
+    display: none;
+  }
+
+  .wb-result-inner .wb-specimen-plate__label {
+    margin-bottom: 0.22rem;
+    font-size: max(0.625rem, var(--mono-min));
+    line-height: 1.34;
+    letter-spacing: 0.055em;
+    color: rgba(204, 162, 126, 0.72);
+  }
+
+  .wb-result-inner .wb-result-header {
+    margin-bottom: 0.3rem;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  .wb-result-inner .wb-result-header .wb-field-label {
+    font-size: max(0.625rem, var(--mono-min));
+    line-height: 1.28;
+    color: rgba(160, 145, 132, 0.72);
+  }
+
+  .wb-result-inner .wb-status-readout__badge {
+    font-size: max(0.5625rem, var(--mono-min));
+    letter-spacing: 0.07em;
+    padding: 0.12rem 0.32rem;
+    line-height: 1.22;
+    border-color: rgba(var(--ember-rgb), 0.18);
+    background: rgba(8, 6, 5, 0.68);
+    flex-shrink: 0;
+  }
+}

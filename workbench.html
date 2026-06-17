@@ -210,24 +210,112 @@ const WORKBENCH_A11Y_CSS = `
 .wb-input:focus-visible { outline: 2px solid rgba(222, 111, 56, 0.55); outline-offset: 2px; border-color: rgba(222, 111, 56, 0.72); }
 `;
 const WORKBENCH_RESULT_GAP_CSS = `
-.wb-result-gap-hero { margin: 0 0 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid rgba(242, 232, 220, 0.1); }
+.wb-result-gap-hero {
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(242, 232, 220, 0.1);
+}
+.wb-result-gap-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 15rem);
+  margin: 0 auto 0.35rem;
+}
+.wb-result-gap-gauge {
+  position: relative;
+  width: 100%;
+  line-height: 0;
+}
+.wb-result-gap-gauge__face {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 1;
+}
+.wb-result-gap-gauge__bloom {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 62%;
+  height: 52%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(222, 111, 56, 0.18) 0%, rgba(222, 111, 56, 0.05) 45%, transparent 72%);
+  opacity: 0;
+  transition: opacity 0.55s ease 0.04s;
+  pointer-events: none;
+  z-index: 0;
+}
+.wb-result-gap-gauge.is-settled .wb-result-gap-gauge__bloom,
+.wb-result-inner.is-reveal-instant .wb-result-gap-gauge__bloom {
+  opacity: 1;
+}
+.wb-result-gap-gauge.is-settled .wb-result-gap-gauge__face {
+  filter: drop-shadow(0 0 12px rgba(222, 111, 56, 0.18));
+  transition: filter 0.55s ease;
+}
+.wb-result-gap-gauge__scan {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 6%;
+  height: 72%;
+  border-radius: 999px 999px 0 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(20, 14, 12, 0) 0px,
+    rgba(20, 14, 12, 0) 2px,
+    rgba(242, 232, 220, 0.04) 2px,
+    rgba(242, 232, 220, 0.04) 3px
+  );
+  mix-blend-mode: soft-light;
+  z-index: 2;
+}
+.wb-result-gap-gauge__needle-line {
+  transition: none;
+}
+.wb-result-gap-gauge__tick-label {
+  font-size: 8.5px;
+  fill: rgba(140, 124, 107, 0.58);
+}
+.wb-result-gap-gauge.is-settled .wb-result-gap-gauge__track-fill {
+  opacity: 0.76;
+}
 .wb-result-gap-hero__score {
   font-family: ${SERIF};
-  font-size: clamp(2.5rem, 11vw, 3.25rem);
+  font-size: clamp(2.05rem, 9.5vw, 2.85rem);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: ${C.text};
-  margin: 0 0 0.65rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  text-align: center;
+  width: 100%;
+  text-shadow: 0 1px 12px rgba(222, 111, 56, 0.14);
 }
-.wb-result-gap-hero .wb-readout__run-strip { margin-top: 0; }
+.wb-result-gap-hero .wb-readout__run-strip--compact {
+  margin-top: 0.65rem;
+  padding: 0.38rem 0.55rem;
+  gap: 0.25rem 0.75rem;
+  font-size: max(0.75rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  background: rgba(10, 7, 6, 0.78);
+  border-color: rgba(222, 111, 56, 0.16);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.16);
+  width: 100%;
+  box-sizing: border-box;
+}
 .wb-result-run-note {
   font-family: ${SANS};
   font-size: 0.9375rem;
   line-height: 1.5;
   color: ${C.textDim};
-  margin: 0.75rem 0 0;
+  margin: 0.65rem 0 0;
   opacity: 0;
   transform: translateY(6px);
 }
@@ -237,6 +325,61 @@ const WORKBENCH_RESULT_GAP_CSS = `
   transition: opacity 0.45s ease, transform 0.45s ease;
 }
 .wb-result-inner.is-reveal-instant .wb-result-run-note { opacity: 1; transform: none; transition: none; }
+.wb-result-inner.is-reveal-instant .wb-result-gap-gauge__face { filter: drop-shadow(0 0 10px rgba(222, 111, 56, 0.16)); transition: none; }
+@media (max-width: 480px) {
+  .wb-result-gap-readout {
+    width: min(100%, 12rem);
+    margin: 0 auto 0.08rem;
+    gap: 0;
+  }
+  .wb-result-gap-gauge {
+    max-width: 11.5rem;
+    margin: 0 auto;
+  }
+  .wb-result-gap-gauge__face {
+    max-height: 3.75rem;
+    width: auto;
+    margin: 0 auto;
+  }
+  .wb-result-gap-gauge__scan {
+    top: 3%;
+    height: 70%;
+  }
+  .wb-result-gap-gauge__bloom {
+    top: 40%;
+    width: 58%;
+    height: 48%;
+  }
+  .wb-result-gap-hero {
+    margin-bottom: 0.28rem;
+    padding-bottom: 0.2rem;
+  }
+  .wb-result-gap-hero__score {
+    font-size: clamp(1.52rem, 7vw, 1.8rem);
+    margin-top: -0.24rem;
+    line-height: 0.95;
+    text-shadow: 0 1px 8px rgba(222, 111, 56, 0.11);
+  }
+  .wb-result-gap-hero .wb-readout__run-strip--compact {
+    margin-top: 0.3rem;
+    margin-inline: auto;
+    width: min(100%, 10.25rem);
+    max-width: 90%;
+    padding: 0.18rem 0.36rem;
+    gap: 0.1rem 0.5rem;
+    font-size: max(0.625rem, var(--mono-min));
+    letter-spacing: 0.03em;
+    line-height: 1.24;
+    color: rgba(188, 164, 142, 0.76);
+    background: rgba(10, 7, 6, 0.58);
+    border-color: rgba(222, 111, 56, 0.1);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08);
+  }
+  .wb-result-gap-hero .wb-result-run-note {
+    margin-top: 0.32rem;
+    font-size: 0.875rem;
+  }
+}
 `;
 
 // ---- CURATED CASES ----
@@ -831,6 +974,93 @@ const RESULT_CHIP_STAGGER_MS = 120;
 const RESULT_VERDICT_BEAT_MS = 80;
 const RESULT_SHARE_DELAY_MS = 400;
 const RESULT_ANSWER_SWEEP_MS = 700;
+const GAP_GAUGE_MAX = 3;
+const GAP_GAUGE_OVERSHOOT = 1.08;
+
+function gapGaugeAngle(gap) {
+  return 180 - (Math.min(Math.max(gap, 0), GAP_GAUGE_MAX) / GAP_GAUGE_MAX) * 180;
+}
+
+function gapGaugePoint(cx, cy, r, deg) {
+  const rad = (deg * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
+}
+
+function gapGaugeArc(cx, cy, r, startDeg, endDeg) {
+  const start = gapGaugePoint(cx, cy, r, startDeg);
+  const end = gapGaugePoint(cx, cy, r, endDeg);
+  const large = Math.abs(startDeg - endDeg) > 180 ? 1 : 0;
+  const sweep = startDeg > endDeg ? 1 : 0;
+  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} ${sweep} ${end.x} ${end.y}`;
+}
+
+function GapGauge({ needleValue, settled }) {
+  const cx = 120;
+  const cy = 84;
+  const r = 58;
+  const fillEnd = gapGaugeAngle(Math.min(needleValue, GAP_GAUGE_MAX));
+  const tip = gapGaugePoint(cx, cy, r - 6, fillEnd);
+  const ticks = [0, 1, 2, 3];
+
+  return (
+    <div className={`wb-result-gap-gauge${settled ? " is-settled" : ""}`}>
+      <div className="wb-result-gap-gauge__bloom" aria-hidden="true" />
+      <svg className="wb-result-gap-gauge__face" viewBox="0 0 240 92" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+        <path
+          className="wb-result-gap-gauge__track"
+          d={gapGaugeArc(cx, cy, r, 180, 0)}
+          stroke="rgba(242, 232, 220, 0.13)"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+        />
+        {needleValue > 0.02 ? (
+          <path
+            className="wb-result-gap-gauge__track-fill"
+            d={gapGaugeArc(cx, cy, r, 180, fillEnd)}
+            stroke={C.accent}
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            opacity={settled ? 0.76 : 0.42}
+          />
+        ) : null}
+        {ticks.map((t) => {
+          const deg = gapGaugeAngle(t);
+          const outer = gapGaugePoint(cx, cy, r + 3, deg);
+          const inner = gapGaugePoint(cx, cy, r - 8, deg);
+          const label = gapGaugePoint(cx, cy, r - 22, deg);
+          return (
+            <g key={t}>
+              <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="rgba(242, 232, 220, 0.26)" strokeWidth="1.2" />
+              <text
+                className="wb-result-gap-gauge__tick-label"
+                x={label.x}
+                y={label.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fontFamily={MONO}
+              >
+                {t}
+              </text>
+            </g>
+          );
+        })}
+        <line
+          className="wb-result-gap-gauge__needle-line"
+          x1={cx}
+          y1={cy}
+          x2={tip.x}
+          y2={tip.y}
+          stroke={C.accent}
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <circle cx={cx} cy={cy} r="3.2" fill={C.text} stroke="rgba(20, 14, 12, 0.65)" strokeWidth="1" />
+        <circle cx={tip.x} cy={tip.y} r="1.6" fill={C.accentSoft} opacity={settled ? 0.85 : 0.48} />
+      </svg>
+      <div className="wb-result-gap-gauge__scan" aria-hidden="true" />
+    </div>
+  );
+}
 
 function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
   const meta = caseMeta(caseId);
@@ -842,6 +1072,8 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   const measureRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
   const [displayGap, setDisplayGap] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
+  const [gaugeNeedle, setGaugeNeedle] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
+  const [gaugeSettled, setGaugeSettled] = useState(reduced.current);
   const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
   const [sweeping, setSweeping] = useState(false);
   const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
@@ -863,16 +1095,33 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
     if (!sequenceReady || gapVal == null) return undefined;
     if (reduced.current) {
       setDisplayGap(gapVal);
+      setGaugeNeedle(gapVal);
+      setGaugeSettled(true);
       return undefined;
     }
     setDisplayGap(0);
+    setGaugeNeedle(0);
+    setGaugeSettled(false);
     const start = performance.now();
     let raf = 0;
     const easeOutCubic = (t) => 1 - (1 - t) ** 3;
     const tick = (now) => {
       const progress = Math.min(1, (now - start) / RESULT_GAP_COUNT_MS);
       setDisplayGap(Math.round(easeOutCubic(progress) * gapVal * 10) / 10);
-      if (progress < 1) raf = requestAnimationFrame(tick);
+      const overshootTarget = gapVal * GAP_GAUGE_OVERSHOOT;
+      if (progress < 0.82) {
+        const p = progress / 0.82;
+        setGaugeNeedle(easeOutCubic(p) * overshootTarget);
+      } else {
+        const p = (progress - 0.82) / 0.18;
+        setGaugeNeedle(overshootTarget + (gapVal - overshootTarget) * easeOutCubic(p));
+      }
+      if (progress < 1) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setGaugeNeedle(gapVal);
+        setGaugeSettled(true);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -949,10 +1198,13 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       <div className="wb-output-module__body">
       {gapVal != null ? (
         <div className="wb-result-gap-hero">
-          <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
-            {displayGap.toFixed(1)} / 3
+          <div className="wb-result-gap-readout">
+            <GapGauge needleValue={gaugeNeedle} settled={gaugeSettled} />
+            <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
+              {displayGap.toFixed(1)} / 3
+            </div>
           </div>
-          <div className="wb-readout__run-strip">
+          <div className="wb-readout__run-strip wb-readout__run-strip--compact">
             {categoryLabel ? <span>{categoryLabel}</span> : null}
             {observedLabel ? <span>4 models · observed {observedLabel}</span> : null}
           </div>
