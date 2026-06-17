@@ -361,7 +361,7 @@ const WORKBENCH_RESULT_GAP_CSS = `
     text-shadow: 0 1px 8px rgba(222, 111, 56, 0.11);
   }
   .wb-result-gap-hero .wb-readout__run-strip--compact {
-    margin-top: 0.3rem;
+    margin-top: 0.55rem;
     margin-inline: auto;
     width: min(100%, 10.25rem);
     max-width: 90%;
@@ -378,6 +378,120 @@ const WORKBENCH_RESULT_GAP_CSS = `
   .wb-result-gap-hero .wb-result-run-note {
     margin-top: 0.32rem;
     font-size: 0.875rem;
+  }
+}
+`;
+
+const WORKBENCH_TERMS_CSS = `
+.wb-result-inner .wb-token-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-result-inner .wb-token-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 0.28rem 0.44rem;
+  font-family: ${MONO};
+  font-size: max(0.625rem, 0.68rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(5px);
+}
+.wb-result-inner .wb-token-chip.is-visible {
+  animation: wb-term-row-in 0.26s ease forwards;
+}
+.wb-result-inner .wb-token-chip.is-visible.is-missing {
+  border: 1px solid rgba(222, 111, 56, 0.14);
+  background: rgba(8, 6, 5, 0.42);
+  color: rgba(230, 210, 194, 0.86);
+  font-weight: 500;
+  box-shadow: none;
+}
+.wb-result-inner .wb-token-chip.is-visible.is-found {
+  border: 1px solid transparent;
+  background: rgba(8, 6, 5, 0.28);
+  color: rgba(118, 108, 98, 0.48);
+  font-weight: 400;
+}
+.wb-token-chip__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: ${C.accent};
+  box-shadow: 0 0 4px rgba(222, 111, 56, 0.32);
+  flex-shrink: 0;
+}
+.wb-token-chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wb-result-discovery-beat {
+  font-family: ${SANS};
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: rgba(222, 111, 56, 0.84);
+  margin: 0.28rem 0 0.1rem;
+  opacity: 0;
+  transform: translateY(5px);
+}
+.wb-result-inner .wb-plate-caption {
+  font-family: ${MONO};
+  font-size: max(0.625rem, 0.65rem);
+  letter-spacing: 0.03em;
+  line-height: 1.28;
+  color: rgba(185, 168, 147, 0.52);
+  margin: 0 0 0.55rem;
+}
+.wb-result-discovery-beat.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.38s ease, transform 0.38s ease;
+}
+.wb-result-inner.is-reveal-instant .wb-token-chip {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+.wb-result-inner.is-reveal-instant .wb-result-discovery-beat {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+@keyframes wb-term-row-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+  .wb-result-inner .wb-token-chip {
+    padding: 0.24rem 0.38rem;
+    font-size: max(0.625rem, var(--mono-min));
+  }
+  .wb-result-inner .wb-token-chips {
+    gap: 0.2rem;
+  }
+  .wb-result-discovery-beat {
+    font-size: 0.75rem;
+    line-height: 1.22;
+    margin-top: 0.24rem;
+    margin-bottom: 0.06rem;
+  }
+  .wb-result-inner .wb-plate-caption {
+    font-size: max(0.625rem, var(--mono-min));
+    line-height: 1.22;
+    letter-spacing: 0.025em;
+    margin-bottom: 0.45rem;
+    color: rgba(185, 168, 147, 0.48);
   }
 }
 `;
@@ -767,7 +881,7 @@ function detectAnchors(text, detect, keyDetect) {
   else if (!anyKeyFound) verdict = "partial";
   else verdict = "key_found";
   const verdictLine = {
-    gap_held: "Gap held.",
+    gap_held: "Gap detected.",
     partial: "Partially surfaced.",
     key_found: "Your model surfaced it — this gap may be narrowing. That's a result too. Logged.",
   }[verdict];
@@ -970,7 +1084,7 @@ function scrollWorkbenchAnchor(el, after) {
 }
 
 const RESULT_GAP_COUNT_MS = 800;
-const RESULT_CHIP_STAGGER_MS = 120;
+const RESULT_CHIP_STAGGER_MS = 100;
 const RESULT_VERDICT_BEAT_MS = 80;
 const RESULT_SHARE_DELAY_MS = 400;
 const RESULT_ANSWER_SWEEP_MS = 700;
@@ -1080,7 +1194,9 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   const [showVerdict, setShowVerdict] = useState(reduced.current);
   const [verdictPulse, setVerdictPulse] = useState(false);
   const [showShare, setShowShare] = useState(reduced.current);
+  const [showDiscoveryLine, setShowDiscoveryLine] = useState(reduced.current && tokens.some((t) => !t.found));
   const [antennaSignal, setAntennaSignal] = useState(reduced.current && tokens.some((t) => t.isKey && t.found));
+  const hasMissing = tokens.some((t) => !t.found);
   const words = countWords(answer);
 
   useEffect(() => {
@@ -1136,6 +1252,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       setShowVerdict(true);
       setVerdictPulse(true);
       setShowShare(true);
+      setShowDiscoveryLine(hasMissing);
       setAntennaSignal(tokens.some((t) => t.isKey && t.found));
       const t = setTimeout(() => setVerdictPulse(false), 50);
       return () => clearTimeout(t);
@@ -1147,6 +1264,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
     setShowVerdict(false);
     setVerdictPulse(false);
     setShowShare(false);
+    setShowDiscoveryLine(false);
     setAntennaSignal(false);
 
     const timers = [];
@@ -1160,6 +1278,9 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
     });
 
     const afterRows = RESULT_GAP_COUNT_MS + tokens.length * RESULT_CHIP_STAGGER_MS;
+    if (hasMissing) {
+      schedule(() => setShowDiscoveryLine(true), afterRows + 50);
+    }
     const verdictAt = afterRows + RESULT_VERDICT_BEAT_MS;
     schedule(() => {
       setShowVerdict(true);
@@ -1235,13 +1356,21 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
           const cls = `wb-token-chip${visible ? " is-visible" : ""}${t.found ? " is-found" : " is-missing"}`;
           return (
             <li key={t.term} className={cls}>
-              {t.term}{t.isKey ? " (key)" : ""} · {t.found ? "found" : "missing"}
+              {!t.found ? <span className="wb-token-chip__dot" aria-hidden="true" /> : null}
+              <span className="wb-token-chip__label">
+                {t.term}{t.isKey ? " (key)" : ""} · {t.found ? "found" : "missing"}
+              </span>
             </li>
           );
         })}
       </ul>
+      {hasMissing ? (
+        <p className={`wb-result-discovery-beat${showDiscoveryLine ? " is-visible" : ""}`}>
+          Gap surfaced: this appeared in your answer, not the model's.
+        </p>
+      ) : null}
       <p className="wb-plate-caption">
-        Text check — we look for the named terms in your pasted answer, not a judgment of the whole response.
+        Text check only: named terms, not full-response quality.
       </p>
       {caseId === "006" && showVerdict ? (
         <p className="wb-plate-note">
@@ -1838,7 +1967,7 @@ function Workbench() {
   return (
     <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
       <style>{FONT_IMPORT}</style>
-      <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}</style>
+      <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}{WORKBENCH_TERMS_CSS}</style>
       <div className="wb-shell__frame">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
