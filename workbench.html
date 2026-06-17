@@ -407,19 +407,20 @@ const WORKBENCH_RESULT_GAP_CSS = `
 const WORKBENCH_RESULT_LAYOUT_CSS = `
 .wb-build-note {
   display: flex;
-  gap: 0.38rem;
+  gap: 0.42rem;
   align-items: flex-start;
   margin-bottom: 0.42rem;
   padding: 0.34rem 0.44rem;
   background: rgba(14, 10, 8, 0.96);
   border: 1px solid rgba(242, 232, 220, 0.15);
+  border-left: 2px solid rgba(222, 111, 56, 0.42);
   border-radius: 3px;
 }
 .wb-build-note__marker {
   font-family: ${MONO};
   font-size: 0.75rem;
   font-weight: 500;
-  color: rgba(222, 111, 56, 0.82);
+  color: rgba(222, 111, 56, 0.88);
   line-height: 1.35;
   flex-shrink: 0;
 }
@@ -428,6 +429,34 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
   font-size: 0.6875rem;
   line-height: 1.36;
   color: rgba(232, 220, 204, 0.9);
+}
+@media (min-width: 481px) {
+  .wb-build-note {
+    margin-bottom: 0.65rem;
+    padding: 0.5rem 0.65rem;
+    background: rgba(18, 12, 9, 0.98);
+    border: 1px solid rgba(222, 111, 56, 0.24);
+    border-left: 2px solid rgba(222, 111, 56, 0.68);
+    box-shadow: inset 0 1px 0 rgba(242, 232, 220, 0.05);
+  }
+  .wb-build-note__marker {
+    font-size: 0.875rem;
+    animation: wb-build-marker-pulse 2.8s ease-in-out infinite;
+  }
+  .wb-build-note__text {
+    font-size: 0.8125rem;
+    line-height: 1.42;
+    color: rgba(242, 232, 220, 0.94);
+  }
+}
+@keyframes wb-build-marker-pulse {
+  0%, 100% { opacity: 0.68; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb-build-note__marker {
+    animation: none !important;
+  }
 }
 .wb-result-inner .wb-output-module__head--compact {
   padding-bottom: 0.35rem;
@@ -545,7 +574,11 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
 
 const WORKBENCH_FLOW_CSS = `
 .wb-shell .wb-build-note {
-  margin-bottom: 0.55rem;
+  margin-top: 0;
+  margin-bottom: 0.85rem;
+}
+.wb-shell .wb-build-note + .wb-mode-toggle {
+  margin-top: 0;
 }
 .wb-flow-module {
   margin-top: 0.48rem;
@@ -607,7 +640,7 @@ const WORKBENCH_FLOW_CSS = `
 }
 @media (max-width: 480px) {
   .wb-shell .wb-build-note {
-    margin-bottom: 0.42rem;
+    margin-bottom: 0.65rem;
   }
   .wb-flow-module {
     margin-top: 0.38rem;
@@ -864,36 +897,6 @@ function caseMeta(caseId) {
 
 function countWords(text) {
   return (text || "").trim().split(/\s+/).filter(Boolean).length;
-}
-
-function StageProgress({ value, max }) {
-  const pct = max > 1 ? (value - 1) / (max - 1) : 0;
-  const clamped = Math.max(0, Math.min(1, pct));
-  const steps = Array.from({ length: max }, (_, i) => i + 1);
-  return (
-    <div className="wb-stage-progress" aria-hidden="true">
-      <div className="wb-stage-progress__track">
-        <div className="wb-stage-progress__fill" style={{ transform: `scaleX(${clamped})` }} />
-      </div>
-      <ol className="wb-stage-progress__steps">
-        {steps.map((n) => (
-          <li key={n} className={`wb-stage-progress__step${n < value ? " is-done" : ""}${n === value ? " is-current" : ""}`}>
-            {n < value ? <span className="wb-stage-progress__tick" aria-hidden="true">✓</span> : String(n).padStart(2, "0")}
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
-function InstrumentStageHeader({ num, total }) {
-  return (
-    <div className="wb-instrument-header" aria-hidden="true">
-      <span className="wb-instrument-header__num">{String(num).padStart(2, "0")}</span>
-      <span className="wb-instrument-header__sep">/</span>
-      <span className="wb-instrument-header__total">{String(total).padStart(2, "0")}</span>
-    </div>
-  );
 }
 
 function AntennaMark({ signal }) {
@@ -1800,10 +1803,7 @@ function Curated() {
   return (
     <div className="wb-console">
       <div className="wb-console__main">
-      <StageProgress value={step + 1} max={3} />
-      <div ref={stepAnchorRef} className="wb-scroll-anchor">
-        <InstrumentStageHeader num={step + 1} total={3} />
-      </div>
+      <div ref={stepAnchorRef} className="wb-scroll-anchor" />
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28, marginTop: 16 }}>
         {CURATED.map((c) => {
@@ -2000,7 +2000,6 @@ function Byo() {
     </div>
   );
 
-  const byoStepNum = { 0: 1, 1: 2, 3: 3, 4: 4, 5: 5, 6: 6 }[step] || 1;
   const plateCls = [
     "wb-panel",
     "wb-specimen-plate",
@@ -2013,10 +2012,7 @@ function Byo() {
   return (
     <div className="wb-console">
       <div className="wb-console__main">
-      <StageProgress value={byoStepNum} max={6} />
-      <div ref={stepAnchorRef} className="wb-scroll-anchor">
-        <InstrumentStageHeader num={byoStepNum} total={6} />
-      </div>
+      <div ref={stepAnchorRef} className="wb-scroll-anchor" />
       <p className="wb-plate-note">Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.</p>
 
       <div className="wb-console__measure">
@@ -2210,7 +2206,6 @@ function Byo() {
 // ---- SHELL ----
 function Workbench() {
   const [mode, setMode] = useState("curated");
-  const modeStep = mode === "curated" ? 1 : 2;
   const headingRef = useRef(null);
 
   useEffect(() => {
@@ -2243,17 +2238,15 @@ function Workbench() {
           <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
 
-        <StageProgress value={modeStep} max={2} />
+        <WorkbenchBuildNote />
+
         <div role="group" aria-label="Workbench mode" className="wb-mode-toggle">
-          {[["curated", "01", "Cases Imbas measured"], ["byo", "02", "Bring your own"]].map(([k, num, lbl]) => (
+          {[["curated", "Cases Imbas measured"], ["byo", "Bring your own"]].map(([k, lbl]) => (
             <button key={k} type="button" aria-pressed={mode === k} className={`wb-mode-btn wb-focus${mode === k ? " is-active" : ""}`} onClick={() => setMode(k)}>
-              <span className="wb-mode-btn__num">{num}</span>
               <span className="wb-mode-btn__lbl">{lbl}</span>
             </button>
           ))}
         </div>
-
-        <WorkbenchBuildNote />
 
         {mode === "curated" ? <Curated /> : <Byo />}
 
