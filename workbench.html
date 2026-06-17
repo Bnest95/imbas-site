@@ -896,9 +896,9 @@ const TARGETED_EXAMPLES = [
   },
 ];
 
-function specimenLabel(c) {
+function caseCardLabel(c) {
   if (!c || !c.ready) return null;
-  return `CASE ${c.id} · ${c.category.toUpperCase()} · GAP ${c.gap.toFixed(1)}/3 · VERIFIED ${c.observedDate.toUpperCase()}`;
+  return `CASE ${c.id} · ${c.category.toUpperCase()}`;
 }
 
 function resultProvenance(c) {
@@ -915,7 +915,7 @@ function FlowCaseProvenance({ c }) {
   return (
     <div className="wb-flow-case-prov">
       <p className="wb-flow-case-prov__case">{prov.caseLine}</p>
-      <p className="wb-flow-case-prov__sub">Curated case · verified {prov.verified}</p>
+      <p className="wb-flow-case-prov__sub">Curated case · verified {prov.verified.toUpperCase()}</p>
     </div>
   );
 }
@@ -1748,38 +1748,6 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   );
 }
 
-function ByoModeReadoutRail() {
-  return (
-    <aside className="wb-readout-rail wb-readout-rail--byo" aria-hidden="true">
-      <div className="wb-readout-rail__head">Mode readout</div>
-      <dl className="wb-readout-rail__grid">
-        <div><dt>Mode</dt><dd>Custom run</dd></div>
-        <div><dt>Status</dt><dd>Candidate</dd></div>
-        <div><dt>Inputs</dt><dd>03</dd></div>
-        <div><dt>Review</dt><dd>Human</dd></div>
-        <div><dt>Archive</dt><dd>Provisional</dd></div>
-      </dl>
-    </aside>
-  );
-}
-
-function CaseReadoutRail({ sel }) {
-  if (!sel?.ready) return null;
-  return (
-    <aside className="wb-readout-rail" aria-hidden="true">
-      <div className="wb-readout-rail__head">Channel readout</div>
-      <dl className="wb-readout-rail__grid">
-        <div><dt>Case</dt><dd>{sel.id}</dd></div>
-        <div><dt>Gap</dt><dd>{sel.gap.toFixed(1)} / 3</dd></div>
-        <div><dt>Signal</dt><dd>{sel.category.toUpperCase()}</dd></div>
-        <div><dt>Models</dt><dd>4</dd></div>
-        <div><dt>Observed</dt><dd>{sel.observedDate.toUpperCase()}</dd></div>
-        <div><dt>Status</dt><dd>Verified</dd></div>
-      </dl>
-    </aside>
-  );
-}
-
 function Curated() {
   const [sel, setSel] = useState(CURATED[0]);
   const [step, setStep] = useState(0); // 0 observe+copy, 1 gate+paste, 2 result
@@ -1903,7 +1871,7 @@ function Curated() {
           return (
             <button key={c.id} type="button" className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${active ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`} onClick={() => pick(c)} disabled={!c.ready}>
               {c.ready ? (
-                <div className="wb-specimen-plate__label">{specimenLabel(c)}</div>
+                <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div>
               ) : (
                 <Label>To add</Label>
               )}
@@ -1930,11 +1898,11 @@ function Curated() {
                 <div className="wb-flow-module wb-flow-module--input">
                   <FlowCaseProvenance c={sel} />
                   <div className="wb-input-bay">
-                    <Field label="Step 2 — which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
+                    <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
                   </div>
                   <div className="wb-input-bay">
                     <PasteField
-                      label="Step 3 — paste its answer to the question"
+                      label="Paste the model's open answer"
                       value={answer}
                       onChange={(v) => { setAnswer(v); setPasteError(""); }}
                       error={pasteError}
@@ -2000,7 +1968,6 @@ function Curated() {
               </div>
             )}
           </div>
-          <CaseReadoutRail sel={sel} />
         </div>
       )}
       </div>
@@ -2129,7 +2096,7 @@ function Byo() {
             <Field label="The open question you asked">
               <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
             </Field>
-            <Field label="The answer it gave (open prompt)">
+            <Field label="Paste the model's open answer">
               <textarea rows={9} value={openAnswer} onChange={(e) => { setOpenAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
             </Field>
           </div>
@@ -2152,7 +2119,7 @@ function Byo() {
 
       {step === 1 && unlocked && (
         <>
-          <Label>Step 2 — write a targeted follow-up prompt</Label>
+          <Label>Ask the direct inspection question</Label>
           <p className="wb-plate-support">Name the specific rule, study, mechanism, or named fact you think the open answer skipped. Ask your AI about it directly — in a fresh chat.</p>
           {TARGETED_EXAMPLES.map((ex) => (
             <div key={ex.label} className="wb-example-plate">
@@ -2182,7 +2149,7 @@ function Byo() {
       {step === 3 && (
         <>
           <div className="wb-input-bay">
-            <Field label="Step 3 — paste the targeted answer">
+            <Field label="Paste the model's direct-prompt answer">
               <p className="wb-plate-support">Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.</p>
               <PromptCard text={targetedPrompt} />
               <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
@@ -2212,19 +2179,19 @@ function Byo() {
       {step === 4 && (
         <>
           <div className="wb-input-bay">
-            <Field label="Step 4 — what surfaced only after direct prompting?">
+            <Field label="Paste the surfaced answer">
               <input value={surfacedSentence} onChange={(e) => { setSurfacedSentence(e.target.value); setByoSurfacedError(""); }} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
               {byoSurfacedError ? (
                 <div className="wb-field-error">{byoSurfacedError}</div>
               ) : null}
             </Field>
-            <Field label="Step 4 — category">
+            <Field label="Category">
               <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
                 <option value="" disabled>Choose a category…</option>
                 {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
               </select>
             </Field>
-            <Field label="Step 4 — self-assessed gap (optional)">
+            <Field label="Self-assessed gap (optional)">
               <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
                 <option value="">Skip — let a reviewer score it</option>
                 <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
@@ -2249,7 +2216,7 @@ function Byo() {
       {step === 5 && (
         <>
           <div className="wb-output-module__head wb-output-module__head--compact">
-            <FlowProvenance>Review your candidate · provisional</FlowProvenance>
+            <FlowProvenance>Review your submission</FlowProvenance>
           </div>
           <div className="wb-output-module__body wb-review-module wb-flow-module">
             {reviewRow("Model", model)}
@@ -2277,7 +2244,7 @@ function Byo() {
       {step === 6 && candidate && (
         <div className="wb-output-module">
           <div className="wb-output-module__head wb-output-module__head--compact">
-            <FlowProvenance>Candidate captured · provisional review</FlowProvenance>
+            <FlowProvenance>Recorded for review</FlowProvenance>
             {selfScore !== "" ? (
               <div className="wb-result-score-panel" style={{ marginTop: "0.35rem" }}>
                 <div className="wb-result-gap-hero__score" aria-label={`Self-assessed gap ${selfScore} out of 3`}>
@@ -2312,7 +2279,6 @@ function Byo() {
             </>
           )}
         </div>
-        <ByoModeReadoutRail />
       </div>
       </div>
     </div>
