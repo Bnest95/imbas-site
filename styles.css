@@ -2510,12 +2510,6 @@ body:has(main > section.hero) .nav__menu-btn {
   z-index: 2;
   min-width: 0;
 }
-.close__signup h2 {
-  font-size: clamp(1.65rem, 2.5vw, 2.1rem);
-  line-height: 1.1;
-  max-width: 14ch;
-  color: var(--ink-luminous);
-}
 
 /* =============================================================
    CASE ARCHIVE — proof, lower, mineral-lifted
@@ -3523,6 +3517,25 @@ body:has(main > section.hero) .nav__menu-btn {
 /* =============================================================
    FIELD NOTES — signup within close section
    ============================================================= */
+.close.section-scene .close__signup h2.field-notes__heading,
+.field-notes-signup h2.field-notes__heading,
+.rd-field-notes.field-notes-signup > .rd-section__title.field-notes__heading {
+  font-family: var(--font-display);
+  font-size: clamp(1.65rem, 2.5vw, 2.1rem);
+  font-weight: 450;
+  letter-spacing: -0.014em;
+  line-height: 1.1;
+  max-width: 14ch;
+  color: var(--ember-soft);
+  text-transform: none;
+}
+.page--readers .rd-field-notes.field-notes-signup > .rd-section__title.field-notes__heading {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  max-width: 14ch;
+}
 .field-notes__caption {
   font-family: var(--font-mono);
   font-size: 0.875rem;
@@ -3532,7 +3545,7 @@ body:has(main > section.hero) .nav__menu-btn {
   margin-top: var(--space-3);
 }
 .field-notes__body {
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   max-width: 28rem;
   font-size: 0.95rem;
   line-height: 1.65;
@@ -3647,14 +3660,14 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .close .subscribe button,
 .field-notes-signup .subscribe button {
-  background: var(--ember);
-  border: 1px solid var(--ember);
+  background: var(--ember-deep);
+  border: 1px solid rgba(var(--ember-rgb), 0.72);
   border-radius: 2px;
   color: #F2E8DC;
   font-family: var(--font-mono);
   font-size: max(0.74rem, var(--mono-min));
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 0 1.25rem;
   min-height: 44px;
@@ -3664,16 +3677,15 @@ body:has(main > section.hero) .nav__menu-btn {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(var(--ember-rgb), 0.28);
-  transition: background .25s ease, border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+  box-shadow: 0 2px 12px rgba(var(--ember-rgb), 0.2);
+  transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 .close .subscribe button:hover,
 .field-notes-signup .subscribe button:hover {
-  background: var(--ember-deep);
-  border-color: var(--ember-deep);
+  background: #B84E28;
+  border-color: rgba(var(--ember-rgb), 0.82);
   color: #F2E8DC;
-  box-shadow: 0 6px 22px rgba(var(--ember-rgb), 0.38);
-  transform: translateY(-1px);
+  box-shadow: 0 3px 14px rgba(var(--ember-rgb), 0.26);
 }
 .close .subscribe button:focus-visible,
 .field-notes-signup .subscribe button:focus-visible {
@@ -3682,7 +3694,7 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .close .subscribe button:active,
 .field-notes-signup .subscribe button:active {
-  transform: translateY(0);
+  transform: none;
 }
 .close .subscribe button:disabled,
 .field-notes-signup .subscribe button:disabled {
@@ -3712,8 +3724,16 @@ body:has(main > section.hero) .nav__menu-btn {
   }
   .origin__inscription-wrap { max-width: min(38ch, 100%); }
   .close__signup {
-    padding-bottom: var(--space-2);
-    scroll-margin-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+    padding-bottom: var(--space-3);
+    scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
+  }
+  .close.section-scene .close__signup h2.field-notes__heading {
+    font-size: clamp(1.55rem, 6.5vw, 1.85rem);
+    max-width: none;
+  }
+  .close__signup .field-notes__body {
+    margin-top: var(--space-2);
+    max-width: none;
   }
   .close .subscribe,
   .field-notes-signup .subscribe {
@@ -3721,8 +3741,8 @@ body:has(main > section.hero) .nav__menu-btn {
     align-items: stretch;
     max-width: 100%;
     padding: 0.75rem 0.85rem;
-    gap: 0.75rem;
-    margin-top: var(--space-4);
+    gap: 0.65rem;
+    margin-top: var(--space-3);
   }
   .close .subscribe input[type="email"],
   .field-notes-signup .subscribe input[type="email"] {
@@ -3734,7 +3754,18 @@ body:has(main > section.hero) .nav__menu-btn {
     align-self: stretch;
     width: 100%;
     min-height: 44px;
-    padding: 0.75rem 1.25rem;
+    padding: 0.65rem 1.1rem;
+    background: var(--ember-deep);
+    border-color: rgba(var(--ember-rgb), 0.72);
+    box-shadow: 0 2px 10px rgba(var(--ember-rgb), 0.16);
+    letter-spacing: 0.1em;
+  }
+  .close .subscribe button:hover,
+  .field-notes-signup .subscribe button:hover {
+    background: #B84E28;
+    border-color: rgba(var(--ember-rgb), 0.82);
+    box-shadow: 0 3px 12px rgba(var(--ember-rgb), 0.22);
+    transform: none;
   }
   .field-notes__recent {
     margin-top: var(--space-4);

@@ -2,7 +2,7 @@
   "desktopLayout": {
     "width": 1440,
     "formDirection": "row",
-    "btnBg": "rgb(222, 111, 56)",
+    "btnBg": "rgb(200, 88, 48)",
     "btnMinHeight": "44px",
     "stacked": true,
     "readBelowForm": true,
@@ -11,11 +11,27 @@
   "mobileLayout": {
     "width": 375,
     "formDirection": "column",
-    "btnBg": "rgb(222, 111, 56)",
+    "btnBg": "rgb(200, 88, 48)",
     "btnMinHeight": "44px",
     "stacked": true,
     "readBelowForm": true,
     "overflow": false
+  },
+  "copy": {
+    "hasHeadingClass": true,
+    "hasEyebrow": false,
+    "hasNewBody": true,
+    "hasOldBody": false,
+    "headingColor": "rgb(240, 143, 88)",
+    "headingIsEmberSoft": true,
+    "headingToken": "var(--ember-soft)",
+    "headingNotWhite": true,
+    "headingDiffersFromQuote": true,
+    "bodyLineCount": 1
+  },
+  "mobileButton": {
+    "minHeight": "44px",
+    "bg": "rgb(200, 88, 48)"
   },
   "functional": {
     "subscribed": true,

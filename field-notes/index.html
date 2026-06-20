@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="/styles.css?v=field-notes-native">
+  <link rel="stylesheet" href="/styles.css?v=field-notes-subscribe-ember">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -108,9 +108,8 @@
     </section>
 
     <section class="fn-subscribe field-notes-signup" aria-labelledby="fn-subscribe-heading">
-      <h2 id="fn-subscribe-heading" class="fn-section__title">Subscribe</h2>
-      <p class="field-notes__caption">Follow new records and product releases.</p>
-      <p class="field-notes__body">Records show the result. Field Notes shows the investigation.</p>
+      <h2 id="fn-subscribe-heading" class="field-notes__heading">Field Notes</h2>
+      <p class="field-notes__body">Get updates, new cases, and findings from Imbas.</p>
       <form
         class="subscribe subscribe--field-notes"
         id="field-notes-form-fn"
@@ -130,6 +129,9 @@
         <button type="submit">Subscribe</button>
       </form>
       <p class="subscribe__msg" id="field-notes-msg-fn" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
+      <p class="field-notes__recent">
+        <a href="/field-notes/what-the-volunteer-gap-measures.html">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      </p>
     </section>
   </div>
 </main>
