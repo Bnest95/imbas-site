@@ -71,7 +71,7 @@ if (inv.provisionalPills === 0) pass('no large provisional pills/banners rendere
 else fail(`provisional pills: ${inv.provisionalPills}`);
 if (inv.buildNotes === 1) pass('product-state note once');
 else fail(`buildNotes=${inv.buildNotes}`);
-if (inv.cardLabels.join('|') === 'CASE 005 · OMISSION|CASE 018 · OMISSION') pass('case cards match current workbench set');
+if (inv.cardLabels.length === 5 && inv.cardLabels[0]?.includes('005') && inv.cardLabels.some((l) => l.includes('003')) && inv.cardLabels.some((l) => l.includes('013')) && inv.cardLabels.some((l) => l.includes('021'))) pass('case cards show full public archive set');
 else fail(`card labels: ${inv.cardLabels.join('|')}`);
 if (inv.activeProvCase?.includes('GAP 2.5/3') && /verified/i.test(inv.activeProvSub || '')) pass('active module full provenance');
 else fail(`active prov: ${inv.activeProvCase} / ${inv.activeProvSub}`);
@@ -150,7 +150,7 @@ const suggestUi = await page.evaluate(() => ({
       && !!(suggest.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING);
     return readoutBeforeConfirm && confirmBeforeSuggest && !suggestBetween;
   })(),
-  caseCardsVisible: document.querySelectorAll('.wb-case-card').length >= 2,
+  caseCardsVisible: document.querySelectorAll('.wb-case-card').length >= 5,
   ranItVisible: [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Ran it')),
 }));
 if (!suggestUi.byoVisible) pass('no BYO language on workbench');

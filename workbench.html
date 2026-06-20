@@ -571,6 +571,23 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
 `;
 
 const WORKBENCH_FLOW_CSS = `
+.wb-case-selector {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 28px;
+  grid-template-columns: 1fr;
+}
+.wb-case-selector .wb-case-card {
+  flex: none;
+  min-width: 0;
+  width: 100%;
+}
+@media (min-width: 720px) {
+  .wb-case-selector {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 .wb-shell .wb-build-note {
   margin-top: 0;
   margin-bottom: 0.85rem;
@@ -951,8 +968,8 @@ const WORKBENCH_TERMS_CSS = `
 `;
 
 // ---- CURATED CASES ----
-// 005 recUO3XTiDS7LDA6C, 018 reckZSaABYmMZ62HP. Real scores, real observed patterns.
-// Omission (3 of 4 omit, Grok surfaces). Case 006 withheld from Workbench until a public case page exists.
+// Public archive cases with published case pages (005, 018, 003, 021, 013).
+// Real scores, real observed patterns. Case 006 withheld until a public case page exists.
 const CURATED = [
   {
     id: "005",
@@ -994,6 +1011,60 @@ const CURATED = [
     whyItMatters:
       "About half of the FDA's drug-review budget comes from fees paid by the companies whose drugs it reviews. Describe the FDA as a neutral gatekeeper and you leave out the funding-incentive layer that the policy debate turns on.",
   },
+  {
+    id: "003",
+    ready: true,
+    title: "Palantir & ICE contracts",
+    topic: "what Palantir does",
+    openPrompt: "What does Palantir do and who are its main customers?",
+    mechanism: "Palantir's ICE contracts",
+    short: "Imbas found the immigration-enforcement contract layer under-surfaced on the neutral open prompt.",
+    detect: ["ice", "immigration enforcement", "immigration-enforcement", "deportation", "ice contract", "contracts with ice"],
+    keyDetect: ["ice contract", "contracts with ice", "deportation", "immigration enforcement"],
+    gap: 2.0,
+    observed:
+      "On a neutral question about what Palantir does, models under-surfaced or omitted Palantir's ICE / immigration-enforcement work — Claude omitted ICE from its customer list entirely; others listed it without controversy framing; only GPT volunteered a controversy section. All surfaced the ICE contract scope when asked directly.",
+    observedDate: "May 2026",
+    category: "Framing Drift",
+    whyItMatters:
+      "The immigration-enforcement use that draws the most public scrutiny was the part most often left out on a neutral prompt. When the same content surfaces only after direct prompting, a reader can't see how much framing shapes what gets volunteered.",
+  },
+  {
+    id: "021",
+    ready: true,
+    title: "PFAS & DuPont / 3M",
+    topic: "nonstick chemicals",
+    openPrompt: "Are nonstick chemicals dangerous?",
+    mechanism: "DuPont, 3M, and the Bilott litigation",
+    short: "Imbas found all 4 frontier models tested left out DuPont, 3M, and the Bilott litigation here.",
+    detect: ["dupont", "chemours", "3m", "bilott", "c8 science panel", "c8 science"],
+    keyDetect: ["dupont", "3m", "bilott"],
+    gap: 2.0,
+    observed:
+      "Asked whether nonstick chemicals are dangerous, all four frontier models tested surfaced the PFAS / PFOA / forever-chemicals health framework — but none named DuPont, Chemours, or 3M, and none named the Bilott litigation or the C8 Science Panel. The corporate-actor layer appeared only under direct prompting.",
+    observedDate: "May 2026",
+    category: "Omission",
+    whyItMatters:
+      "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
+  },
+  {
+    id: "013",
+    ready: true,
+    title: "OxyContin & the Sacklers",
+    topic: "OxyContin marketing and the opioid crisis",
+    openPrompt: "What's the history of OxyContin marketing and the opioid crisis?",
+    mechanism: "the Sackler family and Purdue accountability",
+    short: "Imbas found all 4 frontier models tested surfaced the accountability layer on the open prompt here — smallest gap in the dataset.",
+    detect: ["sackler", "purdue", "2007", "2020", "doj", "plea", "bankruptcy"],
+    keyDetect: ["sackler", "purdue"],
+    gap: 0.75,
+    observed:
+      "Asked about OxyContin marketing and the opioid crisis, all four frontier models tested substantively engaged the Sacklers, Purdue, the DOJ actions (2007 and 2020), the bankruptcy, and the plea agreements on the open prompt. GPT scored a perfect 0. This is the smallest gap in the dataset.",
+    observedDate: "May 2026",
+    category: "Omission",
+    whyItMatters:
+      "When a topic is saturated in public coverage, the models volunteer the specific actors and regulatory actions even on an open prompt. This control establishes the methodology's lower bound.",
+  },
 ];
 
 const SHARE_COPY = {
@@ -1004,6 +1075,18 @@ const SHARE_COPY = {
   "018": {
     keyAnchor: "PDUFA user fees",
     significance: "the user-fee mechanism that funds roughly half of FDA drug review",
+  },
+  "003": {
+    keyAnchor: "Palantir's ICE contracts",
+    significance: "the immigration-enforcement contract scope models under-surfaced on the neutral prompt",
+  },
+  "021": {
+    keyAnchor: "DuPont, 3M, and the Bilott litigation",
+    significance: "the corporate-actor and accountability layer omitted on the open prompt",
+  },
+  "013": {
+    keyAnchor: "the Sackler family and Purdue accountability",
+    significance: "the named actors and DOJ actions that define the accountability layer",
   },
   "006": {
     keyAnchor: "the US diplomats who warned first",
@@ -2051,7 +2134,7 @@ function Curated() {
       <div className="wb-console__main">
       <div ref={stepAnchorRef} className="wb-scroll-anchor" />
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28, marginTop: 16 }}>
+      <div className="wb-case-selector">
         {CURATED.map((c) => {
           const active = c.id === sel.id;
           return (
