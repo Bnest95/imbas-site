@@ -9236,8 +9236,12 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   word-break: break-word;
 }
 
-.wb-email-gate .wb-status-readout__head {
+.wb-email-gate .wb-status-readout__head,
+.wb-email-followup .wb-status-readout__head {
   margin-bottom: 0.15rem;
+}
+.wb-email-followup {
+  margin-top: 1rem;
 }
 
 /* Action rows */

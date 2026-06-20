@@ -78,15 +78,15 @@ else fail(`active prov: ${inv.activeProvCase} / ${inv.activeProvSub}`);
 if (inv.runStrip.some((s) => s.includes('4 frontier models tested'))) pass('4 frontier models tested in readout');
 else fail(`run strip: ${inv.runStrip.join(', ')}`);
 
-// Email gate spot-check
+// Curated paste step — no blocking email gate
 await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Ran it'))?.click());
 await wait(400);
-report.spot.emailGate = await page.evaluate(() => ({
-  visible: !!document.querySelector('.wb-email-gate'),
-  title: document.querySelector('.wb-status-readout__title')?.textContent?.trim(),
+report.spot.curatedPaste = await page.evaluate(() => ({
+  gateVisible: !!document.querySelector('.wb-email-gate'),
+  pasteVisible: !!document.querySelector('textarea'),
 }));
-if (report.spot.emailGate.visible) pass('email gate renders on curated paste step');
-else fail('email gate missing');
+if (!report.spot.curatedPaste.gateVisible && report.spot.curatedPaste.pasteVisible) pass('curated paste opens without email gate');
+else fail(`curated paste gate=${report.spot.curatedPaste.gateVisible} paste=${report.spot.curatedPaste.pasteVisible}`);
 
 // BYO validation logic
 const byoVal = {

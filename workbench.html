@@ -175,7 +175,8 @@ const { useState, useEffect, useRef } = React;
     - submitCandidate(candidate): POSTs to IMBAS_ENDPOINT when set;
       until then capture falls back to copy-to-clipboard so nothing is
       lost. One constant flips real public ingestion on.
-    - Email gate bundles the email into the candidate record.
+    - Email optional after result; follow-up capture persists to localStorage
+      and re-submits the candidate record when provided.
     - Colors/fonts are local constants for standalone preview. At site
       integration, replace them with the homepage's CSS variables.
 */
@@ -1117,6 +1118,31 @@ function EmailGate({ onUnlock }) {
   );
 }
 
+function ResultEmailFollowup({ onFollow, onSkip }) {
+  const [email, setEmail] = useState("");
+  const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+  return (
+    <div className="wb-status-readout wb-email-followup">
+      <div className="wb-status-readout__head">
+        <span className="wb-status-readout__title">Track this signal</span>
+        <p className="wb-status-readout__body">Get notified if this case changes, closes, or moves.</p>
+      </div>
+      <div className="wb-input-bay wb-input-bay--gate">
+        <label className="wb-field wb-field--inline">
+          <Label>Your email</Label>
+          <input type="email" value={email} placeholder="you@domain.com" onChange={(e) => setEmail(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, width: "100%" }} />
+        </label>
+      </div>
+      <div className="wb-action-row">
+        <Btn kind="primary" disabled={!valid} onClick={() => onFollow(email)}>Follow this case →</Btn>
+      </div>
+      <div className="wb-action-row wb-action-row--secondary">
+        <Btn kind="ghost" onClick={onSkip}>Continue without email →</Btn>
+      </div>
+    </div>
+  );
+}
+
 // ---- DETECTION (curated; client-side, no API) ----
 // Term-presence check with real word boundaries so common-word names
 // like "Gates" or "Burns" don't false-match inside other words.
@@ -1496,12 +1522,13 @@ function GapGauge({ needleValue, settled }) {
   );
 }
 
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase }) {
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase, onEmailFollow }) {
   const meta = caseMeta(caseId);
   const gapVal = gap ?? meta?.gap;
   const categoryLabel = category || meta?.category;
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
+  const [emailFollowupDismissed, setEmailFollowupDismissed] = useState(false);
   const measureRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
   const [displayGap, setDisplayGap] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
@@ -1715,6 +1742,16 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
         <ShareResult caseId={caseId} caseTitle={caseTitle} model={model} anchors={anchors} runDate={runDate} />
         <RepositoryActions candidate={candidate} submitOk={submitOk} />
       </div>
+      {showShare && !emailFollowupDismissed && !readStoredWorkbenchEmail() ? (
+        <ResultEmailFollowup
+          onFollow={(addr) => {
+            persistWorkbenchEmail(addr);
+            setEmailFollowupDismissed(true);
+            if (onEmailFollow) onEmailFollow(addr);
+          }}
+          onSkip={() => setEmailFollowupDismissed(true)}
+        />
+      ) : null}
       {onAnotherCase ? (
         <div className="wb-result-actions">
           <button type="button" className="wb-another-case wb-focus" onClick={onAnotherCase}>Test another case ↺</button>
@@ -1726,8 +1763,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
 
 function Curated() {
   const [sel, setSel] = useState(CURATED[0]);
-  const [step, setStep] = useState(0); // 0 observe+copy, 1 gate+paste, 2 result
-  const [unlocked, setUnlocked] = useState(() => !!readStoredWorkbenchEmail());
+  const [step, setStep] = useState(0); // 0 observe+copy, 1 paste, 2 result
   const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
   const [model, setModel] = useState("");
   const [answer, setAnswer] = useState("");
@@ -1740,7 +1776,6 @@ function Curated() {
   const [plateFade, setPlateFade] = useState("idle");
   const plateRef = useRef(null);
   const stepAnchorRef = useRef(null);
-  const gateRef = useRef(null);
   const stepScrollReady = useRef(false);
 
   useEffect(() => {
@@ -1750,12 +1785,10 @@ function Curated() {
       return undefined;
     }
     if (step === 2) return undefined;
-    let el = stepAnchorRef.current;
-    if (step === 1 && !unlocked) el = gateRef.current;
-    else if (step === 1) el = plateRef.current;
+    const el = step === 1 ? plateRef.current : stepAnchorRef.current;
     const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(el));
     return () => window.cancelAnimationFrame(id);
-  }, [step, unlocked]);
+  }, [step]);
 
   const resetRun = () => {
     setStep(0);
@@ -1869,8 +1902,14 @@ function Curated() {
                   candidate={candidate}
                   sequenceReady={sequenceReady}
                   onAnotherCase={resetRun}
+                  onEmailFollow={(addr) => {
+                    setEmail(addr);
+                    const updated = { ...candidate, email: addr };
+                    setCandidate(updated);
+                    submitCandidate(updated);
+                  }}
                 />
-              ) : step === 1 && unlocked ? (
+              ) : step === 1 ? (
                 <div className="wb-flow-module wb-flow-module--input">
                   <FlowCaseProvenance c={sel} />
                   <div className="wb-input-bay">
@@ -1938,11 +1977,6 @@ function Curated() {
               </div>
             )}
 
-            {step === 1 && !unlocked && (
-              <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
-                <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); persistWorkbenchEmail(e); }} />
-              </div>
-            )}
           </div>
         </div>
       )}
