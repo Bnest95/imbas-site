@@ -1206,15 +1206,6 @@ function Provisional({ label }) {
   );
 }
 
-function WorkbenchBuildNote() {
-  return (
-    <div className="wb-build-note" role="note">
-      <span className="wb-build-note__marker" aria-hidden="true">*</span>
-      <span className="wb-build-note__text">Imbas is building agentic tools to observe AI behavior. Inspection copilot coming soon.</span>
-    </div>
-  );
-}
-
 function FlowProvenance({ children }) {
   return <p className="wb-flow-provenance">{children}</p>;
 }
@@ -2417,7 +2408,6 @@ function Workbench() {
           <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
 
-        <WorkbenchBuildNote />
 
         <Curated />
 

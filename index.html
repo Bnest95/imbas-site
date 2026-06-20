@@ -179,7 +179,7 @@
         <p class="exists-bridge__thesis reveal" data-stagger="heading">AI will increasingly shape humanity&rsquo;s relationship with information, knowledge, and reality itself.</p>
         <p class="exists-bridge__problem reveal" data-stagger="support">One answer is easy to dismiss. A pattern repeated across trillions of answers can materially alter our collective trajectory.</p>
         <div class="exists-bridge__product">
-          <p class="exists-bridge__payoff reveal" data-stagger="support">Imbas is building the inspection layer for AI.</p>
+          <p class="exists-bridge__payoff reveal" data-stagger="support">Imbas is the inspection layer for AI.</p>
           <p class="exists-bridge__payoff reveal" data-stagger="support">We measure what frontier models surface, what they omit, and how those patterns change over time.</p>
         </div>
       </div>
@@ -387,7 +387,7 @@
         </div>
         <div class="roadmap__item reveal" data-stagger="support">
           <span class="roadmap__label">Next</span>
-          <p>Live measurement while you read.</p>
+          <p>Cross-model case records and the Workbench — run measured cases on your own AI.</p>
         </div>
         <a href="/institutions.html" class="roadmap__item roadmap__item--why reveal" data-stagger="support">
           <span class="roadmap__label">For Institutions</span>
@@ -611,7 +611,27 @@
         <div class="close__signup">
           <h2 id="fn-h2" class="reveal" data-stagger="heading">Field Notes</h2>
           <p class="field-notes__caption reveal" data-stagger="body">Follow new records and product releases.</p>
-          <p class="field-notes__signup-pending reveal" data-stagger="support">Email signup is being wired. For early updates, contact <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.</p>
+          <p class="field-notes__body reveal" data-stagger="support">Records show the result. Field Notes shows the investigation.</p>
+          <form
+            class="subscribe subscribe--field-notes reveal"
+            data-stagger="support"
+            id="field-notes-form"
+            data-msg-id="field-notes-msg"
+            action="/briefing/members/api/send-magic-link"
+            method="POST"
+            novalidate
+          >
+            <input
+              type="email"
+              name="email"
+              placeholder="Email address"
+              autocomplete="email"
+              required
+              aria-label="Email address"
+            >
+            <button type="submit">Subscribe</button>
+          </form>
+          <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
           <p class="field-notes__recent reveal" data-stagger="support">
             <a href="/field-notes/">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
           </p>
@@ -1007,6 +1027,7 @@
     }
   })();
 </script>
+<script src="/field-notes-subscribe.js" defer></script>
 
 </body>
 </html>

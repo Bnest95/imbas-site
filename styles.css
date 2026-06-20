@@ -3531,6 +3531,13 @@ body:has(main > section.hero) .nav__menu-btn {
   color: rgba(180, 192, 210, 0.95);
   margin-top: var(--space-3);
 }
+.field-notes__body {
+  margin-top: var(--space-3);
+  max-width: 28rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
 .field-notes__signup-pending {
   margin-top: var(--space-4);
   max-width: 28rem;
@@ -3568,18 +3575,26 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .field-notes__recent-list a:hover { color: var(--ink-soft); border: none; }
 
-.close .subscribe {
+.close .subscribe,
+.field-notes-signup .subscribe {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   width: 100%;
-  max-width: 100%;
+  max-width: 28rem;
   gap: 0.5rem;
-  margin-top: var(--space-2);
-  padding: 0;
-  border: none;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  margin-top: var(--space-4);
+  padding: 0.25rem 0.25rem 0.25rem 0.85rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color .3s ease, background .3s ease;
+}
+.close .subscribe:focus-within,
+.field-notes-signup .subscribe:focus-within {
+  border-color: rgba(var(--ember-rgb), 0.45);
+  background: rgba(40, 58, 85, 0.55);
 }
 .subscribe {
   display: flex;
@@ -3614,41 +3629,66 @@ body:has(main > section.hero) .nav__menu-btn {
   align-self: flex-end;
   transition: color .25s ease;
 }
-.close .subscribe input[type="email"] {
+.close .subscribe input[type="email"],
+.field-notes-signup .subscribe input[type="email"] {
   flex: 1;
   min-width: 0;
-  padding: 0.85rem 0.9rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 2px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: border-color .3s ease, background .3s ease;
+  padding: 0.85rem 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: none;
 }
-.close .subscribe input[type="email"]:focus {
-  border-color: rgba(var(--ember-rgb), 0.45);
-  background: rgba(40, 58, 85, 0.55);
+.close .subscribe input[type="email"]:focus,
+.field-notes-signup .subscribe input[type="email"]:focus {
   outline: none;
 }
-.close .subscribe button {
-  background: rgba(var(--ember-rgb), 0.3);
-  border: 1px solid rgba(var(--ember-rgb), 0.52);
+.close .subscribe button,
+.field-notes-signup .subscribe button {
+  background: var(--ember);
+  border: 1px solid var(--ember);
   border-radius: 2px;
-  color: var(--ink-luminous);
-  font-size: 0.74rem;
+  color: #F2E8DC;
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  font-weight: 500;
   letter-spacing: 0.14em;
-  padding: 0.7rem 1.1rem;
-  align-self: auto;
-  transition: background .25s ease, border-color .25s ease, color .25s ease;
+  text-transform: uppercase;
+  padding: 0 1.25rem;
+  min-height: 44px;
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(var(--ember-rgb), 0.28);
+  transition: background .25s ease, border-color .25s ease, box-shadow .25s ease, transform .25s ease;
 }
-.close .subscribe button:hover {
-  background: rgba(var(--ember-rgb), 0.42);
-  border-color: var(--ember-soft);
-  color: var(--ink-luminous);
+.close .subscribe button:hover,
+.field-notes-signup .subscribe button:hover {
+  background: var(--ember-deep);
+  border-color: var(--ember-deep);
+  color: #F2E8DC;
+  box-shadow: 0 6px 22px rgba(var(--ember-rgb), 0.38);
+  transform: translateY(-1px);
 }
-.close .subscribe button:focus-visible {
+.close .subscribe button:focus-visible,
+.field-notes-signup .subscribe button:focus-visible {
   outline: 2px solid rgba(var(--ember-rgb), 0.55);
   outline-offset: 2px;
+}
+.close .subscribe button:active,
+.field-notes-signup .subscribe button:active {
+  transform: translateY(0);
+}
+.close .subscribe button:disabled,
+.field-notes-signup .subscribe button:disabled {
+  opacity: 0.72;
+  cursor: default;
+  transform: none;
 }
 .subscribe button:hover { color: var(--ember-soft); }
 .subscribe__msg {
@@ -3671,22 +3711,33 @@ body:has(main > section.hero) .nav__menu-btn {
     opacity: 0.42;
   }
   .origin__inscription-wrap { max-width: min(38ch, 100%); }
-  .close .subscribe {
+  .close__signup {
+    padding-bottom: var(--space-2);
+    scroll-margin-top: calc(4.5rem + env(safe-area-inset-top, 0px));
+  }
+  .close .subscribe,
+  .field-notes-signup .subscribe {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
-  }
-  .close .subscribe input[type="email"] {
-    padding: 0.65rem 0.85rem;
-  }
-  .close .subscribe button {
-    align-self: flex-start;
-    width: auto;
     max-width: 100%;
-    padding: 0.65rem 1rem;
+    padding: 0.75rem 0.85rem;
+    gap: 0.75rem;
+    margin-top: var(--space-4);
+  }
+  .close .subscribe input[type="email"],
+  .field-notes-signup .subscribe input[type="email"] {
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+  .close .subscribe button,
+  .field-notes-signup .subscribe button {
+    align-self: stretch;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.75rem 1.25rem;
   }
   .field-notes__recent {
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
   }
   .field-notes__recent-list a {
     font-size: 0.9rem;
@@ -9497,6 +9548,41 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   padding-top: var(--space-4);
   border-top: 1px solid rgba(var(--ember-rgb), 0.12);
   max-width: var(--fn-read);
+}
+
+.field-notes-signup {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid rgba(var(--ember-rgb), 0.12);
+  max-width: var(--fn-read);
+}
+
+.field-notes-signup .field-notes__caption {
+  margin-top: var(--space-3);
+}
+
+.field-notes-signup .field-notes__body {
+  margin-top: var(--space-2);
+}
+
+.rd-field-notes.field-notes-signup .field-notes__recent {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+}
+
+.rd-field-notes.field-notes-signup .field-notes__recent a {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: rgba(180, 192, 210, 0.95);
+  text-decoration: none;
+  border: none;
+}
+
+.rd-field-notes.field-notes-signup .field-notes__recent a:hover {
+  color: var(--ink-soft);
 }
 
 .fn-subscribe-cta a {

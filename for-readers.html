@@ -166,18 +166,41 @@
       </div>
     </section>
 
-    <section class="rd-section rd-field-notes">
+    <section class="rd-section rd-field-notes field-notes-signup">
       <h2 class="rd-section__title">Field Notes</h2>
       <div class="rd-record-note">
         <p>Field Notes carries observations from the edge of the archive. No trend-chasing. No &ldquo;five ways AI is biased&rdquo; filler. Observations only.</p>
       </div>
+      <p class="field-notes__caption">Follow new records and product releases.</p>
+      <p class="field-notes__body">Records show the result. Field Notes shows the investigation.</p>
+      <form
+        class="subscribe subscribe--field-notes"
+        id="field-notes-form-rd"
+        data-msg-id="field-notes-msg-rd"
+        action="/briefing/members/api/send-magic-link"
+        method="POST"
+        novalidate
+      >
+        <input
+          type="email"
+          name="email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+          aria-label="Email address"
+        >
+        <button type="submit">Subscribe</button>
+      </form>
+      <p class="subscribe__msg" id="field-notes-msg-rd" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
+      <p class="field-notes__recent">
+        <a href="/field-notes/">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      </p>
     </section>
 
     <div class="page__cta-row rd-cta">
       <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/workbench.html">Try the Workbench <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      Email signup is being wired. For early updates, contact <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.
     </div>
   </div>
 </main>
@@ -229,5 +252,6 @@
     }
   })();
 </script>
+<script src="/field-notes-subscribe.js" defer></script>
 </body>
 </html>

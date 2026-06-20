@@ -69,7 +69,7 @@ if (inv.stepLabels === 0 && inv.modeBtnNums === 0) pass('no fake step/tab number
 else fail(`stepLabels=${inv.stepLabels} modeBtnNums=${inv.modeBtnNums}`);
 if (inv.provisionalPills === 0) pass('no large provisional pills/banners rendered');
 else fail(`provisional pills: ${inv.provisionalPills}`);
-if (inv.buildNotes === 1) pass('product-state note once');
+if (inv.buildNotes === 0) pass('no product-state build note');
 else fail(`buildNotes=${inv.buildNotes}`);
 if (inv.cardLabels.length === 5 && inv.cardLabels[0]?.includes('005') && inv.cardLabels.some((l) => l.includes('003')) && inv.cardLabels.some((l) => l.includes('013')) && inv.cardLabels.some((l) => l.includes('021'))) pass('case cards show full public archive set');
 else fail(`card labels: ${inv.cardLabels.join('|')}`);

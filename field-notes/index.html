@@ -91,13 +91,15 @@
       <p class="page__intro">Cases, methods, and updates on what frontier AI systems surface, omit, and reveal under inspection. Occasional, observational, no filler.</p>
     </header>
 
-    <section class="fn-prepared" aria-labelledby="fn-prepared-heading">
-      <h2 id="fn-prepared-heading" class="fn-prepared__title">Field Notes are being prepared</h2>
-      <p class="fn-prepared__body">The first notes are in draft. When a note is ready for the public record, it will appear here with date, category, and a short description.</p>
+    <section class="fn-prepared" aria-labelledby="fn-notes-heading">
+      <h2 id="fn-notes-heading" class="fn-section__title">Notes</h2>
+      <ul class="fn-related__list">
+        <li><a href="/field-notes/what-the-volunteer-gap-measures.html">What the Volunteer Gap Measures <span class="arrow" aria-hidden="true">&rarr;</span></a></li>
+      </ul>
     </section>
 
     <section class="fn-related" aria-labelledby="fn-related-heading">
-      <h2 id="fn-related-heading" class="fn-section__title">While you wait</h2>
+      <h2 id="fn-related-heading" class="fn-section__title">Explore the record</h2>
       <ul class="fn-related__list">
         <li><a href="/archive.html">Explore the Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a></li>
         <li><a href="/workbench.html">Try the Workbench <span class="arrow" aria-hidden="true">&rarr;</span></a></li>
@@ -105,9 +107,30 @@
       </ul>
     </section>
 
-    <p class="fn-subscribe-cta">
-      Email signup is being wired. For early updates, contact <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.
-    </p>
+    <section class="fn-subscribe field-notes-signup" aria-labelledby="fn-subscribe-heading">
+      <h2 id="fn-subscribe-heading" class="fn-section__title">Subscribe</h2>
+      <p class="field-notes__caption">Follow new records and product releases.</p>
+      <p class="field-notes__body">Records show the result. Field Notes shows the investigation.</p>
+      <form
+        class="subscribe subscribe--field-notes"
+        id="field-notes-form-fn"
+        data-msg-id="field-notes-msg-fn"
+        action="/briefing/members/api/send-magic-link"
+        method="POST"
+        novalidate
+      >
+        <input
+          type="email"
+          name="email"
+          placeholder="Email address"
+          autocomplete="email"
+          required
+          aria-label="Email address"
+        >
+        <button type="submit">Subscribe</button>
+      </form>
+      <p class="subscribe__msg" id="field-notes-msg-fn" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
+    </section>
   </div>
 </main>
 
@@ -158,5 +181,6 @@
     }
   })();
 </script>
+<script src="/field-notes-subscribe.js" defer></script>
 </body>
 </html>

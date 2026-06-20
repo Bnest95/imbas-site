@@ -1,0 +1,27 @@
+{
+  "desktopLayout": {
+    "width": 1440,
+    "formDirection": "row",
+    "btnBg": "rgb(222, 111, 56)",
+    "btnMinHeight": "44px",
+    "stacked": true,
+    "readBelowForm": true,
+    "overflow": false
+  },
+  "mobileLayout": {
+    "width": 375,
+    "formDirection": "column",
+    "btnBg": "rgb(222, 111, 56)",
+    "btnMinHeight": "44px",
+    "stacked": true,
+    "readBelowForm": true,
+    "overflow": false
+  },
+  "functional": {
+    "subscribed": true,
+    "noWired": true,
+    "noComingSoon": true,
+    "noContactFallback": true,
+    "msgVisible": true
+  }
+}

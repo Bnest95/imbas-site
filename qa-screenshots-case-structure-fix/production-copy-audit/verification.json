@@ -1,0 +1,12 @@
+{
+  "homepageMobile": {
+    "wired": false,
+    "comingSoon": false,
+    "buildNote": 0
+  },
+  "workbench": {
+    "buildNote": 0,
+    "comingSoon": false,
+    "agentic": false
+  }
+}
