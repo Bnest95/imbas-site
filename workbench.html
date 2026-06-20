@@ -152,11 +152,9 @@ const { useState, useEffect, useRef } = React;
       the answer back, and the result resolves from what they pasted.
       No result is shown before the paste. Nothing is predicted.
 
-    BYO — guided manual capture. The user pastes open Q+A, writes their
-      own targeted follow-up (with examples), pastes the direct answer,
-      self-describes what surfaced, picks category and optional score.
-      Everything routes to the repository for human review — no client
-      scoring API.
+    SUGGEST — topic submission channel. Users propose what Imbas should
+      investigate next. No scoring, no result generation — acknowledgment
+      only after submit. Routes to the repository for human review.
 
   Honesty rules enforced in copy + logic:
     - Describe, never predict. Past observation is stated as past.
@@ -169,9 +167,8 @@ const { useState, useEffect, useRef } = React;
 
   v0 technical notes (for whoever integrates this):
     - No client-side scoring API. Curated runs entirely in the browser
-      (term-presence check + local quote pull). BYO is guided capture-mode:
-      the user writes their own targeted prompt, pastes both answers, and
-      self-describes the gap. No score is invented in the browser.
+      (term-presence check + local quote pull). Suggest an Investigation
+      is a lightweight submission form — no score is generated in the browser.
     - submitCandidate(candidate): POSTs to IMBAS_ENDPOINT when set;
       until then capture falls back to copy-to-clipboard so nothing is
       lost. One constant flips real public ingestion on.
@@ -639,6 +636,174 @@ const WORKBENCH_FLOW_CSS = `
   margin: 0 0 0.35rem;
   text-transform: uppercase;
 }
+.wb-suggest-module {
+  margin-top: 0;
+  margin-bottom: 0.25rem;
+  width: 100%;
+  max-width: min(100%, 40rem);
+}
+.wb-suggest-module.is-collapsed {
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.14);
+}
+.wb-suggest-module.is-collapsed .wb-flow-module--suggest {
+  padding: 0.55rem 0.58rem 0.58rem;
+  background: rgba(42, 33, 28, 0.78);
+  border: 1px solid rgba(242, 232, 220, 0.14);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+}
+.wb-suggest-module__heading {
+  font-family: ${SERIF};
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: ${C.text};
+  margin: 0 0 0.36rem;
+}
+.wb-suggest-module.is-collapsed .wb-suggest-module__heading {
+  margin: 0 0 0.32rem;
+}
+.wb-suggest-module.is-collapsed .wb-suggest-module__lead {
+  margin: 0 0 0.44rem;
+  font-family: ${SANS};
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: rgba(185, 168, 147, 0.88);
+}
+.wb-suggest-module .wb-suggest-cta-row {
+  margin-top: 0.18rem;
+}
+.wb-suggest-module.is-collapsed .wb-suggest-cta-row .wb-btn--ghost {
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 11px 20px;
+  border-color: rgba(248, 168, 102, 0.48) !important;
+  color: ${C.text} !important;
+  background: rgba(32, 24, 20, 0.96) !important;
+}
+.wb-suggest-module.is-collapsed .wb-suggest-cta-row .wb-btn--ghost:not(:disabled):hover {
+  border-color: rgba(248, 168, 102, 0.65) !important;
+  background: rgba(222, 111, 56, 0.14) !important;
+  color: ${C.text} !important;
+}
+.wb-suggest-module.is-expanded,
+.wb-suggest-module.is-done {
+  width: 100%;
+  max-width: min(100%, 40rem);
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.14);
+}
+.wb-suggest-module.is-collapsed .wb-plate-hint {
+  margin-bottom: 0.24rem;
+}
+.wb-suggest-module.is-collapsed .wb-action-row {
+  margin-top: 0.18rem;
+}
+.wb-suggest-module.is-expanded .wb-flow-module--suggest,
+.wb-suggest-module.is-done .wb-flow-module--suggest {
+  margin-top: 0;
+  padding: 0.55rem 0.58rem 0.58rem;
+  background: rgba(42, 33, 28, 0.78);
+  border: 1px solid rgba(242, 232, 220, 0.14);
+  border-radius: 4px;
+}
+.wb-suggest-module.is-expanded .wb-suggest-module__heading,
+.wb-suggest-module.is-done .wb-suggest-module__heading {
+  margin: 0 0 0.24rem;
+}
+.wb-suggest-module.is-expanded .wb-suggest-module__lead,
+.wb-suggest-module.is-done .wb-suggest-module__lead {
+  color: ${C.textDim};
+}
+.wb-suggest-module__title {
+  font-family: ${MONO};
+  font-size: max(0.5625rem, var(--mono-min));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${C.textDim};
+  margin: 0 0 0.28rem;
+  line-height: 1.32;
+}
+.wb-suggest-module__lead {
+  font-family: ${SANS};
+  font-size: 15px;
+  line-height: 1.42;
+  color: rgba(210, 196, 180, 0.92);
+  margin: 0 0 0.22rem;
+}
+.wb-suggest-module .wb-plate-support {
+  font-size: 14.5px;
+  line-height: 1.45;
+  margin: 0 0 0.18rem;
+  color: rgba(200, 186, 170, 0.88);
+}
+.wb-suggest-module .wb-plate-hint {
+  font-size: 13.5px;
+  line-height: 1.4;
+  margin: 0 0 0.42rem;
+  color: rgba(196, 182, 166, 0.86);
+}
+.wb-suggest-module .wb-input-bay {
+  margin-top: 0.28rem;
+}
+.wb-suggest-module .wb-input-bay + .wb-input-bay {
+  margin-top: 0.22rem;
+}
+.wb-suggest-module .wb-field-label {
+  color: rgba(201, 184, 165, 0.92);
+}
+.wb-suggest-module .wb-input {
+  padding: 11px 13px 10px;
+  font-size: 15px;
+  min-height: 40px;
+  color: ${C.text};
+}
+.wb-suggest-module .wb-input::placeholder {
+  color: rgba(185, 168, 147, 0.78);
+  opacity: 1;
+}
+.wb-suggest-module textarea.wb-input {
+  min-height: unset;
+  line-height: 1.45;
+}
+.wb-suggest-module .wb-action-row {
+  margin-top: 0.32rem;
+}
+.wb-suggest-module .wb-btn {
+  font-size: 15px;
+  min-height: 40px;
+  padding: 10px 18px;
+  opacity: 1 !important;
+}
+.wb-suggest-module .wb-btn--primary:not(:disabled) {
+  background: ${C.accent} !important;
+  border-color: ${C.accent} !important;
+  color: #181210 !important;
+}
+.wb-suggest-module .wb-btn--primary:not(:disabled):hover {
+  background: ${C.accentSoft} !important;
+  border-color: ${C.accentSoft} !important;
+}
+.wb-suggest-module .wb-btn--primary:disabled {
+  background: rgba(222, 111, 56, 0.14) !important;
+  border-color: rgba(248, 168, 102, 0.28) !important;
+  color: rgba(230, 218, 204, 0.72) !important;
+  cursor: not-allowed !important;
+}
+.wb-suggest-module .wb-btn--ghost:not(:disabled) {
+  border-color: rgba(242, 232, 220, 0.18) !important;
+  color: rgba(230, 218, 204, 0.9) !important;
+}
+.wb-suggest-module .wb-status-readout__title {
+  color: rgba(230, 218, 204, 0.94);
+}
+.wb-suggest-module .wb-status-readout__body {
+  color: rgba(196, 182, 166, 0.9);
+}
 .wb-byo-nudge {
   font-family: ${SANS};
   font-size: 0.8125rem;
@@ -675,6 +840,15 @@ const WORKBENCH_FLOW_CSS = `
     font-size: 0.78rem;
     line-height: 1.38;
     padding: 0.34rem 0.42rem;
+  }
+  .wb-suggest-module.is-collapsed {
+    width: 100%;
+  }
+  .wb-suggest-module__heading {
+    font-size: 22px;
+  }
+  .wb-suggest-module.is-collapsed .wb-suggest-module__lead {
+    font-size: 15px;
   }
 }
 `;
@@ -1328,6 +1502,9 @@ const IMBAS_ENDPOINT = "/api/repository"; // e.g. "/api/repository" once the fun
 function buildCandidate(p) {
   return { schema: "imbas.candidate.v0", pool: "repository", status: "provisional_for_review", captured_at: new Date().toISOString(), ...p };
 }
+function buildInvestigationSuggestion(p) {
+  return { schema: "imbas.investigation_suggestion.v0", pool: "repository", status: "suggestion_for_review", captured_at: new Date().toISOString(), ...p };
+}
 async function submitCandidate(candidate) {
   if (!IMBAS_ENDPOINT) return { ok: false };
   try {
@@ -1977,6 +2154,8 @@ function Curated() {
               </div>
             )}
 
+            <SuggestInvestigation />
+
           </div>
         </div>
       )}
@@ -1985,319 +2164,144 @@ function Curated() {
   );
 }
 
-// ---- BYO MODE (guided manual capture; no client-side API) ----
-function Byo() {
-  const [step, setStep] = useState(0);
-  const [model, setModel] = useState("");
-  const [openPrompt, setOpenPrompt] = useState("");
-  const [openAnswer, setOpenAnswer] = useState("");
-  const [unlocked, setUnlocked] = useState(() => !!readStoredWorkbenchEmail());
-  const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
-  const [targetedPrompt, setTargetedPrompt] = useState("");
-  const [targetedAnswer, setTargetedAnswer] = useState("");
-  const [surfacedSentence, setSurfacedSentence] = useState("");
-  const [category, setCategory] = useState("");
-  const [selfScore, setSelfScore] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [candidate, setCandidate] = useState(null);
-  const [submitOk, setSubmitOk] = useState(true);
-  const [byoPasteError, setByoPasteError] = useState("");
-  const [byoSurfacedError, setByoSurfacedError] = useState("");
-  const stepAnchorRef = useRef(null);
-  const gateRef = useRef(null);
-  const plateRef = useRef(null);
-  const stepScrollReady = useRef(false);
+const suggestInputStyle = { ...inputStyle, padding: "11px 13px 10px", fontSize: 15, minHeight: 40, resize: "none" };
+const suggestTextareaStyle = { ...suggestInputStyle, minHeight: "unset", resize: "vertical" };
 
-  useEffect(() => {
-    if (!stepScrollReady.current) {
-      stepScrollReady.current = true;
-      syncWorkbenchHeaderOffset();
-      return undefined;
-    }
-    let el = stepAnchorRef.current;
-    if (step === 1 && !unlocked) el = gateRef.current;
-    else if (plateRef.current) el = plateRef.current;
-    const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(el));
-    return () => window.cancelAnimationFrame(id);
-  }, [step, unlocked]);
+// ---- SUGGEST AN INVESTIGATION (secondary submission channel; no scoring) ----
+function SuggestInvestigation() {
+  const [expanded, setExpanded] = useState(false);
+  const [step, setStep] = useState("form");
+  const [topic, setTopic] = useState("");
+  const [inspect, setInspect] = useState("");
+  const [context, setContext] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitFailed, setSubmitFailed] = useState(null);
 
-  const reset = () => {
-    setStep(0);
-    setModel("");
-    setOpenPrompt("");
-    setOpenAnswer("");
-    setTargetedPrompt("");
-    setTargetedAnswer("");
-    setSurfacedSentence("");
-    setCategory("");
-    setSelfScore("");
-    setCandidate(null);
-    setSubmitOk(true);
-    setBusy(false);
-    setByoPasteError("");
-    setByoSurfacedError("");
-  };
+  const topicOk = topic.trim().length >= 4;
+  const inspectOk = inspect.trim().length >= 8;
+  const canSubmit = topicOk && inspectOk && !submitting;
 
-  const promptSimilarityNudge = byoPromptSimilarityNudge(openPrompt, targetedPrompt);
-
-  const submit = async () => {
-    setBusy(true);
-    const cand = buildCandidate({
-      mode: "byo",
-      model,
-      email,
-      open_prompt: openPrompt,
-      open_answer: openAnswer,
-      targeted_prompt: targetedPrompt.trim(),
-      targeted_answer: targetedAnswer.trim(),
-      surfaced_after_direct: surfacedSentence.trim(),
-      user_category: category,
-      user_self_score: selfScore === "" ? null : Number(selfScore),
-      scoring: "pending_human_review",
+  async function handleSubmit() {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setSubmitFailed(null);
+    const payload = buildInvestigationSuggestion({
+      topic: topic.trim(),
+      inspect_question: inspect.trim(),
+      context: context.trim() || null,
+      email: email.trim() || null,
+      source: "workbench_suggest",
     });
-    const submitResult = await submitCandidate(cand);
-    setCandidate(cand);
-    setSubmitOk(submitResult.ok);
-    setBusy(false);
-    setStep(6);
-  };
+    const res = await submitCandidate(payload);
+    setSubmitting(false);
+    if (res.ok) setStep("done");
+    else setSubmitFailed(payload);
+  }
 
-  const reviewRow = (label, value, collapsible = false) => (
-    <div className="wb-review-row">
-      <Label>{label}</Label>
-      {collapsible && value && value.trim().length > 120 ? (
-        <CollapsedAnswerRow text={value} />
-      ) : (
-        <div className="wb-plate-support wb-review-value">{value}</div>
-      )}
-    </div>
-  );
+  if (step === "done") {
+    return (
+      <section id="wb-suggest-module" className="wb-suggest-module is-done" aria-labelledby="wb-suggest-heading">
+        <div className="wb-flow-module wb-flow-module--suggest">
+          <div className="wb-status-readout">
+            <p className="wb-status-readout__title">Thank you.</p>
+            <p className="wb-status-readout__body">Your submission has been recorded for review.</p>
+            <p className="wb-plate-hint">Selected investigations may become future Imbas cases after human review.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  const plateCls = [
-    "wb-panel",
-    "wb-specimen-plate",
-    "wb-run-plate",
-    "wb-measure-channel",
-    "wb-scroll-anchor",
-    step === 6 ? "is-result" : "",
-  ].filter(Boolean).join(" ");
+  if (!expanded) {
+    return (
+      <section id="wb-suggest-module" className="wb-suggest-module is-collapsed" aria-labelledby="wb-suggest-heading">
+        <div className="wb-flow-module wb-flow-module--suggest">
+          <h2 id="wb-suggest-heading" className="wb-suggest-module__heading">Suggest an Investigation</h2>
+          <p className="wb-suggest-module__lead">Have a case Imbas should inspect next?</p>
+          <div className="wb-action-row wb-suggest-cta-row">
+            <Btn kind="ghost" onClick={() => setExpanded(true)}>Suggest an investigation →</Btn>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
-    <div className="wb-console">
-      <div className="wb-console__main">
-      <div ref={stepAnchorRef} className="wb-scroll-anchor" />
-      <p className="wb-plate-note">Bring a question you asked and the answer you got. Write your own targeted follow-up, run it in your AI, and tell us what surfaced only when asked directly. A person scores every submission — no machine verdict.</p>
+    <section id="wb-suggest-module" className="wb-suggest-module is-expanded" aria-labelledby="wb-suggest-heading">
+      <div className="wb-flow-module wb-flow-module--input wb-flow-module--suggest">
+        <h2 id="wb-suggest-heading" className="wb-suggest-module__heading">Suggest an Investigation</h2>
+        <p className="wb-suggest-module__lead">What should Imbas investigate next?</p>
+        <p className="wb-plate-hint">Selected submissions may become future Imbas records after review.</p>
 
-      <div className="wb-console__measure">
-        <div className="wb-console__measure-main">
-          {step === 1 && !unlocked ? (
-            <div ref={gateRef} className="wb-gate-block wb-scroll-anchor">
-              <EmailGate onUnlock={(e) => { setEmail(e); setUnlocked(true); persistWorkbenchEmail(e); }} />
-            </div>
-          ) : (
-            <>
-              <div ref={plateRef} className={plateCls}>
-      {step === 0 && (
-        <div className="wb-flow-module wb-flow-module--input">
-          <div className="wb-input-bay">
-            <Field label="Which AI did you ask?"><ModelSelect value={model} onChange={setModel} /></Field>
-          </div>
-          <div className="wb-input-bay">
-            <Field label="The open question you asked">
-              <textarea rows={3} value={openPrompt} onChange={(e) => setOpenPrompt(e.target.value)} placeholder="e.g. How do stock buybacks affect the economy?" className={INPUT_CLS} style={inputStyle} />
-            </Field>
-            <Field label="Paste the model's open answer">
-              <textarea rows={9} value={openAnswer} onChange={(e) => { setOpenAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full response…" className={INPUT_CLS} style={inputStyle} />
-            </Field>
-          </div>
-          {byoPasteError ? (
-            <div className="wb-field-error">{byoPasteError}</div>
-          ) : null}
-          <div className="wb-action-row">
-            <Btn kind="primary" disabled={!model || openPrompt.trim().length < 8 || openAnswer.trim().length < 120} onClick={() => {
-              const err = validatePasteCoherence(openAnswer);
-              if (err) { setByoPasteError(err); return; }
-              setByoPasteError("");
-              setStep(1);
-            }}>Continue →</Btn>
-          </div>
-          {openAnswer.trim().length > 0 && openAnswer.trim().length < 120 && (
-            <p className="wb-plate-hint">Paste the full answer so the review has enough context.</p>
-          )}
+        <div className="wb-input-bay">
+          <Field label="Topic or Question">
+            <input
+              className={INPUT_CLS}
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. Model claims about historical events"
+              autoComplete="off"
+              style={suggestInputStyle}
+            />
+          </Field>
         </div>
-      )}
 
-      {step === 1 && unlocked && (
-        <>
-          <Label>Ask the direct inspection question</Label>
-          <p className="wb-plate-support">Name the specific rule, study, mechanism, or named fact you think the open answer skipped. Ask your AI about it directly — in a fresh chat.</p>
-          {TARGETED_EXAMPLES.map((ex) => (
-            <div key={ex.label} className="wb-example-plate">
-              <Label>{ex.label}</Label>
-              <p className="wb-example-plate__open">Open: {ex.open}</p>
-              <p className="wb-example-plate__targeted">Targeted: {ex.targeted}</p>
-            </div>
-          ))}
-          <div className="wb-input-bay">
-            <Field label="Your targeted follow-up prompt">
-              <textarea rows={3} value={targetedPrompt} onChange={(e) => setTargetedPrompt(e.target.value)} placeholder="Name the specific rule, study, or mechanism behind what the open answer skipped…" className={INPUT_CLS} style={inputStyle} />
-            </Field>
-            {promptSimilarityNudge ? (
-              <p className="wb-byo-nudge wb-byo-nudge--prompt">
-                <span className="wb-byo-nudge__full">{BYO_PROMPT_SIMILARITY_NUDGE}</span>
-                <span className="wb-byo-nudge__short">{BYO_PROMPT_SIMILARITY_NUDGE_SHORT}</span>
-              </p>
-            ) : null}
-          </div>
-          <HygieneNote />
-          <div className="wb-action-row">
-            <Btn kind="primary" disabled={targetedPrompt.trim().length < 12} onClick={() => setStep(3)}>Wrote it — I'll run this in my AI →</Btn>
-          </div>
-        </>
-      )}
-
-      {step === 3 && (
-        <>
-          <div className="wb-input-bay">
-            <Field label="Paste the model's direct-prompt answer">
-              <p className="wb-plate-support">Run your targeted prompt in a fresh chat with {model || "your AI"}, then paste the full response.</p>
-              <PromptCard text={targetedPrompt} />
-              <textarea rows={9} value={targetedAnswer} onChange={(e) => { setTargetedAnswer(e.target.value); setByoPasteError(""); }} placeholder="Paste the full targeted response…" className={INPUT_CLS} style={{ ...inputStyle, marginTop: 12 }} />
-            </Field>
-          </div>
-          {promptSimilarityNudge ? (
-            <p className="wb-byo-nudge wb-byo-nudge--prompt">
-              <span className="wb-byo-nudge__full">{BYO_PROMPT_SIMILARITY_NUDGE}</span>
-              <span className="wb-byo-nudge__short">{BYO_PROMPT_SIMILARITY_NUDGE_SHORT}</span>
-            </p>
-          ) : null}
-          {byoPasteError ? (
-            <div className="wb-field-error">{byoPasteError}</div>
-          ) : null}
-          <HygieneNote />
-          <div className="wb-action-row">
-            <Btn kind="primary" disabled={targetedAnswer.trim().length < 80} onClick={() => {
-              const err = validatePasteCoherence(targetedAnswer);
-              if (err) { setByoPasteError(err); return; }
-              setByoPasteError("");
-              setStep(4);
-            }}>Continue →</Btn>
-          </div>
-        </>
-      )}
-
-      {step === 4 && (
-        <>
-          <div className="wb-input-bay">
-            <Field label="Paste the surfaced answer">
-              <input value={surfacedSentence} onChange={(e) => { setSurfacedSentence(e.target.value); setByoSurfacedError(""); }} placeholder="One sentence — the named thing that appeared only when you asked directly…" className={INPUT_CLS} style={inputStyle} />
-              {byoSurfacedError ? (
-                <div className="wb-field-error">{byoSurfacedError}</div>
-              ) : null}
-            </Field>
-            <Field label="Category">
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                <option value="" disabled>Choose a category…</option>
-                {BYO_CATEGORIES.map((c) => <option key={c} value={c} style={{ color: "#111" }}>{c}</option>)}
-              </select>
-            </Field>
-            <Field label="Self-assessed gap (optional)">
-              <select value={selfScore} onChange={(e) => setSelfScore(e.target.value)} className={INPUT_CLS} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
-                <option value="">Skip — let a reviewer score it</option>
-                <option value="0" style={{ color: "#111" }}>0 — no meaningful gap</option>
-                <option value="1" style={{ color: "#111" }}>1 — mentioned vaguely</option>
-                <option value="2" style={{ color: "#111" }}>2 — related but omits specifics</option>
-                <option value="3" style={{ color: "#111" }}>3 — major information left out</option>
-              </select>
-              <p className="wb-plate-hint wb-plate-hint--mono">0 = no meaningful gap · 1 = vague mention · 2 = related but omits specifics · 3 = major information left out</p>
-            </Field>
-          </div>
-          <div className="wb-action-row">
-            <Btn kind="primary" disabled={!category} onClick={() => {
-              const err = validateSurfacedAnswer(surfacedSentence);
-              if (err) { setByoSurfacedError(err); return; }
-              setByoSurfacedError("");
-              setStep(5);
-            }}>Review before submit →</Btn>
-          </div>
-        </>
-      )}
-
-      {step === 5 && (
-        <>
-          <div className="wb-output-module__head wb-output-module__head--compact">
-            <FlowProvenance>Review your submission</FlowProvenance>
-          </div>
-          <div className="wb-output-module__body wb-review-module wb-flow-module">
-            {reviewRow("Model", model)}
-            {reviewRow("Open question", openPrompt)}
-            {reviewRow("Open answer", openAnswer, true)}
-            {reviewRow("Targeted prompt", targetedPrompt)}
-            {reviewRow("Targeted answer", targetedAnswer, true)}
-            {reviewRow("Surfaced after direct prompting", surfacedSentence)}
-            {reviewRow("Category", category)}
-            {reviewRow("Self-assessed gap", selfScore === "" ? "— (reviewer will score)" : `${selfScore} / 3`)}
-          </div>
-          <div className="wb-output-module__footer">
-            {busy ? <Mantis label="Submitting candidate…" /> : (
-              <div className="wb-action-row">
-                <Btn kind="primary" onClick={submit}>Submit for review →</Btn>
-              </div>
-            )}
-            <div className="wb-action-row wb-action-row--secondary">
-              <Btn kind="link" small onClick={() => setStep(4)}>← Edit responses</Btn>
-            </div>
-          </div>
-        </>
-      )}
-
-      {step === 6 && candidate && (
-        <div className="wb-output-module">
-          <div className="wb-output-module__head wb-output-module__head--compact">
-            <FlowProvenance>Recorded for review</FlowProvenance>
-            {selfScore !== "" ? (
-              <div className="wb-result-score-panel" style={{ marginTop: "0.35rem" }}>
-                <div className="wb-result-gap-hero__score" aria-label={`Self-assessed gap ${selfScore} out of 3`}>
-                  {selfScore} / 3
-                </div>
-                <div className="wb-readout__run-strip wb-readout__run-strip--compact">
-                  {category ? <span>{category}</span> : null}
-                  <span>Self-assessed · pending review</span>
-                </div>
-              </div>
-            ) : (
-              <p className="wb-active-case__headline" style={{ margin: "0.35rem 0 0", fontSize: "1.125rem" }}>Candidate recorded for review.</p>
-            )}
-          </div>
-          <div className="wb-output-module__body wb-flow-module">
-            <div className="wb-active-case__headline" style={{ fontSize: "1.125rem", margin: 0 }}>
-              {submitOk ? "Your candidate is ready for review." : "Your record is saved here — we couldn't reach the server."}
-            </div>
-            {submitOk ? (
-              <p className="wb-plate-support" style={{ marginTop: "0.65rem" }}>A person reviews and scores every submission before anything enters the public archive. Nothing here is a verdict.</p>
-            ) : null}
-          </div>
-          <div className="wb-output-module__footer">
-            <RepositoryActions candidate={candidate} submitOk={submitOk} />
-            <div className="wb-action-row wb-action-row--secondary">
-              <Btn kind="link" small onClick={reset}>← Submit another</Btn>
-            </div>
-          </div>
+        <div className="wb-input-bay">
+          <Field label="What should be inspected?">
+            <textarea
+              className={INPUT_CLS}
+              value={inspect}
+              onChange={(e) => setInspect(e.target.value)}
+              placeholder="Describe the claim, behavior, or pattern Imbas should examine"
+              rows={3}
+              style={suggestTextareaStyle}
+            />
+          </Field>
         </div>
-      )}
-              </div>
-            </>
-          )}
+
+        <div className="wb-input-bay">
+          <Field label="Optional context, source, or link">
+            <textarea
+              className={INPUT_CLS}
+              value={context}
+              onChange={(e) => setContext(e.target.value)}
+              placeholder="URL, excerpt, or background (optional)"
+              rows={2}
+              style={suggestTextareaStyle}
+            />
+          </Field>
+        </div>
+
+        <div className="wb-input-bay">
+          <Field label="Optional email for follow-up">
+            <input
+              className={INPUT_CLS}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com (optional)"
+              autoComplete="email"
+              style={suggestInputStyle}
+            />
+          </Field>
+        </div>
+
+        {submitFailed ? <SubmitFailure candidate={submitFailed} /> : null}
+
+        <div className="wb-action-row">
+          <Btn kind="primary" disabled={!canSubmit} onClick={handleSubmit}>
+            {submitting ? "Submitting…" : "Submit Investigation"}
+          </Btn>
         </div>
       </div>
-      </div>
-    </div>
+    </section>
   );
 }
 
 // ---- SHELL ----
 function Workbench() {
-  const [mode, setMode] = useState("curated");
   const headingRef = useRef(null);
 
   useEffect(() => {
@@ -2332,15 +2336,7 @@ function Workbench() {
 
         <WorkbenchBuildNote />
 
-        <div role="group" aria-label="Workbench mode" className="wb-mode-toggle">
-          {[["curated", "Cases Imbas measured"], ["byo", "Bring your own"]].map(([k, lbl]) => (
-            <button key={k} type="button" aria-pressed={mode === k} className={`wb-mode-btn wb-focus${mode === k ? " is-active" : ""}`} onClick={() => setMode(k)}>
-              <span className="wb-mode-btn__lbl">{lbl}</span>
-            </button>
-          ))}
-        </div>
-
-        {mode === "curated" ? <Curated /> : <Byo />}
+        <Curated />
 
         <div style={{ height: 1, background: C.line, margin: "48px 0 16px" }} />
         <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, lineHeight: 1.7, letterSpacing: "0.03em" }}>

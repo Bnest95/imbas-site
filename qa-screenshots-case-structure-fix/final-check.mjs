@@ -109,54 +109,156 @@ const mob = await page.evaluate(() => ({
 if (!mob.overflow) pass('no mobile overflow at 375px');
 else fail(`mobile overflow sw=${mob.scrollWidth} cw=${mob.clientWidth}`);
 
-// BYO submit-complete + share failure spot-check
+// Suggest an Investigation — secondary submission channel (no scoring)
+await page.setViewport({ width: 1440, height: 900 });
+await page.goto(`${base}/workbench.html`, { waitUntil: 'networkidle0' });
+await page.evaluate(() => localStorage.removeItem('imbas_wb_email'));
+await page.reload({ waitUntil: 'networkidle0' });
+await wait(300);
+
+const suggestUi = await page.evaluate(() => ({
+  byoVisible: /bring your own/i.test(document.body.textContent),
+  modeToggle: document.querySelectorAll('.wb-mode-toggle').length,
+  suggestTab: [...document.querySelectorAll('button.wb-mode-btn')].some((b) => b.textContent.includes('Suggest an Investigation')),
+  suggestModule: !!document.querySelector('.wb-suggest-module'),
+  suggestCollapsed: document.querySelector('.wb-suggest-module.is-collapsed') !== null,
+  openSuggestBtn: [...document.querySelectorAll('.wb-suggest-module button')].some((b) => b.textContent.includes('Suggest an investigation')),
+  suggestLead: document.querySelector('.wb-suggest-module.is-collapsed .wb-suggest-module__lead')?.textContent?.trim(),
+  inlineCta: !!document.querySelector('.wb-suggest-discovery'),
+  confirmFollowsFinding: (() => {
+    const readout = document.querySelector('.wb-flow-module--readout');
+    const confirm = document.querySelector('.wb-confirm-block');
+    if (!readout || !confirm) return false;
+    const discovery = document.querySelector('.wb-suggest-discovery');
+    if (discovery) return false;
+    return !!(readout.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING);
+  })(),
+  suggestAfterConfirm: (() => {
+    const suggest = document.querySelector('.wb-suggest-module');
+    const confirm = document.querySelector('.wb-confirm-block');
+    if (!suggest || !confirm) return false;
+    return !!(confirm.compareDocumentPosition(suggest) & Node.DOCUMENT_POSITION_FOLLOWING);
+  })(),
+  fullSuggestNotBetweenFindingAndConfirm: (() => {
+    const readout = document.querySelector('.wb-flow-module--readout');
+    const confirm = document.querySelector('.wb-confirm-block');
+    const suggest = document.querySelector('.wb-suggest-module');
+    if (!readout || !confirm || !suggest) return false;
+    const readoutBeforeConfirm = !!(readout.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const confirmBeforeSuggest = !!(confirm.compareDocumentPosition(suggest) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const suggestBetween = !!(readout.compareDocumentPosition(suggest) & Node.DOCUMENT_POSITION_FOLLOWING)
+      && !!(suggest.compareDocumentPosition(confirm) & Node.DOCUMENT_POSITION_FOLLOWING);
+    return readoutBeforeConfirm && confirmBeforeSuggest && !suggestBetween;
+  })(),
+  caseCardsVisible: document.querySelectorAll('.wb-case-card').length >= 2,
+  ranItVisible: [...document.querySelectorAll('button')].some((b) => b.textContent.includes('Ran it')),
+}));
+if (!suggestUi.byoVisible) pass('no BYO language on workbench');
+else fail('BYO language still visible');
+if (suggestUi.modeToggle === 0) pass('no mode toggle shell');
+else fail(`mode toggle still present: ${suggestUi.modeToggle}`);
+if (!suggestUi.suggestTab) pass('no equal Suggest tab');
+else fail('Suggest tab still present');
+if (!suggestUi.inlineCta) pass('no duplicate inline suggest CTA');
+else fail('duplicate inline suggest CTA still present');
+if (suggestUi.confirmFollowsFinding && suggestUi.suggestAfterConfirm && suggestUi.fullSuggestNotBetweenFindingAndConfirm) pass('finding → confirm → suggest order');
+else fail('suggest module placement wrong');
+if (suggestUi.suggestCollapsed && suggestUi.openSuggestBtn && suggestUi.suggestLead?.includes('Have a case Imbas should inspect next')) pass('readable collapsed suggest CTA');
+else fail('collapsed suggest CTA missing or unreadable');
+const suggestHeading = await page.evaluate(() => {
+  const heading = document.querySelector('.wb-suggest-module__heading');
+  const lead = document.querySelector('.wb-suggest-module__lead');
+  const cta = [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Suggest an investigation'));
+  const hs = heading ? getComputedStyle(heading) : null;
+  const ls = lead ? getComputedStyle(lead) : null;
+  const cs = cta ? getComputedStyle(cta) : null;
+  return {
+    hasHeading: !!heading,
+    headingText: heading?.textContent?.trim(),
+    headingSize: hs?.fontSize,
+    headingFamily: hs?.fontFamily,
+    headingColor: hs?.color,
+    leadColor: ls?.color,
+    ctaColor: cs?.color,
+  };
+});
+if (suggestHeading.hasHeading && suggestHeading.headingText === 'Suggest an Investigation') pass('suggest section title present');
+else fail(`suggest section title: ${JSON.stringify(suggestHeading)}`);
+if (suggestHeading.headingFamily?.includes('Fraunces') && parseFloat(suggestHeading.headingSize) >= 22) pass('suggest title serif display style');
+else fail(`suggest title style: ${JSON.stringify(suggestHeading)}`);
+if (suggestHeading.headingColor === 'rgb(242, 232, 220)' && suggestHeading.ctaColor === suggestHeading.headingColor && suggestHeading.leadColor !== suggestHeading.headingColor) pass('title/body/CTA color hierarchy');
+else fail(`suggest color hierarchy: ${JSON.stringify(suggestHeading)}`);
+if (suggestUi.caseCardsVisible && suggestUi.ranItVisible) pass('curated case replay visible by default');
+else fail('curated case replay not primary');
+
+const collapsedFormHidden = await page.evaluate(() => !document.querySelector('.wb-suggest-module textarea'));
+if (collapsedFormHidden) pass('suggest form hidden until expanded');
+else fail('suggest form visible while collapsed');
+
+await page.evaluate(() => [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Suggest an investigation'))?.click());
+await wait(200);
+
+const formCheck = await page.evaluate(() => ({
+  headline: document.querySelector('.wb-suggest-module__lead')?.textContent?.trim(),
+  submitBtn: [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Submit Investigation'))?.textContent?.trim(),
+  gauge: !!document.querySelector('.wb-result-gap-gauge'),
+  emailGate: !!document.querySelector('.wb-email-gate'),
+  expanded: document.querySelector('.wb-suggest-module.is-expanded') !== null,
+}));
+if (formCheck.headline?.includes('What should Imbas investigate next')) pass('suggest intro copy');
+else fail(`suggest intro: ${formCheck.headline}`);
+if (formCheck.submitBtn && formCheck.expanded) pass('Submit Investigation button present when expanded');
+else fail('Submit Investigation button missing when expanded');
+if (!formCheck.gauge && !formCheck.emailGate) pass('no scoring/gate on suggest form');
+else fail('scoring/gate present on suggest form');
+
 await page.evaluate(() => {
-  localStorage.setItem('imbas_wb_email', 'final-check@imbaslabs.com');
+  window.__origFetch = window.fetch.bind(window);
+  window.fetch = async (url, opts) => String(url).includes('/api/repository') ? { ok: true, json: async () => ({ ok: true }) } : window.__origFetch(url, opts);
+});
+await page.type('.wb-suggest-module input[type="text"]', 'Historical model claims');
+const suggestAreas = await page.$$('.wb-suggest-module textarea');
+await suggestAreas[0].type('Does the model cite primary sources when asked about contested events?');
+await page.evaluate(() => [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Submit Investigation'))?.click());
+await wait(800);
+
+report.spot.suggestComplete = await page.evaluate(() => ({
+  thankYou: document.body.textContent.includes('Thank you'),
+  recorded: document.body.textContent.includes('Your submission has been recorded for review'),
+  gauge: !!document.querySelector('.wb-result-gap-gauge'),
+  score: !!document.querySelector('.wb-result-gap-hero__score'),
+  resultPage: !!document.querySelector('.wb-output-module'),
+}));
+
+if (report.spot.suggestComplete.thankYou && report.spot.suggestComplete.recorded) pass('suggest acknowledgment state');
+else fail('suggest acknowledgment missing');
+if (!report.spot.suggestComplete.gauge && !report.spot.suggestComplete.score && !report.spot.suggestComplete.resultPage) pass('no score/result from suggest submit');
+else fail('score/result generated from suggest');
+
+// Suggest submit failure spot-check
+await page.goto(`${base}/workbench.html`, { waitUntil: 'networkidle0' });
+await page.evaluate(() => {
+  localStorage.removeItem('imbas_wb_email');
   window.__origFetch = window.fetch.bind(window);
   window.fetch = async (url) => String(url).includes('/api/repository') ? { ok: false, json: async () => ({ ok: false }) } : window.__origFetch(url);
 });
 await page.reload({ waitUntil: 'networkidle0' });
 await wait(300);
-await page.evaluate(() => [...document.querySelectorAll('button.wb-mode-btn')].find((b) => b.textContent.includes('Bring your own'))?.click());
+await page.evaluate(() => [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Suggest an investigation'))?.click());
 await wait(200);
-
-const OPEN = 'How do stock buybacks affect the economy and shareholders?';
-const OPEN_ANS = 'Stock buybacks return cash to shareholders and can lift earnings per share by reducing share count. Companies often repurchase shares when they believe the stock is undervalued. Critics argue buybacks divert capital from investment and wages. The practice grew after regulatory changes in the 1980s and has become a major use of corporate cash.';
-const TARGETED = 'What is SEC Rule 10b-18, and how does it relate to stock buybacks?';
-const TARGETED_ANS = 'SEC Rule 10b-18, adopted in 1982, provides a safe harbor from market-manipulation liability for companies conducting open-market repurchases under specified conditions. It limits daily volume, timing around the open and close, and requires disclosure. The rule is central to how buybacks operate at scale today.';
-
-await page.select('select', 'ChatGPT');
-const areas = await page.$$('textarea');
-await areas[0].type(OPEN);
-await areas[1].type(OPEN_ANS);
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Continue'))?.click());
-await wait(400);
-const promptArea = (await page.$$('textarea')).pop();
-await promptArea.type(TARGETED);
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('run this in my AI'))?.click());
-await wait(400);
-await (await page.$$('textarea')).pop().type(TARGETED_ANS);
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Continue'))?.click());
-await wait(400);
-const input = await page.$('input:not([type="email"])');
-await input.type('SEC Rule 10b-18 only surfaced when asked directly.');
-const selects = await page.$$('select');
-await selects[selects.length - 2].select('Omission');
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Review before submit'))?.click());
-await wait(400);
-await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent.includes('Submit for review'))?.click());
+await page.type('.wb-suggest-module input[type="text"]', 'Test investigation topic');
+const failAreas = await page.$$('.wb-suggest-module textarea');
+await failAreas[0].type('Something worth inspecting in model answers.');
+await page.evaluate(() => [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Submit Investigation'))?.click());
 await wait(800);
 
-report.spot.byoComplete = await page.evaluate(() => ({
-  recordedHeader: document.body.textContent.includes('Recorded for review'),
+report.spot.suggestFailure = await page.evaluate(() => ({
   submitFailure: !!document.querySelector('.wb-status-readout--failure'),
   failureCopy: document.querySelector('.wb-status-readout--failure .wb-status-readout__body')?.textContent?.trim(),
 }));
 
-if (report.spot.byoComplete.recordedHeader) pass('BYO recorded for review state');
-else fail('BYO recorded state missing');
-if (report.spot.byoComplete.submitFailure) pass('share/submit failure state present');
-else fail('submit failure UI missing after failed POST');
+if (report.spot.suggestFailure.submitFailure) pass('suggest submit failure state present');
+else fail('suggest submit failure UI missing after failed POST');
 
 // Loading state exists in code path - spot via busy button disabled during compare
 await page.goto(`${base}/workbench.html`, { waitUntil: 'networkidle0' });
