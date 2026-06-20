@@ -1723,6 +1723,23 @@ body:has(main > section.hero) .nav__menu-btn {
   color: var(--ink-luminous);
   text-wrap: pretty;
 }
+.exists-bridge__product {
+  margin-top: clamp(1.5rem, 2.2vw, 2rem);
+  width: min(57.5rem, calc(100vw - 48px));
+  max-width: min(57.5rem, calc(100vw - 48px));
+  margin-inline: auto;
+}
+.exists-bridge__product .exists-bridge__payoff {
+  margin-top: 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.96rem, 1.12vw, 1.06rem);
+  line-height: 1.44;
+  letter-spacing: 0;
+  color: rgba(252, 248, 236, 0.65);
+}
+.exists-bridge__product .exists-bridge__payoff + .exists-bridge__payoff {
+  margin-top: 0.45rem;
+}
 .stakes--context-lead + .compounding {
   padding-top: clamp(var(--space-7), 9vw, var(--space-8));
   border-top: none;
@@ -1809,6 +1826,15 @@ body:has(main > section.hero) .nav__menu-btn {
     width: 100%;
     max-width: none;
     margin-inline: 0;
+  }
+  .exists-bridge__product {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+  }
+  .exists-bridge__product .exists-bridge__payoff {
+    font-size: clamp(0.88rem, 3.1vw, 0.98rem);
+    line-height: 1.42;
   }
   .stakes__copy {
     text-align: left;
@@ -7734,6 +7760,10 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   }
   .stakes.stakes--context-lead .exists-bridge__payoff {
     font-size: clamp(0.93rem, 3.35vw, 1.04rem);
+  }
+  .stakes.stakes--context-lead .exists-bridge__product .exists-bridge__payoff {
+    font-size: clamp(0.84rem, 2.95vw, 0.92rem);
+    line-height: 1.42;
   }
 
   .compounding__copy .section-label {
