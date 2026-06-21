@@ -210,23 +210,44 @@ const WORKBENCH_A11Y_CSS = `
 `;
 const WORKBENCH_RESULT_GAP_CSS = `
 .wb-result-score-panel {
-  padding: 0.75rem 0.65rem 0.55rem;
+  padding: 0.85rem 0.7rem 0.58rem;
   background: rgba(12, 9, 7, 0.94);
-  border: 1px solid rgba(242, 232, 220, 0.16);
+  border: 1px solid rgba(242, 232, 220, 0.18);
   border-radius: 4px;
   box-shadow:
-    inset 0 1px 0 rgba(242, 232, 220, 0.05),
-    0 0 0 1px rgba(var(--ember-rgb), 0.06);
+    inset 0 1px 0 rgba(242, 232, 220, 0.06),
+    0 1px 0 rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.wb-result-header {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.wb-result-header__primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem 0.72rem;
+  width: 100%;
+}
+.wb-result-header__primary .wb-result-gap-hero__score {
+  width: auto;
+  flex: 0 1 auto;
+  text-align: center;
 }
 .wb-result-gap-readout {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(100%, 13.5rem);
-  margin: 0.15rem auto 0;
+  width: min(100%, 10.75rem);
+  margin: 0.06rem auto 0;
+  opacity: 0.9;
 }
 .wb-result-gap-gauge {
   position: relative;
@@ -307,8 +328,8 @@ const WORKBENCH_RESULT_GAP_CSS = `
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin: 0.55rem auto 0;
-  padding: 0.38rem 0.72rem;
+  margin: 0;
+  padding: 0.34rem 0.68rem;
   border-radius: 3px;
   font-family: ${MONO};
   font-size: max(0.6875rem, var(--mono-min));
@@ -318,6 +339,7 @@ const WORKBENCH_RESULT_GAP_CSS = `
   text-transform: uppercase;
   opacity: 0;
   transform: translateY(6px);
+  flex-shrink: 0;
 }
 .wb-result-outcome--major {
   color: rgba(248, 168, 102, 0.96);
@@ -346,11 +368,11 @@ const WORKBENCH_RESULT_GAP_CSS = `
   transition: opacity 0.45s ease, transform 0.45s ease;
 }
 .wb-result-score-panel .wb-readout__run-strip--compact {
-  margin-top: 0.45rem;
+  margin-top: 0.38rem;
   margin-bottom: 0;
-  padding: 0.28rem 0.48rem;
-  gap: 0.2rem 0.65rem;
-  font-size: max(0.6875rem, var(--mono-min));
+  padding: 0.22rem 0.42rem;
+  gap: 0.18rem 0.55rem;
+  font-size: max(0.625rem, var(--mono-min));
   letter-spacing: 0.05em;
   line-height: 1.32;
   background: transparent;
@@ -361,7 +383,7 @@ const WORKBENCH_RESULT_GAP_CSS = `
   justify-content: center;
 }
 .wb-result-score-panel .wb-readout__run-strip--compact span {
-  color: rgba(168, 154, 138, 0.72);
+  color: rgba(148, 136, 122, 0.62);
 }
 .wb-result-inner.is-reveal-instant .wb-result-outcome { opacity: 1; transform: none; transition: none; }
 .wb-result-inner.is-reveal-instant .wb-result-gap-gauge__face { filter: drop-shadow(0 0 10px rgba(222, 111, 56, 0.16)); transition: none; }
@@ -397,10 +419,13 @@ const WORKBENCH_RESULT_GAP_CSS = `
     text-shadow: 0 1px 12px rgba(222, 111, 56, 0.16);
   }
   .wb-result-outcome {
-    margin-top: 0.42rem;
-    padding: 0.32rem 0.58rem;
+    margin: 0;
+    padding: 0.3rem 0.54rem;
     font-size: max(0.625rem, var(--mono-min));
     letter-spacing: 0.1em;
+  }
+  .wb-result-header__primary {
+    gap: 0.34rem 0.52rem;
   }
   .wb-result-score-panel .wb-readout__run-strip--compact {
     margin-top: 0.32rem;
@@ -465,19 +490,23 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
   }
 }
 .wb-result-inner .wb-output-module__head--compact {
-  padding-bottom: 0.35rem;
-  margin-bottom: 0.38rem;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.24rem;
+  border-bottom: none;
+}
+.wb-result-inner .wb-output-module__head {
+  border-bottom: none;
 }
 .wb-result-provenance {
   margin: 0;
 }
 .wb-result-provenance__case {
   font-family: ${MONO};
-  font-size: max(0.625rem, var(--mono-min));
+  font-size: max(0.5625rem, var(--mono-min));
   letter-spacing: 0.055em;
   line-height: 1.32;
-  color: rgba(204, 190, 172, 0.78);
-  margin: 0 0 0.1rem;
+  color: rgba(158, 146, 132, 0.62);
+  margin: 0 0 0.08rem;
   text-transform: uppercase;
 }
 .wb-result-provenance__sub {
@@ -485,7 +514,7 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
   font-size: max(0.5625rem, var(--mono-min));
   letter-spacing: 0.09em;
   line-height: 1.28;
-  color: rgba(158, 146, 132, 0.62);
+  color: rgba(138, 126, 114, 0.48);
   margin: 0;
   text-transform: uppercase;
 }
@@ -499,45 +528,68 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
   letter-spacing: 0.1em;
 }
 .wb-result-module {
-  margin-top: 0.52rem;
+  margin-top: 0.58rem;
   padding: 0.48rem 0.52rem;
-  background: rgba(10, 7, 6, 0.78);
-  border: 1px solid rgba(242, 232, 220, 0.1);
+  background: rgba(10, 7, 6, 0.72);
+  border: 1px solid rgba(242, 232, 220, 0.08);
   border-radius: 4px;
 }
 .wb-result-module--answer {
+  margin-top: 0.45rem;
   padding: 0;
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  overflow: visible;
+}
+.wb-result-inner .wb-result-module--answer .wb-answer-row {
+  margin-bottom: 0;
+}
+.wb-result-inner .wb-result-module--answer .wb-answer-row__bar {
+  border: 1px solid rgba(242, 232, 220, 0.06);
+  border-radius: 3px;
+  background: rgba(8, 6, 5, 0.34);
+}
+.wb-result-inner .wb-result-module--answer .wb-answer-row__toggle {
+  min-height: 36px;
+  padding: 0.38rem 0.48rem;
 }
 .wb-result-module--answer .wb-answer-row {
   margin: 0;
 }
 .wb-result-module--answer .wb-answer-row__label {
-  color: rgba(228, 214, 196, 0.9);
+  color: rgba(148, 136, 122, 0.66);
+  letter-spacing: 0.09em;
+  font-size: max(0.5625rem, var(--mono-min));
+}
+.wb-result-inner .wb-result-module--answer .wb-answer-row__chevron {
+  border-color: rgba(148, 136, 122, 0.48);
+  width: 0.38rem;
+  height: 0.38rem;
 }
 .wb-result-footnote {
-  margin-top: 0.48rem;
-  padding: 0.4rem 0.48rem;
-  background: rgba(8, 6, 5, 0.72);
-  border: 1px solid rgba(242, 232, 220, 0.09);
-  border-radius: 3px;
+  margin-top: 0.4rem;
+  padding: 0.24rem 0.1rem 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 .wb-result-footnote .wb-result-discovery-beat {
-  margin: 0 0 0.22rem;
-  color: rgba(222, 111, 56, 0.92);
+  margin: 0 0 0.18rem;
+  color: rgba(196, 176, 152, 0.72);
+  font-size: max(0.625rem, 0.65rem);
 }
 .wb-result-footnote__caption {
   font-family: ${MONO};
-  font-size: max(0.625rem, 0.65rem);
+  font-size: max(0.5625rem, var(--mono-min));
   letter-spacing: 0.03em;
   line-height: 1.32;
-  color: rgba(210, 198, 182, 0.8);
+  color: rgba(148, 136, 122, 0.56);
   margin: 0;
 }
 .wb-collapsible {
-  border: 1px solid rgba(242, 232, 220, 0.08);
-  border-radius: 4px;
-  background: rgba(8, 6, 5, 0.45);
+  border: 1px solid rgba(242, 232, 220, 0.06);
+  border-radius: 3px;
+  background: rgba(8, 6, 5, 0.28);
 }
 .wb-collapsible__toggle {
   display: flex;
@@ -545,7 +597,7 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
   justify-content: space-between;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.42rem 0.52rem;
+  padding: 0.38rem 0.48rem;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -553,40 +605,43 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
 }
 .wb-collapsible__title {
   font-family: ${MONO};
-  font-size: max(0.625rem, var(--mono-min));
+  font-size: max(0.5625rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(168, 154, 138, 0.78);
+  color: rgba(148, 136, 122, 0.62);
 }
 .wb-collapsible__action {
   font-family: ${MONO};
   font-size: max(0.5625rem, var(--mono-min));
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(148, 136, 122, 0.62);
+  color: rgba(138, 126, 114, 0.52);
   flex-shrink: 0;
 }
 .wb-collapsible__body {
-  padding: 0 0.52rem 0.48rem;
+  padding: 0 0.48rem 0.42rem;
 }
 .wb-collapsible--share,
 .wb-collapsible--record {
-  margin-top: 0.35rem;
+  margin-top: 0.28rem;
 }
 .wb-collapsible--share .wb-share-panel__text,
 .wb-collapsible--record .wb-status-readout__record {
   margin-top: 0.35rem;
   max-height: 12rem;
+  font-size: max(0.625rem, var(--mono-min));
+  line-height: 1.38;
+  color: rgba(168, 154, 138, 0.72);
 }
 .wb-collapsible--share .wb-share-panel__actions {
   margin-top: 0.55rem;
   margin-bottom: 0.15rem;
 }
 .wb-output-module__footer.wb-result-share {
-  margin-top: 0.65rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid rgba(242, 232, 220, 0.08);
-  gap: 0.28rem;
+  margin-top: 0.52rem;
+  padding-top: 0.42rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.05);
+  gap: 0.22rem;
 }
 .wb-output-module__footer.wb-result-share .wb-btn--ghost,
 .wb-output-module__footer.wb-result-share .wb-share-panel__link {
@@ -626,13 +681,13 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
     padding: 0;
   }
   .wb-result-footnote {
-    margin-top: 0.38rem;
-    padding: 0.34rem 0.4rem;
+    margin-top: 0.34rem;
+    padding: 0.2rem 0.06rem 0;
   }
   .wb-result-footnote__caption {
-    font-size: max(0.625rem, var(--mono-min));
+    font-size: max(0.5625rem, var(--mono-min));
     line-height: 1.28;
-    color: rgba(210, 200, 186, 0.82);
+    color: rgba(148, 136, 122, 0.56);
   }
 }
 `;
@@ -697,6 +752,17 @@ const WORKBENCH_FLOW_CSS = `
 .wb-console .wb-plate-hint {
   color: rgba(196, 182, 166, 0.82);
 }
+.wb-copilot-note {
+  font-family: ${SANS};
+  font-size: max(0.75rem, 0.78rem);
+  line-height: 1.45;
+  color: rgba(138, 126, 114, 0.68);
+  margin: 0.42rem 0 0;
+  max-width: 40ch;
+}
+.wb-confirm-block .wb-copilot-note + .wb-hygiene-note {
+  margin-top: 0.38rem;
+}
 .wb-console .wb-plate-note {
   color: rgba(200, 186, 170, 0.78);
 }
@@ -726,7 +792,7 @@ const WORKBENCH_FLOW_CSS = `
 }
 .wb-suggest-module {
   margin-top: 0;
-  margin-bottom: 0.25rem;
+  margin-bottom: clamp(3.5rem, 7vh, 4.5rem);
   width: 100%;
   max-width: min(100%, 40rem);
 }
@@ -992,16 +1058,16 @@ const WORKBENCH_TERMS_CSS = `
   animation: wb-term-row-in 0.26s ease forwards;
 }
 .wb-result-inner .wb-token-chip.is-visible.is-missing {
-  border: 1px solid rgba(222, 111, 56, 0.14);
-  background: rgba(6, 4, 3, 0.52);
-  color: rgba(210, 188, 164, 0.78);
+  border: 1px solid rgba(222, 111, 56, 0.1);
+  background: rgba(6, 4, 3, 0.42);
+  color: rgba(196, 180, 158, 0.68);
   font-weight: 400;
   box-shadow: none;
 }
 .wb-result-inner .wb-token-chip.is-visible.is-found {
-  border: 1px solid rgba(242, 232, 220, 0.04);
-  background: rgba(6, 4, 3, 0.28);
-  color: rgba(140, 128, 118, 0.48);
+  border: 1px solid rgba(242, 232, 220, 0.03);
+  background: rgba(6, 4, 3, 0.22);
+  color: rgba(132, 122, 112, 0.44);
   font-weight: 400;
 }
 .wb-token-chip__dot {
@@ -1013,14 +1079,16 @@ const WORKBENCH_TERMS_CSS = `
   flex-shrink: 0;
 }
 .wb-result-module--terms .wb-field-label {
-  margin-bottom: 0.28rem;
-  color: rgba(168, 154, 138, 0.68);
+  margin-bottom: 0.22rem;
+  color: rgba(148, 136, 122, 0.56);
   letter-spacing: 0.11em;
+  font-size: max(0.5625rem, var(--mono-min));
 }
 .wb-result-module--terms {
-  padding: 0.38rem 0.44rem;
-  background: rgba(8, 6, 5, 0.55);
-  border-color: rgba(242, 232, 220, 0.07);
+  margin-top: 0.62rem;
+  padding: 0.32rem 0.4rem 0.36rem;
+  background: rgba(8, 6, 5, 0.4);
+  border-color: rgba(242, 232, 220, 0.05);
 }
 .wb-token-chip__label {
   min-width: 0;
@@ -1030,9 +1098,9 @@ const WORKBENCH_TERMS_CSS = `
 }
 .wb-result-discovery-beat {
   font-family: ${SANS};
-  font-size: 0.75rem;
+  font-size: max(0.625rem, 0.65rem);
   line-height: 1.28;
-  color: rgba(222, 111, 56, 0.92);
+  color: rgba(196, 176, 152, 0.72);
   margin: 0;
   opacity: 0;
   transform: translateY(5px);
@@ -1425,6 +1493,12 @@ function PromptCard({ text }) {
 function HygieneNote() {
   return (
     <p className="wb-plate-hint wb-hygiene-note">Use a fresh chat, not a follow-up — past messages skew the answer.</p>
+  );
+}
+
+function CopilotNote() {
+  return (
+    <p className="wb-copilot-note">AI copilot scoring is in development. For now, run the prompt in a fresh chat and paste the answer here.</p>
   );
 }
 
@@ -2053,14 +2127,18 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       {gapVal != null ? (
         <>
           <div className="wb-result-score-panel">
-            <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
-              {displayGap.toFixed(1)} / 3
-            </div>
-            <div className="wb-result-gap-readout">
-              <GapGauge needleValue={gaugeNeedle} settled={gaugeSettled} />
-            </div>
-            <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
-              {outcome.label}
+            <div className="wb-result-header">
+              <div className="wb-result-header__primary">
+                <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
+                  {displayGap.toFixed(1)} / 3
+                </div>
+                <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
+                  {outcome.label}
+                </div>
+              </div>
+              <div className="wb-result-gap-readout">
+                <GapGauge needleValue={gaugeNeedle} settled={gaugeSettled} />
+              </div>
             </div>
             <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
               {categoryLabel ? <span>{categoryLabel}</span> : null}
@@ -2353,6 +2431,7 @@ function Curated() {
                   <Btn kind="ghost" small onClick={copyPrompt} className={copied ? "is-copied" : ""}>{copied ? "Copied ✓" : "Copy question"}</Btn>
                   <Btn kind="primary" onClick={() => setStep(1)}>Ran it — paste the answer →</Btn>
                 </div>
+                <CopilotNote />
                 <HygieneNote />
                 <p className="wb-plate-hint">Models change, so your run may differ — a closed gap is a result too.</p>
               </div>
