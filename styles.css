@@ -1298,9 +1298,10 @@ body:has(main > section.hero) .nav__menu-btn {
   line-height: 1.22;
   letter-spacing: -0.014em;
   color: #F2E8DC;
-  max-width: 28ch;
+  max-width: 34ch;
   padding-bottom: clamp(0.65rem, 1.25vw, 0.85rem);
   position: relative;
+  text-wrap: balance;
 }
 .bridge__connector {
   width: 96px;
