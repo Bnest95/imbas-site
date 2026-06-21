@@ -1,0 +1,26 @@
+{
+  "desktop": {
+    "eyebrow": "Public interest",
+    "heading": "Public Interest",
+    "paragraphs": [
+      "As AI becomes part of how people learn, decide, and act, the public needs records of what these systems surface — and what they do not.",
+      "Without records, behavior changes quietly. With records, those changes can be inspected."
+    ],
+    "hasDomainList": false,
+    "hasNewCopy": true,
+    "nextSection": "Why records matter",
+    "overflow": false
+  },
+  "mobile": {
+    "eyebrow": "Public interest",
+    "heading": "Public Interest",
+    "paragraphs": [
+      "As AI becomes part of how people learn, decide, and act, the public needs records of what these systems surface — and what they do not.",
+      "Without records, behavior changes quietly. With records, those changes can be inspected."
+    ],
+    "hasDomainList": false,
+    "hasNewCopy": true,
+    "nextSection": "Why records matter",
+    "overflow": false
+  }
+}

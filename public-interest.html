@@ -24,6 +24,44 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css?v=pi-authority">
+  <style>
+    .page--public-interest .pi-how-measured .pi-measure-steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: pi-measure;
+    }
+    .page--public-interest .pi-how-measured .pi-measure-steps li {
+      position: relative;
+      margin: 0;
+      padding: 0.28rem 0 0.28rem 1.55rem;
+      counter-increment: pi-measure;
+      max-width: 60ch;
+      font-family: var(--font-body);
+      font-size: var(--pi-type-body);
+      line-height: 1.55;
+      color: var(--ink-soft);
+    }
+    .page--public-interest .pi-how-measured .pi-measure-steps li::before {
+      content: counter(pi-measure) ".";
+      position: absolute;
+      left: 0;
+      top: 0.28rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: rgba(var(--ember-rgb), 0.78);
+    }
+    .page--public-interest .pi-how-measured .pi-measure-steps__closing {
+      margin: var(--space-3) 0 0;
+      max-width: 60ch;
+      font-family: var(--font-body);
+      font-size: var(--pi-type-body);
+      line-height: 1.55;
+      color: var(--ink-soft);
+    }
+  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -67,34 +105,39 @@
     <header class="pi-masthead">
       <span class="section-label section-label--named"><span>Public interest</span></span>
       <h1>Public Interest</h1>
-      <p class="page__intro pi-masthead__thesis">As AI becomes a layer over search, work, education, policy, medicine, and finance, the public needs records of what these systems surface &mdash; and what they do not. Without one, that behavior drifts unseen, and the decisions built on it drift with it.</p>
+      <p class="page__intro pi-masthead__thesis">As AI becomes part of how people learn, decide, and act, the public needs records of what these systems surface &mdash; and what they do not.</p>
+      <p class="page__intro pi-masthead__thesis">Without records, behavior changes quietly. With records, those changes can be inspected.</p>
     </header>
 
     <section class="pi-section pi-records">
       <h2 class="pi-section__title">Why records matter</h2>
       <div class="pi-record-note">
-        <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted. Imbas preserves observations under documented conditions so patterns can be inspected over time.</p>
-      </div>
-    </section>
-
-    <section class="pi-section pi-measurement">
-      <h2 class="pi-section__title">Public-interest measurement</h2>
-      <div class="pi-record-note">
-        <p>Imbas documents observable behavior so researchers, journalists, institutions, and citizens can inspect surfacing patterns without relying on vendor claims or anecdote.</p>
+        <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted.</p>
+        <p>Imbas preserves observations under documented conditions so researchers, journalists, institutions, and citizens can inspect surfacing patterns without relying on vendor claims or anecdote.</p>
       </div>
     </section>
 
     <section class="pi-section pi-tracking">
-      <h2 class="pi-section__title">Why tracking this matters</h2>
+      <h2 class="pi-section__title">Why tracking matters</h2>
       <div class="pi-record-note">
-        <p>What gets measured gets better. Tracking what AI surfaces &mdash; and omits &mdash; over time makes the gaps visible, and visible gaps get closed. It also catches drift: a model that volunteers a mechanism today may quietly stop tomorrow, and with no record, no one notices. As AI becomes the layer people decide on &mdash; medicine, finance, policy &mdash; undetected drift degrades those decisions invisibly, at scale. A public record keeps decisions anchored to what&rsquo;s true instead of drifting with the model. And it&rsquo;s tractable: this behavior is observable from the outside, at low cost. Researchers, journalists, and institutions can all inspect it &mdash; but the point is simpler than oversight. Better outputs on net, steadier decisions, for users and labs alike.</p>
+        <p>A model that surfaces a mechanism today may stop surfacing it tomorrow.</p>
+        <p>A model that omits something today may surface it after an update.</p>
+        <p>Without records, those changes disappear.</p>
+        <p>With records, behavior can be compared across time, models, and topics.</p>
       </div>
     </section>
 
     <section class="pi-section pi-how-measured">
       <h2 class="pi-section__title">How it&rsquo;s measured</h2>
       <div class="pi-record-note">
-        <p>v1 established the phenomenon across 13 cases scored on a 0&ndash;3 rubric, within an archive of 50 recorded cases. Those scores were first-pass and founder-assigned &mdash; enough to show the gap is real and recurring, not enough to call it settled. v2 adds a blinded sub-study scored by an independent collaborator, so the rubric can be tested for inter-rater reliability. The instrument is built to be checked, not trusted.</p>
+        <ol class="pi-measure-steps" role="list">
+          <li>Capture an open-ended answer.</li>
+          <li>Capture a targeted inspection answer.</li>
+          <li>Compare what surfaced.</li>
+          <li>Score the difference.</li>
+          <li>Preserve the record.</li>
+        </ol>
+        <p class="pi-measure-steps__closing">Detailed procedures, controls, and limitations are documented in the <a href="/methodology.html">Methodology</a> page.</p>
       </div>
     </section>
 
