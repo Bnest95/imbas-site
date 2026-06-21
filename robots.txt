@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://imbaslabs.com/sitemap.xml
+Sitemap: https://www.imbaslabs.com/sitemap.xml

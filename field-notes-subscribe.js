@@ -3,6 +3,8 @@
   var INVALID = "Please enter a valid email address.";
   var ERROR = "Couldn't subscribe — check the address and try again.";
   var ENDPOINT = "/briefing/members/api/send-magic-link";
+  var SUBSCRIBE_LIVE = false;
+  var PAUSED_COPY = "Field Notes signup is temporarily unavailable. Email brendan@imbaslabs.com or visit Contact.";
 
   function showMsg(el, text) {
     el.textContent = text;
@@ -16,7 +18,32 @@
     el.classList.remove("is-visible");
   }
 
+  function pauseForm(form, msg) {
+    var emailInput = form.querySelector('input[type="email"]');
+    var btn = form.querySelector('button[type="submit"]');
+    form.removeAttribute("action");
+    if (emailInput) {
+      emailInput.disabled = true;
+      emailInput.setAttribute("aria-disabled", "true");
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.setAttribute("aria-disabled", "true");
+    }
+    form.classList.add("is-subscribe-paused");
+    if (msg) showMsg(msg, PAUSED_COPY);
+  }
+
   function wireForm(form, msg) {
+    if (!SUBSCRIBE_LIVE) {
+      pauseForm(form, msg);
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        if (msg) showMsg(msg, PAUSED_COPY);
+      });
+      return;
+    }
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var emailInput = form.querySelector('input[type="email"]');
