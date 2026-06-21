@@ -8888,22 +8888,22 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 
 .wb-share-panel {
-  border: 1px solid var(--wb-border-panel);
-  border-radius: 6px;
-  padding: 1.15rem 1.1rem;
-  background: var(--wb-bg-well);
-  margin-top: 1.35rem;
+  border: 1px solid var(--wb-border-passive);
+  border-radius: 4px;
+  padding: 0;
+  background: transparent;
+  margin-top: 0;
 }
 .wb-share-panel__text {
-  margin: 0.65rem 0 1rem;
-  padding: 0.85rem 0.9rem;
-  background: rgba(24, 18, 16, 0.88);
-  border: 1px solid var(--wb-border-passive);
-  border-radius: 6px;
+  margin: 0.35rem 0 0;
+  padding: 0.65rem 0.7rem;
+  background: rgba(24, 18, 16, 0.72);
+  border: 1px solid rgba(242, 232, 220, 0.08);
+  border-radius: 4px;
   font-family: var(--font-sans);
-  font-size: 0.84375rem;
-  line-height: 1.55;
-  color: rgba(185, 168, 147, 0.94);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(168, 154, 138, 0.88);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -9488,17 +9488,17 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   white-space: nowrap;
 }
 .wb-status-readout__record {
-  margin: 0.75rem 0 0;
-  padding: 0.75rem 0.85rem;
-  max-height: 17.5rem;
+  margin: 0.35rem 0 0;
+  padding: 0.65rem 0.7rem;
+  max-height: 12rem;
   overflow: auto;
-  background: rgba(4, 3, 2, 0.92);
-  border: 1px solid rgba(242, 232, 220, 0.1);
+  background: rgba(4, 3, 2, 0.82);
+  border: 1px solid rgba(242, 232, 220, 0.08);
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: max(0.6875rem, var(--mono-min));
-  line-height: 1.5;
-  color: rgba(185, 168, 147, 0.9);
+  font-size: max(0.625rem, var(--mono-min));
+  line-height: 1.45;
+  color: rgba(158, 146, 132, 0.82);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -10008,4 +10008,69 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 .wb-confirm-block .wb-plate-hint {
   margin-top: 0.45rem;
+}
+
+/* =============================================================
+   WORKBENCH — Pass B.1 case selector contrast
+   ============================================================= */
+
+.wb-case-card:not(.is-active):not(.is-disabled) {
+  opacity: 0.87;
+  border-color: rgba(242, 232, 220, 0.04);
+  background: rgba(26, 20, 17, 0.8);
+}
+.wb-case-card:not(.is-active):not(.is-disabled) .wb-case-card__title {
+  color: rgba(186, 172, 156, 0.64);
+}
+.wb-case-card:not(.is-active):not(.is-disabled) .wb-specimen-plate__label {
+  color: rgba(240, 143, 88, 0.4);
+}
+.wb-case-card:not(.is-active):not(.is-disabled).wb-specimen-plate::before {
+  opacity: 0.24;
+}
+.wb-case-card:not(.is-active):not(.is-disabled).wb-specimen-plate::after {
+  opacity: 0.18;
+}
+.wb-case-card:not(.is-active):not(.is-disabled):not(:disabled):hover {
+  opacity: 0.93;
+  border-color: rgba(242, 232, 220, 0.08);
+  background: rgba(30, 24, 20, 0.86);
+}
+
+.wb-case-card.is-active {
+  opacity: 1;
+  border-color: rgba(var(--ember-rgb), 0.74);
+  background: rgba(62, 46, 38, 0.99);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--ember-rgb), 0.3),
+    0 0 20px rgba(var(--ember-rgb), 0.16),
+    0 0 0 1px rgba(var(--ember-rgb), 0.14);
+}
+.wb-case-card.is-active .wb-case-card__title {
+  color: #FCF8EC;
+  text-shadow: 0 0 14px rgba(var(--ember-rgb), 0.14);
+}
+.wb-case-card.is-active .wb-specimen-plate__label {
+  color: rgba(248, 168, 102, 0.96);
+}
+.wb-case-card.wb-measure-channel.is-active {
+  border-color: rgba(var(--ember-rgb), 0.82);
+  background-color: rgba(64, 46, 36, 1);
+  box-shadow:
+    inset 3px 0 0 var(--ember),
+    inset 0 0 0 1px rgba(var(--ember-rgb), 0.26),
+    0 0 24px rgba(var(--ember-rgb), 0.2),
+    0 0 0 1px rgba(var(--ember-rgb), 0.18);
+}
+.wb-case-card.is-active.wb-specimen-plate::before {
+  opacity: 0.34;
+}
+.wb-case-card.is-active.wb-specimen-plate::after {
+  opacity: 0.38;
+}
+
+@media (max-width: 768px) {
+  .wb-case-card:not(.is-active):not(.is-disabled) {
+    background: rgba(24, 19, 16, 0.84);
+  }
 }

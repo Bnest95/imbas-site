@@ -1,0 +1,12 @@
+{
+  "scoreText": "2.5 / 3",
+  "scoreFontSize": "58.4px",
+  "scoreAboveGauge": true,
+  "outcomeText": "MAJOR GAP",
+  "outcomeVisible": true,
+  "termsBeforeAnswer": true,
+  "shareCollapsed": true,
+  "recordCollapsed": true,
+  "shareToggle": "Share run",
+  "recordToggle": "Record data"
+}

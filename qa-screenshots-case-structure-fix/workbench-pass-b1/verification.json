@@ -1,0 +1,22 @@
+{
+  "desktop": {
+    "activeBorder": "rgba(222, 111, 56, 0.82)",
+    "activeBg": "rgb(64, 46, 36)",
+    "activeTitle": "rgb(252, 248, 236)",
+    "activeOpacity": "1",
+    "inactiveOpacity": "0.87",
+    "inactiveBg": "rgba(26, 20, 17, 0.8)",
+    "inactiveTitle": "rgba(186, 172, 156, 0.64)",
+    "activeBoxShadow": "rgb(222, 111, 56) 3px 0px 0px 0px inset, rgba(222, 111, 56, 0.26) 0px 0px 0px 1p"
+  },
+  "mobile": {
+    "activeBorder": "rgba(222, 111, 56, 0.82)",
+    "activeBg": "rgb(64, 46, 36)",
+    "activeTitle": "rgb(252, 248, 236)",
+    "activeOpacity": "1",
+    "inactiveOpacity": "0.87",
+    "inactiveBg": "rgba(24, 19, 16, 0.84)",
+    "inactiveTitle": "rgba(186, 172, 156, 0.64)",
+    "activeBoxShadow": "rgb(222, 111, 56) 3px 0px 0px 0px inset, rgba(222, 111, 56, 0.26) 0px 0px 0px 1p"
+  }
+}

@@ -163,11 +163,12 @@ if (!suggestUi.inlineCta) pass('no duplicate inline suggest CTA');
 else fail('duplicate inline suggest CTA still present');
 if (suggestUi.confirmFollowsFinding && suggestUi.suggestAfterConfirm && suggestUi.fullSuggestNotBetweenFindingAndConfirm) pass('finding → confirm → suggest order');
 else fail('suggest module placement wrong');
-if (suggestUi.suggestCollapsed && suggestUi.openSuggestBtn && suggestUi.suggestLead?.includes('Have a case Imbas should inspect next')) pass('readable collapsed suggest CTA');
+if (suggestUi.suggestCollapsed && suggestUi.openSuggestBtn && suggestUi.suggestLead?.includes('Help expand the archive')) pass('readable collapsed suggest CTA');
 else fail('collapsed suggest CTA missing or unreadable');
 const suggestHeading = await page.evaluate(() => {
   const heading = document.querySelector('.wb-suggest-module__heading');
   const lead = document.querySelector('.wb-suggest-module__lead');
+  const eyebrow = document.querySelector('.wb-suggest-module__eyebrow');
   const cta = [...document.querySelectorAll('.wb-suggest-module button')].find((b) => b.textContent.includes('Suggest an investigation'));
   const hs = heading ? getComputedStyle(heading) : null;
   const ls = lead ? getComputedStyle(lead) : null;
@@ -175,18 +176,21 @@ const suggestHeading = await page.evaluate(() => {
   return {
     hasHeading: !!heading,
     headingText: heading?.textContent?.trim(),
+    eyebrowText: eyebrow?.textContent?.trim(),
     headingSize: hs?.fontSize,
     headingFamily: hs?.fontFamily,
     headingColor: hs?.color,
     leadColor: ls?.color,
     ctaColor: cs?.color,
+    ctaPrimary: cta?.classList.contains('wb-btn--primary'),
+    ctaBackground: cs?.backgroundColor,
   };
 });
 if (suggestHeading.hasHeading && suggestHeading.headingText === 'Suggest an Investigation') pass('suggest section title present');
 else fail(`suggest section title: ${JSON.stringify(suggestHeading)}`);
 if (suggestHeading.headingFamily?.includes('Fraunces') && parseFloat(suggestHeading.headingSize) >= 22) pass('suggest title serif display style');
 else fail(`suggest title style: ${JSON.stringify(suggestHeading)}`);
-if (suggestHeading.headingColor === 'rgb(242, 232, 220)' && suggestHeading.ctaColor === suggestHeading.headingColor && suggestHeading.leadColor !== suggestHeading.headingColor) pass('title/body/CTA color hierarchy');
+if (suggestHeading.eyebrowText === 'Field contribution' && suggestHeading.headingColor === 'rgb(242, 232, 220)' && suggestHeading.leadColor !== suggestHeading.headingColor && suggestHeading.ctaPrimary) pass('title/body/CTA color hierarchy');
 else fail(`suggest color hierarchy: ${JSON.stringify(suggestHeading)}`);
 if (suggestUi.caseCardsVisible && suggestUi.ranItVisible) pass('curated case replay visible by default');
 else fail('curated case replay not primary');
@@ -205,7 +209,7 @@ const formCheck = await page.evaluate(() => ({
   emailGate: !!document.querySelector('.wb-email-gate'),
   expanded: document.querySelector('.wb-suggest-module.is-expanded') !== null,
 }));
-if (formCheck.headline?.includes('What should Imbas investigate next')) pass('suggest intro copy');
+if (formCheck.headline?.includes('Help expand the archive')) pass('suggest intro copy');
 else fail(`suggest intro: ${formCheck.headline}`);
 if (formCheck.submitBtn && formCheck.expanded) pass('Submit Investigation button present when expanded');
 else fail('Submit Investigation button missing when expanded');
