@@ -1,0 +1,9 @@
+{
+  "note": "Captured before skip-link fix; footer and hero already met targets.",
+  "measurements": {
+    "375": { "skip": { "rect": { "width": 158.42, "height": 38.02 } }, "footerMinHeight": 44, "heroSecondary": { "height": 44 } },
+    "390": { "skip": { "rect": { "width": 158.42, "height": 38.02 } }, "footerMinHeight": 44, "heroSecondary": { "height": 44 } },
+    "430": { "skip": { "rect": { "width": 158.42, "height": 38.02 } }, "footerMinHeight": 44, "heroSecondary": { "height": 44 } },
+    "1440": { "skip": { "rect": { "width": 158.42, "height": 38.02 } }, "footerMinHeight": 44, "heroSecondary": { "height": 44 } }
+  }
+}

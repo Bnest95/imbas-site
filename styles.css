@@ -4407,6 +4407,7 @@ main, .site-footer { position: relative; z-index: 2; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
   text-decoration: none;
+  box-sizing: border-box;
 }
 .skip-link:focus {
   left: 1rem;
@@ -4414,6 +4415,14 @@ main, .site-footer { position: relative; z-index: 2; }
   width: auto;
   height: auto;
   overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+@media (max-width: 900px) {
+  .skip-link:focus {
+    min-height: 44px;
+  }
 }
 .page--methodology .page__section h2 {
   font-size: clamp(1.25rem, 1.8vw, 1.5rem);
