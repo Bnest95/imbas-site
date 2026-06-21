@@ -1,0 +1,66 @@
+{
+  "desktopDoctrine": {
+    "heading": "Not a verdict system",
+    "body": "Imbas records behavior. It does not determine truth, intent, or motive.",
+    "paragraphCount": 1,
+    "hasDoctrinePlate": false,
+    "hasVolunteerGapLink": false,
+    "howMeasuredSteps": [
+      "Capture an open-ended answer.",
+      "Capture a targeted inspection answer.",
+      "Compare what surfaced.",
+      "Score the difference.",
+      "Preserve the record."
+    ],
+    "supportHeading": "What public support can produce",
+    "overflow": false
+  },
+  "desktopTransition": {
+    "heading": "Not a verdict system",
+    "body": "Imbas records behavior. It does not determine truth, intent, or motive.",
+    "paragraphCount": 1,
+    "hasDoctrinePlate": false,
+    "hasVolunteerGapLink": false,
+    "howMeasuredSteps": [
+      "Capture an open-ended answer.",
+      "Capture a targeted inspection answer.",
+      "Compare what surfaced.",
+      "Score the difference.",
+      "Preserve the record."
+    ],
+    "supportHeading": "What public support can produce",
+    "overflow": false
+  },
+  "mobileDoctrine": {
+    "heading": "Not a verdict system",
+    "body": "Imbas records behavior. It does not determine truth, intent, or motive.",
+    "paragraphCount": 1,
+    "hasDoctrinePlate": false,
+    "hasVolunteerGapLink": false,
+    "howMeasuredSteps": [
+      "Capture an open-ended answer.",
+      "Capture a targeted inspection answer.",
+      "Compare what surfaced.",
+      "Score the difference.",
+      "Preserve the record."
+    ],
+    "supportHeading": "What public support can produce",
+    "overflow": false
+  },
+  "mobileTransition": {
+    "heading": "Not a verdict system",
+    "body": "Imbas records behavior. It does not determine truth, intent, or motive.",
+    "paragraphCount": 1,
+    "hasDoctrinePlate": false,
+    "hasVolunteerGapLink": false,
+    "howMeasuredSteps": [
+      "Capture an open-ended answer.",
+      "Capture a targeted inspection answer.",
+      "Compare what surfaced.",
+      "Score the difference.",
+      "Preserve the record."
+    ],
+    "supportHeading": "What public support can produce",
+    "overflow": false
+  }
+}

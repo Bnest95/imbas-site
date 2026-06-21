@@ -61,6 +61,25 @@
       line-height: 1.55;
       color: var(--ink-soft);
     }
+    .page--public-interest .pi-support .pi-output-ledger__row {
+      grid-template-columns: minmax(5.5rem, 10.75rem) minmax(0, 1fr);
+      align-items: start;
+    }
+    .page--public-interest .pi-support .pi-output-ledger__label {
+      text-transform: none;
+      letter-spacing: 0.04em;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--ember-soft);
+    }
+    @media (max-width: 480px) {
+      .page--public-interest .pi-support .pi-output-ledger__row {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+      }
+    }
   </style>
   <script type="application/ld+json">
   {
@@ -143,10 +162,8 @@
 
     <section class="pi-section pi-doctrine">
       <h2 class="pi-section__title">Not a verdict system</h2>
-      <div class="pi-doctrine-plate">
-        <p>Imbas does not declare intent. It does not decide truth for the reader. It does not render moral judgment. It records behavior.</p>
-        <p>The public-interest value comes from making the record inspectable. A reader can examine the captured response, the rubric, and the cited evidence and reach their own conclusion. That is the point of public records: not to settle the question, but to make the question inspectable.</p>
-        <p><a href="/volunteer-gap.html" class="page__cta-link">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
+      <div class="pi-record-note">
+        <p>Imbas records behavior. It does not determine truth, intent, or motive.</p>
       </div>
     </section>
 
@@ -154,28 +171,20 @@
       <h2 class="pi-section__title">What public support can produce</h2>
       <dl class="pi-output-ledger">
         <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Expanded case archive across topics and models</dd>
+          <dt class="pi-output-ledger__label">Expanded case archive</dt>
+          <dd class="pi-output-ledger__desc">More public records across models, topics, and time.</dd>
         </div>
         <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Methodology development and versioned documentation</dd>
+          <dt class="pi-output-ledger__label">Public case reports</dt>
+          <dd class="pi-output-ledger__desc">Readable reports that explain what was measured, what surfaced, and what changed.</dd>
         </div>
         <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Public case reports with full prompt transcripts</dd>
+          <dt class="pi-output-ledger__label">Methodology</dt>
+          <dd class="pi-output-ledger__desc">Clearer rubrics, controls, null cases, and validation notes.</dd>
         </div>
         <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Public datasets for independent analysis</dd>
-        </div>
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Field Notes on emerging patterns</dd>
-        </div>
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Output</dt>
-          <dd class="pi-output-ledger__desc">Live signal prototype for in-the-moment gap detection</dd>
+          <dt class="pi-output-ledger__label">Public datasets</dt>
+          <dd class="pi-output-ledger__desc">Structured records that researchers and institutions can inspect, cite, and compare.</dd>
         </div>
       </dl>
     </section>
