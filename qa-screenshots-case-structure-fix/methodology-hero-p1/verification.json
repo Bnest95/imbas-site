@@ -1,0 +1,28 @@
+{
+  "desktop": {
+    "eyebrow": "Observed behavior, not intent",
+    "heading": "Methodology",
+    "paragraphs": [
+      "Imbas measures what AI systems surface under different prompt conditions.",
+      "It compares what appears in an open-ended answer with what appears when the same system is asked directly about a specific topic.",
+      "The goal is not to infer intent. The goal is to observe behavior."
+    ],
+    "nextSectionHeading": "Behavioral observability for AI systems",
+    "hasAcademicFiller": false,
+    "hasBehaviorPrinciple": true,
+    "overflow": false
+  },
+  "mobile": {
+    "eyebrow": "Observed behavior, not intent",
+    "heading": "Methodology",
+    "paragraphs": [
+      "Imbas measures what AI systems surface under different prompt conditions.",
+      "It compares what appears in an open-ended answer with what appears when the same system is asked directly about a specific topic.",
+      "The goal is not to infer intent. The goal is to observe behavior."
+    ],
+    "nextSectionHeading": "Behavioral observability for AI systems",
+    "hasAcademicFiller": false,
+    "hasBehaviorPrinciple": true,
+    "overflow": false
+  }
+}
