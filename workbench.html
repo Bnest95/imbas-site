@@ -105,6 +105,18 @@
   <div class="wb-stage__grid" aria-hidden="true"></div>
   <div class="hero__dust wb-stage__dust" aria-hidden="true"></div>
   <div id="workbench-root" class="wb-stage__content"></div>
+  <noscript>
+    <div class="wb-noscript-fallback">
+      <h1>Imbas Workbench</h1>
+      <p>Pick a published case, run the open prompt on your AI, and compare your answer against what Imbas observed. The interactive Workbench requires JavaScript.</p>
+      <p>While JavaScript is disabled, you can still inspect the public record:</p>
+      <ul>
+        <li><a href="/archive.html">Case Archive</a></li>
+        <li><a href="/methodology.html">Methodology</a></li>
+        <li><a href="/case/005.html">Case 005 — Buybacks &amp; SEC Rule 10b-18</a></li>
+      </ul>
+    </div>
+  </noscript>
 </main>
 
 <footer class="site-footer">
@@ -752,7 +764,7 @@ const WORKBENCH_FLOW_CSS = `
 .wb-console .wb-plate-hint {
   color: rgba(196, 182, 166, 0.82);
 }
-.wb-copilot-note {
+.wb-automation-note {
   font-family: ${SANS};
   font-size: max(0.75rem, 0.78rem);
   line-height: 1.45;
@@ -760,7 +772,7 @@ const WORKBENCH_FLOW_CSS = `
   margin: 0.42rem 0 0;
   max-width: 40ch;
 }
-.wb-confirm-block .wb-copilot-note + .wb-hygiene-note {
+.wb-confirm-block .wb-automation-note + .wb-hygiene-note {
   margin-top: 0.38rem;
 }
 .wb-console .wb-plate-note {
@@ -1496,9 +1508,9 @@ function HygieneNote() {
   );
 }
 
-function CopilotNote() {
+function AutomationNote() {
   return (
-    <p className="wb-copilot-note">AI copilot scoring is in development. For now, run the prompt in a fresh chat and paste the answer here.</p>
+    <p className="wb-automation-note">Automated scoring is in development. For now, run the prompt in a fresh chat and paste the answer here.</p>
   );
 }
 
@@ -2431,7 +2443,7 @@ function Curated() {
                   <Btn kind="ghost" small onClick={copyPrompt} className={copied ? "is-copied" : ""}>{copied ? "Copied ✓" : "Copy question"}</Btn>
                   <Btn kind="primary" onClick={() => setStep(1)}>Ran it — paste the answer →</Btn>
                 </div>
-                <CopilotNote />
+                <AutomationNote />
                 <HygieneNote />
                 <p className="wb-plate-hint">Models change, so your run may differ — a closed gap is a result too.</p>
               </div>
@@ -2620,7 +2632,6 @@ function Workbench() {
           <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
           <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
-
 
         <Curated />
 

@@ -595,6 +595,35 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 /* =============================================================
    HEADER
    ============================================================= */
+.site-signal {
+  font-family: var(--font-mono);
+  font-size: max(0.5625rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: rgba(222, 111, 56, 0.72);
+  margin: 0;
+}
+.site-announcement {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.75rem;
+  max-height: 2rem;
+  padding: 0.28rem clamp(1rem, 4vw, 3rem);
+  border-bottom: 1px solid rgba(242, 232, 220, 0.06);
+  background: rgba(8, 6, 5, 0.92);
+  text-align: center;
+}
+.site-announcement .site-signal {
+  color: rgba(228, 214, 196, 0.58);
+}
+@media (max-width: 900px) {
+  .site-announcement {
+    min-height: 1.625rem;
+    padding: 0.22rem 1rem;
+  }
+}
 .site-header {
   position: sticky;
   top: 0;
@@ -673,7 +702,12 @@ body:has(main > section.hero) .nav__menu-btn {
   text-transform: uppercase;
   color: var(--ink-soft);
   cursor: pointer;
-  padding: 0.5rem 0;
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  align-items: center;
+  justify-content: center;
 }
 @media (max-width: 900px) {
   .nav { display: none; }
@@ -704,7 +738,7 @@ body:has(main > section.hero) .nav__menu-btn {
     position: relative;
     z-index: 41;
   }
-  .nav__menu-btn { display: inline-block; }
+  .nav__menu-btn { display: inline-flex; }
   .brand .glyph {
     height: 38px;
     max-width: 34px;
@@ -1025,7 +1059,9 @@ body:has(main > section.hero) .nav__menu-btn {
   text-transform: uppercase;
   color: rgba(212, 207, 194, 1);
   border: none;
-  padding: 0;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0.5rem 0;
   margin-top: clamp(1.1rem, 2.4vh, 1.5rem);
 }
 .hero__secondary::after {
@@ -3914,7 +3950,15 @@ body:has(main > section.hero) .nav__menu-btn {
   gap: 0.5rem 1.5rem;
   font-size: 0.88rem;
 }
-.site-footer__links a { color: rgba(180, 192, 210, 0.95); border: none; }
+.site-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0.35rem 0;
+  color: rgba(180, 192, 210, 0.95);
+  border: none;
+}
 .site-footer__links a:hover { color: var(--ember-soft); }
 .site-footer__meta {
   font-family: var(--font-mono);
@@ -4687,6 +4731,14 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .page--case .case-masthead h1 {
   margin: 0 0 var(--space-4);
+}
+.page--case .case-masthead__primer {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  color: rgba(180, 192, 210, 0.72);
 }
 
 /* Metadata record strip */
@@ -6251,6 +6303,14 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .page--archive .arc-stat-strip__metric:last-child::after {
   content: none;
+}
+.page--archive .arc-stat-strip__qualifier {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.75rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  line-height: 1.45;
+  color: rgba(180, 192, 210, 0.72);
 }
 
 /* Rubric note */
@@ -8083,6 +8143,36 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 .wb-stage__content {
   position: relative;
   z-index: 2;
+}
+.wb-noscript-fallback {
+  position: relative;
+  z-index: 2;
+  padding: var(--hero-top-gap) clamp(1.25rem, 4vw, 3rem) 2rem;
+  max-width: 42rem;
+  color: var(--ink-soft);
+}
+.wb-noscript-fallback h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 0 0 1rem;
+}
+.wb-noscript-fallback p {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  margin: 0 0 0.85rem;
+}
+.wb-noscript-fallback ul {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+.wb-noscript-fallback a {
+  color: var(--ember);
 }
 .wb-shell {
   position: relative;
