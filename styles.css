@@ -595,35 +595,6 @@ a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 /* =============================================================
    HEADER
    ============================================================= */
-.site-signal {
-  font-family: var(--font-mono);
-  font-size: max(0.5625rem, var(--mono-min));
-  letter-spacing: 0.14em;
-  line-height: 1.25;
-  text-transform: uppercase;
-  color: rgba(222, 111, 56, 0.72);
-  margin: 0;
-}
-.site-announcement {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.75rem;
-  max-height: 2rem;
-  padding: 0.28rem clamp(1rem, 4vw, 3rem);
-  border-bottom: 1px solid rgba(242, 232, 220, 0.06);
-  background: rgba(8, 6, 5, 0.92);
-  text-align: center;
-}
-.site-announcement .site-signal {
-  color: rgba(228, 214, 196, 0.58);
-}
-@media (max-width: 900px) {
-  .site-announcement {
-    min-height: 1.625rem;
-    padding: 0.22rem 1rem;
-  }
-}
 .site-header {
   position: sticky;
   top: 0;
