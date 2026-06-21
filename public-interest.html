@@ -80,6 +80,59 @@
         gap: 0.2rem;
       }
     }
+    .page--public-interest .pi-cta {
+      align-items: center;
+      gap: 1rem 1.75rem;
+    }
+    .page--public-interest .pi-cta a.pi-cta__primary {
+      background: var(--ember-deep);
+      border: 1px solid rgba(var(--ember-rgb), 0.72);
+      border-radius: 2px;
+      border-bottom: 1px solid rgba(var(--ember-rgb), 0.72);
+      color: #F2E8DC;
+      font-family: var(--font-mono);
+      font-size: max(0.74rem, var(--mono-min));
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0 1.25rem;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 2px 12px rgba(var(--ember-rgb), 0.2);
+      transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    }
+    .page--public-interest .pi-cta a.pi-cta__primary:hover {
+      background: #B84E28;
+      border-color: rgba(var(--ember-rgb), 0.82);
+      color: #F2E8DC;
+      box-shadow: 0 3px 14px rgba(var(--ember-rgb), 0.26);
+    }
+    .page--public-interest .pi-cta a.pi-cta__primary .arrow {
+      color: #F2E8DC;
+    }
+    .page--public-interest .pi-cta a.hero__secondary {
+      margin-top: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    @media (max-width: 699px) {
+      .page--public-interest .pi-cta {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.85rem;
+      }
+      .page--public-interest .pi-cta a.pi-cta__primary {
+        width: 100%;
+        justify-content: center;
+      }
+      .page--public-interest .pi-cta a.hero__secondary,
+      .page--public-interest .pi-cta a:not(.pi-cta__primary):not(.hero__secondary) {
+        align-self: flex-start;
+      }
+    }
   </style>
   <script type="application/ld+json">
   {
@@ -204,8 +257,8 @@
     </section>
 
     <div class="page__cta-row pi-cta">
-      <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="pi-cta__primary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/contact.html">Contact <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
