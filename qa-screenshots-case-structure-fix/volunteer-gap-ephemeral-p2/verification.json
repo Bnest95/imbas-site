@@ -1,0 +1,16 @@
+{
+  "mobile": {
+    "label": "Answers leave no record",
+    "headline": "The answer appears. You read it. It’s gone.",
+    "bodyUnchanged": true,
+    "hasEphemeral": false,
+    "overflow": false
+  },
+  "desktop": {
+    "label": "Answers leave no record",
+    "headline": "The answer appears. You read it. It’s gone.",
+    "bodyUnchanged": true,
+    "hasEphemeral": false,
+    "overflow": false
+  }
+}
