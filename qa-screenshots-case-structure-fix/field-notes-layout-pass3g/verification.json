@@ -1,0 +1,27 @@
+{
+  "console": [],
+  "checks": {
+    "mobileLayout": {
+      "action": "/api/field-notes-signup",
+      "btnText": "Follow Imbas→",
+      "placeholder": "you@example.com",
+      "childrenOrder": [
+        "BUTTON",
+        "INPUT"
+      ],
+      "buttonAboveInput": true,
+      "msgVisible": false,
+      "msgText": "",
+      "pausedCopy": false,
+      "ghostEndpoint": false
+    },
+    "success": {
+      "msg": "You're on the list.",
+      "visible": true
+    },
+    "invalid": {
+      "msg": "Enter a valid email address.",
+      "visible": true
+    }
+  }
+}

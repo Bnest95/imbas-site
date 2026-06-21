@@ -611,9 +611,9 @@
 
         <div class="close__signup">
           <h2 id="fn-h2" class="field-notes__heading reveal" data-stagger="heading">Field Notes</h2>
-          <p class="field-notes__body reveal" data-stagger="body">Get updates, new cases, and findings from Imbas.</p>
+          <p class="field-notes__caption reveal" data-stagger="body">Get updates, new cases, and findings from Imbas.</p>
           <form
-            class="subscribe subscribe--field-notes reveal"
+            class="subscribe subscribe--field-notes subscribe--stacked reveal"
             data-stagger="support"
             id="field-notes-form"
             data-msg-id="field-notes-msg"
@@ -621,20 +621,26 @@
             method="POST"
             novalidate
           >
+            <button type="submit">
+              <span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span>
+            </button>
             <input
               type="email"
               name="email"
-              placeholder="Email address"
+              placeholder="you@example.com"
               autocomplete="email"
               required
               aria-label="Email address"
             >
-            <button type="submit">Subscribe</button>
           </form>
           <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
-          <p class="field-notes__recent reveal" data-stagger="support">
-            <a href="/field-notes/">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
-          </p>
+          <div class="field-notes__recent reveal" data-stagger="support">
+            <ul class="field-notes__recent-list">
+              <li><a href="/methodology.html">On methodology hygiene and prompt design</a></li>
+              <li><a href="/volunteer-gap.html">The Volunteer Gap, explained</a></li>
+              <li><a href="/how-it-works.html">Why we measure behavior, not intent</a></li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

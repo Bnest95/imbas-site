@@ -172,29 +172,35 @@
       <div class="rd-record-note">
         <p>Field Notes carries observations from the edge of the archive. No trend-chasing. No &ldquo;five ways AI is biased&rdquo; filler. Observations only.</p>
       </div>
-      <p class="field-notes__body">Get updates, new cases, and findings from Imbas.</p>
+      <p class="field-notes__caption">Get updates, new cases, and findings from Imbas.</p>
       <form
-        class="subscribe subscribe--field-notes"
+        class="subscribe subscribe--field-notes subscribe--stacked"
         id="field-notes-form-rd"
         data-msg-id="field-notes-msg-rd"
         action="/api/field-notes-signup"
         method="POST"
         novalidate
       >
+        <button type="submit">
+          <span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span>
+        </button>
         <input
           type="email"
           name="email"
-          placeholder="Email address"
+          placeholder="you@example.com"
           autocomplete="email"
           required
           aria-label="Email address"
         >
-        <button type="submit">Subscribe</button>
       </form>
       <p class="subscribe__msg" id="field-notes-msg-rd" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
-      <p class="field-notes__recent">
-        <a href="/field-notes/">Read Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      </p>
+      <div class="field-notes__recent">
+        <ul class="field-notes__recent-list">
+          <li><a href="/methodology.html">On methodology hygiene and prompt design</a></li>
+          <li><a href="/volunteer-gap.html">The Volunteer Gap, explained</a></li>
+          <li><a href="/how-it-works.html">Why we measure behavior, not intent</a></li>
+        </ul>
+      </div>
     </section>
 
     <div class="page__cta-row rd-cta">
