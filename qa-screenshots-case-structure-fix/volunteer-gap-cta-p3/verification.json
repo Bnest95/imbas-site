@@ -1,0 +1,46 @@
+{
+  "mobile": {
+    "count": 2,
+    "order": [
+      {
+        "text": "Explore Case Archive",
+        "href": "/archive.html",
+        "isPrimary": true,
+        "isSecondary": false
+      },
+      {
+        "text": "Read Methodology",
+        "href": "/methodology.html",
+        "isPrimary": false,
+        "isSecondary": true
+      }
+    ],
+    "primaryBg": "rgb(200, 88, 48)",
+    "primaryIsFilled": true,
+    "secondaryBg": "rgba(0, 0, 0, 0)",
+    "secondaryIsTransparent": true,
+    "overflow": false
+  },
+  "desktop": {
+    "count": 2,
+    "order": [
+      {
+        "text": "Explore Case Archive",
+        "href": "/archive.html",
+        "isPrimary": true,
+        "isSecondary": false
+      },
+      {
+        "text": "Read Methodology",
+        "href": "/methodology.html",
+        "isPrimary": false,
+        "isSecondary": true
+      }
+    ],
+    "primaryBg": "rgb(200, 88, 48)",
+    "primaryIsFilled": true,
+    "secondaryBg": "rgba(0, 0, 0, 0)",
+    "secondaryIsTransparent": true,
+    "overflow": false
+  }
+}
