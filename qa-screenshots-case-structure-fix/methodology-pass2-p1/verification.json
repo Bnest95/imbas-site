@@ -1,0 +1,46 @@
+{
+  "heading": {
+    "desktop": {
+      "headingColor": "rgb(240, 143, 88)",
+      "headingIsEmberSoft": true,
+      "headingToken": "var(--ember-soft)",
+      "headingNotWhite": true,
+      "overflow": false
+    },
+    "mobile": {
+      "headingColor": "rgb(240, 143, 88)",
+      "headingIsEmberSoft": true,
+      "headingToken": "var(--ember-soft)",
+      "headingNotWhite": true,
+      "overflow": false
+    }
+  },
+  "gapMethod": {
+    "desktop": {
+      "stepCount": 5,
+      "steps": [
+        "Capture an open-ended answer.",
+        "Capture a targeted inspection answer.",
+        "Compare surfaced information.",
+        "Score the difference using a published rubric.",
+        "Preserve the evidence trail."
+      ],
+      "hasDefinitionParagraph": false,
+      "hasProcedure": true,
+      "overflow": false
+    },
+    "mobile": {
+      "stepCount": 5,
+      "steps": [
+        "Capture an open-ended answer.",
+        "Capture a targeted inspection answer.",
+        "Compare surfaced information.",
+        "Score the difference using a published rubric.",
+        "Preserve the evidence trail."
+      ],
+      "hasDefinitionParagraph": false,
+      "hasProcedure": true,
+      "overflow": false
+    }
+  }
+}

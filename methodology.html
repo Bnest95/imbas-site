@@ -24,6 +24,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css?v=meth-tighten">
+  <style>
+    .page--methodology .meth-masthead h1.meth-masthead__title {
+      color: var(--ember-soft);
+    }
+    .page--methodology .meth-method-steps {
+      counter-reset: meth-step;
+    }
+    .page--methodology .meth-method-steps li {
+      padding-left: 1.65rem;
+      counter-increment: meth-step;
+    }
+    .page--methodology .meth-method-steps li::before {
+      content: counter(meth-step) ".";
+      top: 0.45rem;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      background: none;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: rgba(var(--ember-rgb), 0.78);
+    }
+  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -111,7 +136,7 @@
   <div class="page__inner">
     <header class="meth-masthead">
       <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
-      <h1>Methodology</h1>
+      <h1 class="meth-masthead__title">Methodology</h1>
       <p class="page__intro">Imbas measures what AI systems surface under different prompt conditions.</p>
       <p class="page__intro meth-intro--tight">It compares what appears in an open-ended answer with what appears when the same system is asked directly about a specific topic.</p>
       <p class="page__intro meth-intro--tight">The goal is not to infer intent. The goal is to observe behavior.</p>
@@ -132,11 +157,13 @@
 
     <section class="meth-section meth-gap">
       <h2 class="meth-section__title">The Volunteer Gap methodology</h2>
-      <div class="meth-doctrine-plate">
-        <p>The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know.</p>
-        <p>When a model knows a specific named mechanism, demonstrated by its response to a targeted prompt, but omits or abstracts it on the corresponding open prompt, that omission is measurable, scoreable, and reproducible.</p>
-        <p>The Volunteer Gap is not a measure of bias, intent, or harm. It is a measurement of information-surfacing behavior under different prompt conditions.</p>
-      </div>
+      <ol class="meth-protocol-list meth-method-steps" role="list">
+        <li>Capture an open-ended answer.</li>
+        <li>Capture a targeted inspection answer.</li>
+        <li>Compare surfaced information.</li>
+        <li>Score the difference using a published rubric.</li>
+        <li>Preserve the evidence trail.</li>
+      </ol>
     </section>
 
     <section class="meth-section meth-rubric">
@@ -204,7 +231,7 @@
     </section>
 
     <section class="meth-section meth-controls">
-      <h2 class="meth-section__title">Controls and restraint</h2>
+      <h2 class="meth-section__title">Controls, nulls, and failure cases</h2>
       <div class="meth-doctrine-plate">
         <p>A measurement system that always finds the worst interpretation is suspect.</p>
         <p>Imbas produces null findings, small gaps, ambiguous results, and controls. Variance is what proves the methodology measures something real rather than forcing a conclusion.</p>
@@ -314,31 +341,23 @@
 
     <section class="meth-section meth-landscape">
       <h2 class="meth-section__title">Where Imbas fits</h2>
-      <p>Imbas sits inside the broader AI evaluation landscape but does not compete with the existing categories. The landscape contains capable players measuring different things:</p>
+      <p>Imbas sits beside existing AI evaluation, safety, and monitoring tools. It does not replace them.</p>
       <div class="meth-landscape-grid">
         <article class="meth-landscape-item">
           <h3 class="meth-landscape-item__label">Capability benchmarks</h3>
-          <p>(Stanford HELM, MMLU, BIG-Bench) measure what models can do on standardized tasks.</p>
+          <p>Benchmarks measure what models can do on standardized tasks.</p>
         </article>
         <article class="meth-landscape-item">
-          <h3 class="meth-landscape-item__label">Safety and alignment evaluations</h3>
-          <p>(METR, Apollo Research, UK and US AI Safety Institutes) measure whether frontier models can be made to do dangerous things.</p>
+          <h3 class="meth-landscape-item__label">Safety and security evaluations</h3>
+          <p>Safety and security evaluations test whether models can be made to produce dangerous, vulnerable, or adversarial behavior.</p>
         </article>
         <article class="meth-landscape-item">
-          <h3 class="meth-landscape-item__label">ML observability platforms</h3>
-          <p>(Arize, WhyLabs, Fiddler, Patronus) monitor production systems for drift, performance, and output quality. They serve the engineering team deploying the model.</p>
-        </article>
-        <article class="meth-landscape-item">
-          <h3 class="meth-landscape-item__label">AI security tools</h3>
-          <p>(Lakera, Robust Intelligence) prevent prompt injection, jailbreaks, and adversarial attacks.</p>
-        </article>
-        <article class="meth-landscape-item">
-          <h3 class="meth-landscape-item__label">Research and advocacy</h3>
-          <p>(AlgorithmWatch, Algorithmic Justice League, accountability journalism) document specific AI harms through case studies and policy work.</p>
+          <h3 class="meth-landscape-item__label">Production monitoring</h3>
+          <p>Production monitoring tools track deployed systems for drift, performance, quality, and incidents.</p>
         </article>
       </div>
-      <p>None of these measure what Imbas measures: cross-model information-surfacing behavior under varying prompt conditions, anchored to a human-validated archive, presented to users as signal rather than verdict.</p>
-      <p>Imbas is not a replacement for any of these. It is a missing layer beside them.</p>
+      <p>Imbas measures a different layer: cross-model information-surfacing behavior under documented prompt conditions, preserved as inspectable case records.</p>
+      <p>It is not a replacement for those tools. It is a missing layer beside them.</p>
     </section>
 
     <div class="page__cta-row meth-cta">

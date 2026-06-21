@@ -1,0 +1,30 @@
+{
+  "desktop": {
+    "heading": "Where Imbas fits",
+    "categoryCount": 3,
+    "categories": [
+      "Capability benchmarks",
+      "Safety and security evaluations",
+      "Production monitoring"
+    ],
+    "intro": "Imbas sits beside existing AI evaluation, safety, and monitoring tools. It does not replace them.",
+    "closingPresent": true,
+    "finalSentence": true,
+    "thirdPartyMentions": [],
+    "overflow": false
+  },
+  "mobile": {
+    "heading": "Where Imbas fits",
+    "categoryCount": 3,
+    "categories": [
+      "Capability benchmarks",
+      "Safety and security evaluations",
+      "Production monitoring"
+    ],
+    "intro": "Imbas sits beside existing AI evaluation, safety, and monitoring tools. It does not replace them.",
+    "closingPresent": true,
+    "finalSentence": true,
+    "thirdPartyMentions": [],
+    "overflow": false
+  }
+}

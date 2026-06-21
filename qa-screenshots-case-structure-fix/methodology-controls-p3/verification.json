@@ -1,0 +1,18 @@
+{
+  "desktop": {
+    "heading": "Controls, nulls, and failure cases",
+    "firstSentence": "A measurement system that always finds the worst interpretation is suspect.",
+    "hasCase013": true,
+    "hasNullFindings": true,
+    "hasOldHeading": false,
+    "overflow": false
+  },
+  "mobile": {
+    "heading": "Controls, nulls, and failure cases",
+    "firstSentence": "A measurement system that always finds the worst interpretation is suspect.",
+    "hasCase013": true,
+    "hasNullFindings": true,
+    "hasOldHeading": false,
+    "overflow": false
+  }
+}
