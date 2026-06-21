@@ -1905,32 +1905,60 @@ body:has(main > section.hero) .nav__menu-btn {
   background: linear-gradient(180deg, rgba(var(--bg-base-rgb), 0.48) 0%, var(--bg-surface) 18%, var(--bg-surface) 100%);
 }
 
-/* Ephemeral beat — fade + ember enactment */
+/* Ephemeral beat — Volunteer Gap–style word reveal + trace ghost */
 #ephemeral-h2 + .stakes__copy {
   max-width: 54ch;
   text-wrap: pretty;
 }
-.ephemeral-fade {
+#ephemeral-h2 + .stakes__copy.ephemeral-copy {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 1.5s ease, transform 1.5s ease;
+}
+#ephemeral-h2 + .stakes__copy.ephemeral-copy.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+#ephemeral-h2.ephemeral-headline {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.ephemeral-line {
+  display: inline;
+}
+.ephemeral-line--trace {
+  display: block;
+}
+.ephemeral-word--scroll {
   display: inline;
   opacity: 0;
+  transform: translateY(0.85rem);
+  transition: opacity 0.8s ease, transform 0.8s ease, color 3.6s cubic-bezier(.2, .7, .2, 1);
 }
-[data-reveal-section].is-revealed .ephemeral-fade {
-  animation: ephemeral-vanish 2.6s cubic-bezier(.2,.7,.2,1) forwards;
-  animation-delay: 1.5s;
+.ephemeral-word--scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
-@keyframes ephemeral-vanish {
-  0% {
-    opacity: 0;
-  }
-  19.23% {
-    opacity: 1;
-  }
-  53.85% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.32;
-  }
+.ephemeral-line--trace.is-ghost .ephemeral-word--gone {
+  opacity: 0.24;
+  color: rgba(196, 184, 168, 0.92);
+}
+.ephemeral-static .ephemeral-word--scroll {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+.ephemeral-static #ephemeral-h2 + .stakes__copy.ephemeral-copy,
+.ephemeral-static .ephemeral-copy {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+.ephemeral-static .ephemeral-line--trace.is-ghost .ephemeral-word--gone,
+.ephemeral-static .ephemeral-word--gone {
+  opacity: 1 !important;
+  color: inherit !important;
 }
 .ember {
   color: var(--ember);
@@ -4183,9 +4211,16 @@ body:has(main > section.hero) .nav__menu-btn {
   .gap__line--scroll { opacity: 1; transform: none; transition: none; }
   [data-reveal-section] .reveal { opacity: 1; transform: none; transition: none; }
   [data-reveal-section].is-revealed .reveal { opacity: 1; transform: none; }
-  .ephemeral-fade {
-    opacity: 0.6 !important;
-    animation: none !important;
+  .ephemeral-word--scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  #ephemeral-h2 + .stakes__copy.ephemeral-copy,
+  .ephemeral-copy {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
   .ember {
     animation: none !important;

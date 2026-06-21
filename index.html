@@ -192,8 +192,8 @@
   <section class="stakes section-scene" data-reveal-section aria-labelledby="ephemeral-h2">
     <div class="stakes__inner">
       <span class="section-label section-label--named reveal" data-stagger="label"><span>Ephemeral by default</span></span>
-      <h2 id="ephemeral-h2" class="bridge__thesis reveal" data-stagger="heading">The answer appears. You read it. <span class="ephemeral-fade">It&rsquo;s gone.</span></h2>
-      <p class="stakes__copy reveal" data-stagger="body">An open question returns one answer, then disappears off the screen the moment you move on. What the model surfaced &#8239;&mdash;&#8239; and what it left out &#8239;&mdash;&#8239; leaves no trace. Imbas records it.</p>
+      <h2 id="ephemeral-h2" class="bridge__thesis ephemeral-headline"><span class="ephemeral-line"><span class="ephemeral-word ephemeral-word--scroll">The</span> <span class="ephemeral-word ephemeral-word--scroll">answer</span> <span class="ephemeral-word ephemeral-word--scroll">appears.</span> <span class="ephemeral-word ephemeral-word--scroll">You</span> <span class="ephemeral-word ephemeral-word--scroll">read</span> <span class="ephemeral-word ephemeral-word--scroll">it.</span></span> <span class="ephemeral-line ephemeral-line--trace"><span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">It&rsquo;s</span> <span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">gone.</span></span></h2>
+      <p class="stakes__copy ephemeral-copy">An open question returns one answer, then disappears off the screen the moment you move on. What the model surfaced &#8239;&mdash;&#8239; and what it left out &#8239;&mdash;&#8239; leaves no trace. Imbas records it.</p>
     </div>
   </section>
 
@@ -749,6 +749,60 @@
         el.classList.add('is-visible');
       });
     }
+
+    // Ephemeral beat — Volunteer Gap–style word reveal, then trace ghost
+    (function initEphemeralAnimation() {
+      var section = document.querySelector('#ephemeral-h2');
+      section = section && section.closest('[data-reveal-section]');
+      if (!section) return;
+
+      var words = section.querySelectorAll('.ephemeral-word--scroll');
+      var traceLine = section.querySelector('.ephemeral-line--trace');
+      var copy = section.querySelector('.ephemeral-copy');
+      if (!words.length) return;
+
+      var wordStagger = 220;
+      var wordDuration = 800;
+      var holdAfterReveal = 1900;
+      var paragraphDelayAfterReveal = 600;
+      var revealEnd = (words.length - 1) * wordStagger + wordDuration;
+
+      if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+        section.classList.add('ephemeral-static');
+        words.forEach(function (word) { word.classList.add('is-visible'); });
+        if (copy) copy.classList.add('is-visible');
+        return;
+      }
+
+      var started = false;
+
+      function startReveal() {
+        if (started) return;
+        started = true;
+        words.forEach(function (word, i) {
+          setTimeout(function () {
+            word.classList.add('is-visible');
+          }, i * wordStagger);
+        });
+        setTimeout(function () {
+          if (copy) copy.classList.add('is-visible');
+        }, revealEnd + paragraphDelayAfterReveal);
+        setTimeout(function () {
+          if (traceLine) traceLine.classList.add('is-ghost');
+        }, revealEnd + holdAfterReveal);
+      }
+
+      var ephemeralIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+            startReveal();
+            ephemeralIo.unobserve(section);
+          }
+        });
+      }, { threshold: [0, 0.4, 0.5] });
+
+      ephemeralIo.observe(section);
+    })();
 
     // Scroll-linked aurora intensity — sections wake at viewport center
     (function initSectionAuroraIntensity() {
