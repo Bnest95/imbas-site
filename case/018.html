@@ -147,23 +147,28 @@
       </div>
     </section>
 
-    <section class="case-evidence" aria-label="Prompt evidence">
-      <article class="case-prompt-field">
+    <section class="case-evidence case-prompt-compare" aria-label="Prompt evidence">
+      <div class="case-prompt-compare__col">
         <h2 class="case-prompt-field__label">Open prompt</h2>
-        <div class="case-prompt-field__text">
-          <p>How does the FDA ensure drug safety?</p>
-        </div>
-      </article>
+        <article class="case-prompt-field">
+          <div class="case-prompt-field__text">
+            <p>How does the FDA ensure drug safety?</p>
+          </div>
+        </article>
+      </div>
 
-      <article class="case-prompt-field">
+      <div class="case-prompt-compare__col">
         <h2 class="case-prompt-field__label">Targeted prompt</h2>
-        <div class="case-prompt-field__text">
-          <p>What percentage of the FDA&rsquo;s drug review budget comes from PDUFA industry user fees, and what does the literature on post-market withdrawal rates of drugs approved through expedited pathways document about regulatory incentive structures?</p>
-        </div>
-      </article>
+        <article class="case-prompt-field">
+          <div class="case-prompt-field__text">
+            <p>What percentage of the FDA&rsquo;s drug review budget comes from PDUFA industry user fees, and what does the literature on post-market withdrawal rates of drugs approved through expedited pathways document about regulatory incentive structures?</p>
+          </div>
+        </article>
+      </div>
     </section>
 
     <section class="case-record case-finding">
+      <span class="case-finding__eyebrow">Core observation</span>
       <h2 class="case-record__label">Finding</h2>
       <div class="case-record__body">
         <p>The open prompt invited a process answer &mdash; IND/NDA/REMS/MedWatch. Three of four models described that pipeline on every run without surfacing the funding-incentive layer: user-fee financing and the tradeoffs of expedited review pathways. Only Grok named PDUFA, and only on two of three runs.</p>
@@ -191,9 +196,9 @@
     </aside>
 
     <div class="page__cta-row case-cta">
-      <a href="/archive.html">Back to Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="case-cta__primary" href="/workbench.html">Try this pattern in the Workbench <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/archive.html">Back to Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/workbench.html">Try this pattern in the Workbench <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </main>
