@@ -132,6 +132,52 @@
     .page--archive .arc-record--public + .arc-record--public .arc-record__link {
       box-shadow: inset 0 1px 0 rgba(180, 192, 210, 0.06);
     }
+
+    /* Pass B — continuation visitor copy */
+    .page--archive .arc-record--continuation .arc-record__status {
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-style: normal;
+      letter-spacing: -0.005em;
+      text-transform: none;
+      color: rgba(212, 207, 194, 0.8);
+      line-height: 1.38;
+    }
+
+    .page--archive .arc-record--continuation .arc-record__title {
+      display: block;
+      margin-top: 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      font-weight: 400;
+      font-style: normal;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: rgba(180, 192, 210, 0.5);
+      line-height: 1.4;
+    }
+
+    .page--archive .arc-record--continuation .arc-record__date,
+    .page--archive .arc-record--continuation .arc-record__id,
+    .page--archive .arc-record--continuation .arc-record__type,
+    .page--archive .arc-record--continuation .arc-record__gap {
+      visibility: hidden;
+    }
+
+    @media (max-width: 699px) {
+      .page--archive .arc-record--continuation .arc-record__date,
+      .page--archive .arc-record--continuation .arc-record__id,
+      .page--archive .arc-record--continuation .arc-record__type,
+      .page--archive .arc-record--continuation .arc-record__gap {
+        display: none;
+      }
+
+      .page--archive .arc-record--continuation .arc-record__main {
+        grid-column: 1 / -1;
+        grid-row: 1;
+      }
+    }
   </style>
   <script type="application/ld+json">
   {
@@ -352,13 +398,14 @@
             </a>
           </li>
           <li class="arc-record arc-record--continuation arc-record--tail">
-            <span class="arc-record__date">&hellip;</span>
-            <span class="arc-record__id">45 more</span>
+            <span class="arc-record__date" aria-hidden="true">&hellip;</span>
+            <span class="arc-record__id" aria-hidden="true">&hellip;</span>
             <span class="arc-record__main">
-              <span class="arc-record__status">Archive continuation</span>
+              <span class="arc-record__status">45 additional records preserved in archive</span>
+              <span class="arc-record__title">Additional records are held until validation and publication are complete.</span>
             </span>
-            <span class="arc-record__type">mixed</span>
-            <span class="arc-record__gap">&hellip;</span>
+            <span class="arc-record__type" aria-hidden="true">&hellip;</span>
+            <span class="arc-record__gap" aria-hidden="true">&hellip;</span>
           </li>
         </ul>
       </div>
