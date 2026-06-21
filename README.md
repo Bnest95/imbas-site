@@ -43,13 +43,7 @@ Then open [http://localhost:8765/](http://localhost:8765/).
 
 ## Ghost dependency
 
-Field Notes and email signup depend on **Ghost** served at **`/briefing`**:
-
-- Nav and footer links to `/briefing`
-- Homepage signup forms POST to `/briefing/members/api/send-magic-link`
-- Sample post links: `/briefing/post-1`, `post-2`, `post-3`
-
-Ghost must be configured before public launch, or `/briefing` links and forms need a temporary static fallback. See [DEPLOY.md](DEPLOY.md) for required Ghost setup.
+Field Notes signup posts to **`/api/field-notes-signup`** (Vercel serverless → Airtable). Ghost at **`/briefing`** is no longer used for email capture; `/briefing` redirects to `/field-notes/`.
 
 ## Missing launch assets
 

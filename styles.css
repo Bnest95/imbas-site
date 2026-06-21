@@ -3846,11 +3846,11 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .subscribe button:hover { color: var(--ember-soft); }
 .subscribe__msg {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ember-soft);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--ink-muted);
   margin-top: 0.75rem;
   opacity: 0;
   transition: opacity .4s ease;
@@ -8137,7 +8137,7 @@ main, .site-footer { position: relative; z-index: 2; }
 .field-notes__caption { font-size: max(0.875rem, var(--text-min)); }
 .subscribe button { font-size: max(0.74rem, var(--mono-min)); }
 .close .subscribe button { font-size: max(0.74rem, var(--mono-min)); }
-.subscribe__msg { font-size: max(0.7rem, var(--mono-min)); }
+.subscribe__msg { font-size: max(0.8125rem, var(--text-min)); }
 
 .site-footer__links { font-size: max(0.88rem, var(--text-min)); }
 .nav__menu-btn { font-size: max(0.74rem, var(--mono-min)); }

@@ -1,0 +1,40 @@
+{
+  "console": [],
+  "requests": [
+    {
+      "url": "http://127.0.0.1:8792/api/field-notes-signup",
+      "method": "POST"
+    },
+    {
+      "url": "http://127.0.0.1:8792/api/field-notes-signup",
+      "method": "POST",
+      "mocked": true
+    }
+  ],
+  "checks": {
+    "homeForm": {
+      "action": "/api/field-notes-signup",
+      "btnDisabled": false,
+      "pausedCopy": false,
+      "inputDisabled": false
+    },
+    "invalid": {
+      "msg": "Enter a valid email address.",
+      "uppercase": false
+    },
+    "success": {
+      "msg": "You're on the list.",
+      "subscribed": true
+    },
+    "liveSubmit": {
+      "requests": [
+        {
+          "url": "http://127.0.0.1:8792/api/field-notes-signup",
+          "method": "POST"
+        }
+      ],
+      "noGhost": true,
+      "hitsApi": true
+    }
+  }
+}

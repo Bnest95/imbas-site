@@ -45,18 +45,20 @@ Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `w
 
 Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
 
-## Required external dependency before public launch
+## Field Notes signup
 
-Ghost must be configured at /briefing, or /briefing links/forms must be replaced with a temporary static fallback.
+Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
 
-Required Ghost items:
+Required Vercel env vars:
 
-- /briefing route
-- Members API
-- labels: early-access, field-notes
-- unsubscribe behavior
-- real post slugs or redirects for /briefing/post-1, /post-2, /post-3
-- rate limiting / spam monitoring
+- `AIRTABLE_TOKEN` — personal access token with read/write on the base
+- `AIRTABLE_FIELD_NOTES_TABLE` — table ID for Field Notes signups
+
+Optional:
+
+- `AIRTABLE_BASE` — defaults to `appfxHraqlcpP1AAP`
+
+Create an Airtable table with fields: **Email**, **Source Page**, **Created At**, **User Agent** (optional). Until both env vars are set, the API returns `{ ok: false, error: "unconfigured" }` and the form shows a quiet fallback message.
 
 ## Missing launch assets
 
@@ -87,7 +89,7 @@ but with `script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com` (no
 Content-Security-Policy:
 
 ```
-default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://imbaslabs.com/briefing/members/api/send-magic-link
+default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
 ```
 
 X-Content-Type-Options:

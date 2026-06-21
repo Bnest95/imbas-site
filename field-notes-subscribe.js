@@ -1,10 +1,8 @@
 (function () {
-  var SUCCESS = "You're subscribed to Field Notes.";
-  var INVALID = "Please enter a valid email address.";
-  var ERROR = "Couldn't subscribe — check the address and try again.";
-  var ENDPOINT = "/briefing/members/api/send-magic-link";
-  var SUBSCRIBE_LIVE = false;
-  var PAUSED_COPY = "Field Notes signup is temporarily unavailable. Email brendan@imbaslabs.com or visit Contact.";
+  var SUCCESS = "You're on the list.";
+  var INVALID = "Enter a valid email address.";
+  var UNAVAILABLE = "Signup is not available right now. Email brendan@imbaslabs.com.";
+  var ENDPOINT = "/api/field-notes-signup";
 
   function showMsg(el, text) {
     el.textContent = text;
@@ -18,39 +16,14 @@
     el.classList.remove("is-visible");
   }
 
-  function pauseForm(form, msg) {
-    var emailInput = form.querySelector('input[type="email"]');
-    var btn = form.querySelector('button[type="submit"]');
-    form.removeAttribute("action");
-    if (emailInput) {
-      emailInput.disabled = true;
-      emailInput.setAttribute("aria-disabled", "true");
-    }
-    if (btn) {
-      btn.disabled = true;
-      btn.setAttribute("aria-disabled", "true");
-    }
-    form.classList.add("is-subscribe-paused");
-    if (msg) showMsg(msg, PAUSED_COPY);
-  }
-
   function wireForm(form, msg) {
-    if (!SUBSCRIBE_LIVE) {
-      pauseForm(form, msg);
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (msg) showMsg(msg, PAUSED_COPY);
-      });
-      return;
-    }
-
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var emailInput = form.querySelector('input[type="email"]');
       var btn = form.querySelector('button[type="submit"]');
       if (!emailInput || !emailInput.value.trim() || !emailInput.checkValidity()) {
         showMsg(msg, INVALID);
-        emailInput && emailInput.focus();
+        if (emailInput) emailInput.focus();
         return;
       }
 
@@ -68,19 +41,31 @@
         },
         body: JSON.stringify({
           email: emailInput.value.trim(),
-          emailType: "signup",
-          labels: ["field-notes"],
+          source: window.location.pathname || "/",
         }),
         credentials: "same-origin",
       })
         .then(function (res) {
-          if (!res.ok) throw new Error("subscribe failed");
+          return res.json().catch(function () {
+            return { ok: false };
+          }).then(function (data) {
+            if (res.status === 400 && data && data.error === "invalid_email") {
+              throw new Error("invalid");
+            }
+            if (!res.ok || !data || data.ok !== true) {
+              throw new Error("failed");
+            }
+            return data;
+          });
+        })
+        .then(function () {
           showMsg(msg, SUCCESS);
           emailInput.disabled = true;
           form.classList.add("is-subscribed");
+          if (btn) btn.removeAttribute("aria-busy");
         })
-        .catch(function () {
-          showMsg(msg, ERROR);
+        .catch(function (err) {
+          showMsg(msg, err && err.message === "invalid" ? INVALID : UNAVAILABLE);
           if (btn) {
             btn.disabled = false;
             btn.removeAttribute("aria-busy");
