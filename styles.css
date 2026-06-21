@@ -74,6 +74,11 @@
   --space-4: 2rem;   --space-5: 3rem; --space-6: 4.5rem;
   --space-7: 6rem;   --space-8: 8rem; --space-9: 11rem;
 
+  /* Sticky header — synced from rendered height via site-header.js */
+  --header-offset: 4.8125rem;
+  --hero-top-gap: clamp(1.25rem, 3vh, 2rem);
+  --scroll-anchor-gap: 0.75rem;
+
   /* Legibility floors */
   --text-min-desktop: 14px;
   --text-min-mobile:  13px;
@@ -91,6 +96,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-offset) + var(--scroll-anchor-gap) + env(safe-area-inset-top, 0px));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -685,7 +691,7 @@ body:has(main > section.hero) .nav__menu-btn {
     z-index: 40;
     margin: 0;
     padding:
-      calc(4.75rem + env(safe-area-inset-top, 0px))
+      calc(var(--header-offset) + env(safe-area-inset-top, 0px))
       clamp(1.25rem, 4vw, 3rem)
       calc(1.5rem + env(safe-area-inset-bottom, 0px));
     background: var(--bg-base);
@@ -756,7 +762,7 @@ body:has(main > section.hero) .nav__menu-btn {
   width: 100%;
   max-width: var(--container-wide);
   margin: 0 auto;
-  padding: clamp(4.25rem, 8vh, 6.25rem) clamp(1.25rem, 4vw, 3rem) clamp(2.5rem, 5vh, 4rem);
+  padding: var(--hero-top-gap) clamp(1.25rem, 4vw, 3rem) clamp(2.5rem, 5vh, 4rem);
   display: grid;
   grid-template-rows: auto 1fr;
   gap: clamp(1.5rem, 3vh, 2.25rem);
@@ -1052,7 +1058,7 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 
 @media (max-width: 900px) {
-  .hero__stage { min-height: auto; padding-top: clamp(3.75rem, 9vh, 5.25rem); padding-bottom: clamp(2rem, 5vh, 3rem); }
+  .hero__stage { min-height: auto; padding-top: var(--hero-top-gap); padding-bottom: clamp(2rem, 5vh, 3rem); }
   .hero__monolith-text { font-size: clamp(4.26rem, 15.8vw, 7.91rem); }
   .hero__subhead { max-width: min(32ch, 94vw); }
 }
@@ -3725,7 +3731,7 @@ body:has(main > section.hero) .nav__menu-btn {
   .origin__inscription-wrap { max-width: min(38ch, 100%); }
   .close__signup {
     padding-bottom: var(--space-3);
-    scroll-margin-top: calc(5rem + env(safe-area-inset-top, 0px));
+    scroll-margin-top: calc(var(--header-offset) + var(--scroll-anchor-gap) + env(safe-area-inset-top, 0px));
   }
   .close.section-scene .close__signup h2.field-notes__heading {
     font-size: clamp(1.55rem, 6.5vw, 1.85rem);
@@ -4026,7 +4032,7 @@ main, .site-footer { position: relative; z-index: 2; }
 .page {
   position: relative;
   z-index: 2;
-  padding: clamp(5rem, 12vh, 7rem) 0 var(--space-8);
+  padding: var(--hero-top-gap) 0 var(--space-8);
   background: var(--bg-base);
   min-height: 50vh;
 }
@@ -4184,9 +4190,6 @@ main, .site-footer { position: relative; z-index: 2; }
 .record__title a:hover {
   color: var(--ember-soft);
 }
-@media (max-width: 900px) {
-  .page { padding-top: clamp(4.5rem, 10vh, 5.5rem); }
-}
 .page__pullquote {
   font-family: var(--font-display);
   font-size: clamp(1.15rem, 1.8vw, 1.35rem);
@@ -4263,7 +4266,7 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .skip-link:focus {
   left: 1rem;
-  top: 1rem;
+  top: calc(var(--header-offset) + 0.5rem);
   width: auto;
   height: auto;
   overflow: visible;
@@ -8085,6 +8088,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   position: relative;
   z-index: 1;
   background: transparent;
+  padding: var(--hero-top-gap) clamp(15px, 3.75vw, 48px);
 }
 
 /* Aurora + focal — lab bench: warmer focal (~65% of hero), grid texture */
@@ -9220,7 +9224,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   .wb-readout-rail {
     display: block;
     position: sticky;
-    top: 5rem;
+    top: calc(var(--header-offset) + var(--scroll-anchor-gap));
     padding: 0.85rem 0.95rem;
     border: 1px solid rgba(var(--ember-rgb), 0.12);
     border-left: 2px solid rgba(var(--ember-rgb), 0.48);
@@ -9614,11 +9618,13 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
 }
 
 /* =============================================================
-   WORKBENCH — Pass 2 scroll anchors (sticky header clearance)
+   SITEWIDE — header offset, hero baseline, anchor scroll
    ============================================================= */
 
+:target,
+#main-content,
 .wb-scroll-anchor {
-  scroll-margin-top: calc(var(--wb-header-offset, 72px) + 0.75rem);
+  scroll-margin-top: calc(var(--header-offset) + var(--scroll-anchor-gap) + env(safe-area-inset-top, 0px));
 }
 
 /* =============================================================
@@ -9901,4 +9907,105 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
   .fn-prepared {
     padding: var(--space-3);
   }
+}
+
+/* =============================================================
+   WORKBENCH — Pass A hierarchy & compression
+   ============================================================= */
+
+.wb-case-card {
+  padding: 0.75rem 0.85rem;
+  min-height: 38px;
+}
+.wb-specimen-plate__label {
+  margin-bottom: 0.45rem;
+}
+
+.wb-case-card:not(.is-active):not(.is-disabled) {
+  border-color: rgba(242, 232, 220, 0.06);
+  background: rgba(35, 28, 24, 0.62);
+}
+.wb-case-card:not(.is-active):not(.is-disabled) .wb-case-card__title {
+  color: rgba(210, 196, 180, 0.78);
+}
+.wb-case-card:not(.is-active):not(.is-disabled) .wb-specimen-plate__label {
+  color: rgba(240, 143, 88, 0.58);
+}
+.wb-case-card:not(.is-active):not(.is-disabled).wb-specimen-plate::before {
+  opacity: 0.45;
+}
+.wb-case-card:not(.is-active):not(.is-disabled).wb-specimen-plate::after {
+  opacity: 0.4;
+}
+
+.wb-case-card.is-active {
+  border-color: rgba(var(--ember-rgb), 0.52);
+  background: rgba(58, 44, 38, 0.98);
+  box-shadow: inset 0 0 0 1px rgba(var(--ember-rgb), 0.22);
+}
+.wb-case-card.wb-measure-channel.is-active {
+  border-color: rgba(var(--ember-rgb), 0.62);
+  background-color: rgba(58, 42, 34, 0.99);
+  box-shadow:
+    inset 3px 0 0 var(--ember),
+    inset 0 0 0 1px rgba(var(--ember-rgb), 0.18);
+}
+
+.wb-run-plate:not(.is-result) {
+  margin-bottom: 0;
+  padding: 0.9rem 1.05rem 0.85rem;
+}
+.wb-run-plate:has(.wb-readout) {
+  padding-top: 0.65rem;
+  padding-bottom: 0.7rem;
+  border-radius: 4px 4px 0 0;
+}
+.wb-confirm-block {
+  margin-top: 0;
+}
+.wb-console__measure-main > .wb-run-plate:has(.wb-readout) + .wb-confirm-block.wb-flow-module {
+  margin-top: -1px;
+  padding: 0.4rem 0.55rem 0.5rem;
+  border-top-color: rgba(242, 232, 220, 0.06);
+  border-radius: 0 0 4px 4px;
+  background: rgba(12, 9, 7, 0.82);
+}
+
+.wb-readout .wb-active-case__headline {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  margin: 0.35rem 0 0.3rem;
+  line-height: 1.25;
+}
+.wb-readout .wb-plate-support {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-top: 0;
+}
+.wb-readout__rule {
+  margin: 0.45rem 0;
+}
+.wb-readout__signal {
+  margin: 0.4rem 0 0.15rem;
+  padding: 0.28rem 0.45rem;
+}
+.wb-readout__run-strip {
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.65rem;
+  font-size: max(0.75rem, var(--mono-min));
+}
+.wb-readout__specimen + .wb-readout__rule {
+  margin-top: 0.3rem;
+}
+.wb-readout__section .wb-field-label {
+  margin-bottom: 0.28rem;
+}
+.wb-confirm-block .wb-field-label,
+.wb-confirm-block .wb-specimen-plate__label {
+  margin-bottom: 0.35rem;
+}
+.wb-confirm-block .wb-input-bay {
+  margin-bottom: 0.65rem;
+}
+.wb-confirm-block .wb-plate-hint {
+  margin-top: 0.45rem;
 }

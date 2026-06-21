@@ -73,8 +73,8 @@ if (inv.buildNotes === 0) pass('no product-state build note');
 else fail(`buildNotes=${inv.buildNotes}`);
 if (inv.cardLabels.length === 5 && inv.cardLabels[0]?.includes('005') && inv.cardLabels.some((l) => l.includes('003')) && inv.cardLabels.some((l) => l.includes('013')) && inv.cardLabels.some((l) => l.includes('021'))) pass('case cards show full public archive set');
 else fail(`card labels: ${inv.cardLabels.join('|')}`);
-if (inv.activeProvCase?.includes('GAP 2.5/3') && /verified/i.test(inv.activeProvSub || '')) pass('active module full provenance');
-else fail(`active prov: ${inv.activeProvCase} / ${inv.activeProvSub}`);
+if (inv.activeProvCase?.includes('GAP 2.5/3') && /verified/i.test(inv.activeProvCase || '')) pass('active module full provenance');
+else fail(`active prov: ${inv.activeProvCase}`);
 if (inv.runStrip.some((s) => s.includes('4 frontier models tested'))) pass('4 frontier models tested in readout');
 else fail(`run strip: ${inv.runStrip.join(', ')}`);
 

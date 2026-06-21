@@ -24,6 +24,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css?v=workbench-parity">
+  <script src="/site-header.js" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -573,9 +574,9 @@ const WORKBENCH_RESULT_LAYOUT_CSS = `
 const WORKBENCH_FLOW_CSS = `
 .wb-case-selector {
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
-  margin-bottom: 28px;
+  gap: 10px;
+  margin-top: 12px;
+  margin-bottom: 20px;
   grid-template-columns: 1fr;
 }
 .wb-case-selector .wb-case-card {
@@ -586,6 +587,16 @@ const WORKBENCH_FLOW_CSS = `
 @media (min-width: 720px) {
   .wb-case-selector {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .wb-case-selector {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .wb-case-selector .wb-case-card__title {
+    font-size: 0.9375rem;
+    line-height: 1.28;
   }
 }
 .wb-shell .wb-build-note {
@@ -641,17 +652,11 @@ const WORKBENCH_FLOW_CSS = `
   letter-spacing: 0.055em;
   line-height: 1.32;
   color: rgba(204, 190, 172, 0.78);
-  margin: 0 0 0.1rem;
+  margin: 0 0 0.28rem;
   text-transform: uppercase;
 }
-.wb-flow-case-prov__sub {
-  font-family: ${MONO};
-  font-size: max(0.5625rem, var(--mono-min));
-  letter-spacing: 0.08em;
-  line-height: 1.28;
-  color: rgba(158, 146, 132, 0.62);
-  margin: 0 0 0.35rem;
-  text-transform: uppercase;
+.wb-console .wb-plate-note:first-of-type {
+  margin: 0.45rem 0 0.35rem;
 }
 .wb-suggest-module {
   margin-top: 0;
@@ -1148,8 +1153,7 @@ function FlowCaseProvenance({ c }) {
   if (!prov) return null;
   return (
     <div className="wb-flow-case-prov">
-      <p className="wb-flow-case-prov__case">{prov.caseLine}</p>
-      <p className="wb-flow-case-prov__sub">Curated case · verified {prov.verified.toUpperCase()}</p>
+      <p className="wb-flow-case-prov__case">{prov.caseLine} · VERIFIED {prov.verified.toUpperCase()}</p>
     </div>
   );
 }
@@ -1662,11 +1666,10 @@ function prefersReducedMotion() {
 }
 
 function syncWorkbenchHeaderOffset() {
-  if (typeof document === "undefined") return 84;
+  if (typeof window.syncHeaderOffset === "function") return window.syncHeaderOffset();
+  if (typeof document === "undefined") return 77;
   const header = document.querySelector(".site-header");
-  const height = header ? Math.ceil(header.getBoundingClientRect().height) + 12 : 84;
-  document.documentElement.style.setProperty("--wb-header-offset", `${height}px`);
-  return height;
+  return header ? Math.ceil(header.getBoundingClientRect().height) : 77;
 }
 
 function scrollWorkbenchAnchor(el, after) {
@@ -2385,24 +2388,24 @@ function Workbench() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
   return (
-    <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS, padding: "clamp(20px, 5vw, 64px)" }}>
+    <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS }}>
       <style>{FONT_IMPORT}</style>
       <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}{WORKBENCH_RESULT_LAYOUT_CSS}{WORKBENCH_FLOW_CSS}{WORKBENCH_TERMS_CSS}</style>
       <div className="wb-shell__frame">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
           <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Workbench</div>
         </div>
-        <div style={{ height: 1, background: C.line, marginBottom: 30 }} />
+        <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
 
-        <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 14px" }}>
+        <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 10px" }}>
           See what your AI leaves out.
         </h1>
-        <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.6, color: C.textDim, margin: "0 0 32px", maxWidth: 560 }}>
+        <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.6, color: C.textDim, margin: "0 0 22px", maxWidth: 560 }}>
           Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
         </p>
 
-        <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 32, paddingTop: 0, borderTop: "none" }}>
+        <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 22, paddingTop: 0, borderTop: "none" }}>
           <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
           <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
           <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
