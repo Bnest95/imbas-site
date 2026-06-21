@@ -754,6 +754,9 @@ body:has(main > section.hero) .nav__menu-btn {
     top: calc(100% + 0.65rem);
     right: 0;
   }
+  #primary-nav > a.nav__link--mobile-field-notes {
+    display: none;
+  }
 }
 .nav a::after {
   content: "";
@@ -838,6 +841,12 @@ body:has(main > section.hero) .nav__menu-btn {
     align-items: center;
     padding: 0.35rem 0;
     font-size: 0.95rem;
+  }
+  #primary-nav > a.nav__link--mobile-field-notes {
+    font-size: 1rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
   .brand .glyph {
     height: 38px;
@@ -2112,6 +2121,23 @@ body:has(main > section.hero) .nav__menu-btn {
   line-height: 1;
   flex-shrink: 0;
 }
+.proof-strip--landing .proof-strip__desc {
+  color: rgba(180, 192, 210, 0.78);
+  font-weight: 400;
+  text-transform: lowercase;
+  letter-spacing: 0.18em;
+}
+.proof-strip--landing .proof-strip__metric--scope {
+  white-space: nowrap;
+}
+.proof-strip--landing .proof-strip__scope {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: rgba(212, 207, 194, 0.94);
+}
 .proof-strip--landing .proof-strip__sep {
   display: none;
 }
@@ -3118,7 +3144,22 @@ body:has(main > section.hero) .nav__menu-btn {
   font-weight: 500;
   letter-spacing: 0.02em;
   line-height: 1.2;
-  color: var(--ember-soft);
+  color: var(--ink-luminous);
+}
+.archive--home-preview .hp-arc-metrics__item--scope {
+  white-space: nowrap;
+}
+.archive--home-preview .hp-arc-metrics__scope {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: rgba(212, 207, 194, 0.94);
+}
+.archive--home-preview .hp-arc-metrics__desc {
+  text-transform: lowercase;
+  color: rgba(180, 192, 210, 0.72);
 }
 .archive--home-preview .hp-arc-metrics__label {
   font-family: var(--font-mono);
@@ -6410,7 +6451,21 @@ main, .site-footer { position: relative; z-index: 2; }
 .page--archive .arc-stat-strip__num {
   font-size: 1rem;
   font-weight: 500;
-  color: var(--ember-soft);
+  color: var(--ink-luminous);
+  text-transform: none;
+}
+.page--archive .arc-stat-strip__desc {
+  color: rgba(180, 192, 210, 0.72);
+  font-weight: 400;
+}
+.page--archive .arc-stat-strip__metric--scope {
+  white-space: nowrap;
+}
+.page--archive .arc-stat-strip__scope {
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: rgba(212, 207, 194, 0.94);
 }
 .page--archive .arc-stat-strip__sep {
   display: none;

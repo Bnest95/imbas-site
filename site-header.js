@@ -1,6 +1,15 @@
 (function () {
   var FALLBACK = 77;
-  var MORE_PAGES = ['/methodology.html', '/faq.html', '/contact.html'];
+  var MORE_PAGES = ['/field-notes', '/methodology.html', '/faq.html', '/contact.html'];
+
+  function isFieldNotesPath(path) {
+    return path === '/field-notes' || path.indexOf('/field-notes/') === 0;
+  }
+
+  function isMoreSectionPath(path) {
+    if (isFieldNotesPath(path)) return true;
+    return MORE_PAGES.indexOf(path) !== -1;
+  }
 
   function syncHeaderOffset() {
     var header = document.querySelector('.site-header');
@@ -47,7 +56,7 @@
     toggle.setAttribute('aria-controls', 'nav-more-menu');
     toggle.innerHTML = 'More <span class="nav-more__caret" aria-hidden="true">\u25BE</span>';
 
-    if (MORE_PAGES.indexOf(path) !== -1) {
+    if (isMoreSectionPath(path)) {
       toggle.setAttribute('aria-current', 'page');
     }
 
@@ -58,6 +67,7 @@
     menu.hidden = true;
 
     [
+      { href: '/field-notes/', label: 'Field Notes', fieldNotes: true },
       { href: '/methodology.html', label: 'Methodology' },
       { href: '/faq.html', label: 'FAQ' },
       { href: '/contact.html', label: 'Contact' }
@@ -68,7 +78,7 @@
       link.href = item.href;
       link.setAttribute('role', 'menuitem');
       link.textContent = item.label;
-      if (path === item.href) {
+      if (item.fieldNotes ? isFieldNotesPath(path) : path === item.href) {
         link.setAttribute('aria-current', 'page');
       }
       li.appendChild(link);
@@ -173,8 +183,29 @@
     }
   }
 
+  function ensureMobileFieldNotesNav() {
+    var nav = document.getElementById('primary-nav');
+    if (!nav || nav.querySelector('.nav__link--mobile-field-notes')) return;
+
+    var path = normalizePath(window.location.pathname);
+    var link = document.createElement('a');
+    link.href = '/field-notes/';
+    link.className = 'nav__link--mobile-field-notes';
+    link.textContent = 'Field Notes';
+    if (isFieldNotesPath(path)) {
+      link.setAttribute('aria-current', 'page');
+    }
+
+    var more = nav.querySelector('.nav-more');
+    if (more) nav.insertBefore(link, more);
+    else nav.appendChild(link);
+
+    link.addEventListener('click', closeMobileNav);
+  }
+
   function init() {
     ensureNavMore();
+    ensureMobileFieldNotesNav();
     syncHeaderOffset();
     window.addEventListener('resize', syncHeaderOffset);
     var header = document.querySelector('.site-header');
