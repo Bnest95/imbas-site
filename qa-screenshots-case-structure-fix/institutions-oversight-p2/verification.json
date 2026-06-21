@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "heading": "Why this matters for AI oversight",
+    "bodyParagraph": "AI answers are entering workflows, research, compliance, customer support, policy analysis, and decision support. Institutions need to know not only whether a model can answer a question, but what kind of answer it tends to volunteer when the user does not already know the right term to ask about.",
+    "pullLine": "Institutions need visibility into what models surface, omit, and change over time.",
+    "pullWordCount": 12,
+    "hasVolunteerGap": false,
+    "hasImbas": false,
+    "overflow": false
+  },
+  "mobile": {
+    "heading": "Why this matters for AI oversight",
+    "bodyParagraph": "AI answers are entering workflows, research, compliance, customer support, policy analysis, and decision support. Institutions need to know not only whether a model can answer a question, but what kind of answer it tends to volunteer when the user does not already know the right term to ask about.",
+    "pullLine": "Institutions need visibility into what models surface, omit, and change over time.",
+    "pullWordCount": 12,
+    "hasVolunteerGap": false,
+    "hasImbas": false,
+    "overflow": false
+  }
+}
