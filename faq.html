@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FAQ — Imbas and the Volunteer Gap</title>
-  <meta name="description" content="Answers about Imbas, the Volunteer Gap, observed AI behavior, the antenna metaphor, and how scoring works under documented prompt conditions.">
+  <meta name="description" content="Answers about Imbas, the Volunteer Gap, observed AI behavior, and how scoring works under documented prompt conditions.">
   <link rel="canonical" href="https://imbaslabs.com/faq.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
@@ -24,6 +24,70 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css?v=faq-readability">
+  <style>
+    .page--faq .faq-masthead .page__intro {
+      margin-top: var(--space-3);
+      margin-bottom: 0;
+    }
+    .page--faq .faq-entry dt {
+      margin-bottom: 0;
+    }
+    .page--faq .faq-entry.is-open dt {
+      margin-bottom: 0.75rem;
+    }
+    .page--faq .faq-entry__trigger {
+      width: 100%;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+    }
+    .page--faq .faq-entry__trigger:focus-visible {
+      outline: 2px solid rgba(var(--ember-rgb), 0.72);
+      outline-offset: 3px;
+    }
+    .page--faq .faq-entry__question-text {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-display);
+      font-size: var(--faq-type-question);
+      font-weight: 500;
+      letter-spacing: -0.012em;
+      line-height: 1.3;
+      color: var(--ink-luminous);
+      max-width: 52ch;
+    }
+    .page--faq .faq-entry__toggle {
+      flex-shrink: 0;
+      width: 1.25rem;
+      font-family: var(--font-mono);
+      font-size: 1.125rem;
+      font-weight: 500;
+      line-height: 1;
+      text-align: center;
+      color: var(--ember-soft);
+    }
+    .page--faq .faq-entry__answer[hidden] {
+      display: none;
+    }
+    @media (max-width: 699px) {
+      .page--faq .faq-entry.is-open dt {
+        margin-bottom: 0.65rem;
+      }
+      .page--faq .faq-entry__question-text {
+        max-width: none;
+        overflow-wrap: break-word;
+      }
+    }
+  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -76,11 +140,6 @@
       },
       {
         "@type": "Question",
-        "name": "What is the antenna metaphor?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Imbas raises an antenna when documented context wasn't surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn't matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours." }
-      },
-      {
-        "@type": "Question",
         "name": "Why does Imbas refuse to say \"this AI is biased\"?",
         "acceptedAnswer": { "@type": "Answer", "text": "Because the moment a measurement system says \"this AI is wrong\" or \"this answer is biased,\" it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide." }
       },
@@ -112,7 +171,7 @@
       {
         "@type": "Question",
         "name": "What happens next?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading." }
+        "acceptedAnswer": { "@type": "Answer", "text": "The archive expands. More cases are recorded, scored, and published. The methodology is updated as new evidence and validation work become available." }
       }
     ]
   }
@@ -150,48 +209,89 @@
     <header class="faq-masthead">
       <span class="section-label section-label--named"><span>FAQ</span></span>
       <h1>FAQ</h1>
+      <p class="page__intro">Answers to common questions about how Imbas measures and records AI behavior.</p>
     </header>
 
     <section class="faq-group">
       <dl class="faq-list">
         <div class="faq-entry">
-          <dt>What is the Volunteer Gap?</dt>
-          <dd>The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know. Imbas measures the Volunteer Gap under documented prompt conditions &mdash; signal, not verdict. <a href="/volunteer-gap.html">Read the full Volunteer Gap definition</a>.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-01" aria-expanded="false" aria-controls="faq-a-01">
+              <span class="faq-entry__question-text">What is the Volunteer Gap?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-01" role="region" aria-labelledby="faq-q-01" hidden>The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know. Imbas measures the Volunteer Gap under documented prompt conditions &mdash; signal, not verdict. <a href="/volunteer-gap.html">Read the full Volunteer Gap definition</a>.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Is Imbas a fact-checking site?</dt>
-          <dd>No. Imbas measures what AI systems surface or leave out under documented prompt conditions.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-02" aria-expanded="false" aria-controls="faq-a-02">
+              <span class="faq-entry__question-text">Is Imbas a fact-checking site?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-02" role="region" aria-labelledby="faq-q-02" hidden>No. Imbas measures what AI systems surface or leave out under documented prompt conditions.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Is the Volunteer Gap a claim about intent?</dt>
-          <dd>No. It measures observed behavior, not model intent.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-03" aria-expanded="false" aria-controls="faq-a-03">
+              <span class="faq-entry__question-text">Is the Volunteer Gap a claim about intent?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-03" role="region" aria-labelledby="faq-q-03" hidden>No. It measures observed behavior, not model intent.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Is this the same as AI bias?</dt>
-          <dd>No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-04" aria-expanded="false" aria-controls="faq-a-04">
+              <span class="faq-entry__question-text">Is this the same as AI bias?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-04" role="region" aria-labelledby="faq-q-04" hidden>No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Why compare open prompts and direct prompts?</dt>
-          <dd>Because users often do not know the specific mechanism to ask about. The gap between open and direct answers is measurable.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-05" aria-expanded="false" aria-controls="faq-a-05">
+              <span class="faq-entry__question-text">Why compare open prompts and direct prompts?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-05" role="region" aria-labelledby="faq-q-05" hidden>Because users often do not know the specific mechanism to ask about. The gap between open and direct answers is measurable.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>What does 0&ndash;3 mean?</dt>
-          <dd>0 means no meaningful gap. 3 means major relevant information was left out of the open answer.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-06" aria-expanded="false" aria-controls="faq-a-06">
+              <span class="faq-entry__question-text">What does 0&ndash;3 mean?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-06" role="region" aria-labelledby="faq-q-06" hidden>0 means no meaningful gap. 3 means major relevant information was left out of the open answer.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Who is Imbas for?</dt>
-          <dd>Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-07" aria-expanded="false" aria-controls="faq-a-07">
+              <span class="faq-entry__question-text">Who is Imbas for?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-07" role="region" aria-labelledby="faq-q-07" hidden>Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Is the methodology final?</dt>
-          <dd>No. It is versioned and will evolve as the archive grows.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-08" aria-expanded="false" aria-controls="faq-a-08">
+              <span class="faq-entry__question-text">Is the methodology final?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-08" role="region" aria-labelledby="faq-q-08" hidden>No. It is versioned and will evolve as the archive grows.</dd>
         </div>
       </dl>
     </section>
@@ -199,23 +299,33 @@
     <section class="faq-group">
       <dl class="faq-list">
         <div class="faq-entry">
-          <dt>How many cases are in the archive?</dt>
-          <dd>Imbas currently has 50 recorded cases, 13 cases scored in v1, and 5 public case pages published. Recorded cases are captured under documented conditions; scored cases have rubric-assigned gap scores; public cases have full pages available for inspection.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-09" aria-expanded="false" aria-controls="faq-a-09">
+              <span class="faq-entry__question-text">How many cases are in the archive?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-09" role="region" aria-labelledby="faq-q-09" hidden>Imbas currently has 50 recorded cases, 13 cases scored in v1, and 5 public case pages published. Recorded cases are captured under documented conditions; scored cases have rubric-assigned gap scores; public cases have full pages available for inspection.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>What is the antenna metaphor?</dt>
-          <dd>Imbas raises an antenna when documented context wasn&rsquo;t surfaced. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further. The antenna is the signal. The decision is yours.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-10" aria-expanded="false" aria-controls="faq-a-10">
+              <span class="faq-entry__question-text">Why does Imbas refuse to say &ldquo;this AI is biased&rdquo;?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-10" role="region" aria-labelledby="faq-q-10" hidden>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Why does Imbas refuse to say &ldquo;this AI is biased&rdquo;?</dt>
-          <dd>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
-        </div>
-
-        <div class="faq-entry">
-          <dt>Is there an inter-rater reliability number for the v1 scoring?</dt>
-          <dd>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-11" aria-expanded="false" aria-controls="faq-a-11">
+              <span class="faq-entry__question-text">Is there an inter-rater reliability number for the v1 scoring?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-11" role="region" aria-labelledby="faq-q-11" hidden>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
         </div>
       </dl>
     </section>
@@ -223,28 +333,53 @@
     <section class="faq-group">
       <dl class="faq-list">
         <div class="faq-entry">
-          <dt>What does Imbas mean by &ldquo;behavioral observability&rdquo;?</dt>
-          <dd>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-12" aria-expanded="false" aria-controls="faq-a-12">
+              <span class="faq-entry__question-text">What does Imbas mean by &ldquo;behavioral observability&rdquo;?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-12" role="region" aria-labelledby="faq-q-12" hidden>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Why does Imbas use multiple models?</dt>
-          <dd>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-13" aria-expanded="false" aria-controls="faq-a-13">
+              <span class="faq-entry__question-text">Why does Imbas use multiple models?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-13" role="region" aria-labelledby="faq-q-13" hidden>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Why do documented prompt conditions matter?</dt>
-          <dd>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-14" aria-expanded="false" aria-controls="faq-a-14">
+              <span class="faq-entry__question-text">Why do documented prompt conditions matter?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-14" role="region" aria-labelledby="faq-q-14" hidden>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>Can Imbas be wrong?</dt>
-          <dd>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-15" aria-expanded="false" aria-controls="faq-a-15">
+              <span class="faq-entry__question-text">Can Imbas be wrong?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-15" role="region" aria-labelledby="faq-q-15" hidden>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
         </div>
 
         <div class="faq-entry">
-          <dt>What happens next?</dt>
-          <dd>Today, Imbas is an archive and methodology. Next, it becomes a live signal tool that rides alongside AI and raises the antenna when a documented gap pattern appears in the answer you are reading.</dd>
+          <dt class="faq-entry__term">
+            <button type="button" class="faq-entry__trigger" id="faq-q-16" aria-expanded="false" aria-controls="faq-a-16">
+              <span class="faq-entry__question-text">What happens next?</span>
+              <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
+            </button>
+          </dt>
+          <dd class="faq-entry__answer" id="faq-a-16" role="region" aria-labelledby="faq-q-16" hidden>The archive expands. More cases are recorded, scored, and published. The methodology is updated as new evidence and validation work become available.</dd>
         </div>
       </dl>
     </section>
@@ -302,6 +437,21 @@
         }
       });
     }
+
+    function setFaqEntryState(trigger, open) {
+      var panel = document.getElementById(trigger.getAttribute('aria-controls'));
+      var icon = trigger.querySelector('.faq-entry__icon');
+      trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.hidden = !open;
+      if (icon) icon.textContent = open ? '\u2212' : '+';
+      trigger.closest('.faq-entry').classList.toggle('is-open', open);
+    }
+
+    document.querySelectorAll('.faq-entry__trigger').forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        setFaqEntryState(trigger, trigger.getAttribute('aria-expanded') !== 'true');
+      });
+    });
   })();
 </script>
 </body>

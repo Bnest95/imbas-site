@@ -1,0 +1,20 @@
+{
+  "desktop": {
+    "heading": "FAQ",
+    "intro": "Questions about the Volunteer Gap, the archive, scoring, and methodology.",
+    "introMatches": true,
+    "faqCount": 17,
+    "firstQuestion": "What is the Volunteer Gap?",
+    "firstAnswerStart": "The Volunteer Gap is the difference between what a model surfaces on an open-end",
+    "overflow": false
+  },
+  "mobile": {
+    "heading": "FAQ",
+    "intro": "Questions about the Volunteer Gap, the archive, scoring, and methodology.",
+    "introMatches": true,
+    "faqCount": 17,
+    "firstQuestion": "What is the Volunteer Gap?",
+    "firstAnswerStart": "The Volunteer Gap is the difference between what a model surfaces on an open-end",
+    "overflow": false
+  }
+}
