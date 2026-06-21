@@ -41,9 +41,9 @@ Then open [http://localhost:8765/](http://localhost:8765/).
 | `/robots.txt` | Crawler rules |
 | `/sitemap.xml` | Sitemap |
 
-## Ghost dependency
+## Field Notes signup
 
-Field Notes signup posts to **`/api/field-notes-signup`** (Vercel serverless → Airtable). Ghost at **`/briefing`** is no longer used for email capture; `/briefing` redirects to `/field-notes/`.
+Field Notes signup posts to **`/api/field-notes-signup`** (Vercel serverless → Airtable). Legacy **`/briefing`** URLs redirect to **`/field-notes/`**.
 
 ## Missing launch assets
 
@@ -71,7 +71,7 @@ Security headers (CSP, HSTS, `X-Content-Type-Options`, etc.) belong at the **hos
 
 Before public share:
 
-1. **Ghost at `/briefing`** — or hide/replace Field Notes links and signup forms until live
+1. **Field Notes API env vars** — set `AIRTABLE_TOKEN` and `AIRTABLE_FIELD_NOTES_TABLE` on Vercel, or signup forms return unconfigured
 2. **Missing assets** — `favicon.ico`, `og-image.png`, `apple-touch-icon.png`
 3. **Deploy hygiene** — use tracked files only; exclude screenshot folders and junk on disk
 4. **HTTPS + security headers** — configure at host/CDN; enable HSTS only after HTTPS is confirmed

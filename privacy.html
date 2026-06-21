@@ -118,7 +118,7 @@
         <li>Email addresses submitted through signup forms on the site.</li>
         <li>Information you send directly by email, such as your name, email address, organization, and message content.</li>
         <li>Basic technical and log information collected by hosting providers, such as IP address, browser type, pages visited, referring URL, and timestamps.</li>
-        <li>If Field Notes or <code>/field-notes</code> is powered by Ghost Members, information processed through that service, including email address, subscription status, labels or tags, and email engagement data.</li>
+        <li>Field Notes signup submissions, including email address, the page where you signed up, a created timestamp, and browser user agent when provided by your browser.</li>
       </ul>
       <p>Imbas does not intentionally collect sensitive personal information, such as government ID numbers, financial account details, precise health records, or similar categories of sensitive data.</p>
     </section>
@@ -154,8 +154,7 @@
       <ul>
         <li>Hosting providers that operate the site.</li>
         <li>Email and newsletter infrastructure used to send communications.</li>
-        <li>Database and record-keeping services used to review Workbench submissions, such as Airtable.</li>
-        <li>Ghost or Ghost Members, if configured for Field Notes or <code>/field-notes</code>.</li>
+        <li>Database and record-keeping services, such as Airtable, used to store Field Notes signups and review Workbench submissions.</li>
         <li>Professional service providers if needed, such as legal, security, or technical support providers.</li>
         <li>Authorities or other parties when required by law or to protect rights, safety, or security.</li>
       </ul>
@@ -168,8 +167,9 @@
     </section>
 
     <section class="page__section">
-      <h2>Ghost and Field Notes</h2>
-      <p>If <code>/field-notes</code> is powered by Ghost, newsletter signup and membership functionality may be processed through Ghost. You can unsubscribe from emails using the unsubscribe link in any email or by contacting Imbas at <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.</p>
+      <h2>Field Notes signup</h2>
+      <p>When you subscribe to Field Notes through signup forms on the site, your email address is sent to Imbas through a server-side route at <code>/api/field-notes-signup</code>. Imbas may store your email address, the page where you signed up, a created timestamp, and your browser user agent (if provided by your browser) in Airtable, a third-party database service. Access credentials for Airtable are kept in server-side environment variables and are not exposed in the site&rsquo;s public code.</p>
+      <p>You can unsubscribe from emails using the unsubscribe link in any message or by contacting Imbas at <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.</p>
     </section>
 
     <section class="page__section">
