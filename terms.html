@@ -25,6 +25,51 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/styles.css">
   <script src="/site-header.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com"
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.imbaslabs.com/terms.html#webpage",
+        "url": "https://www.imbaslabs.com/terms.html",
+        "name": "Terms of Use",
+        "description": "Terms governing use of the Imbas website, archive, Field Notes, methodology pages, and related materials.",
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://www.imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://www.imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.imbaslabs.com/terms.html#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.imbaslabs.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Terms of Use",
+            "item": "https://www.imbaslabs.com/terms.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 

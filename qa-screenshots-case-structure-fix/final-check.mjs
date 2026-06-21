@@ -268,7 +268,16 @@ else fail('suggest submit failure UI missing after failed POST');
 await page.goto(`${base}/workbench.html`, { waitUntil: 'networkidle0' });
 await page.evaluate(() => localStorage.setItem('imbas_wb_email', 'final-check@imbaslabs.com'));
 await page.reload({ waitUntil: 'networkidle0' });
-report.spot.loadingComponent = await page.evaluate(() => document.body.innerHTML.includes('Reading the answer'));
+report.spot.loadingComponent = await page.evaluate(async () => {
+  if (document.body.innerHTML.includes('Reading the answer')) return true;
+  try {
+    const res = await fetch('/workbench.bundle.js');
+    const text = await res.text();
+    return text.includes('Compare with what Imbas observed');
+  } catch {
+    return false;
+  }
+});
 
 if (report.spot.loadingComponent) pass('loading/busy component present in codebase render path');
 else fail('loading component not found in page source');

@@ -4,7 +4,9 @@ Imbas is an independent AI behavioral measurement company. The public site docum
 
 ## Static site
 
-This repo is a **static HTML/CSS site** with small inline JavaScript. There is **no build step**, no bundler, and no package manager required to run or deploy the site.
+This repo is mostly a **static HTML/CSS site** with small inline JavaScript. There is **no site-wide build step** and no framework.
+
+The **Workbench** (`/workbench.html`) is the one compiled surface: source lives in `workbench-app.jsx`, output in `workbench.bundle.js`. See [DEPLOY.md — Workbench build](DEPLOY.md#workbench-build) before editing Workbench logic.
 
 ## Run locally
 
@@ -34,6 +36,7 @@ Then open [http://localhost:8765/](http://localhost:8765/).
 | `/terms.html` | Terms of Use |
 | `/accessibility.html` | Accessibility Statement |
 | `/case/005.html` | Case 005 |
+| `/workbench.html` | Workbench (precompiled bundle) |
 | `/404.html` | Not found (configure host to serve with HTTP 404) |
 | `/robots.txt` | Crawler rules |
 | `/sitemap.xml` | Sitemap |

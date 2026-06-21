@@ -16,7 +16,34 @@ Do not deploy:
 
 ## Static site
 
-No build step required. The site is static HTML/CSS with small inline JS.
+Most pages are static HTML/CSS with small inline JS. **Vercel does not currently run a build step** for this site.
+
+The Workbench is the one exception: it ships a precompiled JavaScript bundle (see **Workbench build** below). Everything else deploys as-is from git.
+
+## Workbench build
+
+The live Workbench UI is compiled from source into a static bundle. **`workbench.bundle.js` is committed as a static artifact** — Vercel serves it directly; it is not rebuilt on deploy.
+
+If the bundle is stale (source edited but not rebuilt), Workbench behavior may not match `workbench-app.jsx`.
+
+When changing Workbench logic or copy:
+
+1. Edit `workbench-app.jsx`
+2. Run `npm run build:workbench`
+3. Commit `workbench-app.jsx` and `workbench.bundle.js`
+4. Run `node qa-screenshots-case-structure-fix/final-check.mjs`
+5. Run `node qa-screenshots-case-structure-fix/metadata-check.mjs`
+
+First-time or after pulling changes that touch `package.json`:
+
+```bash
+npm install
+npm run build:workbench
+```
+
+Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `workbench.html`). Do not edit `Workbench.jsx` unless diffed against `workbench-app.jsx` first — it may be stale.
+
+Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
 
 ## Required external dependency before public launch
 
@@ -42,9 +69,8 @@ Still needed:
 ## Hosting headers
 
 Platform: Vercel. Headers ship in `vercel.json` (repo root). CSP is per-route: a
-near-strict policy on every page, plus a relaxed block scoped to `/workbench.html`
-only (it loads React/Babel from cdnjs and compiles in the browser, which needs
-`'unsafe-eval'` + cdnjs).
+near-strict policy on every page, plus a workbench-specific block scoped to
+`/workbench.html` (allows cdnjs for React/ReactDOM CDN scripts).
 
 Note: the site embeds an inline `<script>` on every page (nav menu; index also has
 scroll-reveal) and a few inline `style="..."` attributes, so the shipped policy
@@ -55,7 +81,8 @@ defer>`) and convert the inline `style=` attributes to classes, then drop
 `'unsafe-inline'` from script-src. Not required for launch.
 
 Values below are the GLOBAL (non-workbench) policy. The workbench block is the same
-but with `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com`.
+but with `script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com` (no
+`'unsafe-eval'` — Workbench JSX is precompiled to `/workbench.bundle.js`).
 
 Content-Security-Policy:
 
