@@ -1254,7 +1254,7 @@ body:has(main > section.hero) .nav__menu-btn {
    ============================================================= */
 .bridge {
   position: relative;
-  padding: clamp(var(--space-5), 8vw, var(--space-7)) 0;
+  padding: clamp(var(--space-3), 5vw, var(--space-5)) 0;
   background: var(--bg-base);
   border-bottom: 1px solid var(--line-faint);
   overflow: hidden;
@@ -1273,33 +1273,33 @@ body:has(main > section.hero) .nav__menu-btn {
 .bridge__inner {
   position: relative;
   z-index: 2;
-  max-width: var(--container-mid);
+  max-width: min(980px, 94vw);
   margin: 0 auto;
   padding: 0 clamp(1.25rem, 4vw, 3rem);
 }
 .bridge__frame {
   position: relative;
-  padding: clamp(2rem, 4vw, 3rem) clamp(1.5rem, 3vw, 2.5rem);
-  border: 1px solid var(--line-soft);
+  padding: clamp(1rem, 2vw, 1.45rem) clamp(1.5rem, 3.25vw, 2.5rem);
+  border: 1px solid rgba(237, 228, 210, 0.08);
   background:
-    linear-gradient(rgba(140, 176, 210, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(140, 176, 210, 0.035) 1px, transparent 1px),
-    rgba(var(--bg-elevated-rgb), 0.12);
+    linear-gradient(rgba(140, 176, 210, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(140, 176, 210, 0.018) 1px, transparent 1px),
+    rgba(var(--bg-elevated-rgb), 0.055);
   background-size: 28px 28px, 28px 28px, auto;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
 }
 .bridge__thesis {
   margin: 0 auto;
   text-align: center;
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: clamp(1.65rem, 2.8vw, 2.2rem);
-  line-height: 1.28;
-  letter-spacing: -0.012em;
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+  line-height: 1.22;
+  letter-spacing: -0.014em;
   color: #F2E8DC;
-  max-width: 24ch;
-  padding-bottom: var(--space-3);
+  max-width: 28ch;
+  padding-bottom: clamp(0.65rem, 1.25vw, 0.85rem);
   position: relative;
 }
 .bridge__connector {
@@ -1373,19 +1373,24 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 
 @media (max-width: 800px) {
-  .bridge { padding: var(--space-5) 0; }
-  .bridge__frame { padding: var(--space-4) var(--space-3); }
-  .bridge__thesis { max-width: 28ch; }
+  .bridge { padding: var(--space-3) 0; }
+  .bridge__inner { max-width: 100%; }
+  .bridge__frame { padding: var(--space-3) var(--space-3); }
+  .bridge__thesis {
+    max-width: none;
+    padding-bottom: var(--space-2);
+    text-align: left;
+    margin-inline: 0;
+    font-size: clamp(1.55rem, 6.5vw, 1.85rem);
+    line-height: 1.24;
+  }
   .bridge__lede {
     text-align: left !important;
     margin-inline: 0;
     max-width: none;
+    font-size: 0.975rem;
+    line-height: 1.6;
   }
-  .bridge__plate p {
-    max-width: none;
-    text-align: left;
-  }
-  .bridge__plates { grid-template-columns: 1fr; gap: var(--space-3); }
 }
 
 /* =============================================================
