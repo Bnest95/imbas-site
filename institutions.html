@@ -24,6 +24,66 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,450;9..144,500&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="styles.css?v=inst-section-headers">
+  <style>
+    .page--institutions .inst-masthead:has(+ .inst-value-bridge) {
+      margin-bottom: var(--space-5);
+      padding-bottom: var(--space-5);
+      border-bottom-color: rgba(var(--ember-rgb), 0.16);
+      box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.07);
+    }
+    .page--institutions .inst-value-bridge {
+      margin: 0 0 var(--space-5);
+      padding: 0 0 var(--space-4);
+      border-bottom: 1px solid var(--line-faint);
+    }
+    .page--institutions .inst-value-bridge .inst-section__title {
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-2);
+    }
+    .page--institutions .inst-value-bridge__list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem var(--space-5);
+      max-width: var(--inst-prose-width);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .page--institutions .inst-value-bridge__item {
+      position: relative;
+      margin: 0;
+      padding: 0 0 0 1.05rem;
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: rgba(212, 207, 194, 0.92);
+    }
+    .page--institutions .inst-value-bridge__item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.58em;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(var(--ember-rgb), 0.58);
+    }
+    @media (max-width: 699px) {
+      .page--institutions .inst-masthead:has(+ .inst-value-bridge) {
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-4);
+      }
+      .page--institutions .inst-value-bridge {
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
+      }
+      .page--institutions .inst-value-bridge__list {
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+        max-width: none;
+      }
+    }
+  </style>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -73,6 +133,16 @@
         <p class="page__intro inst-intro--tight">Imbas documents what frontier models surface and skip under repeatable prompt conditions — cross-vendor records institutions can monitor, audit, and cite.</p>
       </div>
     </header>
+
+    <section class="inst-section inst-value-bridge" aria-labelledby="inst-value-bridge-heading">
+      <h2 id="inst-value-bridge-heading" class="inst-section__title">Why institutions use Imbas</h2>
+      <ul class="inst-value-bridge__list" role="list">
+        <li class="inst-value-bridge__item">Compare model behavior across vendors</li>
+        <li class="inst-value-bridge__item">Document omissions and framing changes</li>
+        <li class="inst-value-bridge__item">Produce citable records for audits and reviews</li>
+        <li class="inst-value-bridge__item">Track behavioral drift across releases</li>
+      </ul>
+    </section>
 
     <section class="inst-section inst-deliverables">
       <h2 class="inst-section__title">What Imbas can produce for an institution</h2>
