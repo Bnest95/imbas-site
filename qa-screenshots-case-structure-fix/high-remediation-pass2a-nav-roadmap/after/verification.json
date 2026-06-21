@@ -1,0 +1,69 @@
+{
+  "phase": "after",
+  "nav": {
+    "1024": {
+      "navHeight": 28.796875,
+      "overflow": false,
+      "hasMore": true
+    },
+    "1280": {
+      "navHeight": 28.796875,
+      "overflow": false,
+      "hasMore": true
+    },
+    "1440": {
+      "navHeight": 28.796875,
+      "overflow": false,
+      "hasMore": true
+    },
+    "mobileClosed": {
+      "navHeight": 0,
+      "overflow": false,
+      "hasMore": true
+    },
+    "mobileOpen": {
+      "navHeight": 900,
+      "overflow": false,
+      "hasMore": true
+    },
+    "mobileMore": {
+      "navHeight": 900,
+      "overflow": false,
+      "hasMore": true
+    }
+  },
+  "roadmap": {
+    "desktop": [
+      {
+        "label": "Now",
+        "text": "Public archive, validated records, and Workbench demo."
+      },
+      {
+        "label": "Next",
+        "text": "Broader case release, stronger comparison workflows, and expanded measurement coverage."
+      },
+      {
+        "label": "For Institutions",
+        "text": "Measurement programs, monitoring, and reporting for the systems you already use."
+      }
+    ],
+    "mobile": [
+      {
+        "label": "Now",
+        "text": "Public archive, validated records, and Workbench demo."
+      },
+      {
+        "label": "Next",
+        "text": "Broader case release, stronger comparison workflows, and expanded measurement coverage."
+      },
+      {
+        "label": "For Institutions",
+        "text": "Measurement programs, monitoring, and reporting for the systems you already use."
+      }
+    ]
+  },
+  "mobileOverflow": {
+    "doc": true,
+    "body": true
+  }
+}
