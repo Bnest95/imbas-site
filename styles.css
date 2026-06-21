@@ -1785,6 +1785,9 @@ body:has(main > section.hero) .nav__menu-btn {
   border-top: none;
   background: linear-gradient(180deg, rgba(var(--bg-base-rgb), 0.48) 0%, var(--bg-surface) 18%, var(--bg-surface) 100%);
 }
+.compounding + .stakes.section-scene:not(.stakes--context-lead) {
+  padding-top: clamp(var(--space-4), 5.5vw, var(--space-5));
+}
 
 /* Ephemeral beat — Volunteer Gap–style word reveal + trace ghost */
 #ephemeral-h2 + .stakes__copy {
