@@ -70,7 +70,11 @@ export default async function handler(req, res) {
       headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`, "Content-Type": "application/json" },
       body: JSON.stringify({ fields, typecast: true }),
     });
-    if (!r.ok) { const t = await r.text(); return res.status(502).json({ ok: false, error: "airtable", detail: t.slice(0, 300) }); }
+    if (!r.ok) {
+      const t = await r.text();
+      console.error("[repository] airtable write failed:", r.status, t.slice(0, 300));
+      return res.status(502).json({ ok: false, error: "airtable" });
+    }
     const data = await r.json();
     return res.status(200).json({ ok: true, id: data.id });
   } catch {

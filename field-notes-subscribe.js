@@ -20,6 +20,7 @@
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       var emailInput = form.querySelector('input[type="email"]');
+      var hpInput = form.querySelector('input[name="hp"]');
       var btn = form.querySelector('button[type="submit"]');
       if (!emailInput || !emailInput.value.trim() || !emailInput.checkValidity()) {
         showMsg(msg, INVALID);
@@ -42,6 +43,7 @@
         body: JSON.stringify({
           email: emailInput.value.trim(),
           source: window.location.pathname || "/",
+          hp: hpInput ? hpInput.value : "",
         }),
         credentials: "same-origin",
       })

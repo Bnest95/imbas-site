@@ -15,7 +15,6 @@
 //   User Agent   — long text (optional)
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
-const TABLE = process.env.AIRTABLE_FIELD_NOTES_TABLE;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX = 500;
 
@@ -40,11 +39,14 @@ function escapeFormula(value) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
 
-  if (!process.env.AIRTABLE_TOKEN || !TABLE) {
+  const body = req.body || {};
+  if (body.hp) return res.status(200).json({ ok: true }); // honeypot: drop silently
+
+  if (!process.env.AIRTABLE_TOKEN || !process.env.AIRTABLE_FIELD_NOTES_TABLE) {
     return res.status(503).json({ ok: false, error: "unconfigured" });
   }
 
-  const body = req.body || {};
+  const table = process.env.AIRTABLE_FIELD_NOTES_TABLE;
   const email = normalizeEmail(body.email);
   if (!email || !EMAIL_RE.test(email)) {
     return res.status(400).json({ ok: false, error: "invalid_email" });
@@ -60,7 +62,7 @@ export default async function handler(req, res) {
 
   try {
     const formula = encodeURIComponent(`{Email}='${escapeFormula(email)}'`);
-    const lookup = await fetch(`https://api.airtable.com/v0/${BASE}/${TABLE}?filterByFormula=${formula}&maxRecords=1`, {
+    const lookup = await fetch(`https://api.airtable.com/v0/${BASE}/${table}?filterByFormula=${formula}&maxRecords=1`, {
       headers: auth,
     });
     if (lookup.ok) {
@@ -77,14 +79,15 @@ export default async function handler(req, res) {
     };
     if (ua) fields["User Agent"] = ua;
 
-    const r = await fetch(`https://api.airtable.com/v0/${BASE}/${TABLE}`, {
+    const r = await fetch(`https://api.airtable.com/v0/${BASE}/${table}`, {
       method: "POST",
       headers: { ...auth, "Content-Type": "application/json" },
       body: JSON.stringify({ fields, typecast: true }),
     });
     if (!r.ok) {
       const t = await r.text();
-      return res.status(502).json({ ok: false, error: "airtable", detail: t.slice(0, 300) });
+      console.error("[field-notes-signup] airtable write failed:", r.status, t.slice(0, 300));
+      return res.status(502).json({ ok: false, error: "airtable" });
     }
     const data = await r.json();
     return res.status(200).json({ ok: true, id: data.id });
