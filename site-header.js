@@ -67,13 +67,14 @@
     menu.hidden = true;
 
     [
-      { href: '/field-notes/', label: 'Field Notes', fieldNotes: true },
+      { href: '/field-notes/', label: 'Field Notes', fieldNotes: true, desktopOnly: true },
       { href: '/methodology.html', label: 'Methodology' },
       { href: '/faq.html', label: 'FAQ' },
       { href: '/contact.html', label: 'Contact' }
     ].forEach(function (item) {
       var li = document.createElement('li');
       li.setAttribute('role', 'none');
+      if (item.desktopOnly) li.className = 'nav-more__item--desktop-only';
       var link = document.createElement('a');
       link.href = item.href;
       link.setAttribute('role', 'menuitem');
