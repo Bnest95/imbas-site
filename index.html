@@ -259,6 +259,7 @@
                 name="topic"
                 class="experience-capture__field"
                 placeholder="The topic or question"
+                maxlength="500"
                 autocomplete="off"
                 required
               >
@@ -270,6 +271,7 @@
                 name="ai_answer"
                 class="experience-capture__field experience-capture__field--area"
                 placeholder="What the AI told you"
+                maxlength="12000"
                 rows="5"
                 required
               ></textarea>
@@ -282,10 +284,15 @@
                 name="email"
                 class="experience-capture__field"
                 placeholder="Email — so we can tell you what we find"
+                maxlength="254"
                 autocomplete="email"
                 required
               >
             </div>
+            <label class="subscribe__hp" aria-hidden="true">
+              <span>Leave blank</span>
+              <input type="text" name="hp" tabindex="-1" autocomplete="off" value="">
+            </label>
             <div class="experience-capture__actions">
               <button type="submit" class="experience-capture__submit">
                 <span>Send it</span>
@@ -293,6 +300,7 @@
               </button>
             </div>
           </form>
+          <p class="experience-capture__error" id="experience-capture-error" role="alert" aria-live="polite" aria-atomic="true" hidden>Something didn&rsquo;t go through. Try again in a moment.</p>
           <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
         </aside>
       </div>
@@ -743,39 +751,71 @@
       var form = document.getElementById('experience-capture-form');
       if (!form) return;
       var confirm = document.getElementById('experience-capture-confirm');
+      var error = document.getElementById('experience-capture-error');
       var submitBtn = form.querySelector('button[type="submit"]');
+      var hpInput = form.querySelector('[name="hp"]');
       var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      var TOPIC_MAX = 500;
+      var ANSWER_MAX = 12000;
+      var EMAIL_MAX = 254;
+
+      function showError() {
+        if (error) error.hidden = false;
+      }
+
+      function hideError() {
+        if (error) error.hidden = true;
+      }
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
+        hideError();
         var topicInput = form.querySelector('[name="topic"]');
         var answerInput = form.querySelector('[name="ai_answer"]');
         var emailInput = form.querySelector('[name="email"]');
         var topic = topicInput.value.trim();
         var aiAnswer = answerInput.value.trim();
         var email = emailInput.value.trim();
+        var hp = hpInput ? hpInput.value : '';
 
-        if (!topic || !aiAnswer) return;
-        if (!email || !emailPattern.test(email)) {
+        if (!topic || topic.length > TOPIC_MAX) return;
+        if (!aiAnswer || aiAnswer.length > ANSWER_MAX) return;
+        if (!email || email.length > EMAIL_MAX || !emailPattern.test(email)) {
           emailInput.focus();
           return;
         }
 
         submitBtn.disabled = true;
 
-        var payload = {
-          topic: topic,
-          ai_answer: aiAnswer,
-          email: email
-        };
-
-        window.setTimeout(function () {
-          // TODO: connect capture endpoint
-          console.log(payload);
-          form.hidden = true;
-          confirm.hidden = false;
-          confirm.focus();
-        }, 350);
+        fetch('/api/experience', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            aiAnswer: aiAnswer,
+            email: email,
+            hp: hp
+          })
+        })
+          .then(function (response) {
+            return response.json().then(function (data) {
+              return { ok: response.ok, data: data };
+            });
+          })
+          .then(function (result) {
+            if (result.data && result.data.ok) {
+              form.hidden = true;
+              confirm.hidden = false;
+              confirm.focus();
+              return;
+            }
+            showError();
+            submitBtn.disabled = false;
+          })
+          .catch(function () {
+            showError();
+            submitBtn.disabled = false;
+          });
       });
     })();
 

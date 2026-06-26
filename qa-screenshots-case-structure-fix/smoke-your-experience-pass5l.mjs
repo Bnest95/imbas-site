@@ -64,7 +64,12 @@ const report = {
       experienceBlock.includes('>AI answer</label>') &&
       experienceBlock.includes('>Contact</label>'),
     splitLayout: experienceBlock.includes('your-experience__layout'),
-    todoComment: index.includes('// TODO: connect capture endpoint'),
+    wiredToApi: index.includes("fetch('/api/experience'") && !index.includes('// TODO: connect capture endpoint'),
+    honeypot: experienceBlock.includes('name="hp"'),
+    maxlengths:
+      experienceBlock.includes('maxlength="500"') &&
+      experienceBlock.includes('maxlength="12000"') &&
+      experienceBlock.includes('maxlength="254"'),
     noApiAction: !/<form[^>]*class="experience-capture[^"]*"[^>]*action=/.test(index) &&
       !/id="experience-capture-form"[^>]*action=/.test(index),
   },

@@ -2519,6 +2519,16 @@ body:has(main > section.hero) .nav__menu-btn {
 .experience-capture__confirm[hidden] {
   display: none !important;
 }
+.experience-capture__error {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: max(0.875rem, var(--text-min));
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.experience-capture__error[hidden] {
+  display: none !important;
+}
 @media (max-width: 900px) {
   .your-experience__layout {
     grid-template-columns: 1fr;
