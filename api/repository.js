@@ -9,7 +9,13 @@
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const TABLE = process.env.AIRTABLE_REPO_TABLE || "tblyPn1kp4PHbxTWz";
-const MAX = 20000; // per-field character cap
+const MAX_BODY = 256 * 1024;
+const FIELD_MAX = 20000;
+const HP_MAX = 1000;
+const EMAIL_MAX = 254;
+const MODE_MAX = 64;
+const MODEL_MAX = 64;
+const CASE_ID_MAX = 32;
 
 // best-effort in-memory throttle (resets on cold start; swap for Vercel KV / Upstash for hard limits)
 const hits = new Map();
@@ -19,7 +25,7 @@ function throttled(ip) {
   arr.push(now); hits.set(ip, arr);
   return arr.length > max;
 }
-const clip = (v) => (typeof v === "string" && v.length > MAX ? v.slice(0, MAX) : v);
+const clip = (v, max = FIELD_MAX) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
 function userSelfScore(v) {
   if (v == null || v === "") return null;
   const n = Number(v);
@@ -29,24 +35,52 @@ function userSelfScore(v) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
-  if (!process.env.AIRTABLE_TOKEN) return res.status(500).json({ ok: false, error: "unconfigured" });
 
-  const c = req.body || {};
-  if (c.hp) return res.status(200).json({ ok: true }); // honeypot: drop silently
+  const contentLength = Number(req.headers["content-length"] || 0);
+  if (contentLength > MAX_BODY) {
+    return res.status(413).json({ ok: false, error: "too_large" });
+  }
+
+  const c = req.body;
+  if (!c || typeof c !== "object" || Array.isArray(c)) {
+    return res.status(400).json({ ok: false, error: "invalid" });
+  }
+
+  try {
+    if (Buffer.byteLength(JSON.stringify(c), "utf8") > MAX_BODY) {
+      return res.status(413).json({ ok: false, error: "too_large" });
+    }
+  } catch {
+    return res.status(400).json({ ok: false, error: "invalid" });
+  }
+
+  const hp = typeof c.hp === "string" ? c.hp : "";
+  if (hp.length > HP_MAX) return res.status(400).json({ ok: false, error: "invalid" });
+  if (hp.trim()) return res.status(200).json({ ok: true });
+
   if (c.schema !== "imbas.candidate.v0") return res.status(400).json({ ok: false, error: "schema" });
-  if (!c.mode || !c.model) return res.status(400).json({ ok: false, error: "missing" });
+  const mode = typeof c.mode === "string" ? c.mode.trim() : "";
+  const model = typeof c.model === "string" ? c.model.trim() : "";
+  if (!mode || mode.length > MODE_MAX || !model || model.length > MODEL_MAX) {
+    return res.status(400).json({ ok: false, error: "missing" });
+  }
+
+  const email = typeof c.email === "string" ? c.email.trim() : "";
+  if (email.length > EMAIL_MAX) return res.status(400).json({ ok: false, error: "invalid" });
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
   if (throttled(ip)) return res.status(429).json({ ok: false, error: "rate" });
+
+  if (!process.env.AIRTABLE_TOKEN) return res.status(503).json({ ok: false, error: "unconfigured" });
 
   const id = "CAND-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
   const score = userSelfScore(c.user_self_score);
   const fields = {
     "Candidate ID": id,
     "Captured At": c.captured_at || new Date().toISOString(),
-    "Mode": c.mode,
-    "Source Case ID": c.case_id || "",
-    "Model": c.model,
+    "Mode": clip(mode, MODE_MAX),
+    "Source Case ID": clip(c.case_id || "", CASE_ID_MAX),
+    "Model": clip(model, MODEL_MAX),
     "Open Prompt": clip(c.open_prompt || ""),
     "Open Answer": clip(c.open_answer || ""),
     "Gap Held": !!c.gap_held,
@@ -55,7 +89,7 @@ export default async function handler(req, res) {
     "Targeted Answer": clip(c.targeted_answer || ""),
     "User Category": clip(c.user_category || ""),
     "Evidence Quote": clip(c.evidence || ""),
-    "Submitter Email": c.email || "",
+    "Submitter Email": clip(email, EMAIL_MAX),
     "Triage Status": "new",
     "Triage Notes": c.mechanism ? "mechanism: " + c.mechanism : "",
   };

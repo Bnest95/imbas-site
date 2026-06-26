@@ -1642,8 +1642,14 @@ function buildInvestigationSuggestion(p) {
 }
 async function submitCandidate(candidate) {
   if (!IMBAS_ENDPOINT) return { ok: false };
+  const hpEl = document.getElementById("wb-hp");
+  const hp = hpEl && typeof hpEl.value === "string" ? hpEl.value : "";
   try {
-    const res = await fetch(IMBAS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(candidate) });
+    const res = await fetch(IMBAS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...candidate, hp }),
+    });
     let data = null;
     try { data = await res.json(); } catch {}
     if (!res.ok || (data && data.ok === false)) return { ok: false };

@@ -16,7 +16,11 @@
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX = 500;
+const MAX_BODY = 8 * 1024;
+const EMAIL_MAX = 254;
+const HP_MAX = 1000;
+const SOURCE_MAX = 500;
+const UA_MAX = 500;
 
 const hits = new Map();
 function throttled(ip) {
@@ -29,7 +33,7 @@ function throttled(ip) {
   return arr.length > max;
 }
 
-const clip = (v) => (typeof v === "string" && v.length > MAX ? v.slice(0, MAX) : v);
+const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
 const normalizeEmail = (v) => (typeof v === "string" ? v.trim().toLowerCase() : "");
 
 function escapeFormula(value) {
@@ -39,8 +43,27 @@ function escapeFormula(value) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
 
-  const body = req.body || {};
-  if (body.hp) return res.status(200).json({ ok: true }); // honeypot: drop silently
+  const contentLength = Number(req.headers["content-length"] || 0);
+  if (contentLength > MAX_BODY) {
+    return res.status(413).json({ ok: false, error: "too_large" });
+  }
+
+  const body = req.body;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return res.status(400).json({ ok: false, error: "invalid_email" });
+  }
+
+  try {
+    if (Buffer.byteLength(JSON.stringify(body), "utf8") > MAX_BODY) {
+      return res.status(413).json({ ok: false, error: "too_large" });
+    }
+  } catch {
+    return res.status(400).json({ ok: false, error: "invalid_email" });
+  }
+
+  const hp = typeof body.hp === "string" ? body.hp : "";
+  if (hp.length > HP_MAX) return res.status(400).json({ ok: false, error: "invalid_email" });
+  if (hp.trim()) return res.status(200).json({ ok: true });
 
   if (!process.env.AIRTABLE_TOKEN || !process.env.AIRTABLE_FIELD_NOTES_TABLE) {
     return res.status(503).json({ ok: false, error: "unconfigured" });
@@ -48,15 +71,15 @@ export default async function handler(req, res) {
 
   const table = process.env.AIRTABLE_FIELD_NOTES_TABLE;
   const email = normalizeEmail(body.email);
-  if (!email || !EMAIL_RE.test(email)) {
+  if (!email || email.length > EMAIL_MAX || !EMAIL_RE.test(email)) {
     return res.status(400).json({ ok: false, error: "invalid_email" });
   }
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
   if (throttled(ip)) return res.status(429).json({ ok: false, error: "rate" });
 
-  const source = clip(typeof body.source === "string" ? body.source : "");
-  const ua = clip(typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : "");
+  const source = clip(typeof body.source === "string" ? body.source.trim() : "", SOURCE_MAX);
+  const ua = clip(typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : "", UA_MAX);
 
   const auth = { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` };
 
