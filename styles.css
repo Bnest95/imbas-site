@@ -2532,6 +2532,13 @@ body:has(main > section.hero) .nav__menu-btn {
   .experience-intake {
     padding: var(--space-3);
   }
+  .experience-capture__field {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+  .experience-capture__field::placeholder {
+    font-size: max(0.8125rem, var(--mono-min));
+  }
   .experience-capture__submit {
     width: 100%;
     justify-content: center;
