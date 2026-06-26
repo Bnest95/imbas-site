@@ -237,6 +237,68 @@
     </div>
   </section>
 
+  <!-- YOUR EXPERIENCE — felt drift, local capture -->
+  <section class="your-experience section-scene" data-reveal-section aria-labelledby="experience-label">
+    <div class="your-experience__inner">
+      <div class="your-experience__layout">
+        <div class="your-experience__stakes">
+          <span class="section-label section-label--named reveal" data-stagger="label" id="experience-label"><span>Your Experience</span></span>
+          <div class="your-experience__copy reveal" data-stagger="body">
+            <p class="your-experience__p">The AI output: not wrong, exactly. But off. Maybe it was <span class="ember">managing</span> you instead of answering you.</p>
+            <p class="your-experience__p">Something important is missing, or weirdly one-sided. It&rsquo;s hedging like a lawyer instead of being a genuine thought partner.</p>
+            <p class="your-experience__p">Imbas is here to help. Bring us the topic and the answer. We&rsquo;ll investigate. AI accountability starts with you.</p>
+          </div>
+        </div>
+        <aside class="experience-intake reveal" data-stagger="support" aria-label="Submit your experience for inspection">
+          <form class="experience-capture" id="experience-capture-form" novalidate>
+            <div class="experience-capture__row">
+              <label class="experience-capture__label" for="experience-topic">Topic</label>
+              <input
+                type="text"
+                id="experience-topic"
+                name="topic"
+                class="experience-capture__field"
+                placeholder="The topic or question"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <div class="experience-capture__row experience-capture__row--evidence">
+              <label class="experience-capture__label" for="experience-answer">AI answer</label>
+              <textarea
+                id="experience-answer"
+                name="ai_answer"
+                class="experience-capture__field experience-capture__field--area"
+                placeholder="What the AI told you"
+                rows="5"
+                required
+              ></textarea>
+            </div>
+            <div class="experience-capture__row">
+              <label class="experience-capture__label" for="experience-email">Contact</label>
+              <input
+                type="email"
+                id="experience-email"
+                name="email"
+                class="experience-capture__field"
+                placeholder="Email — so we can tell you what we find"
+                autocomplete="email"
+                required
+              >
+            </div>
+            <div class="experience-capture__actions">
+              <button type="submit" class="experience-capture__submit">
+                <span>Send it</span>
+                <span class="arrow" aria-hidden="true">&rarr;</span>
+              </button>
+            </div>
+          </form>
+          <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
   <!-- EPHEMERAL BY DEFAULT — uncaptured answers beat -->
   <section class="stakes section-scene" data-reveal-section aria-labelledby="ephemeral-h2">
     <div class="stakes__inner">
@@ -676,6 +738,46 @@
         link.addEventListener('click', closeMenu);
       });
     }
+
+    (function initExperienceCapture() {
+      var form = document.getElementById('experience-capture-form');
+      if (!form) return;
+      var confirm = document.getElementById('experience-capture-confirm');
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var topicInput = form.querySelector('[name="topic"]');
+        var answerInput = form.querySelector('[name="ai_answer"]');
+        var emailInput = form.querySelector('[name="email"]');
+        var topic = topicInput.value.trim();
+        var aiAnswer = answerInput.value.trim();
+        var email = emailInput.value.trim();
+
+        if (!topic || !aiAnswer) return;
+        if (!email || !emailPattern.test(email)) {
+          emailInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        var payload = {
+          topic: topic,
+          ai_answer: aiAnswer,
+          email: email
+        };
+
+        window.setTimeout(function () {
+          // TODO: connect capture endpoint
+          console.log(payload);
+          form.hidden = true;
+          confirm.hidden = false;
+          confirm.focus();
+        }, 350);
+      });
+    })();
 
     var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
