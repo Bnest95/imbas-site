@@ -2534,8 +2534,7 @@ body:has(main > section.hero) .nav__menu-btn {
   font-family: var(--font-body);
   font-size: max(0.8125rem, var(--text-min));
   line-height: 1.45;
-  color: var(--ink-muted);
-  opacity: var(--text-min-opacity);
+  color: rgba(148, 160, 180, 0.6);
 }
 @media (max-width: 900px) {
   .your-experience__layout {
