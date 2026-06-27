@@ -2529,6 +2529,14 @@ body:has(main > section.hero) .nav__menu-btn {
 .experience-capture__error[hidden] {
   display: none !important;
 }
+.experience-capture__trust {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-body);
+  font-size: max(0.8125rem, var(--text-min));
+  line-height: 1.45;
+  color: var(--ink-muted);
+  opacity: var(--text-min-opacity);
+}
 @media (max-width: 900px) {
   .your-experience__layout {
     grid-template-columns: 1fr;
@@ -8515,6 +8523,59 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
     font-size: clamp(1.02rem, 3.9vw, 1.18rem);
     line-height: 1.38;
   }
+}
+
+
+/* =============================================================
+   PASS 5P — Homepage section background rhythm (index only)
+   Distinct chapters without stripey cards; palette unchanged.
+   ============================================================= */
+main > .hero + .proof-strip--landing {
+  background: var(--bg-deep);
+}
+main > .your-experience {
+  background:
+    radial-gradient(ellipse 52% 42% at 18% 14%, rgba(var(--ember-rgb), 0.055), transparent 70%),
+    linear-gradient(180deg, #221E19 0%, var(--bg-base) 100%);
+}
+main > .your-experience + section.stakes {
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 0%, rgba(var(--bg-surface-rgb), 0.22), transparent 72%),
+    linear-gradient(180deg, rgba(var(--bg-surface-rgb), 0.28) 0%, var(--bg-base) 38%, var(--bg-base) 100%);
+}
+main > .categories {
+  background:
+    radial-gradient(ellipse 70% 36% at 50% 0%, rgba(var(--ember-rgb), 0.035), transparent 66%),
+    linear-gradient(180deg, #1A1815 0%, #171412 100%);
+}
+main > .value.value--flow {
+  background:
+    radial-gradient(ellipse 40% 72% at 88% 42%, var(--slate-deeper), transparent 74%),
+    linear-gradient(180deg, var(--bg-elevated) 0%, rgba(var(--bg-surface-rgb), 0.92) 100%);
+}
+main > section.stakes[aria-labelledby="public-interest-h2"] {
+  background:
+    radial-gradient(ellipse 58% 44% at 50% 18%, rgba(var(--ember-rgb), 0.04), transparent 72%),
+    linear-gradient(180deg, #1E1A16 0%, var(--bg-base) 100%);
+}
+main > .audiences {
+  background:
+    radial-gradient(ellipse 50% 40% at 72% 28%, rgba(var(--bg-surface-rgb), 0.14), transparent 74%),
+    linear-gradient(180deg, var(--bg-base) 0%, #181512 100%);
+}
+main > .archive.archive--home-preview {
+  background:
+    radial-gradient(ellipse 70% 42% at 50% 100%, var(--slate-bloom), transparent 68%),
+    linear-gradient(180deg, var(--bg-surface) 0%, #0E1624 100%);
+}
+main > .close {
+  background: linear-gradient(180deg, #0E1624 0%, var(--bg-surface) 55%, var(--bg-elevated) 100%);
+}
+main > .close::before {
+  opacity: 0.42;
+  background:
+    radial-gradient(ellipse 44% 34% at 72% 42%, var(--slate-deeper), transparent 72%),
+    radial-gradient(ellipse 38% 30% at 28% 88%, rgba(var(--ember-rgb), 0.03), transparent 74%);
 }
 
 

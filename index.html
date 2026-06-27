@@ -170,7 +170,7 @@
         <div class="exists-bridge__label-rule" aria-hidden="true"></div>
         <p class="exists-bridge__thesis reveal" data-stagger="heading">Every answer shapes what you think, notice, and believe.</p>
         <p class="exists-bridge__problem reveal" data-stagger="heading">One answer is marginal. Across <span class="exists-bridge__scale">trillions of answers</span>, repeated patterns can reshape what people notice, believe, and act on.</p>
-        <p class="exists-bridge__definition reveal" data-stagger="support">Imbas is the inspection layer for AI &mdash; agentic tools that capture model answers, compare how they surface, omit, and reframe information, and flag the patterns that matter.</p>
+        <p class="exists-bridge__definition reveal" data-stagger="support">Imbas is the inspection layer for AI &mdash; agent-assisted inspection tools that capture model answers, compare how they surface, omit, and reframe information, and flag the patterns that matter.</p>
       </div>
     </div>
   </section>
@@ -299,6 +299,7 @@
                 <span class="arrow" aria-hidden="true">&rarr;</span>
               </button>
             </div>
+            <p class="experience-capture__trust">Submissions are reviewed and are not published automatically.</p>
           </form>
           <p class="experience-capture__error" id="experience-capture-error" role="alert" aria-live="polite" aria-atomic="true" hidden>Something didn&rsquo;t go through. Try again in a moment.</p>
           <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
@@ -658,9 +659,6 @@
             method="POST"
             novalidate
           >
-            <button type="submit">
-              <span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span>
-            </button>
             <input
               type="email"
               name="email"
@@ -670,6 +668,9 @@
               required
               aria-label="Email address"
             >
+            <button type="submit">
+              <span class="subscribe__btn-text">Follow Imbas</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span>
+            </button>
             <label class="subscribe__hp" aria-hidden="true">
               <span>Leave blank</span>
               <input type="text" name="hp" tabindex="-1" autocomplete="off" value="">
