@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=vg-labels">
+  <link rel="stylesheet" href="styles.css?v=vg-canonical-v1">
   <script src="/site-header.js" defer></script>
   <style>
     .page--volunteer-gap .vg-cta {
@@ -66,6 +66,10 @@
       border-bottom: none;
       padding-bottom: 0;
     }
+    .page--volunteer-gap .vg-definition-plate__record {
+      margin-top: 1.15em;
+      color: var(--ink-muted);
+    }
     @media (max-width: 699px) {
       .page--volunteer-gap .vg-cta {
         flex-direction: column;
@@ -77,6 +81,9 @@
         justify-content: center;
       }
       .page--volunteer-gap .vg-cta a.hero__secondary {
+        align-self: flex-start;
+      }
+      .page--volunteer-gap .vg-cta a:not(.vg-cta__primary) {
         align-self: flex-start;
       }
     }
@@ -195,9 +202,11 @@
         <div class="vg-hero__horizon" aria-hidden="true"></div>
 
         <div class="vg-definition-plate vg-hero__definition">
-          <p class="page__lede">The Volunteer Gap is the difference between what a model surfaces in an open-ended answer and what it can surface when directly asked about a specific topic.</p>
+          <p class="page__lede">The Volunteer Gap is the difference between what a model surfaces in an open-ended answer and what the same model can surface when directly asked about the underlying specific topic.</p>
+          <p class="page__lede">Open answers shape what users notice first. The Volunteer Gap records what stayed outside that first frame.</p>
           <p class="page__lede">It measures what users see versus what the model knows.</p>
           <p class="page__lede">Imbas records and compares those gaps across models, topics, and time.</p>
+          <p class="page__lede vg-definition-plate__record">Each gap record preserves the prompt, answer, targeted follow-up, and comparison so the finding can be inspected.</p>
         </div>
       </div>
     </header>
@@ -219,11 +228,11 @@
         </div>
         <div class="vg-mechanism-ledger__row">
           <dt class="vg-mechanism-ledger__label">Targeted prompt</dt>
-          <dd class="vg-mechanism-ledger__desc">If the model can surface a specific named mechanism, regulatory framework, dataset, or piece of evidence when asked directly,</dd>
+          <dd class="vg-mechanism-ledger__desc">A direct question about a specific mechanism, source, dataset, or regulatory frame related to the open topic.</dd>
         </div>
         <div class="vg-mechanism-ledger__row">
           <dt class="vg-mechanism-ledger__label">Gap</dt>
-          <dd class="vg-mechanism-ledger__desc">but does not include it in a related open answer, the gap is not imaginary. It can be recorded.</dd>
+          <dd class="vg-mechanism-ledger__desc">If the model can surface it when asked directly but leaves it out of the related open answer, the gap can be recorded.</dd>
         </div>
       </dl>
     </section>
@@ -238,15 +247,15 @@
       <dl class="vg-signal-ledger">
         <div class="vg-signal-ledger__row">
           <dt class="vg-signal-ledger__label">Omission</dt>
-          <dd class="vg-signal-ledger__desc">a named mechanism or context available under targeted inspection but not surfaced in the open answer</dd>
+          <dd class="vg-signal-ledger__desc">A named mechanism or context available under targeted inspection but not surfaced in the open answer.</dd>
         </div>
         <div class="vg-signal-ledger__row">
           <dt class="vg-signal-ledger__label">Framing Drift</dt>
-          <dd class="vg-signal-ledger__desc">the same topic appears under targeted inspection, but attribution, emphasis, or source framing shifts</dd>
+          <dd class="vg-signal-ledger__desc">The same topic appears under targeted inspection, but attribution, emphasis, or source framing shifts.</dd>
         </div>
         <div class="vg-signal-ledger__row">
           <dt class="vg-signal-ledger__label">Deflection</dt>
-          <dd class="vg-signal-ledger__desc">the answer redirects away from the underlying concern before addressing the specific context</dd>
+          <dd class="vg-signal-ledger__desc">The answer redirects away from the underlying concern before addressing the specific context.</dd>
         </div>
       </dl>
     </section>
@@ -261,8 +270,9 @@
       </div>
     </section>
 
-    <div class="page__cta-row vg-cta">
-      <a class="vg-cta__primary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    <div class="page__cta-row vg-cta" aria-label="Next steps">
+      <a class="vg-cta__primary" href="/workbench.html">Test an answer <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
