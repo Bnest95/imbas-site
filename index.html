@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
 
-  <link rel="stylesheet" href="/styles.css?v=field-notes-subscribe-ember">
+  <link rel="stylesheet" href="/styles.css?v=homepage-reader-bridge-v1.2b">
   <script src="/site-header.js" defer></script>
 
   <script type="application/ld+json">
@@ -99,7 +99,7 @@
 
 <main id="main-content">
 
-  <!-- HERO — Workbench primary CTA; Explore the record links to archive -->
+  <!-- HERO — Reader/Workbench primary CTA; archive via nav, proof strip, Case Archive -->
   <section class="hero section-scene" aria-labelledby="hero-h1">
 
     <div class="hero__fog" aria-hidden="true"></div>
@@ -133,14 +133,11 @@
 
         <div class="hero__capture-block">
           <form class="hero__capture" action="/workbench.html" method="get">
+            <input type="hidden" name="reader" value="1">
             <button type="submit">Test your AI</button>
           </form>
+          <p class="hero__microcopy">Paste an answer. See what surfaced, what was omitted, and how it was shaped.</p>
         </div>
-
-        <a href="#archive" class="hero__secondary">
-          <span>Explore the record</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
-        </a>
 
       </div>
 
@@ -155,7 +152,7 @@
           <span class="proof-strip__metric"><span class="proof-strip__num">50+</span> <span class="proof-strip__desc">cases recorded</span></span>
         </span>
         <span class="proof-strip__sep" aria-hidden="true">&middot;</span>
-        <span class="proof-strip__metric"><span class="proof-strip__num">500+</span> <span class="proof-strip__desc">captures</span></span>
+        <span class="proof-strip__metric"><span class="proof-strip__num">500+</span> <span class="proof-strip__desc">model captures</span></span>
         <span class="proof-strip__sep" aria-hidden="true">&middot;</span>
         <span class="proof-strip__metric proof-strip__metric--scope"><span class="proof-strip__scope">Across ChatGPT, Claude, Gemini, and Grok</span></span>
       </span>
@@ -246,11 +243,21 @@
           <div class="your-experience__copy reveal" data-stagger="body">
             <p class="your-experience__p">The AI output: not wrong, exactly. But off. Maybe it was <span class="ember">managing</span> you instead of answering you.</p>
             <p class="your-experience__p">Something important is missing, or weirdly one-sided. It&rsquo;s hedging like a lawyer instead of being a genuine thought partner.</p>
-            <p class="your-experience__p">Imbas is here to help. Bring us the topic and the answer. We&rsquo;ll investigate. AI accountability starts with you.</p>
+            <p class="your-experience__p">Bring the question and answer to the Reader. Imbas will inspect what surfaced, what was omitted, and how the answer was shaped.</p>
           </div>
         </div>
-        <aside class="experience-intake reveal" data-stagger="support" aria-label="Submit your experience for inspection">
-          <form class="experience-capture" id="experience-capture-form" novalidate>
+        <aside class="experience-intake reveal" data-stagger="support" aria-label="Reader and investigation intake">
+          <div class="experience-intake__primary">
+            <a href="/workbench.html?reader=1" class="experience-intake__reader-cta">
+              <span>Open the Workbench</span>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <p class="experience-intake__tier-hint">Run a live inspection now.</p>
+          </div>
+          <div class="experience-intake__secondary">
+            <p class="experience-intake__form-label">Suggest an investigation</p>
+            <p class="experience-intake__tier-hint experience-intake__tier-hint--secondary">For cases we should investigate later.</p>
+            <form class="experience-capture" id="experience-capture-form" novalidate>
             <div class="experience-capture__row">
               <label class="experience-capture__label" for="experience-topic">Topic</label>
               <input
@@ -295,12 +302,13 @@
             </label>
             <div class="experience-capture__actions">
               <button type="submit" class="experience-capture__submit">
-                <span>Send it</span>
+                <span>Suggest investigation</span>
                 <span class="arrow" aria-hidden="true">&rarr;</span>
               </button>
             </div>
-            <p class="experience-capture__trust">Submissions are reviewed and are not published automatically.</p>
+            <p class="experience-capture__trust">Reviewed, not published automatically.</p>
           </form>
+          </div>
           <p class="experience-capture__error" id="experience-capture-error" role="alert" aria-live="polite" aria-atomic="true" hidden>Something didn&rsquo;t go through. Try again in a moment.</p>
           <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
         </aside>
@@ -491,7 +499,7 @@
             </li>
             <li class="hp-arc-metrics__item">
               <span class="hp-arc-metrics__value">500+</span>
-              <span class="hp-arc-metrics__label hp-arc-metrics__desc">captures</span>
+              <span class="hp-arc-metrics__label hp-arc-metrics__desc">model captures</span>
             </li>
             <li class="hp-arc-metrics__item hp-arc-metrics__item--scope">
               <span class="hp-arc-metrics__scope">Across ChatGPT, Claude, Gemini, and Grok</span>
