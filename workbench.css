@@ -4016,6 +4016,14 @@
   margin-bottom: 1.25rem;
   padding-top: 0;
   border-top: none;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  max-width: 100%;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__context-links a {
+  max-width: 100%;
+  word-break: break-word;
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__agent-bar {
@@ -4252,6 +4260,27 @@
   align-items: center;
 }
 
+.wb-reader-result__copy-fail {
+  font-size: 0.78rem;
+  color: rgba(190, 175, 158, 0.78);
+  letter-spacing: 0.02em;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__field .wb-field-error {
+  margin-top: 0.45rem;
+  font-size: 0.84rem;
+  color: rgba(210, 185, 155, 0.88);
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__field .wb-field-error--hint {
+  color: rgba(190, 178, 162, 0.82);
+}
+
+.wb-shell--reader-v2 .wb-reader-v2 {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 .wb-reader-result.is-agent .wb-reader-result__copy .wb-btn--ghost {
   min-height: 2rem;
   padding: 0.35rem 0.65rem;
@@ -4380,6 +4409,7 @@
   .wb-reader-result.is-agent .wb-reader-result__copy .wb-btn--ghost {
     flex: 1 1 auto;
     min-width: calc(50% - 0.3rem);
+    min-height: 2.75rem;
     justify-content: center;
   }
 

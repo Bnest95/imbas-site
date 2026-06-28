@@ -1345,10 +1345,12 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
         placeholder={placeholder}
         className={`${INPUT_CLS}${received ? " is-paste-received" : ""}`}
         style={style || inputStyle}
+        aria-invalid={error ? true : undefined}
       />
       {ackWords && !error ? (
         <div className="wb-paste-ack">{ackWords} words received</div>
       ) : null}
+      {error ? <div className="wb-field-error" role="alert">{error}</div> : null}
     </Field>
   );
 }
@@ -2538,14 +2540,15 @@ function SuggestInvestigation({ variant = "default" }) {
 
 // ---- READER V2 (feature-flagged) ----
 const READER_SIGIL_COPY = {
-  idle: { primary: "Paste an answer to wake The Reader.", secondary: "" },
+  idle: { primary: "Paste an answer to run The Reader.", secondary: "" },
   ready: { primary: "The Reader is ready.", secondary: "" },
   inspecting: { primary: "Reader inspecting…", secondary: "" },
   result: { primary: "Reader complete.", secondary: "" },
 };
 
 const READER_STATUS_COPY = {
-  idle: "Paste an answer to wake The Reader.",
+  idle: "Paste an answer to run The Reader.",
+  needQuestion: "Add the question you asked.",
   ready: "The Reader is ready.",
   inspecting: "Reader inspecting…",
   result: "Reader complete.",
@@ -2805,24 +2808,35 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
 function ReaderResultCopyActions({ result, context }) {
   const [copiedResult, setCopiedResult] = useState(false);
   const [copiedFull, setCopiedFull] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  const flashCopied = (setter) => {
+    setter(true);
+    setCopyFail("");
+    setTimeout(() => setter(false), 1800);
+  };
   const copyResult = async () => {
     try {
       await navigator.clipboard.writeText(formatReaderResultCopy(result));
-      setCopiedResult(true);
-      setTimeout(() => setCopiedResult(false), 1800);
-    } catch {}
+      flashCopied(setCopiedResult);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
   };
   const copyFull = async () => {
     try {
       await navigator.clipboard.writeText(formatReaderFullRecord({ ...context, result }));
-      setCopiedFull(true);
-      setTimeout(() => setCopiedFull(false), 1800);
-    } catch {}
+      flashCopied(setCopiedFull);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
   };
   return (
     <div className="wb-reader-result__copy">
       <Btn kind="ghost" small onClick={copyResult}>{copiedResult ? "Copied" : "Copy result"}</Btn>
       <Btn kind="ghost" small onClick={copyFull}>{copiedFull ? "Copied" : "Copy full record"}</Btn>
+      {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
     </div>
   );
 }
@@ -2939,8 +2953,19 @@ function ReaderWorkbench() {
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
 
-  const isReady = !!(mode === "guided" ? sel.openPrompt : question).trim() && !!answer.trim();
-  const statusState = busy ? "inspecting" : readerResult ? "result" : isReady ? "ready" : "idle";
+  const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
+  const hasAnswer = !!answer.trim();
+  const isReady = hasQuestion && hasAnswer;
+  const ownQuestionPrompt = mode === "own" && hasAnswer && !hasQuestion;
+  const statusState = busy
+    ? "inspecting"
+    : readerResult
+      ? "result"
+      : isReady
+        ? "ready"
+        : ownQuestionPrompt
+          ? "needQuestion"
+          : "idle";
 
   useEffect(() => {
     if (!scrollReady.current) {
@@ -2978,12 +3003,25 @@ function ReaderWorkbench() {
     setBusy(false);
   };
 
+  const touchAnswer = (v) => {
+    setAnswer(v);
+    setErrors((e) => ({ ...e, answer: "" }));
+    if (readerResult) setReaderResult(null);
+  };
+
+  const touchQuestion = (v) => {
+    setQuestion(v);
+    setErrors((e) => ({ ...e, question: "" }));
+    if (readerResult) setReaderResult(null);
+  };
+
   const run = async () => {
+    if (busy) return;
     const nextErrors = {};
     const q = mode === "guided" ? sel.openPrompt : question;
     const a = answer;
-    if (!(q || "").trim()) nextErrors.question = "Enter the question you asked.";
-    if (!(a || "").trim()) nextErrors.answer = "Paste the AI answer you received.";
+    if (mode === "own" && !(q || "").trim()) nextErrors.question = "Add the question you asked.";
+    if (!(a || "").trim()) nextErrors.answer = "Paste an answer to run The Reader.";
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
       return;
@@ -3094,7 +3132,7 @@ function ReaderWorkbench() {
                       <PasteField
                         label="AI answer received"
                         value={answer}
-                        onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                        onChange={touchAnswer}
                         error={errors.answer}
                         placeholder="Paste the full AI answer here…"
                         minAckLength={1}
@@ -3108,13 +3146,17 @@ function ReaderWorkbench() {
                         <textarea
                           className={INPUT_CLS}
                           value={question}
-                          onChange={(e) => { setQuestion(e.target.value); setErrors((er) => ({ ...er, question: "" })); }}
+                          onChange={(e) => touchQuestion(e.target.value)}
                           placeholder="What did you ask the model?"
                           rows={3}
                           style={inputStyle}
+                          aria-invalid={!!errors.question}
                         />
                       </Field>
-                      {errors.question ? <div className="wb-field-error">{errors.question}</div> : null}
+                      {errors.question ? <div className="wb-field-error" role="alert">{errors.question}</div> : null}
+                      {ownQuestionPrompt && !errors.question ? (
+                        <div className="wb-field-error wb-field-error--hint" role="status">Add the question you asked.</div>
+                      ) : null}
                     </div>
                     <div className="wb-reader-v2__field wb-reader-v2__field--optional">
                       <Field label="Optional topic / context">
@@ -3128,7 +3170,7 @@ function ReaderWorkbench() {
                       <PasteField
                         label="AI answer received"
                         value={answer}
-                        onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                        onChange={touchAnswer}
                         error={errors.answer}
                         placeholder="Paste the full AI answer here…"
                         minAckLength={1}
@@ -3138,7 +3180,7 @@ function ReaderWorkbench() {
                 )}
               </div>
 
-              <div className="wb-reader-v2__action-row">
+              <div className="wb-reader-v2__action-row" aria-busy={busy}>
                 <ReaderStatusLine state={statusState} />
                 <div className="wb-action-row wb-reader-v2__cta-row">
                   <Btn
