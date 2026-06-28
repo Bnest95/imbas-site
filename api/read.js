@@ -74,6 +74,23 @@ const ANCHOR_MAX = 500;
 const WHY_MAX = 1000;
 const TERM_MAX = 120;
 
+// ── Spend ceiling ────────────────────────────────────────────────────────────
+// A soft monthly ceiling: once the month's ESTIMATED spend crosses the cap,
+// Reader stops calling Opus and serves the keyword cross-check instead. The
+// TRUE hard cap lives one level down — the account balance with auto-reload
+// OFF, where credits hitting $0 makes every call error and we fall back anyway.
+// This ceiling is the earlier, headroom-preserving stop, defaulting to $8 under
+// a ~$10 balance. Override per-environment with READER_SPEND_CEILING_USD.
+//
+// Cost is ESTIMATED from each call's reported token usage at Opus 4.7 list
+// prices, with cache reads/writes priced on their own multipliers. The running
+// total is in-memory at module scope: it counts within a warm instance and
+// resets on cold start or across instances — fine at this scale (solo + a few
+// testers) where the $0-balance backstop is the real net. Swap for Vercel KV /
+// Upstash before widening access if you want a durable cross-instance gate.
+const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
+const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.7 list
+
 const hits = new Map();
 function throttled(ip) {
   const now = Date.now();
@@ -83,6 +100,37 @@ function throttled(ip) {
   arr.push(now);
   hits.set(ip, arr);
   return arr.length > max;
+}
+
+// Running spend estimate for the current UTC month. Resets when the calendar
+// month rolls over or when the instance is recycled (see the ceiling note above).
+let spendMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+let spendUsd = 0;
+function rollMonth() {
+  const m = new Date().toISOString().slice(0, 7);
+  if (m !== spendMonth) {
+    spendMonth = m;
+    spendUsd = 0;
+  }
+}
+function ceilingReached() {
+  rollMonth();
+  return spendUsd >= SPEND_CEILING_USD;
+}
+function estimateCostUsd(u) {
+  if (!u) return 0;
+  return (
+    (u.input_tokens || 0) * USD_PER_MTOK.in +
+    (u.output_tokens || 0) * USD_PER_MTOK.out +
+    (u.cache_creation_input_tokens || 0) * USD_PER_MTOK.cacheWrite +
+    (u.cache_read_input_tokens || 0) * USD_PER_MTOK.cacheRead
+  ) / 1e6;
+}
+function recordSpend(u) {
+  rollMonth();
+  const cost = estimateCostUsd(u);
+  spendUsd += cost;
+  return { cost, total: spendUsd };
 }
 
 const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
@@ -175,18 +223,75 @@ function buildUserMessage(input) {
   ].join("\n");
 }
 
+// Single forward pass that removes the two things Opus most often adds to
+// otherwise-valid JSON: // and /* */ comments (it echoes the schema's inline
+// comments), and trailing commas before } or ]. Everything INSIDE a string
+// literal is copied byte-for-byte, so URLs ("https://…") and commas or braces
+// in the prose are never touched. Only " toggles string state — never ' — so
+// an apostrophe in the read ("don't") can't desync the scan.
+function cleanJsonish(s) {
+  let out = "";
+  let inStr = false;
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    const next = s[i + 1];
+
+    if (inStr) {
+      out += c;
+      if (c === "\\") {
+        // copy the escaped char verbatim so \" / \\ can't end the string early
+        if (i + 1 < s.length) { out += s[i + 1]; i++; }
+      } else if (c === '"') {
+        inStr = false;
+      }
+      continue;
+    }
+
+    if (c === '"') { inStr = true; out += c; continue; }
+
+    // // line comment — skip to (and re-emit) the newline
+    if (c === "/" && next === "/") {
+      while (i < s.length && s[i] !== "\n") i++;
+      if (i < s.length) out += "\n";
+      continue;
+    }
+    // /* block comment */ — skip through the closer
+    if (c === "/" && next === "*") {
+      i += 2;
+      while (i < s.length && !(s[i] === "*" && s[i + 1] === "/")) i++;
+      i += 1; // sit on the '*'; loop ++ steps past the '/'
+      continue;
+    }
+    // trailing comma — drop a comma whose next non-space char closes a list/object
+    if (c === ",") {
+      let j = i + 1;
+      while (j < s.length && /\s/.test(s[j])) j++;
+      if (s[j] === "}" || s[j] === "]") continue;
+    }
+
+    out += c;
+  }
+  return out;
+}
+
 // Tolerant extraction: the model is told JSON-only, but if it ever wraps the
-// object in prose or a code fence, take the outermost {...} and parse that.
+// object in prose or a ``` code fence, take the outermost {...} (the fence and
+// any prose sit outside the braces, so the slice drops them for free). Try a
+// strict parse first so already-valid JSON is never mutated; only on failure
+// run the comment/trailing-comma cleaner and parse again.
 function extractJson(text) {
   if (typeof text !== "string") return null;
   const a = text.indexOf("{");
   const b = text.lastIndexOf("}");
   if (a === -1 || b === -1 || b <= a) return null;
+  const candidate = text.slice(a, b + 1);
   try {
-    return JSON.parse(text.slice(a, b + 1));
-  } catch {
-    return null;
-  }
+    return JSON.parse(candidate);
+  } catch {}
+  try {
+    return JSON.parse(cleanJsonish(candidate));
+  } catch {}
+  return null;
 }
 
 // Graceful degradation: a minimal, valid object in the real output shape, marked
@@ -268,6 +373,16 @@ export default async function handler(req, res) {
     return res.status(200).json(fallback(input, "no_key"));
   }
 
+  // Spend ceiling: once the month's estimated spend crosses the cap, stop
+  // calling Opus and serve the honest keyword fallback. The auto-reload-OFF
+  // account balance remains the absolute hard cap underneath this.
+  if (ceilingReached()) {
+    console.warn(
+      `[read] spend ceiling reached — est $${spendUsd.toFixed(2)} >= $${SPEND_CEILING_USD} for ${spendMonth}; serving keyword fallback`
+    );
+    return res.status(200).json(fallback(input, "ceiling"));
+  }
+
   // ── Model call ──────────────────────────────────────────────────────────────
   // Opus 4.7: adaptive thinking only (no budget_tokens); temperature/top_p/top_k
   // are removed on this model and would 400, so none are sent.
@@ -301,10 +416,12 @@ export default async function handler(req, res) {
       ? data.content.filter((b) => b && b.type === "text").map((b) => b.text).join("")
       : "";
     if (data.usage) {
+      const { cost, total } = recordSpend(data.usage);
       console.log(
         `[read] usage in=${data.usage.input_tokens} out=${data.usage.output_tokens} ` +
           `cache_read=${data.usage.cache_read_input_tokens ?? 0} ` +
-          `cache_write=${data.usage.cache_creation_input_tokens ?? 0}`
+          `cache_write=${data.usage.cache_creation_input_tokens ?? 0} ` +
+          `est_cost=$${cost.toFixed(4)} month_total=$${total.toFixed(2)}/${SPEND_CEILING_USD} (${spendMonth})`
       );
     }
   } catch (e) {
@@ -321,7 +438,9 @@ export default async function handler(req, res) {
     typeof parsed.the_read !== "string" ||
     !parsed.the_read.trim()
   ) {
-    console.warn("[read] bad model JSON");
+    console.warn(
+      `[read] bad model JSON — raw[0..600]=${JSON.stringify(modelText.slice(0, 600))}`
+    );
     return res.status(200).json(fallback(input, "bad_json"));
   }
 
