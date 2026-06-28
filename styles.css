@@ -449,19 +449,19 @@ main {
   100% { transform: translate(-3.2%, 3.8%) scale(0.97); opacity: 0.32; }
 }
 @keyframes aurora-hero-radiance-a-mobile {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.19; }
-  50%  { transform: translate(1.3vw, 0.9vh) scale(1.018); opacity: 0.23; }
-  100% { transform: translate(-1vw, 1.2vh) scale(0.99); opacity: 0.2; }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.22; }
+  50%  { transform: translate(1.65vw, 1.15vh) scale(1.028); opacity: 0.27; }
+  100% { transform: translate(-1.3vw, 1.5vh) scale(0.99); opacity: 0.24; }
 }
 @keyframes aurora-hero-radiance-b-mobile {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.15; }
-  50%  { transform: translate(-1.4vw, 0.7vh) scale(1.015); opacity: 0.19; }
-  100% { transform: translate(1vw, -0.8vh) scale(0.985); opacity: 0.17; }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.18; }
+  50%  { transform: translate(-1.75vw, 0.9vh) scale(1.022); opacity: 0.22; }
+  100% { transform: translate(1.3vw, -1vh) scale(0.985); opacity: 0.19; }
 }
 @keyframes aurora-living-edge-drift-b-mobile {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.24; }
-  50%  { transform: translate(2.4%, 2%) scale(1.02); opacity: 0.3; }
-  100% { transform: translate(-2%, 2.4%) scale(0.985); opacity: 0.26; }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.26; }
+  50%  { transform: translate(3%, 2.5%) scale(1.028); opacity: 0.32; }
+  100% { transform: translate(-2.5%, 3%) scale(0.985); opacity: 0.28; }
 }
 
 .aurora-living.aurora-field--warm .aurora-field__layer--a {
@@ -590,55 +590,55 @@ main {
     filter: blur(64px) !important;
     transform: none !important;
   }
-  /* PASS 6A.2 — tighter mobile hero aurora; center stable, less edge/proof spill */
+  /* PASS 6A.2C — restore modest mobile aurora presence; center stable, no proof spill */
   .hero .aurora-field {
-    -webkit-mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 90%);
-    mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 90%);
+    -webkit-mask-image: linear-gradient(180deg, black 0%, black 70%, transparent 88%);
+    mask-image: linear-gradient(180deg, black 0%, black 70%, transparent 88%);
   }
   .hero .aurora-field__layer--a {
     top: 24% !important;
-    width: min(720px, 78vw) !important;
-    height: min(480px, 56vh) !important;
-    margin-left: calc(min(720px, 78vw) / -2) !important;
-    filter: blur(66px) !important;
-    opacity: 0.7 !important;
+    width: min(760px, 82vw) !important;
+    height: min(520px, 58vh) !important;
+    margin-left: calc(min(760px, 82vw) / -2) !important;
+    filter: blur(68px) !important;
+    opacity: 0.82 !important;
     background:
       radial-gradient(ellipse 54% 50% at 50% 48%,
-        rgba(var(--ember-rgb), 0.28) 0%,
-        rgba(var(--ember-rgb), 0.1) 42%,
+        rgba(var(--ember-rgb), 0.32) 0%,
+        rgba(var(--ember-rgb), 0.12) 42%,
         transparent 72%),
-      radial-gradient(ellipse 58% 18% at 50% 86%,
-        rgba(var(--ember-rgb), 0.04) 0%,
-        transparent 62%) !important;
+      radial-gradient(ellipse 58% 16% at 50% 84%,
+        rgba(var(--ember-rgb), 0.05) 0%,
+        transparent 60%) !important;
   }
   .hero .aurora-living .aurora-field__layer--b {
     top: -8% !important;
     right: -6% !important;
-    width: 36% !important;
-    height: 36% !important;
+    width: 38% !important;
+    height: 38% !important;
     filter: blur(68px) !important;
-    opacity: 0.24 !important;
+    opacity: 0.28 !important;
     animation: aurora-living-edge-drift-b-mobile 42s ease-in-out infinite alternate-reverse !important;
   }
   .hero__dust { display: none !important; }
   .hero__aurora-focal {
     display: block !important;
-    width: 88vw !important;
-    height: 56vh !important;
-    filter: blur(72px) !important;
-    opacity: 0.38 !important;
+    width: 96vw !important;
+    height: 62vh !important;
+    filter: blur(74px) !important;
+    opacity: 0.46 !important;
   }
   .hero__aurora-radiance {
-    width: 90vw !important;
-    height: 58vh !important;
-    filter: blur(56px) !important;
+    width: 94vw !important;
+    height: 62vh !important;
+    filter: blur(58px) !important;
   }
   .hero__aurora-radiance::before {
-    opacity: 0.2 !important;
+    opacity: 0.25 !important;
     animation: aurora-hero-radiance-a-mobile 32s ease-in-out infinite alternate !important;
   }
   .hero__aurora-radiance::after {
-    opacity: 0.16 !important;
+    opacity: 0.2 !important;
     animation: aurora-hero-radiance-b-mobile 38s ease-in-out infinite alternate !important;
   }
   .hero__fog {
