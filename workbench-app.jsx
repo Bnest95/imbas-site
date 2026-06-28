@@ -2752,6 +2752,26 @@ function ReaderDevice({ state, completeness, isFallback }) {
   );
 }
 
+function readerFallbackReasonCode(result) {
+  if (result?.reason) return String(result.reason).replace(/^read_/, "");
+  const read = result?.the_read || "";
+  const match = read.match(/\(([a-z_]+)\)/i);
+  return match ? match[1] : "";
+}
+
+function readerFallbackDisplayMessage(result) {
+  const code = readerFallbackReasonCode(result).toLowerCase();
+  if (code === "ceiling") return "Reader limit reached — showing fallback check.";
+  if (["no_key", "disabled", "api_error", "network", "bad_json"].includes(code)) {
+    return "Reader temporarily unavailable — showing fallback check.";
+  }
+  return "Reader unavailable — showing fallback check.";
+}
+
+function readerFallbackReadBody() {
+  return "The full Reader is unavailable. Your question and answer are preserved above — this is not a full inspection.";
+}
+
 function formatReaderResultCopy(result) {
   const comp = (result?.completeness || "partial").toUpperCase();
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
@@ -2801,8 +2821,8 @@ function ReaderResultCopyActions({ result, context }) {
   };
   return (
     <div className="wb-reader-result__copy">
-      <Btn kind="ghost" small onClick={copyResult}>{copiedResult ? "Copied ✓" : "Copy result"}</Btn>
-      <Btn kind="ghost" small onClick={copyFull}>{copiedFull ? "Copied ✓" : "Copy full record"}</Btn>
+      <Btn kind="ghost" small onClick={copyResult}>{copiedResult ? "Copied" : "Copy result"}</Btn>
+      <Btn kind="ghost" small onClick={copyFull}>{copiedFull ? "Copied" : "Copy full record"}</Btn>
     </div>
   );
 }
@@ -2813,46 +2833,54 @@ function ReaderResultBlock({ result, context }) {
   const shaped = (result?.how_it_was_shaped || "").trim();
   const isFallback = result?.source === "fallback";
   const isAgent = result?.source === "agent";
-  const paragraphs = (result?.the_read || "").split(/\n\n+/).filter(Boolean);
+  const paragraphs = isFallback
+    ? [readerFallbackReadBody()]
+    : (result?.the_read || "").split(/\n\n+/).filter(Boolean);
 
   return (
     <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
       <div className="wb-reader-result__head">
-        <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
+        <div className="wb-reader-result__head-main">
+          <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
+          {isAgent ? (
+            <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
+          ) : null}
+        </div>
         {isAgent ? <ReaderResultCopyActions result={result} context={context} /> : null}
-        {isFallback ? (
-          <p className="wb-reader-result__fallback" role="status">
-            Reader unavailable — showing fallback check.
-          </p>
-        ) : null}
       </div>
-      {!isFallback ? (
-        <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
+      {isFallback ? (
+        <p className="wb-reader-result__fallback" role="status">
+          {readerFallbackDisplayMessage(result)}
+        </p>
       ) : null}
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-reader-result__section--read">
-          <h3 className="wb-reader-result__section-title">The read</h3>
+          {!isFallback ? <h3 className="wb-reader-result__section-title">The read</h3> : null}
           <div className="wb-reader-result__read-body">
             {paragraphs.length ? paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
-            )) : <p>{result?.the_read || "No read returned."}</p>}
+            )) : <p>{isFallback ? readerFallbackReadBody() : "No read returned."}</p>}
           </div>
         </article>
-        <article className="wb-reader-result__section">
-          <h3 className="wb-reader-result__section-title">What was left out</h3>
-          {leftOut.length ? (
-            <ul className="wb-reader-result__list">
-              {leftOut.map((item, i) => <li key={i}>{item}</li>)}
-            </ul>
-          ) : (
-            <p className="wb-reader-result__empty">No major substantive omissions identified.</p>
-          )}
-        </article>
-        <article className="wb-reader-result__section">
-          <h3 className="wb-reader-result__section-title">How it was shaped</h3>
-          <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
-        </article>
-        {isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
+        {!isFallback ? (
+          <>
+            <article className="wb-reader-result__section wb-reader-result__section--left-out">
+              <h3 className="wb-reader-result__section-title">What was left out</h3>
+              {leftOut.length ? (
+                <ul className="wb-reader-result__list">
+                  {leftOut.map((item, i) => <li key={i}>{item}</li>)}
+                </ul>
+              ) : (
+                <p className="wb-reader-result__empty">No major substantive omissions identified.</p>
+              )}
+            </article>
+            <article className="wb-reader-result__section wb-reader-result__section--shaped">
+              <h3 className="wb-reader-result__section-title">How it was shaped</h3>
+              <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
+            </article>
+            {isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
+          </>
+        ) : null}
       </div>
     </section>
   );
@@ -2977,7 +3005,7 @@ function ReaderWorkbench() {
       setReaderResult({
         source: "fallback",
         completeness: "thin",
-        the_read: "The Reader could not be reached. Your input is preserved below.",
+        the_read: readerFallbackReadBody(),
         what_was_left_out: [],
         how_it_was_shaped: "",
         reason: String(err.message || "network"),
