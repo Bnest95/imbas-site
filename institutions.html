@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=inst-section-headers">
+  <link rel="stylesheet" href="styles.css?v=inst-buyer-path-v1">
   <script src="/site-header.js" defer></script>
   <style>
     .page--institutions .inst-masthead:has(+ .inst-value-bridge) {
@@ -90,6 +90,10 @@
         align-items: stretch;
         gap: 0.85rem;
       }
+      .page--institutions .inst-cta--early {
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
+      }
       .page--institutions .inst-cta a.inst-cta__primary {
         width: 100%;
         justify-content: center;
@@ -135,6 +139,19 @@
       margin-top: 0;
       border-bottom: none;
       padding-bottom: 0;
+    }
+    .page--institutions .inst-cta--early {
+      margin: 0 0 var(--space-5);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--line-faint);
+    }
+    .page--institutions .inst-records-note {
+      margin: var(--space-3) 0 0;
+      max-width: var(--inst-prose-width);
+      font-family: var(--font-body);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      color: var(--ink-muted);
     }
   </style>
   <script type="application/ld+json">
@@ -184,7 +201,7 @@
     <header class="inst-masthead">
       <span class="section-label section-label--named"><span>Independent measurement</span></span>
       <h1>For Institutions</h1>
-      <p class="page__lede inst-masthead__thesis">When AI omits context, institutions rarely see the gap.</p>
+      <p class="page__lede inst-masthead__thesis">See what your AI systems surface, omit, and reframe before those patterns quietly shape decisions.</p>
       <div class="inst-masthead__briefing">
         <p class="page__intro">Institutions increasingly rely on AI for research, analysis, monitoring, recommendations, and decision support. When those systems omit important context, shift framing, or change behavior between releases, the gap often stays invisible.</p>
         <p class="page__intro inst-intro--tight">Imbas documents what frontier models surface and skip under repeatable prompt conditions — cross-vendor records institutions can monitor, audit, and cite.</p>
@@ -200,6 +217,35 @@
         <li class="inst-value-bridge__item">Track behavioral drift across releases</li>
       </ul>
     </section>
+
+    <section class="inst-section inst-near-term" aria-labelledby="inst-receive-heading">
+      <h2 id="inst-receive-heading" class="inst-section__title">What institutions receive</h2>
+      <div class="inst-roadmap">
+        <div class="inst-roadmap__stage">
+          <span class="inst-roadmap__label">Available now</span>
+          <ul class="inst-roadmap__items" role="list">
+            <li>Published case records</li>
+            <li>Methodology notes</li>
+            <li>Archive-backed examples</li>
+            <li>Workbench inspection on your own model outputs</li>
+          </ul>
+        </div>
+        <div class="inst-roadmap__stage">
+          <span class="inst-roadmap__label">Pilot engagements</span>
+          <ul class="inst-roadmap__items" role="list">
+            <li>Cross-model comparison reports</li>
+            <li>Audit-ready measurement summaries</li>
+            <li>Procurement or vendor-review evidence packs</li>
+          </ul>
+        </div>
+      </div>
+      <p class="inst-records-note">Records are based on documented prompt conditions, model outputs, and reviewable evidence.</p>
+    </section>
+
+    <div class="page__cta-row inst-cta inst-cta--early" aria-label="Institutional inquiry">
+      <a class="inst-cta__primary" href="/contact.html">Discuss institutional use <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
 
     <section class="inst-section inst-deliverables">
       <h2 class="inst-section__title">What Imbas can produce for an institution</h2>
@@ -258,32 +304,8 @@
       </div>
     </section>
 
-    <section class="inst-section inst-near-term">
-      <h2 class="inst-section__title">What institutions receive</h2>
-      <div class="inst-roadmap">
-        <div class="inst-roadmap__stage">
-          <span class="inst-roadmap__label">Available now</span>
-          <ul class="inst-roadmap__items" role="list">
-            <li>Published case records</li>
-            <li>Methodology notes</li>
-            <li>Archive-backed examples</li>
-            <li>Workbench replay on your own models</li>
-          </ul>
-        </div>
-        <div class="inst-roadmap__stage">
-          <span class="inst-roadmap__label">Pilot engagements</span>
-          <ul class="inst-roadmap__items" role="list">
-            <li>Cross-model comparison reports</li>
-            <li>Audit-ready measurement summaries</li>
-            <li>Procurement or vendor-review evidence packs</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <div class="page__cta-row inst-cta">
+    <div class="page__cta-row inst-cta" aria-label="Next steps">
       <a class="inst-cta__primary" href="/contact.html">Discuss institutional use <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a class="hero__secondary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
