@@ -1745,8 +1745,58 @@ function scrollWorkbenchAnchor(el, after) {
   }
   syncWorkbenchHeaderOffset();
   const reduced = prefersReducedMotion();
-  el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  const root = document.documentElement;
+  const headerOffset = parseFloat(getComputedStyle(root).getPropertyValue("--header-offset")) || 77;
+  const anchorGap = parseFloat(getComputedStyle(root).getPropertyValue("--scroll-anchor-gap")) || 12;
+  const top = el.getBoundingClientRect().top + window.scrollY - headerOffset - anchorGap - 6;
+  window.scrollTo({ top: Math.max(0, top), behavior: reduced ? "auto" : "smooth" });
   if (after) window.setTimeout(after, reduced ? 0 : 420);
+}
+
+function isReaderWorkbenchEnabled() {
+  if (typeof window === "undefined") return false;
+  try {
+    if (new URLSearchParams(window.location.search).get("reader") === "1") return true;
+    if (window.localStorage.getItem("imbasReader") === "1") return true;
+  } catch {}
+  return false;
+}
+
+const READER_API = "/api/read";
+
+function buildReaderRequest({ mode, sel, question, answer, topic }) {
+  if (mode === "guided") {
+    return {
+      case: {
+        topic: sel.topic || sel.title || "Guided case",
+        anchor: sel.mechanism || sel.anchor || "",
+        why_it_matters: sel.whyItMatters || "",
+      },
+      open_question: sel.openPrompt,
+      answer: (answer || "").trim(),
+      textcheck: { surfaced: false, found: [], missing: [] },
+    };
+  }
+  return {
+    case: {
+      topic: (topic || "").trim() || "User-submitted answer",
+      anchor: "",
+      why_it_matters: "",
+    },
+    open_question: (question || "").trim(),
+    answer: (answer || "").trim(),
+    textcheck: { surfaced: false, found: [], missing: [] },
+  };
+}
+
+async function runReader(request) {
+  const res = await fetch(READER_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) throw new Error(`read_${res.status}`);
+  return res.json();
 }
 
 const RESULT_GAP_COUNT_MS = 800;
@@ -2452,9 +2502,497 @@ function SuggestInvestigation() {
   );
 }
 
+// ---- READER V2 (feature-flagged) ----
+const READER_SIGIL_COPY = {
+  idle: { primary: "Paste an answer to wake The Reader.", secondary: "" },
+  ready: { primary: "The Reader is ready.", secondary: "" },
+  inspecting: {
+    primary: "Reader inspecting…",
+    secondary: "Looking for omissions, framing shifts, and softened claims.",
+  },
+  result: { primary: "", secondary: "" },
+};
+
+const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
+
+function MantisSigilSvg() {
+  return (
+    <svg
+      className="wb-reader-sigil__glyph"
+      viewBox="0 0 220 260"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <radialGradient id="wb-sigil-lens-glow" cx="38%" cy="30%" r="72%">
+          <stop offset="0%" stopColor="rgba(255, 238, 210, 0.92)" />
+          <stop offset="38%" stopColor="rgba(222, 111, 56, 0.52)" />
+          <stop offset="100%" stopColor="rgba(12, 8, 6, 0)" />
+        </radialGradient>
+        <radialGradient id="wb-sigil-tip-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(255, 220, 160, 0.98)" />
+          <stop offset="42%" stopColor="rgba(222, 111, 56, 0.78)" />
+          <stop offset="100%" stopColor="rgba(222, 111, 56, 0)" />
+        </radialGradient>
+      </defs>
+
+      <g className="wb-reader-sigil__tips">
+        <circle className="wb-reader-sigil__tip-halo wb-reader-sigil__tip-halo--l" cx="8" cy="6" r="12" />
+        <circle className="wb-reader-sigil__tip-node wb-reader-sigil__tip-node--l" cx="8" cy="6" r="4.2" />
+        <circle className="wb-reader-sigil__tip-halo wb-reader-sigil__tip-halo--r" cx="212" cy="6" r="12" />
+        <circle className="wb-reader-sigil__tip-node wb-reader-sigil__tip-node--r" cx="212" cy="6" r="4.2" />
+        <circle className="wb-reader-sigil__tip-spark wb-reader-sigil__tip-spark--l" cx="4" cy="2" r="1.2" />
+        <circle className="wb-reader-sigil__tip-spark wb-reader-sigil__tip-spark--r" cx="216" cy="2" r="1.2" />
+      </g>
+
+      <path className="wb-reader-sigil__stroke wb-reader-sigil__antenna" d="M 102 66 C 78 42 42 20 8 6" />
+      <path className="wb-reader-sigil__stroke wb-reader-sigil__antenna" d="M 118 66 C 142 42 178 20 212 6" />
+
+      <circle className="wb-reader-sigil__stroke wb-reader-sigil__joint" cx="100" cy="62" r="2" />
+      <circle className="wb-reader-sigil__stroke wb-reader-sigil__joint" cx="120" cy="62" r="2" />
+
+      <path className="wb-reader-sigil__stroke" d="M 110 74 L 118 76 L 172 94 L 180 116 L 166 176 L 110 232 L 54 176 L 40 116 L 48 94 Z" />
+      <path className="wb-reader-sigil__stroke" d="M 110 74 L 110 232" />
+      <path className="wb-reader-sigil__stroke" d="M 88 98 L 132 98" />
+      <path className="wb-reader-sigil__stroke" d="M 110 88 L 116 104 L 110 120 L 104 104 Z" />
+      <path className="wb-reader-sigil__stroke" d="M 110 120 L 114 140 L 110 158 L 106 140 Z" />
+      <path className="wb-reader-sigil__stroke" d="M 110 158 L 112 178 L 110 198 L 108 178 Z" />
+
+      <g className="wb-reader-sigil__lens wb-reader-sigil__lens--l" transform="rotate(-18 54 118)">
+        <ellipse className="wb-reader-sigil__lens-glow" cx="54" cy="118" rx="12" ry="27" />
+        <ellipse className="wb-reader-sigil__lens-lid" cx="54" cy="118" rx="12" ry="27" />
+        <ellipse className="wb-reader-sigil__lens-ring" cx="54" cy="118" rx="12" ry="27" />
+        <path className="wb-reader-sigil__lens-glint" d="M 44 108 Q 54 102 64 108" />
+      </g>
+
+      <g className="wb-reader-sigil__lens wb-reader-sigil__lens--r" transform="rotate(18 166 118)">
+        <ellipse className="wb-reader-sigil__lens-glow" cx="166" cy="118" rx="12" ry="27" />
+        <ellipse className="wb-reader-sigil__lens-lid" cx="166" cy="118" rx="12" ry="27" />
+        <ellipse className="wb-reader-sigil__lens-ring" cx="166" cy="118" rx="12" ry="27" />
+        <path className="wb-reader-sigil__lens-glint" d="M 156 108 Q 166 102 176 108" />
+      </g>
+    </svg>
+  );
+}
+
+function ReaderDiagnostic({ state, completeness, isFallback }) {
+  const reduced = prefersReducedMotion();
+  const comp = completeness || "partial";
+  const cls = [
+    "wb-reader-diagnostic",
+    `is-${state}`,
+    state === "result" && !isFallback ? `is-${comp}` : "",
+    isFallback ? "is-fallback" : "",
+    reduced ? "is-reduced" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div className={cls} aria-hidden="true">
+      <div className="wb-reader-diagnostic__scan-sweep" />
+      <div className="wb-reader-diagnostic__scanline" />
+      <div className="wb-reader-diagnostic__halo-ticks">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <span key={i} className="wb-reader-diagnostic__halo-tick" style={{ "--ti": `${i * 0.18}s` }} />
+        ))}
+      </div>
+      <div className="wb-reader-diagnostic__channels">
+        {["SURFACE", "OMIT", "SHAPE"].map((label, i) => (
+          <div key={label} className={`wb-reader-diagnostic__channel is-${label.toLowerCase()}`}>
+            <span className="wb-reader-diagnostic__label">{label}</span>
+            <span className="wb-reader-diagnostic__bar">
+              <span className="wb-reader-diagnostic__bar-fill" style={{ "--ci": i }} />
+            </span>
+          </div>
+        ))}
+      </div>
+      <svg className="wb-reader-diagnostic__needle" viewBox="0 0 120 34" aria-hidden="true">
+        <path d="M 14 28 A 46 46 0 0 1 106 28" fill="none" stroke="rgba(242, 232, 220, 0.14)" strokeWidth="1.1" />
+        {[0, 1, 2, 3].map((t) => {
+          const deg = 180 - t * 60;
+          const rad = (deg * Math.PI) / 180;
+          const cx = 60;
+          const cy = 28;
+          const r = 44;
+          const x1 = cx + (r - 6) * Math.cos(rad);
+          const y1 = cy - (r - 6) * Math.sin(rad);
+          const x2 = cx + (r + 2) * Math.cos(rad);
+          const y2 = cy - (r + 2) * Math.sin(rad);
+          return <line key={t} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(242, 232, 220, 0.22)" strokeWidth="1" />;
+        })}
+        <line className="wb-reader-diagnostic__needle-arm" x1="60" y1="28" x2="60" y2="6" stroke="rgba(222, 111, 56, 0.85)" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="60" cy="28" r="2.4" fill="rgba(242, 232, 220, 0.75)" />
+      </svg>
+    </div>
+  );
+}
+
+function ReaderSigil({ state, completeness }) {
+  const reduced = prefersReducedMotion();
+  const comp = completeness || "partial";
+  const copy = READER_SIGIL_COPY[state] || READER_SIGIL_COPY.idle;
+  const cls = [
+    "wb-reader-sigil",
+    `is-${state}`,
+    state === "result" ? `is-${comp}` : "",
+    reduced ? "is-reduced" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div className={cls} aria-live={state === "inspecting" ? "polite" : "off"}>
+      <div className="wb-reader-sigil__frame">
+        <div className="wb-reader-sigil__halo-disc" aria-hidden="true" />
+        <div className="wb-reader-sigil__occult-ring" aria-hidden="true" />
+        <div className="wb-reader-sigil__float">
+          <MantisSigilSvg />
+        </div>
+        <div className="wb-reader-sigil__reflection" aria-hidden="true" />
+      </div>
+      {copy.primary ? <p className="wb-reader-sigil__status">{copy.primary}</p> : null}
+      {copy.secondary ? <p className="wb-reader-sigil__sub">{copy.secondary}</p> : null}
+    </div>
+  );
+}
+
+function ReaderChamber({ state, completeness, isFallback }) {
+  const reduced = prefersReducedMotion();
+  const comp = completeness || "partial";
+  const cls = [
+    "wb-reader-chamber",
+    `is-${state}`,
+    state === "result" ? `is-${comp}` : "",
+    reduced ? "is-reduced" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <div className={cls}>
+      <div className="wb-reader-chamber__veil" aria-hidden="true" />
+      <div className="wb-reader-chamber__outer-aura" aria-hidden="true" />
+      <div className="wb-reader-chamber__occult-halo" aria-hidden="true" />
+      <div className="wb-reader-chamber__glow wb-reader-chamber__glow--violet" aria-hidden="true" />
+      <div className="wb-reader-chamber__glow wb-reader-chamber__glow--amber" aria-hidden="true" />
+      <div className="wb-reader-chamber__scanlines" aria-hidden="true" />
+      <div className="wb-reader-chamber__radial-sweep" aria-hidden="true" />
+      <div className="wb-reader-chamber__embers" aria-hidden="true">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <span
+            key={i}
+            className="wb-reader-chamber__ember"
+            style={{
+              "--ex": `${8 + (i * 7.3) % 84}%`,
+              "--ey": `${72 + (i % 5) * 4}%`,
+              "--ed": `${(i * 0.42).toFixed(2)}s`,
+            }}
+          />
+        ))}
+      </div>
+      <span className="wb-reader-chamber__corner wb-reader-chamber__corner--tl" aria-hidden="true" />
+      <span className="wb-reader-chamber__corner wb-reader-chamber__corner--tr" aria-hidden="true" />
+      <span className="wb-reader-chamber__corner wb-reader-chamber__corner--bl" aria-hidden="true" />
+      <span className="wb-reader-chamber__corner wb-reader-chamber__corner--br" aria-hidden="true" />
+      <div className="wb-reader-chamber__frame">
+        <ReaderSigil state={state} completeness={completeness} />
+        <ReaderDiagnostic state={state} completeness={completeness} isFallback={isFallback} />
+      </div>
+      <div className="wb-reader-chamber__floor" aria-hidden="true" />
+    </div>
+  );
+}
+
+function ReaderResultBlock({ result, sigilState }) {
+  const comp = result?.completeness || "partial";
+  const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
+  const shaped = (result?.how_it_was_shaped || "").trim();
+  const isFallback = result?.source === "fallback";
+  const paragraphs = (result?.the_read || "").split(/\n\n+/).filter(Boolean);
+
+  return (
+    <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}`} aria-labelledby="wb-reader-result-heading">
+      <div className="wb-reader-result__head">
+        <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
+        {isFallback ? (
+          <p className="wb-reader-result__fallback" role="status">
+            Reader unavailable — showing fallback check.
+            {result?.reason ? ` (${result.reason})` : ""}
+          </p>
+        ) : null}
+      </div>
+      <ReaderChamber state={sigilState} completeness={comp} isFallback={isFallback} />
+      {!isFallback ? (
+        <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
+      ) : null}
+      <div className="wb-reader-result__sections">
+        <article className="wb-reader-result__section wb-reader-result__section--read">
+          <h3 className="wb-reader-result__section-title">The read</h3>
+          <div className="wb-reader-result__read-body">
+            {paragraphs.length ? paragraphs.map((p, i) => (
+              <p key={i}>{p}</p>
+            )) : <p>{result?.the_read || "No read returned."}</p>}
+          </div>
+        </article>
+        <article className="wb-reader-result__section">
+          <h3 className="wb-reader-result__section-title">What was left out</h3>
+          {leftOut.length ? (
+            <ul className="wb-reader-result__list">
+              {leftOut.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          ) : (
+            <p className="wb-reader-result__empty">No major substantive omissions identified.</p>
+          )}
+        </article>
+        <article className="wb-reader-result__section">
+          <h3 className="wb-reader-result__section-title">How it was shaped</h3>
+          <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function ArchiveSignalPanel({ sel, answer }) {
+  if (!sel || !answer) return null;
+  const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
+  return (
+    <CollapsiblePanel title="Archive signal" className="wb-reader-archive">
+      <p className="wb-plate-support">{sel.short}</p>
+      <div className="wb-reader-archive-terms">
+        {anchors.tokens.map((t) => (
+          <span key={t.term} className={`wb-reader-archive-term${t.found ? " is-found" : " is-missing"}`}>{t.term}</span>
+        ))}
+      </div>
+      <p className="wb-plate-hint">The Reader inspects the full answer. This list is the legacy named-term check for this archive case.</p>
+    </CollapsiblePanel>
+  );
+}
+
+function ReaderWorkbench() {
+  const [mode, setMode] = useState("guided");
+  const [sel, setSel] = useState(CURATED[0]);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [topic, setTopic] = useState("");
+  const [model, setModel] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [readerResult, setReaderResult] = useState(null);
+  const [errors, setErrors] = useState({});
+  const stageRef = useRef(null);
+  const resultRef = useRef(null);
+  const scrollReady = useRef(false);
+
+  const isReady = !!(mode === "guided" ? sel.openPrompt : question).trim() && !!answer.trim();
+  const sigilState = busy ? "inspecting" : readerResult ? "result" : isReady ? "ready" : "idle";
+
+  useEffect(() => {
+    if (!scrollReady.current) {
+      scrollReady.current = true;
+      syncWorkbenchHeaderOffset();
+      return undefined;
+    }
+    if (mode !== "guided") return undefined;
+    const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
+    return () => window.cancelAnimationFrame(id);
+  }, [sel.id, mode]);
+
+  useEffect(() => {
+    if (readerResult && resultRef.current) {
+      const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(resultRef.current));
+      return () => window.cancelAnimationFrame(id);
+    }
+    return undefined;
+  }, [readerResult]);
+
+  const switchMode = (next) => {
+    if (next === mode) return;
+    setMode(next);
+    setErrors({});
+    setReaderResult(null);
+    setBusy(false);
+  };
+
+  const pickCase = (c) => {
+    if (!c.ready || c.id === sel.id) return;
+    setSel(c);
+    setAnswer("");
+    setReaderResult(null);
+    setErrors({});
+    setBusy(false);
+  };
+
+  const run = async () => {
+    const nextErrors = {};
+    const q = mode === "guided" ? sel.openPrompt : question;
+    const a = answer;
+    if (!(q || "").trim()) nextErrors.question = "Enter the question you asked.";
+    if (!(a || "").trim()) nextErrors.answer = "Paste the AI answer you received.";
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
+    setErrors({});
+    setBusy(true);
+    setReaderResult(null);
+    const request = buildReaderRequest({
+      mode,
+      sel,
+      question,
+      answer: a,
+      topic,
+    });
+    try {
+      const data = await runReader(request);
+      setReaderResult(data);
+    } catch (err) {
+      setReaderResult({
+        source: "fallback",
+        completeness: "thin",
+        the_read: "The Reader could not be reached. Your input is preserved below.",
+        what_was_left_out: [],
+        how_it_was_shaped: "",
+        reason: String(err.message || "network"),
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="wb-reader-v2">
+      <div className="wb-reader-v2__chip" role="status">
+        <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
+        LIVE READER AGENT
+        <span className="wb-reader-v2__chip-sub">Inspects answer behavior, not just keywords.</span>
+      </div>
+
+      <div className="wb-reader-v2__modes wb-scroll-anchor" role="tablist" aria-label="Workbench mode">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "guided"}
+          className={`wb-reader-v2__mode wb-focus${mode === "guided" ? " is-active" : ""}`}
+          onClick={() => switchMode("guided")}
+        >
+          <span className="wb-reader-v2__mode-name">Guided Case</span>
+          <span className="wb-reader-v2__mode-desc">Try a known Imbas case. Fastest way to see the method.</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "own"}
+          className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
+          onClick={() => switchMode("own")}
+        >
+          <span className="wb-reader-v2__mode-name">Paste Your Own</span>
+          <span className="wb-reader-v2__mode-desc">Bring any AI answer. The Reader will inspect it.</span>
+        </button>
+      </div>
+
+      <div ref={stageRef} className="wb-reader-v2__stage wb-scroll-anchor">
+        <p className="wb-reader-v2__promise">The Reader does not check keywords. It reads the shape of the answer.</p>
+        {!readerResult ? <ReaderChamber state={sigilState} completeness={readerResult?.completeness} isFallback={false} /> : null}
+
+        <div className="wb-reader-v2__offering">
+          <p className="wb-reader-v2__offering-label">Bring The Reader your exchange</p>
+
+        {mode === "guided" ? (
+          <>
+            <p className="wb-plate-note">Curated cases are guided presets from the archive.</p>
+            <div className="wb-case-selector">
+              {CURATED.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${c.id === sel.id ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`}
+                  onClick={() => pickCase(c)}
+                  disabled={!c.ready}
+                >
+                  {c.ready ? <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div> : <Label>To add</Label>}
+                  <div className="wb-case-card__title">{c.title}</div>
+                </button>
+              ))}
+            </div>
+            <div className="wb-input-bay">
+              <span className="wb-input-bay__tag">Suggested question</span>
+              <PromptCard text={sel.openPrompt} />
+            </div>
+            <div className="wb-input-bay">
+              <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
+            </div>
+            <div className="wb-input-bay">
+              <PasteField
+                label="Paste the AI answer you received"
+                value={answer}
+                onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                error={errors.answer}
+                placeholder="Paste the full response here…"
+                minAckLength={1}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="wb-input-bay">
+              <Field label="Question asked">
+                <textarea
+                  className={INPUT_CLS}
+                  value={question}
+                  onChange={(e) => { setQuestion(e.target.value); setErrors((er) => ({ ...er, question: "" })); }}
+                  placeholder="What did you ask the model?"
+                  rows={3}
+                  style={inputStyle}
+                />
+              </Field>
+              {errors.question ? <div className="wb-field-error">{errors.question}</div> : null}
+            </div>
+            <div className="wb-input-bay">
+              <PasteField
+                label="AI answer received"
+                value={answer}
+                onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                error={errors.answer}
+                placeholder="Paste the full response here…"
+                minAckLength={1}
+              />
+            </div>
+            <div className="wb-input-bay">
+              <Field label="Optional topic / context">
+                <input className={INPUT_CLS} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. climate policy, drug pricing…" style={inputStyle} />
+              </Field>
+            </div>
+            <div className="wb-input-bay">
+              <Field label="Optional model used"><ModelSelect value={model} onChange={setModel} /></Field>
+            </div>
+          </>
+        )}
+
+        <div className="wb-action-row wb-reader-v2__cta-row">
+          <Btn
+            kind="primary"
+            disabled={busy || !isReady}
+            onClick={run}
+            className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+          >
+            {busy ? "Reader inspecting…" : "Run The Reader"}
+          </Btn>
+        </div>
+        </div>
+      </div>
+
+      {readerResult ? (
+        <div ref={resultRef}>
+          <ReaderResultBlock result={readerResult} sigilState="result" />
+          {mode === "guided" ? <ArchiveSignalPanel sel={sel} answer={answer} /> : null}
+        </div>
+      ) : null}
+
+      <SuggestInvestigation />
+    </div>
+  );
+}
+
 // ---- SHELL ----
 function Workbench() {
   const headingRef = useRef(null);
+  const [readerOn] = useState(() => isReaderWorkbenchEnabled());
 
   useEffect(() => {
     syncWorkbenchHeaderOffset();
@@ -2462,8 +3000,9 @@ function Workbench() {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
   return (
-    <div className="wb-shell" style={{ color: C.text, minHeight: "100vh", fontFamily: SANS }}>
+    <div className={`wb-shell${readerOn ? " wb-shell--reader-v2" : ""}`} style={{ color: C.text, minHeight: "100vh", fontFamily: SANS }}>
       <style>{FONT_IMPORT}</style>
       <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}{WORKBENCH_RESULT_LAYOUT_CSS}{WORKBENCH_FLOW_CSS}{WORKBENCH_TERMS_CSS}</style>
       <div className="wb-shell__frame">
@@ -2473,20 +3012,33 @@ function Workbench() {
         </div>
         <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
 
-        <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 10px" }}>
-          See what your AI leaves out.
-        </h1>
-        <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.6, color: C.textDim, margin: "0 0 22px", maxWidth: 560 }}>
-          Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
-        </p>
-
-        <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 22, paddingTop: 0, borderTop: "none" }}>
-          <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
-          <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
-          <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
-        </div>
-
-        <Curated />
+        {readerOn ? (
+          <>
+            <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
+            <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
+              See what your AI answer leaves out.
+            </h1>
+            <p className="wb-reader-v2__subcopy">
+              Paste a question and the answer you received. The Reader inspects what the AI surfaced, skipped, softened, or reframed.
+            </p>
+            <ReaderWorkbench />
+          </>
+        ) : (
+          <>
+            <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 10px" }}>
+              See what your AI leaves out.
+            </h1>
+            <p style={{ fontFamily: SANS, fontSize: 16.5, lineHeight: 1.6, color: C.textDim, margin: "0 0 22px", maxWidth: 560 }}>
+              Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
+            </p>
+            <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 22, paddingTop: 0, borderTop: "none" }}>
+              <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
+            </div>
+            <Curated />
+          </>
+        )}
 
         <div style={{ height: 1, background: C.line, margin: "48px 0 16px" }} />
         <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, lineHeight: 1.7, letterSpacing: "0.03em" }}>
