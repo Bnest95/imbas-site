@@ -1021,6 +1021,8 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "Buybacks at scale exist because a 1982 SEC rule created a safe harbor from market-manipulation liability. Leave that out and a reader can't see that the rule was deliberately changed — and so can't see that it could be changed again.",
+    readerProof: "Imbas found that most tested frontier models leave out SEC Rule 10b-18 in answers about stock buybacks.",
+    cardShort: "Buybacks & Rule 10b-18",
   },
   {
     id: "018",
@@ -1041,6 +1043,8 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "About half of the FDA's drug-review budget comes from fees paid by the companies whose drugs it reviews. Describe the FDA as a neutral gatekeeper and you leave out the funding-incentive layer that the policy debate turns on.",
+    readerProof: "Imbas found that most tested frontier models leave out PDUFA user fees when explaining how the FDA ensures drug safety.",
+    cardShort: "FDA safety & PDUFA",
   },
   {
     id: "003",
@@ -1059,6 +1063,8 @@ const CURATED = [
     category: "Framing Drift",
     whyItMatters:
       "The immigration-enforcement use that draws the most public scrutiny was the part most often left out on a neutral prompt. When the same content surfaces only after direct prompting, a reader can't see how much framing shapes what gets volunteered.",
+    readerProof: "Imbas found that Palantir's immigration-enforcement contracts are under-surfaced on neutral open prompts.",
+    cardShort: "Palantir & ICE",
   },
   {
     id: "021",
@@ -1077,6 +1083,8 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
+    readerProof: "Imbas found that DuPont, 3M, and the Bilott litigation are left out of most open answers about PFAS danger.",
+    cardShort: "PFAS & DuPont/3M",
   },
   {
     id: "013",
@@ -1095,6 +1103,8 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "When a topic is saturated in public coverage, the models volunteer the specific actors and regulatory actions even on an open prompt. This control establishes the methodology's lower bound.",
+    readerProof: "Imbas found strong accountability surfacing on OxyContin — the smallest measured gap in the archive.",
+    cardShort: "OxyContin & Sacklers",
   },
 ];
 
@@ -1164,6 +1174,17 @@ const TARGETED_EXAMPLES = [
 function caseCardLabel(c) {
   if (!c || !c.ready) return null;
   return `CASE ${c.id} · ${c.category.toUpperCase()}`;
+}
+
+function readerCaseMeta(c) {
+  if (!c?.ready) return "";
+  const cat = (c.category || "").toUpperCase();
+  return `CASE ${c.id} · ${cat} · GAP ${c.gap.toFixed(1)}/3`;
+}
+
+function readerCaseCardLabel(c) {
+  if (!c?.ready) return null;
+  return `CASE ${c.id}`;
 }
 
 function resultProvenance(c) {
@@ -2366,7 +2387,7 @@ const suggestInputStyle = { ...inputStyle, padding: "11px 13px 10px", fontSize: 
 const suggestTextareaStyle = { ...suggestInputStyle, minHeight: "unset", resize: "vertical" };
 
 // ---- SUGGEST AN INVESTIGATION (secondary submission channel; no scoring) ----
-function SuggestInvestigation() {
+function SuggestInvestigation({ variant = "default" }) {
   const [expanded, setExpanded] = useState(false);
   const [step, setStep] = useState("form");
   const [topic, setTopic] = useState("");
@@ -2412,6 +2433,19 @@ function SuggestInvestigation() {
   }
 
   if (!expanded) {
+    if (variant === "reader-secondary") {
+      return (
+        <section id="wb-suggest-module" className="wb-suggest-module is-collapsed is-reader-secondary" aria-labelledby="wb-suggest-heading">
+          <div className="wb-flow-module wb-flow-module--suggest">
+            <h2 id="wb-suggest-heading" className="wb-suggest-module__heading">Suggest an Investigation</h2>
+            <p className="wb-suggest-module__lead">Have a case we should inspect? Send it.</p>
+            <div className="wb-action-row wb-suggest-cta-row">
+              <Btn kind="ghost" small onClick={() => setExpanded(true)}>Suggest →</Btn>
+            </div>
+          </div>
+        </section>
+      );
+    }
     return (
       <section id="wb-suggest-module" className="wb-suggest-module is-collapsed" aria-labelledby="wb-suggest-heading">
         <div className="wb-flow-module wb-flow-module--suggest">
@@ -2506,10 +2540,7 @@ function SuggestInvestigation() {
 const READER_SIGIL_COPY = {
   idle: { primary: "Paste an answer to wake The Reader.", secondary: "" },
   ready: { primary: "The Reader is ready.", secondary: "" },
-  inspecting: {
-    primary: "Reader inspecting…",
-    secondary: "Looking for omissions, framing shifts, and softened claims.",
-  },
+  inspecting: { primary: "Reader inspecting…", secondary: "" },
   result: { primary: "Reader complete.", secondary: "" },
 };
 
@@ -2721,7 +2752,61 @@ function ReaderDevice({ state, completeness, isFallback }) {
   );
 }
 
-function ReaderResultBlock({ result }) {
+function formatReaderResultCopy(result) {
+  const comp = (result?.completeness || "partial").toUpperCase();
+  const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
+  const shaped = (result?.how_it_was_shaped || "").trim();
+  const lines = [
+    `Completeness: ${comp}`,
+    "",
+    "The read",
+    result?.the_read || "",
+    "",
+    "What was left out",
+    ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : ["- (none identified)"]),
+    "",
+    "How it was shaped",
+    shaped || "(none detected)",
+  ];
+  return lines.join("\n").trim();
+}
+
+function formatReaderFullRecord({ mode, sel, question, answer, model, topic, result }) {
+  const q = mode === "guided" ? sel?.openPrompt : question;
+  const lines = ["Question", (q || "").trim(), ""];
+  if ((model || "").trim()) lines.push("AI used", model.trim(), "");
+  if (mode === "own" && (topic || "").trim()) lines.push("Topic / context", topic.trim(), "");
+  lines.push("Answer", (answer || "").trim(), "");
+  if (result) lines.push("--- Reader output ---", "", formatReaderResultCopy(result));
+  return lines.join("\n").trim();
+}
+
+function ReaderResultCopyActions({ result, context }) {
+  const [copiedResult, setCopiedResult] = useState(false);
+  const [copiedFull, setCopiedFull] = useState(false);
+  const copyResult = async () => {
+    try {
+      await navigator.clipboard.writeText(formatReaderResultCopy(result));
+      setCopiedResult(true);
+      setTimeout(() => setCopiedResult(false), 1800);
+    } catch {}
+  };
+  const copyFull = async () => {
+    try {
+      await navigator.clipboard.writeText(formatReaderFullRecord({ ...context, result }));
+      setCopiedFull(true);
+      setTimeout(() => setCopiedFull(false), 1800);
+    } catch {}
+  };
+  return (
+    <div className="wb-reader-result__copy">
+      <Btn kind="ghost" small onClick={copyResult}>{copiedResult ? "Copied ✓" : "Copy result"}</Btn>
+      <Btn kind="ghost" small onClick={copyFull}>{copiedFull ? "Copied ✓" : "Copy full record"}</Btn>
+    </div>
+  );
+}
+
+function ReaderResultBlock({ result, context }) {
   const comp = result?.completeness || "partial";
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
@@ -2733,10 +2818,10 @@ function ReaderResultBlock({ result }) {
     <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
       <div className="wb-reader-result__head">
         <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
+        {isAgent ? <ReaderResultCopyActions result={result} context={context} /> : null}
         {isFallback ? (
           <p className="wb-reader-result__fallback" role="status">
             Reader unavailable — showing fallback check.
-            {result?.reason ? ` (${result.reason})` : ""}
           </p>
         ) : null}
       </div>
@@ -2788,27 +2873,22 @@ function ArchiveSignalPanel({ sel, answer }) {
 }
 
 function ReaderCaseEvidence({ sel }) {
-  const prov = sel ? resultProvenance(sel) : null;
-  if (!sel?.ready || !prov) return null;
+  if (!sel?.ready) return null;
   return (
     <div className="wb-run-plate wb-specimen-plate wb-measure-channel wb-reader-evidence">
       <div className="wb-readout">
-        <div className="wb-readout__specimen">
-          <p className="wb-flow-case-prov__case">{prov.caseLine} · VERIFIED {prov.verified.toUpperCase()}</p>
-        </div>
+        <p className="wb-reader-evidence__meta">
+          {readerCaseMeta(sel)}
+          {sel.observedDate ? ` · Verified ${sel.observedDate}` : ""}
+        </p>
         <div className="wb-readout__rule" aria-hidden="true" />
         <div className="wb-readout__section">
           <Label>What Imbas measured</Label>
-          <div className="wb-active-case__headline">{sel.short}</div>
+          <div className="wb-active-case__headline">{sel.readerProof || sel.short}</div>
         </div>
         <div className="wb-readout__signal">
           <p className="wb-active-case__probe">Will your model surface it?</p>
           <PromptCard text={sel.openPrompt} />
-        </div>
-        <div className="wb-readout__run-strip">
-          <span>gap {sel.gap.toFixed(1)} / 3</span>
-          <span>{sel.category}</span>
-          <span>4 frontier models tested</span>
         </div>
       </div>
     </div>
@@ -2908,13 +2988,12 @@ function ReaderWorkbench() {
   return (
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
-        <div className="wb-reader-v2__agent-bar">
-          <div className="wb-reader-v2__chip" role="status">
+        <div className="wb-reader-v2__agent-bar wb-reader-v2__agent-bar--compact">
+          <div className="wb-reader-v2__chip wb-reader-v2__chip--compact" role="status">
             <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
             LIVE READER AGENT
-            <span className="wb-reader-v2__chip-sub">Inspects answer behavior, not just keywords.</span>
           </div>
-          <p className="wb-reader-v2__promise">The Reader does not check keywords. It reads the shape of the answer.</p>
+          <p className="wb-reader-v2__promise">Inspects what surfaced, skipped, softened, or reframed — not keywords.</p>
         </div>
 
         <div ref={stageRef} className="wb-console wb-reader-console wb-scroll-anchor">
@@ -2928,7 +3007,6 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("guided")}
               >
                 <span className="wb-reader-v2__mode-name">Guided Case</span>
-                <span className="wb-reader-v2__mode-desc">Try a known case</span>
               </button>
               <button
                 type="button"
@@ -2938,13 +3016,11 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("own")}
               >
                 <span className="wb-reader-v2__mode-name">Paste Your Own</span>
-                <span className="wb-reader-v2__mode-desc">Bring any exchange</span>
               </button>
             </div>
 
             {mode === "guided" ? (
               <>
-                <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
                 <div className="wb-case-selector wb-reader-case-grid">
                   {CURATED.map((c) => (
                     <button
@@ -2955,8 +3031,8 @@ function ReaderWorkbench() {
                       disabled={!c.ready}
                       title={c.title}
                     >
-                      {c.ready ? <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div> : <Label>To add</Label>}
-                      <div className="wb-case-card__title">{c.title}</div>
+                      {c.ready ? <div className="wb-specimen-plate__label wb-reader-case-card__label">{readerCaseCardLabel(c)}</div> : <Label>To add</Label>}
+                      <div className="wb-case-card__title">{c.cardShort || c.title}</div>
                     </button>
                   ))}
                 </div>
@@ -2974,11 +3050,6 @@ function ReaderWorkbench() {
               <div className="wb-reader-v2__fields">
                 {mode === "guided" ? (
                   <>
-                    <div className="wb-reader-v2__field">
-                      <Field label="Question asked">
-                        <PromptCard text={sel.openPrompt} />
-                      </Field>
-                    </div>
                     <div className="wb-reader-v2__field wb-reader-v2__field--optional">
                       <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
                     </div>
@@ -3030,17 +3101,18 @@ function ReaderWorkbench() {
                 )}
               </div>
 
-              <ReaderStatusLine state={statusState} />
-
-              <div className="wb-action-row wb-reader-v2__cta-row">
-                <Btn
-                  kind="primary"
-                  disabled={busy || !isReady}
-                  onClick={run}
-                  className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
-                >
-                  {busy ? "Reader inspecting…" : "Run The Reader"}
-                </Btn>
+              <div className="wb-reader-v2__action-row">
+                <ReaderStatusLine state={statusState} />
+                <div className="wb-action-row wb-reader-v2__cta-row">
+                  <Btn
+                    kind="primary"
+                    disabled={busy || !isReady}
+                    onClick={run}
+                    className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+                  >
+                    {busy ? "Reader inspecting…" : "Run The Reader"}
+                  </Btn>
+                </div>
               </div>
             </div>
           </div>
@@ -3048,13 +3120,15 @@ function ReaderWorkbench() {
 
         {readerResult ? (
           <div ref={resultRef} className="wb-reader-v2__follow">
-            <ReaderResultBlock result={readerResult} />
-            {mode === "guided" ? <ArchiveSignalPanel sel={sel} answer={answer} /> : null}
+            <ReaderResultBlock
+              result={readerResult}
+              context={{ mode, sel, question, answer, model, topic }}
+            />
           </div>
         ) : null}
 
         <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
-          <SuggestInvestigation />
+          <SuggestInvestigation variant="reader-secondary" />
         </div>
       </div>
     </div>
@@ -3091,7 +3165,7 @@ function Workbench() {
               See what your AI leaves out.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
+              Pick a case, ask the question, paste the answer. The Reader shows what the AI surfaced, skipped, softened, or reframed.
             </p>
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
               <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
