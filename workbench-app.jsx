@@ -1179,7 +1179,7 @@ function caseCardLabel(c) {
 function readerCaseMeta(c) {
   if (!c?.ready) return "";
   const cat = (c.category || "").toUpperCase();
-  return `CASE ${c.id} · ${cat} · GAP ${c.gap.toFixed(1)}/3`;
+  return `CASE ${c.id} · ${cat}`;
 }
 
 function readerCaseCardLabel(c) {
@@ -2775,6 +2775,13 @@ function readerFallbackReadBody() {
   return "The full Reader is unavailable. Your question and answer are preserved above — this is not a full inspection.";
 }
 
+function readerResultProvenanceLabel({ mode, sel, result }) {
+  if (result?.source === "fallback") return "Fallback check";
+  if (result?.source !== "agent") return "Reader";
+  if (mode === "guided" && sel?.id) return `Reader agent · Case ${sel.id}`;
+  return "Reader agent · Custom answer";
+}
+
 function formatReaderResultCopy(result) {
   const comp = (result?.completeness || "partial").toUpperCase();
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
@@ -2796,7 +2803,11 @@ function formatReaderResultCopy(result) {
 
 function formatReaderFullRecord({ mode, sel, question, answer, model, topic, result }) {
   const q = mode === "guided" ? sel?.openPrompt : question;
-  const lines = [`Question: ${(q || "").trim()}`];
+  const lines = [];
+  if (result?.source === "agent") {
+    lines.push("Inspection record", readerResultProvenanceLabel({ mode, sel, result }), "");
+  }
+  lines.push(`Question: ${(q || "").trim()}`);
   if ((model || "").trim()) lines.push(`AI used: ${model.trim()}`);
   lines.push("", "Answer", (answer || "").trim());
   if (result) {
@@ -2841,12 +2852,13 @@ function ReaderResultCopyActions({ result, context }) {
   );
 }
 
-function ReaderResultBlock({ result, context }) {
+function ReaderResultBlock({ result, context, onRunAgain }) {
   const comp = result?.completeness || "partial";
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const isFallback = result?.source === "fallback";
   const isAgent = result?.source === "agent";
+  const provenance = readerResultProvenanceLabel({ mode: context.mode, sel: context.sel, result });
   const paragraphs = isFallback
     ? [readerFallbackReadBody()]
     : (result?.the_read || "").split(/\n\n+/).filter(Boolean);
@@ -2860,8 +2872,10 @@ function ReaderResultBlock({ result, context }) {
             <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
           ) : null}
         </div>
-        {isAgent ? <ReaderResultCopyActions result={result} context={context} /> : null}
       </div>
+      {isAgent ? (
+        <p className="wb-reader-result__provenance">{provenance}</p>
+      ) : null}
       {isFallback ? (
         <p className="wb-reader-result__fallback" role="status">
           {readerFallbackDisplayMessage(result)}
@@ -2896,6 +2910,14 @@ function ReaderResultBlock({ result, context }) {
           </>
         ) : null}
       </div>
+      {onRunAgain ? (
+        <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
+          {isAgent ? <ReaderResultCopyActions result={result} context={context} /> : null}
+          <Btn kind="ghost" small onClick={onRunAgain} className="wb-reader-result__rerun">
+            Run again
+          </Btn>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -2992,6 +3014,7 @@ function ReaderWorkbench() {
     setErrors({});
     setReaderResult(null);
     setBusy(false);
+    if (next === "own") setAnswer("");
   };
 
   const pickCase = (c) => {
@@ -3061,7 +3084,7 @@ function ReaderWorkbench() {
             <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
             LIVE READER AGENT
           </div>
-          <p className="wb-reader-v2__promise">Inspects answer behavior, not keywords.</p>
+          <p className="wb-reader-v2__promise">Inspects answer behavior and turns each answer into an inspection record.</p>
         </div>
 
         <div ref={stageRef} className="wb-console wb-reader-console wb-scroll-anchor">
@@ -3109,9 +3132,12 @@ function ReaderWorkbench() {
                 <ReaderCaseEvidence sel={sel} />
               </>
             ) : (
-              <p className="wb-reader-v2__own-intro">
-                Paste the question and answer. The Reader will inspect how the AI handled it.
-              </p>
+              <div className="wb-reader-v2__own-header">
+                <p className="wb-reader-v2__own-eyebrow">Custom inspection</p>
+                <p className="wb-reader-v2__own-intro">
+                  Paste the question you asked and the answer you received.
+                </p>
+              </div>
             )}
 
             <div className={`wb-confirm-block wb-reader-confirm wb-flow-module${mode === "own" ? " wb-reader-confirm--own" : ""}`}>
@@ -3182,16 +3208,19 @@ function ReaderWorkbench() {
 
               <div className="wb-reader-v2__action-row" aria-busy={busy}>
                 <ReaderStatusLine state={statusState} />
-                <div className="wb-action-row wb-reader-v2__cta-row">
-                  <Btn
-                    kind="primary"
-                    disabled={busy || !isReady}
-                    onClick={run}
-                    className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
-                  >
-                    {busy ? "Reader inspecting…" : readerResult ? "Run again" : "Run The Reader"}
-                  </Btn>
-                </div>
+                <p className="wb-reader-v2__input-note">Inputs are used for this inspection. They are not published as archive records unless submitted.</p>
+                {!readerResult ? (
+                  <div className="wb-action-row wb-reader-v2__cta-row">
+                    <Btn
+                      kind="primary"
+                      disabled={busy || !isReady}
+                      onClick={run}
+                      className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+                    >
+                      {busy ? "Reader inspecting…" : "Run The Reader"}
+                    </Btn>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -3202,6 +3231,7 @@ function ReaderWorkbench() {
             <ReaderResultBlock
               result={readerResult}
               context={{ mode, sel, question, answer, model, topic }}
+              onRunAgain={run}
             />
           </div>
         ) : null}

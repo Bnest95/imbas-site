@@ -2321,8 +2321,7 @@
   margin: 0;
   font-family: var(--font-mono);
   font-size: max(0.6875rem, var(--mono-min));
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: rgba(175, 162, 148, 0.9);
 }
 
@@ -4013,7 +4012,7 @@
 /* V2H — refined V1 shell + V2 Reader agent */
 .wb-shell--reader-v2 .wb-reader-v2__context-links {
   margin-top: 0;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
   padding-top: 0;
   border-top: none;
   flex-wrap: wrap;
@@ -4053,11 +4052,11 @@
 }
 
 .wb-shell--reader-v2 .wb-reader-case-grid {
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.5rem;
 }
 
 .wb-shell--reader-v2 .wb-reader-case-grid .wb-case-card {
-  padding: 0.75rem 0.85rem;
+  padding: 0.65rem 0.8rem;
   min-height: 0;
 }
 
@@ -4067,11 +4066,11 @@
 }
 
 .wb-shell--reader-v2 .wb-reader-evidence {
-  margin: 0.15rem 0 0.85rem;
+  margin: 0.1rem 0 0.65rem;
 }
 
 .wb-shell--reader-v2 .wb-reader-evidence .wb-readout {
-  padding: 0.15rem 0.1rem 0.05rem;
+  padding: 0.1rem 0.1rem 0;
 }
 
 .wb-shell--reader-v2 .wb-reader-evidence .wb-active-case__headline {
@@ -4087,17 +4086,30 @@
   background: rgba(12, 9, 8, 0.65);
 }
 
+.wb-shell--reader-v2 .wb-reader-v2__own-header {
+  margin: 0.55rem 0 0.7rem;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__own-eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(195, 175, 148, 0.78);
+}
+
 .wb-shell--reader-v2 .wb-reader-v2__own-intro {
-  margin: 0.65rem 0 0.75rem;
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 1.08rem;
-  line-height: 1.48;
-  color: rgba(230, 218, 200, 0.94);
+  font-size: 1.02rem;
+  line-height: 1.46;
+  color: rgba(230, 218, 200, 0.92);
 }
 
 .wb-shell--reader-v2 .wb-reader-confirm {
-  margin-top: 0.5rem;
-  padding: 0.65rem 0.7rem 0.75rem;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.7rem 0.7rem;
   background: rgba(14, 11, 9, 0.82);
   border: 1px solid rgba(242, 232, 220, 0.1);
   border-radius: 4px;
@@ -4139,9 +4151,9 @@
 .wb-shell--reader-v2 .wb-reader-v2__agent-bar--compact {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.55rem 0.85rem;
-  margin-bottom: 0.85rem;
+  align-items: flex-start;
+  gap: 0.5rem 0.85rem;
+  margin-bottom: 0.65rem;
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__chip--compact {
@@ -4151,9 +4163,41 @@
 .wb-shell--reader-v2 .wb-reader-v2__agent-bar--compact .wb-reader-v2__promise {
   margin: 0;
   flex: 1 1 14rem;
+  min-width: 0;
   font-size: 0.84rem;
   line-height: 1.42;
   color: rgba(200, 186, 170, 0.78);
+}
+
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional {
+  opacity: 0.9;
+}
+
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional .wb-field-label {
+  color: rgba(155, 142, 128, 0.62);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+}
+
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional .wb-input,
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional textarea.wb-input,
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional select.wb-input {
+  border-color: rgba(242, 232, 220, 0.07);
+  background: rgba(12, 10, 9, 0.55);
+  color: rgba(185, 172, 158, 0.88);
+}
+
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional .wb-input::placeholder,
+.wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional textarea.wb-input::placeholder {
+  color: rgba(140, 128, 115, 0.55);
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__input-note {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: rgba(165, 152, 138, 0.72);
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__modes--inline .wb-reader-v2__mode-desc {
@@ -4252,11 +4296,46 @@
   margin-top: 0;
 }
 
+.wb-reader-result__provenance {
+  margin: -0.35rem 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+  color: rgba(175, 162, 148, 0.78);
+}
+
+.wb-reader-result__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-reader-result__footer.is-fallback {
+  justify-content: flex-start;
+}
+
+.wb-reader-result__rerun.wb-btn--ghost {
+  margin-left: auto;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  color: rgba(185, 170, 155, 0.82);
+  border-color: rgba(242, 232, 220, 0.1);
+}
+
+.wb-reader-result__rerun.wb-btn--ghost:hover {
+  color: rgba(230, 215, 195, 0.92);
+  border-color: rgba(222, 111, 56, 0.22);
+}
+
 .wb-reader-result__copy {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem 0.55rem;
-  margin-left: auto;
   align-items: center;
 }
 
@@ -4397,18 +4476,29 @@
   }
 
   .wb-reader-result.is-agent .wb-reader-result__head {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .wb-reader-result__footer {
     flex-direction: column;
     align-items: stretch;
   }
 
   .wb-reader-result__copy {
-    margin-left: 0;
     width: 100%;
   }
 
   .wb-reader-result.is-agent .wb-reader-result__copy .wb-btn--ghost {
     flex: 1 1 auto;
     min-width: calc(50% - 0.3rem);
+    min-height: 2.75rem;
+    justify-content: center;
+  }
+
+  .wb-reader-result__rerun.wb-btn--ghost {
+    margin-left: 0;
+    width: 100%;
     min-height: 2.75rem;
     justify-content: center;
   }
