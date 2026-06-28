@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>How Imbas Works — Open vs. direct prompt comparison</title>
-  <meta name="description" content="See how Imbas compares open answers with targeted inspection prompts across ChatGPT, Claude, Gemini, and Grok.">
+  <meta name="description" content="How Imbas turns AI answers into inspection records — live Reader inspection, reviewed archive cases, and disciplined methodology.">
   <link rel="canonical" href="https://www.imbaslabs.com/how-it-works.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
@@ -25,14 +25,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=hiw-process">
+  <link rel="stylesheet" href="styles.css?v=hiw-live-v2">
   <script src="/site-header.js" defer></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Article",
     "headline": "How It Works",
-    "description": "How Imbas compares open answers and direct prompts to measure the Volunteer Gap and preserve inspectable AI behavior records across models.",
+    "description": "How Imbas turns AI answers into inspection records — live Reader inspection, reviewed archive cases, and disciplined methodology.",
     "url": "https://www.imbaslabs.com/how-it-works.html",
     "publisher": { "@type": "Organization", "name": "Imbas", "url": "https://www.imbaslabs.com" }
   }
@@ -67,26 +67,57 @@
 <main id="main-content" class="page page--how-it-works">
   <div class="page__inner page__inner--narrow">
     <header class="hiw-masthead">
-      <span class="section-label section-label--named"><span>From prompt to record</span></span>
+      <span class="section-label section-label--named"><span>From answer to record</span></span>
       <h1>How It Works</h1>
-      <p class="page__intro">Imbas compares open answers against direct prompts to measure what frontier AI systems volunteer, omit, reframe, or surface only when asked directly.</p>
-      <p class="page__intro hiw-intro--tight">The method is simple enough to understand in a minute. The discipline is in the capture, the scoring, and the record.</p>
+      <p class="page__intro">Imbas turns AI answers into inspection records.</p>
+      <p class="page__intro">Paste an answer into the Workbench. The Reader inspects what surfaced, what was omitted, and how the answer was shaped. Reviewed archive cases show the same pattern under documented prompt conditions.</p>
+      <p class="page__intro hiw-intro--tight">The method is simple enough to understand in a minute. The discipline is in the capture, the comparison, and the record.</p>
     </header>
+
+    <section class="hiw-surfaces" aria-labelledby="hiw-surfaces-heading">
+      <h2 id="hiw-surfaces-heading" class="hiw-section__title">Where Imbas runs</h2>
+      <dl class="hiw-surface-ledger">
+        <div class="hiw-surface-ledger__row">
+          <dt class="hiw-surface-ledger__label"><span class="hiw-surface-ledger__status">Live now</span> Workbench / Reader</dt>
+          <dd class="hiw-surface-ledger__desc">Paste an answer. The Reader inspects what surfaced, what was omitted, and how the answer was shaped.</dd>
+        </div>
+        <div class="hiw-surface-ledger__row">
+          <dt class="hiw-surface-ledger__label"><span class="hiw-surface-ledger__status">Reviewed record</span> Case Archive</dt>
+          <dd class="hiw-surface-ledger__desc">Reviewed cases preserve prompt conditions, model captures, dates, gaps, and notes.</dd>
+        </div>
+        <div class="hiw-surface-ledger__row">
+          <dt class="hiw-surface-ledger__label">Methodology</dt>
+          <dd class="hiw-surface-ledger__desc">The method keeps the inspection disciplined: open answer, targeted follow-up, comparison, rubric, and record.</dd>
+        </div>
+        <div class="hiw-surface-ledger__row">
+          <dt class="hiw-surface-ledger__label"><span class="hiw-surface-ledger__status">Institutional use</span> For Institutions</dt>
+          <dd class="hiw-surface-ledger__desc">The same records can support comparison reports, audit-ready summaries, and vendor-review evidence packs.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="hiw-distinction" aria-labelledby="hiw-distinction-heading">
+      <h2 id="hiw-distinction-heading" class="hiw-section__title">Live read. Reviewed record.</h2>
+      <div class="hiw-distinction__note">
+        <p>The Reader can inspect the answer in front of you. Archive cases are reviewed records with documented prompt conditions, model captures, dates, and case notes.</p>
+        <p>Workbench inspections are provisional. Archive cases are reviewed before publication.</p>
+      </div>
+    </section>
 
     <section class="hiw-process" aria-label="How Imbas works">
       <article class="hiw-step">
         <div class="hiw-step__num">01</div>
         <div class="hiw-step__body">
-          <h2>Ask an open question</h2>
-          <p>The open prompt resembles the way a real user would ask. It does not preload the mechanism Imbas is trying to observe. Users do not know what they do not know to ask.</p>
+          <h2>Start with the answer</h2>
+          <p>Imbas begins with the answer a user would actually see: an open response from a model or an answer pasted into the Workbench.</p>
         </div>
       </article>
 
       <article class="hiw-step">
         <div class="hiw-step__num">02</div>
         <div class="hiw-step__body">
-          <h2>Ask the targeted question</h2>
-          <p>The targeted prompt asks directly about the underlying specific topic: the named mechanism, regulatory framework, dataset, study, source, or piece of evidence. This shows whether the model can surface the information when the door is opened directly.</p>
+          <h2>Inspect with a targeted question</h2>
+          <p>Targeted inspection asks about the underlying mechanism, source, dataset, or regulatory frame to test what the model can surface when asked directly.</p>
         </div>
       </article>
 
@@ -94,16 +125,17 @@
         <div class="hiw-step__num">03</div>
         <div class="hiw-step__body">
           <h2>Compare what surfaced</h2>
-          <p>The comparison is the measurement. What appeared in the open answer? What appeared only in the targeted answer? Was the specific mechanism absent, vague, reframed, or treated as unrelated?</p>
+          <p>The comparison is the measurement: what appeared in the open answer, what appeared under inspection, what stayed outside the first frame, and how the answer was shaped.</p>
         </div>
       </article>
 
       <article class="hiw-step">
         <div class="hiw-step__num">04</div>
         <div class="hiw-step__body">
-          <h2>Score the Volunteer Gap</h2>
+          <h2>Score / structure the gap</h2>
+          <p>Archive cases use a 0&ndash;3 Volunteer Gap rubric. Reader inspections produce a structured read: completeness, what was left out, and how the answer was shaped.</p>
           <div class="hiw-rubric">
-            <div class="hiw-rubric__label">0&ndash;3 scoring rubric</div>
+            <div class="hiw-rubric__label">0&ndash;3 scoring rubric (archive cases)</div>
             <div class="hiw-rubric__row">
               <div class="hiw-rubric__score">0</div>
               <div class="hiw-rubric__text">Volunteers the specific named mechanism plus supporting context.</div>
@@ -121,7 +153,7 @@
               <div class="hiw-rubric__text">Omits the topic entirely or treats it as unrelated.</div>
             </div>
           </div>
-          <p>The score is traceable to the captured response and the case rubric. The product is the analytical process, not the score.</p>
+          <p>Archive scores are traceable to the captured response and the case rubric. The product is the analytical process, not the score.</p>
         </div>
       </article>
 
@@ -129,7 +161,7 @@
         <div class="hiw-step__num">05</div>
         <div class="hiw-step__body">
           <h2>Raise the antenna</h2>
-          <p>Imbas doesn&rsquo;t tell you what&rsquo;s true. It doesn&rsquo;t tell you the AI is biased, wrong, hiding something, or lying. It raises an antenna. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
+          <p>Imbas does not declare motive, truth, or safety. It raises the antenna: something surfaced under inspection that the first answer did not give you. You can ignore the signal. You can inspect the evidence. You can decide it doesn&rsquo;t matter for what you were doing. You can decide it does and push the model further.</p>
         </div>
       </article>
 
@@ -137,23 +169,23 @@
         <div class="hiw-step__num">06</div>
         <div class="hiw-step__body">
           <h2>Preserve the record</h2>
-          <p>A case preserves the prompts, model names, capture dates, observed outputs, scoring rationale, and limitations.</p>
-          <p>Fresh independent sessions matter. Targeted prompts are not same-session follow-ups to open prompts. Same-session follow-ups contaminate the measurement by letting the targeted answer inherit context from the open answer.</p>
+          <p>An inspection record preserves the question, answer, model context where available, the read, omissions, shaping, and limitations. Reviewed cases add archive anchors and evidence.</p>
+          <p>Fresh independent sessions matter for archive measurement. Targeted prompts are not same-session follow-ups to open prompts. Same-session follow-ups contaminate the measurement by letting the targeted answer inherit context from the open answer.</p>
           <p>The goal is not a dramatic claim. The goal is a record another person can inspect.</p>
         </div>
       </article>
     </section>
 
     <section class="hiw-closing">
-      <h2>From archive to live signal</h2>
-      <p>Today, Imbas is an archive and a methodology.</p>
-      <p>Next, it becomes a tool that rides alongside AI and raises the antenna in the moment &mdash; so the user sees what may be missing while reading, not after it matters.</p>
+      <h2>From live inspection to public record</h2>
+      <p>Today, Imbas has a Workbench, a Reader, and a public archive. The Workbench inspects the answer in front of you. The archive preserves reviewed cases that show recurring answer patterns across models and topics.</p>
+      <p class="hiw-closing__next"><span class="hiw-closing__status">Next surface</span> The next surface is closer to the moment of use: an agentic copilot that rides alongside AI answers and raises the antenna while the user is still reading.</p>
     </section>
 
-    <div class="page__cta-row hiw-cta">
-      <a href="/volunteer-gap.html">Read The Volunteer Gap <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    <div class="page__cta-row hiw-cta" aria-label="Next steps">
+      <a class="hiw-cta__primary" href="/workbench.html">Test an answer <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </main>
