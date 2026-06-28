@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=pi-authority">
+  <link rel="stylesheet" href="styles.css?v=pi-public-record-v1">
   <script src="/site-header.js" defer></script>
   <style>
     .page--public-interest .pi-how-measured .pi-measure-steps {
@@ -121,11 +121,27 @@
       border-bottom: none;
       padding-bottom: 0;
     }
+    .page--public-interest .pi-cta--early {
+      margin: 0 0 var(--space-5);
+      padding-bottom: var(--space-4);
+      border-bottom: 1px solid var(--line-faint);
+    }
+    .page--public-interest .pi-masthead__stakes {
+      color: rgba(252, 248, 236, 0.92);
+    }
+    .page--public-interest .pi-record-note__review {
+      margin-top: 1.15em;
+      color: var(--ink-muted);
+    }
     @media (max-width: 699px) {
       .page--public-interest .pi-cta {
         flex-direction: column;
         align-items: stretch;
         gap: 0.85rem;
+      }
+      .page--public-interest .pi-cta--early {
+        margin-bottom: var(--space-4);
+        padding-bottom: var(--space-3);
       }
       .page--public-interest .pi-cta a.pi-cta__primary {
         width: 100%;
@@ -185,6 +201,7 @@
       <span class="section-label section-label--named"><span>Public interest</span></span>
       <h1>Public Interest</h1>
       <p class="page__intro pi-masthead__thesis">As AI becomes part of how people learn, decide, and act, the public needs records of what these systems surface &mdash; and what they do not.</p>
+      <p class="page__intro pi-masthead__thesis pi-masthead__stakes">When AI answers become infrastructure, what they omit becomes public-interest evidence.</p>
       <p class="page__intro pi-masthead__thesis">Without records, behavior changes quietly. With records, those changes can be inspected.</p>
     </header>
 
@@ -193,6 +210,7 @@
       <div class="pi-record-note">
         <p>AI answers are ephemeral. A response given today may differ tomorrow, and most users have no record of what was omitted.</p>
         <p>Imbas preserves observations under documented conditions so researchers, journalists, institutions, and citizens can inspect surfacing patterns without relying on vendor claims or anecdote.</p>
+        <p class="pi-record-note__review">Records make the basis of a finding reviewable: prompt, answer, comparison, and gap.</p>
       </div>
     </section>
 
@@ -205,6 +223,33 @@
         <p>With records, behavior can be compared across time, models, and topics.</p>
       </div>
     </section>
+
+    <section class="pi-section pi-support" aria-labelledby="pi-support-heading">
+      <h2 id="pi-support-heading" class="pi-section__title">What public support can produce</h2>
+      <dl class="pi-output-ledger">
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Expanded case archive</dt>
+          <dd class="pi-output-ledger__desc">More public records across models, topics, and time.</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Public case reports</dt>
+          <dd class="pi-output-ledger__desc">Readable reports that explain what was measured, what surfaced, and what changed.</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Methodology</dt>
+          <dd class="pi-output-ledger__desc">Clearer rubrics, controls, null cases, and validation notes.</dd>
+        </div>
+        <div class="pi-output-ledger__row">
+          <dt class="pi-output-ledger__label">Public datasets</dt>
+          <dd class="pi-output-ledger__desc">Structured records that researchers and institutions can inspect, cite, and compare.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="page__cta-row pi-cta pi-cta--early" aria-label="Public-interest support">
+      <a class="pi-cta__primary" href="/contact.html#funders">Discuss public-interest support <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
 
     <section class="pi-section pi-how-measured">
       <h2 class="pi-section__title">How it&rsquo;s measured</h2>
@@ -227,28 +272,6 @@
       </div>
     </section>
 
-    <section class="pi-section pi-support">
-      <h2 class="pi-section__title">What public support can produce</h2>
-      <dl class="pi-output-ledger">
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Expanded case archive</dt>
-          <dd class="pi-output-ledger__desc">More public records across models, topics, and time.</dd>
-        </div>
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Public case reports</dt>
-          <dd class="pi-output-ledger__desc">Readable reports that explain what was measured, what surfaced, and what changed.</dd>
-        </div>
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Methodology</dt>
-          <dd class="pi-output-ledger__desc">Clearer rubrics, controls, null cases, and validation notes.</dd>
-        </div>
-        <div class="pi-output-ledger__row">
-          <dt class="pi-output-ledger__label">Public datasets</dt>
-          <dd class="pi-output-ledger__desc">Structured records that researchers and institutions can inspect, cite, and compare.</dd>
-        </div>
-      </dl>
-    </section>
-
     <section class="pi-section pi-credibility">
       <div class="pi-record-note pi-record-note--closing">
         <p>A measurement system that cannot produce small gaps, null findings, and ambiguous results is not a measurement system. It is a conclusion engine. Imbas is not trying to be a conclusion engine. The v1 dataset contains controls that produced gaps as low as 0.75, including one model that scored a perfect 0 on Case 013 (OxyContin). That variance is the credibility.</p>
@@ -258,16 +281,15 @@
     <section class="pi-section pi-funder">
       <div class="pi-doctrine-plate">
         <p>Support the record</p>
-        <p>This work is funded to stay independent &mdash; outside the labs it measures. Imbas is seeking grant support and partners to expand the archive and complete the v2 reliability study.</p>
-        <p><a href="/contact.html" class="page__cta-link">Get in touch <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
-        <p><a href="/contact.html#funders">Contact Imbas about grant or public-interest support</a></p>
+        <p>Public-interest support helps keep measurement independent from the labs being measured. Imbas is seeking grant support and partners to expand the archive and complete the v2 reliability study.</p>
+        <p><a href="/contact.html#funders" class="page__cta-link">Discuss public-interest support <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
       </div>
     </section>
 
-    <div class="page__cta-row pi-cta">
-      <a class="pi-cta__primary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    <div class="page__cta-row pi-cta" aria-label="Next steps">
+      <a class="pi-cta__primary" href="/contact.html#funders">Discuss public-interest support <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <a class="hero__secondary" href="/methodology.html">Read Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
-      <a href="/contact.html">Contact <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="hero__secondary" href="/archive.html">Explore Case Archive <span class="arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </main>
