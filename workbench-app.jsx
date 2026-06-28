@@ -2510,11 +2510,31 @@ const READER_SIGIL_COPY = {
     primary: "Reader inspecting…",
     secondary: "Looking for omissions, framing shifts, and softened claims.",
   },
-  result: { primary: "", secondary: "" },
+  result: { primary: "Reader complete.", secondary: "" },
+};
+
+const READER_STATUS_COPY = {
+  idle: "Paste an answer to wake The Reader.",
+  ready: "The Reader is ready.",
+  inspecting: "Reader inspecting…",
+  result: "Reader complete.",
 };
 
 const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
 
+/** V2F — text-only status; V2G — instrument readout with ember dot */
+function ReaderStatusLine({ state }) {
+  return (
+    <div className={`wb-reader-v2__status-wrap is-${state}`} role="status" aria-live="polite">
+      <span className="wb-reader-v2__status-dot" aria-hidden="true" />
+      <p className={`wb-reader-v2__status is-${state}`}>
+        {READER_STATUS_COPY[state] || READER_STATUS_COPY.idle}
+      </p>
+    </div>
+  );
+}
+
+/* Preserved device/sigil components — not rendered in V2F stacked Reader form */
 function MantisSigilSvg() {
   return (
     <svg
@@ -2654,18 +2674,20 @@ function ReaderSigil({ state, completeness }) {
   );
 }
 
-function ReaderChamber({ state, completeness, isFallback }) {
+function ReaderDevice({ state, completeness, isFallback }) {
   const reduced = prefersReducedMotion();
   const comp = completeness || "partial";
   const cls = [
+    "wb-reader-device",
     "wb-reader-chamber",
     `is-${state}`,
-    state === "result" ? `is-${comp}` : "",
+    state === "result" && !isFallback ? `is-${comp}` : "",
+    isFallback ? "is-fallback" : "",
     reduced ? "is-reduced" : "",
   ].filter(Boolean).join(" ");
 
   return (
-    <div className={cls}>
+    <div className={cls} aria-label="The Reader device">
       <div className="wb-reader-chamber__veil" aria-hidden="true" />
       <div className="wb-reader-chamber__outer-aura" aria-hidden="true" />
       <div className="wb-reader-chamber__occult-halo" aria-hidden="true" />
@@ -2699,15 +2721,16 @@ function ReaderChamber({ state, completeness, isFallback }) {
   );
 }
 
-function ReaderResultBlock({ result, sigilState }) {
+function ReaderResultBlock({ result }) {
   const comp = result?.completeness || "partial";
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const isFallback = result?.source === "fallback";
+  const isAgent = result?.source === "agent";
   const paragraphs = (result?.the_read || "").split(/\n\n+/).filter(Boolean);
 
   return (
-    <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}`} aria-labelledby="wb-reader-result-heading">
+    <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
       <div className="wb-reader-result__head">
         <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
         {isFallback ? (
@@ -2717,7 +2740,6 @@ function ReaderResultBlock({ result, sigilState }) {
           </p>
         ) : null}
       </div>
-      <ReaderChamber state={sigilState} completeness={comp} isFallback={isFallback} />
       {!isFallback ? (
         <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
       ) : null}
@@ -2765,6 +2787,34 @@ function ArchiveSignalPanel({ sel, answer }) {
   );
 }
 
+function ReaderCaseEvidence({ sel }) {
+  const prov = sel ? resultProvenance(sel) : null;
+  if (!sel?.ready || !prov) return null;
+  return (
+    <div className="wb-run-plate wb-specimen-plate wb-measure-channel wb-reader-evidence">
+      <div className="wb-readout">
+        <div className="wb-readout__specimen">
+          <p className="wb-flow-case-prov__case">{prov.caseLine} · VERIFIED {prov.verified.toUpperCase()}</p>
+        </div>
+        <div className="wb-readout__rule" aria-hidden="true" />
+        <div className="wb-readout__section">
+          <Label>What Imbas measured</Label>
+          <div className="wb-active-case__headline">{sel.short}</div>
+        </div>
+        <div className="wb-readout__signal">
+          <p className="wb-active-case__probe">Will your model surface it?</p>
+          <PromptCard text={sel.openPrompt} />
+        </div>
+        <div className="wb-readout__run-strip">
+          <span>gap {sel.gap.toFixed(1)} / 3</span>
+          <span>{sel.category}</span>
+          <span>4 frontier models tested</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ReaderWorkbench() {
   const [mode, setMode] = useState("guided");
   const [sel, setSel] = useState(CURATED[0]);
@@ -2780,7 +2830,7 @@ function ReaderWorkbench() {
   const scrollReady = useRef(false);
 
   const isReady = !!(mode === "guided" ? sel.openPrompt : question).trim() && !!answer.trim();
-  const sigilState = busy ? "inspecting" : readerResult ? "result" : isReady ? "ready" : "idle";
+  const statusState = busy ? "inspecting" : readerResult ? "result" : isReady ? "ready" : "idle";
 
   useEffect(() => {
     if (!scrollReady.current) {
@@ -2857,134 +2907,156 @@ function ReaderWorkbench() {
 
   return (
     <div className="wb-reader-v2">
-      <div className="wb-reader-v2__chip" role="status">
-        <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
-        LIVE READER AGENT
-        <span className="wb-reader-v2__chip-sub">Inspects answer behavior, not just keywords.</span>
-      </div>
+      <div className="wb-reader-v2__stack">
+        <div className="wb-reader-v2__agent-bar">
+          <div className="wb-reader-v2__chip" role="status">
+            <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
+            LIVE READER AGENT
+            <span className="wb-reader-v2__chip-sub">Inspects answer behavior, not just keywords.</span>
+          </div>
+          <p className="wb-reader-v2__promise">The Reader does not check keywords. It reads the shape of the answer.</p>
+        </div>
 
-      <div className="wb-reader-v2__modes wb-scroll-anchor" role="tablist" aria-label="Workbench mode">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "guided"}
-          className={`wb-reader-v2__mode wb-focus${mode === "guided" ? " is-active" : ""}`}
-          onClick={() => switchMode("guided")}
-        >
-          <span className="wb-reader-v2__mode-name">Guided Case</span>
-          <span className="wb-reader-v2__mode-desc">Try a known Imbas case. Fastest way to see the method.</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === "own"}
-          className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
-          onClick={() => switchMode("own")}
-        >
-          <span className="wb-reader-v2__mode-name">Paste Your Own</span>
-          <span className="wb-reader-v2__mode-desc">Bring any AI answer. The Reader will inspect it.</span>
-        </button>
-      </div>
+        <div ref={stageRef} className="wb-console wb-reader-console wb-scroll-anchor">
+          <div className="wb-console__main">
+            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "guided"}
+                className={`wb-reader-v2__mode wb-focus${mode === "guided" ? " is-active" : ""}`}
+                onClick={() => switchMode("guided")}
+              >
+                <span className="wb-reader-v2__mode-name">Guided Case</span>
+                <span className="wb-reader-v2__mode-desc">Try a known case</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "own"}
+                className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
+                onClick={() => switchMode("own")}
+              >
+                <span className="wb-reader-v2__mode-name">Paste Your Own</span>
+                <span className="wb-reader-v2__mode-desc">Bring any exchange</span>
+              </button>
+            </div>
 
-      <div ref={stageRef} className="wb-reader-v2__stage wb-scroll-anchor">
-        <p className="wb-reader-v2__promise">The Reader does not check keywords. It reads the shape of the answer.</p>
-        {!readerResult ? <ReaderChamber state={sigilState} completeness={readerResult?.completeness} isFallback={false} /> : null}
+            {mode === "guided" ? (
+              <>
+                <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
+                <div className="wb-case-selector wb-reader-case-grid">
+                  {CURATED.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${c.id === sel.id ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`}
+                      onClick={() => pickCase(c)}
+                      disabled={!c.ready}
+                      title={c.title}
+                    >
+                      {c.ready ? <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div> : <Label>To add</Label>}
+                      <div className="wb-case-card__title">{c.title}</div>
+                    </button>
+                  ))}
+                </div>
+                <ReaderCaseEvidence sel={sel} />
+              </>
+            ) : (
+              <p className="wb-reader-v2__own-intro">
+                Bring any AI answer. The Reader will inspect what it surfaced, skipped, softened, or reframed.
+              </p>
+            )}
 
-        <div className="wb-reader-v2__offering">
-          <p className="wb-reader-v2__offering-label">Bring The Reader your exchange</p>
+            <div className={`wb-confirm-block wb-reader-confirm wb-flow-module${mode === "own" ? " wb-reader-confirm--own" : ""}`}>
+              {mode === "guided" ? <Label>Confirm it yourself</Label> : null}
 
-        {mode === "guided" ? (
-          <>
-            <p className="wb-plate-note">Curated cases are guided presets from the archive.</p>
-            <div className="wb-case-selector">
-              {CURATED.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${c.id === sel.id ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`}
-                  onClick={() => pickCase(c)}
-                  disabled={!c.ready}
+              <div className="wb-reader-v2__fields">
+                {mode === "guided" ? (
+                  <>
+                    <div className="wb-reader-v2__field">
+                      <Field label="Question asked">
+                        <PromptCard text={sel.openPrompt} />
+                      </Field>
+                    </div>
+                    <div className="wb-reader-v2__field wb-reader-v2__field--optional">
+                      <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
+                    </div>
+                    <div className="wb-reader-v2__field wb-reader-v2__field--answer">
+                      <PasteField
+                        label="AI answer received"
+                        value={answer}
+                        onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                        error={errors.answer}
+                        placeholder="Paste the full response here…"
+                        minAckLength={1}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="wb-reader-v2__field">
+                      <Field label="Question asked">
+                        <textarea
+                          className={INPUT_CLS}
+                          value={question}
+                          onChange={(e) => { setQuestion(e.target.value); setErrors((er) => ({ ...er, question: "" })); }}
+                          placeholder="What did you ask the model?"
+                          rows={3}
+                          style={inputStyle}
+                        />
+                      </Field>
+                      {errors.question ? <div className="wb-field-error">{errors.question}</div> : null}
+                    </div>
+                    <div className="wb-reader-v2__field wb-reader-v2__field--optional">
+                      <Field label="Optional topic / context">
+                        <input className={INPUT_CLS} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. climate policy, drug pricing…" style={inputStyle} />
+                      </Field>
+                    </div>
+                    <div className="wb-reader-v2__field wb-reader-v2__field--optional">
+                      <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
+                    </div>
+                    <div className="wb-reader-v2__field wb-reader-v2__field--answer">
+                      <PasteField
+                        label="AI answer received"
+                        value={answer}
+                        onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
+                        error={errors.answer}
+                        placeholder="Paste the full response here…"
+                        minAckLength={1}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <ReaderStatusLine state={statusState} />
+
+              <div className="wb-action-row wb-reader-v2__cta-row">
+                <Btn
+                  kind="primary"
+                  disabled={busy || !isReady}
+                  onClick={run}
+                  className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
                 >
-                  {c.ready ? <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div> : <Label>To add</Label>}
-                  <div className="wb-case-card__title">{c.title}</div>
-                </button>
-              ))}
+                  {busy ? "Reader inspecting…" : "Run The Reader"}
+                </Btn>
+              </div>
             </div>
-            <div className="wb-input-bay">
-              <span className="wb-input-bay__tag">Suggested question</span>
-              <PromptCard text={sel.openPrompt} />
-            </div>
-            <div className="wb-input-bay">
-              <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
-            </div>
-            <div className="wb-input-bay">
-              <PasteField
-                label="Paste the AI answer you received"
-                value={answer}
-                onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
-                error={errors.answer}
-                placeholder="Paste the full response here…"
-                minAckLength={1}
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="wb-input-bay">
-              <Field label="Question asked">
-                <textarea
-                  className={INPUT_CLS}
-                  value={question}
-                  onChange={(e) => { setQuestion(e.target.value); setErrors((er) => ({ ...er, question: "" })); }}
-                  placeholder="What did you ask the model?"
-                  rows={3}
-                  style={inputStyle}
-                />
-              </Field>
-              {errors.question ? <div className="wb-field-error">{errors.question}</div> : null}
-            </div>
-            <div className="wb-input-bay">
-              <PasteField
-                label="AI answer received"
-                value={answer}
-                onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
-                error={errors.answer}
-                placeholder="Paste the full response here…"
-                minAckLength={1}
-              />
-            </div>
-            <div className="wb-input-bay">
-              <Field label="Optional topic / context">
-                <input className={INPUT_CLS} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. climate policy, drug pricing…" style={inputStyle} />
-              </Field>
-            </div>
-            <div className="wb-input-bay">
-              <Field label="Optional model used"><ModelSelect value={model} onChange={setModel} /></Field>
-            </div>
-          </>
-        )}
-
-        <div className="wb-action-row wb-reader-v2__cta-row">
-          <Btn
-            kind="primary"
-            disabled={busy || !isReady}
-            onClick={run}
-            className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
-          >
-            {busy ? "Reader inspecting…" : "Run The Reader"}
-          </Btn>
+          </div>
         </div>
+
+        {readerResult ? (
+          <div ref={resultRef} className="wb-reader-v2__follow">
+            <ReaderResultBlock result={readerResult} />
+            {mode === "guided" ? <ArchiveSignalPanel sel={sel} answer={answer} /> : null}
+          </div>
+        ) : null}
+
+        <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
+          <SuggestInvestigation />
         </div>
       </div>
-
-      {readerResult ? (
-        <div ref={resultRef}>
-          <ReaderResultBlock result={readerResult} sigilState="result" />
-          {mode === "guided" ? <ArchiveSignalPanel sel={sel} answer={answer} /> : null}
-        </div>
-      ) : null}
-
-      <SuggestInvestigation />
     </div>
   );
 }
@@ -3016,11 +3088,16 @@ function Workbench() {
           <>
             <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
-              See what your AI answer leaves out.
+              See what your AI leaves out.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Paste a question and the answer you received. The Reader inspects what the AI surfaced, skipped, softened, or reframed.
+              Ask a model an open question and it can quietly skip the one fact that changes the picture. Pick a case, run it on your own AI, and see.
             </p>
+            <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
+              <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
+            </div>
             <ReaderWorkbench />
           </>
         ) : (
