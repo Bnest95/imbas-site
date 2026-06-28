@@ -448,6 +448,21 @@ main {
   50%  { transform: translate(4%, 3.2%) scale(1.035); opacity: 0.38; }
   100% { transform: translate(-3.2%, 3.8%) scale(0.97); opacity: 0.32; }
 }
+@keyframes aurora-hero-radiance-a-mobile {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.19; }
+  50%  { transform: translate(1.3vw, 0.9vh) scale(1.018); opacity: 0.23; }
+  100% { transform: translate(-1vw, 1.2vh) scale(0.99); opacity: 0.2; }
+}
+@keyframes aurora-hero-radiance-b-mobile {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.15; }
+  50%  { transform: translate(-1.4vw, 0.7vh) scale(1.015); opacity: 0.19; }
+  100% { transform: translate(1vw, -0.8vh) scale(0.985); opacity: 0.17; }
+}
+@keyframes aurora-living-edge-drift-b-mobile {
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.24; }
+  50%  { transform: translate(2.4%, 2%) scale(1.02); opacity: 0.3; }
+  100% { transform: translate(-2%, 2.4%) scale(0.985); opacity: 0.26; }
+}
 
 .aurora-living.aurora-field--warm .aurora-field__layer--a {
   animation: aurora-living-warm-drift 34s ease-in-out infinite alternate;
@@ -575,21 +590,69 @@ main {
     filter: blur(64px) !important;
     transform: none !important;
   }
-  .hero .aurora-field__layer {
-    filter: blur(80px) !important;
-    opacity: 0.5 !important;
+  /* PASS 6A.2 — tighter mobile hero aurora; center stable, less edge/proof spill */
+  .hero .aurora-field {
+    -webkit-mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 90%);
+    mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 90%);
+  }
+  .hero .aurora-field__layer--a {
+    top: 24% !important;
+    width: min(720px, 78vw) !important;
+    height: min(480px, 56vh) !important;
+    margin-left: calc(min(720px, 78vw) / -2) !important;
+    filter: blur(66px) !important;
+    opacity: 0.7 !important;
+    background:
+      radial-gradient(ellipse 54% 50% at 50% 48%,
+        rgba(var(--ember-rgb), 0.28) 0%,
+        rgba(var(--ember-rgb), 0.1) 42%,
+        transparent 72%),
+      radial-gradient(ellipse 58% 18% at 50% 86%,
+        rgba(var(--ember-rgb), 0.04) 0%,
+        transparent 62%) !important;
+  }
+  .hero .aurora-living .aurora-field__layer--b {
+    top: -8% !important;
+    right: -6% !important;
+    width: 36% !important;
+    height: 36% !important;
+    filter: blur(68px) !important;
+    opacity: 0.24 !important;
+    animation: aurora-living-edge-drift-b-mobile 42s ease-in-out infinite alternate-reverse !important;
   }
   .hero__dust { display: none !important; }
   .hero__aurora-focal {
     display: block !important;
-    width: 116vw !important;
-    height: 78vh !important;
-    filter: blur(85px) !important;
+    width: 88vw !important;
+    height: 56vh !important;
+    filter: blur(72px) !important;
+    opacity: 0.38 !important;
   }
   .hero__aurora-radiance {
-    width: 118vw !important;
-    height: 82vh !important;
-    filter: blur(64px) !important;
+    width: 90vw !important;
+    height: 58vh !important;
+    filter: blur(56px) !important;
+  }
+  .hero__aurora-radiance::before {
+    opacity: 0.2 !important;
+    animation: aurora-hero-radiance-a-mobile 32s ease-in-out infinite alternate !important;
+  }
+  .hero__aurora-radiance::after {
+    opacity: 0.16 !important;
+    animation: aurora-hero-radiance-b-mobile 38s ease-in-out infinite alternate !important;
+  }
+  .hero__fog {
+    background:
+      linear-gradient(180deg,
+        rgba(var(--bg-deep-rgb), 0.35) 0%,
+        transparent 14%,
+        transparent 86%,
+        rgba(var(--bg-deep-rgb), 0.14) 100%);
+  }
+  .hero::after {
+    background:
+      linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.48) 0%, transparent 14%),
+      linear-gradient(0deg, rgba(var(--bg-deep-rgb), 0.28) 0%, transparent 10%);
   }
   .divergence.is-live .divergence__origin-core,
   .divergence.is-live .divergence__endpoint--bot,
@@ -2008,7 +2071,7 @@ body:has(main > section.hero) .nav__menu-btn {
   margin-bottom: calc(var(--space-4) + 1.5rem + 0.75rem);
 }
 .hero + .proof-strip--landing {
-  margin-top: var(--space-3);
+  margin-top: 0;
 }
 @media (max-width: 900px) {
   .hero:has(+ .proof-strip--landing) .hero__stage {
@@ -2016,10 +2079,9 @@ body:has(main > section.hero) .nav__menu-btn {
   }
   .hero:has(+ .proof-strip--landing) .hero__secondary {
     margin-top: 0.65rem;
-    margin-bottom: calc(var(--space-3) + 1.25rem + 0.75rem);
+    margin-bottom: calc(var(--space-3) + 0.5rem);
   }
   .hero + .proof-strip--landing {
-    margin-top: var(--space-3);
     padding-top: var(--space-3);
   }
 }
@@ -2029,10 +2091,9 @@ body:has(main > section.hero) .nav__menu-btn {
   }
   .hero:has(+ .proof-strip--landing) .hero__secondary {
     margin-top: 0.6rem;
-    margin-bottom: calc(var(--space-3) + 1.25rem + 0.75rem);
+    margin-bottom: calc(var(--space-3) + 0.5rem);
   }
   .hero + .proof-strip--landing {
-    margin-top: var(--space-3);
     padding-top: var(--space-2);
     padding-bottom: var(--space-3);
   }
@@ -4329,13 +4390,13 @@ body:has(main > section.hero) .nav__menu-btn {
     animation: aurora-living-warm-drift 34s ease-in-out infinite alternate;
   }
   .hero .aurora-living .aurora-field__layer--b {
-    animation: aurora-living-edge-drift-b 42s ease-in-out infinite alternate-reverse;
+    animation: aurora-living-edge-drift-b-mobile 42s ease-in-out infinite alternate-reverse;
   }
   .hero__aurora-radiance::before {
-    animation: aurora-hero-radiance-a 32s ease-in-out infinite alternate;
+    animation: aurora-hero-radiance-a-mobile 32s ease-in-out infinite alternate;
   }
   .hero__aurora-radiance::after {
-    animation: aurora-hero-radiance-b 38s ease-in-out infinite alternate;
+    animation: aurora-hero-radiance-b-mobile 38s ease-in-out infinite alternate;
   }
   .value__beats::after { left: 0.72rem; }
   .value__beat-dot:not(.is-active) {
@@ -8598,6 +8659,7 @@ body:has(main > section.hero) .nav a { color: rgba(212, 207, 194, max(0.78, var(
    ============================================================= */
 main > .hero + .proof-strip--landing {
   background: var(--bg-deep);
+  border-top: 1px solid var(--line-faint);
 }
 main > .your-experience {
   background:
