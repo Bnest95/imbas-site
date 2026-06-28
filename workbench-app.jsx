@@ -1043,7 +1043,7 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "About half of the FDA's drug-review budget comes from fees paid by the companies whose drugs it reviews. Describe the FDA as a neutral gatekeeper and you leave out the funding-incentive layer that the policy debate turns on.",
-    readerProof: "Imbas found that most tested frontier models leave out PDUFA user fees when explaining how the FDA ensures drug safety.",
+    readerProof: "Imbas found that most tested models discuss FDA drug safety without naming the user-fee structure that helps fund drug review.",
     cardShort: "FDA safety & PDUFA",
   },
   {
@@ -1063,7 +1063,7 @@ const CURATED = [
     category: "Framing Drift",
     whyItMatters:
       "The immigration-enforcement use that draws the most public scrutiny was the part most often left out on a neutral prompt. When the same content surfaces only after direct prompting, a reader can't see how much framing shapes what gets volunteered.",
-    readerProof: "Imbas found that Palantir's immigration-enforcement contracts are under-surfaced on neutral open prompts.",
+    readerProof: "Imbas found that models often describe Palantir–ICE contracts without clearly naming the surveillance and deportation context.",
     cardShort: "Palantir & ICE",
   },
   {
@@ -1083,7 +1083,7 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
-    readerProof: "Imbas found that DuPont, 3M, and the Bilott litigation are left out of most open answers about PFAS danger.",
+    readerProof: "Imbas found that models often describe PFAS risk without clearly naming the corporate knowledge and delay record.",
     cardShort: "PFAS & DuPont/3M",
   },
   {
@@ -1103,7 +1103,7 @@ const CURATED = [
     category: "Omission",
     whyItMatters:
       "When a topic is saturated in public coverage, the models volunteer the specific actors and regulatory actions even on an open prompt. This control establishes the methodology's lower bound.",
-    readerProof: "Imbas found strong accountability surfacing on OxyContin — the smallest measured gap in the archive.",
+    readerProof: "Imbas found that models often describe OxyContin harms without fully naming the Sackler family's role in Purdue's marketing strategy.",
     cardShort: "OxyContin & Sacklers",
   },
 ];
@@ -2440,7 +2440,7 @@ function SuggestInvestigation({ variant = "default" }) {
             <h2 id="wb-suggest-heading" className="wb-suggest-module__heading">Suggest an Investigation</h2>
             <p className="wb-suggest-module__lead">Have a case we should inspect? Send it.</p>
             <div className="wb-action-row wb-suggest-cta-row">
-              <Btn kind="ghost" small onClick={() => setExpanded(true)}>Suggest →</Btn>
+              <Btn kind="ghost" small onClick={() => setExpanded(true)}>Suggest</Btn>
             </div>
           </div>
         </section>
@@ -2773,11 +2773,12 @@ function formatReaderResultCopy(result) {
 
 function formatReaderFullRecord({ mode, sel, question, answer, model, topic, result }) {
   const q = mode === "guided" ? sel?.openPrompt : question;
-  const lines = ["Question", (q || "").trim(), ""];
-  if ((model || "").trim()) lines.push("AI used", model.trim(), "");
-  if (mode === "own" && (topic || "").trim()) lines.push("Topic / context", topic.trim(), "");
-  lines.push("Answer", (answer || "").trim(), "");
-  if (result) lines.push("--- Reader output ---", "", formatReaderResultCopy(result));
+  const lines = [`Question: ${(q || "").trim()}`];
+  if ((model || "").trim()) lines.push(`AI used: ${model.trim()}`);
+  lines.push("", "Answer", (answer || "").trim());
+  if (result) {
+    lines.push("", formatReaderResultCopy(result));
+  }
   return lines.join("\n").trim();
 }
 
@@ -2851,6 +2852,7 @@ function ReaderResultBlock({ result, context }) {
           <h3 className="wb-reader-result__section-title">How it was shaped</h3>
           <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
         </article>
+        {isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
       </div>
     </section>
   );
@@ -2993,7 +2995,7 @@ function ReaderWorkbench() {
             <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
             LIVE READER AGENT
           </div>
-          <p className="wb-reader-v2__promise">Inspects what surfaced, skipped, softened, or reframed — not keywords.</p>
+          <p className="wb-reader-v2__promise">Inspects answer behavior, not keywords.</p>
         </div>
 
         <div ref={stageRef} className="wb-console wb-reader-console wb-scroll-anchor">
@@ -3007,6 +3009,7 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("guided")}
               >
                 <span className="wb-reader-v2__mode-name">Guided Case</span>
+                <span className="wb-reader-v2__mode-desc">Start with a measured case.</span>
               </button>
               <button
                 type="button"
@@ -3016,6 +3019,7 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("own")}
               >
                 <span className="wb-reader-v2__mode-name">Paste Your Own</span>
+                <span className="wb-reader-v2__mode-desc">Bring any answer.</span>
               </button>
             </div>
 
@@ -3040,12 +3044,17 @@ function ReaderWorkbench() {
               </>
             ) : (
               <p className="wb-reader-v2__own-intro">
-                Bring any AI answer. The Reader will inspect what it surfaced, skipped, softened, or reframed.
+                Paste the question and answer. The Reader will inspect how the AI handled it.
               </p>
             )}
 
             <div className={`wb-confirm-block wb-reader-confirm wb-flow-module${mode === "own" ? " wb-reader-confirm--own" : ""}`}>
-              {mode === "guided" ? <Label>Confirm it yourself</Label> : null}
+              {mode === "guided" ? (
+                <>
+                  <Label>Confirm it yourself</Label>
+                  <p className="wb-reader-confirm__lead">Paste the answer you got. The Reader will inspect how it handled the question.</p>
+                </>
+              ) : null}
 
               <div className="wb-reader-v2__fields">
                 {mode === "guided" ? (
@@ -3059,7 +3068,7 @@ function ReaderWorkbench() {
                         value={answer}
                         onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
                         error={errors.answer}
-                        placeholder="Paste the full response here…"
+                        placeholder="Paste the full AI answer here…"
                         minAckLength={1}
                       />
                     </div>
@@ -3093,7 +3102,7 @@ function ReaderWorkbench() {
                         value={answer}
                         onChange={(v) => { setAnswer(v); setErrors((e) => ({ ...e, answer: "" })); }}
                         error={errors.answer}
-                        placeholder="Paste the full response here…"
+                        placeholder="Paste the full AI answer here…"
                         minAckLength={1}
                       />
                     </div>
@@ -3110,7 +3119,7 @@ function ReaderWorkbench() {
                     onClick={run}
                     className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
                   >
-                    {busy ? "Reader inspecting…" : "Run The Reader"}
+                    {busy ? "Reader inspecting…" : readerResult ? "Run again" : "Run The Reader"}
                   </Btn>
                 </div>
               </div>
@@ -3159,13 +3168,13 @@ function Workbench() {
         <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
 
         {readerOn ? (
-          <>
+          <div className="wb-reader-v2__flow">
             <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
               See what your AI leaves out.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Pick a case, ask the question, paste the answer. The Reader shows what the AI surfaced, skipped, softened, or reframed.
+              The archive shows the pattern. The Reader checks the answer in front of you.
             </p>
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
               <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
@@ -3173,7 +3182,13 @@ function Workbench() {
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
             <ReaderWorkbench />
-          </>
+            <div className="wb-reader-v2__trust">
+              <div className="wb-reader-v2__trust-rule" aria-hidden="true" />
+              <p className="wb-reader-v2__trust-note">
+                Behavior, not intent. Results are provisional. Archive entries are reviewed before publication.
+              </p>
+            </div>
+          </div>
         ) : (
           <>
             <h1 ref={headingRef} className="wb-scroll-anchor" style={{ fontFamily: SERIF, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 500, lineHeight: 1.15, margin: "0 0 10px" }}>
@@ -3191,10 +3206,14 @@ function Workbench() {
           </>
         )}
 
-        <div style={{ height: 1, background: C.line, margin: "48px 0 16px" }} />
-        <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, lineHeight: 1.7, letterSpacing: "0.03em" }}>
-          Behavior, not intent. Results are provisional and reviewed by a person before entering the archive.
-        </div>
+        {!readerOn ? (
+          <>
+            <div style={{ height: 1, background: C.line, margin: "48px 0 16px" }} />
+            <div style={{ fontFamily: MONO, fontSize: 11, color: C.textFaint, lineHeight: 1.7, letterSpacing: "0.03em" }}>
+              Behavior, not intent. Results are provisional. Archive entries are reviewed before publication.
+            </div>
+          </>
+        ) : null}
       </div>
     </div>
   );

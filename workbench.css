@@ -2074,10 +2074,40 @@
   scroll-margin-top: calc(var(--header-offset) + var(--scroll-anchor-gap) + 0.65rem + env(safe-area-inset-top, 0px));
 }
 
-.wb-shell--reader-v2 .wb-reader-v2__eyebrow,
-.wb-shell--reader-v2 .wb-reader-v2__headline,
-.wb-shell--reader-v2 .wb-reader-v2__subcopy {
-  max-width: 48rem;
+/* V2I.1 — single centered stack for mast + Reader body */
+.wb-shell--reader-v2 .wb-reader-v2__flow {
+  --wb-reader-flow-max: 48rem;
+  max-width: var(--wb-reader-flow-max);
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__flow .wb-reader-v2__eyebrow,
+.wb-shell--reader-v2 .wb-reader-v2__flow .wb-reader-v2__headline,
+.wb-shell--reader-v2 .wb-reader-v2__flow .wb-reader-v2__subcopy,
+.wb-shell--reader-v2 .wb-reader-v2__flow .wb-reader-v2__context-links {
+  max-width: none;
+  width: 100%;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__trust {
+  margin-top: 3rem;
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__trust-rule {
+  height: 1px;
+  margin: 0 0 1rem;
+  background: rgba(242, 232, 220, 0.12);
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__trust-note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: rgba(165, 152, 138, 0.88);
 }
 
 .wb-reader-v2__eyebrow {
@@ -2104,7 +2134,6 @@
   line-height: 1.58;
   color: rgba(200, 185, 165, 0.96);
   margin: 0 0 1.35rem;
-  max-width: 48rem;
 }
 
 .wb-reader-v2__chip {
@@ -2145,9 +2174,8 @@
 
 /* V2F stacked form — V2G surface / hierarchy polish */
 .wb-reader-v2__stack {
-  --wb-stack-max: 48rem;
-  max-width: var(--wb-stack-max);
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
   width: 100%;
 }
 
@@ -3906,6 +3934,16 @@
   border-left: 2px solid rgba(120, 100, 180, 0.35);
 }
 
+.wb-reader-result__trust {
+  margin: 0.85rem 0 0;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.07);
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.08em;
+  color: rgba(175, 160, 145, 0.68);
+}
+
 .wb-reader-archive {
   margin-bottom: 1.5rem;
   opacity: 0.88;
@@ -4056,7 +4094,6 @@
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__subcopy {
-  max-width: 38rem;
   margin-bottom: 0.85rem;
 }
 
@@ -4081,7 +4118,22 @@
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__modes--inline .wb-reader-v2__mode-desc {
-  display: none;
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  line-height: 1.3;
+  color: rgba(185, 170, 155, 0.72);
+}
+
+.wb-shell--reader-v2 .wb-reader-v2__modes--inline .wb-reader-v2__mode.is-active .wb-reader-v2__mode-desc {
+  color: rgba(215, 195, 170, 0.82);
+}
+
+.wb-shell--reader-v2 .wb-reader-confirm__lead {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: rgba(200, 186, 170, 0.82);
 }
 
 .wb-shell--reader-v2 .wb-reader-case-grid .wb-case-card:not(.is-active) {
