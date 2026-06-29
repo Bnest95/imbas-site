@@ -1787,8 +1787,22 @@ function isReaderWorkbenchEnabled() {
 
 const READER_API = "/api/read";
 
+// Map a detectAnchors() result → the /api/read textcheck shape. This rides along
+// only for the server's degraded fallback (spend ceiling tripped or Opus errored),
+// so that path leans on the real keyword cross-check instead of coming back empty.
+// The live agent read never sees textcheck — it is fed question + answer only.
+function textcheckFromAnchors(anchors) {
+  const tokens = (anchors && anchors.tokens) || [];
+  return {
+    surfaced: !!anchors && anchors.verdict === "key_found",
+    found: tokens.filter((t) => t.found).map((t) => t.term),
+    missing: tokens.filter((t) => !t.found).map((t) => t.term),
+  };
+}
+
 function buildReaderRequest({ mode, sel, question, answer, topic }) {
   if (mode === "guided") {
+    const anchors = detectAnchors((answer || "").trim(), sel.detect || [], sel.keyDetect || []);
     return {
       case: {
         topic: sel.topic || sel.title || "Guided case",
@@ -1797,9 +1811,13 @@ function buildReaderRequest({ mode, sel, question, answer, topic }) {
       },
       open_question: sel.openPrompt,
       answer: (answer || "").trim(),
-      textcheck: { surfaced: false, found: [], missing: [] },
+      textcheck: textcheckFromAnchors(anchors),
     };
   }
+  // Paste-your-own carries no curated anchor list, so there is no keyword
+  // cross-check to send — empty is the correct, honest value here. Running the
+  // selected case's terms against unrelated pasted content would inject the
+  // wrong terms into the fallback, so we deliberately don't.
   return {
     case: {
       topic: (topic || "").trim() || "User-submitted answer",
