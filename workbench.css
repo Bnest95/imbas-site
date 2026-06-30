@@ -4407,6 +4407,30 @@
   letter-spacing: 0.02em;
 }
 
+.wb-reader-result__share {
+  width: 100%;
+  margin-top: 0.15rem;
+}
+
+.wb-reader-result__share-trust {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.48;
+  color: rgba(170, 158, 142, 0.82);
+}
+
+.wb-reader-result__share-btn.wb-btn--ghost {
+  min-height: 2rem;
+}
+
+.wb-reader-result__share-fail {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: max(0.8125rem, 13px);
+  color: rgba(190, 175, 158, 0.78);
+}
+
 .wb-shell--reader-v2 .wb-reader-v2__field .wb-field-error {
   margin-top: 0.45rem;
   font-size: 0.84rem;
@@ -4609,9 +4633,22 @@
 
   .wb-reader-result__rerun.wb-btn--ghost {
     margin-left: 0;
+    order: 4;
     width: 100%;
     min-height: 2.75rem;
     justify-content: center;
+  }
+
+  .wb-reader-result__share {
+    order: 3;
+    margin-top: 0.35rem;
+  }
+
+  .wb-reader-result__share-btn.wb-btn--ghost {
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: center;
+    font-size: max(0.8125rem, 13px);
   }
 
   .wb-reader-result.is-agent .wb-reader-result__section--read .wb-reader-result__read-body p:first-child {

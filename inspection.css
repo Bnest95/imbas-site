@@ -1,0 +1,172 @@
+/* inspection.css — Unlisted Workbench inspection record page */
+
+.page--inspection {
+  padding-bottom: 4rem;
+}
+
+.page--inspection .page__inner {
+  max-width: 42rem;
+}
+
+.insp-record__mast {
+  margin-bottom: 1.25rem;
+}
+
+.insp-record__eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(230, 175, 130, 0.9);
+}
+
+.insp-record__status {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-mono);
+  font-size: max(0.75rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  color: rgba(185, 168, 147, 0.88);
+}
+
+.insp-record__trust-note {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: max(0.875rem, 14px);
+  line-height: 1.55;
+  color: rgba(175, 162, 148, 0.88);
+}
+
+.insp-context {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.85rem 0 1rem;
+  padding: 0.85rem 0 1rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+  border-bottom: 1px solid rgba(242, 232, 220, 0.06);
+}
+
+.insp-context__label {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(190, 175, 158, 0.78);
+}
+
+.insp-context__text {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: max(0.875rem, 14px);
+  line-height: 1.55;
+  color: rgba(224, 210, 190, 0.94);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.insp-context__text--answer {
+  font-size: max(0.8125rem, 13px);
+  color: rgba(200, 185, 168, 0.9);
+}
+
+.page--inspection .wb-reader-result.is-agent {
+  margin-bottom: 1rem;
+}
+
+.insp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.55rem;
+  margin-top: 1rem;
+}
+
+.insp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.85rem;
+  font-family: var(--font-sans);
+  font-size: max(0.875rem, 14px);
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 4px;
+  border: 1px solid rgba(242, 232, 220, 0.12);
+  background: rgba(20, 16, 13, 0.65);
+  color: rgba(230, 215, 195, 0.92);
+  cursor: pointer;
+}
+
+.insp-btn--primary {
+  border-color: rgba(222, 111, 56, 0.35);
+  background: rgba(222, 111, 56, 0.12);
+  color: rgba(240, 200, 165, 0.98);
+}
+
+.insp-btn--ghost:hover,
+.insp-btn--primary:hover {
+  border-color: rgba(222, 111, 56, 0.28);
+}
+
+.insp-btn.is-copied {
+  border-color: rgba(155, 174, 126, 0.42);
+  color: rgba(184, 200, 160, 0.95);
+  background: rgba(155, 174, 126, 0.08);
+}
+
+.insp-loading {
+  margin: 2rem 0;
+  font-family: var(--font-mono);
+  font-size: max(0.8125rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  color: rgba(175, 162, 148, 0.82);
+}
+
+.insp-error {
+  margin: 1.5rem 0 2rem;
+  padding: 1.25rem 1.1rem;
+  border: 1px solid rgba(200, 175, 150, 0.14);
+  border-radius: 8px;
+  background: rgba(18, 14, 12, 0.92);
+}
+
+.insp-error__title {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: rgba(242, 232, 220, 0.95);
+}
+
+.insp-error__body {
+  margin: 0 0 0.35rem;
+  font-size: max(0.875rem, 14px);
+  line-height: 1.55;
+  color: rgba(190, 175, 158, 0.88);
+}
+
+.insp-error__hint {
+  margin: 0 0 1rem;
+  font-size: max(0.8125rem, 13px);
+  color: rgba(165, 152, 138, 0.78);
+}
+
+@media (max-width: 640px) {
+  .page--inspection .wb-reader-result.is-agent {
+    padding: 1.15rem 0.72rem 1.3rem;
+  }
+
+  .insp-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .insp-btn {
+    width: 100%;
+  }
+
+  .insp-context__text--answer {
+    font-size: max(0.875rem, 13px);
+  }
+}

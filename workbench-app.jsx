@@ -2849,6 +2849,105 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
   return lines.join("\n").trim();
 }
 
+const READER_SHARE_TRUST_COPY =
+  "Creates an unlisted Workbench inspection. Anyone with the link can view it. It is not a reviewed archive case.";
+
+function inspectionSharePayload({ mode, sel, question, answer, model, topic, result }) {
+  const q = mode === "guided" ? sel?.openPrompt : question;
+  const topicLine = (topic || "").trim() || (mode === "guided" ? (sel?.topic || "").trim() : "");
+  return {
+    question: (q || "").trim(),
+    topic: topicLine,
+    ai_model: (model || "").trim(),
+    answer: (answer || "").trim(),
+    source_label: mode === "guided" ? "Guided Case" : "Custom Answer",
+    case_label: mode === "guided" && sel?.id ? `Case ${sel.id}` : "",
+    completeness: result?.completeness || "partial",
+    the_read: result?.the_read || "",
+    what_was_left_out: Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [],
+    how_it_was_shaped: result?.how_it_was_shaped || "",
+    inspection_note: result?.inspection_note || "",
+  };
+}
+
+function ReaderResultShareAction({ result, context }) {
+  const [shareUrl, setShareUrl] = useState("");
+  const [phase, setPhase] = useState("idle");
+  const [errMsg, setErrMsg] = useState("");
+
+  const copyUrl = async (url) => {
+    await navigator.clipboard.writeText(url);
+    setPhase("copied");
+    setErrMsg("");
+    setTimeout(() => setPhase(shareUrl ? "ready" : "idle"), 1800);
+  };
+
+  const createShare = async () => {
+    if (shareUrl) {
+      try {
+        await copyUrl(shareUrl);
+      } catch {
+        setPhase("error");
+        setErrMsg("Could not copy link");
+        setTimeout(() => setPhase("ready"), 2200);
+      }
+      return;
+    }
+    setPhase("creating");
+    setErrMsg("");
+    try {
+      const res = await fetch("/api/inspection-share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inspectionSharePayload({ ...context, result })),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.share_url) {
+        const msg =
+          data.error === "unconfigured"
+            ? "Share links are not available on this deployment yet."
+            : "Could not create share link";
+        setPhase("error");
+        setErrMsg(msg);
+        setTimeout(() => setPhase("idle"), 2800);
+        return;
+      }
+      setShareUrl(data.share_url);
+      await copyUrl(data.share_url);
+      setPhase("ready");
+    } catch {
+      setPhase("error");
+      setErrMsg("Network error — try again");
+      setTimeout(() => setPhase("idle"), 2800);
+    }
+  };
+
+  const btnLabel =
+    phase === "creating"
+      ? "Creating…"
+      : phase === "copied"
+        ? "Copied"
+        : shareUrl
+          ? "Copy share link"
+          : "Create share link";
+
+  return (
+    <div className="wb-reader-result__share">
+      <p className="wb-reader-result__share-trust">{READER_SHARE_TRUST_COPY}</p>
+      <Btn
+        kind="ghost"
+        small
+        className={`wb-reader-result__share-btn${phase === "copied" ? " is-copied" : ""}`}
+        onClick={createShare}
+        disabled={phase === "creating"}
+      >
+        {btnLabel}
+      </Btn>
+      {errMsg ? <span className="wb-reader-result__share-fail" role="status">{errMsg}</span> : null}
+    </div>
+  );
+}
+
 function ReaderResultCopyActions({ result, context }) {
   const [copiedResult, setCopiedResult] = useState(false);
   const [copiedFull, setCopiedFull] = useState(false);
@@ -2961,7 +3060,12 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
       </div>
       {onRunAgain ? (
         <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
-          {isAgent ? <ReaderResultCopyActions result={result} context={context} /> : null}
+          {isAgent ? (
+            <>
+              <ReaderResultCopyActions result={result} context={context} />
+              <ReaderResultShareAction result={result} context={context} />
+            </>
+          ) : null}
           <Btn kind="ghost" small onClick={onRunAgain} className="wb-reader-result__rerun">
             Run again
           </Btn>
