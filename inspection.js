@@ -88,7 +88,7 @@ function renderRecord(root, record) {
     <header class="insp-record__mast">
       <p class="insp-record__eyebrow">Workbench inspection</p>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
-      <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Factual claims should be independently verified before citation.</p>
+      <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
     </header>
 
     <section class="wb-reader-result is-agent is-${escapeHtml(comp)}" aria-label="Inspection result">

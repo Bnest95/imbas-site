@@ -3373,7 +3373,9 @@ function ReaderWorkbench() {
 
               <div className="wb-reader-v2__action-row" aria-busy={busy}>
                 <ReaderStatusLine state={statusState} />
-                <p className="wb-reader-v2__input-note">Inputs are used for this inspection. They are not published as archive records unless submitted.</p>
+                <p className="wb-reader-v2__input-note">
+                  Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them.
+                </p>
                 {!readerResult ? (
                   <div className="wb-action-row wb-reader-v2__cta-row">
                     <Btn

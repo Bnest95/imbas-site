@@ -4256,9 +4256,10 @@
 
 .wb-shell--reader-v2 .wb-reader-v2__input-note {
   margin: 0.45rem 0 0;
+  max-width: 38rem;
   font-family: var(--font-sans);
   font-size: 0.78rem;
-  line-height: 1.4;
+  line-height: 1.45;
   color: rgba(165, 152, 138, 0.72);
 }
 

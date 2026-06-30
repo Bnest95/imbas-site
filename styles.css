@@ -5494,6 +5494,14 @@ main, .site-footer { position: relative; z-index: 2; }
   line-height: 1.45;
   color: rgba(180, 192, 210, 0.72);
 }
+.page--case .case-trust-note {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) 0 0;
+  border-top: 1px solid var(--line-faint);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(170, 182, 200, 0.78);
+}
 
 /* Metadata record strip */
 .page--case .case-meta {
@@ -7012,6 +7020,13 @@ main, .site-footer { position: relative; z-index: 2; }
   margin: 0;
   max-width: 62ch;
   line-height: 1.58;
+}
+.page--archive .arc-trust-note {
+  margin: var(--space-3) 0 0;
+  max-width: 62ch;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: rgba(170, 182, 200, 0.78);
 }
 
 /* Archive stat strip */
