@@ -2878,6 +2878,7 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
   const comp = result?.completeness || "partial";
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
+  const inspectionNote = (result?.inspection_note || "").trim();
   const isFallback = result?.source === "fallback";
   const isAgent = result?.source === "agent";
   const provenance = readerResultProvenanceLabel({ mode: context.mode, sel: context.sel, result });
@@ -2930,6 +2931,9 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
             </article>
             {isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
           </>
+        ) : null}
+        {inspectionNote ? (
+          <p className={`wb-reader-result__inspection-note${isAgent ? "" : " is-standalone"}`}>{inspectionNote}</p>
         ) : null}
       </div>
       {onRunAgain ? (
