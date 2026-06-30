@@ -92,6 +92,10 @@ const QUESTION_MIN = 3;
 // capture is skipped silently and the read still returns.
 const AIRTABLE_BASE = "appfxHraqlcpP1AAP";
 const RUNS_TABLE = "tblqmHiOCQ5YSXBN3";
+// Hard ceiling on how long the capture write may add to a read. Since the write
+// now completes BEFORE the response flushes (see sendRead), a hung Airtable would
+// otherwise stall the read; this aborts the write so the read always returns.
+const CAPTURE_TIMEOUT_MS = 2500;
 
 // ── Spend ceiling ────────────────────────────────────────────────────────────
 // A soft monthly ceiling: once the month's ESTIMATED spend crosses the cap,
@@ -385,14 +389,22 @@ async function captureRun(input, payload) {
       Source: payload.source || "",
       Created: new Date().toISOString(),
     };
-    const r = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ fields, typecast: true }),
-    });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), CAPTURE_TIMEOUT_MS);
+    let r;
+    try {
+      r = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fields, typecast: true }),
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!r.ok) {
       const t = await r.text();
       console.error(
@@ -400,19 +412,28 @@ async function captureRun(input, payload) {
       );
     }
   } catch (e) {
+    const reason =
+      e && e.name === "AbortError"
+        ? `timed out after ${CAPTURE_TIMEOUT_MS}ms`
+        : e && e.message
+        ? e.message
+        : "unknown";
     console.error(
-      `[read] CAPTURE ERROR — ${e && e.message ? e.message : "unknown"} — Reader Runs did not record this run (the read was returned to the user normally)`
+      `[read] CAPTURE ERROR — ${reason} — Reader Runs did not record this run (the read was returned to the user normally)`
     );
   }
 }
 
-// Send the read, then capture it. res.json() flushes the response to the client
-// immediately, so the user sees no delay; awaiting captureRun afterward keeps the
-// serverless instance warm just long enough for the Airtable write to land.
-// captureRun is fail-safe internally, so this never throws back into the handler.
+// Capture the read, THEN send it. On Vercel the invocation ends when the response
+// flushes, so anything awaited AFTER res.json() is frozen and dropped — which is
+// why capturing-after-responding silently lost every row. Awaiting the write first
+// (as experience.js/repository.js do) is the only reliable order. captureRun is
+// fail-safe internally — it early-returns when AIRTABLE_TOKEN is unset, swallows
+// every error, and now aborts its own fetch after CAPTURE_TIMEOUT_MS — so it never
+// throws and adds at most that timeout to an already multi-second read.
 async function sendRead(res, input, payload) {
-  res.status(200).json(payload);
   await captureRun(input, payload);
+  res.status(200).json(payload);
 }
 
 export default async function handler(req, res) {
