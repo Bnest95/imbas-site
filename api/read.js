@@ -73,6 +73,14 @@ const TOPIC_MAX = 500;
 const ANCHOR_MAX = 500;
 const WHY_MAX = 1000;
 const TERM_MAX = 120;
+// Cap how MANY keyword terms ride in (alongside the per-term TERM_MAX clip), so a
+// crafted textcheck can't bloat the fallback response or the Airtable capture cell.
+const TERM_COUNT_MAX = 50;
+// Empty-body gate: a real read needs an actual question and answer. These small
+// minimums reject empty/near-empty payloads BEFORE the throttle and the paid Opus
+// call, closing the cheapest cost-abuse path (an empty {} buying a model call).
+const ANSWER_MIN = 20;
+const QUESTION_MIN = 3;
 
 // ── Read capture (Airtable) ──────────────────────────────────────────────────
 // Every read returned to a user — agent or fallback — is logged to the "Reader
@@ -357,7 +365,12 @@ const DEFAULT_INSPECTION_NOTE =
 // match the Completeness string to its single-select choice.
 async function captureRun(input, payload) {
   try {
-    if (!process.env.AIRTABLE_TOKEN) return;
+    if (!process.env.AIRTABLE_TOKEN) {
+      console.warn(
+        "[read] CAPTURE SKIPPED — AIRTABLE_TOKEN unset; Reader Runs is not recording (the read itself is unaffected)"
+      );
+      return;
+    }
     const leftOut = Array.isArray(payload.what_was_left_out)
       ? payload.what_was_left_out.join("\n")
       : "";
@@ -382,10 +395,14 @@ async function captureRun(input, payload) {
     });
     if (!r.ok) {
       const t = await r.text();
-      console.error(`[read] capture write failed: ${r.status} ${t.slice(0, 300)}`);
+      console.error(
+        `[read] CAPTURE FAILED — Airtable ${r.status}: ${t.slice(0, 300)} — Reader Runs did not record this run (the read was returned to the user normally)`
+      );
     }
   } catch (e) {
-    console.error(`[read] capture error: ${e && e.message ? e.message : "unknown"}`);
+    console.error(
+      `[read] CAPTURE ERROR — ${e && e.message ? e.message : "unknown"} — Reader Runs did not record this run (the read was returned to the user normally)`
+    );
   }
 }
 
@@ -424,10 +441,10 @@ export default async function handler(req, res) {
   const caseObj = body.case || {};
   const textcheck = body.textcheck || {};
   const found = Array.isArray(textcheck.found)
-    ? textcheck.found.filter((t) => typeof t === "string").map((t) => clip(t, TERM_MAX))
+    ? textcheck.found.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
     : [];
   const missing = Array.isArray(textcheck.missing)
-    ? textcheck.missing.filter((t) => typeof t === "string").map((t) => clip(t, TERM_MAX))
+    ? textcheck.missing.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
     : [];
 
   const input = {
@@ -442,6 +459,16 @@ export default async function handler(req, res) {
       missing,
     },
   };
+
+  // Empty-body gate: require a real question + answer before spending a throttle
+  // slot or a paid Opus call. A 400 here degrades gracefully — the client treats a
+  // non-ok read as a failure and shows its honest local fallback, never a break.
+  if (
+    input.answer.trim().length < ANSWER_MIN ||
+    input.openQuestion.trim().length < QUESTION_MIN
+  ) {
+    return res.status(400).json({ error: "empty" });
+  }
 
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
   if (throttled(ip)) return res.status(429).json({ error: "rate" });
