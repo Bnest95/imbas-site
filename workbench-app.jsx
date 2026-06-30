@@ -3115,7 +3115,7 @@ function ReaderCaseEvidence({ sel }) {
 }
 
 function ReaderWorkbench() {
-  const [mode, setMode] = useState("guided");
+  const [mode, setMode] = useState("own");
   const [sel, setSel] = useState(CURATED[0]);
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -3141,6 +3141,15 @@ function ReaderWorkbench() {
         : ownQuestionPrompt
           ? "needQuestion"
           : "idle";
+
+  useEffect(() => {
+    const goOwnFromHash = () => {
+      if (window.location.hash === "#wb-reader-console") setMode("own");
+    };
+    goOwnFromHash();
+    window.addEventListener("hashchange", goOwnFromHash);
+    return () => window.removeEventListener("hashchange", goOwnFromHash);
+  }, []);
 
   useEffect(() => {
     if (!scrollReady.current) {
@@ -3237,12 +3246,22 @@ function ReaderWorkbench() {
             <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
             LIVE READER AGENT
           </div>
-          <p className="wb-reader-v2__promise">Inspects answer behavior and turns each answer into an inspection record.</p>
+          <p className="wb-reader-v2__promise">Inspects the answer in front of you and turns it into an inspection record.</p>
         </div>
 
-        <div ref={stageRef} className="wb-console wb-reader-console wb-scroll-anchor">
+        <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={mode === "own"}
+                className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
+                onClick={() => switchMode("own")}
+              >
+                <span className="wb-reader-v2__mode-name">Paste Your Own</span>
+                <span className="wb-reader-v2__mode-desc">Bring any AI answer.</span>
+              </button>
               <button
                 type="button"
                 role="tab"
@@ -3252,16 +3271,6 @@ function ReaderWorkbench() {
               >
                 <span className="wb-reader-v2__mode-name">Guided Case</span>
                 <span className="wb-reader-v2__mode-desc">Start with a measured case.</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "own"}
-                className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
-                onClick={() => switchMode("own")}
-              >
-                <span className="wb-reader-v2__mode-name">Paste Your Own</span>
-                <span className="wb-reader-v2__mode-desc">Bring any answer.</span>
               </button>
             </div>
 
@@ -3286,7 +3295,7 @@ function ReaderWorkbench() {
               </>
             ) : (
               <div className="wb-reader-v2__own-header">
-                <p className="wb-reader-v2__own-eyebrow">Custom inspection</p>
+                <p className="wb-reader-v2__own-eyebrow">Run your own inspection</p>
                 <p className="wb-reader-v2__own-intro">
                   Paste the question you asked and the answer you received.
                 </p>
@@ -3427,10 +3436,10 @@ function Workbench() {
               See what your AI leaves out.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              The archive shows the pattern. The Reader checks the answer in front of you.
+              Paste an AI answer. The Reader shows what surfaced, what was omitted, and how it was shaped.
             </p>
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
-              <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="#wb-reader-console">Paste your own answer <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>

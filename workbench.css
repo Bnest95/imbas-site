@@ -4483,7 +4483,9 @@
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__follow--suggest {
-  margin-top: 0.65rem;
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.06);
 }
 
 .wb-reader-chamber.is-inspecting .wb-reader-chamber__scanlines {
