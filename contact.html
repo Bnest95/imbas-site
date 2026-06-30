@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=ct-routes-split">
+  <link rel="stylesheet" href="styles.css?v=ct-intent-v1">
   <script src="/site-header.js" defer></script>
   <script type="application/ld+json">
   {
@@ -115,23 +115,24 @@
     <header class="ct-masthead">
       <span class="section-label section-label--named"><span>Get in touch</span></span>
       <h1>Contact</h1>
-      <p class="page__intro">Choose the path that best matches why you&rsquo;re here.<br><br>Institutions can discuss pilots and measurement programs.<br>Researchers can request methodology materials.<br>Everyone else can follow Field Notes.</p>
+      <p class="page__intro">Choose the path that best matches why you&rsquo;re here. Each route includes the subject line that helps Imbas respond clearly.</p>
     </header>
 
     <section class="ct-section ct-routes" aria-label="Contact routes">
-        <article class="ct-route ct-route--primary">
+        <article class="ct-route ct-route--primary" id="institutions">
           <div class="ct-route__label">Institutions</div>
           <div class="ct-route__body">
             <h2 class="ct-route__title">For Institutions</h2>
-            <p class="ct-route__desc">Discuss institutional pilots, audit-ready documentation, or cross-vendor measurement for your team.</p>
+            <p class="ct-route__desc">Discuss institutional pilots, review-ready documentation, or cross-vendor measurement for your team.</p>
             <div class="ct-field-strip">
               <p class="ct-record-field">Email: <a href="mailto:brendan@imbaslabs.com?subject=Institutional%20use">brendan@imbaslabs.com</a></p>
               <p class="ct-record-field">Subject line: &ldquo;Institutional use&rdquo;</p>
             </div>
+            <p class="ct-record-field ct-record-field--action"><a href="mailto:brendan@imbaslabs.com?subject=Institutional%20use" class="page__cta-link ct-route__action">Email about institutional use <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
           </div>
         </article>
 
-        <article class="ct-route">
+        <article class="ct-route" id="researchers">
           <div class="ct-route__label">Research</div>
           <div class="ct-route__body">
             <h2 class="ct-route__title">For researchers</h2>
@@ -140,6 +141,7 @@
               <p class="ct-record-field">Email: <a href="mailto:brendan@imbaslabs.com?subject=Methodology">brendan@imbaslabs.com</a></p>
               <p class="ct-record-field">Subject line: &ldquo;Methodology&rdquo;</p>
             </div>
+            <p class="ct-record-field ct-record-field--action"><a href="mailto:brendan@imbaslabs.com?subject=Methodology" class="page__cta-link ct-route__action">Request methodology <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
           </div>
         </article>
 
@@ -147,20 +149,21 @@
           <div class="ct-route__label">Funders</div>
           <div class="ct-route__body">
             <h2 class="ct-route__title">Funders &amp; public-interest partners</h2>
-            <p class="ct-route__desc">For foundations, research institutions, and public-interest partners interested in independent AI measurement, contact Imbas with the subject line &ldquo;Grant / funding inquiry.&rdquo;</p>
+            <p class="ct-route__desc">For foundations, research institutions, and public-interest partners interested in independent AI measurement, public records, or case-report funding.</p>
             <div class="ct-field-strip">
               <p class="ct-record-field">Email: <a href="mailto:brendan@imbaslabs.com?subject=Grant%20%2F%20funding%20inquiry">brendan@imbaslabs.com</a></p>
               <p class="ct-record-field">Subject line: &ldquo;Grant / funding inquiry&rdquo;</p>
             </div>
+            <p class="ct-record-field ct-record-field--action"><a href="mailto:brendan@imbaslabs.com?subject=Grant%20%2F%20funding%20inquiry" class="page__cta-link ct-route__action">Discuss public-interest support <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
           </div>
         </article>
 
-        <article class="ct-route">
+        <article class="ct-route" id="field-notes">
           <div class="ct-route__label">Field Notes</div>
           <div class="ct-route__body">
             <h2 class="ct-route__title">For everyone else</h2>
             <p class="ct-route__desc">Follow Field Notes for observations from the edge of the archive. Occasional, observational, no filler.</p>
-            <p class="ct-record-field ct-record-field--action"><a href="/field-notes/" class="page__cta-link ct-route__action">Subscribe on Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
+            <p class="ct-record-field ct-record-field--action"><a href="/field-notes/" class="page__cta-link ct-route__action">Get Field Notes <span class="arrow" aria-hidden="true">&rarr;</span></a></p>
           </div>
         </article>
     </section>
