@@ -9315,5 +9315,117 @@ main > .close::before {
   }
 }
 
+/* =============================================================
+   HOMEPAGE MOBILE HERO HIERARCHY — IMBAS dominant, compact proof strip
+   Index hero only; desktop unchanged (≤680px).
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .hero .hero__stage {
+    gap: 0.95rem;
+    padding-top: clamp(0.85rem, 2.5vh, 1.15rem);
+    padding-bottom: 0.5rem;
+  }
+  main > .hero:has(+ .proof-strip--landing) .hero__stage {
+    padding-bottom: 0.4rem;
+  }
+  main > .hero .hero__meta--instrument {
+    font-size: max(0.625rem, var(--mono-min));
+    letter-spacing: 0.15em;
+    padding: 0.05rem 0;
+  }
+  main > .hero .hero__center {
+    gap: 0.8rem;
+    padding-inline: clamp(0.5rem, 2.5vw, 0.75rem);
+  }
+  main > .hero .hero__monolith {
+    margin: 0.15rem 0 0.2rem;
+  }
+  main > .hero .hero__monolith-text {
+    font-size: clamp(4.45rem, 21.8vw, 7rem);
+    letter-spacing: -0.046em;
+    line-height: 0.82;
+  }
+  main > .hero .hero__subhead {
+    max-width: min(30ch, 90vw);
+  }
+  main > .hero .hero__subhead-line {
+    font-size: clamp(0.88rem, 3.25vw, 1.05rem);
+    line-height: 1.32;
+    margin-bottom: 0.45em;
+    padding-inline: 0;
+    color: rgba(237, 232, 220, 0.92);
+  }
+  main > .hero .hero__capture-block {
+    margin-top: 0.28rem;
+    margin-bottom: 0.2rem;
+    max-width: min(420px, calc(100vw - 2rem));
+  }
+  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
+    margin-bottom: 0.28rem;
+  }
+  main > .hero .hero__capture button {
+    padding: 0.72rem 1.55rem;
+    font-size: max(0.78rem, var(--mono-min));
+    letter-spacing: 0.13em;
+  }
+  main > .hero .hero__microcopy {
+    font-size: clamp(0.8rem, 2.85vw, 0.875rem);
+    line-height: 1.4;
+    margin-top: 0.62rem;
+    max-width: 26ch;
+    color: rgba(252, 248, 236, 0.68);
+  }
+
+  main > .hero + .proof-strip--landing {
+    padding-top: 0.4rem;
+    padding-bottom: 0.48rem;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__meta {
+    font-size: max(0.6rem, var(--mono-min));
+    letter-spacing: 0.1em;
+    line-height: 1.2;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    row-gap: 0.12rem;
+    column-gap: 0.32em;
+    line-height: 1.15;
+    transform: none;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__num {
+    font-size: 0.88rem;
+    font-weight: 500;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__desc {
+    letter-spacing: 0.08em;
+    font-size: 0.88em;
+    color: rgba(180, 192, 210, 0.68);
+  }
+  main > .hero + .proof-strip--landing .proof-strip__metric--scope {
+    flex: 0 0 100%;
+    justify-content: center;
+    margin-top: 0.08rem;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__scope {
+    font-size: max(0.6rem, var(--mono-min));
+    letter-spacing: 0.02em;
+    color: rgba(180, 192, 210, 0.62);
+    font-weight: 400;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__lead {
+    gap: 6px;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__lead .dot {
+    width: 4px;
+    height: 4px;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__metric::after {
+    color: rgba(180, 192, 210, 0.45);
+  }
+}
+
 
 /* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
