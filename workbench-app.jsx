@@ -1779,10 +1779,13 @@ function scrollWorkbenchAnchor(el, after) {
 function isReaderWorkbenchEnabled() {
   if (typeof window === "undefined") return false;
   try {
-    if (new URLSearchParams(window.location.search).get("reader") === "1") return true;
+    const reader = new URLSearchParams(window.location.search).get("reader");
+    if (reader === "0") return false;
+    if (reader === "1") return true;
+    if (window.localStorage.getItem("imbasReader") === "0") return false;
     if (window.localStorage.getItem("imbasReader") === "1") return true;
   } catch {}
-  return false;
+  return true;
 }
 
 const READER_API = "/api/read";
