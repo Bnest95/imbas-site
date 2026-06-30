@@ -2573,6 +2573,11 @@ const READER_STATUS_COPY = {
 };
 
 const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
+const READER_COMPLETENESS_GLOSS = {
+  full: "The answer substantially served the question.",
+  partial: "Some material context was missing or shaped.",
+  thin: "The answer was evasive or substantially incomplete.",
+};
 
 /** V2F — text-only status; V2G — instrument readout with ember dot */
 function ReaderStatusLine({ state }) {
@@ -2801,40 +2806,46 @@ function readerResultProvenanceLabel({ mode, sel, result }) {
 }
 
 function formatReaderResultCopy(result) {
-  const comp = (result?.completeness || "partial").toUpperCase();
+  const compKey = result?.completeness || "partial";
+  const comp = compKey.toUpperCase();
+  const gloss = READER_COMPLETENESS_GLOSS[compKey] || READER_COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
   const lines = [
     `Completeness: ${comp}`,
+    gloss,
     "",
-    "The read",
+    "THE READ",
     result?.the_read || "",
     "",
-    "What was left out",
+    "WHAT WAS LEFT OUT",
     ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : ["- (none identified)"]),
     "",
-    "How it was shaped",
+    "HOW IT WAS SHAPED",
     shaped || "(none detected)",
   ];
   if (inspectionNote) {
-    lines.push("", "Inspection note", inspectionNote);
+    lines.push("", "INSPECTION NOTE", inspectionNote);
   }
   return lines.join("\n").trim();
 }
 
 function formatReaderFullRecord({ mode, sel, question, answer, model, topic, result }) {
   const q = mode === "guided" ? sel?.openPrompt : question;
+  const topicLine = (topic || "").trim() || (mode === "guided" ? (sel?.topic || "").trim() : "");
   const lines = [];
   if (result?.source === "agent") {
     lines.push("Inspection record", readerResultProvenanceLabel({ mode, sel, result }), "");
   }
   lines.push(`Question: ${(q || "").trim()}`);
+  if (topicLine) lines.push(`Topic / context: ${topicLine}`);
   if ((model || "").trim()) lines.push(`AI used: ${model.trim()}`);
   lines.push("", "Answer", (answer || "").trim());
   if (result) {
     lines.push("", formatReaderResultCopy(result));
   }
+  lines.push("", "Behavior, not intent.");
   return lines.join("\n").trim();
 }
 
@@ -2867,8 +2878,12 @@ function ReaderResultCopyActions({ result, context }) {
   };
   return (
     <div className="wb-reader-result__copy">
-      <Btn kind="ghost" small onClick={copyResult}>{copiedResult ? "Copied" : "Copy result"}</Btn>
-      <Btn kind="ghost" small onClick={copyFull}>{copiedFull ? "Copied" : "Copy full record"}</Btn>
+      <Btn kind="ghost" small className={copiedResult ? "is-copied" : ""} onClick={copyResult}>
+        {copiedResult ? "Copied" : "Copy Result"}
+      </Btn>
+      <Btn kind="ghost" small className={copiedFull ? "is-copied" : ""} onClick={copyFull}>
+        {copiedFull ? "Copied" : "Copy Full Record"}
+      </Btn>
       {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
     </div>
   );
@@ -2889,15 +2904,20 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
   return (
     <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
       <div className="wb-reader-result__head">
-        <div className="wb-reader-result__head-main">
-          <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
-          {isAgent ? (
+        {isAgent ? (
+          <div className={`wb-reader-result__status is-${comp}`}>
             <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
-          ) : null}
-        </div>
+            <p className="wb-reader-result__badge-gloss">{READER_COMPLETENESS_GLOSS[comp]}</p>
+          </div>
+        ) : (
+          <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
+        )}
       </div>
       {isAgent ? (
-        <p className="wb-reader-result__provenance">{provenance}</p>
+        <>
+          <h2 id="wb-reader-result-heading" className="wb-reader-result__title wb-reader-result__title--sub">THE READER</h2>
+          <p className="wb-reader-result__provenance">{provenance}</p>
+        </>
       ) : null}
       {isFallback ? (
         <p className="wb-reader-result__fallback" role="status">
@@ -2929,12 +2949,15 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
               <h3 className="wb-reader-result__section-title">How it was shaped</h3>
               <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
             </article>
-            {isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
           </>
         ) : null}
         {inspectionNote ? (
-          <p className={`wb-reader-result__inspection-note${isAgent ? "" : " is-standalone"}`}>{inspectionNote}</p>
+          <article className="wb-reader-result__section wb-reader-result__section--inspection">
+            <h3 className="wb-reader-result__section-title">Inspection note</h3>
+            <p className="wb-reader-result__inspection-note">{inspectionNote}</p>
+          </article>
         ) : null}
+        {!isFallback && isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
       </div>
       {onRunAgain ? (
         <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
