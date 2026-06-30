@@ -74,6 +74,17 @@ const ANCHOR_MAX = 500;
 const WHY_MAX = 1000;
 const TERM_MAX = 120;
 
+// ── Read capture (Airtable) ──────────────────────────────────────────────────
+// Every read returned to a user — agent or fallback — is logged to the "Reader
+// Runs" table, so the reads people actually run are captured, not just rendered
+// and gone. The write is non-blocking and fail-safe (see captureRun + sendRead):
+// the 200 is flushed to the client first, the write happens after, and any
+// failure is swallowed and logged so capturing can never delay or break a read.
+// Uses the server-side AIRTABLE_TOKEN (never client-side); if it is unset the
+// capture is skipped silently and the read still returns.
+const AIRTABLE_BASE = "appfxHraqlcpP1AAP";
+const RUNS_TABLE = "tblqmHiOCQ5YSXBN3";
+
 // ── Spend ceiling ────────────────────────────────────────────────────────────
 // A soft monthly ceiling: once the month's ESTIMATED spend crosses the cap,
 // Reader stops calling Opus and serves the keyword cross-check instead. The
@@ -336,6 +347,57 @@ const COMPLETENESS = new Set(["full", "partial", "thin"]);
 const DEFAULT_INSPECTION_NOTE =
   "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.";
 
+// Capture one completed read to the Reader Runs table. Non-blocking by contract:
+// the caller (sendRead) has ALREADY flushed the 200 to the client, so nothing in
+// here can delay or break the read. Every failure path is swallowed and logged —
+// a capture miss must never surface to the user — and the whole write is skipped
+// when AIRTABLE_TOKEN is unset, so a missing/misscoped token degrades to "not
+// captured", never to a broken read. The what_was_left_out array is joined into
+// one newline-delimited string for the long-text field. typecast lets Airtable
+// match the Completeness string to its single-select choice.
+async function captureRun(input, payload) {
+  try {
+    if (!process.env.AIRTABLE_TOKEN) return;
+    const leftOut = Array.isArray(payload.what_was_left_out)
+      ? payload.what_was_left_out.join("\n")
+      : "";
+    const fields = {
+      Question: input.openQuestion || "",
+      Answer: input.answer || "",
+      "The Read": payload.the_read || "",
+      Completeness: payload.completeness || "",
+      "What Was Left Out": leftOut,
+      "How It Was Shaped": payload.how_it_was_shaped || "",
+      "Inspection Note": payload.inspection_note || "",
+      Source: payload.source || "",
+      Created: new Date().toISOString(),
+    };
+    const r = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields, typecast: true }),
+    });
+    if (!r.ok) {
+      const t = await r.text();
+      console.error(`[read] capture write failed: ${r.status} ${t.slice(0, 300)}`);
+    }
+  } catch (e) {
+    console.error(`[read] capture error: ${e && e.message ? e.message : "unknown"}`);
+  }
+}
+
+// Send the read, then capture it. res.json() flushes the response to the client
+// immediately, so the user sees no delay; awaiting captureRun afterward keeps the
+// serverless instance warm just long enough for the Airtable write to land.
+// captureRun is fail-safe internally, so this never throws back into the handler.
+async function sendRead(res, input, payload) {
+  res.status(200).json(payload);
+  await captureRun(input, payload);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "method" });
@@ -386,10 +448,10 @@ export default async function handler(req, res) {
 
   // Kill switch / missing key → honest fallback, no model call.
   if (process.env.READER_ENABLED === "0") {
-    return res.status(200).json(fallback(input, "disabled"));
+    return sendRead(res, input, fallback(input, "disabled"));
   }
   if (!process.env.READER_API_KEY) {
-    return res.status(200).json(fallback(input, "no_key"));
+    return sendRead(res, input, fallback(input, "no_key"));
   }
 
   // Spend ceiling: once the month's estimated spend crosses the cap, stop
@@ -399,7 +461,7 @@ export default async function handler(req, res) {
     console.warn(
       `[read] spend ceiling reached — est $${spendUsd.toFixed(2)} >= $${SPEND_CEILING_USD} for ${spendMonth}; serving keyword fallback`
     );
-    return res.status(200).json(fallback(input, "ceiling"));
+    return sendRead(res, input, fallback(input, "ceiling"));
   }
 
   // ── Model call ──────────────────────────────────────────────────────────────
@@ -427,7 +489,7 @@ export default async function handler(req, res) {
     if (!r.ok) {
       const detail = (await r.text()).slice(0, 300);
       console.warn(`[read] anthropic ${r.status}: ${detail}`);
-      return res.status(200).json(fallback(input, "api_error"));
+      return sendRead(res, input, fallback(input, "api_error"));
     }
 
     const data = await r.json();
@@ -445,7 +507,7 @@ export default async function handler(req, res) {
     }
   } catch (e) {
     console.warn(`[read] fetch failed: ${e && e.message}`);
-    return res.status(200).json(fallback(input, "network"));
+    return sendRead(res, input, fallback(input, "network"));
   }
 
   // Validate the model's JSON against the new shape. Anything off → honest
@@ -460,7 +522,7 @@ export default async function handler(req, res) {
     console.warn(
       `[read] bad model JSON — raw[0..600]=${JSON.stringify(modelText.slice(0, 600))}`
     );
-    return res.status(200).json(fallback(input, "bad_json"));
+    return sendRead(res, input, fallback(input, "bad_json"));
   }
 
   const whatLeftOut = Array.isArray(parsed.what_was_left_out)
@@ -473,7 +535,7 @@ export default async function handler(req, res) {
       ? parsed.inspection_note.trim()
       : DEFAULT_INSPECTION_NOTE;
 
-  return res.status(200).json({
+  return sendRead(res, input, {
     completeness: parsed.completeness,
     the_read: parsed.the_read.trim(),
     what_was_left_out: whatLeftOut,
