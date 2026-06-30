@@ -193,13 +193,24 @@ Here is the target. Match this voice, this economy, this structure:
 
   Look at what the answer is built around — your behavior. Don't overheat it, don't scratch it, toss it when it chips. Every tip is true. But notice it never quite says what the coating actually is: PTFE, part of the PFAS family, the 'forever chemicals' that don't break down in the environment or in you, and that have turned up in basically everyone's bloodstream. It didn't lie. It just quietly moved the conversation from 'what is this material' to 'how do I use it responsibly' — which is a much more relaxing topic for a cookware company than for the person eating off the pan. Ask it about PFAS directly and it'll tell you everything. It just won't bring it up on its own. That's the gap: you got a safety-tips answer to a what-is-this question, and you'd never know the bigger conversation existed unless you already knew to ask for it."
 
+WHERE YOUR AUTHORITY ENDS
+
+You inspect how the answer was built — what it surfaced, omitted, hedged, or shaped. That is your ground, and on it you are direct and unflinching: if the omission or the framing is damning, say so plainly. Do not soften a real finding — softening is itself the managing move you exist to expose.
+
+But stay on the answer's behavior, not on adjudicating the underlying issue:
+- Report what the answer did. Do not rule on who is right about the substance, or declare the underlying facts true or false as if from your own authority. "It left out X and framed it as Y" is your job. "X is true and the answer is wrong" is not — that's for the reader to judge with the fuller picture you've handed them.
+- If you cite a fact to show what was omitted, frame it as something the reader can verify, not as settled truth coming from you.
+- Never assert the model's motive, intent, bias, or censorship. Stay on observable behavior — surfaced, omitted, shaped — never "it wanted to" or "it's hiding."
+- On charged topics (health, law, politics, money, safety, identity), hold this line hardest: expose the shape of the answer without picking a side on the substance. The revelation is in what was left out, not in your verdict on the truth. Signal, not verdict.
+
 OUTPUT
 Valid JSON, nothing else:
 {
   "completeness": "full" | "partial" | "thin",
   "the_read": string,   // TL;DR first (1-2 sentences, the whole point), then the deeper breakdown. Plain, direct, dry. The product.
   "what_was_left_out": string[],   // specific substantive things a fuller answer includes, by meaning not keywords. Empty if none. IMPORTANT: if completeness is "full", this stays empty or at most one genuinely material item — do NOT pad it with depth-points the read already acknowledged are optional. A "full" verdict and a long left-out list contradict each other.
-  "how_it_was_shaped": string   // one line naming the move — framing, advocacy, deescalation, overload, false certainty, whatever it is, including any you named yourself. Empty if straight.
+  "how_it_was_shaped": string,   // one line naming the move — framing, advocacy, deescalation, overload, false certainty, whatever it is, including any you named yourself. Empty if straight.
+  "inspection_note": string   // one short line, plain and consistent in spirit: this read identifies how the answer behaved — what it surfaced, omitted, or shaped — not whether its underlying claims are true. Any facts you name are pointers for the reader to verify independently before citing, not settled findings from you.
 }
 
 The person should finish your read thinking: now I see the whole room — and I can decide for myself.`;
@@ -311,11 +322,19 @@ function fallback(input, reason) {
       `The Reader is unavailable right now (${reason}) — this is the honest fallback, not a real read. ${note}`,
     what_was_left_out: tc.missing.slice(),
     how_it_was_shaped: "",
+    inspection_note: DEFAULT_INSPECTION_NOTE,
     source: "fallback",
   };
 }
 
 const COMPLETENESS = new Set(["full", "partial", "thin"]);
+
+// Default for the inspection_note field when the model omits it or sends a blank.
+// Shared by the agent-validation path and the fallback so the note is identical
+// everywhere. Restates the contract: the read is about answer behavior, and any
+// facts it names are pointers to verify — not settled truth from the Reader.
+const DEFAULT_INSPECTION_NOTE =
+  "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -449,12 +468,17 @@ export default async function handler(req, res) {
     : [];
   const howShaped =
     typeof parsed.how_it_was_shaped === "string" ? parsed.how_it_was_shaped.trim() : "";
+  const inspectionNote =
+    typeof parsed.inspection_note === "string" && parsed.inspection_note.trim()
+      ? parsed.inspection_note.trim()
+      : DEFAULT_INSPECTION_NOTE;
 
   return res.status(200).json({
     completeness: parsed.completeness,
     the_read: parsed.the_read.trim(),
     what_was_left_out: whatLeftOut,
     how_it_was_shaped: howShaped,
+    inspection_note: inspectionNote,
     source: "agent",
   });
 }

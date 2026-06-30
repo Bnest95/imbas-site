@@ -2804,6 +2804,7 @@ function formatReaderResultCopy(result) {
   const comp = (result?.completeness || "partial").toUpperCase();
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
+  const inspectionNote = (result?.inspection_note || "").trim();
   const lines = [
     `Completeness: ${comp}`,
     "",
@@ -2816,6 +2817,9 @@ function formatReaderResultCopy(result) {
     "How it was shaped",
     shaped || "(none detected)",
   ];
+  if (inspectionNote) {
+    lines.push("", "Inspection note", inspectionNote);
+  }
   return lines.join("\n").trim();
 }
 
