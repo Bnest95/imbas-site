@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "redirects": [
     { "source": "/inspection/:shareId", "destination": "/inspection.html?share=:shareId", "permanent": false },
+    { "source": "/case/003", "destination": "/case/003.html", "permanent": true },
+    { "source": "/case/005", "destination": "/case/005.html", "permanent": true },
+    { "source": "/case/013", "destination": "/case/013.html", "permanent": true },
+    { "source": "/case/018", "destination": "/case/018.html", "permanent": true },
+    { "source": "/case/021", "destination": "/case/021.html", "permanent": true },
     { "source": "/briefing", "destination": "/field-notes/", "permanent": true },
     { "source": "/briefing/", "destination": "/field-notes/", "permanent": true },
     { "source": "/briefing/post-1", "destination": "/field-notes/", "permanent": true },
