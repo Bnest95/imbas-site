@@ -9427,5 +9427,78 @@ main > .close::before {
   }
 }
 
+/* =============================================================
+   HOMEPAGE MOBILE LANDING FINAL TUNE — roadmap trust + scan density
+   Index only; desktop unchanged (≤680px).
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .value.value--flow .value__beats {
+    gap: 0.82rem;
+    padding-top: 0.1rem;
+  }
+  main > .value.value--flow .value__beats::after {
+    top: 0.5rem;
+    bottom: 0.5rem;
+  }
+  main > .value.value--flow .value__beats li {
+    font-size: clamp(0.96rem, 3.5vw, 1.05rem);
+    line-height: 1.36;
+    gap: 0.58rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured {
+    padding: 1rem 0.9rem 1.05rem;
+    margin-bottom: 1.25rem;
+  }
+  main > .archive--home-preview .hp-arc-featured__title {
+    margin-bottom: 0.7rem;
+    font-size: clamp(1.32rem, 4.9vw, 1.48rem);
+    line-height: 1.22;
+  }
+  main > .archive--home-preview .hp-arc-featured__meta {
+    padding: 0.6rem 0;
+    margin-bottom: 0.65rem;
+  }
+  main > .archive--home-preview .hp-arc-featured__body {
+    gap: 0.7rem;
+  }
+  main > .archive--home-preview .hp-arc-featured__prompts {
+    gap: 0.6rem;
+  }
+  main > .archive--home-preview .hp-arc-prompt-field {
+    padding: 0.68rem 0.72rem;
+  }
+  main > .archive--home-preview .hp-arc-prompt-field__label {
+    margin-bottom: 0.3rem;
+  }
+  main > .archive--home-preview .hp-arc-prompt-field p {
+    font-size: 0.9rem;
+    line-height: 1.42;
+  }
+  main > .archive--home-preview .hp-arc-featured__finding {
+    padding: 0.72rem 0.78rem;
+  }
+  main > .archive--home-preview .hp-arc-featured__finding-label {
+    margin-bottom: 0.32rem;
+  }
+  main > .archive--home-preview .hp-arc-featured__finding p {
+    font-size: 0.9rem;
+    line-height: 1.44;
+  }
+  main > .archive--home-preview .archive__foot {
+    padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px) * 0.5);
+  }
+  main > .archive--home-preview .hp-arc-ledger-wrap {
+    margin-bottom: 0.15rem;
+  }
+
+  main > .close {
+    padding-bottom: calc(clamp(3.5rem, 10vw, 4.25rem) + max(0.85rem, env(safe-area-inset-bottom, 0px)));
+  }
+  body:has(main > section.hero) .site-footer {
+    padding-bottom: calc(var(--space-4) + max(0.85rem, env(safe-area-inset-bottom, 0px)));
+  }
+}
+
 
 /* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
