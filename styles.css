@@ -1877,11 +1877,6 @@ body:has(main > section.hero) .nav__menu-btn {
   color: rgba(252, 248, 236, 0.96);
   text-wrap: pretty;
 }
-.exists-bridge__scale {
-  font-weight: 500;
-  color: #FAF3E6;
-  letter-spacing: -0.005em;
-}
 .exists-bridge__definition {
   margin-top: clamp(1.5rem, 2.25vw, 2rem);
   margin-bottom: 0;
@@ -9500,6 +9495,80 @@ main > .close::before {
   }
 }
 
+/* =============================================================
+   HOMEPAGE MOBILE HERO RHYTHM — CTA breathing room, first-scroll transition
+   Index hero + proof + Why Imbas only; desktop unchanged (≤680px).
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .hero:has(+ .proof-strip--landing) .hero__stage {
+    padding-bottom: 0.72rem;
+  }
+
+  main > .hero .hero__capture-block {
+    margin-top: 0.32rem;
+    margin-bottom: 0.38rem;
+  }
+
+  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
+    margin-bottom: 0.52rem;
+  }
+
+  main > .hero .hero__microcopy {
+    margin-top: 0.88rem;
+    margin-bottom: 0.42rem;
+    line-height: 1.46;
+    max-width: 28ch;
+  }
+
+  main > .hero + .proof-strip--landing {
+    padding-top: 0.58rem;
+    padding-bottom: 0.68rem;
+  }
+
+  main > .hero + .proof-strip--landing .proof-strip__metrics {
+    row-gap: 0.16rem;
+  }
+
+  main > .hero + .proof-strip--landing .proof-strip__metric--scope {
+    margin-top: 0.12rem;
+  }
+
+  main > .proof-strip--landing + .stakes.stakes--context-lead {
+    margin-top: 0.55rem;
+    padding-top: clamp(2.15rem, 7.2vw, 2.65rem);
+  }
+
+  main > .stakes.stakes--context-lead .exists-bridge__thesis {
+    font-size: clamp(1.2rem, 4.4vw, 1.4rem);
+    line-height: 1.26;
+    margin-bottom: 0.72rem;
+  }
+
+  main > .stakes.stakes--context-lead .exists-bridge__problem {
+    font-size: clamp(1.04rem, 3.85vw, 1.2rem);
+    line-height: 1.34;
+  }
+
+  main > .stakes.stakes--context-lead .exists-bridge__definition {
+    font-size: clamp(0.94rem, 3.4vw, 1.04rem);
+    line-height: 1.42;
+    margin-top: 0.88rem;
+  }
+}
+
+.compounding__scale,
+.exists-bridge__scale {
+  font-weight: 500;
+  color: #faf3e6;
+  letter-spacing: -0.005em;
+}
+
+@media (max-width: 680px) {
+  main > .compounding .compounding__scale {
+    white-space: nowrap;
+  }
+}
+
 /* HOMEPAGE MOBILE ARCHIVE PREVIEW — proof strip, not full case read */
 @media (max-width: 680px) {
   main > .archive--home-preview .hp-arc-featured__prompts {
@@ -9559,6 +9628,91 @@ main > .close::before {
   main > .archive--home-preview .hp-arc-featured__link {
     margin-top: 0.15rem;
     padding-top: 0.55rem;
+  }
+}
+
+
+/* =============================================================
+   HOMEPAGE MOBILE CLOSE AURORA — richer Field Notes / lower close atmosphere
+   Index close + footer transition only; desktop unchanged (≤680px).
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .archive.archive--home-preview {
+    background:
+      radial-gradient(ellipse 78% 46% at 50% 100%, rgba(155, 188, 228, 0.26) 0%, transparent 66%),
+      radial-gradient(ellipse 44% 34% at 18% 18%, rgba(110, 150, 195, 0.12) 0%, transparent 74%),
+      linear-gradient(180deg, var(--bg-surface) 0%, #0e1624 100%);
+  }
+
+  main > .archive.archive--home-preview::before {
+    opacity: 0.78;
+  }
+
+  main > .close.section-scene {
+    --scene-aurora: 1;
+  }
+
+  main > .close.section-scene > .aurora-field {
+    opacity: 1;
+  }
+
+  main > .close {
+    background:
+      radial-gradient(ellipse 90% 54% at 50% 0%, rgba(100, 138, 188, 0.24) 0%, transparent 58%),
+      radial-gradient(ellipse 68% 46% at 84% 36%, rgba(125, 95, 168, 0.14) 0%, transparent 62%),
+      radial-gradient(ellipse 56% 42% at 16% 74%, rgba(var(--ember-rgb), 0.13) 0%, transparent 68%),
+      linear-gradient(180deg, #0b121c 0%, #0e1624 36%, var(--bg-surface) 70%, var(--bg-elevated) 100%);
+  }
+
+  main > .close.section-scene::before {
+    opacity: 0.76;
+    background:
+      radial-gradient(ellipse 54% 42% at 66% 30%, rgba(125, 162, 210, 0.2) 0%, transparent 70%),
+      radial-gradient(ellipse 46% 36% at 22% 80%, rgba(var(--ember-rgb), 0.09) 0%, transparent 72%),
+      radial-gradient(ellipse 38% 30% at 52% 52%, rgba(105, 82, 148, 0.11) 0%, transparent 68%);
+  }
+
+  main > .close .aurora-field__layer--a {
+    top: 6%;
+    left: 4%;
+    width: 82%;
+    height: 76%;
+    opacity: 0.84;
+    filter: blur(68px);
+    background: radial-gradient(ellipse 58% 52% at 50% 50%,
+      rgba(var(--ember-rgb), 0.34) 0%,
+      rgba(var(--ember-rgb), 0.13) 42%,
+      transparent 72%);
+  }
+
+  main > .close .aurora-field__layer--b {
+    top: 22%;
+    right: -8%;
+    width: 58%;
+    height: 58%;
+    opacity: 0.66;
+    filter: blur(76px);
+    background: radial-gradient(ellipse 55% 48% at 50% 50%,
+      rgba(135, 170, 215, 0.24) 0%,
+      rgba(110, 145, 190, 0.1) 45%,
+      transparent 68%);
+  }
+
+  main > .close .origin__bloom {
+    opacity: 0.54;
+    filter: blur(46px);
+  }
+
+  main > .close::after {
+    background:
+      linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.34) 0%, transparent 13%),
+      linear-gradient(0deg, rgba(var(--bg-deep-rgb), 0.4) 0%, transparent 11%);
+  }
+
+  body:has(main > section.hero) .site-footer {
+    background:
+      radial-gradient(ellipse 82% 50% at 50% 0%, rgba(95, 128, 172, 0.1) 0%, transparent 56%),
+      var(--bg-deep);
   }
 }
 
