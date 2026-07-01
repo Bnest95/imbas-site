@@ -9982,15 +9982,42 @@ main > .close::before {
 
 
 /* =============================================================
-   HOMEPAGE MOBILE PROOF STRIP FINAL — intentional credibility band
+   HOMEPAGE MOBILE PROOF STRIP EDGE BLEND — soft band, no hard shelf
    Index proof-strip presentation only; hero/Why Imbas/desktop unchanged (≤680px).
    ============================================================= */
 @media (max-width: 680px) {
   main > .hero + .proof-strip.proof-strip--landing {
-    background: var(--bg-deep);
-    border-top: 1px solid var(--line-faint);
-    border-bottom: 1px solid var(--line-faint);
+    position: relative;
+    overflow: visible;
+    background: transparent;
+    border-top: none;
+    border-bottom: none;
     box-shadow: none;
+  }
+
+  main > .hero + .proof-strip.proof-strip--landing::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -14px;
+    bottom: -14px;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(var(--bg-deep-rgb), 0.38) 16%,
+      rgba(var(--bg-deep-rgb), 0.68) 38%,
+      rgba(var(--bg-deep-rgb), 0.68) 62%,
+      rgba(var(--bg-deep-rgb), 0.38) 84%,
+      transparent 100%
+    );
+  }
+
+  main > .hero + .proof-strip.proof-strip--landing .proof-strip__meta {
+    position: relative;
+    z-index: 1;
   }
 }
 
