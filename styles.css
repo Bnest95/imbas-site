@@ -9982,51 +9982,15 @@ main > .close::before {
 
 
 /* =============================================================
-   HOMEPAGE MOBILE PROOF STRIP BACKGROUND — blend transition, no boxes
-   Index proof-strip atmosphere only; spacing/desktop unchanged (≤680px).
+   HOMEPAGE MOBILE PROOF STRIP FINAL — intentional credibility band
+   Index proof-strip presentation only; hero/Why Imbas/desktop unchanged (≤680px).
    ============================================================= */
 @media (max-width: 680px) {
-  main > .hero:has(+ .proof-strip--landing) {
-    overflow: visible;
-  }
-
-  main > .hero:has(+ .proof-strip--landing) .hero__fog {
-    background:
-      linear-gradient(180deg,
-        rgba(var(--bg-deep-rgb), 0.35) 0%,
-        transparent 14%,
-        transparent 100%);
-  }
-
-  main > .hero:has(+ .proof-strip--landing)::after {
-    background: linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.48) 0%, transparent 14%);
-  }
-
-  main > .hero:has(+ .proof-strip--landing) .aurora-field__layer--a {
-    height: min(760px, 86vh);
-    top: 18%;
-  }
-
-  main > .hero:has(+ .proof-strip--landing) .hero__aurora-focal {
-    top: 48%;
-    height: min(58vh, 500px);
-  }
-
-  main > .hero:has(+ .proof-strip--landing) .hero__aurora-radiance {
-    top: 48%;
-    height: min(88vh, 780px);
-  }
-
   main > .hero + .proof-strip.proof-strip--landing {
-    position: relative;
-    z-index: 1;
-    background: none;
-    border: none;
+    background: var(--bg-deep);
+    border-top: 1px solid var(--line-faint);
+    border-bottom: 1px solid var(--line-faint);
     box-shadow: none;
-  }
-
-  main > .proof-strip--landing + .stakes.stakes--context-lead {
-    background: none;
   }
 }
 
