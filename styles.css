@@ -9965,4 +9965,20 @@ main > .close::before {
 }
 
 
+/* =============================================================
+   HOMEPAGE MOBILE HERO FINAL MICRO-FIX — IMBAS scale + post-proof gap
+   Index hero only; desktop unchanged (≤680px). Two tweaks only.
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .hero .hero__monolith-text {
+    font-size: clamp(5.15rem, 25.2vw, 7.85rem);
+  }
+
+  main > .proof-strip--landing + .stakes.stakes--context-lead {
+    margin-top: 0.75rem;
+    padding-top: clamp(1.5rem, 5.25vw, 2rem);
+  }
+}
+
+
 /* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
