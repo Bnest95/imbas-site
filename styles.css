@@ -9981,4 +9981,37 @@ main > .close::before {
 }
 
 
+/* =============================================================
+   HOMEPAGE MOBILE PROOF STRIP BACKGROUND — blend transition, no boxes
+   Index proof-strip atmosphere only; spacing/desktop unchanged (≤680px).
+   ============================================================= */
+@media (max-width: 680px) {
+  main > .hero:has(+ .proof-strip--landing) .hero__fog {
+    background:
+      linear-gradient(180deg,
+        rgba(var(--bg-deep-rgb), 0.35) 0%,
+        transparent 14%,
+        transparent 100%);
+  }
+
+  main > .hero:has(+ .proof-strip--landing)::after {
+    background: linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.48) 0%, transparent 14%);
+  }
+
+  main > .hero + .proof-strip--landing {
+    background:
+      radial-gradient(ellipse 88% 120% at 50% 18%, rgba(var(--ember-rgb), 0.055), transparent 64%);
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+  }
+
+  main > .proof-strip--landing + .stakes.stakes--context-lead {
+    background:
+      radial-gradient(ellipse 72% 48% at 50% 0%, rgba(var(--ember-rgb), 0.04), transparent 72%),
+      linear-gradient(180deg, var(--bg-base) 0%, var(--bg-base) 52%, rgba(var(--bg-surface-rgb), 0.34) 100%);
+  }
+}
+
+
 /* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
