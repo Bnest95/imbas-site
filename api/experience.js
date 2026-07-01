@@ -13,7 +13,6 @@ const TOPIC_MAX = 500;
 const ANSWER_MAX = 12000;
 const EMAIL_MAX = 254;
 const HP_MAX = 1000;
-const UA_MAX = 500;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const hits = new Map();
@@ -26,8 +25,6 @@ function throttled(ip) {
   hits.set(ip, arr);
   return arr.length > max;
 }
-
-const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "method" });
@@ -71,7 +68,6 @@ export default async function handler(req, res) {
     return res.status(503).json({ ok: false, error: "unconfigured" });
   }
 
-  const ua = clip(typeof req.headers["user-agent"] === "string" ? req.headers["user-agent"] : "", UA_MAX);
   const fields = {
     Topic: topic,
     "AI Answer": aiAnswer,
@@ -79,7 +75,6 @@ export default async function handler(req, res) {
     "Source Page": "homepage / your-experience",
     Status: "new",
   };
-  if (ua) fields["User Agent"] = ua;
 
   try {
     const r = await fetch(`https://api.airtable.com/v0/${BASE}/${TABLE}`, {
