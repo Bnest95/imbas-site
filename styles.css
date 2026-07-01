@@ -9957,24 +9957,10 @@ main > .close::before {
     padding-bottom: 1.18rem;
   }
 
-  /* 6. Proof strip → Why Imbas Exists */
+  /* 6. Proof strip → Why Imbas Exists — modest transition; avoid empty band in stakes bg */
   main > .proof-strip--landing + .stakes.stakes--context-lead {
-    margin-top: 3.35rem;
-    padding-top: clamp(5.25rem, 17vw, 6.25rem);
-  }
-
-  @media (min-width: 386px) {
-    main > .proof-strip--landing + .stakes.stakes--context-lead {
-      margin-top: 3.65rem;
-      padding-top: clamp(5.65rem, 19vw, 6.85rem);
-    }
-  }
-
-  @media (min-width: 415px) {
-    main > .proof-strip--landing + .stakes.stakes--context-lead {
-      margin-top: 3.95rem;
-      padding-top: clamp(5.95rem, 20vw, 7.15rem);
-    }
+    margin-top: 1rem;
+    padding-top: clamp(2rem, 7vw, 2.65rem);
   }
 }
 
