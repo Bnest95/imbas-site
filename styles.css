@@ -2955,6 +2955,126 @@ body:has(main > section.hero) .nav__menu-btn {
     padding: var(--space-4) var(--space-5);
   }
 }
+
+/* =============================================================
+   RECORD COMPOUNDS — validated record → future inspection agent
+   Homepage compounding thesis; restrained, founder-led tone.
+   ============================================================= */
+.record-compounds {
+  position: relative;
+  padding: clamp(var(--space-5), 7vw, var(--space-7)) 0;
+  background: var(--bg-base);
+  border-top: 1px solid var(--line-faint);
+  overflow: hidden;
+  isolation: isolate;
+}
+.record-compounds::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 62% 44% at 50% 0%, rgba(var(--ember-rgb), 0.045), transparent 72%),
+    radial-gradient(ellipse 48% 36% at 82% 88%, var(--slate-deeper), transparent 74%);
+  opacity: 0.55;
+}
+.record-compounds__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--container-wide);
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 3rem);
+}
+.record-compounds__head {
+  margin-bottom: clamp(1.35rem, 3.5vw, 1.85rem);
+}
+.record-compounds__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.85rem, 2.8vw, 2.35rem);
+  line-height: 1.14;
+  letter-spacing: -0.015em;
+  color: var(--ink-luminous);
+  margin: 0;
+  max-width: 18ch;
+}
+.record-compounds__body {
+  max-width: 52ch;
+}
+.record-compounds__body p {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+  line-height: 1.58;
+  color: var(--ink-soft);
+  margin: 0;
+  text-wrap: pretty;
+}
+.record-compounds__body p + p {
+  margin-top: 1.15em;
+}
+.record-compounds__lead {
+  color: rgba(252, 248, 236, 0.94);
+  font-size: clamp(1.12rem, 1.45vw, 1.28rem);
+  line-height: 1.5;
+}
+.record-compounds__progression {
+  list-style: none;
+  margin: clamp(1.75rem, 4vw, 2.35rem) 0 0;
+  padding: clamp(1.1rem, 2.8vw, 1.45rem) 0 0;
+  border-top: 1px solid rgba(237, 228, 210, 0.07);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  max-width: 58rem;
+}
+.record-compounds__progression li {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.record-compounds__step {
+  font-family: var(--font-mono);
+  font-size: max(0.68rem, var(--mono-min));
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180, 192, 210, 0.78);
+  white-space: nowrap;
+}
+.record-compounds__progression li:not(:last-child)::after {
+  content: "→";
+  margin-left: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  color: rgba(180, 192, 210, 0.38);
+}
+@media (max-width: 680px) {
+  .record-compounds__progression {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.62rem;
+    max-width: none;
+  }
+  .record-compounds__progression li:not(:last-child)::after {
+    content: none;
+  }
+  .record-compounds__progression li + li::before {
+    content: "→";
+    margin-right: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgba(180, 192, 210, 0.32);
+  }
+  .record-compounds__step {
+    white-space: normal;
+    line-height: 1.35;
+  }
+}
+
 @media (max-width: 760px) {
   .audiences__grid { grid-template-columns: 1fr; }
   .audience--primary {
@@ -8942,6 +9062,11 @@ main > .audiences {
     radial-gradient(ellipse 50% 40% at 72% 28%, rgba(var(--bg-surface-rgb), 0.14), transparent 74%),
     linear-gradient(180deg, var(--bg-base) 0%, #181512 100%);
 }
+main > .record-compounds {
+  background:
+    radial-gradient(ellipse 58% 40% at 50% 0%, rgba(var(--ember-rgb), 0.04), transparent 72%),
+    linear-gradient(180deg, #181512 0%, var(--bg-base) 100%);
+}
 main > .archive.archive--home-preview {
   background:
     radial-gradient(ellipse 70% 42% at 50% 100%, var(--slate-bloom), transparent 68%),
@@ -9002,6 +9127,21 @@ main > .close::before {
   main > .audiences {
     padding-top: clamp(3.25rem, 9vw, 4rem);
     padding-bottom: clamp(3.25rem, 9vw, 4rem);
+  }
+  main > .record-compounds {
+    padding-top: clamp(2.35rem, 6.8vw, 2.85rem);
+    padding-bottom: clamp(2.35rem, 6.8vw, 2.85rem);
+  }
+  main > .record-compounds .record-compounds__title {
+    font-size: clamp(1.72rem, 6.2vw, 2rem);
+    max-width: none;
+  }
+  main > .record-compounds .record-compounds__body p {
+    font-size: clamp(1.02rem, 3.6vw, 1.12rem);
+    line-height: 1.56;
+  }
+  main > .record-compounds .record-compounds__lead {
+    font-size: clamp(1.08rem, 3.8vw, 1.18rem);
   }
   main > .archive.archive--home-preview {
     padding-top: clamp(3.25rem, 9vw, 4rem);
