@@ -10015,70 +10015,18 @@ main > .close::before {
   main > .hero:has(+ .proof-strip--landing) .hero__aurora-radiance {
     top: 48%;
     height: min(88vh, 780px);
-    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 36%, transparent 70%);
-    mask-image: linear-gradient(180deg, #000 0%, #000 36%, transparent 70%);
   }
 
   main > .hero + .proof-strip.proof-strip--landing {
     position: relative;
     z-index: 1;
-    overflow: visible;
     background: none;
     border: none;
     box-shadow: none;
   }
 
-  main > .hero + .proof-strip.proof-strip--landing::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 58%;
-    transform: translate(-50%, -50%);
-    width: min(168vw, 860px);
-    height: min(500px, 74vh);
-    pointer-events: none;
-    z-index: -1;
-    background: radial-gradient(
-      ellipse 82% 72% at 50% 48%,
-      rgba(110, 150, 195, 0.20) 0%,
-      rgba(var(--bg-surface-rgb), 0.40) 24%,
-      rgba(155, 188, 228, 0.11) 44%,
-      transparent 72%
-    );
-    filter: blur(26px);
-  }
-
   main > .proof-strip--landing + .stakes.stakes--context-lead {
-    position: relative;
-    overflow: visible;
-    background:
-      radial-gradient(ellipse 96% 62% at 50% 0%, rgba(155, 188, 228, 0.14), transparent 70%),
-      radial-gradient(ellipse 88% 80% at 50% 55%, rgba(var(--bg-surface-rgb), 0.34), transparent 76%);
-  }
-
-  main > .proof-strip--landing + .stakes.stakes--context-lead::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translate(-50%, -48%);
-    width: min(168vw, 860px);
-    height: min(520px, 78vh);
-    pointer-events: none;
-    z-index: 0;
-    background: radial-gradient(
-      ellipse 78% 68% at 50% 54%,
-      rgba(155, 188, 228, 0.16) 0%,
-      rgba(var(--bg-surface-rgb), 0.30) 30%,
-      rgba(110, 150, 195, 0.10) 50%,
-      transparent 76%
-    );
-    filter: blur(28px);
-  }
-
-  main > .proof-strip--landing + .stakes.stakes--context-lead .stakes__inner {
-    position: relative;
-    z-index: 1;
+    background: none;
   }
 }
 
