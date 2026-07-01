@@ -2873,29 +2873,33 @@ function inspectionSharePayload({ mode, sel, question, answer, model, topic, res
   };
 }
 
+function shareFailureMessage(data) {
+  if (data?.error === "unconfigured") {
+    return "Share links are not available yet. Copy the full record for now.";
+  }
+  return "Could not create share link. Copy the full record for now.";
+}
+
 function ReaderResultShareAction({ result, context }) {
   const [shareUrl, setShareUrl] = useState("");
   const [phase, setPhase] = useState("idle");
   const [errMsg, setErrMsg] = useState("");
 
-  const copyUrl = async (url) => {
-    await navigator.clipboard.writeText(url);
-    setPhase("copied");
-    setErrMsg("");
-    setTimeout(() => setPhase(shareUrl ? "ready" : "idle"), 1800);
+  const copyShareUrl = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setPhase("copied");
+      setErrMsg("");
+      setTimeout(() => setPhase("ready"), 1800);
+    } catch {
+      setPhase("error");
+      setErrMsg("Could not copy link. Select the link below and copy manually.");
+    }
   };
 
   const createShare = async () => {
-    if (shareUrl) {
-      try {
-        await copyUrl(shareUrl);
-      } catch {
-        setPhase("error");
-        setErrMsg("Could not copy link");
-        setTimeout(() => setPhase("ready"), 2200);
-      }
-      return;
-    }
+    if (phase === "creating") return;
     setPhase("creating");
     setErrMsg("");
     try {
@@ -2906,47 +2910,76 @@ function ReaderResultShareAction({ result, context }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.share_url) {
-        const msg =
-          data.error === "unconfigured"
-            ? "Share links are not available on this deployment yet."
-            : "Could not create share link";
+        if (data.error === "unconfigured") {
+          console.warn("[imbas] inspection-share unconfigured — set AIRTABLE_TOKEN and AIRTABLE_INSPECTION_SHARES_TABLE");
+        } else {
+          console.warn("[imbas] inspection-share failed", res.status, data);
+        }
         setPhase("error");
-        setErrMsg(msg);
-        setTimeout(() => setPhase("idle"), 2800);
+        setErrMsg(shareFailureMessage(data));
         return;
       }
       setShareUrl(data.share_url);
-      await copyUrl(data.share_url);
       setPhase("ready");
-    } catch {
+      try {
+        await navigator.clipboard.writeText(data.share_url);
+        setPhase("copied");
+        setTimeout(() => setPhase("ready"), 1600);
+      } catch {
+        /* success UI still shows manual copy */
+      }
+    } catch (err) {
+      console.warn("[imbas] inspection-share network error", err);
       setPhase("error");
-      setErrMsg("Network error — try again");
-      setTimeout(() => setPhase("idle"), 2800);
+      setErrMsg("Could not create share link. Copy the full record for now.");
     }
   };
 
-  const btnLabel =
-    phase === "creating"
-      ? "Creating…"
-      : phase === "copied"
-        ? "Copied"
-        : shareUrl
-          ? "Copy share link"
-          : "Create share link";
+  const showSuccess = shareUrl && (phase === "ready" || phase === "copied");
 
   return (
     <div className="wb-reader-result__share">
       <p className="wb-reader-result__share-trust">{READER_SHARE_TRUST_COPY}</p>
-      <Btn
-        kind="ghost"
-        small
-        className={`wb-reader-result__share-btn${phase === "copied" ? " is-copied" : ""}`}
-        onClick={createShare}
-        disabled={phase === "creating"}
-      >
-        {btnLabel}
-      </Btn>
-      {errMsg ? <span className="wb-reader-result__share-fail" role="status">{errMsg}</span> : null}
+      {showSuccess ? (
+        <div className="wb-reader-result__share-success" role="status">
+          <p className="wb-reader-result__share-success-title">Share link created</p>
+          <p className="wb-reader-result__share-url">
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer">{shareUrl}</a>
+          </p>
+          <div className="wb-reader-result__share-actions">
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wb-btn wb-btn--ghost wb-reader-result__share-open"
+            >
+              Open share record
+            </a>
+            <Btn
+              kind="ghost"
+              small
+              className={`wb-reader-result__share-copy${phase === "copied" ? " is-copied" : ""}`}
+              onClick={copyShareUrl}
+            >
+              {phase === "copied" ? "Copied" : "Copy share link"}
+            </Btn>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Btn
+            kind="ghost"
+            small
+            className="wb-reader-result__share-btn"
+            onClick={createShare}
+            disabled={phase === "creating"}
+            aria-busy={phase === "creating"}
+          >
+            {phase === "creating" ? "Creating share link…" : "Create share link"}
+          </Btn>
+          {errMsg ? <p className="wb-reader-result__share-fail" role="alert">{errMsg}</p> : null}
+        </>
+      )}
     </div>
   );
 }
@@ -3373,8 +3406,11 @@ function ReaderWorkbench() {
 
               <div className="wb-reader-v2__action-row" aria-busy={busy}>
                 <ReaderStatusLine state={statusState} />
-                <p className="wb-reader-v2__input-note">
+                <p className="wb-reader-v2__input-note wb-reader-v2__input-note--full">
                   Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them.
+                </p>
+                <p className="wb-reader-v2__input-note wb-reader-v2__input-note--compact">
+                  Not published to the reviewed archive. Do not paste sensitive, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying.
                 </p>
                 {!readerResult ? (
                   <div className="wb-action-row wb-reader-v2__cta-row">

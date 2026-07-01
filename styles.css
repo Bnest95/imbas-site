@@ -9500,5 +9500,67 @@ main > .close::before {
   }
 }
 
+/* HOMEPAGE MOBILE ARCHIVE PREVIEW — proof strip, not full case read */
+@media (max-width: 680px) {
+  main > .archive--home-preview .hp-arc-featured__prompts {
+    display: none;
+  }
+
+  main > .archive--home-preview .hp-arc-featured {
+    padding: 0.88rem 0.82rem 0.92rem;
+    margin-bottom: 1rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__label {
+    margin-bottom: 0.38rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__title {
+    margin-bottom: 0.55rem;
+    font-size: clamp(1.26rem, 4.6vw, 1.42rem);
+  }
+
+  main > .archive--home-preview .hp-arc-featured__meta {
+    padding: 0.48rem 0;
+    margin-bottom: 0.5rem;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__meta-item + .hp-arc-featured__meta-item {
+    padding-left: 0.55rem;
+    margin-left: 0.55rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__body {
+    gap: 0;
+    margin-bottom: 0.55rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__finding {
+    padding: 0.62rem 0.68rem;
+    border-radius: 4px;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__finding-label {
+    margin-bottom: 0.28rem;
+    font-size: 0.68rem;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__finding p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.86rem;
+    line-height: 1.42;
+  }
+
+  main > .archive--home-preview .hp-arc-featured__link {
+    margin-top: 0.15rem;
+    padding-top: 0.55rem;
+  }
+}
+
 
 /* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
