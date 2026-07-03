@@ -1728,6 +1728,18 @@ body:has(main > section.hero) .nav__menu-btn {
   max-width: 56ch;
   margin-bottom: var(--space-4);
 }
+/* Thesis reveal — broader Imbas ambition, secondary to the definition */
+.gap__thesis {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.02rem, 1.35vw, 1.14rem);
+  line-height: 1.52;
+  color: var(--ink-soft);
+  max-width: 52ch;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+  text-wrap: pretty;
+}
 .gap__link {
   display: inline-flex;
   align-items: center;
