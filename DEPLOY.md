@@ -175,6 +175,37 @@ after the 200 body is prepared, so the user still gets their inspection; the fai
 2. In Vercel function logs, filter `"event":"reader_runtime"` and confirm the run ends with `capture_succeeded` (not `capture_failed`). Success logs also carry presence booleans: `request_id_present`, `reader_model_present`, `prompt_version_present`, `source_content_hash_present`, `reader_output_hash_present` — all `true`. Hash **values** are never logged.
 3. Open the newest Reader Runs row and confirm the eight fields above are populated (`Request ID` matches the run's `request_id`; both hashes are 64 hex chars). Do not export or publish row contents or user answer text.
 
+## Case lineage + review-state fields (manual)
+
+Two additive fields close the pipeline's **public-case ↔ source-capture linkage** and **explicit
+review-state** gaps. Both are **populated by hand during review/promotion** — no serverless function
+writes them, so there is no runtime dependency and no automated-publication path. Created on base
+`appfxHraqlcpP1AAP` on 2026-07-03 via the Airtable schema API.
+
+| Table | Field | Type | Purpose |
+|-------|-------|------|---------|
+| Cases (`tblf7c2RYUolaTVXJ`) | `Source Candidate ID` | single line text | Back-link to the Repository `Candidate ID` a case was promoted from. Mirrors Repository's `Promoted To Case` for a bidirectional, plain-text (non-linked-record) lineage trail. Empty for legacy / hand-authored cases. |
+| Repository (`tblyPn1kp4PHbxTWz`) | `Reviewed At` | dateTime (ISO / `utc`) | Timestamp of the review decision. Completes the explicit review transition with existing `Triage Status` (state + terminal decision) and `Reviewed By` (reviewer). Empty until reviewed. |
+
+**Tracing a public case's lineage + review:** from a Case row, `Source Candidate ID` → the Repository
+candidate; that candidate carries `Triage Status` (`promoted` / `rejected` / `duplicate` = the
+decision), `Reviewed By` (who), and `Reviewed At` (when). The reverse edge
+(`Repository.Promoted To Case` → Case) already existed.
+
+**No code writes these.** `api/repository.js` sets `Triage Status: new` at intake and does **not**
+touch `Reviewed At` (a fresh candidate is unreviewed) or the Cases table (it never has). Promotion
+and review stay a manual call.
+
+**Manual creation (fresh base / new environment):** create `Source Candidate ID` as single line text
+on Cases, and `Reviewed At` as a dateTime field (ISO date, 24-hour, `utc` time zone) on Repository.
+Nothing deploys or breaks if they are absent — they are only read/written by hand in the Airtable UI.
+
+**Verification (schema-presence, not a runtime probe):** because these are human-populated, confirm
+the fields exist on the live base rather than firing a request. Via `get_table_schema` (or the
+Airtable UI): Cases `Source Candidate ID` = singleLineText (`fldCroOvdzKqBakID`); Repository
+`Reviewed At` = dateTime/`utc` (`fldIcFUw168lY4QtF`). Do **not** write probe rows into the validated
+Cases archive.
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.

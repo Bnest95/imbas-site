@@ -12,6 +12,7 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **Reader behavior:** `api/read.js` (agent writes prose read + `completeness`, `what_was_left_out`, `how_it_was_shaped`; does NOT compute the gap score/category — those are rubric-bound in the client).
 - **Capture / candidate pool:** `api/repository.js` (Repository table; Triage Status `new`; "Never touches the Cases archive").
 - **Inspection shares:** `api/inspection-share.js` (Visibility `unlisted`, Reviewed Status `Unreviewed`).
+- **Case lineage + review-state (schema):** Airtable `Cases.Source Candidate ID` (back-link to the source candidate) and `Repository.Reviewed At` (review timestamp), added 2026-07-03; manual, no code writer. See #19 and `DEPLOY.md`.
 - **Methodology / limitations:** `methodology.html`.
 - **Positioning:** `CLAUDE.md`, current as-submitted grant applications.
 
@@ -102,7 +103,7 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 
 ### 10. Candidate observation vs public case
 - **Category:** 5 (current archive state) + 7 (methodology description)
-- **Canonical interpretation:** Reader/Workbench inspections and Try-Imbas candidates are captured to a pool (Repository, Triage Status `new`) or as unlisted, Unreviewed inspection shares. They do **not** automatically become public cases. Cases are reviewed against preserved evidence, prompt conditions, and rubric before publication.
+- **Canonical interpretation:** Reader/Workbench inspections and Try-Imbas candidates are captured to a pool (Repository, Triage Status `new`) or as unlisted, Unreviewed inspection shares. They do **not** automatically become public cases. Cases are reviewed against preserved evidence, prompt conditions, and rubric before publication. If a candidate is later promoted, that lineage can be recorded manually (see #19); it is never an automatic path.
 - **Source of truth:** `api/repository.js`, `api/inspection-share.js`, `api/read.js` (capture only); `methodology.html` ("Human validation"); `how-it-works.html` ("Workbench inspections are provisional. Archive cases are reviewed before publication.").
 - **Temporal scope:** Current.
 - **May be used:** How-it-works, for-readers, methodology, homepage ("Reviewed, not published automatically").
@@ -111,7 +112,7 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 
 ### 11. Human review / "human-confirmed record"
 - **Category:** 5 (current archive state) / 7 (methodology description)
-- **Canonical interpretation:** Cases selected for the public record are human-reviewed against evidence, prompt conditions, and rubric before publication. The archive is described as a "human-confirmed record" in the sense of review-before-publication, not automated promotion.
+- **Canonical interpretation:** Cases selected for the public record are human-reviewed against evidence, prompt conditions, and rubric before publication. The archive is described as a "human-confirmed record" in the sense of review-before-publication, not automated promotion. The review transition itself can be recorded on the source candidate via `Triage Status` + `Reviewed By` + `Reviewed At` (see #19) — a manual record, not evidence of independent, blinded, or audited validation.
 - **Source of truth:** `methodology.html` ("Human validation").
 - **Temporal scope:** Current.
 - **May be used:** Methodology, how-it-works, archive.
@@ -133,7 +134,7 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **Source of truth:** `api/read.js` (`captureRun` provenance fields; `READER_PROMPT_VERSION`; `sourceContentHash` / `readerOutputHash`); Reader Runs `tblqmHiOCQ5YSXBN3` (fields: Request ID, Reader Model, Reader Prompt Version, Topic, Anchor, Inspected AI Model, Source Content Hash, Reader Output Hash); `methodology.html` ("Capture protocol"); `faq.html` (Q08, Q16).
 - **Temporal scope:** Current capture + run identity/hashing (live); cross-run lineage + verification workflow planned.
 - **May be used:** Methodology, FAQ, contact.
-- **Should not be used:** Do not claim a finished, verified provenance *system*. The hashes are content fingerprints for identity and dedup — NOT proof of review, validation, independent/blinded scoring, or inter-rater reliability — and they do NOT link runs into the Cases archive or establish public-case lineage. These fields live on Reader Runs (the raw run log), not the validated Cases archive. Keep cross-run analysis and verification workflow in planned/underway tense.
+- **Should not be used:** Do not claim a finished, verified provenance *system*. The hashes are content fingerprints for identity and dedup — NOT proof of review, validation, independent/blinded scoring, or inter-rater reliability — and they do NOT link runs into the Cases archive or establish public-case lineage. These fields live on Reader Runs (the raw run log), not the validated Cases archive. (Public-case ↔ source-capture lineage is instead carried by the separate manual `Cases.Source Candidate ID` back-link — see #19 — a human-populated pointer, not a hash-derived or automatic link.) Keep cross-run analysis and verification workflow in planned/underway tense.
 - **Update trigger:** A shipped provenance verification or cross-run lineage feature, or any change to the captured field set / hash construction in `api/read.js`.
 
 ### 14. Cross-model comparison
@@ -180,6 +181,15 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **May be used:** Homepage compounding section, how-it-works closing, as upside/roadmap.
 - **Should not be used:** Never as a current capability. Keep in "can become / next" tense.
 - **Update trigger:** Any real work shipped toward a trained inspection agent or copilot.
+
+### 19. Case lineage + review-state fields (schema)
+- **Category:** 5 (current archive state) + 7 (methodology description)
+- **Canonical interpretation:** Two additive Airtable fields (added 2026-07-03) give the pipeline a recordable, manual lineage-and-review trail with no code or automation. `Cases.Source Candidate ID` (singleLineText, `fldCroOvdzKqBakID`) is a plain-text back-link to the Repository `Candidate ID` a case was promoted from — the reverse edge of the existing `Repository.Promoted To Case`, making public-case ↔ source-capture lineage bidirectional. `Repository.Reviewed At` (dateTime ISO/UTC, `fldIcFUw168lY4QtF`) records when a candidate's review decision was taken, completing the explicit review transition alongside the existing `Triage Status` (state + terminal decision: promoted/rejected/duplicate) and `Reviewed By` (reviewer). A public case reaches its full review record by following its `Source Candidate ID` into the pool; Cases itself stays lean (no review fields on it).
+- **Source of truth:** Airtable Cases `tblf7c2RYUolaTVXJ` (`Source Candidate ID`), Repository `tblyPn1kp4PHbxTWz` (`Reviewed At`, `Triage Status`, `Reviewed By`, `Promoted To Case`); `DEPLOY.md` ("Case lineage + review-state fields").
+- **Temporal scope:** Current (schema live 2026-07-03).
+- **May be used:** Internal pipeline/provenance description, methodology hardening notes.
+- **Should not be used:** These are recordable fields populated by MANUAL review — not automated, not retroactive (legacy/hand-authored cases have an empty `Source Candidate ID`), and not a validation, audit, independent/blinded scoring, or inter-rater-reliability process. A field existing ≠ any given case being linked or reviewed. Do not describe lineage or review-state as automatic, complete, or independently verified; promotion and review remain manual. No application code writes either field.
+- **Update trigger:** A code path that writes either field, a change to the review-state field set, or a documented independent/blinded review process.
 
 ---
 
