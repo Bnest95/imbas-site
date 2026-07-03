@@ -114,6 +114,7 @@ test("durable rate limit uses redis when configured", async () => {
       calls.push(JSON.parse(init.body));
       const cmd = JSON.parse(init.body);
       if (Array.isArray(cmd[0])) {
+        assert.ok(String(url).endsWith("/pipeline"), "pipeline must POST to /pipeline");
         const results = cmd.map((c) => {
           const key = c[1];
           if (c[0] === "INCR") {
@@ -164,6 +165,7 @@ test("durable rate limit honors Vercel Marketplace KV_REST_API_* names", async (
   global.fetch = async (url, init) => {
     const cmd = JSON.parse(init.body);
     if (Array.isArray(cmd[0])) {
+      assert.ok(String(url).endsWith("/pipeline"), "pipeline must POST to /pipeline");
       const results = cmd.map((c) => {
         const key = c[1];
         if (c[0] === "INCR") {

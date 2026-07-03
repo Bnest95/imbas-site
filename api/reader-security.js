@@ -117,7 +117,9 @@ async function redisPipeline(commands, env = process.env, signal) {
   if (!base || !token) return { ok: false, reason: "no_store" };
   const timeoutSignal = signal || AbortSignal.timeout(2000);
   try {
-    const res = await fetch(base, {
+    // Upstash REST serves pipelines at /pipeline; the base endpoint only accepts
+    // a single command, so posting an array-of-arrays there returns HTTP 400.
+    const res = await fetch(`${base}/pipeline`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
