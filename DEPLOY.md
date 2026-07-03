@@ -175,12 +175,13 @@ after the 200 body is prepared, so the user still gets their inspection; the fai
 2. In Vercel function logs, filter `"event":"reader_runtime"` and confirm the run ends with `capture_succeeded` (not `capture_failed`). Success logs also carry presence booleans: `request_id_present`, `reader_model_present`, `prompt_version_present`, `source_content_hash_present`, `reader_output_hash_present` — all `true`. Hash **values** are never logged.
 3. Open the newest Reader Runs row and confirm the eight fields above are populated (`Request ID` matches the run's `request_id`; both hashes are 64 hex chars). Do not export or publish row contents or user answer text.
 
-## Case lineage + review-state fields (manual)
+## Case lineage + review-state fields
 
 Two additive fields close the pipeline's **public-case ↔ source-capture linkage** and **explicit
-review-state** gaps. Both are **populated by hand during review/promotion** — no serverless function
-writes them, so there is no runtime dependency and no automated-publication path. Created on base
-`appfxHraqlcpP1AAP` on 2026-07-03 via the Airtable schema API.
+review-state** gaps. They are **populated during review/promotion — by hand or via the internal
+`promote-candidate` CLI (below)** — and **no serverless function writes them**, so there is no
+runtime dependency and no automated-publication path. Created on base `appfxHraqlcpP1AAP` on
+2026-07-03 via the Airtable schema API.
 
 | Table | Field | Type | Purpose |
 |-------|-------|------|---------|
@@ -192,9 +193,32 @@ candidate; that candidate carries `Triage Status` (`promoted` / `rejected` / `du
 decision), `Reviewed By` (who), and `Reviewed At` (when). The reverse edge
 (`Repository.Promoted To Case` → Case) already existed.
 
-**No code writes these.** `api/repository.js` sets `Triage Status: new` at intake and does **not**
-touch `Reviewed At` (a fresh candidate is unreviewed) or the Cases table (it never has). Promotion
-and review stay a manual call.
+**Writer — the internal `promote-candidate` CLI, not a serverless route.** The `/api` request path
+still never writes these fields: `api/repository.js` sets `Triage Status: new` at intake and does
+**not** touch `Reviewed At` (a fresh candidate is unreviewed) or the Cases table (it never has).
+Promotion is instead recorded by a human-run helper, `scripts/promote-candidate.mjs` — Brendan runs
+it by hand at promotion time; there is no automatic, scheduled, or request-triggered path, so the
+no-automated-publication guarantee holds. Given an **already-created** Case, it looks up both rows
+first, then writes only:
+
+- Repository (found by `Candidate ID`): `Reviewed At` = now, `Triage Status` = `promoted`,
+  `Promoted To Case` = `<case>`, and `Reviewed By` when `--by` is passed;
+- Cases (found by `Case ID`): `Source Candidate ID` = `<candidate>`.
+
+It fails safely with no writes if either ID is missing or ambiguous, reads both rows back to verify
+the write, requests only ID/state columns (never answer, prompt, or email content), and reads the
+token from `AIRTABLE_TOKEN` in the environment (never printed, never committed). It never creates a
+case, publishes, scores, or validates. Run a `--dry-run` first (it looks up both rows and prints the
+planned writes without changing anything), then the real write:
+
+```
+# dry run — resolves both rows, writes nothing:
+AIRTABLE_TOKEN=… node scripts/promote-candidate.mjs --candidate CAND-abc12 --case 005 --dry-run
+# real write (optionally record the reviewer):
+AIRTABLE_TOKEN=… node scripts/promote-candidate.mjs --candidate CAND-abc12 --case 005 --by "Brendan Nestor"
+```
+
+Mapping/validation logic is unit-tested with no live Airtable calls (`test/promote-candidate.test.mjs`).
 
 **Manual creation (fresh base / new environment):** create `Source Candidate ID` as single line text
 on Cases, and `Reviewed At` as a dateTime field (ISO date, 24-hour, `utc` time zone) on Repository.
