@@ -68,8 +68,15 @@ import {
   checkGlobalSpendCeiling,
   addGlobalSpend,
   estimateCostUsd,
-  logSecurityEvent,
 } from "./reader-security.js";
+import {
+  createRuntimeContext,
+  markPhase,
+  elapsedMs,
+  totalDurationMs,
+  logRuntimeEvent,
+  CAPTURE_TARGET,
+} from "./reader-runtime.js";
 
 const MODEL = "claude-opus-4-7";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
@@ -297,7 +304,6 @@ function extractJson(text) {
 // (not silent) so a fallback is visible in the Vercel function logs.
 function fallback(input, reason) {
   const tc = input.textcheck;
-  console.warn(`[read] fallback (${reason}) — agent read unavailable`);
   const hasTerms = tc.found.length > 0 || tc.missing.length > 0;
   const note = hasTerms
     ? `The keyword cross-check ${tc.surfaced ? "found" : "did not find"} the tracked terms in the answer.`
@@ -322,21 +328,38 @@ const COMPLETENESS = new Set(["full", "partial", "thin"]);
 const DEFAULT_INSPECTION_NOTE =
   "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.";
 
-// Capture one completed read to the Reader Runs table. Non-blocking by contract:
-// the caller (sendRead) has ALREADY flushed the 200 to the client, so nothing in
-// here can delay or break the read. Every failure path is swallowed and logged —
-// a capture miss must never surface to the user — and the whole write is skipped
-// when AIRTABLE_TOKEN is unset, so a missing/misscoped token degrades to "not
-// captured", never to a broken read. The what_was_left_out array is joined into
-// one newline-delimited string for the long-text field. typecast lets Airtable
-// match the Completeness string to its single-select choice.
-async function captureRun(input, payload) {
+// Best-effort capture to Reader Runs. The user response is returned even when
+// capture fails — failures are logged as reader_runtime capture_failed events.
+// Never log field values or answer content from the write payload.
+export async function captureRun(input, payload, ctx, deps = {}) {
+  const env = deps.env || process.env;
+  const fetchImpl = deps.fetch || fetch;
+  const requestId = ctx?.request_id;
+  const route = ctx?.route || "/api/read";
+  markPhase(ctx, "capture_start");
+  logRuntimeEvent("capture_started", {
+    request_id: requestId,
+    route,
+    target: CAPTURE_TARGET,
+  });
+
+  const fail = (failureClass, extra = {}) => {
+    const duration_ms = elapsedMs(ctx, "capture_start");
+    logRuntimeEvent("capture_failed", {
+      request_id: requestId,
+      route,
+      target: CAPTURE_TARGET,
+      failure_class: failureClass,
+      duration_ms,
+      user_response_returned: true,
+      ...extra,
+    });
+    return { ok: false, failure_class: failureClass };
+  };
+
   try {
-    if (!process.env.AIRTABLE_TOKEN) {
-      console.warn(
-        "[read] CAPTURE SKIPPED — AIRTABLE_TOKEN unset; Reader Runs is not recording (the read itself is unaffected)"
-      );
-      return;
+    if (!env.AIRTABLE_TOKEN) {
+      return fail("unconfigured");
     }
     const leftOut = Array.isArray(payload.what_was_left_out)
       ? payload.what_was_left_out.join("\n")
@@ -356,10 +379,10 @@ async function captureRun(input, payload) {
     const timer = setTimeout(() => ctrl.abort(), CAPTURE_TIMEOUT_MS);
     let r;
     try {
-      r = await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
+      r = await fetchImpl(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}`,
+          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ fields, typecast: true }),
@@ -369,21 +392,20 @@ async function captureRun(input, payload) {
       clearTimeout(timer);
     }
     if (!r.ok) {
-      const t = await r.text();
-      console.error(
-        `[read] CAPTURE FAILED — Airtable ${r.status}: ${t.slice(0, 300)} — Reader Runs did not record this run (the read was returned to the user normally)`
-      );
+      return fail("airtable_http", { upstream_status: r.status });
     }
+    logRuntimeEvent("capture_succeeded", {
+      request_id: requestId,
+      route,
+      target: CAPTURE_TARGET,
+      duration_ms: elapsedMs(ctx, "capture_start"),
+      user_response_returned: true,
+    });
+    return { ok: true };
   } catch (e) {
-    const reason =
-      e && e.name === "AbortError"
-        ? `timed out after ${CAPTURE_TIMEOUT_MS}ms`
-        : e && e.message
-        ? e.message
-        : "unknown";
-    console.error(
-      `[read] CAPTURE ERROR — ${reason} — Reader Runs did not record this run (the read was returned to the user normally)`
-    );
+    const failureClass =
+      e && e.name === "AbortError" ? "timeout" : e && e.message ? "network" : "unknown";
+    return fail(failureClass);
   }
 }
 
@@ -394,193 +416,296 @@ async function captureRun(input, payload) {
 // fail-safe internally — it early-returns when AIRTABLE_TOKEN is unset, swallows
 // every error, and now aborts its own fetch after CAPTURE_TIMEOUT_MS — so it never
 // throws and adds at most that timeout to an already multi-second read.
-async function sendRead(res, input, payload) {
-  await captureRun(input, payload);
+async function sendRead(res, input, payload, ctx, deps = {}) {
+  if (payload.source === "fallback") {
+    logRuntimeEvent("fallback_returned", {
+      request_id: ctx.request_id,
+      route: ctx.route,
+      reason: ctx.fallback_reason || "unknown",
+      inference_skipped: !!ctx.inference_skipped,
+    });
+  }
+  await captureRun(input, payload, ctx, deps);
+  logRuntimeEvent("response_returned", {
+    request_id: ctx.request_id,
+    route: ctx.route,
+    status: 200,
+    source: payload.source,
+    duration_ms: totalDurationMs(ctx),
+    capture_duration_ms: elapsedMs(ctx, "capture_start"),
+  });
   res.status(200).json(payload);
 }
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "method" });
-  }
+function rejectValidation(res, ctx, reason, status, body = {}) {
+  logRuntimeEvent("validation_rejected", {
+    request_id: ctx.request_id,
+    route: ctx.route,
+    reason,
+    status,
+    duration_ms: totalDurationMs(ctx),
+  });
+  return res.status(status).json({ error: body.error || reason, request_id: ctx.request_id, ...body });
+}
 
-  const contentLength = Number(req.headers["content-length"] || 0);
-  if (contentLength > MAX_BODY) {
-    logSecurityEvent("input_rejected", { reason: "body_too_large", status: 413 });
-    return res.status(413).json({ error: "too_large" });
-  }
+function rejectSecurity(res, ctx, reason, status, extra = {}) {
+  logRuntimeEvent("security_rejected", {
+    request_id: ctx.request_id,
+    route: ctx.route,
+    reason,
+    status,
+    duration_ms: totalDurationMs(ctx),
+    ...extra,
+  });
+  const body = { error: extra.error || "capacity", request_id: ctx.request_id };
+  if (extra.message) body.message = extra.message;
+  return res.status(status).json(body);
+}
 
-  const body = req.body;
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    logSecurityEvent("input_rejected", { reason: "invalid_body", status: 400 });
-    return res.status(400).json({ error: "invalid" });
-  }
+export function createReadHandler(deps = {}) {
+  const env = deps.env || process.env;
+  const fetchImpl = deps.fetch || fetch;
 
-  try {
-    if (Buffer.byteLength(JSON.stringify(body), "utf8") > MAX_BODY) {
-      logSecurityEvent("input_rejected", { reason: "body_too_large", status: 413 });
-      return res.status(413).json({ error: "too_large" });
+  return async function handler(req, res) {
+    const ctx = createRuntimeContext();
+    logRuntimeEvent("request_received", {
+      request_id: ctx.request_id,
+      route: ctx.route,
+    });
+
+    if (req.method !== "POST") {
+      return rejectValidation(res, ctx, "method_not_allowed", 405, { error: "method" });
     }
-  } catch {
-    logSecurityEvent("input_rejected", { reason: "invalid_body", status: 400 });
-    return res.status(400).json({ error: "invalid" });
-  }
 
-  const caseObj = body.case || {};
-  const textcheck = body.textcheck || {};
-  const found = Array.isArray(textcheck.found)
-    ? textcheck.found.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
-    : [];
-  const missing = Array.isArray(textcheck.missing)
-    ? textcheck.missing.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
-    : [];
+    const contentLength = Number(req.headers["content-length"] || 0);
+    if (contentLength > MAX_BODY) {
+      return rejectValidation(res, ctx, "body_too_large", 413, { error: "too_large" });
+    }
 
-  const input = {
-    topic: clip(str(caseObj.topic), TOPIC_MAX),
-    anchor: clip(str(caseObj.anchor), ANCHOR_MAX),
-    whyItMatters: clip(str(caseObj.why_it_matters), WHY_MAX),
-    openQuestion: clip(str(body.open_question), QUESTION_MAX),
-    answer: clip(str(body.answer), ANSWER_MAX),
-    textcheck: {
-      surfaced: !!textcheck.surfaced,
-      found,
-      missing,
-    },
-  };
+    const body = req.body;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return rejectValidation(res, ctx, "invalid_body", 400, { error: "invalid" });
+    }
 
-  // Empty-body gate: require a real question + answer before spending a throttle
-  // slot or a paid Opus call. A 400 here degrades gracefully — the client treats a
-  // non-ok read as a failure and shows its honest local fallback, never a break.
-  if (
-    input.answer.trim().length < ANSWER_MIN ||
-    input.openQuestion.trim().length < QUESTION_MIN
-  ) {
-    logSecurityEvent("input_rejected", { reason: "empty", status: 400 });
-    return res.status(400).json({ error: "empty" });
-  }
+    try {
+      if (Buffer.byteLength(JSON.stringify(body), "utf8") > MAX_BODY) {
+        return rejectValidation(res, ctx, "body_too_large", 413, { error: "too_large" });
+      }
+    } catch {
+      return rejectValidation(res, ctx, "invalid_body", 400, { error: "invalid" });
+    }
 
-  // Server-side 1200-word cap on the pasted answer. Reject rather than clip so the
-  // Reader never inspects a truncated answer and reports false omissions.
-  if (wordCount(input.answer) > ANSWER_WORD_MAX) {
-    logSecurityEvent("input_rejected", { reason: "answer_too_long", status: 400 });
-    return res.status(400).json({ error: "too_long", limit_words: ANSWER_WORD_MAX });
-  }
+    const caseObj = body.case || {};
+    const textcheck = body.textcheck || {};
+    const found = Array.isArray(textcheck.found)
+      ? textcheck.found.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
+      : [];
+    const missing = Array.isArray(textcheck.missing)
+      ? textcheck.missing.filter((t) => typeof t === "string").slice(0, TERM_COUNT_MAX).map((t) => clip(t, TERM_MAX))
+      : [];
 
-  const ip = deriveClientIp(req);
-  const rate = await checkReaderRateLimits(ip);
-  if (!rate.allowed) {
-    logSecurityEvent("rate_limited", {
-      ip_hash: rate.ipHash,
-      tier: rate.tier,
-      durable: rate.durable,
-      store_error: !!rate.storeError,
-    });
-    return res.status(429).json({ error: "capacity", message: CAPACITY_MESSAGE });
-  }
-
-  // Kill switch / missing key → honest fallback, no model call.
-  if (process.env.READER_ENABLED === "0") {
-    logSecurityEvent("reader_disabled", { ip_hash: rate.ipHash });
-    return sendRead(res, input, fallback(input, "disabled"));
-  }
-  if (!process.env.READER_API_KEY) {
-    logSecurityEvent("reader_unconfigured", { ip_hash: rate.ipHash });
-    return sendRead(res, input, fallback(input, "no_key"));
-  }
-
-  const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD);
-  if (spend.blocked) {
-    logSecurityEvent("spend_ceiling", {
-      month: spend.month,
-      durable: spend.durable,
-      store_error: !!spend.storeError,
-    });
-    return res.status(429).json({ error: "capacity", message: CAPACITY_MESSAGE });
-  }
-
-  // ── Model call ──────────────────────────────────────────────────────────────
-  // Opus 4.7: adaptive thinking only (no budget_tokens); temperature/top_p/top_k
-  // are removed on this model and would 400, so none are sent.
-  let modelText = "";
-  try {
-    const r = await fetch(ANTHROPIC_URL, {
-      method: "POST",
-      headers: {
-        "x-api-key": process.env.READER_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
+    const input = {
+      topic: clip(str(caseObj.topic), TOPIC_MAX),
+      anchor: clip(str(caseObj.anchor), ANCHOR_MAX),
+      whyItMatters: clip(str(caseObj.why_it_matters), WHY_MAX),
+      openQuestion: clip(str(body.open_question), QUESTION_MAX),
+      answer: clip(str(body.answer), ANSWER_MAX),
+      textcheck: {
+        surfaced: !!textcheck.surfaced,
+        found,
+        missing,
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        thinking: { type: "adaptive" },
-        // cache_control on the big stable prompt; harmless if below the cache floor.
-        system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-        messages: [{ role: "user", content: buildUserMessage(input) }],
-      }),
-    });
+    };
 
-    if (!r.ok) {
-      const detail = (await r.text()).slice(0, 300);
-      logSecurityEvent("inference_failed", { status: r.status, detail_len: detail.length });
-      return sendRead(res, input, fallback(input, "api_error"));
+    if (
+      input.answer.trim().length < ANSWER_MIN ||
+      input.openQuestion.trim().length < QUESTION_MIN
+    ) {
+      return rejectValidation(res, ctx, "empty", 400, { error: "empty" });
     }
 
-    const data = await r.json();
-    modelText = Array.isArray(data.content)
-      ? data.content.filter((b) => b && b.type === "text").map((b) => b.text).join("")
-      : "";
-    if (data.usage) {
-      const cost = estimateCostUsd(data.usage, USD_PER_MTOK);
-      const recorded = await addGlobalSpend(cost);
-      logSecurityEvent("inference_usage", {
-        input_tokens: data.usage.input_tokens || 0,
-        output_tokens: data.usage.output_tokens || 0,
-        cache_read_tokens: data.usage.cache_read_input_tokens ?? 0,
-        cache_write_tokens: data.usage.cache_creation_input_tokens ?? 0,
-        month: recorded.month,
-        durable_spend: recorded.durable,
-        durable_rate: rate.durable,
+    if (wordCount(input.answer) > ANSWER_WORD_MAX) {
+      return rejectValidation(res, ctx, "answer_too_long", 400, {
+        error: "too_long",
+        limit_words: ANSWER_WORD_MAX,
       });
     }
-  } catch (e) {
-    logSecurityEvent("inference_failed", {
-      reason: e && e.message ? String(e.message).slice(0, 120) : "network",
+
+    markPhase(ctx, "security_start");
+    const ip = deriveClientIp(req);
+    const rate = await checkReaderRateLimits(ip, deps);
+    if (!rate.allowed) {
+      return rejectSecurity(res, ctx, "rate_limited", 429, {
+        error: "capacity",
+        message: CAPACITY_MESSAGE,
+        rejection_tier: rate.tier,
+        durable_rate: rate.durable,
+        store_error: !!rate.storeError,
+      });
+    }
+
+    if (env.READER_ENABLED === "0") {
+      ctx.fallback_reason = "disabled";
+      ctx.inference_skipped = true;
+      return sendRead(res, input, fallback(input, "disabled"), ctx, deps);
+    }
+    if (!env.READER_API_KEY) {
+      ctx.fallback_reason = "no_key";
+      ctx.inference_skipped = true;
+      return sendRead(res, input, fallback(input, "no_key"), ctx, deps);
+    }
+
+    const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
+    const security_duration_ms = elapsedMs(ctx, "security_start");
+    if (spend.blocked) {
+      return rejectSecurity(res, ctx, "spend_ceiling", 429, {
+        error: "capacity",
+        message: CAPACITY_MESSAGE,
+        durable_spend: spend.durable,
+        store_error: !!spend.storeError,
+        security_duration_ms,
+      });
+    }
+    ctx.durable_rate = rate.durable;
+    ctx.durable_spend = spend.durable;
+
+    let modelText = "";
+    markPhase(ctx, "inference_start");
+    logRuntimeEvent("inference_started", {
+      request_id: ctx.request_id,
+      route: ctx.route,
+      model: MODEL,
+      durable_rate: ctx.durable_rate,
+      durable_spend: ctx.durable_spend,
+      security_duration_ms,
     });
-    return sendRead(res, input, fallback(input, "network"));
-  }
 
-  // Validate the model's JSON against the new shape. Anything off → honest
-  // fallback, never a faked read.
-  const parsed = extractJson(modelText);
-  if (
-    !parsed ||
-    !COMPLETENESS.has(parsed.completeness) ||
-    typeof parsed.the_read !== "string" ||
-    !parsed.the_read.trim()
-  ) {
-    console.warn(
-      `[read] bad model JSON — raw[0..600]=${JSON.stringify(modelText.slice(0, 600))}`
+    try {
+      const r = await fetchImpl(ANTHROPIC_URL, {
+        method: "POST",
+        headers: {
+          "x-api-key": env.READER_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: MAX_TOKENS,
+          thinking: { type: "adaptive" },
+          system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+          messages: [{ role: "user", content: buildUserMessage(input) }],
+        }),
+      });
+
+      if (!r.ok) {
+        const inference_duration_ms = elapsedMs(ctx, "inference_start");
+        logRuntimeEvent("inference_failed", {
+          request_id: ctx.request_id,
+          route: ctx.route,
+          upstream_status: r.status,
+          inference_duration_ms,
+          durable_rate: ctx.durable_rate,
+          durable_spend: ctx.durable_spend,
+        });
+        ctx.fallback_reason = "api_error";
+        return sendRead(res, input, fallback(input, "api_error"), ctx, deps);
+      }
+
+      const data = await r.json();
+      modelText = Array.isArray(data.content)
+        ? data.content.filter((b) => b && b.type === "text").map((b) => b.text).join("")
+        : "";
+      const inference_duration_ms = elapsedMs(ctx, "inference_start");
+      const usageFields = {};
+      if (data.usage) {
+        const cost = estimateCostUsd(data.usage, USD_PER_MTOK);
+        const recorded = await addGlobalSpend(cost, deps);
+        usageFields.input_tokens = data.usage.input_tokens || 0;
+        usageFields.output_tokens = data.usage.output_tokens || 0;
+        usageFields.cache_read_tokens = data.usage.cache_read_input_tokens ?? 0;
+        usageFields.cache_write_tokens = data.usage.cache_creation_input_tokens ?? 0;
+        usageFields.durable_spend = recorded.durable;
+        ctx.durable_spend = recorded.durable;
+      }
+      logRuntimeEvent("inference_succeeded", {
+        request_id: ctx.request_id,
+        route: ctx.route,
+        model: MODEL,
+        inference_duration_ms,
+        durable_rate: ctx.durable_rate,
+        ...usageFields,
+      });
+    } catch (e) {
+      logRuntimeEvent("inference_failed", {
+        request_id: ctx.request_id,
+        route: ctx.route,
+        failure_class: e && e.name === "AbortError" ? "timeout" : "network",
+        inference_duration_ms: elapsedMs(ctx, "inference_start"),
+        durable_rate: ctx.durable_rate,
+        durable_spend: ctx.durable_spend,
+      });
+      ctx.fallback_reason = "network";
+      return sendRead(res, input, fallback(input, "network"), ctx, deps);
+    }
+
+    markPhase(ctx, "parse_start");
+    const parsed = extractJson(modelText);
+    if (
+      !parsed ||
+      !COMPLETENESS.has(parsed.completeness) ||
+      typeof parsed.the_read !== "string" ||
+      !parsed.the_read.trim()
+    ) {
+      let parseErrorClass = "invalid_shape";
+      if (!parsed) parseErrorClass = "json_extract_failed";
+      else if (!COMPLETENESS.has(parsed.completeness)) parseErrorClass = "invalid_completeness";
+      else if (typeof parsed.the_read !== "string" || !parsed.the_read.trim()) {
+        parseErrorClass = "missing_the_read";
+      }
+      logRuntimeEvent("parse_failed", {
+        request_id: ctx.request_id,
+        route: ctx.route,
+        parse_error_class: parseErrorClass,
+        model_text_len: modelText.length,
+        parse_duration_ms: elapsedMs(ctx, "parse_start"),
+        inference_duration_ms: elapsedMs(ctx, "inference_start"),
+      });
+      ctx.fallback_reason = "bad_json";
+      return sendRead(res, input, fallback(input, "bad_json"), ctx, deps);
+    }
+
+    logRuntimeEvent("parse_succeeded", {
+      request_id: ctx.request_id,
+      route: ctx.route,
+      parse_duration_ms: elapsedMs(ctx, "parse_start"),
+      completeness: parsed.completeness,
+    });
+
+    const whatLeftOut = Array.isArray(parsed.what_was_left_out)
+      ? parsed.what_was_left_out.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim())
+      : [];
+    const howShaped =
+      typeof parsed.how_it_was_shaped === "string" ? parsed.how_it_was_shaped.trim() : "";
+    const inspectionNote =
+      typeof parsed.inspection_note === "string" && parsed.inspection_note.trim()
+        ? parsed.inspection_note.trim()
+        : DEFAULT_INSPECTION_NOTE;
+
+    return sendRead(
+      res,
+      input,
+      {
+        completeness: parsed.completeness,
+        the_read: parsed.the_read.trim(),
+        what_was_left_out: whatLeftOut,
+        how_it_was_shaped: howShaped,
+        inspection_note: inspectionNote,
+        source: "agent",
+      },
+      ctx,
+      deps
     );
-    return sendRead(res, input, fallback(input, "bad_json"));
-  }
-
-  const whatLeftOut = Array.isArray(parsed.what_was_left_out)
-    ? parsed.what_was_left_out.filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim())
-    : [];
-  const howShaped =
-    typeof parsed.how_it_was_shaped === "string" ? parsed.how_it_was_shaped.trim() : "";
-  const inspectionNote =
-    typeof parsed.inspection_note === "string" && parsed.inspection_note.trim()
-      ? parsed.inspection_note.trim()
-      : DEFAULT_INSPECTION_NOTE;
-
-  return sendRead(res, input, {
-    completeness: parsed.completeness,
-    the_read: parsed.the_read.trim(),
-    what_was_left_out: whatLeftOut,
-    how_it_was_shaped: howShaped,
-    inspection_note: inspectionNote,
-    source: "agent",
-  });
+  };
 }
+
+export default createReadHandler();

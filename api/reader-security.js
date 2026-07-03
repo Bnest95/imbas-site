@@ -76,7 +76,7 @@ function redisBaseUrl(env = process.env) {
 function redisToken(env = process.env) {
   return env.UPSTASH_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN || "";
 }
-function redisConfigured(env = process.env) {
+export function redisConfigured(env = process.env) {
   return Boolean(redisBaseUrl(env) && redisToken(env));
 }
 

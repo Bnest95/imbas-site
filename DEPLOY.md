@@ -87,6 +87,52 @@ Setup:
    `durable_spend: true` and `durable_rate: true` after a test read. (The `rate_limited` and
    `spend_ceiling` events only carry `durable: true` when they actually block a request.)
 
+## Reader runtime observability
+
+`POST /api/read` emits structured `reader_runtime` JSON logs (one line per event) for every
+major execution step. Search Vercel function logs for `"event":"reader_runtime"`.
+
+**Quick health check:** `GET /api/reader-health` returns non-sensitive status (`mode`:
+`ready` | `degraded` | `disabled`, store/key/capture configured flags, timestamp). No secrets,
+tokens, or user data.
+
+### Normal successful run (agent path)
+
+Typical event chain for one request (same `request_id` throughout):
+
+1. `request_received`
+2. `inference_started` → `inference_succeeded` (includes `inference_duration_ms`, token counts)
+3. `parse_succeeded`
+4. `capture_started` → `capture_succeeded` (or `capture_failed` if Airtable write fails)
+5. `response_returned` (`source: "agent"`, `duration_ms`)
+
+Also expect occasional `reader_security` events from `reader-security.js` when Redis is
+unavailable (`store_unavailable`, `action: memory_fallback`).
+
+### Degraded execution signals
+
+| Log type | Meaning |
+|----------|---------|
+| `fallback_returned` | User got honest placeholder, not agent read (`reason`: `disabled`, `no_key`, `api_error`, `network`, `bad_json`) |
+| `inference_failed` | Anthropic call failed; check `upstream_status` or `failure_class` |
+| `parse_failed` | Model returned unparseable JSON (`parse_error_class`, `model_text_len` only — no raw output) |
+| `capture_failed` | Reader Runs row not written; user still got 200 (`user_response_returned: true`) |
+| `security_rejected` | Rate limit or spend ceiling (`reason`: `rate_limited`, `spend_ceiling`) |
+| `validation_rejected` | Bad input (`reason`: `empty`, `too_long`, `body_too_large`, etc.) |
+
+### What to do
+
+- **`inference_failed` spike** — Check Anthropic status, `READER_API_KEY` scope, Vercel env on Production. Note `request_id` from error JSON if user reports a problem.
+- **`parse_failed` spike** — Model output shape drift; inspect frequency, not log content (privacy). Fallback reads are honest but thin.
+- **`capture_failed`** — Check `AIRTABLE_TOKEN` permissions on base `appfxHraqlcpP1AAP`, Reader Runs table `tblqmHiOCQ5YSXBN3`. Reads still work; only logging is affected.
+- **`security_rejected` + `store_error: true`** — Upstash/KV unreachable; rate limits may fail closed. Verify `KV_REST_API_*` or `UPSTASH_REDIS_REST_*` on Vercel.
+- **`security_rejected` + `reason: spend_ceiling`** — Monthly cap hit (`READER_SPEND_CEILING_USD`, default 8). Raise cap or wait for month rollover.
+- **`reader_security` + `memory_fallback`** — Durable store not configured or down; per-instance counters only. Fix Redis env vars and redeploy.
+- **`/api/reader-health` `mode: degraded`** — Missing model key and/or durable store; inspect flags before traffic.
+
+Error responses (400/429) include `request_id` for correlation. They do not include stack traces,
+provider bodies, or user content.
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
