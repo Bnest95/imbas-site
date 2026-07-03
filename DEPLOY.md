@@ -175,6 +175,16 @@ after the 200 body is prepared, so the user still gets their inspection; the fai
 2. In Vercel function logs, filter `"event":"reader_runtime"` and confirm the run ends with `capture_succeeded` (not `capture_failed`). Success logs also carry presence booleans: `request_id_present`, `reader_model_present`, `prompt_version_present`, `source_content_hash_present`, `reader_output_hash_present` — all `true`. Hash **values** are never logged.
 3. Open the newest Reader Runs row and confirm the eight fields above are populated (`Request ID` matches the run's `request_id`; both hashes are 64 hex chars). Do not export or publish row contents or user answer text.
 
+**Prompt-version guardrail.** `Reader Prompt Version` is only trustworthy if it changes whenever
+the prompt changes. `test/reader-prompt-version.test.mjs` enforces this: it pins
+`READER_PROMPT_VERSION` to a SHA-256 fingerprint of `SYSTEM_PROMPT` (both now exported from
+`api/read.js`) through a `KNOWN_FINGERPRINTS` registry. Any edit to `SYSTEM_PROMPT` changes the
+fingerprint and fails `npm test` until someone deliberately (1) bumps `READER_PROMPT_VERSION`
+(e.g. `reader.v1` → `reader.v2`) and (2) registers the new version's fingerprint in that file. So a
+prompt change can't ship while silently mislabelling every capture with the old version tag. The
+test imports the two constants only — no model call, no Airtable, no spend — and never prints the
+prompt text.
+
 ## Case lineage + review-state fields
 
 Two additive fields close the pipeline's **public-case ↔ source-capture linkage** and **explicit
@@ -229,6 +239,31 @@ the fields exist on the live base rather than firing a request. Via `get_table_s
 Airtable UI): Cases `Source Candidate ID` = singleLineText (`fldCroOvdzKqBakID`); Repository
 `Reviewed At` = dateTime/`utc` (`fldIcFUw168lY4QtF`). Do **not** write probe rows into the validated
 Cases archive.
+
+## Pipeline metrics (read-only)
+
+`npm run metrics` (`scripts/imbas-metrics.mjs`) prints a one-screen count of the data layer so the
+pipeline's state can be checked at a glance without opening Airtable:
+
+- **Cases** — total, Severity coverage (`X / total`), and the exact Case IDs still missing a
+  Severity score. Intentionally-unscored **controls are listed separately** so a baseline item is
+  never counted as a scoring gap. Controls are detected from live data — a Case whose `Name` carries
+  the parenthetical `(control…)` / `(CONTROL)` annotation — not from a hardcoded ID list, so the rule
+  follows the naming convention (and the report prints the excluded control IDs, so a
+  misclassification is visible, not silent).
+- **Repository** — triage-status distribution (how many candidates sit at each stage).
+- **Reader Runs** — total, and how many carry provenance (both `Reader Prompt Version` and
+  `Source Content Hash` present), as a count and rate.
+
+It is **read-only**: Airtable GETs only, never a PATCH/POST/DELETE. It requests only the few fields
+each metric needs, follows offset pagination, and **never prints captured content** — no prompts,
+answers, emails, or hash values (provenance is a presence count; hash strings are tested for presence
+and discarded). It reads `AIRTABLE_TOKEN` from the environment (needs `data.records:read`); with no
+token it exits non-zero and makes no request. Exit codes: `0` ok, `2` bad usage, `3` missing token,
+`1` runtime / Airtable error.
+
+Classification/aggregation logic is unit-tested with no live Airtable calls
+(`test/imbas-metrics.test.mjs`).
 
 ## Field Notes signup
 

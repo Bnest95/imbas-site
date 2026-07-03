@@ -4,6 +4,7 @@
   "scripts": {
     "build:workbench": "node scripts/build-workbench.mjs",
     "check:workbench": "node scripts/check-workbench-bundle.mjs",
+    "metrics": "node scripts/imbas-metrics.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {

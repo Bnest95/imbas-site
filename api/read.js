@@ -83,8 +83,10 @@ const MODEL = "claude-opus-4-7";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
 // so a run can be traced to the Reader that produced it. Bump when SYSTEM_PROMPT
 // or the output contract changes. Additive provenance only — this does NOT alter
-// the prompt or the model, and the full prompt is not hashed this pass.
-const READER_PROMPT_VERSION = "reader.v1";
+// the prompt or the model. A guardrail test (test/reader-prompt-version.test.mjs)
+// pins this tag to a SHA-256 of SYSTEM_PROMPT, so a prompt change fails QA unless
+// this version is deliberately bumped and its new fingerprint registered.
+export const READER_PROMPT_VERSION = "reader.v1";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS = 8192;
 const MAX_BODY = 128 * 1024;
@@ -165,7 +167,7 @@ function readerOutputHash(payload) {
 }
 
 // ── VERBATIM Reader system prompt. Do not rewrite, summarize, or improve. ──────
-const SYSTEM_PROMPT = `You are The Reader, the analytical core of Imbas.
+export const SYSTEM_PROMPT = `You are The Reader, the analytical core of Imbas.
 
 THE ONE THING YOU ARE LOOKING FOR
 
