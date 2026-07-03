@@ -21,8 +21,8 @@
 // ── STATUS ──────────────────────────────────────────────────────────────────
 // Live model call: Claude Opus 4.7, adaptive thinking, verbatim Reader system
 // prompt, tolerant-JSON parse, graceful fallback to a minimal honest object on
-// any failure. Input caps + per-IP rate limit in place; the $25 spend ceiling
-// lands in step 3.
+// any failure. Input caps + durable rate/spend controls when Upstash Redis REST
+// is configured (see reader-security.js); in-memory fallback otherwise.
 //
 // ── Request (POST, application/json) ─────────────────────────────────────────
 // {
@@ -59,9 +59,17 @@
 // ── Env vars ─────────────────────────────────────────────────────────────────
 //   READER_API_KEY    — Anthropic key, server-side only, never committed
 //   READER_ENABLED    — kill switch ("0" → skip the call, fall back honestly)
-//   (spend-ceiling + rate-limit state arrive in step 3)
+//   READER_SPEND_CEILING_USD — optional monthly estimated spend cap (default 8)
+//   UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN — durable rate + spend (recommended)
 
-const str = (v) => (typeof v === "string" ? v : "");
+import {
+  deriveClientIp,
+  checkReaderRateLimits,
+  checkGlobalSpendCeiling,
+  addGlobalSpend,
+  estimateCostUsd,
+  logSecurityEvent,
+} from "./reader-security.js";
 
 const MODEL = "claude-opus-4-7";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
@@ -104,64 +112,11 @@ const RUNS_TABLE = "tblqmHiOCQ5YSXBN3";
 // otherwise stall the read; this aborts the write so the read always returns.
 const CAPTURE_TIMEOUT_MS = 2500;
 
-// ── Spend ceiling ────────────────────────────────────────────────────────────
-// A soft monthly ceiling: once the month's ESTIMATED spend crosses the cap,
-// Reader stops calling Opus and serves the keyword cross-check instead. The
-// TRUE hard cap lives one level down — the account balance with auto-reload
-// OFF, where credits hitting $0 makes every call error and we fall back anyway.
-// This ceiling is the earlier, headroom-preserving stop, defaulting to $8 under
-// a ~$10 balance. Override per-environment with READER_SPEND_CEILING_USD.
-//
-// Cost is ESTIMATED from each call's reported token usage at Opus 4.7 list
-// prices, with cache reads/writes priced on their own multipliers. The running
-// total is in-memory at module scope: it counts within a warm instance and
-// resets on cold start or across instances — fine at this scale (solo + a few
-// testers) where the $0-balance backstop is the real net. Swap for Vercel KV /
-// Upstash before widening access if you want a durable cross-instance gate.
+// Monthly estimated spend cap. Durable only when Upstash Redis REST is configured;
+// otherwise falls back to per-instance memory in reader-security.js.
 const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.7 list
-
-const hits = new Map();
-function throttled(ip) {
-  const now = Date.now();
-  const win = 60000;
-  const max = 12;
-  const arr = (hits.get(ip) || []).filter((t) => now - t < win);
-  arr.push(now);
-  hits.set(ip, arr);
-  return arr.length > max;
-}
-
-// Running spend estimate for the current UTC month. Resets when the calendar
-// month rolls over or when the instance is recycled (see the ceiling note above).
-let spendMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
-let spendUsd = 0;
-function rollMonth() {
-  const m = new Date().toISOString().slice(0, 7);
-  if (m !== spendMonth) {
-    spendMonth = m;
-    spendUsd = 0;
-  }
-}
-function ceilingReached() {
-  rollMonth();
-  return spendUsd >= SPEND_CEILING_USD;
-}
-function estimateCostUsd(u) {
-  if (!u) return 0;
-  return (
-    (u.input_tokens || 0) * USD_PER_MTOK.in +
-    (u.output_tokens || 0) * USD_PER_MTOK.out +
-    (u.cache_creation_input_tokens || 0) * USD_PER_MTOK.cacheWrite +
-    (u.cache_read_input_tokens || 0) * USD_PER_MTOK.cacheRead
-  ) / 1e6;
-}
-function recordSpend(u) {
-  rollMonth();
-  const cost = estimateCostUsd(u);
-  spendUsd += cost;
-  return { cost, total: spendUsd };
-}
+const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a little while.";
 
 const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
 
@@ -450,19 +405,23 @@ export default async function handler(req, res) {
 
   const contentLength = Number(req.headers["content-length"] || 0);
   if (contentLength > MAX_BODY) {
+    logSecurityEvent("input_rejected", { reason: "body_too_large", status: 413 });
     return res.status(413).json({ error: "too_large" });
   }
 
   const body = req.body;
   if (!body || typeof body !== "object" || Array.isArray(body)) {
+    logSecurityEvent("input_rejected", { reason: "invalid_body", status: 400 });
     return res.status(400).json({ error: "invalid" });
   }
 
   try {
     if (Buffer.byteLength(JSON.stringify(body), "utf8") > MAX_BODY) {
+      logSecurityEvent("input_rejected", { reason: "body_too_large", status: 413 });
       return res.status(413).json({ error: "too_large" });
     }
   } catch {
+    logSecurityEvent("input_rejected", { reason: "invalid_body", status: 400 });
     return res.status(400).json({ error: "invalid" });
   }
 
@@ -495,36 +454,47 @@ export default async function handler(req, res) {
     input.answer.trim().length < ANSWER_MIN ||
     input.openQuestion.trim().length < QUESTION_MIN
   ) {
+    logSecurityEvent("input_rejected", { reason: "empty", status: 400 });
     return res.status(400).json({ error: "empty" });
   }
 
   // Server-side 1200-word cap on the pasted answer. Reject rather than clip so the
   // Reader never inspects a truncated answer and reports false omissions.
   if (wordCount(input.answer) > ANSWER_WORD_MAX) {
+    logSecurityEvent("input_rejected", { reason: "answer_too_long", status: 400 });
     return res.status(400).json({ error: "too_long", limit_words: ANSWER_WORD_MAX });
   }
 
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
-  if (throttled(ip)) {
-    return res.status(429).json({ error: "capacity", message: "The Reader is at capacity today. Come back tomorrow." });
+  const ip = deriveClientIp(req);
+  const rate = await checkReaderRateLimits(ip);
+  if (!rate.allowed) {
+    logSecurityEvent("rate_limited", {
+      ip_hash: rate.ipHash,
+      tier: rate.tier,
+      durable: rate.durable,
+      store_error: !!rate.storeError,
+    });
+    return res.status(429).json({ error: "capacity", message: CAPACITY_MESSAGE });
   }
 
   // Kill switch / missing key → honest fallback, no model call.
   if (process.env.READER_ENABLED === "0") {
+    logSecurityEvent("reader_disabled", { ip_hash: rate.ipHash });
     return sendRead(res, input, fallback(input, "disabled"));
   }
   if (!process.env.READER_API_KEY) {
+    logSecurityEvent("reader_unconfigured", { ip_hash: rate.ipHash });
     return sendRead(res, input, fallback(input, "no_key"));
   }
 
-  // Spend ceiling: once the month's estimated spend crosses the cap, stop calling
-  // Opus and return a hard 429 capacity message (same as the per-IP limiter). The
-  // auto-reload-OFF account balance remains the absolute hard cap underneath this.
-  if (ceilingReached()) {
-    console.warn(
-      `[read] spend ceiling reached — est $${spendUsd.toFixed(2)} >= $${SPEND_CEILING_USD} for ${spendMonth}; returning 429 capacity`
-    );
-    return res.status(429).json({ error: "capacity", message: "The Reader is at capacity today. Come back tomorrow." });
+  const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD);
+  if (spend.blocked) {
+    logSecurityEvent("spend_ceiling", {
+      month: spend.month,
+      durable: spend.durable,
+      store_error: !!spend.storeError,
+    });
+    return res.status(429).json({ error: "capacity", message: CAPACITY_MESSAGE });
   }
 
   // ── Model call ──────────────────────────────────────────────────────────────
@@ -551,7 +521,7 @@ export default async function handler(req, res) {
 
     if (!r.ok) {
       const detail = (await r.text()).slice(0, 300);
-      console.warn(`[read] anthropic ${r.status}: ${detail}`);
+      logSecurityEvent("inference_failed", { status: r.status, detail_len: detail.length });
       return sendRead(res, input, fallback(input, "api_error"));
     }
 
@@ -560,16 +530,22 @@ export default async function handler(req, res) {
       ? data.content.filter((b) => b && b.type === "text").map((b) => b.text).join("")
       : "";
     if (data.usage) {
-      const { cost, total } = recordSpend(data.usage);
-      console.log(
-        `[read] usage in=${data.usage.input_tokens} out=${data.usage.output_tokens} ` +
-          `cache_read=${data.usage.cache_read_input_tokens ?? 0} ` +
-          `cache_write=${data.usage.cache_creation_input_tokens ?? 0} ` +
-          `est_cost=$${cost.toFixed(4)} month_total=$${total.toFixed(2)}/${SPEND_CEILING_USD} (${spendMonth})`
-      );
+      const cost = estimateCostUsd(data.usage, USD_PER_MTOK);
+      const recorded = await addGlobalSpend(cost);
+      logSecurityEvent("inference_usage", {
+        input_tokens: data.usage.input_tokens || 0,
+        output_tokens: data.usage.output_tokens || 0,
+        cache_read_tokens: data.usage.cache_read_input_tokens ?? 0,
+        cache_write_tokens: data.usage.cache_creation_input_tokens ?? 0,
+        month: recorded.month,
+        durable_spend: recorded.durable,
+        durable_rate: rate.durable,
+      });
     }
   } catch (e) {
-    console.warn(`[read] fetch failed: ${e && e.message}`);
+    logSecurityEvent("inference_failed", {
+      reason: e && e.message ? String(e.message).slice(0, 120) : "network",
+    });
     return sendRead(res, input, fallback(input, "network"));
   }
 

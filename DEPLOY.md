@@ -45,6 +45,48 @@ Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `w
 
 Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
 
+## Reader inference security (rate limits + spend ceiling)
+
+`POST /api/read` calls Anthropic Opus and is public. Durable abuse controls live in
+`api/reader-security.js` and activate when both Upstash env vars are set on Vercel.
+
+Required for **durable** cross-instance protection (recommended before traffic):
+
+- `UPSTASH_REDIS_REST_URL` — from Upstash console → Redis database → REST API
+- `UPSTASH_REDIS_REST_TOKEN` — same screen
+
+Provisioning Upstash through the **Vercel Marketplace** instead injects
+`KV_REST_API_URL` / `KV_REST_API_TOKEN`. Vercel marks these integration values write-only,
+so they can't be read back via `vercel env pull` and can't be hand-copied into the
+`UPSTASH_*` names. The security module therefore auto-detects the `KV_REST_API_*` names as
+a fallback (see `reader-security.js`); set the `UPSTASH_*` names only when you want to
+override the injected pair.
+
+Upstash free tier is sufficient at current scale (10k commands/day). No npm package is
+required; the serverless functions call the REST API directly.
+
+Without any of these vars, Reader falls back to **per-instance in-memory** rate/spend counters
+(same class of weakness as before). Logs emit `reader_security` events with
+`action: memory_fallback` once per cold start.
+
+Existing Reader env vars (unchanged):
+
+- `READER_API_KEY` — Anthropic key
+- `READER_ENABLED` — `"0"` manual kill switch (returns honest fallback, no inference)
+- `READER_SPEND_CEILING_USD` — optional monthly estimated spend cap (default `8`)
+
+Setup:
+
+1. Create a free Upstash Redis database — either via the Vercel Marketplace (Storage →
+   Upstash, which wires `KV_REST_API_*` into the project automatically) or standalone at
+   the Upstash console (any region close to the Vercel deployment).
+2. Marketplace path: nothing to copy — the integration injects the vars for the environments
+   you select. Standalone path: copy REST URL + token into the project's Production (and
+   Preview) env under the `UPSTASH_*` names.
+3. Redeploy. Confirm Vercel logs show a `reader_security` `inference_usage` event carrying
+   `durable_spend: true` and `durable_rate: true` after a test read. (The `rate_limited` and
+   `spend_ceiling` events only carry `durable: true` when they actually block a request.)
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
