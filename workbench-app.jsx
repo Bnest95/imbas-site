@@ -1839,7 +1839,13 @@ async function runReader(request) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
-  if (!res.ok) throw new Error(`read_${res.status}`);
+  if (!res.ok) {
+    if (res.status === 400) {
+      const data = await res.json().catch(() => ({}));
+      if (data && data.error === "too_long") throw new Error("too_long");
+    }
+    throw new Error(`read_${res.status}`);
+  }
   return res.json();
 }
 
@@ -2852,6 +2858,11 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
   return lines.join("\n").trim();
 }
 
+// Final line appended to copied records. Uses the live share link when one exists for
+// the run, otherwise the bare domain.
+const readerCreditLine = (shareUrl) =>
+  `Inspected with the Imbas Reader · ${shareUrl && shareUrl.trim() ? shareUrl.trim() : "imbaslabs.com"}`;
+
 const READER_SHARE_TRUST_COPY =
   "Creates an unlisted Workbench inspection. Anyone with the link can view it. It is not a reviewed archive case.";
 
@@ -2873,15 +2884,14 @@ function inspectionSharePayload({ mode, sel, question, answer, model, topic, res
   };
 }
 
-function shareFailureMessage(data) {
-  if (data?.error === "unconfigured") {
-    return "Share links are not available yet. Copy the full record for now.";
+function shareFailureMessage(status, data) {
+  if (status === 503 || status === 500 || data?.error === "unconfigured") {
+    return "Share links are not live yet. Copy the full record for now.";
   }
   return "Could not create share link. Copy the full record for now.";
 }
 
-function ReaderResultShareAction({ result, context }) {
-  const [shareUrl, setShareUrl] = useState("");
+function ReaderResultShareAction({ result, context, shareUrl, setShareUrl }) {
   const [phase, setPhase] = useState("idle");
   const [errMsg, setErrMsg] = useState("");
 
@@ -2916,7 +2926,7 @@ function ReaderResultShareAction({ result, context }) {
           console.warn("[imbas] inspection-share failed", res.status, data);
         }
         setPhase("error");
-        setErrMsg(shareFailureMessage(data));
+        setErrMsg(shareFailureMessage(res.status, data));
         return;
       }
       setShareUrl(data.share_url);
@@ -2984,7 +2994,7 @@ function ReaderResultShareAction({ result, context }) {
   );
 }
 
-function ReaderResultCopyActions({ result, context }) {
+function ReaderResultCopyActions({ result, context, shareUrl }) {
   const [copiedResult, setCopiedResult] = useState(false);
   const [copiedFull, setCopiedFull] = useState(false);
   const [copyFail, setCopyFail] = useState("");
@@ -2995,7 +3005,7 @@ function ReaderResultCopyActions({ result, context }) {
   };
   const copyResult = async () => {
     try {
-      await navigator.clipboard.writeText(formatReaderResultCopy(result));
+      await navigator.clipboard.writeText(`${formatReaderResultCopy(result)}\n\n${readerCreditLine(shareUrl)}`);
       flashCopied(setCopiedResult);
     } catch {
       setCopyFail("Could not copy");
@@ -3004,7 +3014,7 @@ function ReaderResultCopyActions({ result, context }) {
   };
   const copyFull = async () => {
     try {
-      await navigator.clipboard.writeText(formatReaderFullRecord({ ...context, result }));
+      await navigator.clipboard.writeText(`${formatReaderFullRecord({ ...context, result })}\n\n${readerCreditLine(shareUrl)}`);
       flashCopied(setCopiedFull);
     } catch {
       setCopyFail("Could not copy");
@@ -3025,6 +3035,7 @@ function ReaderResultCopyActions({ result, context }) {
 }
 
 function ReaderResultBlock({ result, context, onRunAgain }) {
+  const [shareUrl, setShareUrl] = useState("");
   const comp = result?.completeness || "partial";
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
@@ -3098,8 +3109,8 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
         <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
           {isAgent ? (
             <>
-              <ReaderResultCopyActions result={result} context={context} />
-              <ReaderResultShareAction result={result} context={context} />
+              <ReaderResultCopyActions result={result} context={context} shareUrl={shareUrl} />
+              <ReaderResultShareAction result={result} context={context} shareUrl={shareUrl} setShareUrl={setShareUrl} />
             </>
           ) : null}
           <Btn kind="ghost" small onClick={onRunAgain} className="wb-reader-result__rerun">
@@ -3261,14 +3272,18 @@ function ReaderWorkbench() {
       const data = await runReader(request);
       setReaderResult(data);
     } catch (err) {
-      setReaderResult({
-        source: "fallback",
-        completeness: "thin",
-        the_read: readerFallbackReadBody(),
-        what_was_left_out: [],
-        how_it_was_shaped: "",
-        reason: String(err.message || "network"),
-      });
+      if (err && err.message === "too_long") {
+        setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
+      } else {
+        setReaderResult({
+          source: "fallback",
+          completeness: "thin",
+          the_read: readerFallbackReadBody(),
+          what_was_left_out: [],
+          how_it_was_shaped: "",
+          reason: String(err.message || "network"),
+        });
+      }
     } finally {
       setBusy(false);
     }
