@@ -2,7 +2,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:workbench": "node scripts/build-workbench.mjs"
+    "build:workbench": "node scripts/build-workbench.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

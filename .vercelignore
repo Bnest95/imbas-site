@@ -17,5 +17,8 @@ qa-screenshots-*/
 pass14-screenshots/
 pass15-screenshots/
 
+# Unit tests — run locally, never deployed (files in /api are functions; tests live here)
+test/
+
 # Unreferenced static assets
 antenna-glyph.svg

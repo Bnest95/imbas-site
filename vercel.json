@@ -1,7 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/inspection/:shareId", "destination": "/api/inspection-view?shareId=:shareId" }
+  ],
   "redirects": [
-    { "source": "/inspection/:shareId", "destination": "/inspection.html?share=:shareId", "permanent": false },
     { "source": "/case/003", "destination": "/case/003.html", "permanent": true },
     { "source": "/case/005", "destination": "/case/005.html", "permanent": true },
     { "source": "/case/013", "destination": "/case/013.html", "permanent": true },

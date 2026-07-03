@@ -81,6 +81,13 @@ const TERM_COUNT_MAX = 50;
 // call, closing the cheapest cost-abuse path (an empty {} buying a model call).
 const ANSWER_MIN = 20;
 const QUESTION_MIN = 3;
+// Server-side word cap on the pasted answer. Rejected (not clipped): truncating a
+// pasted answer would make the Reader inspect partial content and report omissions
+// that are really just past the cut — a false measurement. Better to refuse than to
+// measure a fragment. The ANSWER_MAX char clip above is the coarse abuse guard; this
+// is the semantic ceiling a real inspection should stay under.
+const ANSWER_WORD_MAX = 1200;
+const wordCount = (s) => (String(s).trim().match(/\S+/g) || []).length;
 
 // ── Read capture (Airtable) ──────────────────────────────────────────────────
 // Every read returned to a user — agent or fallback — is logged to the "Reader
@@ -491,8 +498,16 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "empty" });
   }
 
+  // Server-side 1200-word cap on the pasted answer. Reject rather than clip so the
+  // Reader never inspects a truncated answer and reports false omissions.
+  if (wordCount(input.answer) > ANSWER_WORD_MAX) {
+    return res.status(400).json({ error: "too_long", limit_words: ANSWER_WORD_MAX });
+  }
+
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
-  if (throttled(ip)) return res.status(429).json({ error: "rate" });
+  if (throttled(ip)) {
+    return res.status(429).json({ error: "capacity", message: "The Reader is at capacity today. Come back tomorrow." });
+  }
 
   // Kill switch / missing key → honest fallback, no model call.
   if (process.env.READER_ENABLED === "0") {
@@ -502,14 +517,14 @@ export default async function handler(req, res) {
     return sendRead(res, input, fallback(input, "no_key"));
   }
 
-  // Spend ceiling: once the month's estimated spend crosses the cap, stop
-  // calling Opus and serve the honest keyword fallback. The auto-reload-OFF
-  // account balance remains the absolute hard cap underneath this.
+  // Spend ceiling: once the month's estimated spend crosses the cap, stop calling
+  // Opus and return a hard 429 capacity message (same as the per-IP limiter). The
+  // auto-reload-OFF account balance remains the absolute hard cap underneath this.
   if (ceilingReached()) {
     console.warn(
-      `[read] spend ceiling reached — est $${spendUsd.toFixed(2)} >= $${SPEND_CEILING_USD} for ${spendMonth}; serving keyword fallback`
+      `[read] spend ceiling reached — est $${spendUsd.toFixed(2)} >= $${SPEND_CEILING_USD} for ${spendMonth}; returning 429 capacity`
     );
-    return sendRead(res, input, fallback(input, "ceiling"));
+    return res.status(429).json({ error: "capacity", message: "The Reader is at capacity today. Come back tomorrow." });
   }
 
   // ── Model call ──────────────────────────────────────────────────────────────
