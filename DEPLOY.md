@@ -141,6 +141,40 @@ unavailable (`store_unavailable`, `action: memory_fallback`).
 Error responses (400/429) include `request_id` for correlation. They do not include stack traces,
 provider bodies, or user content.
 
+## Reader Runs capture fields (provenance)
+
+`POST /api/read` writes one row per read to **Reader Runs** (`tblqmHiOCQ5YSXBN3`, base
+`appfxHraqlcpP1AAP`). Alongside the original capture fields (`Question`, `Answer`, `The Read`,
+`Completeness`, `What Was Left Out`, `How It Was Shaped`, `Inspection Note`, `Source`, `Created`),
+the capture writes these **additive provenance fields**. All are **single line text** and were
+created on this base on 2026-07-03 (via the Airtable schema API, not auto-created by the write):
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `Request ID` | server-side `ctx.request_id` (16 hex) | Ties the row to the `reader_runtime` logs for the same run |
+| `Reader Model` | `MODEL` constant (`claude-opus-4-7`) | The configured Reader model |
+| `Reader Prompt Version` | `READER_PROMPT_VERSION` (`reader.v1`) | Bump when `SYSTEM_PROMPT` / output contract changes |
+| `Topic` | request `case.topic` | Empty when the request carries none |
+| `Anchor` | request `case.anchor` | Empty when the request carries none |
+| `Inspected AI Model` | request `inspected_model` (Workbench model select) | Empty when unknown; no new UI, no user requirement |
+| `Source Content Hash` | SHA-256 hex of `open_question` + "\n" + `answer` | Deterministic source fingerprint |
+| `Reader Output Hash` | SHA-256 hex of the output (fixed key order: completeness, the_read, what_was_left_out, how_it_was_shaped, inspection_note, source) | Deterministic read fingerprint |
+
+**Manual creation (fresh base / new environment):** if you point the Reader at a base where these
+fields do not yet exist, create all eight as **single line text** fields on the Reader Runs table
+before deploying. Airtable's `typecast: true` coerces values but does **not** create fields — a POST
+naming a nonexistent field returns **HTTP 422 `UNKNOWN_FIELD_NAME`** and fails the whole row.
+
+**Fail-safe:** a missing field never breaks a read. The write is fail-safe (`captureRun`) and runs
+after the 200 body is prepared, so the user still gets their inspection; the failure surfaces as a
+`capture_failed` log with `failure_class: "airtable_http"`, `upstream_status: 422`, and
+`user_response_returned: true`. Reads continue in **degraded capture mode** until the fields exist.
+
+**Verification procedure (after deploy):**
+1. Deploy to Production and run **one** controlled inspection through the live Workbench (never loop `/api/read` — each call spends real model budget).
+2. In Vercel function logs, filter `"event":"reader_runtime"` and confirm the run ends with `capture_succeeded` (not `capture_failed`). Success logs also carry presence booleans: `request_id_present`, `reader_model_present`, `prompt_version_present`, `source_content_hash_present`, `reader_output_hash_present` — all `true`. Hash **values** are never logged.
+3. Open the newest Reader Runs row and confirm the eight fields above are populated (`Request ID` matches the run's `request_id`; both hashes are 64 hex chars). Do not export or publish row contents or user answer text.
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.

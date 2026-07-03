@@ -1803,7 +1803,7 @@ function textcheckFromAnchors(anchors) {
   };
 }
 
-function buildReaderRequest({ mode, sel, question, answer, topic }) {
+function buildReaderRequest({ mode, sel, question, answer, topic, model }) {
   if (mode === "guided") {
     const anchors = detectAnchors((answer || "").trim(), sel.detect || [], sel.keyDetect || []);
     return {
@@ -1814,6 +1814,7 @@ function buildReaderRequest({ mode, sel, question, answer, topic }) {
       },
       open_question: sel.openPrompt,
       answer: (answer || "").trim(),
+      inspected_model: (model || "").trim(),
       textcheck: textcheckFromAnchors(anchors),
     };
   }
@@ -1829,6 +1830,7 @@ function buildReaderRequest({ mode, sel, question, answer, topic }) {
     },
     open_question: (question || "").trim(),
     answer: (answer || "").trim(),
+    inspected_model: (model || "").trim(),
     textcheck: { surfaced: false, found: [], missing: [] },
   };
 }
@@ -3267,6 +3269,7 @@ function ReaderWorkbench() {
       question,
       answer: a,
       topic,
+      model,
     });
     try {
       const data = await runReader(request);

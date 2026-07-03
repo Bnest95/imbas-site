@@ -128,13 +128,13 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **Update trigger:** First completed blinded/independent scoring sub-study.
 
 ### 13. Provenance
-- **Category:** mixed — 3 (current: capture preserves conditions) + 8 (planned: hardening)
-- **Canonical interpretation:** Today, captures preserve prompt conditions, model, date, raw response, and evidence (case records). Provenance *hardening* (stronger workflow, discipline) is described as active/planned work, not a completed system.
-- **Source of truth:** `methodology.html` ("Capture protocol"); `faq.html` (Q08, Q16, "provenance discipline / workflow ... hardening").
-- **Temporal scope:** Current capture + planned hardening.
+- **Category:** mixed — 3 (current: capture preserves conditions, run identity, and deterministic content hashes) + 8 (planned: cross-run lineage / verification workflow)
+- **Canonical interpretation:** Captures preserve prompt conditions, model, date, raw response, and evidence (case records). As of the 2026-07-03 provenance pass, every Reader run written to Reader Runs (`tblqmHiOCQ5YSXBN3`) *additively* also records: a server-side request ID (ties the row to the structured runtime logs), the Reader model, the Reader prompt/protocol version (`reader.v1`), the topic and anchor when the request carries them, the inspected AI model when the Workbench provides it, a SHA-256 hash of the canonical source content (`open_question` + newline + answer), and a SHA-256 hash of the Reader output. The hashes are deterministic fingerprints — identical inputs or identical reads produce identical hashes, so re-runs and duplicate reads *can be recognized* without exposing content. Capture is fail-safe: a read is always returned to the user even if the write fails. Broader provenance *hardening* (cross-run lineage analysis, verification workflow, review discipline) remains active/planned work, not a completed system.
+- **Source of truth:** `api/read.js` (`captureRun` provenance fields; `READER_PROMPT_VERSION`; `sourceContentHash` / `readerOutputHash`); Reader Runs `tblqmHiOCQ5YSXBN3` (fields: Request ID, Reader Model, Reader Prompt Version, Topic, Anchor, Inspected AI Model, Source Content Hash, Reader Output Hash); `methodology.html` ("Capture protocol"); `faq.html` (Q08, Q16).
+- **Temporal scope:** Current capture + run identity/hashing (live); cross-run lineage + verification workflow planned.
 - **May be used:** Methodology, FAQ, contact.
-- **Should not be used:** Do not claim a finished, verified provenance system. Keep hardening in planned/underway tense.
-- **Update trigger:** A shipped provenance verification feature.
+- **Should not be used:** Do not claim a finished, verified provenance *system*. The hashes are content fingerprints for identity and dedup — NOT proof of review, validation, independent/blinded scoring, or inter-rater reliability — and they do NOT link runs into the Cases archive or establish public-case lineage. These fields live on Reader Runs (the raw run log), not the validated Cases archive. Keep cross-run analysis and verification workflow in planned/underway tense.
+- **Update trigger:** A shipped provenance verification or cross-run lineage feature, or any change to the captured field set / hash construction in `api/read.js`.
 
 ### 14. Cross-model comparison
 - **Category:** 3 (current capability) / 1 (historical study fact)

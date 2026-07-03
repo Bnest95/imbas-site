@@ -77,8 +77,14 @@ import {
   logRuntimeEvent,
   CAPTURE_TARGET,
 } from "./reader-runtime.js";
+import { createHash } from "node:crypto";
 
 const MODEL = "claude-opus-4-7";
+// Version tag of the Reader prompt/protocol contract, recorded on every capture
+// so a run can be traced to the Reader that produced it. Bump when SYSTEM_PROMPT
+// or the output contract changes. Additive provenance only — this does NOT alter
+// the prompt or the model, and the full prompt is not hashed this pass.
+const READER_PROMPT_VERSION = "reader.v1";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS = 8192;
 const MAX_BODY = 128 * 1024;
@@ -87,6 +93,9 @@ const QUESTION_MAX = 4000;
 const TOPIC_MAX = 500;
 const ANCHOR_MAX = 500;
 const WHY_MAX = 1000;
+// Cap on the optional inspected-AI-model label (e.g. "ChatGPT"). Short by design;
+// stored as provenance context, never fed to the model.
+const INSPECTED_MODEL_MAX = 120;
 const TERM_MAX = 120;
 // Cap how MANY keyword terms ride in (alongside the per-term TERM_MAX clip), so a
 // crafted textcheck can't bloat the fallback response or the Airtable capture cell.
@@ -127,6 +136,33 @@ const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a li
 
 const str = (v) => (typeof v === "string" ? v : "");
 const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
+
+// ── Provenance hashing ───────────────────────────────────────────────────────
+// Deterministic SHA-256 (hex) identifiers for a run's source content and the
+// Reader's output. Additive: they sit alongside the stored question/answer and
+// read — they never replace them. Same input → same hash, so re-runs of the same
+// source (or identical reads) can be recognized without exposing content. Hash
+// VALUES are never logged (only presence booleans) — see captureRun's logging.
+const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
+
+// Source ID: canonical inspected input is open_question + "\n" + answer.
+function sourceContentHash(input) {
+  return sha256Hex(`${input.openQuestion || ""}\n${input.answer || ""}`);
+}
+
+// Output ID: hash the Reader output with a FIXED key order so logically-equal
+// reads hash equal regardless of object key insertion order. Arrays keep order.
+function readerOutputHash(payload) {
+  const canonical = JSON.stringify({
+    completeness: payload.completeness || "",
+    the_read: payload.the_read || "",
+    what_was_left_out: Array.isArray(payload.what_was_left_out) ? payload.what_was_left_out : [],
+    how_it_was_shaped: payload.how_it_was_shaped || "",
+    inspection_note: payload.inspection_note || "",
+    source: payload.source || "",
+  });
+  return sha256Hex(canonical);
+}
 
 // ── VERBATIM Reader system prompt. Do not rewrite, summarize, or improve. ──────
 const SYSTEM_PROMPT = `You are The Reader, the analytical core of Imbas.
@@ -336,6 +372,20 @@ export async function captureRun(input, payload, ctx, deps = {}) {
   const fetchImpl = deps.fetch || fetch;
   const requestId = ctx?.request_id;
   const route = ctx?.route || "/api/read";
+
+  // Deterministic provenance IDs for this run. Computed once, up front, so the
+  // presence markers are available on both the success and every failure log.
+  // The hash VALUES are never logged — only the booleans below.
+  const srcHash = sourceContentHash(input);
+  const outHash = readerOutputHash(payload);
+  const provenance = {
+    request_id_present: !!requestId,
+    reader_model_present: !!MODEL,
+    prompt_version_present: !!READER_PROMPT_VERSION,
+    source_content_hash_present: !!srcHash,
+    reader_output_hash_present: !!outHash,
+  };
+
   markPhase(ctx, "capture_start");
   logRuntimeEvent("capture_started", {
     request_id: requestId,
@@ -352,6 +402,7 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       failure_class: failureClass,
       duration_ms,
       user_response_returned: true,
+      ...provenance,
       ...extra,
     });
     return { ok: false, failure_class: failureClass };
@@ -374,6 +425,15 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       "Inspection Note": payload.inspection_note || "",
       Source: payload.source || "",
       Created: new Date().toISOString(),
+      // ── Additive provenance (see reader-provenance tests + DEPLOY.md) ──
+      "Request ID": requestId || "",
+      "Reader Model": MODEL,
+      "Reader Prompt Version": READER_PROMPT_VERSION,
+      Topic: input.topic || "",
+      Anchor: input.anchor || "",
+      "Inspected AI Model": input.inspectedModel || "",
+      "Source Content Hash": srcHash,
+      "Reader Output Hash": outHash,
     };
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), CAPTURE_TIMEOUT_MS);
@@ -400,6 +460,7 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       target: CAPTURE_TARGET,
       duration_ms: elapsedMs(ctx, "capture_start"),
       user_response_returned: true,
+      ...provenance,
     });
     return { ok: true };
   } catch (e) {
@@ -510,6 +571,9 @@ export function createReadHandler(deps = {}) {
       whyItMatters: clip(str(caseObj.why_it_matters), WHY_MAX),
       openQuestion: clip(str(body.open_question), QUESTION_MAX),
       answer: clip(str(body.answer), ANSWER_MAX),
+      // Optional inspected-AI-model label from the Workbench (e.g. "ChatGPT").
+      // Provenance context only: never sent to the model, empty when unknown.
+      inspectedModel: clip(str(body.inspected_model), INSPECTED_MODEL_MAX),
       textcheck: {
         surfaced: !!textcheck.surfaced,
         found,
