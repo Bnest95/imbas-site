@@ -26,13 +26,21 @@ The live Workbench UI is compiled from source into a static bundle. **`workbench
 
 If the bundle is stale (source edited but not rebuilt), Workbench behavior may not match `workbench-app.jsx`.
 
+**Staleness guardrail:** `npm run check:workbench` (also run inside `npm test` via
+`test/workbench-bundle.test.mjs`) rebuilds `workbench-app.jsx` in memory and compares the
+SHA-256 against the committed `workbench.bundle.js`. A mismatch exits non-zero and fails the
+test suite loudly. Both use the shared esbuild config in `scripts/workbench-build-config.mjs`,
+so the check and the real build can't drift. A comment/whitespace-only edit that doesn't change
+the minified output is intentionally treated as in-sync.
+
 When changing Workbench logic or copy:
 
 1. Edit `workbench-app.jsx`
 2. Run `npm run build:workbench`
 3. Commit `workbench-app.jsx` and `workbench.bundle.js`
-4. Run `node qa-screenshots-case-structure-fix/final-check.mjs`
-5. Run `node qa-screenshots-case-structure-fix/metadata-check.mjs`
+4. Run `npm test` (or `npm run check:workbench`) to confirm the bundle is in sync
+5. Run `node qa-screenshots-case-structure-fix/final-check.mjs`
+6. Run `node qa-screenshots-case-structure-fix/metadata-check.mjs`
 
 First-time or after pulling changes that touch `package.json`:
 

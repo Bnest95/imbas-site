@@ -3,6 +3,7 @@
   "type": "module",
   "scripts": {
     "build:workbench": "node scripts/build-workbench.mjs",
+    "check:workbench": "node scripts/check-workbench-bundle.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
