@@ -126,7 +126,8 @@ test("durable rate limit uses redis when configured", async () => {
           if (c[0] === "EXPIRE") return 1;
           return null;
         });
-        return { ok: true, json: async () => ({ result: results }) };
+        // Upstash /pipeline returns a top-level array of {result} objects.
+        return { ok: true, json: async () => results.map((r) => ({ result: r })) };
       }
       return { ok: true, json: async () => ({ result: null }) };
     },
@@ -177,7 +178,8 @@ test("durable rate limit honors Vercel Marketplace KV_REST_API_* names", async (
         if (c[0] === "EXPIRE") return 1;
         return null;
       });
-      return { ok: true, json: async () => ({ result: results }) };
+      // Upstash /pipeline returns a top-level array of {result} objects.
+      return { ok: true, json: async () => results.map((r) => ({ result: r })) };
     }
     return { ok: true, json: async () => ({ result: null }) };
   };

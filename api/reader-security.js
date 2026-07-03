@@ -132,10 +132,20 @@ async function redisPipeline(commands, env = process.env, signal) {
       return { ok: false, reason: "redis_http", status: res.status };
     }
     const data = await res.json();
-    if (data && data.error) {
-      return { ok: false, reason: "redis_error", detail: String(data.error).slice(0, 120) };
+    // Upstash's /pipeline returns a top-level ARRAY — one {result}|{error}
+    // object per command — not the single {result} envelope the base endpoint
+    // uses. Flatten to a positional value array so callers can read result[i].
+    if (!Array.isArray(data)) {
+      if (data && data.error) {
+        return { ok: false, reason: "redis_error", detail: String(data.error).slice(0, 120) };
+      }
+      return { ok: false, reason: "redis_bad_shape" };
     }
-    return { ok: true, result: data.result };
+    const errored = data.find((entry) => entry && entry.error);
+    if (errored) {
+      return { ok: false, reason: "redis_error", detail: String(errored.error).slice(0, 120) };
+    }
+    return { ok: true, result: data.map((entry) => (entry ? entry.result : undefined)) };
   } catch (e) {
     return {
       ok: false,
