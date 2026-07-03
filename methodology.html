@@ -144,7 +144,7 @@
     <header class="meth-masthead">
       <span class="section-label section-label--named"><span>Observed behavior, not intent</span></span>
       <h1 class="meth-masthead__title">Methodology</h1>
-      <p class="page__intro">Imbas measures what AI systems surface under different prompt conditions.</p>
+      <p class="page__intro">Imbas is the inspection layer for AI answers. It measures what AI systems surface under different prompt conditions.</p>
       <p class="page__intro meth-intro--tight">It compares what appears in an open-ended answer with what appears when the same system is asked directly about a specific topic.</p>
       <p class="page__intro meth-intro--tight">The goal is not to infer intent. The goal is to observe behavior.</p>
     </header>
@@ -164,6 +164,11 @@
 
     <section class="meth-section meth-gap">
       <h2 class="meth-section__title">The Volunteer Gap methodology</h2>
+      <div class="meth-section__body">
+        <p>The Volunteer Gap was the first behavior Imbas measured. v1 was the initial hypothesis test: an early scored set that established the first capture discipline, the 0&ndash;3 rubric, and case-record practice around preserved prompts, outputs, rubric anchors, and quoted evidence.</p>
+        <p>That work produced measurable gaps, null and control findings, and enough methodological friction to justify further measurement. It also exposed a broader inspection problem. AI answers increasingly mediate what people see and understand, but answer behavior is difficult to inspect, compare, and preserve across systems and prompt conditions.</p>
+        <p>Imbas has expanded from the initial Volunteer Gap study into an independent inspection layer for AI answers and a growing public evidence system. Volunteer Gap remains a named measurement and an important part of the methodology. It is not the ceiling of Imbas.</p>
+      </div>
       <ol class="meth-protocol-list meth-method-steps" role="list">
         <li>Capture an open-ended answer.</li>
         <li>Capture a targeted inspection answer.</li>
@@ -241,7 +246,7 @@
       <h2 class="meth-section__title">Controls, nulls, and failure cases</h2>
       <div class="meth-doctrine-plate">
         <p>A measurement system that always finds the worst interpretation is suspect.</p>
-        <p>Imbas produces null findings, small gaps, ambiguous results, and controls. Variance is what proves the methodology measures something real rather than forcing a conclusion.</p>
+        <p>Imbas produces null findings, small gaps, ambiguous results, and controls. Variance is what shows the methodology measures something real rather than forcing a conclusion.</p>
         <p>The v1 dataset includes three control cases. The strongest control was Case 013 (OxyContin), which produced an aggregate gap of 0.75 &mdash; the smallest in the v1 set. One model scored a perfect 0. This is the methodology working as designed: when coverage density is high enough, models surface specifics regardless of prompt openness.</p>
       </div>
       <p>Findings are stated as observed behavior:</p>
@@ -275,11 +280,11 @@
           <dd>3 pts</dd>
         </div>
       </dl>
-      <p>The finding generalizes: prompt framing is a documented behavioral lever on what models volunteer. v2 expands cross-tier capture to additional cases to confirm the pattern.</p>
+      <p>The finding generalizes: prompt framing is a documented behavioral lever on what models volunteer. Cross-tier capture continues beyond v1 to confirm the pattern under the next protocol.</p>
     </section>
 
     <section class="meth-section meth-dataset">
-      <h2 class="meth-section__title">v1 dataset in brief</h2>
+      <h2 class="meth-section__title">The first scored set</h2>
       <dl class="meth-dataset-strip">
         <div class="meth-dataset-strip__item">
           <dt>Cases scored (v1)</dt>
@@ -290,24 +295,15 @@
           <dd>4 frontier models</dd>
         </div>
         <div class="meth-dataset-strip__item">
-          <dt>Mean hypothesis gap</dt>
-          <dd>1.65</dd>
-        </div>
-        <div class="meth-dataset-strip__item">
-          <dt>Mean control gap</dt>
-          <dd>1.17</dd>
-        </div>
-        <div class="meth-dataset-strip__item">
-          <dt>Range</dt>
-          <dd>0.75&ndash;2.50</dd>
+          <dt>Period</dt>
+          <dd>May 2026</dd>
         </div>
       </dl>
       <div class="meth-section__body">
-        <p>Current public cases compare ChatGPT, Claude, Gemini, and Grok.</p>
-        <p>v1 covers 13 cases scored across 4 frontier models (May 2026). Mean hypothesis gap: 1.65. Mean control gap: 1.17. Range: 0.75 to 2.50.</p>
-        <p>The Case Archive holds 50 cases recorded and 500+ captures across those four frontier models, including cases captured beyond the v1 scored set.</p>
-        <p>The discrimination between hypothesis cases and controls is real but modest. v2 expands the control set to firm up the distinction.</p>
-        <p>Three v1 cases showed structural omission (Case 003 Tier 1, Case 005, Case 006 &mdash; aggregate gaps 2.00 or higher). Six cases showed medium named-term omission. Three controls plus Case 003 Tier 2 produced small gaps.</p>
+        <p>The first Imbas study tested 13 cases across four frontier models in May 2026. It was an early hypothesis test, not a population survey.</p>
+        <p>The initial scored set produced larger gaps in several hypothesis cases than in the control set, alongside null and small-gap findings. Three v1 cases showed structural omission (Case 003 Tier 1, Case 005, Case 006 &mdash; aggregate gaps 2.00 or higher). Six cases showed medium named-term omission. Three controls plus Case 003 Tier 2 produced small gaps.</p>
+        <p>The distinction between hypothesis cases and controls was real but modest. Those limitations directly informed the next measurement protocol and the broader Imbas inspection system.</p>
+        <p>Beyond the v1 scored set, the Case Archive is a growing reviewed record with additional captures and cases under the current rubric.</p>
       </div>
     </section>
 
@@ -317,23 +313,23 @@
       <div class="meth-limitations-plate">
         <article class="meth-limitation">
           <h3 class="meth-limitation__label">Single scorer.</h3>
-          <p>All v1 scoring was conducted by the founder against published case-specific rubrics. Inter-rater reliability has not yet been measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample.</p>
+          <p>All v1 scoring was conducted by the founder against published case-specific rubrics. Inter-rater reliability has not yet been measured. A blinded independent scoring sub-study is part of the next reliability protocol.</p>
         </article>
         <article class="meth-limitation">
           <h3 class="meth-limitation__label">Single capture per condition.</h3>
-          <p>Each case &times; model &times; prompt-tier combination was captured once. Frontier models are stochastic; within-condition variance was not measured in v1. v2 captures each prompt three times per condition.</p>
+          <p>Each case &times; model &times; prompt-tier combination was captured once. Frontier models are stochastic; within-condition variance was not measured in v1. The next protocol calls for repeated capture per condition.</p>
         </article>
         <article class="meth-limitation">
           <h3 class="meth-limitation__label">Single time point.</h3>
-          <p>v1 captures were taken within roughly 48 hours. Behavior across weeks and model updates is not yet measured. v2 includes a cross-day stability sub-study.</p>
+          <p>v1 captures were taken within roughly 48 hours. Behavior across weeks and model updates is not yet measured. Cross-day stability measurement is part of the next protocol.</p>
         </article>
         <article class="meth-limitation">
           <h3 class="meth-limitation__label">Possible selection bias.</h3>
-          <p>v1 cases were selected for hypothesized properties. v2 adds a random-topic sub-study drawing cases from a defined pool to test whether gaps appear at similar rates outside the selected set.</p>
+          <p>v1 cases were selected for hypothesized properties. A random-topic sub-study is part of the next protocol design to test whether gaps appear at similar rates outside the selected set.</p>
         </article>
         <article class="meth-limitation">
           <h3 class="meth-limitation__label">No blinded scoring in v1.</h3>
-          <p>The scorer knew which model produced each response. v2 includes a blinded re-scoring sub-study.</p>
+          <p>The scorer knew which model produced each response. Blinded re-scoring is part of the next reliability protocol.</p>
         </article>
       </div>
       <p>The methodology is auditable, not authoritative. A critic who disagrees with a scoring decision can examine the captured response, the rubric, and the cited evidence and reach a different conclusion. That is the point.</p>
@@ -342,8 +338,9 @@
     <section class="meth-section meth-validation">
       <h2 class="meth-section__title">Human validation</h2>
       <div class="meth-doctrine-plate meth-doctrine-plate--compact">
-        <p>AI may eventually propose candidate cases. AI may eventually first-pass score against published rubrics. AI never adds to the validated archive without human confirmation.</p>
-        <p>The validated archive is a human-confirmed record. The point is inspectability, not automation theater.</p>
+        <p>Reader inspections can produce candidate observations. Candidate observations do not enter the public archive automatically.</p>
+        <p>Cases selected for the public record are reviewed against preserved evidence, prompt conditions, and the applicable rubric before publication.</p>
+        <p>The archive is a human-confirmed record. The point is inspectability, not automation theater.</p>
       </div>
     </section>
 
@@ -364,8 +361,9 @@
           <p>Production monitoring tools track deployed systems for drift, performance, quality, and incidents.</p>
         </article>
       </div>
-      <p>Imbas measures a different layer: cross-model information-surfacing behavior under documented prompt conditions, preserved as inspectable case records.</p>
-      <p>It is not a replacement for those tools. It is a missing layer beside them.</p>
+      <p>Imbas measures a different layer: how AI answers surface information under documented conditions, and how that behavior changes across prompts, systems, and time.</p>
+      <p>The Reader makes individual answers inspectable. The public record preserves consequential observations for comparison and review.</p>
+      <p>It is not a replacement for existing evaluation or monitoring systems. It is an inspection layer beside them.</p>
     </section>
 
     <div class="page__cta-row meth-cta">

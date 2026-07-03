@@ -99,22 +99,22 @@
       {
         "@type": "Question",
         "name": "What is the Volunteer Gap?",
-        "acceptedAnswer": { "@type": "Answer", "text": "The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know. Imbas measures the Volunteer Gap under documented prompt conditions — signal, not verdict. Full definition: https://www.imbaslabs.com/volunteer-gap.html" }
+        "acceptedAnswer": { "@type": "Answer", "text": "The difference between what an AI system surfaces under an open question and what becomes available under targeted inspection. It was the first behavior Imbas measured. Full definition: https://www.imbaslabs.com/volunteer-gap.html" }
       },
       {
         "@type": "Question",
         "name": "Is Imbas a fact-checking site?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. Imbas measures what AI systems surface or leave out under documented prompt conditions." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Imbas inspects answer behavior. It can identify missing context, changed framing, or information that appears only under different prompt conditions. Factual claims still require independent verification." }
       },
       {
         "@type": "Question",
         "name": "Is the Volunteer Gap a claim about intent?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. It measures observed behavior, not model intent." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. It is a measurement of observed answer behavior under documented prompt conditions." }
       },
       {
         "@type": "Question",
         "name": "Is this the same as AI bias?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. Bias is a broader category and often implies a theory of cause or direction. Imbas records specific observable differences in information surfacing." }
       },
       {
         "@type": "Question",
@@ -129,52 +129,52 @@
       {
         "@type": "Question",
         "name": "Who is Imbas for?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Readers inspecting AI answers, researchers studying model behavior, and institutions that need reviewable evidence about how AI systems surface information." }
       },
       {
         "@type": "Question",
         "name": "Is the methodology final?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. It is versioned and will evolve as the archive grows." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. The initial Volunteer Gap protocol was an early hypothesis test. The methodology is being hardened through repeated capture, broader controls, provenance discipline, and reliability work." }
       },
       {
         "@type": "Question",
         "name": "How many cases are in the archive?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Imbas currently has 50 recorded cases, 13 cases scored in v1, and 5 public case pages published. Recorded cases are captured under documented conditions; scored cases have rubric-assigned gap scores; public cases have full pages available for inspection." }
+        "acceptedAnswer": { "@type": "Answer", "text": "The archive is a growing reviewed record. Published cases are only one layer of the broader capture and inspection record." }
       },
       {
         "@type": "Question",
         "name": "Why does Imbas refuse to say \"this AI is biased\"?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Because the moment a measurement system says \"this AI is wrong\" or \"this answer is biased,\" it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Because the evidence supports a narrower claim: under documented prompt condition X, model Y surfaced or omitted Z. Imbas preserves that claim at the level the evidence can support." }
       },
       {
         "@type": "Question",
         "name": "Is there an inter-rater reliability number for the v1 scoring?",
-        "acceptedAnswer": { "@type": "Answer", "text": "No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated." }
+        "acceptedAnswer": { "@type": "Answer", "text": "No. v1 was single-scored by the founder against published case-specific rubrics. Independent blinded scoring is part of the reliability work underway." }
       },
       {
         "@type": "Question",
         "name": "What does Imbas mean by \"behavioral observability\"?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed." }
+        "acceptedAnswer": { "@type": "Answer", "text": "The ability to inspect and compare what AI systems actually surface under documented conditions without inferring internal beliefs, motives, or intent." }
       },
       {
         "@type": "Question",
         "name": "Why does Imbas use multiple models?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Cross-model comparison helps distinguish a model-specific response from a broader information-surfacing pattern." }
       },
       {
         "@type": "Question",
         "name": "Why do documented prompt conditions matter?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Because an observation is only meaningful if the conditions that produced the answer can be inspected." }
       },
       {
         "@type": "Question",
         "name": "Can Imbas be wrong?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Scoring can be disputed, prompts can be poorly designed, evidence can be incomplete, and model behavior changes. The point of the record is that the prompt, output, rubric, and evidence can be inspected and challenged." }
       },
       {
         "@type": "Question",
         "name": "What happens next?",
-        "acceptedAnswer": { "@type": "Answer", "text": "The archive expands. More cases are recorded, scored, and published. The methodology is updated as new evidence and validation work become available." }
+        "acceptedAnswer": { "@type": "Answer", "text": "Imbas is expanding the public case record, hardening the Reader and provenance workflow, improving repeated cross-model inspection, and extending the measurement system beyond the first Volunteer Gap behavior." }
       }
     ]
   }
@@ -228,7 +228,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-01" role="region" aria-labelledby="faq-q-01" hidden>The Volunteer Gap is the difference between what a model surfaces on an open-ended prompt and what the same model surfaces when directly asked about the underlying specific topic. It tells us what users see versus what models know. Imbas measures the Volunteer Gap under documented prompt conditions &mdash; signal, not verdict. <a href="/volunteer-gap.html">Read the full Volunteer Gap definition</a>.</dd>
+          <dd class="faq-entry__answer" id="faq-a-01" role="region" aria-labelledby="faq-q-01" hidden>The difference between what an AI system surfaces under an open question and what becomes available under targeted inspection. It was the first behavior Imbas measured. <a href="/volunteer-gap.html">Read the full Volunteer Gap definition</a>.</dd>
         </div>
 
         <div class="faq-entry">
@@ -238,7 +238,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-02" role="region" aria-labelledby="faq-q-02" hidden>No. Imbas measures what AI systems surface or leave out under documented prompt conditions.</dd>
+          <dd class="faq-entry__answer" id="faq-a-02" role="region" aria-labelledby="faq-q-02" hidden>No. Imbas inspects answer behavior. It can identify missing context, changed framing, or information that appears only under different prompt conditions. Factual claims still require independent verification.</dd>
         </div>
 
         <div class="faq-entry">
@@ -248,7 +248,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-03" role="region" aria-labelledby="faq-q-03" hidden>No. It measures observed behavior, not model intent.</dd>
+          <dd class="faq-entry__answer" id="faq-a-03" role="region" aria-labelledby="faq-q-03" hidden>No. It is a measurement of observed answer behavior under documented prompt conditions.</dd>
         </div>
 
         <div class="faq-entry">
@@ -258,7 +258,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-04" role="region" aria-labelledby="faq-q-04" hidden>No. Bias is one possible interpretation in some contexts. Imbas starts with observable surfacing behavior.</dd>
+          <dd class="faq-entry__answer" id="faq-a-04" role="region" aria-labelledby="faq-q-04" hidden>No. Bias is a broader category and often implies a theory of cause or direction. Imbas records specific observable differences in information surfacing.</dd>
         </div>
 
         <div class="faq-entry">
@@ -288,7 +288,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-07" role="region" aria-labelledby="faq-q-07" hidden>Readers, researchers, institutions, journalists, and anyone who wants a clearer record of how AI systems behave.</dd>
+          <dd class="faq-entry__answer" id="faq-a-07" role="region" aria-labelledby="faq-q-07" hidden>Readers inspecting AI answers, researchers studying model behavior, and institutions that need reviewable evidence about how AI systems surface information.</dd>
         </div>
 
         <div class="faq-entry">
@@ -298,7 +298,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-08" role="region" aria-labelledby="faq-q-08" hidden>No. It is versioned and will evolve as the archive grows.</dd>
+          <dd class="faq-entry__answer" id="faq-a-08" role="region" aria-labelledby="faq-q-08" hidden>No. The initial Volunteer Gap protocol was an early hypothesis test. The methodology is being hardened through repeated capture, broader controls, provenance discipline, and reliability work.</dd>
         </div>
       </dl>
     </section>
@@ -312,7 +312,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-09" role="region" aria-labelledby="faq-q-09" hidden>Imbas currently has 50 recorded cases, 13 cases scored in v1, and 5 public case pages published. Recorded cases are captured under documented conditions; scored cases have rubric-assigned gap scores; public cases have full pages available for inspection.</dd>
+          <dd class="faq-entry__answer" id="faq-a-09" role="region" aria-labelledby="faq-q-09" hidden>The archive is a growing reviewed record. Published cases are only one layer of the broader capture and inspection record.</dd>
         </div>
 
         <div class="faq-entry">
@@ -322,7 +322,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-10" role="region" aria-labelledby="faq-q-10" hidden>Because the moment a measurement system says &ldquo;this AI is wrong&rdquo; or &ldquo;this answer is biased,&rdquo; it becomes another opinion engine. The discipline of surface-not-judge is what distinguishes Imbas from bias detection tools, fact-checkers, and AI accountability claims that render verdicts. Imbas surfaces specific named mechanisms that exist in the documented record. It does not tell you whether their omission matters. You decide.</dd>
+          <dd class="faq-entry__answer" id="faq-a-10" role="region" aria-labelledby="faq-q-10" hidden>Because the evidence supports a narrower claim: under documented prompt condition X, model Y surfaced or omitted Z. Imbas preserves that claim at the level the evidence can support.</dd>
         </div>
 
         <div class="faq-entry">
@@ -332,7 +332,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-11" role="region" aria-labelledby="faq-q-11" hidden>No. v1 was scored by the founder against published case-specific rubrics. Inter-rater reliability was not measured. v2 includes a blinded sub-study with an independent collaborator scoring a random sample of cases. The reliability number will be reported when v2 publishes. Pre-loading this limitation is part of the methodology being honest about what it has and has not yet demonstrated.</dd>
+          <dd class="faq-entry__answer" id="faq-a-11" role="region" aria-labelledby="faq-q-11" hidden>No. v1 was single-scored by the founder against published case-specific rubrics. Independent blinded scoring is part of the reliability work underway.</dd>
         </div>
       </dl>
     </section>
@@ -346,7 +346,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-12" role="region" aria-labelledby="faq-q-12" hidden>Behavioral observability means preserving a record of how AI systems behave under documented prompt conditions. Imbas is not trying to read model intent. It records what surfaced, what did not, and what changed when the prompt changed.</dd>
+          <dd class="faq-entry__answer" id="faq-a-12" role="region" aria-labelledby="faq-q-12" hidden>The ability to inspect and compare what AI systems actually surface under documented conditions without inferring internal beliefs, motives, or intent.</dd>
         </div>
 
         <div class="faq-entry">
@@ -356,7 +356,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-13" role="region" aria-labelledby="faq-q-13" hidden>Cross-model comparison helps separate a one-off answer from a broader behavioral pattern. If the same specific named mechanism is omitted across several frontier models under similar prompt conditions, the signal is stronger.</dd>
+          <dd class="faq-entry__answer" id="faq-a-13" role="region" aria-labelledby="faq-q-13" hidden>Cross-model comparison helps distinguish a model-specific response from a broader information-surfacing pattern.</dd>
         </div>
 
         <div class="faq-entry">
@@ -366,7 +366,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-14" role="region" aria-labelledby="faq-q-14" hidden>Because AI answers shift with prompt wording, model version, date, session state, and context. A case record is only useful if another person can inspect the conditions under which the answer was produced.</dd>
+          <dd class="faq-entry__answer" id="faq-a-14" role="region" aria-labelledby="faq-q-14" hidden>Because an observation is only meaningful if the conditions that produced the answer can be inspected.</dd>
         </div>
 
         <div class="faq-entry">
@@ -376,7 +376,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-15" role="region" aria-labelledby="faq-q-15" hidden>Yes. A scoring judgment can be challenged. That is why the archive should preserve the prompt, model, output, rubric, cited evidence, and limitations. The point is not to make the score untouchable. The point is to make the record inspectable.</dd>
+          <dd class="faq-entry__answer" id="faq-a-15" role="region" aria-labelledby="faq-q-15" hidden>Yes. Scoring can be disputed, prompts can be poorly designed, evidence can be incomplete, and model behavior changes. The point of the record is that the prompt, output, rubric, and evidence can be inspected and challenged.</dd>
         </div>
 
         <div class="faq-entry">
@@ -386,7 +386,7 @@
               <span class="faq-entry__toggle" aria-hidden="true"><span class="faq-entry__icon">+</span></span>
             </button>
           </dt>
-          <dd class="faq-entry__answer" id="faq-a-16" role="region" aria-labelledby="faq-q-16" hidden>The archive expands. More cases are recorded, scored, and published. The methodology is updated as new evidence and validation work become available.</dd>
+          <dd class="faq-entry__answer" id="faq-a-16" role="region" aria-labelledby="faq-q-16" hidden>Imbas is expanding the public case record, hardening the Reader and provenance workflow, improving repeated cross-model inspection, and extending the measurement system beyond the first Volunteer Gap behavior.</dd>
         </div>
       </dl>
     </section>
