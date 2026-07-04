@@ -287,6 +287,103 @@ the ledger is internally inconsistent).
 Integrity logic is unit-tested with synthetic in-memory fixtures — no dependency on the uncommitted
 `grant-engine/` files (`test/check-submission-snapshots.test.mjs`).
 
+## Grant Tracker reconciliation (evidence → operational fields)
+
+`npm run reconcile:grants` (`scripts/grant-reconcile.mjs`) turns **body-free** funder-reply evidence
+into a minimal, idempotent set of operational-field updates on the Grant Tracker
+(`tbllp4STmYOafMWy3`, base `appfxHraqlcpP1AAP`). It answers, per grant: did we submit, when, is the
+submission email-confirmed, did the funder reply, what kind of reply, is an action owed — and routes
+everything it is not confident about to human review instead of writing a guess.
+
+**Why a pure engine, not a cron.** Gmail is only reachable through the agent's read-only MCP; there is
+**no Gmail credential in the CLI/serverless environment**, so nothing here can autonomously scan a
+mailbox. The shippable artifact is therefore a **pure, tested reconciliation core**: the agent (or any
+future credentialed run) does the Gmail read, distills each thread into a small body-free evidence
+record, and feeds the engine three JSON inputs plus a field map. The engine classifies, matches, and
+plans; it never reads mail itself. Writes are applied either by the agent over the Airtable MCP or by
+the script's own `--apply` REST path.
+
+**Inputs (all body-free JSON, all live in uncommitted `grant-engine/reconcile/`):**
+
+- `--evidence` — one record per grant: `grant_key`, `funder`, `record_id`, `submitted_date`,
+  `source` (`gmail` | `none`), `evidence_id` (stable Gmail thread id = the idempotency anchor),
+  `reply_type`, `asks_response`, `responded`. **No addresses, subjects, or bodies.**
+- `--ledger` — the submissions ledger (`grant_id`-keyed) used only to decide whether a confirmed
+  submission is already tracked (drives the `needsReview` flag, never a field value).
+- `--tracker` — a snapshot of current row field values, so the plan can diff against live state.
+- `--fieldmap` — maps the six writable logical names to live Grant Tracker field IDs.
+
+**Field allowlist (the only cells it may ever touch).** Anything outside this frozen set is refused:
+
+| Logical | Grant Tracker field | Type | Written when |
+|---------|---------------------|------|--------------|
+| `submitted` | `fldcuKha1d5EcKeKL` | checkbox | submission is `gmail`-confirmed |
+| `submissionDate` | `fldvzyR5wcjX31zWb` | date | with a confirmed submission (never invented) |
+| `responseCategory` | `fldafDQvCpTduSDOg` | singleSelect | a reply is classified with confidence |
+| `actionRequired` | `fldMhuw8GK4tmGQZC` | checkbox | reply-required / interview / more-info |
+| `evidenceRef` | `fld9UasKkEtYJGJGy` | singleLineText | always (the thread id, for traceability) |
+| `result` | `fldWh0ypaABi2LVCF` | singleSelect | award/rejection **only when decisive** |
+
+The last three are **additive fields created on this base on 2026-07-03** via the Airtable schema API
+(Response Category = `fldafDQvCpTduSDOg`, singleSelect with the eight categories below; Action Required
+= `fldMhuw8GK4tmGQZC`, checkbox; Evidence Ref = `fld9UasKkEtYJGJGy`, single line text), each carrying
+the provenance description "Additive operational field, added 2026-07-03." The first three
+(`Submitted`, `Submission Date`, `Result`) pre-existed.
+
+**Evidence categories** (`responseCategory` values): `acknowledgment`, `award`, `rejection`,
+`interview-meeting`, `more-info-requested`, `reply-required`, `decision-status-update`,
+`other-uncertain`.
+
+**Safety guarantees (all unit-tested):**
+
+- **Idempotent.** A second run with no new evidence writes nothing. No-ops are decided by a
+  checkbox-tolerant comparator (`sameValue`) — Airtable returns an unchecked box as *absent* on
+  read-back, so a desired `false` correctly matches an absent cell and is never rewritten.
+- **Never erases.** Empty inferred values never overwrite a populated cell (except an explicit
+  `actionRequired` clear when a reply-required item is resolved).
+- **Never downgrades human truth.** A strong human `Result` (`Accepted`/`Rejected`/`Withdrawn`) and a
+  populated `Submission Date` are protected from weaker inferred writes; `responseCategory` is kept as-is
+  when the same evidence id already backs the row.
+- **Uncertainty is routed, not written.** Non-Gmail sources, undecisive award/rejection signals,
+  unknown reply shapes, and confirmed-but-unledgered submissions produce **no field writes** and are
+  listed for human review. Award/rejection is written only when the evidence is marked decisive.
+- **Body-free reports.** The dry-run report prints funder, record id, field ids, and category only —
+  never an address, subject, snippet, or body.
+
+**Run it — dry run first, always:**
+
+```
+# dry run (default): prints the plan, writes nothing, no token needed
+npm run reconcile:grants -- \
+  --evidence grant-engine/reconcile/evidence.json \
+  --ledger grant-engine/applications/submissions-ledger.json \
+  --tracker grant-engine/reconcile/tracker-snapshot.json \
+  --fieldmap grant-engine/reconcile/fieldmap.json
+
+# apply (needs a token; PATCHes then reads each row back to verify):
+AIRTABLE_TOKEN=… npm run reconcile:grants -- --apply --evidence … --ledger … --tracker … --fieldmap …
+```
+
+`--apply` PATCHes only the planned cells and **reads each row back to confirm the write landed**
+(again using the checkbox-tolerant comparator, so a dropped `false` is not a false alarm). Exit codes:
+`0` ok, `2` bad usage, `3` `--apply` without `AIRTABLE_TOKEN`, `1` runtime / Airtable error, `4`
+apply-verify mismatch (a written cell did not read back as intended).
+
+**Manual creation (fresh base / new environment):** create Response Category as a singleSelect with the
+eight category options, Action Required as a checkbox, and Evidence Ref as single line text on the Grant
+Tracker before applying. As with the Reader provenance fields, Airtable will **not** auto-create them — a
+PATCH naming a missing field returns HTTP 422 and fails the row.
+
+**Verification (schema-presence + one dry run):** confirm the three additive fields exist via
+`get_table_schema` (or the Airtable UI), then run a dry run and read the plan — a clean reconciled state
+prints `field writes: 0`. Because Gmail is agent-only, do not expect a scheduled job to keep this
+current; it is re-run when new funder replies are observed.
+
+Classification, matching, planning, and apply-verify logic are unit-tested with **synthetic fixtures and
+an injected fake `fetch`** — no live Airtable, no Gmail, no network, and no real email content in any
+fixture (`test/grant-reconcile.test.mjs`). `grant-engine/` is local scratch and is **not committed**, so
+a fresh checkout ships the engine and its tests but none of the evidence, ledger, or snapshots.
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.

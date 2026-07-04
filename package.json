@@ -6,6 +6,7 @@
     "check:workbench": "node scripts/check-workbench-bundle.mjs",
     "check:snapshots": "node scripts/check-submission-snapshots.mjs",
     "metrics": "node scripts/imbas-metrics.mjs",
+    "reconcile:grants": "node scripts/grant-reconcile.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
