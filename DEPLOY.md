@@ -265,6 +265,28 @@ token it exits non-zero and makes no request. Exit codes: `0` ok, `2` bad usage,
 Classification/aggregation logic is unit-tested with no live Airtable calls
 (`test/imbas-metrics.test.mjs`).
 
+## As-submitted snapshot integrity (read-only)
+
+`npm run check:snapshots` (`scripts/check-submission-snapshots.mjs`) verifies that the archived
+as-submitted grant artifacts still match what was recorded when they were saved. It reads a
+hand-maintained ledger, `grant-engine/applications/submissions-ledger.json`, and for every entry
+marked `snapshot_present` it **recomputes the sha256 of each artifact file and asserts it still
+matches the recorded hash** — making the snapshots tamper-evident. Entries marked
+`submission_version_unknown` are listed as **open gaps for human review, not failures**: the honest
+state of a hand submission is often "we know it was submitted, we can't prove which byte-exact draft
+went out," and the script never fabricates a snapshot or copies a live draft to fill a gap.
+
+It is **read-only**: it hashes the ledgered files and writes nothing — no network, no Airtable, no
+Gmail. It never prints artifact contents and never prints hash values; a mismatch is reported by
+filename and reason only. `grant-engine/` is local scratch and is **not committed**, so a fresh
+checkout has no ledger — that is not an error: the script says so and exits `0`. Exit codes: `0` ok
+(all present artifacts verify, or no ledger to check), `2` bad usage, `1` runtime (ledger unreadable
+/ invalid JSON), `4` check failed (a snapshot artifact is missing or its hash no longer matches, or
+the ledger is internally inconsistent).
+
+Integrity logic is unit-tested with synthetic in-memory fixtures — no dependency on the uncommitted
+`grant-engine/` files (`test/check-submission-snapshots.test.mjs`).
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
