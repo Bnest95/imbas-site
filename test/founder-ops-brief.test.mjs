@@ -23,6 +23,9 @@ import {
   stateFromBrief,
   assertStateClean,
   buildWarnings,
+  auditBundle,
+  scanForSensitive,
+  SENSITIVE_MAX_STRING,
   parseArgs,
   STATE_SCHEMA,
   SCORE_MAX,
@@ -100,8 +103,10 @@ function imbasBundle({ cases = [], repository = [], readerRuns = [], available =
 }
 
 function snapEntry(grant_id, present) {
+  // Body-free by contract: only status + a filename count reach the bundle — never a raw
+  // artifact hash (the engine consumes artifact_status only; a sha256 is a "hash value").
   return present
-    ? { grant_id, funder: grant_id, artifact_status: "snapshot_present", artifacts: [{ file: `${grant_id}.md`, sha256: "a".repeat(64) }] }
+    ? { grant_id, funder: grant_id, artifact_status: "snapshot_present", artifacts: [{ file: `${grant_id}.md` }] }
     : { grant_id, funder: grant_id, artifact_status: "submission_version_unknown", artifacts: [] };
 }
 function snapshotsBundle({ present = [], unknown = [], available = true } = {}) {
@@ -519,13 +524,57 @@ test("a fully empty bundle is all-unavailable, never a clean bill of health", ()
 // CLI arg parsing.
 // ---------------------------------------------------------------------------
 test("parseArgs supports inline = , flags, and rejects bad usage", () => {
-  const o = parseArgs(["--input=bundle.json", "--state", "s.json", "--save-state"]);
+  const o = parseArgs(["--input=bundle.json", "--state", "s.json", "--save-state", "--audit"]);
   assert.equal(o.input, "bundle.json");
   assert.equal(o.state, "s.json");
   assert.equal(o.saveState, true);
+  assert.equal(o.audit, true);
   assert.equal(o.out, "");
   assert.throws(() => parseArgs(["--nope"]), /unknown argument/);
   assert.throws(() => parseArgs(["--input"]), /missing value/);
+});
+
+// ---------------------------------------------------------------------------
+// Unattended leak gate (--audit / auditBundle / scanForSensitive).
+// ---------------------------------------------------------------------------
+test("auditBundle passes a clean body-free bundle", () => {
+  assert.deepEqual(auditBundle(fullBundle()), []);
+});
+
+test("audit flags a planted email address by path and kind, never the value", () => {
+  const b = fullBundle();
+  b.grants.evidence[0].from_domain = "grants@secret-funder.org"; // full address, not a domain
+  const hits = auditBundle(b);
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].kind, "email-address");
+  assert.match(hits[0].path, /grants\.evidence\[0\]\.from_domain/);
+  // the report object carries path + kind only — the matched value is never echoed
+  assert.deepEqual(Object.keys(hits[0]).sort(), ["kind", "path"]);
+  assert.equal(JSON.stringify(hits).includes("secret-funder"), false);
+});
+
+test("audit flags a content-hash and an api-token but allows a 16-hex thread id", () => {
+  const b = fullBundle();
+  b.grants.evidence[0].evidence_id = "19f1c58aa9e34095";        // 16-hex Gmail thread id — allowed
+  b.imbas.readerRuns[1].fields["Source Content Hash"] = "d".repeat(64); // real hash — blocked
+  b.grants.tracker[0].fields[FM.evidenceRef] = "sk-ant-api03-DEADbeef"; // token — blocked
+  const kinds = auditBundle(b).map((h) => h.kind).sort();
+  assert.deepEqual(kinds, ["api-token", "content-hash"]);
+});
+
+test("audit flags an overlong string (a body/prompt/answer stuffed into a field)", () => {
+  const b = fullBundle();
+  b.grants.evidence[0].reply_type = "x".repeat(SENSITIVE_MAX_STRING + 1);
+  const hits = scanForSensitive(b, "bundle");
+  assert.equal(hits.some((h) => h.kind === "overlong-string"), true);
+});
+
+test("scanForSensitive also guards the rendered brief and state (output side)", () => {
+  // A clean run's own render and state must themselves pass the same gate. The brief is a
+  // document (legitimately long), so the length heuristic is disabled for it; pattern checks stay.
+  const model = buildBrief(fullBundle(), null);
+  assert.deepEqual(scanForSensitive(renderBrief(model), "brief", { maxString: Infinity }), []);
+  assert.deepEqual(scanForSensitive(model.state, "state"), []);
 });
 
 // ---------------------------------------------------------------------------

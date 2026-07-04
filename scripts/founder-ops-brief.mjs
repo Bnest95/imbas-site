@@ -603,6 +603,53 @@ export function assertStateClean(state) {
 }
 
 // ---------------------------------------------------------------------------
+// scanForSensitive / auditBundle — pure. An UNATTENDED-mode leak gate (`--audit`).
+//
+// The engine is deliberately tolerant of junk in non-consumed fields: it reads only
+// allowlisted keys, so a stray value provably never reaches the render or the state
+// (that is the default, human-in-the-loop posture). When the brief runs unattended,
+// there is no human to privacy-scan the output before it is written or delivered, so
+// `--audit` adds a fail-closed gate: it deep-scans the input bundle, the rendered
+// brief, and the state object for content that must never leave the box — an email
+// address, a long content-hash, or an API/token prefix — and refuses to proceed if it
+// finds any. Reports carry the PATH and the KIND only, never the matched value, so the
+// gate itself cannot leak what it caught. A 16-hex Gmail thread id (a permitted stable
+// evidence reference) is intentionally below the 32-hex hash threshold and is not flagged.
+// ---------------------------------------------------------------------------
+export const SENSITIVE_PATTERNS = Object.freeze([
+  { kind: "email-address", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/ },
+  { kind: "content-hash",  re: /[0-9a-fA-F]{32,}/ },
+  { kind: "api-token",     re: /\bsk-[A-Za-z0-9_-]{8,}/ },
+  { kind: "token-prefix",  re: /\b(?:ghp_|gho_|xox[baprs]-|AKIA[0-9A-Z]{12,})/ },
+]);
+export const SENSITIVE_MAX_STRING = 400;
+
+// scanForSensitive(value, path, { maxString }) — walk a JSON value and return {path,kind}
+// hits, value withheld. The overlong-string heuristic catches a body/prompt/answer stuffed
+// into a structured field; pass maxString: Infinity to disable it when scanning a rendered
+// document (a brief is legitimately long — only embedded addresses/hashes/tokens matter there).
+export function scanForSensitive(value, path = "bundle", { maxString = SENSITIVE_MAX_STRING } = {}) {
+  const hits = [];
+  const walk = (v, p) => {
+    if (typeof v === "string") {
+      for (const { kind, re } of SENSITIVE_PATTERNS) {
+        if (re.test(v)) { hits.push({ path: p, kind }); return; }
+      }
+      if (v.length > maxString) hits.push({ path: p, kind: "overlong-string" });
+      return;
+    }
+    if (Array.isArray(v)) { v.forEach((el, i) => walk(el, `${p}[${i}]`)); return; }
+    if (v && typeof v === "object") { for (const k of Object.keys(v)) walk(v[k], `${p}.${k}`); }
+  };
+  walk(value, path);
+  return hits;
+}
+
+export function auditBundle(bundle) {
+  return scanForSensitive(bundle, "bundle");
+}
+
+// ---------------------------------------------------------------------------
 // renderBrief — pure. The morning brief in the fixed hierarchy. Markdown, concise.
 // ---------------------------------------------------------------------------
 export function renderBrief(model) {
@@ -763,11 +810,12 @@ function executiveSignal(model) {
 // Thin IO below. All logic above is the tested surface.
 // ---------------------------------------------------------------------------
 export function parseArgs(args) {
-  const opts = { input: "", state: "", out: "", saveState: false, help: false };
+  const opts = { input: "", state: "", out: "", saveState: false, audit: false, help: false };
   for (let i = 0; i < args.length; i++) {
     let a = args[i];
     if (a === "--help" || a === "-h") { opts.help = true; continue; }
     if (a === "--save-state") { opts.saveState = true; continue; }
+    if (a === "--audit") { opts.audit = true; continue; }
     let inlineVal = null;
     if (a.startsWith("--")) {
       const eq = a.indexOf("=");
@@ -793,11 +841,14 @@ export function parseArgs(args) {
 const USAGE = `founder-ops-brief — assemble the Founder Ops Daily Brief from a body-free bundle.
 
 Usage:
-  node scripts/founder-ops-brief.mjs --input bundle.json [--state state.json] [--save-state] [--out brief.md]
+  node scripts/founder-ops-brief.mjs --input bundle.json [--state state.json] [--save-state] [--audit] [--out brief.md]
 
 --input       required. Body-free JSON bundle the agent assembles from MCP reads.
 --state       optional. Prior-run state file for change detection (and --save-state target).
 --save-state  optional. Write the new operational state back to --state after rendering.
+--audit       optional. Unattended leak gate: fail closed (exit 2) if the bundle, the
+              rendered brief, or the state contains an address, hash, or token. Use for
+              every scheduled/unattended run — nothing is written or delivered if it trips.
 --out         optional. Write the brief to a file instead of stdout.
 
 Reads no network, no Gmail, no Airtable. Prints/saves operational summaries only — never
@@ -827,12 +878,31 @@ async function main(argv) {
     catch (e) { console.error(`error: ${e.message}`); process.exitCode = 2; return; }
   }
 
+  const reportLeaks = (where, hits) => {
+    console.error(`error: --audit blocked ${where} — ${hits.length} sensitive pattern(s) found (values withheld):`);
+    for (const h of hits) console.error(`  ${h.path}: ${h.kind}`);
+    console.error("Nothing was written or delivered.");
+  };
+
+  if (opts.audit) {
+    const inHits = auditBundle(bundle);
+    if (inHits.length) { reportLeaks("the input bundle", inHits); process.exitCode = 2; return; }
+  }
+
   let model, rendered;
   try {
     model = buildBrief(bundle, prevState);
     assertStateClean(model.state); // defense in depth before anything is written
     rendered = renderBrief(model);
   } catch (e) { console.error(`error: ${e.message}`); process.exitCode = 1; return; }
+
+  if (opts.audit) {
+    const outHits = [
+      ...scanForSensitive(rendered, "brief", { maxString: Infinity }), // a brief is legitimately long
+      ...scanForSensitive(model.state, "state"),
+    ];
+    if (outHits.length) { reportLeaks("the rendered brief/state", outHits); process.exitCode = 2; return; }
+  }
 
   if (opts.out) {
     try { mkdirSync(dirname(opts.out), { recursive: true }); writeFileSync(opts.out, rendered + "\n"); }
