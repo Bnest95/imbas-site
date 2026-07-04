@@ -384,6 +384,93 @@ an injected fake `fetch`** — no live Airtable, no Gmail, no network, and no re
 fixture (`test/grant-reconcile.test.mjs`). `grant-engine/` is local scratch and is **not committed**, so
 a fresh checkout ships the engine and its tests but none of the evidence, ledger, or snapshots.
 
+## Founder Ops Daily Brief (one decision-ordered operating brief)
+
+`npm run ops:brief` (`scripts/founder-ops-brief.mjs`) folds the operational state we already collect —
+grant reconciliation, as-submitted snapshot coverage, and the Imbas pipeline metrics — into **one
+decision-ordered morning brief** plus a tiny durable state file so each run can say what changed since
+the last. It is an internal operating instrument: **no dashboard, no public route, no database, no
+account.** It reads no network, no Gmail, no Airtable, and spends no money.
+
+**Why a pure engine, not a cron (same credential reality as reconcile).** There is **no Gmail
+credential and no `AIRTABLE_TOKEN` in the CLI/serverless environment**, so the collection step — reading
+funder replies and the live tables — is inherently agent-driven and cannot run unattended. What is
+deterministic, tested, and reusable is everything downstream: it reuses `grant-reconcile` (classification
++ the four evidence states), `check-submission-snapshots` (`classifyLedger`), and `imbas-metrics`
+(`classifyCases` / `triageDistribution` / `provenanceStats`), then adds the contradiction detector, the
+priority model, change detection, and the render. **The agent assembles one body-free JSON bundle from
+its MCP reads; the engine builds, ranks, and renders.** Not autonomous by itself — see "What is / isn't
+autonomous" below.
+
+**Input (one body-free bundle, agent-assembled — see the header of `scripts/founder-ops-brief.mjs`):**
+`{ generatedAt, date, grants?, imbas?, snapshots? }`. Each source carries `available:false` (or is
+omitted) when its read failed, so a failed source is **surfaced as a warning, never a silent clean bill
+of health.** `grants` reuses the reconcile inputs (evidence / ledger / tracker / fieldMap) with the
+fieldMap extended by a `status` logical key so the contradiction detector can read the Grant Tracker
+`Status` field. **No addresses, subjects, bodies, prompts, answers, or hash values** appear in the bundle.
+
+**Priority model (transparent, deterministic, testable — not a deadline sort).** Every candidate action
+declares six ordinal 0–3 factors; the score is a fixed weighted sum:
+
+```
+score = upside*3 + probability*3 + urgency*4 + unblock*2 + integrityRisk*4 + (3 - effort)*2   # max 54
+High ≥ 34 · Medium ≥ 20 · Low < 20
+```
+
+The factors encode the rules Brendan set: an acknowledgment produces **no candidate at all** (FYI, never
+an action); a reply-required / interview / more-info / award owes a response → High and lands in **Top 5
+Today**; an **unverified "Submitted"** carries integrity risk but **zero funding upside** (score 32,
+Medium) so a big number never floats to the top on a submission we cannot prove; triage backlog, first
+promotion, unscored substantive cases, and snapshot gaps are compounding **This Week** work. Ranking is a
+stable score-desc sort with an id tiebreaker, so it is order-independent and reproducible.
+
+**Four submission states, never collapsed.** (1) confirmed + artifact preserved, (2) confirmed + artifact
+unknown, (3) asserted-but-unverified, (4) no evidence. Submission is "confirmed" **only** from a
+funder/system receipt (via reconcile) — never from a tracker `Status`, a `Submitted` checkbox alone, a
+draft, or a prior report. A row whose `Status` asserts submission but has no confirming receipt, no
+`Submitted` box, and no strong human `Result` is surfaced as **unverified/contradictory** (the Pulitzer
+failure mode) and the disagreement is shown — Airtable is never silently trusted over Gmail. A strong
+human `Result` (`Accepted`/`Rejected`/`Withdrawn`) is never downgraded.
+
+**Change-detection state (allowlisted, operational-only, git-ignored).** `--save-state` writes a small
+`founder-ops-state.v1` object containing **counts, IDs, public funder names, category enums, and prompt
+version tags only** — never a body, address, prompt, answer, hash, or token. `assertStateClean` walks the
+object and throws on any key outside the allowlist (defense in depth) before anything is written. The
+default state dir `.founder-ops/` is **git-ignored** so live grant/Gmail-derived state is never committed;
+the first run with no prior state is labelled the **baseline** (no invented changes).
+
+**Run it:**
+
+```
+# print the brief from an agent-assembled bundle (no token, no network):
+npm run ops:brief -- --input .founder-ops/input.json
+
+# with change detection against the prior run, and persist the new state:
+npm run ops:brief -- --input .founder-ops/input.json --state .founder-ops/state.json --save-state
+
+# write the brief to a file instead of stdout:
+npm run ops:brief -- --input .founder-ops/input.json --out .founder-ops/brief.md
+```
+
+Exit codes: `0` ok, `2` bad usage / unreadable input, `1` runtime. Output sections, in order: EXECUTIVE
+SIGNAL · WHAT CHANGED · TOP 5 TODAY · TOP 5 THIS WEEK · GRANTS (action-required / new replies / unverified
+/ acknowledgments / snapshot coverage) · IMBAS OPERATIONS · WARNINGS / DRIFT · NO-ACTION ITEMS. The Imbas
+section is explicitly labelled **live operational state, deliberately separate from the locked public
+Numbers Ledger** — the brief never reconciles or overwrites public figures.
+
+**What is / isn't autonomous.** *Deterministic & offline:* build, rank, render, diff, state I/O — given a
+bundle. *Requires the agent (or a future credentialed job):* assembling the bundle from Gmail + Airtable
+reads. The single smallest missing piece for a fully unattended daily run is a **read-only Gmail
+credential plus an `AIRTABLE_TOKEN`** available to a scheduled job; until then the collection step stays
+agent-driven and evidence standards are not weakened to fake completeness.
+
+**Tests (synthetic only).** `test/founder-ops-brief.test.mjs` covers baseline / no-change / each delta
+type, acknowledgment-is-not-an-action, reply-required → High, interview vs more-info ordering, unverified
+stays unverified, Gmail/Airtable contradiction surfaced, snapshot / repository / provenance / lineage
+deltas, ranking determinism, the allowlisted-state guarantee, no-leakage of planted secrets, and a failed
+input source surfacing rather than passing silently. No live Airtable, no Gmail, no network, and **no real
+email or grant content in any fixture.**
+
 ## Field Notes signup
 
 Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
