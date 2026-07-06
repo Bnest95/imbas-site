@@ -14,6 +14,9 @@ import {
   renderBrief,
   summarizeGrants,
   detectGrantContradictions,
+  summarizeGrantMomentum,
+  summarizeAttention,
+  parseDeadline,
   summarizeSnapshots,
   summarizeImbas,
   actionCandidatesFrom,
@@ -31,6 +34,8 @@ import {
   SCORE_MAX,
   TIER_HIGH,
   TIER_MEDIUM,
+  DEADLINE_WINDOW_DAYS,
+  PIPELINE_ENUM_CAP,
 } from "../scripts/founder-ops-brief.mjs";
 
 // ---------------------------------------------------------------------------
@@ -44,6 +49,8 @@ const FM = {
   evidenceRef: "fldEviref00000001",
   result: "fldResult00000001",
   status: "fldStatus00000001",
+  deadline: "fldDeadline000001",
+  followUpDate: "fldFollowup000001",
 };
 
 function ledger(ids) {
@@ -575,6 +582,288 @@ test("scanForSensitive also guards the rendered brief and state (output side)", 
   const model = buildBrief(fullBundle(), null);
   assert.deepEqual(scanForSensitive(renderBrief(model), "brief", { maxString: Infinity }), []);
   assert.deepEqual(scanForSensitive(model.state, "state"), []);
+});
+
+// ---------------------------------------------------------------------------
+// GRANT MOMENTUM — the forward funnel read straight from the tracker snapshot.
+// ---------------------------------------------------------------------------
+const JUL5 = new Date(Date.UTC(2026, 6, 5)); // 2026-07-05, UTC midnight
+function momentumGrants(trackerRows) {
+  return { available: true, evidence: [], ledger: ledger([]), tracker: trackerRows, fieldMap: FM };
+}
+
+test("grant momentum counts submitted, the decided breakdown, and awaiting (Pending folds into awaiting)", () => {
+  const gm = summarizeGrantMomentum(momentumGrants([
+    row("rec1", "Award Fund", { [FM.submitted]: true, [FM.result]: "Accepted" }),
+    row("rec2", "Reject Fund", { [FM.submitted]: true, [FM.result]: "Rejected" }),
+    row("rec3", "Noresp Fund", { [FM.submitted]: true, [FM.result]: "No response" }),
+    row("rec4", "Pending Fund", { [FM.submitted]: true, [FM.result]: "Pending" }), // Pending → awaiting, NOT decided
+    row("rec5", "Await Fund", { [FM.submitted]: true }), // empty Result → awaiting
+    row("rec6", "Weird Fund", { [FM.submitted]: true, [FM.result]: "Interviewing" }), // out-of-enum → defensive "other"
+  ]), { now: JUL5 });
+  assert.equal(gm.submittedCount, 6);
+  assert.deepEqual(gm.decided.awards.map((x) => x.funder), ["Award Fund"]);
+  assert.deepEqual(gm.decided.declines.map((x) => x.funder), ["Noresp Fund", "Reject Fund"]);
+  // Pending no longer lands in "other"; only a value outside the live Result enum does.
+  assert.deepEqual(gm.decided.other.map((x) => x.funder), ["Weird Fund"]);
+  assert.equal(gm.decided.other[0].result, "Interviewing");
+  // Empty Result AND explicit "Pending" both count as awaiting, sorted by funder.
+  assert.deepEqual(gm.awaiting.map((x) => x.funder), ["Await Fund", "Pending Fund"]);
+});
+
+test("pipeline outstanding excludes submitted rows and terminal-Status rows", () => {
+  const gm = summarizeGrantMomentum(momentumGrants([
+    row("rec1", "Drafting Fund", { [FM.status]: "Drafting" }),   // in flight → outstanding
+    row("rec2", "Ready Fund", { [FM.status]: "Ready" }),          // in flight → outstanding
+    row("rec3", "Skip Fund", { [FM.status]: "Skip" }),            // terminal, unsubmitted → excluded
+    row("rec4", "Deferred Fund", { [FM.status]: "Deferred" }),    // terminal → excluded
+    row("rec5", "Sent Fund", { [FM.status]: "Submitted", [FM.submitted]: true }), // submitted → excluded
+    row("rec6", "Unset Fund", {}),                                // no status, unsubmitted → outstanding
+  ]), { now: JUL5 });
+  assert.deepEqual(gm.pipelineOutstanding.map((x) => x.funder), ["Drafting Fund", "Ready Fund", "Unset Fund"]);
+  assert.equal(gm.pipelineOutstanding.find((x) => x.funder === "Unset Fund").status, "(unset)");
+});
+
+test("next deadlines: outstanding rows within the window, sorted, capped at 3; VERIFY split; past/rolling/far/submitted excluded", () => {
+  const gm = summarizeGrantMomentum(momentumGrants([
+    row("recA", "Due3", { [FM.status]: "Ready", [FM.deadline]: "2026-07-08" }),      // 3d
+    row("recB", "Due10", { [FM.status]: "Drafting", [FM.deadline]: "2026-07-15" }),  // 10d
+    row("recC", "Due1", { [FM.status]: "Qualified", [FM.deadline]: "2026-07-06" }),  // 1d
+    row("recD", "Due20", { [FM.status]: "Ready", [FM.deadline]: "2026-07-25" }),     // 20d (4th → dropped by cap)
+    row("recE", "TooFar", { [FM.status]: "Ready", [FM.deadline]: "2026-08-30" }),    // >21d → excluded
+    row("recF", "Past", { [FM.status]: "Ready", [FM.deadline]: "2026-07-01" }),      // past → excluded
+    row("recG", "Rolling", { [FM.status]: "Ready", [FM.deadline]: "Rolling" }),      // not a date → excluded
+    row("recH", "Verify", { [FM.status]: "Ready", [FM.deadline]: "VERIFY" }),        // unverified → split list
+    row("recI", "SentSoon", { [FM.status]: "Submitted", [FM.submitted]: true, [FM.deadline]: "2026-07-06" }), // submitted → excluded
+  ]), { now: JUL5 });
+  assert.deepEqual(gm.nextDeadlines.map((x) => x.funder), ["Due1", "Due3", "Due10"]);
+  assert.deepEqual(gm.nextDeadlines.map((x) => x.daysOut), [1, 3, 10]);
+  assert.equal(gm.nextDeadlines[0].date, "2026-07-06");
+  assert.deepEqual(gm.verifyDeadlines.map((x) => x.funder), ["Verify"]);
+});
+
+test("summarizeGrantMomentum degrades safely when the grant source is unavailable", () => {
+  const gm = summarizeGrantMomentum({ available: false }, { now: JUL5 });
+  assert.equal(gm.available, false);
+  assert.equal(gm.submittedCount, 0);
+  assert.deepEqual(gm.nextDeadlines, []);
+  assert.deepEqual(summarizeGrantMomentum(undefined, {}).pipelineOutstanding, []);
+});
+
+test("parseDeadline classifies date/VERIFY/Rolling/empty; days-out is UTC-calendar and deterministic", () => {
+  assert.equal(parseDeadline("VERIFY", JUL5).kind, "verify");
+  assert.equal(parseDeadline("  rolling  ", JUL5).kind, "rolling");
+  assert.equal(parseDeadline("", JUL5).kind, "none");
+  assert.equal(parseDeadline("not a date", JUL5).kind, "none");
+  const d = parseDeadline("2026-07-12", JUL5);
+  assert.equal(d.kind, "date");
+  assert.equal(d.daysOut, 7);
+  assert.equal(parseDeadline("2026-07-05", JUL5).daysOut, 0);
+  assert.equal(parseDeadline("2026-07-04", JUL5).daysOut, -1);
+  // Real Deadline fields prefix the ISO date with prose — extract it anywhere, not only at pos 0.
+  const prefixed = parseDeadline("DL 2026-07-13 — APPLY NOW; fit 7", JUL5);
+  assert.equal(prefixed.kind, "date");
+  assert.equal(prefixed.daysOut, 8);
+  assert.equal(parseDeadline("DL 2026-07-20 AoE; fit 8", JUL5).daysOut, 15);
+  // A prose month-name date ("Jul 12 2026") is NOT ISO and stays unparsed — a known limitation.
+  assert.equal(parseDeadline("Grants round DEADLINE Jul 12 2026 — apply now", JUL5).kind, "none");
+  // VERIFY and Rolling are still checked first, so they win even over an extractable ISO date.
+  assert.equal(parseDeadline("2026-07-20 — but please VERIFY the round", JUL5).kind, "verify");
+  assert.equal(parseDeadline("target 2026-11-04; ROLLING pitch first", JUL5).kind, "rolling");
+});
+
+test("next deadlines extract an ISO date embedded in prose, and skip prose month-name dates", () => {
+  const gm = summarizeGrantMomentum(momentumGrants([
+    row("recDL", "PrefixDated", { [FM.status]: "Qualified", [FM.deadline]: "DL 2026-07-13 — APPLY NOW; fit 7" }), // 8d
+    row("recPr", "ProseMonth", { [FM.status]: "Qualified", [FM.deadline]: "Grants round DEADLINE Jul 12 2026" }), // unparsed → none
+  ]), { now: JUL5 });
+  assert.deepEqual(gm.nextDeadlines.map((x) => x.funder), ["PrefixDated"]);
+  assert.equal(gm.nextDeadlines[0].daysOut, 8);
+  assert.equal(gm.nextDeadlines[0].date, "2026-07-13");
+  // Both rows are still outstanding pipeline entries regardless of deadline parseability.
+  assert.deepEqual(gm.pipelineOutstanding.map((x) => x.funder), ["PrefixDated", "ProseMonth"]);
+});
+
+test("pipeline splits into enumerated in-motion (Ready first + marked, deadline if dated) and a backlog count", () => {
+  const gm = summarizeGrantMomentum(momentumGrants([
+    row("recR", "Ready Fund", { [FM.status]: "Ready", [FM.deadline]: "2026-07-10" }),   // in motion, ready, dated
+    row("recV", "Voice Fund", { [FM.status]: "Voice pass" }),                            // in motion, no date
+    row("recD", "Draft Fund", { [FM.status]: "Drafting", [FM.deadline]: "Rolling" }),    // in motion, Rolling → no label
+    row("recRt", "Redteam Fund", { [FM.status]: "Red-team" }),                           // in motion, no date
+    row("recDisc", "Disc Fund", { [FM.status]: "Discovered" }),                          // backlog
+    row("recRes", "Res Fund", { [FM.status]: "Researched" }),                            // backlog
+    row("recQ1", "Q One", { [FM.status]: "Qualified" }),                                 // backlog
+    row("recQ2", "Q Two", { [FM.status]: "Qualified" }),                                 // backlog
+    row("recU", "Unset Fund", {}),                                                       // unset → backlog "(unset)"
+  ]), { now: JUL5 });
+  // Ready first (highest signal), then the rest alphabetical.
+  assert.deepEqual(gm.inMotion.map((x) => x.funder), ["Ready Fund", "Draft Fund", "Redteam Fund", "Voice Fund"]);
+  assert.equal(gm.inMotion[0].ready, true);
+  assert.equal(gm.inMotion[0].deadlineLabel, "2026-07-10");
+  assert.equal(gm.inMotion.filter((x) => x.ready).length, 1);
+  assert.equal(gm.inMotion.find((x) => x.funder === "Draft Fund").deadlineLabel, null); // Rolling is not "dated"
+  // Backlog is a count + per-status tally, never enumerated by funder.
+  assert.equal(gm.backlog.count, 5);
+  assert.deepEqual(gm.backlog.byStatus, { Discovered: 1, Researched: 1, Qualified: 2, "(unset)": 1 });
+  // Total outstanding always reconciles: in-motion + backlog.
+  assert.equal(gm.pipelineOutstanding.length, gm.inMotion.length + gm.backlog.count);
+});
+
+test("in-motion enumeration is hard-capped at PIPELINE_ENUM_CAP with a +K more tail; backlog never enumerates", () => {
+  const rows = [];
+  for (let i = 0; i < PIPELINE_ENUM_CAP + 3; i++) {
+    const n = String(i).padStart(2, "0");
+    rows.push(row(`rec${n}`, `Fund ${n}`, { [FM.status]: "Drafting" }));
+  }
+  const gm = summarizeGrantMomentum(momentumGrants(rows), { now: JUL5 });
+  assert.equal(gm.inMotion.length, PIPELINE_ENUM_CAP + 3); // engine keeps them all; only the render caps
+  const out = renderBrief(buildBrief(bundle({
+    date: "2026-07-05",
+    grants: { available: true, evidence: [], ledger: ledger([]), fieldMap: FM, tracker: rows },
+  }), null));
+  assert.match(out, /\+3 more in motion/);
+  assert.equal(out.includes("Fund 12"), false); // 11th+ funder names are not enumerated
+  assert.ok(out.includes("Fund 09"));           // the 10th IS enumerated (0-indexed)
+});
+
+// ---------------------------------------------------------------------------
+// NEEDS YOUR ATTENTION — action-required rows only, with the four asked-for fields.
+// ---------------------------------------------------------------------------
+test("attention surfaces only Action-Required rows, with funder/category/evidence/submission-date", () => {
+  const at = summarizeAttention(momentumGrants([
+    row("rec1", "A Fund", { [FM.actionRequired]: true, [FM.responseCategory]: "reply-required", [FM.evidenceRef]: "19f1c58aa9e34095", [FM.submissionDate]: "2026-06-20" }),
+    row("rec2", "B Fund", { [FM.actionRequired]: false, [FM.responseCategory]: "acknowledgment" }), // not flagged → excluded
+    row("rec3", "C Fund", {}), // no flag → excluded
+  ]), { reconcileMarker: "2026-07-05T09:00:00.000Z" });
+  assert.equal(at.available, true);
+  assert.equal(at.rows.length, 1);
+  assert.deepEqual(at.rows[0], {
+    funder: "A Fund",
+    record_id: "rec1",
+    responseCategory: "reply-required",
+    evidenceRef: "19f1c58aa9e34095",
+    submissionDate: "2026-06-20",
+  });
+  assert.equal(at.reconcileMarker, "2026-07-05T09:00:00.000Z");
+});
+
+test("attention marker normalizes: absent or blank marker becomes null", () => {
+  const g = momentumGrants([]);
+  assert.equal(summarizeAttention(g, {}).reconcileMarker, null);
+  assert.equal(summarizeAttention(g, { reconcileMarker: "   " }).reconcileMarker, null);
+  assert.equal(summarizeAttention({ available: false }, { reconcileMarker: "x" }).available, false);
+});
+
+test("attention surfaces follow-ups due on or before today, overdue-sorted, 0 = due today; ISO-only", () => {
+  const at = summarizeAttention(momentumGrants([
+    row("recA", "Today Fund", { [FM.followUpDate]: "2026-07-05" }),   // due today → overdue 0
+    row("recB", "Over Fund", { [FM.followUpDate]: "2026-07-01" }),    // 4 days overdue
+    row("recC", "Future Fund", { [FM.followUpDate]: "2026-07-20" }),  // future → excluded
+    row("recD", "Empty Fund", {}),                                    // no follow-up date → excluded
+    row("recE", "Prose Fund", { [FM.followUpDate]: "Jul 1 2026" }),   // non-ISO → not parsed → excluded
+  ]), { now: JUL5 });
+  assert.deepEqual(at.followUps.map((x) => x.funder), ["Over Fund", "Today Fund"]); // overdue desc
+  assert.deepEqual(at.followUps.map((x) => x.overdue), [4, 0]);
+  assert.equal(at.followUps[1].date, "2026-07-05"); // 0 = due today
+  assert.deepEqual(at.rows, []); // follow-ups are independent of the Action-Required list
+});
+
+test("the brief renders GRANT MOMENTUM and NEEDS YOUR ATTENTION with a freshness line", () => {
+  const b = bundle({
+    date: "2026-07-05",
+    grants: {
+      available: true, evidence: [], ledger: ledger([]), fieldMap: FM,
+      tracker: [
+        row("rec1", "Ready Fund", { [FM.status]: "Ready", [FM.deadline]: "2026-07-10" }),
+        row("rec2", "Sent Fund", { [FM.status]: "Submitted", [FM.submitted]: true, [FM.result]: "Accepted" }),
+        row("rec3", "Owed Fund", { [FM.status]: "Follow-up", [FM.submitted]: true, [FM.actionRequired]: true, [FM.responseCategory]: "reply-required", [FM.evidenceRef]: "19f1c58aa9e34095", [FM.submissionDate]: "2026-06-20" }),
+      ],
+    },
+  });
+  const out = renderBrief(buildBrief(b, null, { reconcileMarker: "2026-07-05T09:00:00.000Z" }));
+  assert.match(out, /## GRANT MOMENTUM/);
+  assert.match(out, /\*\*Submitted:\*\* 2 /);
+  assert.match(out, /awards: Sent Fund/);
+  assert.match(out, /Ready Fund — Ready/);           // pipeline outstanding
+  assert.match(out, /Ready Fund — 2026-07-10 · 5d out/); // next deadline
+  assert.match(out, /## NEEDS YOUR ATTENTION/);
+  assert.match(out, /Last reconcile: 2026-07-05T09:00:00\.000Z/);
+  assert.match(out, /Owed Fund — reply-required · evidence 19f1c58aa9e34095 · submitted 2026-06-20/);
+  assert.equal(DEADLINE_WINDOW_DAYS, 21);
+});
+
+test("when no reconcile marker is present the attention section says so, not a fake freshness", () => {
+  const b = bundle({ grants: grantsBundle({ trackerRows: [row("rec1", "X Fund", { [FM.actionRequired]: true, [FM.responseCategory]: "award" })] }) });
+  const out = renderBrief(buildBrief(b, null)); // no reconcileMarker
+  assert.match(out, /No last-run marker found/);
+  assert.match(out, /Refresh via `npm run reconcile:grants`/);
+});
+
+test("the brief renders in-motion [READY] marks, a backlog count, and follow-ups-due lines", () => {
+  const b = bundle({
+    date: "2026-07-05",
+    grants: {
+      available: true, evidence: [], ledger: ledger([]), fieldMap: FM,
+      tracker: [
+        row("recR", "Ready Fund", { [FM.status]: "Ready", [FM.deadline]: "2026-07-10" }),
+        row("recD", "Draft Fund", { [FM.status]: "Drafting" }),
+        row("recDisc", "Disc Fund", { [FM.status]: "Discovered" }),
+        row("recQ", "Q Fund", { [FM.status]: "Qualified" }),
+        row("recF", "FollowUp Fund", { [FM.submitted]: true, [FM.followUpDate]: "2026-07-03" }), // 2d overdue
+        row("recT", "Today Fund", { [FM.submitted]: true, [FM.followUpDate]: "2026-07-05" }),    // due today
+      ],
+    },
+  });
+  const out = renderBrief(buildBrief(b, null, { reconcileMarker: "2026-07-05T09:00:00.000Z" }));
+  assert.match(out, /\*\*In motion \(2\)\*\*/);
+  assert.match(out, /\*\*\[READY\]\*\* Ready Fund — Ready · 2026-07-10/);
+  assert.match(out, /\*\*Backlog \(2\)\*\* — not yet in drafting: Discovered×1, Qualified×1/);
+  assert.match(out, /Follow-ups due — Follow-up Date on or before 2026-07-05 \(2\)/);
+  assert.match(out, /FollowUp Fund — 2d overdue \(2026-07-03\)/);
+  assert.match(out, /Today Fund — due today \(2026-07-05\)/);
+});
+
+// ---------------------------------------------------------------------------
+// Leak-gate extension — the new fields must not become a bypass.
+// ---------------------------------------------------------------------------
+test("audit flags an email address planted in a Deadline field, by path and kind only", () => {
+  const b = fullBundle();
+  b.grants.tracker[0].fields[FM.deadline] = "email grants@secret-funder.org before noon";
+  const hits = auditBundle(b);
+  assert.ok(hits.some((h) => h.kind === "email-address" && /fldDeadline000001/.test(h.path)));
+  assert.equal(JSON.stringify(hits).includes("secret-funder"), false); // value never echoed
+});
+
+test("audit flags an email planted in the reconcile marker string (input side)", () => {
+  const hits = scanForSensitive("stamp person@leak.example.com", "reconcileMarker");
+  assert.equal(hits.length, 1);
+  assert.equal(hits[0].kind, "email-address");
+  assert.equal(hits[0].path, "reconcileMarker");
+});
+
+test("a clean bundle exercising momentum + attention (incl. a 16-hex evidence ref) passes the output scan", () => {
+  const b = bundle({
+    date: "2026-07-05",
+    grants: {
+      available: true, evidence: [], ledger: ledger([]), fieldMap: FM,
+      tracker: [
+        row("rec1", "Ready Fund", { [FM.status]: "Ready", [FM.deadline]: "2026-07-10" }),
+        row("rec3", "Owed Fund", { [FM.status]: "Follow-up", [FM.submitted]: true, [FM.actionRequired]: true, [FM.responseCategory]: "reply-required", [FM.evidenceRef]: "19f1c58aa9e34095", [FM.submissionDate]: "2026-06-20" }),
+      ],
+    },
+    imbas: imbasBundle({ cases: [caseRec("001", { severity: 1 })] }),
+    snapshots: snapshotsBundle({ present: ["g1"] }),
+  });
+  const model = buildBrief(b, null, { reconcileMarker: "2026-07-05T09:00:00.000Z" });
+  assert.deepEqual(auditBundle(b), []);
+  assert.deepEqual(scanForSensitive(renderBrief(model), "brief", { maxString: Infinity }), []); // 16-hex ref allowed
+  assert.deepEqual(scanForSensitive(model.state, "state"), []);
+});
+
+test("parseArgs reads --reconcile-marker and defaults it to the gitignored path", () => {
+  assert.equal(parseArgs(["--input", "b.json"]).reconcileMarker, ".founder-ops/last-reconcile.txt");
+  assert.equal(parseArgs(["--input", "b.json", "--reconcile-marker", "/tmp/x.txt"]).reconcileMarker, "/tmp/x.txt");
+  assert.equal(parseArgs(["--input", "b.json", "--reconcile-marker=/tmp/y.txt"]).reconcileMarker, "/tmp/y.txt");
 });
 
 // ---------------------------------------------------------------------------

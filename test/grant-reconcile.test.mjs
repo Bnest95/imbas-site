@@ -16,6 +16,8 @@ import {
   reconcile,
   formatReport,
   applyPlans,
+  writeReconcileMarker,
+  RECONCILE_MARKER_PATH,
   parseArgs,
   ValidationError,
 } from "../scripts/grant-reconcile.mjs";
@@ -311,6 +313,32 @@ test("applyPlans throws if a write does not verify", async () => {
     applyPlans([{ record_id: "recX", sets: { [FM.submitted]: true } }], { token: "fake", fetchImpl: badFetch }),
     /did not verify/,
   );
+});
+
+// ---------------------------------------------------------------------------
+// writeReconcileMarker — local freshness stamp for the Founder Ops brief. Injected impls;
+// no filesystem, no network. Writes only an ISO timestamp.
+// ---------------------------------------------------------------------------
+test("writeReconcileMarker stamps an ISO time via injected impls and creates the dir", () => {
+  const calls = { mkdir: [], write: [] };
+  const stamp = writeReconcileMarker({
+    path: ".founder-ops/last-reconcile.txt",
+    now: new Date(Date.UTC(2026, 6, 5, 9, 0, 0)),
+    mkdirImpl: (dir, opts) => calls.mkdir.push([dir, opts]),
+    writeFileImpl: (p, data) => calls.write.push([p, data]),
+  });
+  assert.equal(stamp, "2026-07-05T09:00:00.000Z");
+  assert.deepEqual(calls.mkdir[0], [".founder-ops", { recursive: true }]);
+  assert.equal(calls.write[0][0], ".founder-ops/last-reconcile.txt");
+  assert.equal(calls.write[0][1], "2026-07-05T09:00:00.000Z\n"); // only a timestamp, trailing newline
+  assert.equal(RECONCILE_MARKER_PATH, ".founder-ops/last-reconcile.txt");
+});
+
+test("writeReconcileMarker defaults now to a real ISO timestamp", () => {
+  let written = "";
+  const stamp = writeReconcileMarker({ writeFileImpl: (_p, d) => { written = d; }, mkdirImpl: () => {} });
+  assert.match(stamp, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  assert.equal(written, stamp + "\n");
 });
 
 // ---------------------------------------------------------------------------

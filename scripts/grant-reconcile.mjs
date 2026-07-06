@@ -37,7 +37,8 @@
 //   AIRTABLE_BASE    optional — default appfxHraqlcpP1AAP
 //   AIRTABLE_GRANTS_TABLE  optional — default tbllp4STmYOafMWy3 (Grant Tracker)
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
@@ -459,6 +460,22 @@ export async function applyPlans(plans, { token, fetchImpl }) {
   return applied;
 }
 
+// ---------------------------------------------------------------------------
+// writeReconcileMarker — stamp a local, gitignored freshness marker after a successful
+// --apply, so the Founder Ops brief's NEEDS YOUR ATTENTION section can tell the founder how
+// stale the Action Required flags are. Writes only an ISO timestamp — never evidence, funder
+// names, or anything from a reply. Impls are injectable for tests; it never touches the
+// network. Returns the ISO stamp written.
+// ---------------------------------------------------------------------------
+export const RECONCILE_MARKER_PATH = ".founder-ops/last-reconcile.txt";
+
+export function writeReconcileMarker({ path = RECONCILE_MARKER_PATH, now = new Date(), writeFileImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  const stamp = (now instanceof Date ? now : new Date()).toISOString();
+  mkdirImpl(dirname(path), { recursive: true });
+  writeFileImpl(path, stamp + "\n");
+  return stamp;
+}
+
 function readJson(path, label) {
   let raw;
   try { raw = readFileSync(path, "utf8"); }
@@ -499,6 +516,14 @@ async function main(argv) {
     console.log(formatReport(result, { apply: true }));
     const wrote = applied.reduce((n, a) => n + a.wrote, 0);
     console.log(`\nApplied and verified ${wrote} field write(s) across ${applied.filter((a) => a.wrote > 0).length} row(s).`);
+    // Stamp the freshness marker for the Founder Ops brief. Non-fatal: a marker failure must
+    // never undo a verified Airtable write.
+    try {
+      const stamp = writeReconcileMarker({ now: new Date() });
+      console.error(`Reconcile marker updated: ${stamp} (${RECONCILE_MARKER_PATH}).`);
+    } catch (e) {
+      console.error(`warning: could not write reconcile marker (${e.message}) — brief freshness will read stale.`);
+    }
   } catch (e) { console.error(`error: ${e.message}`); process.exitCode = 4; }
 }
 

@@ -47,6 +47,10 @@
 //       --state .founder-ops/state.json --save-state                       # + persist new state
 //   node scripts/founder-ops-brief.mjs --input bundle.json --out brief.md  # write brief to file
 //
+// The NEEDS YOUR ATTENTION freshness line reads .founder-ops/last-reconcile.txt (gitignored),
+// which `npm run reconcile:grants -- --apply` stamps after a successful write. Override the
+// path with --reconcile-marker; if the file is absent the brief says so and nothing breaks.
+//
 // Exit codes: 0 ok · 2 bad usage / unreadable input · 1 runtime.
 //
 // Input bundle (all body-free; assembled by the agent from MCP reads):
@@ -59,7 +63,13 @@
 //       "ledger":   { "submissions": [ ... ] },     // submissions-ledger.json
 //       "tracker":  [ { "record_id", "funder", "fields": { "<fieldId>": <value> } } ],
 //       "fieldMap": { "submitted","submissionDate","responseCategory","actionRequired",
-//                     "evidenceRef","result","status" }   // logical -> Grant Tracker field id
+//                     "evidenceRef","result","status","deadline","followUpDate" } // logical -> id
+//                     // "deadline" is a free-text cell: a date, "Rolling", or "VERIFY". By
+//                     // convention the cell LEADS WITH THE ISO DATE (YYYY-MM-DD, optionally
+//                     // followed by prose), and the FIRST ISO date in the field wins; a
+//                     // prose-only date ("Jul 12 2026") never parses and stays unscheduled.
+//                     // "followUpDate" is a founder-entered date field: a row whose Follow-up
+//                     // Date is on or before today surfaces in NEEDS YOUR ATTENTION.
 //     },
 //     "imbas": {                             // omit or {available:false} if the read failed
 //       "available": true,
@@ -130,6 +140,42 @@ export const SCORE_MAX = 54;
 // are strong human decisions and are handled by the no-downgrade rule, not flagged here.
 export const CLAIMS_SUBMITTED = new Set(["Submitted", "Follow-up"]);
 
+// Grant-momentum taxonomy (signed off against the live Grant Tracker singleSelect options,
+// 2026-07-05). TERMINAL_STATUSES are the Status values that take a row OUT of the outstanding
+// pipeline — it has been sent, decided, deferred to a later round, or deliberately skipped.
+// Every other Status (Discovered · Researched · Qualified · Drafting · Voice pass · Red-team ·
+// Ready) is still in flight, so an unsubmitted row in one of those states is "pipeline
+// outstanding". Change this one set to re-tune the funnel.
+export const TERMINAL_STATUSES = new Set([
+  "Submitted", "Follow-up", "Accepted", "Rejected", "Deferred", "Round 2", "Skip",
+]);
+
+// Decided-Result partition for the submitted breakdown. AWAITING = an empty Result OR the
+// explicit "Pending" placeholder (a submitted row with no decision yet — the two mean the same
+// thing operationally, so they fold together). DECIDED splits into a win (AWARD_RESULT), a
+// negative close (DECLINE_RESULT), or — defensively — any other non-empty Result value ("other").
+// The live Result singleSelect options are exactly {Pending, Accepted, Rejected, No response,
+// Withdrawn}, so with Pending folded into awaiting, "other" stays empty against real data and
+// exists only to keep a malformed bundle from silently miscounting.
+export const AWARD_RESULTS = new Set(["Accepted"]);
+export const DECLINE_RESULTS = new Set(["Rejected", "No response", "Withdrawn"]);
+export const AWAITING_RESULTS = new Set(["Pending"]); // treated as awaiting, alongside an empty Result
+
+// Next-deadline horizon: a parseable Deadline date this many days out or fewer is surfaced.
+export const DEADLINE_WINDOW_DAYS = 21;
+
+// Outstanding-pipeline partition for GRANT MOMENTUM. IN_MOTION_STATUSES are the states where
+// active drafting/review work is underway — these are enumerated by name (Ready first and
+// marked, because Ready = work complete / submission pending, the highest-signal line in the
+// section). BACKLOG_STATUSES are the not-yet-started states — rendered as a count only, never
+// enumerated. Any non-terminal status outside both sets (e.g. an unset status) counts toward the
+// backlog total so the outstanding count always reconciles. Enumeration is hard-capped at
+// PIPELINE_ENUM_CAP with a "+K more" tail so the section stays scannable at any funnel depth.
+export const IN_MOTION_STATUSES = new Set(["Drafting", "Voice pass", "Red-team", "Ready"]);
+export const BACKLOG_STATUSES = new Set(["Discovered", "Researched", "Qualified"]);
+export const READY_STATUS = "Ready";
+export const PIPELINE_ENUM_CAP = 10;
+
 const clamp03 = (n) => Math.max(0, Math.min(3, Math.round(Number.isFinite(n) ? n : 0)));
 
 // ---------------------------------------------------------------------------
@@ -195,6 +241,200 @@ export function detectGrantContradictions(grants, grantSummary) {
   }
   out.sort((a, b) => String(a.funder).localeCompare(String(b.funder)));
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Deadline math. Deterministic and timezone-free: every date is reduced to a UTC calendar
+// day, and "now" is derived from the bundle's own date (never wall-clock), so the same
+// bundle always yields the same days-out. The Grant Tracker Deadline is a free-text field
+// holding a date, "Rolling", or "VERIFY"; parseDeadline classifies which.
+// ---------------------------------------------------------------------------
+function calendarDateUTC(s) {
+  if (typeof s !== "string") return null;
+  const t = s.trim();
+  if (!t) return null;
+  // Recognize an explicit ISO date (YYYY-MM-DD) anywhere in the string — real Deadline fields
+  // prefix it with prose ("DL 2026-07-13 — APPLY NOW", "DL 2026-07-20 AoE"), so scan, don't
+  // anchor. CONVENTION (documented for the founder): the Deadline cell LEADS WITH THE ISO DATE,
+  // and the FIRST ISO date in the field wins — `.exec` without the /g flag returns the earliest
+  // match, so a leading "2026-07-13" governs even if a later date appears in trailing prose.
+  // Deliberately NO Date.parse fallback: its leniency is engine-dependent and would
+  // classify "Jul 12 2026" as a date on one build/locale and not another (and parses a bare
+  // "Jul 12 2026" while returning NaN on the same date buried in a longer sentence) — too
+  // fragile for an evidence-grade brief. A deadline surfaces iff it is written as an ISO date;
+  // anything else stays none (or Rolling/VERIFY via the keyword checks in parseDeadline).
+  const iso = /(\d{4})-(\d{2})-(\d{2})/.exec(t);
+  if (!iso) return null;
+  const dt = new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
+// nowFromDate — the fixed "today" for days-out math, taken from the bundle date (UTC midnight).
+export function nowFromDate(date) {
+  return calendarDateUTC(date) || new Date();
+}
+
+// daysBetween — whole UTC days from -> to (both reduced to calendar days).
+export function daysBetween(from, to) {
+  const a = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
+  const b = Date.UTC(to.getUTCFullYear(), to.getUTCMonth(), to.getUTCDate());
+  return Math.round((b - a) / 86400000);
+}
+
+const isoDay = (d) => d.toISOString().slice(0, 10);
+
+// parseDeadline(raw, now) -> { kind: "date"|"rolling"|"verify"|"none", date, daysOut }.
+export function parseDeadline(raw, now) {
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if (!s) return { kind: "none", date: null, daysOut: null };
+  if (/verify/i.test(s)) return { kind: "verify", date: null, daysOut: null };
+  if (/rolling/i.test(s)) return { kind: "rolling", date: null, daysOut: null };
+  const d = calendarDateUTC(s);
+  if (!d) return { kind: "none", date: null, daysOut: null };
+  const ref = now instanceof Date ? now : new Date();
+  return { kind: "date", date: d, daysOut: daysBetween(ref, d) };
+}
+
+// ---------------------------------------------------------------------------
+// summarizeGrantMomentum — pure. The forward-looking grant funnel read straight from the
+// tracker snapshot (never from a reconciled receipt): how many applications are out and how
+// the decided ones broke down, how many still await a decision, what is still in flight
+// (not submitted AND not in a terminal Status), and the nearest deadlines. The outstanding set
+// is split by MEANING, not by number: IN-MOTION rows (Drafting · Voice pass · Red-team · Ready)
+// are the active work and are enumerated (Ready first and marked); BACKLOG rows (Discovered ·
+// Researched · Qualified, plus any unset/unknown non-terminal status) are a count only. Deadlines
+// and the VERIFY split are computed over the OUTSTANDING set only (not submitted, not terminal)
+// — a row that is already sent or shelved has no "next deadline" to act on. `now` fixes the
+// reference day so days-out is deterministic.
+// ---------------------------------------------------------------------------
+export function summarizeGrantMomentum(grants, { now = new Date() } = {}) {
+  const empty = {
+    available: false,
+    submittedCount: 0,
+    decided: { awards: [], declines: [], other: [] },
+    awaiting: [],
+    pipelineOutstanding: [],
+    inMotion: [],
+    backlog: { count: 0, byStatus: {} },
+    nextDeadlines: [],
+    verifyDeadlines: [],
+  };
+  if (!grants || grants.available === false) return empty;
+
+  const fieldMap = grants.fieldMap || {};
+  const submittedId = fieldMap.submitted;
+  const resultId = fieldMap.result;
+  const statusId = fieldMap.status;
+  const deadlineId = fieldMap.deadline;
+
+  const awards = [], declines = [], other = [], awaiting = [];
+  const pipelineOutstanding = [], inMotion = [], dated = [], verifyDeadlines = [];
+  const backlogByStatus = {};
+  let submittedCount = 0;
+
+  for (const rowRec of grants.tracker || []) {
+    const fields = rowRec.fields || {};
+    const ref = { funder: rowRec.funder, record_id: rowRec.record_id };
+    const submitted = submittedId ? normalizeValue(fields[submittedId]) === true : false;
+    const result = resultId ? selectName(fields[resultId]).trim() : "";
+    const status = statusId ? selectName(fields[statusId]).trim() : "";
+
+    if (submitted) {
+      submittedCount += 1;
+      if (!result || AWAITING_RESULTS.has(result)) awaiting.push(ref);
+      else if (AWARD_RESULTS.has(result)) awards.push({ ...ref, result });
+      else if (DECLINE_RESULTS.has(result)) declines.push({ ...ref, result });
+      else other.push({ ...ref, result });
+    } else if (!TERMINAL_STATUSES.has(status)) {
+      const st = status || "(unset)";
+      pipelineOutstanding.push({ ...ref, status: st });
+      const dl = deadlineId ? parseDeadline(fields[deadlineId], now) : { kind: "none" };
+      if (dl.kind === "verify") verifyDeadlines.push(ref);
+      else if (dl.kind === "date" && dl.daysOut >= 0 && dl.daysOut <= DEADLINE_WINDOW_DAYS) {
+        dated.push({ ...ref, daysOut: dl.daysOut, date: isoDay(dl.date) });
+      }
+      if (IN_MOTION_STATUSES.has(status)) {
+        // "deadline if dated" — attach the ISO day only when it is a real date; Rolling/VERIFY
+        // carry no label here (VERIFY still surfaces on its own line below).
+        const deadlineLabel = dl.kind === "date" ? isoDay(dl.date) : null;
+        inMotion.push({ ...ref, status, ready: status === READY_STATUS, deadlineLabel });
+      } else {
+        // BACKLOG_STATUSES and any unset/unknown non-terminal status: count only, never enumerated.
+        backlogByStatus[st] = (backlogByStatus[st] || 0) + 1;
+      }
+    }
+  }
+
+  const byFunder = (a, b) => String(a.funder).localeCompare(String(b.funder));
+  awards.sort(byFunder); declines.sort(byFunder); other.sort(byFunder);
+  awaiting.sort(byFunder); pipelineOutstanding.sort(byFunder); verifyDeadlines.sort(byFunder);
+  // Ready first (highest signal), then alphabetical — deterministic regardless of tracker order.
+  inMotion.sort((a, b) => (Number(b.ready) - Number(a.ready)) || byFunder(a, b));
+  dated.sort((a, b) => a.daysOut - b.daysOut || byFunder(a, b));
+
+  const backlogCount = Object.values(backlogByStatus).reduce((n, v) => n + v, 0);
+
+  return {
+    available: true,
+    submittedCount,
+    decided: { awards, declines, other },
+    awaiting,
+    pipelineOutstanding,
+    inMotion,
+    backlog: { count: backlogCount, byStatus: backlogByStatus },
+    nextDeadlines: dated.slice(0, 3),
+    verifyDeadlines,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// summarizeAttention — pure. The rows the founder must personally act on. Two independent lists:
+//   • rows: every tracker row whose Action Required box is checked, carrying ONLY the four fields
+//     asked for — Funder, Response Category, Evidence Ref id, Submission Date. Evidence Ref is a
+//     stable thread id (an allowed reference), never a body/subject/address. These flags are only
+//     as fresh as the last reconcile run, carried here as an opaque marker string for the render.
+//   • followUps: every row whose founder-entered Follow-up Date is ON OR BEFORE today. Same
+//     deterministic ISO-only parse as deadlines (first ISO date wins, no Date.parse); no inference
+//     — the founder set the date, we only surface it. overdue = whole days past due, 0 = due today.
+// `now` fixes "today" from the bundle date so the due/overdue split is deterministic.
+// ---------------------------------------------------------------------------
+export function summarizeAttention(grants, { reconcileMarker = null, now = new Date() } = {}) {
+  const marker = typeof reconcileMarker === "string" && reconcileMarker.trim() ? reconcileMarker.trim() : null;
+  if (!grants || grants.available === false) return { available: false, rows: [], followUps: [], reconcileMarker: marker };
+
+  const fieldMap = grants.fieldMap || {};
+  const actionRequiredId = fieldMap.actionRequired;
+  const responseCategoryId = fieldMap.responseCategory;
+  const evidenceRefId = fieldMap.evidenceRef;
+  const submissionDateId = fieldMap.submissionDate;
+  const followUpDateId = fieldMap.followUpDate;
+  const ref = now instanceof Date ? now : new Date();
+
+  const rows = [];
+  const followUps = [];
+  for (const rowRec of grants.tracker || []) {
+    const fields = rowRec.fields || {};
+    const actionRequired = actionRequiredId ? normalizeValue(fields[actionRequiredId]) === true : false;
+    if (actionRequired) {
+      rows.push({
+        funder: rowRec.funder,
+        record_id: rowRec.record_id,
+        responseCategory: responseCategoryId ? selectName(fields[responseCategoryId]).trim() : "",
+        evidenceRef: evidenceRefId ? String(normalizeValue(fields[evidenceRefId])).trim() : "",
+        submissionDate: submissionDateId ? String(normalizeValue(fields[submissionDateId])).trim() : "",
+      });
+    }
+    if (followUpDateId) {
+      const fu = calendarDateUTC(String(normalizeValue(fields[followUpDateId]) ?? ""));
+      if (fu) {
+        const overdue = daysBetween(fu, ref); // >=0 means due today (0) or overdue (positive)
+        if (overdue >= 0) followUps.push({ funder: rowRec.funder, record_id: rowRec.record_id, date: isoDay(fu), overdue });
+      }
+    }
+  }
+  rows.sort((a, b) => String(a.funder).localeCompare(String(b.funder)));
+  followUps.sort((a, b) => (b.overdue - a.overdue) || String(a.funder).localeCompare(String(b.funder)));
+  return { available: true, rows, followUps, reconcileMarker: marker };
 }
 
 // ---------------------------------------------------------------------------
@@ -494,12 +734,15 @@ function num(v) {
 // ---------------------------------------------------------------------------
 // buildBrief — pure. Assemble the whole model from a bundle + prior state.
 // ---------------------------------------------------------------------------
-export function buildBrief(bundle, prevState) {
+export function buildBrief(bundle, prevState, { reconcileMarker = null } = {}) {
   const generatedAt = typeof bundle.generatedAt === "string" ? bundle.generatedAt : new Date().toISOString();
   const date = typeof bundle.date === "string" ? bundle.date : generatedAt.slice(0, 10);
+  const now = nowFromDate(date);
 
   const grantSummary = summarizeGrants(bundle.grants);
   const contradictions = detectGrantContradictions(bundle.grants, grantSummary);
+  const grantMomentum = summarizeGrantMomentum(bundle.grants, { now });
+  const attention = summarizeAttention(bundle.grants, { reconcileMarker, now });
   const snapshots = summarizeSnapshots(bundle.snapshots);
   const imbas = summarizeImbas(bundle.imbas);
 
@@ -512,7 +755,7 @@ export function buildBrief(bundle, prevState) {
     snapshots: bundle.snapshots ? bundle.snapshots.available !== false : false,
   };
 
-  const model = { generatedAt, date, grantSummary, contradictions, snapshots, imbas, ranked, availability };
+  const model = { generatedAt, date, grantSummary, grantMomentum, attention, contradictions, snapshots, imbas, ranked, availability };
   const currState = stateFromBrief(model);
   model.diff = diffState(prevState, currState);
   model.state = currState;
@@ -719,6 +962,71 @@ export function renderBrief(model) {
   }
   push("");
 
+  // GRANT MOMENTUM
+  push("## GRANT MOMENTUM");
+  if (!model.availability.grants) {
+    push("> **INPUT UNAVAILABLE** — the grant read did not run. Section incomplete.");
+  } else {
+    const gm = model.grantMomentum;
+    const dec = gm.decided;
+    const decidedTotal = dec.awards.length + dec.declines.length + dec.other.length;
+    push(`**Submitted:** ${gm.submittedCount} · **decided** ${decidedTotal} (awards ${dec.awards.length}, declines ${dec.declines.length}, other ${dec.other.length}) · **awaiting decision** ${gm.awaiting.length}.`);
+    if (dec.awards.length) push(`- awards: ${dec.awards.map((x) => x.funder).join(", ")}`);
+    if (dec.declines.length) push(`- declines: ${dec.declines.map((x) => `${x.funder} (${x.result})`).join(", ")}`);
+    if (dec.other.length) push(`- other result: ${dec.other.map((x) => `${x.funder} (${x.result})`).join(", ")}`);
+    if (gm.awaiting.length) push(`- awaiting: ${gm.awaiting.map((x) => x.funder).join(", ")}`);
+    push("");
+    push(`**Pipeline outstanding — not submitted, not terminal (${gm.pipelineOutstanding.length}):**`);
+    if (gm.pipelineOutstanding.length === 0) {
+      push("- (none)");
+    } else {
+      const im = gm.inMotion;
+      push(`- **In motion (${im.length})** — Drafting · Voice pass · Red-team · Ready:`);
+      if (im.length === 0) push("  - (none in motion)");
+      for (const p of im.slice(0, PIPELINE_ENUM_CAP)) {
+        const mark = p.ready ? "**[READY]** " : "";
+        const dl = p.deadlineLabel ? ` · ${p.deadlineLabel}` : "";
+        push(`  - ${mark}${p.funder} — ${p.status}${dl}`);
+      }
+      if (im.length > PIPELINE_ENUM_CAP) push(`  - +${im.length - PIPELINE_ENUM_CAP} more in motion`);
+      const bl = gm.backlog;
+      const blStr = Object.entries(bl.byStatus).sort((a, b) => a[0].localeCompare(b[0])).map(([k, v]) => `${k}×${v}`).join(", ") || "none";
+      push(`- **Backlog (${bl.count})** — not yet in drafting: ${blStr}`);
+    }
+    push("");
+    push(`**Next deadlines — ≤${DEADLINE_WINDOW_DAYS}d, outstanding rows (${gm.nextDeadlines.length}):**`);
+    if (gm.nextDeadlines.length === 0) push("- (none within window)");
+    for (const nd of gm.nextDeadlines) push(`- ${nd.funder} — ${nd.date} · ${nd.daysOut}d out`);
+    if (gm.verifyDeadlines.length) push(`- deadline unverified (VERIFY): ${gm.verifyDeadlines.map((x) => x.funder).join(", ")}`);
+  }
+  push("");
+
+  // NEEDS YOUR ATTENTION
+  push("## NEEDS YOUR ATTENTION");
+  if (!model.availability.grants) {
+    push("> **INPUT UNAVAILABLE** — the grant read did not run. Section incomplete.");
+  } else {
+    const at = model.attention;
+    push(`_Action Required flags are only as fresh as the last reconcile run. ${at.reconcileMarker ? `Last reconcile: ${at.reconcileMarker}.` : "No last-run marker found."} Refresh via \`npm run reconcile:grants\`._`);
+    push(`**Action-required rows (${at.rows.length}):**`);
+    if (at.rows.length === 0) push("- (none)");
+    for (const r of at.rows) {
+      const bits = [r.responseCategory || "(no category)"];
+      if (r.evidenceRef) bits.push(`evidence ${r.evidenceRef}`);
+      if (r.submissionDate) bits.push(`submitted ${r.submissionDate}`);
+      push(`- ${r.funder} — ${bits.join(" · ")}`);
+    }
+    push("");
+    const fu = at.followUps || [];
+    push(`**Follow-ups due — Follow-up Date on or before ${model.date} (${fu.length}):**`);
+    if (fu.length === 0) push("- (none due)");
+    for (const f of fu) {
+      const when = f.overdue === 0 ? "due today" : `${f.overdue}d overdue`;
+      push(`- ${f.funder} — ${when} (${f.date})`);
+    }
+  }
+  push("");
+
   // IMBAS OPERATIONS
   push("## IMBAS OPERATIONS");
   push("_Live operational counts — the internal instrument, deliberately separate from the locked public Numbers Ledger figures._");
@@ -810,7 +1118,7 @@ function executiveSignal(model) {
 // Thin IO below. All logic above is the tested surface.
 // ---------------------------------------------------------------------------
 export function parseArgs(args) {
-  const opts = { input: "", state: "", out: "", saveState: false, audit: false, help: false };
+  const opts = { input: "", state: "", out: "", reconcileMarker: ".founder-ops/last-reconcile.txt", saveState: false, audit: false, help: false };
   for (let i = 0; i < args.length; i++) {
     let a = args[i];
     if (a === "--help" || a === "-h") { opts.help = true; continue; }
@@ -832,6 +1140,7 @@ export function parseArgs(args) {
       case "--input": opts.input = takeValue(); break;
       case "--state": opts.state = takeValue(); break;
       case "--out": opts.out = takeValue(); break;
+      case "--reconcile-marker": opts.reconcileMarker = takeValue(); break;
       default: throw new Error(`unknown argument: ${a}`);
     }
   }
@@ -845,6 +1154,9 @@ Usage:
 
 --input       required. Body-free JSON bundle the agent assembles from MCP reads.
 --state       optional. Prior-run state file for change detection (and --save-state target).
+--reconcile-marker  optional. Path to the reconcile freshness stamp (default
+              .founder-ops/last-reconcile.txt, gitignored). Read if present; the NEEDS YOUR
+              ATTENTION section prints it so the Action Required list carries its own staleness.
 --save-state  optional. Write the new operational state back to --state after rendering.
 --audit       optional. Unattended leak gate: fail closed (exit 2) if the bundle, the
               rendered brief, or the state contains an address, hash, or token. Use for
@@ -878,6 +1190,14 @@ async function main(argv) {
     catch (e) { console.error(`error: ${e.message}`); process.exitCode = 2; return; }
   }
 
+  // Reconcile freshness marker (local, gitignored). Read the same way as --state: present it
+  // if it exists, otherwise the brief prints "No last-run marker found".
+  let reconcileMarker = null;
+  if (opts.reconcileMarker && existsSync(opts.reconcileMarker)) {
+    try { reconcileMarker = readFileSync(opts.reconcileMarker, "utf8").trim(); }
+    catch (e) { console.error(`error: cannot read reconcile marker "${opts.reconcileMarker}": ${e.message}`); process.exitCode = 2; return; }
+  }
+
   const reportLeaks = (where, hits) => {
     console.error(`error: --audit blocked ${where} — ${hits.length} sensitive pattern(s) found (values withheld):`);
     for (const h of hits) console.error(`  ${h.path}: ${h.kind}`);
@@ -885,13 +1205,13 @@ async function main(argv) {
   };
 
   if (opts.audit) {
-    const inHits = auditBundle(bundle);
+    const inHits = [...auditBundle(bundle), ...scanForSensitive(reconcileMarker, "reconcileMarker")];
     if (inHits.length) { reportLeaks("the input bundle", inHits); process.exitCode = 2; return; }
   }
 
   let model, rendered;
   try {
-    model = buildBrief(bundle, prevState);
+    model = buildBrief(bundle, prevState, { reconcileMarker });
     assertStateClean(model.state); // defense in depth before anything is written
     rendered = renderBrief(model);
   } catch (e) { console.error(`error: ${e.message}`); process.exitCode = 1; return; }
