@@ -22,3 +22,6 @@ test/
 
 # Unreferenced static assets
 antenna-glyph.svg
+
+# Engine source is not a public route
+scripts/
