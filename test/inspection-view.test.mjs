@@ -73,6 +73,11 @@ test("renderShareHtml: OG/Twitter tags present and well-formed", () => {
   // og:description carries the verdict gloss + item count, never the answer text.
   assert.match(head, /<meta property="og:description" content="[^"]*2 items left out\./);
   assert.ok(!html.includes("SECRET_ANSWER_TEXT"), "answer text must never appear");
+  // Unreviewed marker rides both tags so the card can't read as an Imbas-endorsed
+  // verdict on self-authored text: right behind the verdict in the title, leading the
+  // description (where it survives truncation).
+  assert.match(head, /<meta property="og:title" content="THIN · Unlisted · Unreviewed · /);
+  assert.match(head, /<meta property="og:description" content="Unlisted · Unreviewed\. /);
 });
 
 test("renderShareHtml: exactly one title/head, body byte-identical to template", () => {
@@ -90,11 +95,13 @@ test("buildTitle truncates the question to 80 chars with an ellipsis", () => {
   assert.ok(inner.length <= 81, "truncated question <= 80 chars + ellipsis");
   assert.ok(inner.endsWith("…"));
   assert.ok(title.startsWith("FULL · "));
+  assert.ok(title.includes("Unlisted · Unreviewed"), "title carries the unreviewed marker");
 });
 
 test("buildDescription: singular vs plural item count, no answer leakage", () => {
   const one = buildDescription({ completeness: "partial", what_was_left_out: ["x"], answer: "A" });
   assert.ok(one.includes("1 item left out."));
+  assert.ok(one.startsWith("Unlisted · Unreviewed."), "description leads with the unreviewed marker");
   const none = buildDescription({ completeness: "full", what_was_left_out: [] });
   assert.ok(none.includes("0 items left out."));
   assert.ok(!one.includes("A") || !one.includes("answer"), "no answer text in description");

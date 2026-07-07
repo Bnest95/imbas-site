@@ -18,7 +18,7 @@ export const RATE_MINUTE_WINDOW_SEC = 60;
 export const RATE_DAY_MAX = 48;
 export const RATE_DAY_WINDOW_SEC = 86400;
 
-const MEMORY_WARNED = { rate: false, spend: false };
+const MEMORY_WARNED = { rate: false, spend: false, shareCreate: false };
 
 // ── Client IP (Vercel) ─────────────────────────────────────────────────────
 // On Vercel serverless, the edge overwrites x-forwarded-for. The leftmost entry
@@ -358,6 +358,138 @@ export function estimateCostUsd(usage, rates) {
   ) / 1e6;
 }
 
+// ── Share creation limits ──────────────────────────────────────────────────
+// Same durable KV machinery as the Reader rate limits: per-IP minute window plus
+// a global per-day creation ceiling. Durable when Upstash is configured; a
+// configured-store error fails closed (blocks) so an outage can't reopen the mint.
+export const SHARE_CREATE_IP_MAX = 10;
+export const SHARE_CREATE_IP_WINDOW_SEC = 60;
+export const SHARE_CREATE_DAY_MAX_DEFAULT = 200;
+const SHARE_CREATE_DAY_TTL_SEC = 2 * 86400;
+
+export function shareCreateDayMax(env = process.env) {
+  const raw = Number(env.SHARE_CREATE_DAILY_MAX);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : SHARE_CREATE_DAY_MAX_DEFAULT;
+}
+
+function shareCreateDayKey(date = new Date()) {
+  return `share:create:d:${date.toISOString().slice(0, 10)}`;
+}
+
+// In-memory day counter fallback (per instance — not durable).
+const memoryShareDay = { day: "", count: 0 };
+function memoryShareDayGet(dayKey) {
+  if (memoryShareDay.day !== dayKey) {
+    memoryShareDay.day = dayKey;
+    memoryShareDay.count = 0;
+  }
+  return memoryShareDay.count;
+}
+function memoryShareDayIncr(dayKey) {
+  if (memoryShareDay.day !== dayKey) {
+    memoryShareDay.day = dayKey;
+    memoryShareDay.count = 0;
+  }
+  memoryShareDay.count += 1;
+  return memoryShareDay.count;
+}
+
+// Pre-creation gate. The per-IP counter counts attempts (so an abuser can only lock
+// themselves out); the global ceiling is read read-only here and advanced only by
+// recordShareCreation on a confirmed write, so rejected requests can't burn the day's
+// global budget or let anyone globally DoS the mint.
+export async function checkShareCreationLimits(ip, deps = {}) {
+  const env = deps.env || process.env;
+  const signal = deps.signal;
+  const ipHash = hashClientIp(ip);
+  const durable = redisConfigured(env);
+  const dayMax = shareCreateDayMax(env);
+  const dayKey = shareCreateDayKey();
+
+  if (durable) {
+    const r = await incrWindow(`share:rl:m:${ipHash}`, SHARE_CREATE_IP_WINDOW_SEC, env, signal);
+    if (!r.ok) {
+      logSecurityEvent("store_unavailable", {
+        control: "share_create_rate",
+        tier: "ip_minute",
+        ip_hash: ipHash,
+        reason: r.reason,
+        action: "fail_closed",
+      });
+      return { allowed: false, tier: "ip_minute", durable: false, ipHash, storeError: true };
+    }
+    if (r.count > SHARE_CREATE_IP_MAX) {
+      return { allowed: false, tier: "ip_minute", durable: true, ipHash, count: r.count };
+    }
+    const g = await redisFetch(["GET", dayKey], env, signal);
+    if (!g.ok) {
+      logSecurityEvent("store_unavailable", {
+        control: "share_create_ceiling",
+        reason: g.reason,
+        action: "fail_closed",
+      });
+      return { allowed: false, tier: "global_day", durable: false, storeError: true };
+    }
+    const dayTotal = Number(g.result || 0);
+    if (Number.isFinite(dayTotal) && dayTotal >= dayMax) {
+      return { allowed: false, tier: "global_day", durable: true, dayTotal, dayMax };
+    }
+    return { allowed: true, durable: true, ipHash, dayTotal: Number.isFinite(dayTotal) ? dayTotal : 0, dayMax };
+  }
+
+  if (!MEMORY_WARNED.shareCreate) {
+    MEMORY_WARNED.shareCreate = true;
+    logSecurityEvent("store_unavailable", {
+      control: "share_create_rate",
+      reason: "no_store",
+      action: "memory_fallback",
+    });
+  }
+  const memIp = memoryIncrWindow(`share:rl:m:${ipHash}`, SHARE_CREATE_IP_WINDOW_SEC, SHARE_CREATE_IP_MAX);
+  if (memIp.blocked) {
+    return { allowed: false, tier: "ip_minute", durable: false, ipHash, count: memIp.count };
+  }
+  const memDay = memoryShareDayGet(dayKey);
+  if (memDay >= dayMax) {
+    return { allowed: false, tier: "global_day", durable: false, dayTotal: memDay, dayMax };
+  }
+  return { allowed: true, durable: false, ipHash, dayTotal: memDay, dayMax };
+}
+
+// Advance the global per-day counter after a confirmed creation. Best-effort: the
+// share already exists, so a store error is logged, mirrored to memory, and never
+// fails the request.
+export async function recordShareCreation(deps = {}) {
+  const env = deps.env || process.env;
+  const signal = deps.signal;
+  const dayKey = shareCreateDayKey();
+
+  if (redisConfigured(env)) {
+    const pipe = await redisPipeline(
+      [
+        ["INCR", dayKey],
+        ["EXPIRE", dayKey, String(SHARE_CREATE_DAY_TTL_SEC)],
+      ],
+      env,
+      signal
+    );
+    if (!pipe.ok) {
+      const memTotal = memoryShareDayIncr(dayKey);
+      logSecurityEvent("store_unavailable", {
+        control: "share_create_record",
+        reason: pipe.reason,
+        action: "memory_fallback",
+      });
+      return { ok: false, total: memTotal, durable: false };
+    }
+    const total = Number(pipe.result?.[0]);
+    return { ok: true, total: Number.isFinite(total) ? total : 0, durable: true };
+  }
+
+  const memTotal = memoryShareDayIncr(dayKey);
+  return { ok: true, total: memTotal, durable: false };
+}
+
 // Test-only seed for memory window counters (does not bypass production paths).
 export function _seedMemoryRateCountForTests(ipHash, suffix, count) {
   const key = `reader:rl:${suffix}:${ipHash}`;
@@ -368,11 +500,21 @@ export function _seedMemoryRateCountForTests(ipHash, suffix, count) {
   );
 }
 
+// Test-only seed for the in-memory share-creation day counter.
+export function _seedShareCreateDayForTests(count) {
+  const dayKey = shareCreateDayKey();
+  memoryShareDay.day = dayKey;
+  memoryShareDay.count = count;
+}
+
 // Test-only reset for in-memory fallback state.
 export function _resetMemoryStateForTests() {
   memoryHits.clear();
   memorySpend.month = "";
   memorySpend.usd = 0;
+  memoryShareDay.day = "";
+  memoryShareDay.count = 0;
   MEMORY_WARNED.rate = false;
   MEMORY_WARNED.spend = false;
+  MEMORY_WARNED.shareCreate = false;
 }

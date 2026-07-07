@@ -51,18 +51,22 @@ function truncate(s, max) {
   return t.length > max ? `${t.slice(0, max).trimEnd()}…` : t;
 }
 
-// {VERDICT} · "{question ≤80 chars}" · Imbas Reader — assembled raw, then escaped whole
-// (so truncation never splits an entity and the decorative quotes get escaped for the
-// content="…" attribute).
+// {VERDICT} · Unlisted · Unreviewed · "{question ≤80 chars}" · Imbas Reader — assembled
+// raw, then escaped whole (so truncation never splits an entity and the decorative quotes
+// get escaped for the content="…" attribute). The "Unlisted · Unreviewed" marker rides
+// right behind the verdict so even aggressive card truncation keeps it: the card can never
+// read as an Imbas-endorsed verdict on self-authored text.
 export function buildTitle(record) {
   const comp = str(record.completeness).toLowerCase();
   const verdict = COMPLETENESS_LABEL[comp] || "PARTIAL";
   const question = truncate(str(record.question), 80);
-  return `${verdict} · "${question}" · Imbas Reader`;
+  return `${verdict} · Unlisted · Unreviewed · "${question}" · Imbas Reader`;
 }
 
-// One line: what surfaced (completeness gloss) · what was missing (N items) · how it
-// was shaped. NEVER includes answer text. Bounded, whitespace-collapsed, then escaped.
+// "Unlisted · Unreviewed." then one line: what surfaced (completeness gloss) · what was
+// missing (N items) · how it was shaped. NEVER includes answer text. The marker leads so
+// it always survives the 200-char truncation (which only ever cuts the tail). Bounded,
+// whitespace-collapsed, then escaped.
 export function buildDescription(record) {
   const comp = str(record.completeness).toLowerCase();
   const gloss = COMPLETENESS_GLOSS[comp] || COMPLETENESS_GLOSS.partial;
@@ -73,7 +77,7 @@ export function buildDescription(record) {
   const missing = `${n} ${n === 1 ? "item" : "items"} left out.`;
   const shapedRaw = str(record.how_it_was_shaped).replace(/\s+/g, " ").trim();
   const shaped = shapedRaw ? `Shaping: ${shapedRaw}` : "No meaningful shaping detected.";
-  return truncate(`${gloss} ${missing} ${shaped}`, 200);
+  return truncate(`Unlisted · Unreviewed. ${gloss} ${missing} ${shaped}`, 200);
 }
 
 // Inject the per-share <title> + OG/Twitter meta into the template head. The body

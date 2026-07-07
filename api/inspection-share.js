@@ -12,6 +12,11 @@
 //   Source Label, Case Label, Visibility, Reviewed Status
 
 import { randomBytes } from "node:crypto";
+import {
+  deriveClientIp,
+  checkShareCreationLimits,
+  recordShareCreation,
+} from "./reader-security.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const TABLE = process.env.AIRTABLE_INSPECTION_SHARES_TABLE || "";
@@ -22,17 +27,6 @@ const TOPIC_MAX = 500;
 const MODEL_MAX = 64;
 const LABEL_MAX = 64;
 const SHARE_ID_RE = /^[A-Za-z0-9_-]{20,32}$/;
-
-const hits = new Map();
-function throttled(ip) {
-  const now = Date.now();
-  const win = 60000;
-  const max = 10;
-  const arr = (hits.get(ip) || []).filter((t) => now - t < win);
-  arr.push(now);
-  hits.set(ip, arr);
-  return arr.length > max;
-}
 
 const clip = (v, max = FIELD_MAX) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
 const str = (v) => (typeof v === "string" ? v : "");
@@ -117,8 +111,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: "invalid" });
   }
 
-  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "0";
-  if (throttled(ip)) return res.status(429).json({ ok: false, error: "rate" });
+  // TODO(durable fix): gate creation to genuine Reader output — require a signed
+  // share token minted by api/read.js on a real Reader run and verify it here, so
+  // arbitrary self-authored text can't mint an Imbas-styled share. The per-IP and
+  // per-day limits below are the interim mitigation, not the boundary.
+  const ip = deriveClientIp(req);
+  const limit = await checkShareCreationLimits(ip);
+  if (!limit.allowed) {
+    return res.status(429).json({
+      ok: false,
+      error: limit.tier === "global_day" ? "daily_capacity" : "rate",
+    });
+  }
 
   if (!process.env.AIRTABLE_TOKEN || !TABLE) {
     return res.status(503).json({ ok: false, error: "unconfigured" });
@@ -179,6 +183,8 @@ export default async function handler(req, res) {
       console.error("[inspection-share] airtable write failed:", r.status, t.slice(0, 300));
       return res.status(502).json({ ok: false, error: "airtable" });
     }
+    // Only a confirmed write advances the global per-day counter (best-effort).
+    await recordShareCreation();
     const origin = siteOrigin(req);
     const shareUrl = `${origin}/inspection/${shareId}`;
     return res.status(200).json({ ok: true, share_id: shareId, share_url: shareUrl });
