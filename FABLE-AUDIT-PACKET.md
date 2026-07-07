@@ -1,3 +1,4 @@
+SUPERSEDED 2026-07-04 by the six-lens re-audit; retained as a frozen artifact per canon rule 5.
 # Imbas — full shipping source (reference for the audit)
 
 Read-only source dump. Each file is delimited by a `FILE:` marker below. No instructions here — follow the audit prompt in the chat message.
