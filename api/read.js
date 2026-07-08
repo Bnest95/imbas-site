@@ -79,7 +79,7 @@ import {
 } from "./reader-runtime.js";
 import { createHash, randomBytes } from "node:crypto";
 
-const MODEL = "claude-opus-4-7";
+const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
 // so a run can be traced to the Reader that produced it. Bump when SYSTEM_PROMPT
 // or the output contract changes. Additive provenance only — this does NOT alter

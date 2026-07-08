@@ -13,7 +13,7 @@ import { captureRun, createReadHandler } from "../api/read.js";
 import { createRuntimeContext } from "../api/reader-runtime.js";
 import { _resetMemoryStateForTests } from "../api/reader-security.js";
 
-const MODEL = "claude-opus-4-7";
+const MODEL = "claude-opus-4-8";
 const PROMPT_VERSION = "reader.v1";
 const LONG_ANSWER =
   "This is a sufficiently long pasted model answer with more than enough words to clear the validation gate cleanly.";
