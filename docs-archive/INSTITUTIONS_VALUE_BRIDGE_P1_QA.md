@@ -1,3 +1,5 @@
+SUPERSEDED 2026-07-07 — current source: institutions.html (live) + STATE.md. Retained as record.
+
 # Institutions value bridge — Pass 1 QA
 
 ## Pages checked

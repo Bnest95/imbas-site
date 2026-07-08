@@ -1,3 +1,5 @@
+SUPERSEDED 2026-07-07 — current source: live Field Notes signup + STATE.md. Retained as record.
+
 # Field Notes Subscribe — Sitewide Consistency QA
 
 **Date:** 2026-05-29 · **Status:** Verified in working tree · **Not committed**

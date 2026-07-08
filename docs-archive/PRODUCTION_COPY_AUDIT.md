@@ -1,3 +1,5 @@
+SUPERSEDED 2026-07-07 — current source: CLAIMS-LEDGER.md. Retained as record.
+
 # Production Copy Audit
 
 Sitewide review of implementation-status language, placeholder copy, and developer-facing messaging.  

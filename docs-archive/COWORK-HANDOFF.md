@@ -1,3 +1,5 @@
+SUPERSEDED 2026-07-07 — current source: STATE.md + CLAUDE.md. Retained as record.
+
 # Imbas — Cowork Handoff
 
 Paste everything below into the new Cowork window.
