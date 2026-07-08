@@ -28,6 +28,7 @@ Read VOICE.md before touching any copy. Change only the broken thing. His words 
 
 ## Locked decisions (do not relitigate)
 Static site, no build step · two-tier data model (workbench → Repository pool → human-promoted Cases) · email gate only at run-your-own · curated cases lead the workbench · no called-shot/prediction framing · umber system (bg #2A211E, text #F2E8DC, accent #B46A5A) · signal categories: Omission, Framing Drift, Deflection (formerly Active Foreclosure in v1 docs).
+Document pages (papers, whitepaper, future reports) use the document masthead pattern per whitepaper.html: mono eyebrow, Fraunces H1, serif lede, dot-separated meta, italic register notes; plain-terms asides use the ember-bordered callout.
 
 ## Grant work rules
 - `grant-engine/ANSWER-BANK.md` is the canonical answer set; start there and tailor to the funder's register. `BUDGET-TIERS.md` governs budgets. `OBJECTION-CANON.md` governs objections. GRANT-CORE (Notion) is the master narrative, rebuilt 2026-07-02 from the as-submitted applications.
