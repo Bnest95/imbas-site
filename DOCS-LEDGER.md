@@ -8,8 +8,11 @@ Classes: **LAW** (never moved/renamed/edited) · **FROZEN** (frozen artifact, su
 **CURRENT** (live, governs its domain) · **SUPERSEDED** (bannered + moved to `docs-archive/`) ·
 **REVIEW** (uncertain — untouched, needs Brendan's call).
 
-Actions this pass: 5 SUPERSEDED → banner + `docs-archive/`. 0 DUPLICATE deletions (no byte-identical
+Actions (2026-07-07): 5 SUPERSEDED → banner + `docs-archive/`. 0 DUPLICATE deletions (no byte-identical
 redundant copies found). 2 REVIEW. All else left in place.
+
+Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-passes.md` SUPERSEDED → archived;
+`grant-engine/applications/foresight.md` kept as CURRENT working draft. Now 6 SUPERSEDED, 0 REVIEW open.
 
 ---
 
@@ -21,11 +24,12 @@ redundant copies found). 2 REVIEW. All else left in place.
 | `IMBAS-CANON.md` | Canon (cross-model state). Self-governing. |
 | `AGENT-DOCTRINE.md` | Doctrine. Self-governing. |
 
-## FROZEN — frozen artifact, header-only supersession (canon rule 5)
+## FROZEN — frozen artifacts, never moved or rewritten (canon rule 5)
 
 | File | Class | Pointer |
 |------|-------|---------|
 | `FABLE-AUDIT-PACKET.md` | FROZEN | Already carries `SUPERSEDED 2026-07-04 by the six-lens re-audit` header (line 1). Left in place per canon rule 5 — never moved or rewritten. |
+| `grant-engine/applications/foresight-SUBMITTED-2026-06-30.md` | FROZEN | As-submitted snapshot — positioning ground truth for what was submitted to Foresight. Never rewritten. Untracked. |
 
 ## CURRENT — live, governs its domain
 
@@ -49,7 +53,7 @@ redundant copies found). 2 REVIEW. All else left in place.
 | `grant-engine/BATCH-2026-07.md` | Current grant batch (2026-07-01, tracker-reconciled). Overlaps FUNDING-RESCAN but retained as active. |
 | `grant-engine/FUNDING-RESCAN-2026-07-ANALYSIS.md` | Current market rescan (2026-07-03), companion to the xlsx. |
 | `grant-engine/FIELD-NOTE-SEEDS.md` | Current content seeds (2026-07-05). |
-| `grant-engine/applications/foresight-SUBMITTED-2026-06-30.md` | As-submitted snapshot (positioning ground truth, frozen). |
+| `grant-engine/applications/foresight.md` | Working draft, kept as working material (WORKING DRAFT banner points to the as-submitted snapshot as ground truth). Untracked. Snapshot now under FROZEN. |
 | `grant-engine/applications/longview-SUBMITTED-2026-07-02.md` | As-submitted snapshot (positioning ground truth, frozen). |
 | `grant-engine/applications/cloudflare-startups.md` | Active working draft (no submission yet). |
 | `grant-engine/applications/emergent-ventures.md` | Active working draft. |
@@ -69,14 +73,14 @@ redundant copies found). 2 REVIEW. All else left in place.
 | `docs-archive/PRODUCTION_COPY_AUDIT.md` | `PRODUCTION_COPY_AUDIT.md` | `CLAIMS-LEDGER.md`. Point-in-time copy audit (2026-05-29, "not committed"); copy authority now the Claims Ledger. |
 | `docs-archive/FIELD_NOTES_SUBSCRIBE_QA.md` | `FIELD_NOTES_SUBSCRIBE_QA.md` | Live Field Notes signup + `STATE.md`. Completed-pass QA record (2026-05-29, "not committed"). |
 | `docs-archive/INSTITUTIONS_VALUE_BRIDGE_P1_QA.md` | `INSTITUTIONS_VALUE_BRIDGE_P1_QA.md` | `institutions.html` (live) + `STATE.md`. Completed pass-1 QA record. |
-| `docs-archive/OBJECTION-BANK.md` | `grant-engine/OBJECTION-BANK.md` | `grant-engine/OBJECTION-CANON.md` (CLAUDE.md-designated governing objections doc). NOTE: BANK carries objections 4–6 ("labs run evals", etc.) not yet in CANON — worth porting before relying on the archive. |
+| `docs-archive/OBJECTION-BANK.md` | `grant-engine/OBJECTION-BANK.md` | `grant-engine/OBJECTION-CANON.md` (CLAUDE.md-designated governing objections doc). BANK objections 4–6 ported verbatim into CANON 2026-07-08. |
+| `docs-archive/imbas-landing-cursor-passes.md` | `imbas-landing-cursor-passes.md` | Workflow retired 2026-07-08 — passes now run through the committed repo and Code sessions. |
 
-## REVIEW — uncertain, untouched (needs Brendan's call)
+## REVIEW — none open
 
-| File | Why REVIEW |
-|------|-----------|
-| `imbas-landing-cursor-passes.md` | "Pre-launch" Cursor-pass pack documenting a workflow ("never commit to git; Brendan runs passes") the repo has since moved off of (direct commits now). Reads as dead, BUT it self-describes as an append target ("new passes get appended here"). Not moved — confirm it's dead before archiving. |
-| `grant-engine/applications/foresight.md` | Working draft whose as-submitted snapshot exists (`foresight-SUBMITTED-2026-06-30.md`, ground truth). Draft differs from the snapshot. May be superseded, or may be retained for a resubmission/similar funder. Your call. |
+Both 2026-07-07 REVIEW items resolved 2026-07-08:
+- `imbas-landing-cursor-passes.md` → SUPERSEDED, archived (workflow retired).
+- `grant-engine/applications/foresight.md` → CURRENT working draft (WORKING DRAFT banner added; as-submitted snapshot remains ground truth).
 
 ## OUT-OF-SCOPE — gitignored (`.founder-ops/`), listed for completeness, untouched
 

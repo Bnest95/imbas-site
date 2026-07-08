@@ -1,3 +1,5 @@
+SUPERSEDED 2026-07-08 — workflow retired; passes now run through the committed repo and Code sessions. Retained as record.
+
 # Imbas Landing — Cursor Pass Pack (pre-launch)
 
 Scoped, paste-ready prompts for the landing-page audit fixes. Ordered certainty → experiment
