@@ -9,6 +9,8 @@
     { "source": "/case/013", "destination": "/case/013.html", "permanent": true },
     { "source": "/case/018", "destination": "/case/018.html", "permanent": true },
     { "source": "/case/021", "destination": "/case/021.html", "permanent": true },
+    { "source": "/challenge", "destination": "/challenge.html", "permanent": true },
+    { "source": "/independence", "destination": "/independence.html", "permanent": true },
     { "source": "/briefing", "destination": "/field-notes/", "permanent": true },
     { "source": "/briefing/", "destination": "/field-notes/", "permanent": true },
     { "source": "/briefing/post-1", "destination": "/field-notes/", "permanent": true },
