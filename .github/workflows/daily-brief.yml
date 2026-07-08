@@ -1,0 +1,89 @@
+# Daily Founder Ops Brief — Tier 1 (unattended, Airtable-only).
+#
+# Read-and-notify ONLY. This workflow never writes to Airtable or Gmail and never
+# commits to the repo. It reads Airtable, renders the brief through the leak gate,
+# and delivers it as a GitHub Issue (that is the "email"). Funder-reply items are
+# Gmail-sourced and appear only in agent-run briefs, by design.
+#
+# NOTE: GitHub disables scheduled workflows after 60 days of no repo activity.
+# Any commit, or one manual "Run workflow", re-arms the schedule.
+name: Daily Founder Ops Brief
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # 14:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: daily-brief
+  cancel-in-progress: false
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Collect Airtable + render brief (leak gate on)
+        env:
+          AIRTABLE_TOKEN: ${{ secrets.AIRTABLE_TOKEN }}
+          AIRTABLE_BASE: ${{ secrets.AIRTABLE_BASE }}
+          AIRTABLE_GRANTS_TABLE: ${{ secrets.AIRTABLE_GRANTS_TABLE }}
+          AIRTABLE_CASES_TABLE: ${{ secrets.AIRTABLE_CASES_TABLE }}
+          AIRTABLE_REPO_TABLE: ${{ secrets.AIRTABLE_REPO_TABLE }}
+          AIRTABLE_RUNS_TABLE: ${{ secrets.AIRTABLE_RUNS_TABLE }}
+        run: |
+          node scripts/collect-airtable.mjs --out .founder-ops/input.json
+          node scripts/founder-ops-brief.mjs --input .founder-ops/input.json --audit --out .founder-ops/brief.md
+
+      - name: Publish brief as an issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh label create daily-brief --color 5319e7 --description "Automated founder ops brief" --force
+
+          BRIEF=.founder-ops/brief.md
+          # NEEDS YOUR ATTENTION pulled to the top, then a divider, then the full brief.
+          {
+            awk '/^## NEEDS YOUR ATTENTION/{c=1;print;next} c&&/^## /{c=0} c{print}' "$BRIEF"
+            echo
+            echo "---"
+            echo
+            cat "$BRIEF"
+          } > issue-body.md
+
+          # Close any previously open brief issue so only today's stays open (best-effort).
+          for n in $(gh issue list --label daily-brief --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Superseded by the $(date -u +%F) brief." || true
+          done
+
+          gh issue create \
+            --title "Imbas brief $(date -u +%F)" \
+            --body-file issue-body.md \
+            --label daily-brief
+
+      - name: Report failure as an issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh label create daily-brief --color 5319e7 --description "Automated founder ops brief" --force || true
+          gh issue create \
+            --title "BRIEF FAILED $(date -u +%F)" \
+            --body "The daily founder ops brief workflow failed before it could publish. Investigate the run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --label daily-brief

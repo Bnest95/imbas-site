@@ -755,7 +755,9 @@ export function buildBrief(bundle, prevState, { reconcileMarker = null } = {}) {
     snapshots: bundle.snapshots ? bundle.snapshots.available !== false : false,
   };
 
-  const model = { generatedAt, date, grantSummary, grantMomentum, attention, contradictions, snapshots, imbas, ranked, availability };
+  // Optional tier notice (e.g. the unattended Airtable-only run). null on agent bundles.
+  const notice = typeof bundle.notice === "string" && bundle.notice.trim() ? bundle.notice.trim() : null;
+  const model = { generatedAt, date, notice, grantSummary, grantMomentum, attention, contradictions, snapshots, imbas, ranked, availability };
   const currState = stateFromBrief(model);
   model.diff = diffState(prevState, currState);
   model.state = currState;
@@ -905,6 +907,14 @@ export function renderBrief(model) {
   push("# FOUNDER OPS DAILY BRIEF");
   push(`**Date:** ${model.date}  ·  **Generated:** ${model.generatedAt}`);
   push("");
+
+  // Optional tier notice, near the top so a reader immediately knows the run's data scope.
+  // Guarded on model.notice, which is null for agent bundles — so the agent-driven brief is
+  // byte-identical to before this line existed.
+  if (model.notice) {
+    push(`> ${model.notice}`);
+    push("");
+  }
 
   // EXECUTIVE SIGNAL
   push("## EXECUTIVE SIGNAL");
