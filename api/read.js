@@ -118,17 +118,24 @@ const wordCount = (s) => (String(s).trim().match(/\S+/g) || []).length;
 // ── Read capture (Airtable) ──────────────────────────────────────────────────
 // Every read returned to a user — agent or fallback — is logged to the "Reader
 // Runs" table, so the reads people actually run are captured, not just rendered
-// and gone. The write is non-blocking and fail-safe (see captureRun + sendRead):
-// the 200 is flushed to the client first, the write happens after, and any
-// failure is swallowed and logged so capturing can never delay or break a read.
-// Uses the server-side AIRTABLE_TOKEN (never client-side); if it is unset the
-// capture is skipped silently and the read still returns.
+// and gone. The write is fail-safe and completes BEFORE the 200 flushes (see
+// captureRun + sendRead): capturing-after-responding silently lost rows, so the
+// write is awaited first, retried once on a transient failure, and any final
+// failure is swallowed, logged, and flagged to the client so a read is never
+// delayed or broken. Uses the server-side AIRTABLE_TOKEN (never client-side); if
+// it is unset the capture is skipped silently and the read still returns.
 const AIRTABLE_BASE = "appfxHraqlcpP1AAP";
 const RUNS_TABLE = "tblqmHiOCQ5YSXBN3";
-// Hard ceiling on how long the capture write may add to a read. Since the write
-// now completes BEFORE the response flushes (see sendRead), a hung Airtable would
-// otherwise stall the read; this aborts the write so the read always returns.
-const CAPTURE_TIMEOUT_MS = 2500;
+// Hard ceiling on how long a single capture write may add to a read. Since the
+// write now completes BEFORE the response flushes (see sendRead), a hung Airtable
+// would otherwise stall the read; this aborts the write so the read always
+// returns. 4500 (was 2500) absorbs cold-connection TLS on an instance's first
+// write, which was silently dropping that row.
+const CAPTURE_TIMEOUT_MS = 4500;
+// A transient capture failure (timeout / network drop / Airtable 5xx) is retried
+// once, waiting this long before the second attempt. A 4xx is deterministic and
+// never retried.
+const CAPTURE_RETRY_BACKOFF_MS = 250;
 
 // Monthly estimated spend cap. Durable only when Upstash Redis REST is configured;
 // otherwise falls back to per-instance memory in reader-security.js.
@@ -138,6 +145,7 @@ const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a li
 
 const str = (v) => (typeof v === "string" ? v : "");
 const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // ── Provenance hashing ───────────────────────────────────────────────────────
 // Deterministic SHA-256 (hex) identifiers for a run's source content and the
@@ -412,7 +420,14 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       ...provenance,
       ...extra,
     });
-    return { ok: false, failure_class: failureClass };
+    // capture_uncertain tells the caller the Reader Runs row may be missing for
+    // this run — every write-attempt failure sets it. "unconfigured" does not,
+    // because a token-less deployment is a known no-capture state, not a lost row.
+    return {
+      ok: false,
+      failure_class: failureClass,
+      capture_uncertain: failureClass !== "unconfigured",
+    };
   };
 
   try {
@@ -442,34 +457,60 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       "Source Content Hash": srcHash,
       "Reader Output Hash": outHash,
     };
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), CAPTURE_TIMEOUT_MS);
-    let r;
-    try {
-      r = await fetchImpl(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ fields, typecast: true }),
-        signal: ctrl.signal,
-      });
-    } finally {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`;
+    const requestBody = JSON.stringify({ fields, typecast: true });
+
+    // One initial attempt plus one retry on a transient failure (cold-connection
+    // timeout, network drop, or an Airtable 5xx). A 4xx is deterministic and never
+    // retried. On final failure the read still returns — capture stays fail-safe.
+    const MAX_ATTEMPTS = 2;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const canRetry = attempt < MAX_ATTEMPTS;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), CAPTURE_TIMEOUT_MS);
+      let r;
+      try {
+        r = await fetchImpl(url, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${env.AIRTABLE_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: requestBody,
+          signal: ctrl.signal,
+        });
+      } catch (e) {
+        clearTimeout(timer);
+        const failureClass =
+          e && e.name === "AbortError" ? "timeout" : e && e.message ? "network" : "unknown";
+        if (canRetry) {
+          await delay(CAPTURE_RETRY_BACKOFF_MS);
+          continue;
+        }
+        return fail(failureClass, { attempts: attempt });
+      }
       clearTimeout(timer);
+      if (r.ok) {
+        logRuntimeEvent("capture_succeeded", {
+          request_id: requestId,
+          route,
+          target: CAPTURE_TARGET,
+          duration_ms: elapsedMs(ctx, "capture_start"),
+          user_response_returned: true,
+          attempts: attempt,
+          ...provenance,
+        });
+        return { ok: true };
+      }
+      // Non-2xx: retry only a server error (5xx); a 4xx will never succeed.
+      if (canRetry && r.status >= 500) {
+        await delay(CAPTURE_RETRY_BACKOFF_MS);
+        continue;
+      }
+      return fail("airtable_http", { upstream_status: r.status, attempts: attempt });
     }
-    if (!r.ok) {
-      return fail("airtable_http", { upstream_status: r.status });
-    }
-    logRuntimeEvent("capture_succeeded", {
-      request_id: requestId,
-      route,
-      target: CAPTURE_TARGET,
-      duration_ms: elapsedMs(ctx, "capture_start"),
-      user_response_returned: true,
-      ...provenance,
-    });
-    return { ok: true };
+    // The loop always returns; this only satisfies control-flow analysis.
+    return fail("unknown");
   } catch (e) {
     const failureClass =
       e && e.name === "AbortError" ? "timeout" : e && e.message ? "network" : "unknown";
@@ -493,7 +534,13 @@ async function sendRead(res, input, payload, ctx, deps = {}) {
       inference_skipped: !!ctx.inference_skipped,
     });
   }
-  await captureRun(input, payload, ctx, deps);
+  const capture = await captureRun(input, payload, ctx, deps);
+  // Fail-safe preserved: the read still returns 200. When the write may not have
+  // landed, flag it on the response so the client knows the Reader Runs row may be
+  // missing; the capture_failed log carries request_id for reconciliation.
+  if (capture && capture.capture_uncertain) {
+    payload.capture_uncertain = true;
+  }
   logRuntimeEvent("response_returned", {
     request_id: ctx.request_id,
     route: ctx.route,
@@ -501,6 +548,7 @@ async function sendRead(res, input, payload, ctx, deps = {}) {
     source: payload.source,
     duration_ms: totalDurationMs(ctx),
     capture_duration_ms: elapsedMs(ctx, "capture_start"),
+    capture_uncertain: !!payload.capture_uncertain,
   });
   res.status(200).json(payload);
 }
