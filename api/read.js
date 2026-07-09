@@ -68,7 +68,7 @@ import {
   checkGlobalSpendCeiling,
   addGlobalSpend,
   estimateCostUsd,
-} from "./reader-security.js";
+} from "../reader-security.js";
 import {
   createRuntimeContext,
   markPhase,
@@ -76,7 +76,7 @@ import {
   totalDurationMs,
   logRuntimeEvent,
   CAPTURE_TARGET,
-} from "./reader-runtime.js";
+} from "../reader-runtime.js";
 import { createHash, randomBytes } from "node:crypto";
 import {
   RECEIPT_SCHEMA_VERSION,
@@ -84,7 +84,7 @@ import {
   canonicalizeForHash,
 } from "../reader-receipt.js";
 import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
-import { extractJson } from "./reader-json.js";
+import { extractJson } from "../reader-json.js";
 
 const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture

@@ -28,7 +28,7 @@ import {
   verifyReceiptIntegrity,
   capturePaired,
 } from "../api/read-paired.js";
-import { createRuntimeContext } from "../api/reader-runtime.js";
+import { createRuntimeContext } from "../reader-runtime.js";
 import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
@@ -44,7 +44,7 @@ import {
   addGlobalSpend,
   hashClientIp,
   RATE_BURST_MAX,
-} from "../api/reader-security.js";
+} from "../reader-security.js";
 
 const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 

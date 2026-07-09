@@ -10,8 +10,8 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
 import { captureRun, createReadHandler } from "../api/read.js";
-import { createRuntimeContext } from "../api/reader-runtime.js";
-import { _resetMemoryStateForTests } from "../api/reader-security.js";
+import { createRuntimeContext } from "../reader-runtime.js";
+import { _resetMemoryStateForTests } from "../reader-security.js";
 
 const MODEL = "claude-opus-4-8";
 const PROMPT_VERSION = "reader.v2";

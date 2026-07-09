@@ -1,6 +1,6 @@
 // GET /api/reader-health — lightweight, non-sensitive Reader status for ops checks.
 
-import { redisConfigured } from "./reader-security.js";
+import { redisConfigured } from "../reader-security.js";
 
 export function getReaderHealthStatus(env = process.env) {
   const readerEnabled = env.READER_ENABLED !== "0";

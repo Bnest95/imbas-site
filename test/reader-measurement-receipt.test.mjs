@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
 import { createReadHandler } from "../api/read.js";
-import { _resetMemoryStateForTests } from "../api/reader-security.js";
+import { _resetMemoryStateForTests } from "../reader-security.js";
 import {
   RECEIPT_BOUNDARY,
   RECEIPT_SCHEMA_VERSION,

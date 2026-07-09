@@ -43,7 +43,7 @@ import {
   _resetMemoryStateForTests,
   _seedPerceptionCapForTests,
   PERCEPTION_WRITE_MAX,
-} from "../api/reader-security.js";
+} from "../reader-security.js";
 
 const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 

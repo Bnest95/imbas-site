@@ -55,8 +55,8 @@ import {
   createRuntimeContext,
   logRuntimeEvent,
   totalDurationMs,
-} from "./reader-runtime.js";
-import { checkPerceptionWriteCap } from "./reader-security.js";
+} from "../reader-runtime.js";
+import { checkPerceptionWriteCap } from "../reader-security.js";
 import { canonicalizeForHash } from "../reader-receipt.js";
 import {
   SINGLE_PERCEPTION_VALUES,

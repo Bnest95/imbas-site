@@ -17,7 +17,7 @@ import {
   RATE_DAY_MAX,
   _resetMemoryStateForTests,
   _seedMemoryRateCountForTests,
-} from "../api/reader-security.js";
+} from "../reader-security.js";
 
 beforeEach(() => {
   _resetMemoryStateForTests();

@@ -9,10 +9,10 @@ import {
   createRuntimeContext,
   logRuntimeEvent,
   ROUTE,
-} from "../api/reader-runtime.js";
+} from "../reader-runtime.js";
 import { getReaderHealthStatus } from "../api/reader-health.js";
 import { captureRun, createReadHandler } from "../api/read.js";
-import { _resetMemoryStateForTests } from "../api/reader-security.js";
+import { _resetMemoryStateForTests } from "../reader-security.js";
 
 const SECRET_ANSWER =
   "SECRET_ANSWER_CONTENT_DO_NOT_LOG_THIS_VERY_LONG_PASTED_MODEL_ANSWER_FOR_TESTING";

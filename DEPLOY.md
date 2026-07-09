@@ -56,7 +56,7 @@ Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain 
 ## Reader inference security (rate limits + spend ceiling)
 
 `POST /api/read` calls Anthropic Opus and is public. Durable abuse controls live in
-`api/reader-security.js` and activate when both Upstash env vars are set on Vercel.
+`reader-security.js` (repo root, shared by the `/api` endpoints) and activate when both Upstash env vars are set on Vercel.
 
 Required for **durable** cross-instance protection (recommended before traffic):
 

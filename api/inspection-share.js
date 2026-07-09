@@ -16,7 +16,7 @@ import {
   deriveClientIp,
   checkShareCreationLimits,
   recordShareCreation,
-} from "./reader-security.js";
+} from "../reader-security.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const TABLE = process.env.AIRTABLE_INSPECTION_SHARES_TABLE || "";

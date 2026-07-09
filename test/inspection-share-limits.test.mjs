@@ -13,7 +13,7 @@ import {
   SHARE_CREATE_DAY_MAX_DEFAULT,
   _resetMemoryStateForTests,
   _seedShareCreateDayForTests,
-} from "../api/reader-security.js";
+} from "../reader-security.js";
 
 const DAY_KEY = `share:create:d:${new Date().toISOString().slice(0, 10)}`;
 
