@@ -86,4 +86,17 @@ Each entry proves the procedure was exercised end-to-end against real storage us
 - **Result: PASS** — zero residue.
 - **Note:** the test routed dummies through direct Airtable writes rather than the paid `/api/read` path, to honor the one-paid-run rule; this exercises the closure walk against real storage without spend.
 
+### 2026-07-09 (UTC) — v2 P2 procedure proof, paired run (open + targeted)
+
+- **Namespace:** `DELETE_TEST_READER_V2_P2_20260709T084125Z` (carried inside the pasted open answer).
+- **Origin:** the authorized Phase C.5 paired production verification pair. Two paid calls total: a real `/api/read` open run, then a real `/api/read-paired` targeted run. Unlike the v1 proof, this walk ran against records the live pipeline produced end to end, not direct prefixed writes.
+- **Closure set located:**
+  - Run row `recxDMprB4ems2Gah` in Reader Runs `tblqmHiOCQ5YSXBN3` (open answer raw + derived + P1 candidate fields). Its `Request ID` = `c8706c84a318a57b`, captured before deletion per §3 step 2.
+  - Paired-analysis row `recd1UrxYHh8AvQnu` in Reader Paired Analyses `tblP1ekWWWscz6pBG` — located by its join key `Open Run ID` = `c8706c84a318a57b`, not the held ID (find step proven). It carried the raw second answer, the derived targeted prompt, and the both-side verbatim delta spans (Receipt Hash `605f43b3…`).
+  - Inspection Shares `tbliYeeM5n0TSVrxf`: queried by namespace and by Question — 0 rows. The run was never shared, so the share store held nothing for it; the walk queried it regardless.
+  - Candidate-lead store: still NOT YET BUILT (P4), so it is not in this closure set.
+- **Deleted:** the paired-analysis row, then the run row. Removing the paired row removed the second answer, targeted prompt, and both-side delta spans with it — no separate blob store.
+- **Verified residue = 0:** Reader Runs 0 rows (by Request ID and by namespace); Reader Paired Analyses 0 rows (by Open Run ID and by namespace); Inspection Shares 0 rows (by namespace and Question). Redis holds counters only, nothing per-run to delete.
+- **Result: PASS** — zero residue across every closure-set location, including the paired store that P1 did not yet have.
+
 <!-- TEST-LOG -->
