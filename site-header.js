@@ -1,6 +1,6 @@
 (function () {
   var FALLBACK = 77;
-  var MORE_PAGES = ['/field-notes', '/methodology.html', '/faq.html', '/contact.html'];
+  var MORE_PAGES = ['/field-notes', '/methodology.html', '/public-interest.html', '/faq.html', '/contact.html'];
 
   function isFieldNotesPath(path) {
     return path === '/field-notes' || path.indexOf('/field-notes/') === 0;
@@ -69,6 +69,7 @@
     [
       { href: '/field-notes/', label: 'Field Notes', fieldNotes: true, desktopOnly: true },
       { href: '/methodology.html', label: 'Methodology' },
+      { href: '/public-interest.html', label: 'Public Interest' },
       { href: '/faq.html', label: 'FAQ' },
       { href: '/contact.html', label: 'Contact' }
     ].forEach(function (item) {
