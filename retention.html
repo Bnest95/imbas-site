@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Retention and Deletion — Imbas</title>
+  <meta name="description" content="What Imbas stores when you run a Reader inspection, how long it is kept, how share pages work, and how to request deletion. v1 operational retention policy.">
+  <link rel="canonical" href="https://www.imbaslabs.com/retention.html">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.imbaslabs.com/retention.html">
+  <meta property="og:site_name" content="Imbas">
+  <meta property="og:title" content="Data Retention and Deletion | Imbas">
+  <meta property="og:description" content="What Imbas stores when you run a Reader inspection, how long it is kept, how share pages work, and how to request deletion. v1 operational retention policy.">
+  <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Imbas — AI behavior measurement and public case records.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Data Retention and Deletion | Imbas">
+  <meta name="twitter:description" content="What Imbas stores when you run a Reader inspection, how long it is kept, how share pages work, and how to request deletion. v1 operational retention policy.">
+  <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta name="twitter:image:alt" content="Imbas — AI behavior measurement and public case records.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/site-header.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com"
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.imbaslabs.com/retention.html#webpage",
+        "url": "https://www.imbaslabs.com/retention.html",
+        "name": "Data Retention and Deletion",
+        "description": "What Imbas stores when you run a Reader inspection, how long it is kept, how share pages work, and how to request deletion. v1 operational retention policy.",
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://www.imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://www.imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.imbaslabs.com/retention.html#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.imbaslabs.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Data Retention and Deletion",
+            "item": "https://www.imbaslabs.com/retention.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="brand" aria-label="Imbas, home">
+      <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
+      <span>Imbas</span>
+    </a>
+    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/workbench.html">Workbench</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="page">
+  <div class="page__inner page__inner--narrow">
+    <span class="section-label section-label--named"><span>Governance</span></span>
+    <h1>Data retention and deletion</h1>
+    <p class="page__lede">This page describes what actually happens to what you paste.</p>
+    <p class="page__meta"><span>v1 policy</span> <span>July 2026</span> <span>imbaslabs.com</span></p>
+    <p class="page__intro"><em>It is written to match the implementation, and when either changes, both change together, versioned and dated.</em></p>
+
+    <section class="page__section" style="border-top: none; padding-top: 0;">
+      <h2>Two kinds of records, different rules on purpose</h2>
+      <p>Imbas keeps two fundamentally different kinds of data. The public measurement record, published cases and protocol captures, is built to persist: that permanence is the point of the instrument, and it is governed by the continuity pledge, not this page. Reader product data, the questions and answers you paste into the Reader, is telemetry. It is not the public record, and it does not inherit the record&rsquo;s permanence doctrine. This page governs the second kind.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>Reader runs</h2>
+      <p>When you run an inspection, Imbas stores the question, the pasted answer verbatim, the inspection output, content hashes, and version metadata. Run content is retained while the Reader program operates under this v1 policy, and deleted on request. This is stated as v1 operational doctrine, not permanence: as institutional use grows, tiered retention of raw text is the expected evolution of this policy, and that change will arrive as a dated version of this page, never silently.</p>
+      <p>Retention is not consent. Calibration use, candidate-case retention, and any publication each require your own explicit action, recorded as per-record state; nothing is implied by running an inspection. Where a feature offering that action has not shipped yet, the use simply does not happen.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>Shares</h2>
+      <p>Share pages are unlisted, excluded from search indexing, and permanent by design: a receipt that rots undercuts the reason receipts exist. Anyone holding the link can view it; the link preview never includes answer text. If you created a share and want it gone, that is a deletion request and it is honored. If you are a third party asking that a published record be removed or altered because it concerns you, that is a different thing: it routes through the alteration-request rule on the independence page and is logged there.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>What deletion means</h2>
+      <p>A deletion request removes, from Imbas-controlled storage: the run row, any paired analysis derived from it, any share record you created from it, the stored raw text, derived inspection content, and any candidate-lead copy that retained your text. Deleting the obvious row while copies persist elsewhere would be deletion in name only, so the closure set is defined and the internal procedure walks it.</p>
+      <p>One honest boundary: receipts you downloaded and copies on other people&rsquo;s machines are yours and theirs; Imbas can delete what Imbas holds, not what has already traveled.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>How to request deletion</h2>
+      <p>Email <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a> with enough to identify the record: the share ID, or the approximate time and question of the run. Requests are fulfilled manually, by a person, within 7 days. There is no self-serve deletion today; when that changes, this page changes.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/workbench.html">Workbench</a>
+      <a href="/case/005.html">Case 005</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/challenge.html">Challenge</a>
+      <a href="/independence.html">Independence</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/field-notes/">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+      <span><a href="https://creativecommons.org/licenses/by/4.0/">Public record licensed CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.querySelector('.nav__menu-btn');
+    var nav = document.getElementById('primary-nav');
+    if (btn && nav) {
+      btn.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+          nav.classList.remove('is-open');
+          btn.setAttribute('aria-expanded', 'false');
+          btn.focus();
+        }
+      });
+    }
+  })();
+</script>
+</body>
+</html>

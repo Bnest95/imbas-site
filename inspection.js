@@ -67,7 +67,7 @@ function renderError(root, message) {
   root.innerHTML = `
     <div class="insp-error" role="status">
       <h1 class="insp-error__title">Inspection record not found.</h1>
-      <p class="insp-error__body">This link may be incorrect, expired, or no longer available.</p>
+      <p class="insp-error__body">This link may be incorrect, or the share was removed.</p>
       <p class="insp-error__hint">${escapeHtml(message || "")}</p>
       <div class="insp-actions">
         <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
