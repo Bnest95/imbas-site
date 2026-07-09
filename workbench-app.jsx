@@ -1,4 +1,5 @@
-import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText } from "./reader-receipt.js";
+import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
+import { ACT2_OFFER_COPY } from "./reader-paired.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -1853,6 +1854,29 @@ async function runReader(request) {
   return res.json();
 }
 
+const READER_PAIRED_API = "/api/read-paired";
+
+// Act 2 second read. Posts the client-held open receipt (server re-verifies its
+// integrity hash) plus the pasted second answer. On any non-2xx, the parsed error
+// body rides along on err.info so the caller can tell a paste problem (too_long /
+// empty) from a service state (capacity / unavailable / analysis_failed) — every
+// paired failure leaves Act 1 untouched, so the caller never wipes the first read.
+async function runPairedReader(openReceipt, targetedAnswer) {
+  const res = await fetch(READER_PAIRED_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ open_receipt: openReceipt, targeted_answer: targetedAnswer }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `paired_${res.status}`);
+    err.status = res.status;
+    err.info = data || {};
+    throw err;
+  }
+  return data;
+}
+
 const RESULT_GAP_COUNT_MS = 800;
 const RESULT_CHIP_STAGGER_MS = 100;
 const RESULT_VERDICT_BEAT_MS = 80;
@@ -3140,7 +3164,7 @@ const MEASURE_FINDING_LABEL = {
   "candidate deflection": "Candidate deflection",
 };
 
-function ReaderReceiptActions({ receipt }) {
+function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePrefix = "imbas-reader-receipt" }) {
   const [copiedJson, setCopiedJson] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
@@ -3164,13 +3188,13 @@ function ReaderReceiptActions({ receipt }) {
   };
   const downloadReceipt = () => {
     try {
-      const text = formatReceiptText(receipt);
+      const text = formatter(receipt);
       const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const stamp = (receipt.generated_at || "").replace(/[:.]/g, "-");
       a.href = url;
-      a.download = `imbas-reader-receipt-${stamp || "run"}.txt`;
+      a.download = `${filePrefix}-${stamp || "run"}.txt`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -3250,6 +3274,228 @@ function MeasurementPanel({ result, context }) {
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
       <ReaderReceiptActions receipt={receipt} />
+    </section>
+  );
+}
+
+// Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
+// /api/read-paired: the machine gap estimate with its unvalidated label, the
+// itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
+// from both answers where a span applies), then the paired receipt to download.
+// Reuses the measurement panel's idioms so the paired result reads as the same
+// instrument. The formal signal patterns and the "Machine gap estimate" label appear
+// HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
+// note when the response carries them.
+function PairedDeltaView({ paired, onReset }) {
+  const items = Array.isArray(paired.delta_items) ? paired.delta_items : [];
+  const counts = paired.signal_counts || {};
+  return (
+    <div className="wb-act2__delta wb-scroll-anchor">
+      {paired.idempotent ? (
+        <p className="wb-act2__notice" role="status">You already ran this pair. This is the analysis from that run.</p>
+      ) : null}
+      {paired.capture_uncertain ? (
+        <p className="wb-act2__notice" role="status">The analysis is below. The Reader couldn't confirm it saved its own copy, so download this receipt to keep a full copy.</p>
+      ) : null}
+
+      <div className="wb-measure__estimate wb-act2__estimate">
+        <div className="wb-measure__estimate-value">{paired.gap_estimate_label}</div>
+        {(paired.estimate_rationale || "").trim() ? (
+          <p className="wb-measure__estimate-why">{paired.estimate_rationale.trim()}</p>
+        ) : null}
+      </div>
+
+      <div className="wb-reader-result__sections">
+        <article className="wb-reader-result__section">
+          <h3 className="wb-reader-result__section-title">The delta</h3>
+          <p className="wb-measure__counts">
+            {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
+          </p>
+          {items.length ? (
+            <ol className="wb-measure__list">
+              {items.map((d, i) => (
+                <li key={i} className="wb-measure__finding">
+                  <span className="wb-measure__finding-type">{d.signal_pattern}</span>
+                  <p className="wb-measure__finding-why">{d.point}</p>
+                  {(d.open_side || "").trim() ? (
+                    <blockquote className="wb-measure__anchor wb-act2__side">
+                      <span className="wb-act2__side-label">First answer</span>
+                      {`"${d.open_side.trim()}"`}
+                    </blockquote>
+                  ) : null}
+                  {(d.targeted_side || "").trim() ? (
+                    <blockquote className="wb-measure__anchor wb-act2__side wb-act2__side--targeted">
+                      <span className="wb-act2__side-label">Second answer</span>
+                      {`"${d.targeted_side.trim()}"`}
+                    </blockquote>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="wb-reader-result__empty">No material gap. The direct question surfaced nothing decision-relevant the first answer left out.</p>
+          )}
+        </article>
+      </div>
+
+      <p className="wb-measure__unvalidated">
+        This is a machine estimate over one answer pair. Not a human-scored result, not evidence.
+      </p>
+      <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+
+      <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
+
+      <div className="wb-action-row wb-act2__reset-row">
+        <Btn kind="ghost" small onClick={onReset}>Test another answer</Btn>
+      </div>
+    </div>
+  );
+}
+
+// Turn a paired run failure into one honest line. Prefer the server's own message
+// (capacity / unavailable / analysis_failed all already say the first read is safe);
+// fall back to a network line. Never surfaces a raw status code.
+function pairedRunErrorCopy(err) {
+  const msg = err && err.info && typeof err.info.message === "string" ? err.info.message.trim() : "";
+  if (msg) return msg;
+  return "The second read didn't reach the Reader. Your first read is safe. Try the two-question test again shortly.";
+}
+
+// Reader v2 P2 (Phase B) — the paired test. Mounts under the Act 2 offer: a paste
+// box for the second answer (same caps + escaping as the first paste, via
+// PasteField), a compare button disabled while in flight (the client half of the
+// double-submit guard; the server's idempotency lookup is the other half), then the
+// delta view. Failure isolation: a failed second read only sets a local error and
+// leaves the first read and its receipt untouched, so Act 2 can be retried.
+function PairedTest({ openReceipt }) {
+  const [targeted, setTargeted] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [paired, setPaired] = useState(null);
+  const [fieldError, setFieldError] = useState("");
+  const [runError, setRunError] = useState("");
+  if (!openReceipt) return null;
+  const hasAnswer = !!targeted.trim();
+
+  const touch = (v) => {
+    setTargeted(v);
+    if (fieldError) setFieldError("");
+    if (runError) setRunError("");
+  };
+
+  const reset = () => {
+    setPaired(null);
+    setTargeted("");
+    setFieldError("");
+    setRunError("");
+  };
+
+  const submit = async () => {
+    if (busy) return;
+    if (!hasAnswer) {
+      setFieldError("Paste the answer your AI gave the direct question.");
+      return;
+    }
+    setFieldError("");
+    setRunError("");
+    setBusy(true);
+    try {
+      const data = await runPairedReader(openReceipt, targeted);
+      setPaired(data);
+    } catch (err) {
+      const info = (err && err.info) || {};
+      if (err && err.status === 400 && info.error === "too_long") {
+        setFieldError("Answer is over 1200 words. Trim it and re-run.");
+      } else if (err && err.status === 400 && info.error === "empty") {
+        setFieldError("That's too short to compare. Paste the full answer.");
+      } else if (err && err.status === 400) {
+        setRunError("This inspection can't run the two-question test. Re-run the answer above, then try again.");
+      } else {
+        setRunError(pairedRunErrorCopy(err));
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (paired) {
+    return (
+      <div className="wb-act2__test">
+        <PairedDeltaView paired={paired} onReset={reset} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="wb-act2__test">
+      <PasteField
+        label="Answer to the direct question"
+        value={targeted}
+        onChange={touch}
+        error={fieldError}
+        placeholder="Paste what your AI came back with…"
+        minAckLength={1}
+      />
+      <div className="wb-action-row wb-act2__test-cta">
+        <Btn
+          kind="primary"
+          disabled={busy || !hasAnswer}
+          onClick={submit}
+          className={`wb-reader-cta${hasAnswer && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+        >
+          {busy ? "Comparing…" : "Compare the two answers"}
+        </Btn>
+      </div>
+      {runError ? <p className="wb-act2__run-error" role="status">{runError}</p> : null}
+    </div>
+  );
+}
+
+// Reader v2 P2 (Phase A) — the Act 2 offer. Sits one scroll below the measurement
+// panel: after the single-answer read, offer the direct question built from the
+// candidate missing items so the user can run it on their own AI (design §1). Two
+// states only: the live offer (a targeted prompt to copy) when there is a missing
+// item AND spend capacity, or a plain try-again-shortly when a second read would not
+// clear the observable capacity (design §8). Renders nothing otherwise — no
+// measurement, or a clean/framing-only answer with nothing to probe — so its absence
+// never degrades Act 1. The paste box + paired analysis mount at the seam below.
+function Act2Offer({ result }) {
+  const act2 = result?.act2;
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  if (!act2 || !act2.eligible) return null;
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(act2.targeted_prompt || "");
+      setCopied(true);
+      setCopyFail("");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+  return (
+    <section className="wb-reader-result is-agent wb-act2 wb-scroll-anchor" aria-labelledby="wb-act2-heading">
+      <div className="wb-reader-result__head">
+        <h2 id="wb-act2-heading" className="wb-reader-result__title">THE TWO-QUESTION TEST</h2>
+      </div>
+      {act2.available ? (
+        <>
+          <p className="wb-act2__offer">{ACT2_OFFER_COPY}</p>
+          <pre className="wb-act2__prompt" aria-label="The direct question to run on your AI">{act2.targeted_prompt}</pre>
+          <div className="wb-reader-result__copy wb-act2__actions">
+            <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyPrompt}>
+              {copied ? "Copied" : "Copy the question"}
+            </Btn>
+            {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+          </div>
+          <PairedTest openReceipt={result.receipt} />
+        </>
+      ) : (
+        <p className="wb-act2__degraded" role="status">
+          The test runs a second read, and the Reader is at capacity right now. Try again in a little while.
+        </p>
+      )}
     </section>
   );
 }
@@ -3593,6 +3839,12 @@ function ReaderWorkbench() {
               result={readerResult}
               context={{ mode, sel, question, answer, model, topic }}
             />
+          </div>
+        ) : null}
+
+        {readerResult && readerResult.act2 ? (
+          <div className="wb-reader-v2__follow wb-reader-v2__follow--act2">
+            <Act2Offer result={readerResult} />
           </div>
         ) : null}
 

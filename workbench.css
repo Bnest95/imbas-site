@@ -4141,6 +4141,113 @@
   border-top: 1px solid rgba(242, 232, 220, 0.08);
 }
 
+/* Act 2 — the two-question test offer.
+   Reuses the .wb-reader-result.is-agent card chrome and the shared copy-row
+   idiom; these overrides carry only the offer sentence, the constructed prompt
+   readout, and the at-capacity line, styled with existing umber + amber tokens.
+   No new accent, no new design system. */
+.wb-act2 {
+  margin-top: 0.35rem;
+}
+
+.wb-act2__offer {
+  margin: -0.1rem 0 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: rgba(228, 216, 200, 0.92);
+}
+
+.wb-act2__prompt {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(222, 111, 56, 0.28);
+  border-left: 2px solid rgba(222, 111, 56, 0.5);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(26, 20, 16, 0.6) 0%, rgba(18, 16, 13, 0.6) 100%);
+  font-family: var(--font-mono);
+  font-size: max(0.8rem, 13px);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: rgba(228, 216, 200, 0.94);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.wb-act2__actions {
+  margin-top: 0.25rem;
+}
+
+.wb-act2__degraded {
+  margin: -0.1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(205, 192, 176, 0.86);
+}
+
+/* Act 2 — the paired test (paste box, then the delta view). Reuses the measure
+   idioms (estimate readout, finding list, anchor quotes), so these overrides carry
+   only the paste-step divider, the two-sided quote labels, and the status lines. No
+   new accent: the "before" quote keeps the amber anchor border, the "after" quote
+   takes the same violet as the estimate readout. */
+.wb-act2__test {
+  margin-top: 1.15rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-act2__test-cta {
+  margin-top: 0.9rem;
+}
+
+.wb-act2__delta {
+  margin-top: 0.35rem;
+}
+
+.wb-act2__side {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.wb-act2__side--targeted {
+  border-left-color: rgba(130, 110, 170, 0.5);
+}
+
+.wb-act2__side-label {
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-style: normal;
+  color: rgba(185, 172, 195, 0.72);
+}
+
+.wb-act2__notice {
+  margin: 0 0 0.95rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(222, 111, 56, 0.26);
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(228, 216, 200, 0.9);
+}
+
+.wb-act2__run-error {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(205, 178, 168, 0.9);
+}
+
+.wb-act2__reset-row {
+  margin-top: 0.85rem;
+}
+
 .wb-reader-archive {
   margin-bottom: 1.5rem;
   opacity: 0.88;

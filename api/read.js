@@ -83,6 +83,8 @@ import {
   buildSingleReceipt,
   canonicalizeForHash,
 } from "../reader-receipt.js";
+import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
+import { extractJson } from "./reader-json.js";
 
 const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
@@ -313,76 +315,9 @@ function buildUserMessage(input) {
   ].join("\n");
 }
 
-// Single forward pass that removes the two things Opus most often adds to
-// otherwise-valid JSON: // and /* */ comments (it echoes the schema's inline
-// comments), and trailing commas before } or ]. Everything INSIDE a string
-// literal is copied byte-for-byte, so URLs ("https://…") and commas or braces
-// in the prose are never touched. Only " toggles string state — never ' — so
-// an apostrophe in the read ("don't") can't desync the scan.
-function cleanJsonish(s) {
-  let out = "";
-  let inStr = false;
-  for (let i = 0; i < s.length; i++) {
-    const c = s[i];
-    const next = s[i + 1];
-
-    if (inStr) {
-      out += c;
-      if (c === "\\") {
-        // copy the escaped char verbatim so \" / \\ can't end the string early
-        if (i + 1 < s.length) { out += s[i + 1]; i++; }
-      } else if (c === '"') {
-        inStr = false;
-      }
-      continue;
-    }
-
-    if (c === '"') { inStr = true; out += c; continue; }
-
-    // // line comment — skip to (and re-emit) the newline
-    if (c === "/" && next === "/") {
-      while (i < s.length && s[i] !== "\n") i++;
-      if (i < s.length) out += "\n";
-      continue;
-    }
-    // /* block comment */ — skip through the closer
-    if (c === "/" && next === "*") {
-      i += 2;
-      while (i < s.length && !(s[i] === "*" && s[i + 1] === "/")) i++;
-      i += 1; // sit on the '*'; loop ++ steps past the '/'
-      continue;
-    }
-    // trailing comma — drop a comma whose next non-space char closes a list/object
-    if (c === ",") {
-      let j = i + 1;
-      while (j < s.length && /\s/.test(s[j])) j++;
-      if (s[j] === "}" || s[j] === "]") continue;
-    }
-
-    out += c;
-  }
-  return out;
-}
-
-// Tolerant extraction: the model is told JSON-only, but if it ever wraps the
-// object in prose or a ``` code fence, take the outermost {...} (the fence and
-// any prose sit outside the braces, so the slice drops them for free). Try a
-// strict parse first so already-valid JSON is never mutated; only on failure
-// run the comment/trailing-comma cleaner and parse again.
-function extractJson(text) {
-  if (typeof text !== "string") return null;
-  const a = text.indexOf("{");
-  const b = text.lastIndexOf("}");
-  if (a === -1 || b === -1 || b <= a) return null;
-  const candidate = text.slice(a, b + 1);
-  try {
-    return JSON.parse(candidate);
-  } catch {}
-  try {
-    return JSON.parse(cleanJsonish(candidate));
-  } catch {}
-  return null;
-}
+// Tolerant JSON extraction (extractJson + cleanJsonish) moved to ./reader-json.js
+// so the single and paired endpoints share one parser and cannot drift. Imported
+// at the top of this file; behavior is unchanged.
 
 // Graceful degradation: a minimal, valid object in the real output shape, marked
 // source:"fallback" and honest about being a placeholder. It leans on the keyword
@@ -472,6 +407,42 @@ function parseMeasurement(raw) {
     estimate_scale_version: ESTIMATE_SCALE_VERSION,
     candidate_method_version: CANDIDATE_METHOD_VERSION,
     unvalidated: true,
+  };
+}
+
+// ── Act 2 offer (Reader v2 P2, Phase A) ───────────────────────────────────────
+// After the single-mode panel, the Reader offers a targeted follow-up prompt built
+// deterministically from the P1 candidate missing items (buildTargetedPrompt — no
+// third model call), carried on the response so the client can show it with a copy
+// button and record it verbatim + hashed later (design §1).
+//
+// Capacity grounding (design §8): the two live controls are the per-IP rate limiter
+// (checkReaderRateLimits) and the global monthly spend ceiling
+// (checkGlobalSpendCeiling, READER_SPEND_CEILING_USD). The limiter is
+// consume-on-check — it INCRs each window and returns no non-mutating "remaining"
+// read — and its burst/minute windows reset within the ~60-90s paste-run-paste gap,
+// so it cannot be honestly pre-peeked for the offer without spending a unit. The
+// spend ceiling IS non-mutatingly observable (the month total vs the configured
+// ceiling) and persists across the gap, so the pre-offer gate keys on spend headroom
+// alone; the authoritative per-IP enforcement stays at the paired endpoint (Phase B),
+// which degrades to try-again-shortly at submit. `available` keys on the ceiling
+// threshold the code already enforces, never an invented spend-remaining figure; an
+// unobservable total leaves the offer up (advisory layer fails open, enforcement
+// fails closed).
+//
+// Returns null when there is no measurement (fallback path / older rows): the offer
+// never renders and Act 1 is untouched.
+function buildAct2(measurement, question, spendTotalUsd) {
+  if (!measurement) return null;
+  const { eligible, targeted_prompt } = buildTargetedPrompt({ question, measurement });
+  const available = !(Number(spendTotalUsd) >= SPEND_CEILING_USD);
+  return {
+    eligible,
+    available,
+    degraded_reason: available ? null : "spend_ceiling",
+    targeted_prompt: eligible ? targeted_prompt : "",
+    targeted_prompt_hash: eligible ? sha256Hex(targeted_prompt) : "",
+    paired_method_version: PAIRED_METHOD_VERSION,
   };
 }
 
@@ -810,6 +781,10 @@ export function createReadHandler(deps = {}) {
     }
     ctx.durable_rate = rate.durable;
     ctx.durable_spend = spend.durable;
+    // Freshest observable month spend total, for the Act 2 offer's capacity signal.
+    // Starts at the pre-run total; advanced to the post-add total once this read's
+    // cost is recorded (below). Non-mutating vs the ceiling — no phantom unit spent.
+    let spendTotalAfter = spend.total || 0;
 
     let modelText = "";
     markPhase(ctx, "inference_start");
@@ -862,6 +837,7 @@ export function createReadHandler(deps = {}) {
       if (data.usage) {
         const cost = estimateCostUsd(data.usage, USD_PER_MTOK);
         const recorded = await addGlobalSpend(cost, deps);
+        spendTotalAfter = Number.isFinite(recorded.total) ? recorded.total : spendTotalAfter;
         usageFields.input_tokens = data.usage.input_tokens || 0;
         usageFields.output_tokens = data.usage.output_tokens || 0;
         usageFields.cache_read_tokens = data.usage.cache_read_input_tokens ?? 0;
@@ -978,6 +954,11 @@ export function createReadHandler(deps = {}) {
     });
     receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
     payload.receipt = receipt;
+
+    // Act 2 offer (Reader v2 P2, Phase A): the deterministic targeted prompt + its
+    // hash + a spend-grounded capacity signal. null-safe on the fallback path
+    // (measurement null -> act2 null -> no offer).
+    payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter);
 
     return sendRead(res, input, payload, ctx, deps);
   };

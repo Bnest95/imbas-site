@@ -36,6 +36,15 @@ export function gapEstimateLabel(n) {
   return `Candidate gap estimate: ${n} of 3 (unvalidated)`;
 }
 
+// The paired-mode estimate label (Reader v2 P2). Distinct wording from the single
+// label because the paired estimate is a measured open-to-targeted delta, not a
+// candidate potential — but it is STILL unvalidated (a machine estimate over one
+// answer pair, never a human-scored result). "Machine gap estimate" appears here
+// and only here, exactly as the single label appears only in single mode.
+export function pairedGapEstimateLabel(n) {
+  return `Machine gap estimate: ${n} of 3 (unvalidated)`;
+}
+
 // ── Canonicalization ──────────────────────────────────────────────────────────
 // Deterministic serialization so the same logical envelope always hashes the same:
 //   1. object keys sorted (recursively); arrays keep their order;
@@ -139,32 +148,82 @@ export function buildSingleReceipt({
   };
 }
 
+// ── Envelope assembly (paired mode, Reader v2 P2) ─────────────────────────────
+// The paired receipt is the SAME envelope with receipt_type "paired": the full
+// open-run record is embedded verbatim (openRun, passed whole from the open
+// receipt) so the artifact travels whole with nothing to resolve against Imbas
+// infrastructure, and paired_analysis is populated instead of null. The caller
+// computes content_hash from canonicalizeForHash(envelope) exactly as in single
+// mode — the hash rule and canonicalization_version are identical.
+//
+// delta_items is the structured itemized delta: each entry names one thing the
+// targeted answer surfaced that the open one did not, quotes both sides where a
+// span applies, and carries the machine's signal-pattern classification for that
+// delta (Omission / Framing Drift / Deflection). The paired gap_estimate (0-3,
+// estimate_type "paired_gap") is a machine estimate over this one pair — labelled
+// unvalidated, never a human-scored result.
+export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
+  const pa = pairedAnalysis || {};
+  const deltaItems = Array.isArray(pa.delta_items)
+    ? pa.delta_items.map((d) => ({
+        point: (d && d.point) || "",
+        open_side: (d && d.open_side) || "",
+        targeted_side: (d && d.targeted_side) || "",
+        signal_pattern: (d && d.signal_pattern) || "",
+      }))
+    : [];
+  return {
+    receipt_type: "paired",
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    generated_at: generatedAt,
+    open_run: openRun || null,
+    paired_analysis: {
+      open_run_id: pa.open_run_id || "",
+      targeted_prompt: pa.targeted_prompt || "",
+      targeted_prompt_hash: pa.targeted_prompt_hash || "",
+      targeted_answer: pa.targeted_answer || "",
+      targeted_answer_hash: pa.targeted_answer_hash || "",
+      delta_items: deltaItems,
+      gap_estimate: pa.gap_estimate,
+      gap_estimate_label: pairedGapEstimateLabel(pa.gap_estimate),
+      estimate_rationale: pa.estimate_rationale || "",
+      estimate_type: pa.estimate_type || "paired_gap",
+      rubric_version: pa.rubric_version || "",
+      paired_method_version: pa.paired_method_version || "",
+      unvalidated: true,
+    },
+    boundary: RECEIPT_BOUNDARY,
+    integrity: {
+      algorithm: RECEIPT_HASH_ALGORITHM,
+      canonicalization_version: CANONICALIZATION_VERSION,
+      content_hash: null,
+    },
+  };
+}
+
 // ── Human-readable receipt (.txt) ─────────────────────────────────────────────
 // Plain text so it is universally readable and self-contained. Carries the
 // boundary line AND the unvalidated label inside the artifact, not just the UI.
 const COMPLETENESS_UPPER = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
 
-export function formatReceiptText(envelope) {
-  const e = envelope || {};
-  const run = e.open_run || {};
-  const insp = run.inspection || {};
-  const m = run.measurement;
-  const prov = run.provenance || {};
-  const integ = e.integrity || {};
+// The open-run body: the answer inspected, the read, the candidate measurement,
+// and the run provenance. Shared by BOTH text receipts so the embedded open run
+// renders identically whether it stands alone (single) or is wrapped by a paired
+// receipt. Returns an array of lines (no leading/trailing blank) the caller folds
+// between its own header and integrity footer.
+function openRunBodyLines(run) {
+  const r = run || {};
+  const insp = r.inspection || {};
+  const m = r.measurement;
+  const prov = r.provenance || {};
   const L = [];
-  L.push("IMBAS READER — INSPECTION RECEIPT");
-  L.push(`Generated: ${e.generated_at || ""}`);
-  L.push(`Schema: ${e.schema_version || ""}`);
-  L.push("");
-  L.push(RECEIPT_BOUNDARY);
-  L.push("");
   L.push("—— THE ANSWER INSPECTED ——");
-  L.push(`Question: ${(run.question || "").trim()}`);
-  if ((run.topic || "").trim()) L.push(`Topic / context: ${run.topic.trim()}`);
-  if ((run.declared_model || "").trim()) L.push(`AI used: ${run.declared_model.trim()}`);
+  L.push(`Question: ${(r.question || "").trim()}`);
+  if ((r.topic || "").trim()) L.push(`Topic / context: ${r.topic.trim()}`);
+  if ((r.declared_model || "").trim()) L.push(`AI used: ${r.declared_model.trim()}`);
   L.push("");
   L.push("Answer:");
-  L.push((run.answer || "").trim());
+  L.push((r.answer || "").trim());
   L.push("");
   L.push("—— THE READ ——");
   L.push(`Completeness: ${COMPLETENESS_UPPER[insp.completeness] || (insp.completeness || "").toUpperCase()}`);
@@ -213,11 +272,83 @@ export function formatReceiptText(envelope) {
   L.push(`Reader output hash: ${prov.reader_output_hash || ""}`);
   L.push(`Run timestamp: ${prov.run_timestamp || ""}`);
   if (prov.request_id) L.push(`Request ID: ${prov.request_id}`);
+  return L;
+}
+
+function integrityLines(integ) {
+  const i = integ || {};
+  return [
+    "—— INTEGRITY ——",
+    `Algorithm: ${i.algorithm || RECEIPT_HASH_ALGORITHM}`,
+    `Canonicalization version: ${i.canonicalization_version || CANONICALIZATION_VERSION}`,
+    `Content hash: ${i.content_hash || ""}`,
+  ];
+}
+
+export function formatReceiptText(envelope) {
+  const e = envelope || {};
+  const run = e.open_run || {};
+  const L = [];
+  L.push("IMBAS READER — INSPECTION RECEIPT");
+  L.push(`Generated: ${e.generated_at || ""}`);
+  L.push(`Schema: ${e.schema_version || ""}`);
   L.push("");
-  L.push("—— INTEGRITY ——");
-  L.push(`Algorithm: ${integ.algorithm || RECEIPT_HASH_ALGORITHM}`);
-  L.push(`Canonicalization version: ${integ.canonicalization_version || CANONICALIZATION_VERSION}`);
-  L.push(`Content hash: ${integ.content_hash || ""}`);
+  L.push(RECEIPT_BOUNDARY);
+  L.push("");
+  for (const line of openRunBodyLines(run)) L.push(line);
+  L.push("");
+  for (const line of integrityLines(e.integrity)) L.push(line);
+  L.push("");
+  L.push(RECEIPT_BOUNDARY);
+  return L.join("\n");
+}
+
+// Human-readable paired receipt (.txt). Same header/boundary/integrity frame as
+// the single receipt; the embedded open run renders via the shared body helper so
+// the first-answer record reads identically, and the paired delta section is added
+// beneath it. The estimate carries the "Machine gap estimate: N of 3 (unvalidated)"
+// label — the paired label, which appears only in paired mode.
+export function formatPairedReceiptText(envelope) {
+  const e = envelope || {};
+  const run = e.open_run || {};
+  const pa = e.paired_analysis || {};
+  const L = [];
+  L.push("IMBAS READER — PAIRED INSPECTION RECEIPT");
+  L.push(`Generated: ${e.generated_at || ""}`);
+  L.push(`Schema: ${e.schema_version || ""}`);
+  L.push("");
+  L.push(RECEIPT_BOUNDARY);
+  L.push("");
+  L.push("—— THE FIRST (OPEN) ANSWER ——");
+  L.push("");
+  for (const line of openRunBodyLines(run)) L.push(line);
+  L.push("");
+  L.push("—— THE TWO-QUESTION TEST (paired, machine estimate) ——");
+  if (pa.open_run_id) L.push(`Open run ID: ${pa.open_run_id}`);
+  L.push(pairedGapEstimateLabel(pa.gap_estimate));
+  if ((pa.estimate_rationale || "").trim()) L.push(`Rationale: ${pa.estimate_rationale.trim()}`);
+  L.push("");
+  L.push("Targeted prompt (deterministic, from the open answer's candidate gaps):");
+  L.push((pa.targeted_prompt || "").trim());
+  L.push("");
+  L.push("Delta — what the second answer surfaced that the first did not:");
+  const deltas = Array.isArray(pa.delta_items) ? pa.delta_items : [];
+  if (deltas.length) {
+    deltas.forEach((d, i) => {
+      const pat = (d.signal_pattern || "").trim();
+      L.push(`${i + 1}. ${pat ? `[${pat}] ` : ""}${(d.point || "").trim()}`);
+      if ((d.open_side || "").trim()) L.push(`   first answer: "${d.open_side.trim()}"`);
+      if ((d.targeted_side || "").trim()) L.push(`   second answer: "${d.targeted_side.trim()}"`);
+    });
+  } else {
+    L.push("- (no delta — the second answer added nothing material over the first)");
+  }
+  L.push("");
+  L.push(
+    "These are machine estimates over a single answer pair, not validated classifications or evidence.",
+  );
+  L.push("");
+  for (const line of integrityLines(e.integrity)) L.push(line);
   L.push("");
   L.push(RECEIPT_BOUNDARY);
   return L.join("\n");
