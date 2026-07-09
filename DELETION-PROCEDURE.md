@@ -99,4 +99,17 @@ Each entry proves the procedure was exercised end-to-end against real storage us
 - **Verified residue = 0:** Reader Runs 0 rows (by Request ID and by namespace); Reader Paired Analyses 0 rows (by Open Run ID and by namespace); Inspection Shares 0 rows (by namespace and Question). Redis holds counters only, nothing per-run to delete.
 - **Result: PASS** — zero residue across every closure-set location, including the paired store that P1 did not yet have.
 
+### 2026-07-09 (UTC) — v2 P3 procedure proof, redesigned single-mode flow
+
+- **Namespace:** `DELETE_TEST_READER_V2_P3_20260709T141930Z` (carried inside the pasted answer).
+- **Origin:** the authorized Reader v2 interaction-redesign (paste-first / result-hero) verification run. One paid call total: a real `/api/read` single-mode open run against the production endpoint the shipped workbench bundle calls. The redesigned UI then rendered that exact payload end to end at 380px (result hero: "Candidate gap estimate: 2 of 3 (unvalidated)", summary "Reader found 4 candidate missing items"). Source was `agent`, not fallback.
+- **Closure set located:**
+  - Run row `recUbUmucZDPiPNfs` in Reader Runs `tblqmHiOCQ5YSXBN3`, located by content namespace (find step proven, not the held ID). Its `Request ID` = `a19b98f62503fa14` and `Source Content Hash` = `d590a2d110c8663959a7152398af492d37925706793904af03ed4344380f9e0b`, both captured before deletion per §3 step 2 and matched against the run receipt.
+  - Inspection Shares `tbliYeeM5n0TSVrxf`: queried by namespace **and** by Question — 0 rows. The run was never shared.
+  - Reader Paired Analyses `tblP1ekWWWscz6pBG`: queried by `Open Run ID` = `a19b98f62503fa14` — 0 rows. No paired (Act 2) run was performed.
+  - Candidate-lead store: still NOT YET BUILT (P4), so not in this closure set.
+- **Deleted:** the run row `recUbUmucZDPiPNfs`. Removing it removed the raw answer and derived content with it — no separate blob store.
+- **Verified residue = 0:** Reader Runs 0 rows (re-queried by namespace and by Request ID); Inspection Shares 0 rows; Reader Paired Analyses 0 rows. Redis holds counters only, nothing per-run to delete.
+- **Result: PASS** — zero residue across every live closure-set location.
+
 <!-- TEST-LOG -->
