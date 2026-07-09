@@ -4036,6 +4036,111 @@
   border-top: 1px solid rgba(242, 232, 220, 0.07);
 }
 
+/* ── Reader v2 P1 — measurement panel ──────────────────────────────────────
+   The professional layer beneath the inspection. Reuses the .wb-reader-result
+   card chrome (.is-agent) and its inner idioms; these overrides carry only the
+   measurement-specific pieces (the estimate readout, the candidate findings, the
+   unvalidated + boundary lines), styled with existing umber + violet tokens. No
+   new accent, no new design system. */
+.wb-measure {
+  margin-top: 0.35rem;
+}
+
+.wb-measure__meta {
+  margin: -0.2rem 0 0.9rem;
+}
+
+.wb-measure__estimate {
+  margin: 0 0 1.15rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(130, 110, 170, 0.32);
+  border-left: 2px solid rgba(130, 110, 170, 0.5);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(40, 32, 52, 0.5) 0%, rgba(24, 20, 30, 0.5) 100%);
+}
+
+.wb-measure__estimate-value {
+  font-family: var(--font-mono);
+  font-size: clamp(0.95rem, 2.2vw, 1.08rem);
+  letter-spacing: 0.05em;
+  color: rgba(214, 198, 232, 0.96);
+}
+
+.wb-measure__estimate-why {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: rgba(196, 182, 205, 0.86);
+}
+
+.wb-measure__counts {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-mono);
+  font-size: max(0.68rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: rgba(185, 172, 195, 0.78);
+}
+
+.wb-measure__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.95rem;
+}
+
+.wb-measure__finding {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid rgba(130, 110, 170, 0.32);
+}
+
+.wb-measure__finding-type {
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 168, 150, 0.85);
+}
+
+.wb-measure__finding-why {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(228, 216, 200, 0.92);
+}
+
+.wb-measure__anchor {
+  margin: 0.15rem 0 0;
+  padding: 0.35rem 0 0.35rem 0.75rem;
+  border-left: 2px solid rgba(222, 111, 56, 0.3);
+  font-family: var(--font-serif, Georgia, serif);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgba(205, 192, 176, 0.88);
+}
+
+.wb-measure__unvalidated {
+  margin: 1.1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(190, 176, 196, 0.82);
+}
+
+.wb-measure__boundary {
+  margin-top: 0.65rem;
+}
+
+.wb-measure__actions {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
 .wb-reader-archive {
   margin-bottom: 1.5rem;
   opacity: 0.88;

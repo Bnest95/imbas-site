@@ -28,6 +28,7 @@ import { SYSTEM_PROMPT, READER_PROMPT_VERSION } from "../api/read.js";
 // shipped; the value is the SHA-256 (hex) of that version's SYSTEM_PROMPT.
 const KNOWN_FINGERPRINTS = {
   "reader.v1": "e30ee03560916b143ccf2dbeafc0bc367f2b02080e1d7765db2fff8404ba16be",
+  "reader.v2": "d7c31671fe3f5c156ea780b7acc446d0add312bcc63a0439cff44ea30acacf3a",
 };
 
 const fingerprint = (s) => createHash("sha256").update(s, "utf8").digest("hex");

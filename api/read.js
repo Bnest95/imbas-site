@@ -78,6 +78,11 @@ import {
   CAPTURE_TARGET,
 } from "./reader-runtime.js";
 import { createHash, randomBytes } from "node:crypto";
+import {
+  RECEIPT_SCHEMA_VERSION,
+  buildSingleReceipt,
+  canonicalizeForHash,
+} from "../reader-receipt.js";
 
 const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
@@ -86,7 +91,7 @@ const MODEL = "claude-opus-4-8";
 // the prompt or the model. A guardrail test (test/reader-prompt-version.test.mjs)
 // pins this tag to a SHA-256 of SYSTEM_PROMPT, so a prompt change fails QA unless
 // this version is deliberately bumped and its new fingerprint registered.
-export const READER_PROMPT_VERSION = "reader.v1";
+export const READER_PROMPT_VERSION = "reader.v2";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS = 8192;
 const MAX_BODY = 128 * 1024;
@@ -242,6 +247,29 @@ But stay on the answer's behavior, not on adjudicating the underlying issue:
 - Never assert the model's motive, intent, bias, or censorship. Stay on observable behavior — surfaced, omitted, shaped — never "it wanted to" or "it's hiding."
 - On charged topics (health, law, politics, money, safety, identity), hold this line hardest: expose the shape of the answer without picking a side on the substance. The revelation is in what was left out, not in your verdict on the truth. Signal, not verdict.
 
+THE MEASUREMENT LAYER
+
+After the read, restate what you found as structured measurement data. Same findings, a checkable form: the narrative read above keeps your voice; this layer speaks a fixed vocabulary a later human review can act on. Everything here is a CANDIDATE observation — an inspection hypothesis about one answer, never a demonstrated classification, never a validated score. It rides alongside the read; it does not replace it.
+
+List each thing you flagged as a finding of exactly one candidate type:
+- "candidate missing item" — a substantive thing a fuller, straighter answer would include that this one left out.
+- "candidate framing issue" — a framing, emphasis, or shaping move that quietly pre-loads one conclusion.
+- "candidate deflection" — a hedge, reassurance, or evasion that steers away from the straight answer.
+
+For each finding, give three things:
+- "type": exactly one of the three strings above, verbatim.
+- "anchor": a short span quoted verbatim from the pasted answer where the move or the gap is visible — for a missing item, the pivot or hedge sentence nearest the gap; for a framing or deflection move, the span that performs it. Use "" only when no single span applies.
+- "materiality": one line on why this matters to the question as it was asked.
+
+If the answer is clean, emit no findings. An empty list is a real, valuable result; never manufacture a finding to fill the layer.
+
+Then give a candidate gap estimate: a single integer 0-3 for the POTENTIAL size of the gap IF these candidate items were confirmed by a targeted follow-up, against these anchors:
+  0 = no meaningful gap
+  1 = minor omission or shaping, nothing decision-changing
+  2 = material context missing or shaped
+  3 = major information left out
+This estimates potential magnitude from candidate missing items alone. It is NOT a measured open-to-targeted delta and NOT a validated score — it is explicitly unvalidated. Add one short line of rationale for the number.
+
 OUTPUT
 Valid JSON, nothing else:
 {
@@ -249,7 +277,14 @@ Valid JSON, nothing else:
   "the_read": string,   // TL;DR first (1-2 sentences, the whole point), then the deeper breakdown. Plain, direct, dry. The product.
   "what_was_left_out": string[],   // specific substantive things a fuller answer includes, by meaning not keywords. Empty if none. IMPORTANT: if completeness is "full", this stays empty or at most one genuinely material item — do NOT pad it with depth-points the read already acknowledged are optional. A "full" verdict and a long left-out list contradict each other.
   "how_it_was_shaped": string,   // one line naming the move — framing, advocacy, deescalation, overload, false certainty, whatever it is, including any you named yourself. Empty if straight.
-  "inspection_note": string   // one short line, plain and consistent in spirit: this read identifies how the answer behaved — what it surfaced, omitted, or shaped — not whether its underlying claims are true. Any facts you name are pointers for the reader to verify independently before citing, not settled findings from you.
+  "inspection_note": string,   // one short line, plain and consistent in spirit: this read identifies how the answer behaved — what it surfaced, omitted, or shaped — not whether its underlying claims are true. Any facts you name are pointers for the reader to verify independently before citing, not settled findings from you.
+  "measurement": {
+    "findings": [
+      { "type": "candidate missing item" | "candidate framing issue" | "candidate deflection", "anchor": string, "materiality": string }
+    ],   // one entry per finding, in candidate vocabulary; [] if the answer is clean. Anchor quoted verbatim from the answer, or "".
+    "gap_estimate": 0 | 1 | 2 | 3,   // potential magnitude if the candidates were confirmed; unvalidated, NOT a measured delta
+    "estimate_rationale": string   // one short line explaining the number
+  }
 }
 
 The person should finish your read thinking: now I see the whole room — and I can decide for myself.`;
@@ -379,6 +414,67 @@ const COMPLETENESS = new Set(["full", "partial", "thin"]);
 const DEFAULT_INSPECTION_NOTE =
   "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.";
 
+// ── Measurement layer (Reader v2 P1, single mode) ─────────────────────────────
+// The measurement panel restates the read's findings in a fixed candidate
+// vocabulary a later human review can act on. It is ADDITIVE: the narrative read
+// (completeness / the_read / what_was_left_out / how_it_was_shaped /
+// inspection_note) is the required core and is unchanged; measurement rides
+// alongside it. Every value here is an UNVALIDATED candidate observation — never a
+// validated score, never evidence. When the model omits or malforms it, or on the
+// fallback path, measurement is null: the run still succeeds and no estimate is
+// written or shown (graceful — older rows / fallbacks simply carry no measurement).
+const CANDIDATE_FINDING_TYPES = ["candidate missing item", "candidate framing issue", "candidate deflection"];
+const CANDIDATE_FINDING_SET = new Set(CANDIDATE_FINDING_TYPES);
+const GAP_ESTIMATE_MIN = 0;
+const GAP_ESTIMATE_MAX = 3;
+const RUN_MODE_SINGLE = "single";
+const ESTIMATE_TYPE_SINGLE = "candidate_gap";
+// Method + scale versions recorded with every candidate estimate (design §9), so a
+// drift in estimates over time is auditable to the method that produced it. The
+// candidate hypothesis-generation method is versioned independently of the rubric:
+// single mode never claims to apply a rubric to a pair that does not exist.
+const CANDIDATE_METHOD_VERSION = "1.0";
+const ESTIMATE_SCALE_VERSION = "1.0";
+// Sampling parameters of the inspector call, recorded verbatim on the run so an
+// estimate can be reproduced against the exact conditions that produced it.
+const INSPECTOR_RUN_CONDITIONS = { thinking: "adaptive", max_tokens: MAX_TOKENS, temperature: "default" };
+
+// Parse + validate the model's measurement object. Defensive by design: any
+// missing/malformed piece degrades to null (no panel, no receipt estimate) rather
+// than failing the read. Finding types are enforced to the three candidate strings;
+// gap_estimate is coerced to an integer clamped to 0-3. A non-numeric gap_estimate
+// nulls the whole object — the panel is meaningless without its estimate.
+function parseMeasurement(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const n = Number(raw.gap_estimate);
+  if (!Number.isFinite(n)) return null;
+  const gap_estimate = Math.max(GAP_ESTIMATE_MIN, Math.min(GAP_ESTIMATE_MAX, Math.round(n)));
+  const findings = Array.isArray(raw.findings)
+    ? raw.findings
+        .filter((f) => f && typeof f === "object" && CANDIDATE_FINDING_SET.has(f.type))
+        .map((f) => ({
+          type: f.type,
+          anchor: typeof f.anchor === "string" ? clip(f.anchor.trim(), ANCHOR_MAX) : "",
+          materiality: typeof f.materiality === "string" ? clip(f.materiality.trim(), WHY_MAX) : "",
+        }))
+    : [];
+  const finding_counts = {};
+  for (const t of CANDIDATE_FINDING_TYPES) finding_counts[t] = 0;
+  for (const f of findings) finding_counts[f.type]++;
+  const estimate_rationale =
+    typeof raw.estimate_rationale === "string" ? clip(raw.estimate_rationale.trim(), WHY_MAX) : "";
+  return {
+    findings,
+    finding_counts,
+    gap_estimate,
+    estimate_rationale,
+    estimate_type: ESTIMATE_TYPE_SINGLE,
+    estimate_scale_version: ESTIMATE_SCALE_VERSION,
+    candidate_method_version: CANDIDATE_METHOD_VERSION,
+    unvalidated: true,
+  };
+}
+
 // Best-effort capture to Reader Runs. The user response is returned even when
 // capture fails — failures are logged as reader_runtime capture_failed events.
 // Never log field values or answer content from the write payload.
@@ -456,7 +552,34 @@ export async function captureRun(input, payload, ctx, deps = {}) {
       "Inspected AI Model": input.inspectedModel || "",
       "Source Content Hash": srcHash,
       "Reader Output Hash": outHash,
+      // ── Reader v2 P1 measurement provenance (design §9) ──
+      // Run-level, written on every run. Consent is explicit state, default false;
+      // no P1 surface sets it true (retention never implies eligibility).
+      "Run Mode": RUN_MODE_SINGLE,
+      "Calibration Eligible": false,
+      "Candidate Retention Consent": false,
     };
+    // Receipt-bound fields exist only for agent runs — a fallback makes no model
+    // call and carries no receipt. Older rows / fallbacks simply lack these; the
+    // frontend and any reader treat their absence as null (graceful).
+    if (payload.receipt) {
+      fields["Schema Version"] = payload.receipt.schema_version || RECEIPT_SCHEMA_VERSION;
+      fields["Receipt Hash"] = payload.receipt.integrity?.content_hash || "";
+      fields["Inspector Run Conditions"] = JSON.stringify(INSPECTOR_RUN_CONDITIONS);
+    }
+    // Estimate-level fields exist only when the model produced a valid measurement
+    // (estimate_type candidate_gap only in P1 — no Act 2, no paired estimate).
+    if (payload.measurement) {
+      const m = payload.measurement;
+      fields["Estimate Type"] = m.estimate_type || ESTIMATE_TYPE_SINGLE;
+      fields["Gap Estimate"] = m.gap_estimate;
+      fields["Finding Types"] = CANDIDATE_FINDING_TYPES
+        .map((t) => `${t}: ${(m.finding_counts && m.finding_counts[t]) || 0}`)
+        .join("\n");
+      fields["Estimate Rationale"] = m.estimate_rationale || "";
+      fields["Estimate Scale Version"] = m.estimate_scale_version || ESTIMATE_SCALE_VERSION;
+      fields["Candidate Method Version"] = m.candidate_method_version || CANDIDATE_METHOD_VERSION;
+    }
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${RUNS_TABLE}`;
     const requestBody = JSON.stringify({ fields, typecast: true });
 
@@ -810,20 +933,53 @@ export function createReadHandler(deps = {}) {
         ? parsed.inspection_note.trim()
         : DEFAULT_INSPECTION_NOTE;
 
-    return sendRead(
-      res,
-      input,
-      {
-        completeness: parsed.completeness,
-        the_read: parsed.the_read.trim(),
-        what_was_left_out: whatLeftOut,
-        how_it_was_shaped: howShaped,
-        inspection_note: inspectionNote,
-        source: "agent",
+    // Additive measurement layer (Reader v2 P1). null when the model omitted or
+    // malformed it — the read still returns; no panel, no receipt estimate.
+    const measurement = parseMeasurement(parsed.measurement);
+
+    const payload = {
+      completeness: parsed.completeness,
+      the_read: parsed.the_read.trim(),
+      what_was_left_out: whatLeftOut,
+      how_it_was_shaped: howShaped,
+      inspection_note: inspectionNote,
+      source: "agent",
+      measurement,
+    };
+
+    // Self-contained receipt (Reader v2 P1, single mode). Built server-side so its
+    // content_hash is authoritative and the identical hash is recorded on the run
+    // row; the client copies/downloads it verbatim (see reader-receipt.js). The
+    // hash is taken over the canonical JSON with content_hash itself nulled.
+    const generatedAt = new Date().toISOString();
+    const receipt = buildSingleReceipt({
+      generatedAt,
+      question: input.openQuestion || "",
+      topic: input.topic || "",
+      declaredModel: input.inspectedModel || "",
+      answer: input.answer || "",
+      inspection: {
+        completeness: payload.completeness,
+        the_read: payload.the_read,
+        what_was_left_out: payload.what_was_left_out,
+        how_it_was_shaped: payload.how_it_was_shaped,
+        inspection_note: payload.inspection_note,
       },
-      ctx,
-      deps
-    );
+      measurement,
+      provenance: {
+        reader_model_version: MODEL,
+        inspector_prompt_version: READER_PROMPT_VERSION,
+        inspector_run_conditions: INSPECTOR_RUN_CONDITIONS,
+        source_content_hash: sourceContentHash(input),
+        reader_output_hash: readerOutputHash(payload),
+        run_timestamp: generatedAt,
+        request_id: ctx.request_id || "",
+      },
+    });
+    receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
+    payload.receipt = receipt;
+
+    return sendRead(res, input, payload, ctx, deps);
   };
 }
 

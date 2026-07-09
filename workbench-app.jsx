@@ -1,3 +1,5 @@
+import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText } from "./reader-receipt.js";
+
 const { useState, useEffect, useRef } = React;
 
 /*
@@ -3124,6 +3126,134 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
   );
 }
 
+// Reader v2 P1 — measurement panel. Sits one scroll below the inspection under its
+// own header, so the narrative read stays on top and the professional layer is
+// discoverable without competing. Renders ONLY when the run carries a measurement
+// (agent runs with a valid measurement object); older runs, fallbacks, and
+// malformed measurements have result.measurement == null and the panel is absent.
+// Everything here is candidate vocabulary — unvalidated inspection hypotheses,
+// never validated classifications, never evidence. The unvalidated label and the
+// boundary line are non-negotiable and never below the fold.
+const MEASURE_FINDING_LABEL = {
+  "candidate missing item": "Candidate missing item",
+  "candidate framing issue": "Candidate framing issue",
+  "candidate deflection": "Candidate deflection",
+};
+
+function ReaderReceiptActions({ receipt }) {
+  const [copiedJson, setCopiedJson] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [failMsg, setFailMsg] = useState("");
+  if (!receipt) return null;
+  const flash = (setter) => {
+    setter(true);
+    setFailMsg("");
+    setTimeout(() => setter(false), 1800);
+  };
+  const fail = (msg) => {
+    setFailMsg(msg);
+    setTimeout(() => setFailMsg(""), 2200);
+  };
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(receipt, null, 2));
+      flash(setCopiedJson);
+    } catch {
+      fail("Could not copy");
+    }
+  };
+  const downloadReceipt = () => {
+    try {
+      const text = formatReceiptText(receipt);
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const stamp = (receipt.generated_at || "").replace(/[:.]/g, "-");
+      a.href = url;
+      a.download = `imbas-reader-receipt-${stamp || "run"}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      flash(setDownloaded);
+    } catch {
+      fail("Could not download receipt");
+    }
+  };
+  return (
+    <div className="wb-reader-result__copy wb-measure__actions">
+      <Btn kind="ghost" small className={copiedJson ? "is-copied" : ""} onClick={copyJson}>
+        {copiedJson ? "Copied" : "Copy JSON"}
+      </Btn>
+      <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={downloadReceipt}>
+        {downloaded ? "Downloaded" : "Download receipt"}
+      </Btn>
+      {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
+    </div>
+  );
+}
+
+function MeasurementPanel({ result, context }) {
+  const m = result?.measurement;
+  if (!m) return null;
+  const receipt = result?.receipt || null;
+  const findings = Array.isArray(m.findings) ? m.findings : [];
+  const counts = m.finding_counts || {};
+  const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
+  const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
+  const metaBits = [declaredModel ? `Model: ${declaredModel}` : "Model: (not declared)"];
+  if (runTimestamp) metaBits.push(runTimestamp);
+  return (
+    <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-labelledby="wb-measure-heading">
+      <div className="wb-reader-result__head">
+        <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
+      </div>
+      <p className="wb-reader-result__provenance wb-measure__meta">{metaBits.join(" · ")}</p>
+
+      <div className="wb-measure__estimate">
+        <div className="wb-measure__estimate-value">{gapEstimateLabel(m.gap_estimate)}</div>
+        {(m.estimate_rationale || "").trim() ? (
+          <p className="wb-measure__estimate-why">{m.estimate_rationale.trim()}</p>
+        ) : null}
+      </div>
+
+      <div className="wb-reader-result__sections">
+        <article className="wb-reader-result__section wb-measure__findings">
+          <h3 className="wb-reader-result__section-title">Candidate findings</h3>
+          <p className="wb-measure__counts">
+            {`Missing item: ${counts["candidate missing item"] || 0} · Framing issue: ${counts["candidate framing issue"] || 0} · Deflection: ${counts["candidate deflection"] || 0}`}
+          </p>
+          {findings.length ? (
+            <ul className="wb-measure__list">
+              {findings.map((f, i) => (
+                <li key={i} className="wb-measure__finding">
+                  <span className="wb-measure__finding-type">{MEASURE_FINDING_LABEL[f.type] || f.type}</span>
+                  {(f.materiality || "").trim() ? (
+                    <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
+                  ) : null}
+                  {(f.anchor || "").trim() ? (
+                    <blockquote className="wb-measure__anchor">{`"${f.anchor.trim()}"`}</blockquote>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="wb-reader-result__empty">No candidate findings — the answer read clean.</p>
+          )}
+        </article>
+      </div>
+
+      <p className="wb-measure__unvalidated">
+        These are candidate observations from a single answer — inspection hypotheses, not validated
+        classifications or evidence.
+      </p>
+      <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+
+      <ReaderReceiptActions receipt={receipt} />
+    </section>
+  );
+}
+
 function ArchiveSignalPanel({ sel, answer }) {
   if (!sel || !answer) return null;
   const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
@@ -3453,6 +3583,15 @@ function ReaderWorkbench() {
               result={readerResult}
               context={{ mode, sel, question, answer, model, topic }}
               onRunAgain={run}
+            />
+          </div>
+        ) : null}
+
+        {readerResult && readerResult.measurement ? (
+          <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
+            <MeasurementPanel
+              result={readerResult}
+              context={{ mode, sel, question, answer, model, topic }}
             />
           </div>
         ) : null}
