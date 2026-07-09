@@ -3,8 +3,8 @@
 **Internal operations document. Not linked from any page. Not the public policy.**
 The public promise lives in [/retention.html](retention.html) ("What deletion means"). This file is the private procedure that makes that promise real: the exact storage locations a person walks, in order, to fulfil a deletion request with zero residue. When storage changes, this file changes in the same commit.
 
-- Version: v2 (Reader v2 P2)
-- Applies to: a single-mode Reader run (Act 1) **and** any paired analysis (Act 2) derived from it. The candidate-lead store still does not exist; its row below stays NOT YET BUILT and becomes a live step when P4 ships.
+- Version: v2 (Reader v2 P3)
+- Applies to: a single-mode Reader run (Act 1) **and** any paired analysis (Act 2) derived from it, including the optional **Perception Tap** telemetry P3 adds to each — it is a single enum field *on* those same rows, deleted wholesale with them (see §1 items 1–2). The candidate-lead store still does not exist; its row below stays NOT YET BUILT and becomes a live step when P4 ships.
 - Base: Airtable `appfxHraqlcpP1AAP`.
 
 ---
@@ -13,15 +13,15 @@ The public promise lives in [/retention.html](retention.html) ("What deletion me
 
 A deletion request must remove, from Imbas-controlled storage, **every** copy of the requester's content — not just the obvious row. For a Reader run the closure set is:
 
-1. **The run row** — Reader Runs table. Holds the raw text (question + pasted answer) and the derived inspection content (the read, omissions, shaping, note, and the P1 candidate findings/estimate) as fields on one row.
-2. **Any paired-analysis record** derived from the run — Reader Paired Analyses table. One open run can spawn **more than one** paired record (a different second answer for the same run is a distinct row), so all must be found, not just one. A paired record independently stores the requester's **second** pasted answer (raw), the Imbas-derived targeted prompt, and the derived delta content — including short **verbatim spans quoted from both the first and second answers** (the `open_side` / `targeted_side` of each delta item). It joins back to the run by **`Open Run ID` = the run's `Request ID`** (there is no Airtable link field; the join is by that text value). All of this content lives *on* the row — deleting the row removes it.
+1. **The run row** — Reader Runs table. Holds the raw text (question + pasted answer) and the derived inspection content (the read, omissions, shaping, note, and the P1 candidate findings/estimate) as fields on one row. Since P3 it may also carry the single-mode **Perception Tap** telemetry enum (`single_yes` / `single_no`) as one more field on that same row.
+2. **Any paired-analysis record** derived from the run — Reader Paired Analyses table. One open run can spawn **more than one** paired record (a different second answer for the same run is a distinct row), so all must be found, not just one. A paired record independently stores the requester's **second** pasted answer (raw), the Imbas-derived targeted prompt, and the derived delta content — including short **verbatim spans quoted from both the first and second answers** (the `open_side` / `targeted_side` of each delta item), and since P3 the paired **Perception Tap** telemetry enum (`paired_small` / `paired_noticeable` / `paired_large`). It joins back to the run by **`Open Run ID` = the run's `Request ID`** (there is no Airtable link field; the join is by that text value). All of this content lives *on* the row — deleting the row removes it, the perception field included.
 3. **Any share record** created from the run — Inspection Shares table. A share is a **denormalized copy**: it independently stores the same raw text and derived content, so deleting the run row alone leaves the share as a full second copy.
 4. **The stored raw text** — lives *on* rows 1 and 3 (no separate blob store). Removed when those rows are removed.
 5. **The derived inspection content** — lives *on* rows 1 and 3. Removed when those rows are removed.
 6. **Any candidate-lead copy** that retained the text — *NOT YET BUILT* (candidate-case flag / P4). A lead stores metadata + delta summary only, and pasted text only under an explicit consent checkbox. No leads store exists today. When it ships, add it here.
 
 **Not in the closure set (recorded so no one assumes content hides there):**
-- **Redis** holds only aggregate counters — rate-limit windows, monthly spend (`reader:spend:${month}`), the share-create-day counter (`share:create:d:${date}`). These carry no run content and expire on their own TTLs. Nothing to delete per-request.
+- **Redis** holds only aggregate counters — rate-limit windows, monthly spend (`reader:spend:${month}`), the share-create-day counter (`share:create:d:${date}`), and the P3 per-receipt perception write-cap counter (`reader:perception:${receiptHash}`, an integer of writes with a 24h TTL). These carry no run content — the perception counter keys off the receipt *hash*, never the answer text — and expire on their own TTLs. Nothing to delete per-request.
 - **Downloaded receipts and copies on other people's machines** are outside Imbas control. The public policy states this boundary plainly; Imbas deletes what Imbas holds.
 - **OG/link-preview images** carry no answer text by design.
 
@@ -31,9 +31,9 @@ A deletion request must remove, from Imbas-controlled storage, **every** copy of
 
 | # | Location | Table | What it holds |
 |---|----------|-------|---------------|
-| 1 | Run row | Reader Runs `tblqmHiOCQ5YSXBN3` | Question, Answer (raw); The Read, What Was Left Out, How It Was Shaped, Inspection Note, Finding Types, Gap Estimate, Estimate Rationale (derived); Source/Reader Output/Receipt hashes; provenance + version fields |
+| 1 | Run row | Reader Runs `tblqmHiOCQ5YSXBN3` | Question, Answer (raw); The Read, What Was Left Out, How It Was Shaped, Inspection Note, Finding Types, Gap Estimate, Estimate Rationale (derived); Source/Reader Output/Receipt hashes; Perception Tap (P3 single-mode telemetry enum, nullable); provenance + version fields |
 | 3 | Share row(s) | Inspection Shares `tbliYeeM5n0TSVrxf` | Share ID; Question, Answer (raw copy); The Read, What Was Left Out, How It Was Shaped, Inspection Note, Completeness (derived copy); labels; visibility |
-| 2 | Paired analysis | Reader Paired Analyses `tblP1ekWWWscz6pBG` | Open Run ID (join to the run's Request ID); Targeted Prompt (derived), Targeted Answer (raw second answer); Delta Items — JSON with verbatim `open_side`/`targeted_side` spans from both answers; Signal Patterns, Gap Estimate, Estimate Rationale (derived); Targeted Prompt/Answer + Receipt hashes; Estimate Type, Rubric/Paired Method/Schema versions; Created |
+| 2 | Paired analysis | Reader Paired Analyses `tblP1ekWWWscz6pBG` | Open Run ID (join to the run's Request ID); Targeted Prompt (derived), Targeted Answer (raw second answer); Delta Items — JSON with verbatim `open_side`/`targeted_side` spans from both answers; Signal Patterns, Gap Estimate, Estimate Rationale (derived); Targeted Prompt/Answer + Receipt hashes; Perception Tap (P3 paired-mode telemetry enum, nullable); Estimate Type, Rubric/Paired Method/Schema versions; Created |
 | 6 | Candidate lead | — | NOT YET BUILT (P4) |
 
 There is currently no stored foreign key from a share back to its originating run; a share is matched to its run by content (identical Question + Answer, and the run's Source Content Hash), or by the Share ID the requester provides. A **paired analysis** does carry an explicit text join: its **`Open Run ID`** equals the originating run's **`Request ID`** (Reader Runs field). So the walk must read the run's Request ID **before** deleting the run row, then query paired analyses by it.

@@ -5150,3 +5150,54 @@
     animation: none !important;
   }
 }
+
+/* Reader v2 P3 — the perception tap. A quiet, optional telemetry question after a
+   result: a mono-caps prompt over a row of small pill options. TELEMETRY, NEVER
+   VALIDATION — nothing here reads as a score or a confirmation of accuracy. Reuses
+   the existing umber ground + ember accent; a selected pill borrows the is-armed
+   ember so a choice reads as "logged", not "correct". No new design system. */
+.wb-perception {
+  margin-top: 1.1rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-perception__prompt {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(228, 216, 200, 0.9);
+}
+
+.wb-perception__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.wb-perception__option {
+  min-height: 40px;
+  padding: 0.5rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 232, 220, 0.2);
+  background: rgba(242, 232, 220, 0.03);
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(228, 216, 200, 0.82);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+
+.wb-perception__option:hover {
+  border-color: rgba(222, 111, 56, 0.5);
+  color: rgba(242, 232, 220, 0.96);
+}
+
+.wb-perception__option.is-selected {
+  border-color: rgba(222, 111, 56, 0.82);
+  background: linear-gradient(180deg, rgba(222, 111, 56, 0.32) 0%, rgba(196, 88, 42, 0.2) 60%, rgba(32, 22, 16, 0.9) 100%);
+  color: #fff8f0;
+}

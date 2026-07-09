@@ -490,6 +490,59 @@ export async function recordShareCreation(deps = {}) {
   return { ok: true, total: memTotal, durable: false };
 }
 
+// ── Perception write cap (Reader v2 P3) ────────────────────────────────────
+// A perception tap is a client-triggered mutation authorized only by possession
+// of an integrity-checkable receipt. This cap is the sole abuse control on that
+// endpoint: it bounds how many times ONE receipt may set its perception value, so
+// a replayed receipt can't hammer the endpoint. Keyed on the verified receipt
+// content_hash (64 hex), so it can't be reached without a genuine receipt. Same
+// durable-KV-with-memory-fallback machinery as the other controls; a configured-
+// store error fails CLOSED (rejects) so an outage can't reopen the write path.
+// This is additive — it does not touch the read endpoints' rate or spend controls.
+export const PERCEPTION_WRITE_MAX = 5;
+export const PERCEPTION_WRITE_WINDOW_SEC = 24 * 3600;
+
+export async function checkPerceptionWriteCap(receiptHash, deps = {}) {
+  const env = deps.env || process.env;
+  const signal = deps.signal;
+  const hash = String(receiptHash || "").replace(/[^a-f0-9]/gi, "").slice(0, 64);
+  if (!hash) return { allowed: false, reason: "no_hash" };
+  const key = `reader:perception:${hash}`;
+
+  if (redisConfigured(env)) {
+    const r = await incrWindow(key, PERCEPTION_WRITE_WINDOW_SEC, env, signal);
+    if (!r.ok) {
+      logSecurityEvent("store_unavailable", {
+        control: "perception_write_cap",
+        reason: r.reason,
+        action: "fail_closed",
+      });
+      return { allowed: false, durable: false, storeError: true };
+    }
+    if (r.count > PERCEPTION_WRITE_MAX) {
+      return { allowed: false, durable: true, count: r.count };
+    }
+    return { allowed: true, durable: true, count: r.count };
+  }
+
+  const mem = memoryIncrWindow(key, PERCEPTION_WRITE_WINDOW_SEC, PERCEPTION_WRITE_MAX);
+  if (mem.blocked) {
+    return { allowed: false, durable: false, count: mem.count };
+  }
+  return { allowed: true, durable: false, count: mem.count };
+}
+
+// Test-only seed for the in-memory perception write-cap counter.
+export function _seedPerceptionCapForTests(receiptHash, count) {
+  const hash = String(receiptHash || "").replace(/[^a-f0-9]/gi, "").slice(0, 64);
+  const key = `reader:perception:${hash}`;
+  const now = Date.now();
+  memoryHits.set(
+    key,
+    Array.from({ length: count }, (_, i) => now - i * 1000)
+  );
+}
+
 // Test-only seed for memory window counters (does not bypass production paths).
 export function _seedMemoryRateCountForTests(ipHash, suffix, count) {
   const key = `reader:rl:${suffix}:${ipHash}`;

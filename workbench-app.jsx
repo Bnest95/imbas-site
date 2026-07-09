@@ -1,6 +1,7 @@
 import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
 import { ACT2_OFFER_COPY } from "./reader-paired.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
+import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -1948,6 +1949,7 @@ function isReaderWorkbenchEnabled() {
 }
 
 const READER_API = "/api/read";
+const READER_PERCEPTION_API = "/api/reader-perception";
 
 // Map a detectAnchors() result → the /api/read textcheck shape. This rides along
 // only for the server's degraded fallback (spend ceiling tripped or Opus errored),
@@ -3413,6 +3415,78 @@ function readerCandidateSummary(m) {
   return `Reader found ${parts.join(", ")}.`;
 }
 
+// Reader v2 P3 — the perception-tap write (design §4). A client-triggered telemetry
+// mutation: the server authorizes it by verifying the receipt, so the client sends
+// ONLY { receipt, value } — never a raw request_id, open_run_id, or Airtable row id.
+// Latest wins: re-tapping PATCHes the same record server-side. The write is awaited
+// and retried ONCE on a transient failure (network error or 5xx); a 4xx is terminal
+// (nothing to retry) and a final failure is SWALLOWED — the result, delta, and
+// receipt are never touched and the user is told nothing. The seq guard stops a
+// superseded value from retrying after a newer tap, so re-tapping never burns the
+// server's per-receipt write cap on stale values.
+async function writePerception(receipt, value, seq, seqRef) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (seqRef.current !== seq) return; // a newer tap superseded this write
+    try {
+      const res = await fetch(READER_PERCEPTION_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ receipt, value }),
+      });
+      if (res.ok) return;
+      if (res.status < 500 || attempt === 1) return; // 4xx terminal; 5xx retried once
+    } catch {
+      if (attempt === 1) return; // network error on the retry — swallow
+    }
+  }
+}
+
+// Reader v2 P3 — the perception tap (design §4). ONE optional, mutable question after
+// a result. THIS IS TELEMETRY, NEVER VALIDATION: it records how the read *felt*, not
+// whether it was accurate. Nothing here — label, aria text, or state — may imply the
+// tap confirms accuracy; "users confirm our accuracy" and every paraphrase is banned
+// (see reader-perception-client.js, the shared source of the copy). Single mode asks
+// whether the read landed (the only honest question when the person holds one answer
+// and cannot judge omission); paired mode asks how big the delta felt (real data —
+// they hold both answers). Skipping writes nothing; the field stays null. When the
+// result unmounts this unmounts with it, so there is no re-prompt after the result is
+// left and no cross-session state.
+function PerceptionTap({ mode, receipt }) {
+  const tap = perceptionTap(mode);
+  const [selected, setSelected] = useState(null);
+  const seqRef = useRef(0);
+  if (!tap || !receipt) return null;
+
+  const choose = (value) => {
+    if (!isPerceptionValueForMode(mode, value)) return;
+    setSelected(value); // optimistic + latest-wins; the UI never blocks on the network
+    const seq = ++seqRef.current;
+    void writePerception(receipt, value, seq, seqRef); // fire-and-forget, silent on failure
+  };
+
+  return (
+    <div className="wb-perception wb-scroll-anchor">
+      <p className="wb-perception__prompt">{tap.prompt}</p>
+      <div className="wb-perception__options" role="group" aria-label={tap.prompt}>
+        {tap.options.map((opt) => {
+          const active = selected === opt.value;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              className={`wb-focus wb-perception__option${active ? " is-selected" : ""}`}
+              aria-pressed={active}
+              onClick={() => choose(opt.value)}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // Reader v2 redesign edit 4 — the result hero. The candidate gap-estimate line is
 // the largest, first element of the result. The whole label renders as one run, so
 // "unvalidated" travels with the number at equal legibility and there is never a
@@ -3552,6 +3626,8 @@ function PairedDeltaView({ paired, onReset }) {
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
+
+      <PerceptionTap mode="paired" receipt={paired.receipt} />
 
       <div className="wb-action-row wb-act2__reset-row">
         <Btn kind="ghost" small onClick={onReset}>Test another answer</Btn>
@@ -4149,6 +4225,11 @@ function ReaderWorkbench() {
                   result={readerResult}
                   context={{ mode, sel, question, answer, model, topic }}
                 />
+              </div>
+            ) : null}
+            {readerResult.measurement && readerResult.receipt ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--perception">
+                <PerceptionTap mode="single" receipt={readerResult.receipt} />
               </div>
             ) : null}
             {readerResult.act2 ? (
