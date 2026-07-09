@@ -1,5 +1,6 @@
 import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
 import { ACT2_OFFER_COPY } from "./reader-paired.js";
+import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -890,6 +891,156 @@ const WORKBENCH_FLOW_CSS = `
     font-size: 15px;
   }
 }
+/* Reader v2 interaction redesign — result hero, guided trap-then-reveal steps, the
+   second-run mini-loop, progressive field reveal, and the compact privacy line. Flow
+   and copy layout only: existing umber/ember/Fraunces skin, no new colors/fonts/images. */
+.wb-reader-v2__result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+.wb-result-hero__eyebrow {
+  font-family: ${MONO};
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(180, 106, 90, 0.9);
+  margin: 0 0 0.5rem;
+}
+.wb-result-hero__estimate {
+  font-family: ${SERIF};
+  font-weight: 500;
+  font-size: clamp(1.5rem, 5.2vw, 2.35rem);
+  line-height: 1.16;
+  color: rgba(242, 232, 220, 0.97);
+  margin: 0 0 0.5rem;
+  text-wrap: balance;
+}
+.wb-result-hero__summary {
+  font-family: ${SANS};
+  font-size: clamp(1rem, 2.4vw, 1.125rem);
+  line-height: 1.5;
+  color: rgba(226, 212, 196, 0.92);
+  margin: 0;
+}
+.wb-result-hero__why {
+  font-family: ${SANS};
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(196, 182, 166, 0.82);
+  margin: 0.45rem 0 0;
+}
+.wb-guided-reveal {
+  margin-top: 0.75rem;
+}
+.wb-guided-steps {
+  list-style: none;
+  margin: 0.75rem 0 0.6rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+}
+.wb-guided-steps li {
+  font-family: ${SANS};
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: rgba(220, 206, 190, 0.9);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.wb-guided-steps__n {
+  font-family: ${MONO};
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(242, 232, 220, 0.95);
+  background: rgba(180, 106, 90, 0.22);
+  border: 1px solid rgba(180, 106, 90, 0.5);
+}
+.wb-guided-copy,
+.wb-loop__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.35rem;
+}
+.wb-loop__lead {
+  font-family: ${SANS};
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: rgba(220, 206, 190, 0.9);
+  margin: 0 0 0.2rem;
+}
+.wb-loop .wb-prompt-well {
+  margin-top: 0.4rem;
+}
+.wb-reader-v2__reveal {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.wb-reader-v2__privacy {
+  margin: 0.5rem 0 0.1rem;
+}
+.wb-reader-v2__privacy-line {
+  font-family: ${SANS};
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: rgba(180, 166, 150, 0.82);
+  cursor: pointer;
+  list-style: none;
+}
+.wb-reader-v2__privacy-line::-webkit-details-marker {
+  display: none;
+}
+.wb-reader-v2__privacy-line::after {
+  content: " ⌄";
+  color: rgba(180, 166, 150, 0.62);
+}
+.wb-reader-v2__privacy[open] .wb-reader-v2__privacy-line::after {
+  content: " ⌃";
+}
+.wb-reader-v2__privacy-full {
+  font-family: ${SANS};
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(176, 162, 148, 0.82);
+  margin: 0.4rem 0 0;
+  max-width: 60ch;
+}
+.wb-reader-v2__privacy-full a,
+.wb-reader-v2__post-privacy a {
+  color: rgba(180, 106, 90, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.wb-reader-v2__post-privacy {
+  font-family: ${SANS};
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: rgba(176, 162, 148, 0.8);
+  margin: 0.2rem 0 0;
+}
+@media (max-width: 480px) {
+  .wb-result-hero__estimate {
+    font-size: clamp(1.35rem, 7vw, 1.8rem);
+  }
+  .wb-guided-steps {
+    gap: 0.35rem 0.75rem;
+  }
+}
 `;
 
 const WORKBENCH_TERMS_CSS = `
@@ -1025,6 +1176,7 @@ const CURATED = [
     whyItMatters:
       "Buybacks at scale exist because a 1982 SEC rule created a safe harbor from market-manipulation liability. Leave that out and a reader can't see that the rule was deliberately changed — and so can't see that it could be changed again.",
     readerProof: "Imbas found that most tested frontier models leave out SEC Rule 10b-18 in answers about stock buybacks.",
+    reveal: "In Imbas Case 005, 3 of 4 tested frontier models did not name SEC Rule 10b-18 in the open answer.",
     cardShort: "Buybacks & Rule 10b-18",
   },
   {
@@ -1047,6 +1199,7 @@ const CURATED = [
     whyItMatters:
       "About half of the FDA's drug-review budget comes from fees paid by the companies whose drugs it reviews. Describe the FDA as a neutral gatekeeper and you leave out the funding-incentive layer that the policy debate turns on.",
     readerProof: "Imbas found that most tested models discuss FDA drug safety without naming the user-fee structure that helps fund drug review.",
+    reveal: "In Imbas Case 018, 3 of 4 tested frontier models did not name PDUFA user fees in the open answer.",
     cardShort: "FDA safety & PDUFA",
   },
   {
@@ -1067,6 +1220,7 @@ const CURATED = [
     whyItMatters:
       "The immigration-enforcement use that draws the most public scrutiny was the part most often left out on a neutral prompt. When the same content surfaces only after direct prompting, a reader can't see how much framing shapes what gets volunteered.",
     readerProof: "Imbas found that models often describe Palantir–ICE contracts without clearly naming the surveillance and deportation context.",
+    reveal: "In Imbas Case 003, across the 4 tested frontier models, Palantir's ICE contract scope stayed under-surfaced on the open answer.",
     cardShort: "Palantir & ICE",
   },
   {
@@ -1087,6 +1241,7 @@ const CURATED = [
     whyItMatters:
       "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
     readerProof: "Imbas found that models often describe PFAS risk without clearly naming the corporate knowledge and delay record.",
+    reveal: "In Imbas Case 021, all 4 tested frontier models did not name DuPont, 3M, or the Bilott litigation in the open answer.",
     cardShort: "PFAS & DuPont/3M",
   },
   {
@@ -1107,6 +1262,7 @@ const CURATED = [
     whyItMatters:
       "When a topic is saturated in public coverage, the models volunteer the specific actors and regulatory actions even on an open prompt. This control establishes the methodology's lower bound.",
     readerProof: "Imbas found that models often describe OxyContin harms without fully naming the Sackler family's role in Purdue's marketing strategy.",
+    reveal: "In Imbas Case 013, all 4 tested frontier models surfaced the Sackler accountability layer on the open answer. It is the smallest gap in the dataset.",
     cardShort: "OxyContin & Sacklers",
   },
 ];
@@ -2602,12 +2758,22 @@ const READER_SIGIL_COPY = {
 };
 
 const READER_STATUS_COPY = {
-  idle: "Paste an answer to run The Reader.",
+  idle: "Paste an answer to inspect it.",
   needQuestion: "Add the question you asked.",
-  ready: "The Reader is ready.",
-  inspecting: "Reader inspecting…",
-  result: "Reader complete.",
+  ready: "Let's see what might be missing…",
+  inspecting: "Reading the answer…",
+  result: "Inspection complete.",
 };
+
+// Text-driven wait state (redesign edit 3): the status line narrates while the
+// inspection runs, seeding suspense without asserting an omission before the delta
+// exists. Never "skipped" — candidate language only. Advances once, holds on the
+// last line; no spinner art, existing tokens.
+const READER_INSPECTING_NARRATION = [
+  "Reading the answer…",
+  "Checking what might be missing…",
+  "Found something to check…",
+];
 
 const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
 const READER_COMPLETENESS_GLOSS = {
@@ -2618,12 +2784,25 @@ const READER_COMPLETENESS_GLOSS = {
 
 /** V2F — text-only status; V2G — instrument readout with ember dot */
 function ReaderStatusLine({ state }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (state !== "inspecting") {
+      setStep(0);
+      return undefined;
+    }
+    const id = window.setInterval(() => {
+      setStep((s) => Math.min(s + 1, READER_INSPECTING_NARRATION.length - 1));
+    }, 1100);
+    return () => window.clearInterval(id);
+  }, [state]);
+  const text =
+    state === "inspecting"
+      ? READER_INSPECTING_NARRATION[step]
+      : READER_STATUS_COPY[state] || READER_STATUS_COPY.idle;
   return (
     <div className={`wb-reader-v2__status-wrap is-${state}`} role="status" aria-live="polite">
       <span className="wb-reader-v2__status-dot" aria-hidden="true" />
-      <p className={`wb-reader-v2__status is-${state}`}>
-        {READER_STATUS_COPY[state] || READER_STATUS_COPY.idle}
-      </p>
+      <p className={`wb-reader-v2__status is-${state}`}>{text}</p>
     </div>
   );
 }
@@ -3110,13 +3289,13 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
         {!isFallback ? (
           <>
             <article className="wb-reader-result__section wb-reader-result__section--left-out">
-              <h3 className="wb-reader-result__section-title">What was left out</h3>
+              <h3 className="wb-reader-result__section-title">What may be missing</h3>
               {leftOut.length ? (
                 <ul className="wb-reader-result__list">
                   {leftOut.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               ) : (
-                <p className="wb-reader-result__empty">No major substantive omissions identified.</p>
+                <p className="wb-reader-result__empty">No major gaps flagged in this answer.</p>
               )}
             </article>
             <article className="wb-reader-result__section wb-reader-result__section--shaped">
@@ -3217,6 +3396,42 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
   );
 }
 
+// Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
+// gap-estimate line. Candidate vocabulary only ("candidate missing items"), never
+// "left out / skipped / hid". Counts come straight from the measurement's finding
+// counts, so the prose can never diverge from the itemized panel below.
+function readerCandidateSummary(m) {
+  const c = (m && m.finding_counts) || {};
+  const missing = c["candidate missing item"] || 0;
+  const framing = c["candidate framing issue"] || 0;
+  const deflection = c["candidate deflection"] || 0;
+  const parts = [];
+  if (missing) parts.push(`${missing} candidate missing item${missing === 1 ? "" : "s"}`);
+  if (framing) parts.push(`${framing} candidate framing issue${framing === 1 ? "" : "s"}`);
+  if (deflection) parts.push(`${deflection} candidate deflection${deflection === 1 ? "" : "s"}`);
+  if (!parts.length) return "Reader found no candidate gaps in this answer. It read clean.";
+  return `Reader found ${parts.join(", ")}.`;
+}
+
+// Reader v2 redesign edit 4 — the result hero. The candidate gap-estimate line is
+// the largest, first element of the result. The whole label renders as one run, so
+// "unvalidated" travels with the number at equal legibility and there is never a
+// bare giant "N/3". A plain candidate summary sits beneath, then the full read and
+// measurement panel below. Renders only when the run carries a measurement.
+function ReaderResultHero({ result }) {
+  const m = result?.measurement;
+  if (!m) return null;
+  const rationale = (m.estimate_rationale || "").trim();
+  return (
+    <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
+      <p className="wb-result-hero__eyebrow">Inspection result</p>
+      <p id="wb-result-hero-estimate" className="wb-result-hero__estimate">{gapEstimateLabel(m.gap_estimate)}</p>
+      <p className="wb-result-hero__summary">{readerCandidateSummary(m)}</p>
+      {rationale ? <p className="wb-result-hero__why">{rationale}</p> : null}
+    </section>
+  );
+}
+
 function MeasurementPanel({ result, context }) {
   const m = result?.measurement;
   if (!m) return null;
@@ -3233,13 +3448,6 @@ function MeasurementPanel({ result, context }) {
         <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
       </div>
       <p className="wb-reader-result__provenance wb-measure__meta">{metaBits.join(" · ")}</p>
-
-      <div className="wb-measure__estimate">
-        <div className="wb-measure__estimate-value">{gapEstimateLabel(m.gap_estimate)}</div>
-        {(m.estimate_rationale || "").trim() ? (
-          <p className="wb-measure__estimate-why">{m.estimate_rationale.trim()}</p>
-        ) : null}
-      </div>
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
@@ -3516,8 +3724,26 @@ function ArchiveSignalPanel({ sel, answer }) {
   );
 }
 
+// Reader v2 redesign edit 2 — guided case, trap-then-reveal. Lead with the innocent
+// question, then the reveal (denominator + case tier, per case; never bare-number
+// prevalence, never "left out"). Numbered steps and a one-tap Copy question button so
+// the reader can run it on their own AI. Copy targets the clipboard, never the answer
+// paste field.
 function ReaderCaseEvidence({ sel }) {
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
   if (!sel?.ready) return null;
+  const copyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(sel.openPrompt || "");
+      setCopied(true);
+      setCopyFail("");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
   return (
     <div className="wb-run-plate wb-specimen-plate wb-measure-channel wb-reader-evidence">
       <div className="wb-readout">
@@ -3526,16 +3752,73 @@ function ReaderCaseEvidence({ sel }) {
           {sel.observedDate ? ` · Verified ${sel.observedDate}` : ""}
         </p>
         <div className="wb-readout__rule" aria-hidden="true" />
-        <div className="wb-readout__section">
-          <Label>What Imbas measured</Label>
-          <div className="wb-active-case__headline">{sel.readerProof || sel.short}</div>
-        </div>
-        <div className="wb-readout__signal">
-          <p className="wb-active-case__probe">Will your model surface it?</p>
+        <div className="wb-readout__signal wb-guided-trap">
+          <p className="wb-active-case__probe">Start with an ordinary question:</p>
           <PromptCard text={sel.openPrompt} />
+        </div>
+        {sel.reveal ? (
+          <div className="wb-readout__section wb-guided-reveal">
+            <div className="wb-active-case__headline">{sel.reveal}</div>
+          </div>
+        ) : null}
+        <ol className="wb-guided-steps">
+          <li><span className="wb-guided-steps__n" aria-hidden="true">1</span> Copy the question</li>
+          <li><span className="wb-guided-steps__n" aria-hidden="true">2</span> Ask your AI</li>
+          <li><span className="wb-guided-steps__n" aria-hidden="true">3</span> Paste what it says back</li>
+        </ol>
+        <div className="wb-guided-copy">
+          <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
+            {copied ? "Copied" : "Copy question"}
+          </Btn>
+          {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
         </div>
       </div>
     </div>
+  );
+}
+
+// Reader v2 redesign edit 5 — the second-run mini-loop. After the first result, offer
+// one fresh QUESTION (from a different case) with the same three-step interaction.
+// Hard rule: a question NEVER goes into the answer paste field. "Copy question" puts it
+// on the clipboard for the reader to ask their own AI; "Test another question" resets
+// the run (clearing the answer) and, in guided mode, switches to the suggested case.
+function SecondRunLoop({ mode, sel, onAnother }) {
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  const suggestion = CURATED.find((c) => c.ready && c.id !== sel?.id) || null;
+  const question = suggestion?.openPrompt || sel?.openPrompt || "";
+  if (!question) return null;
+  const copyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(question);
+      setCopied(true);
+      setCopyFail("");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+  return (
+    <section className="wb-reader-result is-agent wb-loop wb-scroll-anchor" aria-labelledby="wb-loop-heading">
+      <div className="wb-reader-result__head">
+        <h2 id="wb-loop-heading" className="wb-reader-result__title">TEST ANOTHER QUESTION</h2>
+      </div>
+      <p className="wb-loop__lead">Run the same check on a fresh question. Copy it, ask your AI, paste what it says back.</p>
+      <ol className="wb-guided-steps">
+        <li><span className="wb-guided-steps__n" aria-hidden="true">1</span> Copy the question</li>
+        <li><span className="wb-guided-steps__n" aria-hidden="true">2</span> Ask your AI</li>
+        <li><span className="wb-guided-steps__n" aria-hidden="true">3</span> Paste the answer back</li>
+      </ol>
+      <PromptCard text={question} />
+      <div className="wb-loop__actions">
+        <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
+          {copied ? "Copied" : "Copy question"}
+        </Btn>
+        {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+        <Btn kind="primary" small onClick={() => onAnother(suggestion)}>Test another question</Btn>
+      </div>
+    </section>
   );
 }
 
@@ -3552,6 +3835,7 @@ function ReaderWorkbench() {
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
+  const scrollState = useRef(initialScrollState());
 
   const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
   const hasAnswer = !!answer.trim();
@@ -3587,8 +3871,14 @@ function ReaderWorkbench() {
     return () => window.cancelAnimationFrame(id);
   }, [sel.id, mode]);
 
+  // Scroll to the result exactly ONCE on the transition into a result, never on a
+  // same-run rerender (receipt tap, Act 2 state change, async field update). The pure
+  // nextResultScroll machine (reader-scroll.js, unit-tested) makes the decision; it
+  // re-arms when the result clears so the next real result scrolls once.
   useEffect(() => {
-    if (readerResult && resultRef.current) {
+    const { state, scroll } = nextResultScroll(scrollState.current, !!readerResult);
+    scrollState.current = state;
+    if (scroll && resultRef.current) {
       const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(resultRef.current));
       return () => window.cancelAnimationFrame(id);
     }
@@ -3611,6 +3901,25 @@ function ReaderWorkbench() {
     setReaderResult(null);
     setErrors({});
     setBusy(false);
+  };
+
+  // Second-run mini-loop (redesign edit 5). Clear the run and stage a fresh QUESTION.
+  // The answer field is always cleared; the suggested question goes to the case (guided)
+  // or the question field (own) — NEVER into the answer paste field. Clearing the result
+  // re-arms the scroll machine, so the next result scrolls once.
+  const startAnother = (suggestion) => {
+    setReaderResult(null);
+    setErrors({});
+    setBusy(false);
+    setAnswer("");
+    if (mode === "guided") {
+      if (suggestion) setSel(suggestion);
+    } else if (suggestion) {
+      setQuestion(suggestion.openPrompt);
+    }
+    if (stageRef.current) {
+      window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
+    }
   };
 
   const touchAnswer = (v) => {
@@ -3671,14 +3980,6 @@ function ReaderWorkbench() {
   return (
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
-        <div className="wb-reader-v2__agent-bar wb-reader-v2__agent-bar--compact">
-          <div className="wb-reader-v2__chip wb-reader-v2__chip--compact" role="status">
-            <span className="wb-reader-v2__chip-dot" aria-hidden="true" />
-            LIVE READER AGENT
-          </div>
-          <p className="wb-reader-v2__promise">Inspects the answer in front of you and turns it into an inspection record.</p>
-        </div>
-
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
@@ -3725,9 +4026,8 @@ function ReaderWorkbench() {
               </>
             ) : (
               <div className="wb-reader-v2__own-header">
-                <p className="wb-reader-v2__own-eyebrow">Run your own inspection</p>
                 <p className="wb-reader-v2__own-intro">
-                  Paste the question you asked and the answer you received.
+                  Paste an AI answer below. The Reader inspects what it might be missing.
                 </p>
               </div>
             )}
@@ -3759,53 +4059,59 @@ function ReaderWorkbench() {
                   </>
                 ) : (
                   <>
-                    <div className="wb-reader-v2__field">
-                      <Field label="Question asked">
-                        <textarea
-                          className={INPUT_CLS}
-                          value={question}
-                          onChange={(e) => touchQuestion(e.target.value)}
-                          placeholder="What did you ask the model?"
-                          rows={3}
-                          style={inputStyle}
-                          aria-invalid={!!errors.question}
-                        />
-                      </Field>
-                      {errors.question ? <div className="wb-field-error" role="alert">{errors.question}</div> : null}
-                      {ownQuestionPrompt && !errors.question ? (
-                        <div className="wb-field-error wb-field-error--hint" role="status">Add the question you asked.</div>
-                      ) : null}
-                    </div>
-                    <div className="wb-reader-v2__field wb-reader-v2__field--optional">
-                      <Field label="Optional topic / context">
-                        <input className={INPUT_CLS} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. climate policy, drug pricing…" style={inputStyle} />
-                      </Field>
-                    </div>
-                    <div className="wb-reader-v2__field wb-reader-v2__field--optional">
-                      <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
-                    </div>
                     <div className="wb-reader-v2__field wb-reader-v2__field--answer">
                       <PasteField
                         label="AI answer received"
                         value={answer}
                         onChange={touchAnswer}
                         error={errors.answer}
-                        placeholder="Paste the full AI answer here…"
+                        placeholder="Paste an AI answer. Anything from ChatGPT, Gemini, Claude…"
                         minAckLength={1}
                       />
                     </div>
+                    {hasAnswer || hasQuestion ? (
+                      <div className="wb-reader-v2__reveal">
+                        <div className="wb-reader-v2__field">
+                          <Field label="Question asked">
+                            <textarea
+                              className={INPUT_CLS}
+                              value={question}
+                              onChange={(e) => touchQuestion(e.target.value)}
+                              placeholder="What did you ask the model?"
+                              rows={3}
+                              style={inputStyle}
+                              aria-invalid={!!errors.question}
+                            />
+                          </Field>
+                          {errors.question ? <div className="wb-field-error" role="alert">{errors.question}</div> : null}
+                          {ownQuestionPrompt && !errors.question ? (
+                            <div className="wb-field-error wb-field-error--hint" role="status">Add the question you asked.</div>
+                          ) : null}
+                        </div>
+                        <div className="wb-reader-v2__field wb-reader-v2__field--optional">
+                          <Field label="Optional topic / context">
+                            <input className={INPUT_CLS} value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. climate policy, drug pricing…" style={inputStyle} />
+                          </Field>
+                        </div>
+                        <div className="wb-reader-v2__field wb-reader-v2__field--optional">
+                          <Field label="Which AI did you ask? (optional)"><ModelSelect value={model} onChange={setModel} /></Field>
+                        </div>
+                      </div>
+                    ) : null}
                   </>
                 )}
               </div>
 
               <div className="wb-reader-v2__action-row" aria-busy={busy}>
                 <ReaderStatusLine state={statusState} />
-                <p className="wb-reader-v2__input-note wb-reader-v2__input-note--full">
-                  Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them.
-                </p>
-                <p className="wb-reader-v2__input-note wb-reader-v2__input-note--compact">
-                  Not published to the reviewed archive. Do not paste sensitive, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying.
-                </p>
+                <details className="wb-reader-v2__privacy">
+                  <summary className="wb-reader-v2__privacy-line">
+                    Inspections aren't saved to our public record. Don't paste anything sensitive.
+                  </summary>
+                  <p className="wb-reader-v2__privacy-full">
+                    Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
+                  </p>
+                </details>
                 {!readerResult ? (
                   <div className="wb-action-row wb-reader-v2__cta-row">
                     <Btn
@@ -3814,7 +4120,7 @@ function ReaderWorkbench() {
                       onClick={run}
                       className={`wb-reader-cta${isReady && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
                     >
-                      {busy ? "Reader inspecting…" : "Run The Reader"}
+                      {busy ? "Inspecting…" : "See what might be missing"}
                     </Btn>
                   </div>
                 ) : null}
@@ -3824,27 +4130,38 @@ function ReaderWorkbench() {
         </div>
 
         {readerResult ? (
-          <div ref={resultRef} className="wb-reader-v2__follow">
-            <ReaderResultBlock
-              result={readerResult}
-              context={{ mode, sel, question, answer, model, topic }}
-              onRunAgain={run}
-            />
-          </div>
-        ) : null}
-
-        {readerResult && readerResult.measurement ? (
-          <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
-            <MeasurementPanel
-              result={readerResult}
-              context={{ mode, sel, question, answer, model, topic }}
-            />
-          </div>
-        ) : null}
-
-        {readerResult && readerResult.act2 ? (
-          <div className="wb-reader-v2__follow wb-reader-v2__follow--act2">
-            <Act2Offer result={readerResult} />
+          <div ref={resultRef} className="wb-reader-v2__result wb-scroll-anchor">
+            {readerResult.measurement ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--hero">
+                <ReaderResultHero result={readerResult} />
+              </div>
+            ) : null}
+            <div className="wb-reader-v2__follow">
+              <ReaderResultBlock
+                result={readerResult}
+                context={{ mode, sel, question, answer, model, topic }}
+                onRunAgain={run}
+              />
+            </div>
+            {readerResult.measurement ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
+                <MeasurementPanel
+                  result={readerResult}
+                  context={{ mode, sel, question, answer, model, topic }}
+                />
+              </div>
+            ) : null}
+            {readerResult.act2 ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--act2">
+                <Act2Offer result={readerResult} />
+              </div>
+            ) : null}
+            <div className="wb-reader-v2__follow wb-reader-v2__follow--loop">
+              <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
+            </div>
+            <p className="wb-reader-v2__post-privacy">
+              This inspection wasn't saved to our public record. See <a href="/retention.html">what deletion means</a>.
+            </p>
           </div>
         ) : null}
 
@@ -3883,13 +4200,12 @@ function Workbench() {
           <div className="wb-reader-v2__flow">
             <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
-              See what your AI leaves out.
+              See what your AI might be missing.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Paste an AI answer. The Reader shows what surfaced, what was omitted, and how it was shaped.
+              Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped.
             </p>
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
-              <a href="#wb-reader-console">Paste your own answer <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
