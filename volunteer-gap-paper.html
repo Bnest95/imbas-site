@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Volunteer Gap: a behavioral measurement construct — Imbas</title>
-  <meta name="description" content="Construct paper defining the Volunteer Gap: the behavioral measurement of what AI systems surface under an open prompt versus what they produce under targeted inspection. Working paper v1.0, July 2026.">
+  <title>Volunteer Gap construct — Imbas</title>
+  <meta name="description" content="Construct paper defining the Volunteer Gap: surfacing under an open prompt versus targeted inspection. Working paper v1.0, July 2026.">
   <link rel="canonical" href="https://www.imbaslabs.com/volunteer-gap-paper.html">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://www.imbaslabs.com/volunteer-gap-paper.html">
   <meta property="og:site_name" content="Imbas">
@@ -134,7 +135,7 @@
 
     <section class="page__section" id="abstract" style="border-top: none; padding-top: 0;">
       <h2>Abstract</h2>
-      <p>AI answers are becoming a default layer between people and information. Each answer looks complete to the person receiving it, because the person sees only what surfaced. This paper defines the Volunteer Gap: the measured difference between what an AI system surfaces in response to an open prompt and what it demonstrably produces under a targeted prompt in matched capture conditions. The construct measures surfacing behavior. It does not adjudicate truth, does not rank capability, and makes no claim about intent. Its central methodological move is that availability is established internally: the model's own targeted response is the evidence that the omitted material was producible under the same conditions, which removes the need for an external arbiter on availability. One human judgment remains and is named as such: materiality, which is prewritten per case, published, and open to challenge. The paper states the construct's definition, its operationalization, its scoring model, the principal threats to its validity and the control answering each, and its relation to adjacent constructs. Known limitations are stated flat. In the v1 study (May 2026), 13 cases were measured across 4 frontier models under this construct; those results are reported in the companion whitepaper and on the public record.</p>
+      <p>AI answers are becoming a default layer between people and information. Each answer looks complete to the person receiving it, because the person sees only what surfaced. This paper defines the Volunteer Gap: the measured difference between what an AI system surfaces in response to an open prompt and what it demonstrably produces under a targeted prompt in matched capture conditions. The construct measures surfacing behavior. It does not adjudicate truth, does not rank capability, and makes no claim about intent. Its central methodological move is that availability is established internally: the model's own targeted response is the evidence that the omitted material was producible under the same conditions, which removes the need for an external arbiter on availability. One human judgment remains and is named as such: materiality, which is prewritten per case, held as part of the case record, and open to challenge. The paper states the construct's definition, its operationalization, its scoring model, the principal threats to its validity and the control answering each, and its relation to adjacent constructs. Known limitations are stated flat. In the v1 study (May 2026), 13 cases were measured across 4 frontier models under this construct; those results are reported in the companion whitepaper and on the public record.</p>
     </section>
 
     <section class="page__section" id="measurement-problem">
@@ -183,6 +184,7 @@
       <p><strong>The tier rule.</strong> No number about the record is stated bare. Every count and every summary carries its tier: the v1 study (13 cases across 4 frontier models, May 2026, methodology public), the public archive ledger, or evidence custody. This is a reporting rule of the instrument because a bare number is itself a small omission, and the instrument should not exhibit the behavior it measures.</p>
       <p><strong>Sample-first phrasing.</strong> Findings are reported in the form "across N models on N cases" before the finding, not after it. Illustrative single cases are labeled as illustrative.</p>
       <p><strong>Two vocabulary tiers, one construct.</strong> The instrument produces <strong>validated scores</strong>: human-assigned, constitutionally gated, evidence-tier. The Imbas Reader, the consumer inspection surface, produces <strong>machine gap estimates</strong>: the same construct, same scale, same typology, estimated by an automated inspector, always labeled unvalidated, and never entering the evidence record. Machine gap estimates are heuristic product output, not instrument measurements; the shared vocabulary exists for commensurability, not equivalence. The two tiers share one vocabulary so that a Reader estimate and an archive score are commensurable statements about the same construct at different evidence standards. Agreement between machine estimates and subsequent validated scores on the same runs is itself a planned, published measurement; until that calibration data exists, no accuracy claim is made for the estimates.</p>
+      <p class="page__intro"><strong>Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.</strong></p>
     </section>
 
     <section class="page__section" id="threats-to-validity">
@@ -205,7 +207,7 @@
       <p><strong>Sandbagging and selective disclosure</strong>, in the evaluation literature, concern capability concealment under test conditions and carry an intent component. The Volunteer Gap makes no intent claim and measures deployed products under ordinary-use conditions, not evaluation harnesses under adversarial elicitation.</p>
       <p><strong>Benchmarks</strong> measure capability ceilings under optimized elicitation. The Volunteer Gap measures default behavior at the answer layer, what a user actually received, which is a different object from what a model can do when maximally prompted.</p>
       <p><strong>Red-teaming</strong> elicits worst-case behavior adversarially. The Volunteer Gap records default-condition behavior systematically. Complementary, not competing.</p>
-      <p><strong>Fact-checking</strong> adjudicates published claims against external truth. The Volunteer Gap adjudicates nothing external; its availability standard is internal, the model's own targeted output, which is precisely what lets it operate without appointing itself an arbiter of contested ground truth. The judgment it does make, materiality, is prewritten, published, and challengeable rather than externally adjudicated.</p>
+      <p><strong>Fact-checking</strong> adjudicates published claims against external truth. The Volunteer Gap adjudicates nothing external; its availability standard is internal, the model's own targeted output, which is precisely what lets it operate without appointing itself an arbiter of contested ground truth. The judgment it does make, materiality, is prewritten, held as part of the case record, and challengeable rather than externally adjudicated.</p>
       <p><strong>Internet censorship measurement</strong> is the nearest methodological relative: independent, longitudinal observation of an information layer, recorded so that patterns invisible to individual users become public record. The Volunteer Gap extends that logic from access to answers. In the older internet, control could mean a blocked page; at the answer layer, it can mean the shape of what is volunteered.</p>
     </section>
 
@@ -221,7 +223,7 @@
 
     <section class="page__section" id="version-provenance">
       <h2>10. Version and provenance</h2>
-      <p>Construct paper v1.0, July 2026. Defines the construct as operationalized in the v1 study (13 cases, 4 frontier models, May 2026) and the public record at imbaslabs.com. Pre-publication, this paper underwent two rounds of cross-model adversarial review; the epistemic claims around possession, materiality, and estimate tiers were tightened per those reviews before v1.0 shipped. Numbers cited trace to the published methodology and results pages as of this date. This document is superseded only by a later version with a change log; it is never silently edited.</p>
+      <p>Construct paper v1.0, July 2026. Defines the construct as operationalized in the v1 study (13 cases, 4 frontier models, May 2026) and the public record at imbaslabs.com. Pre-publication, this paper underwent two rounds of cross-model adversarial review; the epistemic claims around possession, materiality, and estimate tiers were tightened per those reviews before v1.0 shipped. Revised 2026-07-08: materiality custody wording corrected to &ldquo;held as part of the case record&rdquo; in the abstract and section 7, matching sections 2 and 4; no other change. Numbers cited trace to the published methodology and results pages as of this date. This document is superseded only by a later version with a change log; it is never silently edited.</p>
       <p><em>Imbas measures what AI systems surface, omit, and reframe under documented conditions. The inspection layer for AI.</em></p>
     </section>
 

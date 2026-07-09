@@ -1,4 +1,0 @@
-Imbas · Case 005 — Stock buybacks & SEC Rule 10b-18
-My run (ChatGPT, 2026-06-12): gap held — the answer did not name SEC Rule 10b-18, the 1982 rule that gave buybacks a safe harbor from market-manipulation liability.
-Imbas measured: 3 of the 4 frontier models tested left it out (May 2026).
-Run it yourself: imbaslabs.com/workbench

@@ -1,4 +1,0 @@
-Imbas · Case 005 — Stock buybacks & SEC Rule 10b-18
-My run (ChatGPT, 2026-06-12): gap closed — the answer surfaced SEC Rule 10b-18. This gap may be narrowing since May 2026.
-Imbas measured: 3 of the 4 frontier models tested left it out (May 2026).
-Run it yourself: imbaslabs.com/workbench
