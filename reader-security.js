@@ -532,6 +532,55 @@ export async function checkPerceptionWriteCap(receiptHash, deps = {}) {
   return { allowed: true, durable: false, count: mem.count };
 }
 
+// ── Share report limits (Reader v2 P4) ─────────────────────────────────────
+// A share report is an UNAUTHENTICATED, client-triggered, flag-only write: it sets
+// Report Flag=reported for manual operator review and can never remove content,
+// change visibility, or touch any other field. Two cheap windows bound abuse — a
+// per-IP minute window (one IP can't mass-report the site) and a per-share day cap
+// (one share can't be endpoint-hammered). Durable when Upstash is configured; a
+// configured-store error fails CLOSED. Additive — touches no read/perception/
+// share-create control (P4 scope lock).
+export const REPORT_IP_MAX = 20;
+export const REPORT_IP_WINDOW_SEC = 60;
+export const REPORT_SHARE_MAX = 50;
+export const REPORT_SHARE_WINDOW_SEC = 24 * 3600;
+
+export async function checkReportLimits(ip, shareId, deps = {}) {
+  const env = deps.env || process.env;
+  const signal = deps.signal;
+  const ipHash = hashClientIp(ip);
+  const share = String(shareId || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 32);
+  const windows = [
+    { tier: "ip_minute", key: `report:rl:m:${ipHash}`, max: REPORT_IP_MAX, windowSec: REPORT_IP_WINDOW_SEC },
+    { tier: "share_day", key: `report:d:${share}`, max: REPORT_SHARE_MAX, windowSec: REPORT_SHARE_WINDOW_SEC },
+  ];
+
+  if (redisConfigured(env)) {
+    for (const { tier, key, max, windowSec } of windows) {
+      const r = await incrWindow(key, windowSec, env, signal);
+      if (!r.ok) {
+        logSecurityEvent("store_unavailable", {
+          control: "report_rate",
+          tier,
+          reason: r.reason,
+          action: "fail_closed",
+        });
+        return { allowed: false, tier, durable: false, storeError: true };
+      }
+      if (r.count > max) {
+        return { allowed: false, tier, durable: true, count: r.count };
+      }
+    }
+    return { allowed: true, durable: true, ipHash };
+  }
+
+  for (const { tier, key, max, windowSec } of windows) {
+    const r = memoryIncrWindow(key, windowSec, max);
+    if (r.blocked) return { allowed: false, tier, durable: false, count: r.count };
+  }
+  return { allowed: true, durable: false, ipHash };
+}
+
 // Test-only seed for the in-memory perception write-cap counter.
 export function _seedPerceptionCapForTests(receiptHash, count) {
   const hash = String(receiptHash || "").replace(/[^a-f0-9]/gi, "").slice(0, 64);

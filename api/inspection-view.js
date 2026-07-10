@@ -27,6 +27,13 @@ const COMPLETENESS_GLOSS = {
   thin: "The answer was evasive or substantially incomplete.",
 };
 const OG_IMAGE_PATH = "/og-image.png";
+// P4 mode descriptions — fixed, claims-safe copy. No bare estimate number, no answer
+// text, single-mode never says "left out". The static OG image carries no numbers by
+// design (design §7), so the estimate never rides the card.
+const OG_SINGLE_DESC =
+  "Unlisted · Unreviewed. An Imbas Reader inspection of one AI answer — candidate gaps flagged, unvalidated. Discovery, not evidence.";
+const OG_PAIRED_DESC =
+  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. Machine estimate, unvalidated. Discovery, not evidence.";
 
 // Read the static shell once at module load. @vercel/nft traces a readFileSync on a
 // URL relative to import.meta.url and bundles inspection.html alongside the function.
@@ -51,23 +58,29 @@ function truncate(s, max) {
   return t.length > max ? `${t.slice(0, max).trimEnd()}…` : t;
 }
 
-// {VERDICT} · Unlisted · Unreviewed · "{question ≤80 chars}" · Imbas Reader — assembled
-// raw, then escaped whole (so truncation never splits an entity and the decorative quotes
-// get escaped for the content="…" attribute). The "Unlisted · Unreviewed" marker rides
-// right behind the verdict so even aggressive card truncation keeps it: the card can never
-// read as an Imbas-endorsed verdict on self-authored text.
+// Mode-aware title. P4 rows (single/paired) lead with "Imbas Reader · Unlisted
+// {inspection|two-question test}" so the card can never read as an Imbas verdict on
+// self-authored text; only the question (≤80) is user text. Pre-P4 (legacy) rows keep
+// the original verdict form. Assembled raw, then escaped whole so truncation never
+// splits an entity and the decorative quotes get escaped for the content="…" attr.
 export function buildTitle(record) {
+  const question = truncate(str(record.question), 80);
+  const mode = str(record.mode);
+  if (mode === "single") return `Imbas Reader · Unlisted inspection · "${question}"`;
+  if (mode === "paired") return `Imbas Reader · Unlisted two-question test · "${question}"`;
   const comp = str(record.completeness).toLowerCase();
   const verdict = COMPLETENESS_LABEL[comp] || "PARTIAL";
-  const question = truncate(str(record.question), 80);
   return `${verdict} · Unlisted · Unreviewed · "${question}" · Imbas Reader`;
 }
 
-// "Unlisted · Unreviewed." then one line: what surfaced (completeness gloss) · what was
-// missing (N items) · how it was shaped. NEVER includes answer text. The marker leads so
-// it always survives the 200-char truncation (which only ever cuts the tail). Bounded,
-// whitespace-collapsed, then escaped.
+// Mode-aware description. Fixed claims-safe copy for P4 rows (never a bare number,
+// never answer text, single mode never says "left out"). Legacy rows keep the v1
+// completeness gloss. The "Unlisted · Unreviewed" marker leads so it always survives
+// the 200-char truncation (which only ever cuts the tail).
 export function buildDescription(record) {
+  const mode = str(record.mode);
+  if (mode === "single") return truncate(OG_SINGLE_DESC, 200);
+  if (mode === "paired") return truncate(OG_PAIRED_DESC, 200);
   const comp = str(record.completeness).toLowerCase();
   const gloss = COMPLETENESS_GLOSS[comp] || COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(record.what_was_left_out)

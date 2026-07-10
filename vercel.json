@@ -13,6 +13,7 @@
     { "source": "/independence", "destination": "/independence.html", "permanent": true },
     { "source": "/whitepaper", "destination": "/whitepaper.html", "permanent": true },
     { "source": "/retention", "destination": "/retention.html", "permanent": true },
+    { "source": "/publication-policy", "destination": "/publication-policy.html", "permanent": true },
     { "source": "/glossary", "destination": "/glossary.html", "permanent": true },
     { "source": "/methodology", "destination": "/methodology.html", "permanent": true },
     { "source": "/workbench", "destination": "/workbench.html", "permanent": true },

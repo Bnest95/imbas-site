@@ -1854,11 +1854,11 @@ function SubmitFailure({ candidate }) {
   };
   return (
     <div className="wb-status-readout wb-status-readout--failure">
-      <p className="wb-status-readout__body">Couldn't send — copy your record below and email it to brendan@imbaslabs.com</p>
-      <CollapsiblePanel title="Record data" className="wb-collapsible--record">
+      <p className="wb-status-readout__body">Couldn't send — copy your candidate below and email it to brendan@imbaslabs.com</p>
+      <CollapsiblePanel title="Candidate data" className="wb-collapsible--record">
         <pre className="wb-status-readout__record">{record}</pre>
         <div className="wb-action-row wb-action-row--secondary">
-          <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy record"}</Btn>
+          <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy candidate"}</Btn>
         </div>
       </CollapsiblePanel>
     </div>
@@ -1875,10 +1875,10 @@ function CopyRecord({ candidate }) {
   const record = JSON.stringify(candidate, null, 2);
   const copy = async () => { try { await navigator.clipboard.writeText(record); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {} };
   return (
-    <CollapsiblePanel title="Record data" className="wb-collapsible--record">
+    <CollapsiblePanel title="Candidate data" className="wb-collapsible--record">
       <pre className="wb-status-readout__record">{record}</pre>
       <div className="wb-action-row wb-action-row--secondary">
-        <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy record"}</Btn>
+        <Btn kind="ghost" small onClick={copy}>{copied ? "Copied ✓" : "Copy candidate"}</Btn>
         <span className="wb-action-row__note">Goes to the repository · reviewed by a person before the archive</span>
       </div>
     </CollapsiblePanel>
@@ -3054,7 +3054,7 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
   const topicLine = (topic || "").trim() || (mode === "guided" ? (sel?.topic || "").trim() : "");
   const lines = [];
   if (result?.source === "agent") {
-    lines.push("Inspection record", readerResultProvenanceLabel({ mode, sel, result }), "");
+    lines.push("Inspection receipt", readerResultProvenanceLabel({ mode, sel, result }), "");
   }
   lines.push(`Question: ${(q || "").trim()}`);
   if (topicLine) lines.push(`Topic / context: ${topicLine}`);
@@ -3072,72 +3072,140 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
 const readerCreditLine = (shareUrl) =>
   `Inspected with the Imbas Reader · ${shareUrl && shareUrl.trim() ? shareUrl.trim() : "imbaslabs.com"}`;
 
-const READER_SHARE_TRUST_COPY =
-  "Creates an unlisted Workbench inspection. Anyone with the link can view it. It is not a reviewed archive case.";
-
-function inspectionSharePayload({ mode, sel, question, answer, model, topic, result }) {
-  const q = mode === "guided" ? sel?.openPrompt : question;
-  const topicLine = (topic || "").trim() || (mode === "guided" ? (sel?.topic || "").trim() : "");
-  return {
-    question: (q || "").trim(),
-    topic: topicLine,
-    ai_model: (model || "").trim(),
-    answer: (answer || "").trim(),
-    source_label: mode === "guided" ? "Guided Case" : "Custom Answer",
-    case_label: mode === "guided" && sel?.id ? `Case ${sel.id}` : "",
-    completeness: result?.completeness || "partial",
-    the_read: result?.the_read || "",
-    what_was_left_out: Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [],
-    how_it_was_shaped: result?.how_it_was_shaped || "",
-    inspection_note: result?.inspection_note || "",
-  };
-}
+// Pre-publish consent disclosure (design §D, claims-checked — do not reword). Shown
+// in a modal before a share is minted, so nothing is published until the person has
+// seen exactly what the page will carry. Mode-aware: single names the candidate gaps
+// and the "Candidate gap estimate" label; paired names the delta and the "Machine gap
+// estimate" label. Both state plainly that the full answer(s) are never shown.
+const READER_SHARE_CONSENT = {
+  single: {
+    title: "Share this inspection",
+    lines: [
+      "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
+      "The page will show: your question · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the unvalidated estimate (“Candidate gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "It will not show your full answer — only the short excerpts above.",
+    ],
+  },
+  paired: {
+    title: "Share this two-question test",
+    lines: [
+      "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
+      "The page will show: your question · the delta — what the second answer surfaced that the first did not — each with the short quoted excerpts from both answers · the unvalidated estimate (“Machine gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "It will not show either full answer — only the short excerpts above.",
+    ],
+  },
+};
 
 function shareFailureMessage(status, data) {
-  if (status === 503 || status === 500 || data?.error === "unconfigured") {
-    return "Share links are not live yet. Copy the full record for now.";
+  const err = data?.error;
+  if (status === 429) {
+    return err === "daily_capacity"
+      ? "The Reader is at capacity for new shares today. Copy the full receipt for now."
+      : "You've created several share links in a row. Please wait a moment and try again.";
   }
-  return "Could not create share link. Copy the full record for now.";
+  if (status === 503 || status === 500 || err === "unconfigured") {
+    return "Share links are not live yet. Copy the full receipt for now.";
+  }
+  return "Could not create share link. Copy the full receipt for now.";
 }
 
-function ReaderResultShareAction({ result, context, shareUrl, setShareUrl }) {
-  const [phase, setPhase] = useState("idle");
-  const [errMsg, setErrMsg] = useState("");
+// Pre-publish consent modal (design §D). Renders the mode-aware disclosure and the
+// [Create share link] [Cancel] pair. Backdrop click, Escape, and Cancel all dismiss
+// without publishing (all disabled while a create is in flight). Focus moves into the
+// panel on open; ReaderShareAction restores focus to the trigger on close.
+function ShareConsentDialog({ mode, busy, error, onConfirm, onCancel }) {
+  const copy = READER_SHARE_CONSENT[mode] || READER_SHARE_CONSENT.single;
+  const panelRef = useRef(null);
+  const titleId = `wb-share-consent-title--${mode}`;
 
-  const copyShareUrl = async () => {
-    if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setPhase("copied");
-      setErrMsg("");
-      setTimeout(() => setPhase("ready"), 1800);
-    } catch {
-      setPhase("error");
-      setErrMsg("Could not copy link. Select the link below and copy manually.");
-    }
+  useEffect(() => {
+    if (panelRef.current) panelRef.current.focus();
+  }, []);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && !busy) onCancel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [busy, onCancel]);
+
+  return (
+    <div className="wb-share-consent" role="presentation" onClick={busy ? undefined : onCancel}>
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        className="wb-share-consent__panel wb-focus"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 id={titleId} className="wb-share-consent__title">{copy.title}</h3>
+        {copy.lines.map((line, i) => (
+          <p key={i} className="wb-share-consent__line">{line}</p>
+        ))}
+        {error ? <p className="wb-share-consent__error" role="alert">{error}</p> : null}
+        <div className="wb-share-consent__actions">
+          <Btn kind="ghost" small className="wb-share-consent__confirm" onClick={onConfirm} disabled={busy}>
+            {busy ? "Creating share link…" : "Create share link"}
+          </Btn>
+          <Btn kind="ghost" small onClick={onCancel} disabled={busy}>Cancel</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// The share affordance. A share is a PUBLISH action authorized only by possession of
+// the run's receipt: the button opens the §D consent modal, and confirming POSTs
+// { receipt } to /api/inspection-share, which re-verifies the receipt's integrity and
+// its existence on a real minted run before publishing. No receipt → nothing renders
+// (a fallback run can't be shared). onShared lifts the created URL to the caller so a
+// single-mode result can thread it into the copy-record credit line. Every failure
+// keeps the modal open with one honest line; a failed share never blocks the result.
+function ReaderShareAction({ mode, receipt, onShared }) {
+  const [phase, setPhase] = useState("idle"); // idle | consenting | creating | ready | copied
+  const [shareUrl, setShareUrl] = useState("");
+  const [errMsg, setErrMsg] = useState("");
+  const containerRef = useRef(null);
+
+  if (!receipt) return null;
+
+  const label = mode === "paired" ? "Share this two-question test" : "Share this inspection";
+  const dialogOpen = phase === "consenting" || phase === "creating";
+
+  const focusTrigger = () => {
+    const el = containerRef.current && containerRef.current.querySelector(".wb-reader-share__btn");
+    if (el) el.focus();
+  };
+  const openConsent = () => {
+    setErrMsg("");
+    setPhase("consenting");
+  };
+  const closeConsent = () => {
+    if (phase === "creating") return;
+    setErrMsg("");
+    setPhase("idle");
+    focusTrigger();
   };
 
   const createShare = async () => {
-    if (phase === "creating") return;
     setPhase("creating");
     setErrMsg("");
     try {
       const res = await fetch("/api/inspection-share", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inspectionSharePayload({ ...context, result })),
+        body: JSON.stringify({ receipt }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.share_url) {
-        if (data.error === "unconfigured") {
-          console.warn("[imbas] inspection-share unconfigured — set AIRTABLE_TOKEN and AIRTABLE_INSPECTION_SHARES_TABLE");
-        } else {
-          console.warn("[imbas] inspection-share failed", res.status, data);
-        }
-        setPhase("error");
+        console.warn("[imbas] inspection-share failed", res.status, data && data.error);
         setErrMsg(shareFailureMessage(res.status, data));
+        setPhase("consenting"); // keep the modal open, showing the failure line
         return;
       }
+      if (typeof onShared === "function") onShared(data.share_url);
       setShareUrl(data.share_url);
       setPhase("ready");
       try {
@@ -3145,60 +3213,64 @@ function ReaderResultShareAction({ result, context, shareUrl, setShareUrl }) {
         setPhase("copied");
         setTimeout(() => setPhase("ready"), 1600);
       } catch {
-        /* success UI still shows manual copy */
+        /* success UI still shows the manual copy control */
       }
     } catch (err) {
       console.warn("[imbas] inspection-share network error", err);
-      setPhase("error");
-      setErrMsg("Could not create share link. Copy the full record for now.");
+      setErrMsg("Could not create share link. Copy the full receipt for now.");
+      setPhase("consenting");
+    }
+  };
+
+  const copyShareUrl = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setPhase("copied");
+      setTimeout(() => setPhase("ready"), 1600);
+    } catch {
+      setErrMsg("Could not copy link. Select the link below and copy manually.");
     }
   };
 
   const showSuccess = shareUrl && (phase === "ready" || phase === "copied");
 
   return (
-    <div className="wb-reader-result__share">
-      <p className="wb-reader-result__share-trust">{READER_SHARE_TRUST_COPY}</p>
+    <div className="wb-reader-share" ref={containerRef}>
       {showSuccess ? (
-        <div className="wb-reader-result__share-success" role="status">
-          <p className="wb-reader-result__share-success-title">Share link created</p>
-          <p className="wb-reader-result__share-url">
+        <div className="wb-reader-share__success" role="status">
+          <p className="wb-reader-share__success-title">Share link created</p>
+          <p className="wb-reader-share__url">
             <a href={shareUrl} target="_blank" rel="noopener noreferrer">{shareUrl}</a>
           </p>
-          <div className="wb-reader-result__share-actions">
+          <div className="wb-reader-share__actions">
             <a
               href={shareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="wb-btn wb-btn--ghost wb-reader-result__share-open"
+              className="wb-btn wb-btn--ghost wb-reader-share__open"
             >
-              Open share record
+              Open share page
             </a>
-            <Btn
-              kind="ghost"
-              small
-              className={`wb-reader-result__share-copy${phase === "copied" ? " is-copied" : ""}`}
-              onClick={copyShareUrl}
-            >
+            <Btn kind="ghost" small className={phase === "copied" ? "is-copied" : ""} onClick={copyShareUrl}>
               {phase === "copied" ? "Copied" : "Copy share link"}
             </Btn>
           </div>
         </div>
       ) : (
-        <>
-          <Btn
-            kind="ghost"
-            small
-            className="wb-reader-result__share-btn"
-            onClick={createShare}
-            disabled={phase === "creating"}
-            aria-busy={phase === "creating"}
-          >
-            {phase === "creating" ? "Creating share link…" : "Create share link"}
-          </Btn>
-          {errMsg ? <p className="wb-reader-result__share-fail" role="alert">{errMsg}</p> : null}
-        </>
+        <Btn kind="ghost" small className="wb-reader-share__btn" onClick={openConsent}>
+          {label}
+        </Btn>
       )}
+      {dialogOpen ? (
+        <ShareConsentDialog
+          mode={mode}
+          busy={phase === "creating"}
+          error={errMsg}
+          onConfirm={createShare}
+          onCancel={closeConsent}
+        />
+      ) : null}
     </div>
   );
 }
@@ -3236,7 +3308,7 @@ function ReaderResultCopyActions({ result, context, shareUrl }) {
         {copiedResult ? "Copied" : "Copy Result"}
       </Btn>
       <Btn kind="ghost" small className={copiedFull ? "is-copied" : ""} onClick={copyFull}>
-        {copiedFull ? "Copied" : "Copy Full Record"}
+        {copiedFull ? "Copied" : "Copy Full Receipt"}
       </Btn>
       {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
     </div>
@@ -3319,7 +3391,7 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
           {isAgent ? (
             <>
               <ReaderResultCopyActions result={result} context={context} shareUrl={shareUrl} />
-              <ReaderResultShareAction result={result} context={context} shareUrl={shareUrl} setShareUrl={setShareUrl} />
+              <ReaderShareAction mode="single" receipt={result.receipt} onShared={setShareUrl} />
             </>
           ) : null}
           <Btn kind="ghost" small onClick={onRunAgain} className="wb-reader-result__rerun">
@@ -3626,6 +3698,8 @@ function PairedDeltaView({ paired, onReset }) {
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
+
+      <ReaderShareAction mode="paired" receipt={paired.receipt} />
 
       <PerceptionTap mode="paired" receipt={paired.receipt} />
 

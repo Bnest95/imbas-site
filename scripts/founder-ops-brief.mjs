@@ -539,6 +539,31 @@ export function summarizeImbas(imbas) {
 }
 
 // ---------------------------------------------------------------------------
+// summarizeReportedShares — pure. The operator's moderation queue: unlisted Reader shares a
+// reader has flagged (Report Flag=reported), surfaced for a human decision under the Publication
+// Policy. Read-only and non-destructive by construction — the brief only shows the queue;
+// reporting is not removal, and nothing here can hide or delete a share. The bundle rows are
+// already body-free (Share ID / Mode / Created At / Reviewed Status only — no question, no
+// findings, no hash), so the operator opens the share itself to read the reported content. When
+// the bundle omits `shares` (an agent bundle, or the Inspection Shares table is unconfigured) it
+// degrades to available:false — a labeled gap, never a faked empty queue.
+export function summarizeReportedShares(shares) {
+  if (!shares || shares.available === false) return { available: false, count: 0, reported: [] };
+  const rows = Array.isArray(shares.reported) ? shares.reported : [];
+  const reported = rows.map((r) => {
+    const f = r.fields || {};
+    return {
+      shareId: typeof f["Share ID"] === "string" ? f["Share ID"].trim() : String(f["Share ID"] ?? "").trim(),
+      mode: selectName(f["Mode"]).trim() || "(unset)",
+      createdAt: typeof f["Created At"] === "string" ? f["Created At"].trim() : "",
+      reviewedStatus: selectName(f["Reviewed Status"]).trim() || "Unreviewed",
+    };
+  });
+  reported.sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || "") || a.shareId.localeCompare(b.shareId));
+  return { available: true, count: reported.length, reported };
+}
+
+// ---------------------------------------------------------------------------
 // actionCandidatesFrom — pure. Turns the summaries into candidate actions with
 // EXPLICIT factors. This is where the priority rules live. Acknowledgments never
 // produce a candidate. Each candidate declares its horizon (today | week).
@@ -745,6 +770,7 @@ export function buildBrief(bundle, prevState, { reconcileMarker = null } = {}) {
   const attention = summarizeAttention(bundle.grants, { reconcileMarker, now });
   const snapshots = summarizeSnapshots(bundle.snapshots);
   const imbas = summarizeImbas(bundle.imbas);
+  const reportedShares = summarizeReportedShares(bundle.shares);
 
   const candidates = actionCandidatesFrom({ grantSummary, contradictions, snapshots, imbas });
   const ranked = rankAndSplit(candidates);
@@ -753,11 +779,14 @@ export function buildBrief(bundle, prevState, { reconcileMarker = null } = {}) {
     grants: bundle.grants ? bundle.grants.available !== false : false,
     imbas: bundle.imbas ? bundle.imbas.available !== false : false,
     snapshots: bundle.snapshots ? bundle.snapshots.available !== false : false,
+    // Optional/env-gated input: an agent bundle legitimately omits `shares`. Absence is NOT a
+    // failure here (unlike grants/imbas/snapshots), so it never raises an "unavailable" warning.
+    shares: bundle.shares ? bundle.shares.available !== false : false,
   };
 
   // Optional tier notice (e.g. the unattended Airtable-only run). null on agent bundles.
   const notice = typeof bundle.notice === "string" && bundle.notice.trim() ? bundle.notice.trim() : null;
-  const model = { generatedAt, date, notice, grantSummary, grantMomentum, attention, contradictions, snapshots, imbas, ranked, availability };
+  const model = { generatedAt, date, notice, grantSummary, grantMomentum, attention, contradictions, snapshots, imbas, reportedShares, ranked, availability };
   const currState = stateFromBrief(model);
   model.diff = diffState(prevState, currState);
   model.state = currState;
@@ -778,6 +807,13 @@ export function buildWarnings(model) {
   }
   if (model.availability.imbas && model.imbas.readerRuns.total > 0 && model.imbas.readerRuns.populated === model.imbas.readerRuns.syntheticProbe && model.imbas.readerRuns.syntheticProbe > 0) {
     w.push("Reader provenance is populated only by a synthetic probe — no organic run has captured provenance yet. Confirm the next real Reader run carries it.");
+  }
+  // Reported shares are a standing moderation queue: warn only when one is actually pending, so a
+  // missing/agent bundle (shares unavailable) never raises a false alarm. Neutral by policy —
+  // a report queues a human review; it is not a removal, and contested speech stays up by default.
+  if (model.reportedShares.available && model.reportedShares.count > 0) {
+    const n = model.reportedShares.count;
+    w.push(`${n} reader share${n === 1 ? "" : "s"} reported for review under the Publication Policy — a person decides each; a report is not a removal.`);
   }
   return w;
 }
@@ -1051,6 +1087,23 @@ export function renderBrief(model) {
     const provStr = i.readerRuns.promptVersions.map((p) => `${p.version}×${p.count}`).join(", ") || "none";
     push(`- **Reader Runs:** ${i.readerRuns.total} total · provenance ${i.readerRuns.populated}/${i.readerRuns.total} (${i.readerRuns.ratePct}%) · prompt versions: ${provStr}${i.readerRuns.syntheticProbe ? ` · ${i.readerRuns.syntheticProbe} synthetic probe` : ""}.`);
     push(`- **Promotion / lineage:** ${i.lineage.operated ? "operated" : "NEVER operated"} — ${i.lineage.repoPromoted} Repository promoted, ${i.lineage.casesWithSource} case(s) with a Source Candidate ID.`);
+  }
+  push("");
+
+  // REPORTED SHARES — the moderation queue. Reported shares surface here for a human decision
+  // under the Publication Policy; the brief only shows the queue and never removes or hides one.
+  push("## REPORTED SHARES");
+  push("_Unlisted Reader shares a reader has flagged for review. Reporting is not removal — a person decides each under the Publication Policy; contested speech stays up by default._");
+  if (!model.availability.shares) {
+    push("_Reported-share queue not included in this bundle (Airtable Inspection Shares read not run)._");
+  } else {
+    const rs = model.reportedShares;
+    push(`**Reported, awaiting review (${rs.count}):**`);
+    if (rs.count === 0) push("- (none reported)");
+    for (const r of rs.reported) {
+      const created = r.createdAt ? r.createdAt.slice(0, 10) : "date unknown";
+      push(`- ${r.shareId} — ${r.mode} · ${r.reviewedStatus} · created ${created} · review at /inspection/${r.shareId}`);
+    }
   }
   push("");
 

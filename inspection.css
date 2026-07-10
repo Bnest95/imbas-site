@@ -123,6 +123,62 @@
   color: rgba(175, 162, 148, 0.82);
 }
 
+/* Report seam — present on every share, every mode (design §F). */
+.insp-report {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.insp-report__title {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(190, 175, 158, 0.82);
+}
+
+.insp-report__body {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.55;
+  color: rgba(175, 162, 148, 0.86);
+}
+
+.insp-report__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.55rem;
+  margin: 0.85rem 0 0.4rem;
+}
+
+.insp-report__status {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(184, 200, 160, 0.9);
+}
+
+.insp-report__status:empty {
+  margin: 0;
+}
+
+.insp-report__privacy {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-sans);
+  font-size: max(0.75rem, 12px);
+  line-height: 1.5;
+  color: rgba(165, 152, 138, 0.72);
+}
+
+.insp-report__body a,
+.insp-report__privacy a {
+  color: rgba(224, 178, 140, 0.9);
+}
+
 .insp-error {
   margin: 1.5rem 0 2rem;
   padding: 1.25rem 1.1rem;
@@ -157,7 +213,8 @@
     padding: 1.15rem 0.72rem 1.3rem;
   }
 
-  .insp-actions {
+  .insp-actions,
+  .insp-report__actions {
     flex-direction: column;
     align-items: stretch;
   }

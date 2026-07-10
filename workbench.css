@@ -4620,32 +4620,18 @@
   letter-spacing: 0.02em;
 }
 
-.wb-reader-result__share {
+/* Reader v2 P4 — share affordance (receipt-gated publish) + pre-publish consent modal.
+   width:100% keeps the affordance on its own footer row so the success/URL state has room. */
+.wb-reader-share {
   width: 100%;
-  margin-top: 0.15rem;
+  margin-top: 0.35rem;
 }
 
-.wb-reader-result__share-trust {
-  margin: 0 0 0.45rem;
-  font-family: var(--font-sans);
-  font-size: max(0.8125rem, 13px);
-  line-height: 1.48;
-  color: rgba(170, 158, 142, 0.82);
-}
-
-.wb-reader-result__share-btn.wb-btn--ghost {
+.wb-reader-share__btn.wb-btn--ghost {
   min-height: 2rem;
 }
 
-.wb-reader-result__share-fail {
-  display: block;
-  margin: 0.4rem 0 0;
-  font-size: max(0.8125rem, 13px);
-  line-height: 1.45;
-  color: rgba(210, 185, 155, 0.88);
-}
-
-.wb-reader-result__share-success {
+.wb-reader-share__success {
   margin-top: 0.15rem;
   padding: 0.65rem 0.72rem;
   border: 1px solid rgba(155, 174, 126, 0.22);
@@ -4653,7 +4639,7 @@
   background: rgba(155, 174, 126, 0.06);
 }
 
-.wb-reader-result__share-success-title {
+.wb-reader-share__success-title {
   margin: 0 0 0.35rem;
   font-family: var(--font-mono);
   font-size: max(0.6875rem, 11px);
@@ -4662,7 +4648,7 @@
   color: rgba(184, 200, 160, 0.95);
 }
 
-.wb-reader-result__share-url {
+.wb-reader-share__url {
   margin: 0 0 0.55rem;
   font-family: var(--font-mono);
   font-size: max(0.75rem, 12px);
@@ -4670,28 +4656,95 @@
   word-break: break-all;
 }
 
-.wb-reader-result__share-url a {
+.wb-reader-share__url a {
   color: rgba(215, 195, 170, 0.92);
   text-decoration: underline;
   text-underline-offset: 0.12em;
 }
 
-.wb-reader-result__share-actions {
+.wb-reader-share__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 0.55rem;
   align-items: center;
 }
 
-.wb-reader-result__share-open.wb-btn--ghost,
-.wb-reader-result__share-copy.wb-btn--ghost {
+/* The "Open share record" control is a plain anchor (not a <Btn>), so it carries no
+   inline geometry — the ghost color/border come from .wb-btn--ghost, box metrics here. */
+.wb-reader-share__open.wb-btn--ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 2rem;
+  padding: 0.35rem 0.7rem;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 6px;
+  font-family: var(--font-body);
   font-size: max(0.8125rem, 13px);
+  font-weight: 500;
+  text-decoration: none;
 }
 
-.wb-reader-result__share-copy.wb-btn--ghost.is-copied {
-  color: rgba(184, 200, 160, 0.95);
-  border-color: rgba(155, 174, 126, 0.42);
+.wb-share-consent {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(12, 9, 8, 0.74);
+}
+
+.wb-share-consent__panel {
+  width: 100%;
+  max-width: 33rem;
+  max-height: calc(100vh - 2.5rem);
+  overflow-y: auto;
+  padding: 1.5rem 1.55rem 1.35rem;
+  background: rgba(30, 24, 20, 0.98);
+  border: 1px solid rgba(248, 168, 102, 0.22);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.wb-share-consent__title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #F2E8DC;
+}
+
+.wb-share-consent__line {
+  margin: 0 0 0.7rem;
+  font-family: var(--font-body);
+  font-size: max(0.9375rem, 15px);
+  line-height: 1.6;
+  color: rgba(224, 210, 190, 0.92);
+}
+
+.wb-share-consent__error {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-body);
+  font-size: max(0.875rem, 14px);
+  line-height: 1.5;
+  color: rgba(224, 150, 120, 0.95);
+}
+
+.wb-share-consent__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.1rem;
+}
+
+.wb-share-consent__confirm.wb-btn--ghost:not(:disabled) {
+  border-color: rgba(248, 168, 102, 0.55) !important;
+  background: rgba(222, 111, 56, 0.16) !important;
+  color: rgba(242, 232, 220, 0.98) !important;
 }
 
 .wb-shell--reader-v2 .wb-reader-v2__input-note--compact {
@@ -4908,12 +4961,12 @@
     justify-content: center;
   }
 
-  .wb-reader-result__share {
+  .wb-reader-share {
     order: 3;
     margin-top: 0.35rem;
   }
 
-  .wb-reader-result__share-btn.wb-btn--ghost {
+  .wb-reader-share__btn.wb-btn--ghost {
     width: 100%;
     min-height: 2.75rem;
     justify-content: center;
@@ -5107,21 +5160,24 @@
     padding-bottom: max(0.35rem, env(safe-area-inset-bottom, 0px) * 0.35);
   }
 
-  .wb-reader-result__share-success {
+  .wb-reader-share__success {
     padding: 0.58rem 0.62rem;
   }
 
-  .wb-reader-result__share-actions {
+  .wb-reader-share__actions,
+  .wb-share-consent__actions {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .wb-reader-result__share-open.wb-btn--ghost,
-  .wb-reader-result__share-copy.wb-btn--ghost,
-  .wb-reader-result__share-btn.wb-btn--ghost {
+  .wb-reader-share__actions .wb-btn {
     width: 100%;
     min-height: 2.65rem;
     justify-content: center;
+  }
+
+  .wb-share-consent__panel {
+    padding: 1.15rem 1.05rem 1.1rem;
   }
 
   .wb-shell--reader-v2 .wb-reader-v2__trust {
