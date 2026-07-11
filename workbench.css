@@ -4009,7 +4009,11 @@
   font-family: var(--font-mono);
   font-size: max(0.625rem, var(--mono-min));
   letter-spacing: 0.08em;
-  color: rgba(175, 160, 145, 0.68);
+  /* WCAG AA: ~10px mono needs 4.5:1. Opaque (not rgba) so the ratio is deterministic on
+     the dark result panel. rgb(158,144,131) = 5.07:1 on #2A211E (the lightest surface the
+     boundary renders on), 6.19:1 on the actual panel gradient. Was rgba(175,160,145,.68) =
+     3.64:1 (failed). Do not dim below 4.5:1. Also styles the share-page boundary (same class). */
+  color: rgb(158, 144, 131);
 }
 
 .wb-reader-result__inspection-note {

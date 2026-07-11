@@ -339,6 +339,19 @@ export async function findExistingPaired(openRunId, answerHash, deps = {}) {
 // flushes (Vercel drops post-response awaits), one retry on a transient failure,
 // and capture_uncertain returned when the write ultimately fails so the client can
 // say the record may be missing. Never touches the Reader Runs row.
+//
+// Accepted concurrency race (NO auto-delete). findExistingPaired above is a
+// read-before-write idempotency check, so two truly-concurrent identical pairs can both
+// miss it and both write a row. This path deliberately does NOT reconcile by deleting a
+// duplicate. Unlike an Inspection Shares row (which api/inspection-share.js may safely
+// remove — but only the one its OWN create returned), a paired-analysis row is a
+// possession-proof TARGET: share minting verifies a share's Receipt Hash against this
+// table, so a concurrent or later share-create may be resolving against either duplicate.
+// Auto-deleting one could break an in-flight mint or strand a share, so a duplicate is
+// left in place and the flow stays fail-open (a duplicate row, never a lost analysis).
+// Operator dedupe (manual, not automated): for a given (Open Run ID, Targeted Answer
+// Hash), keep the earliest Created row and remove the rest ONLY after confirming no
+// Inspection Shares row carries a Receipt Hash that exists solely on a row being removed.
 export async function capturePaired(record, ctx, deps = {}) {
   const env = deps.env || process.env;
   const fetchImpl = deps.fetch || fetch;

@@ -15,7 +15,7 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
-import { canonicalizeForHash, gapEstimateLabel, pairedGapEstimateLabel } from "../reader-receipt.js";
+import { canonicalizeForHash, gapEstimateLabel, pairedGapEstimateLabel, RECEIPT_BOUNDARY } from "../reader-receipt.js";
 import { _resetMemoryStateForTests } from "../reader-security.js";
 
 const TEST_TABLE = "tblTESTSHARES0001";
@@ -29,7 +29,7 @@ delete process.env.UPSTASH_REDIS_REST_TOKEN;
 delete process.env.SITE_ORIGIN;
 
 const shareMod = await import("../api/inspection-share.js");
-const { recordToPublic, reportShareById } = shareMod;
+const { recordToPublic, reportShareById, pickCanonicalShare } = shareMod;
 const handler = shareMod.default;
 
 const SHARE_ID_RE = /^[A-Za-z0-9_-]{20,32}$/;
@@ -196,6 +196,9 @@ test("recordToPublic legacy (G3): Mode absent → full-answer render preserved",
   assert.equal(pub.answer, "the full legacy answer text", "legacy shares still render the stored answer");
   assert.deepEqual(pub.what_was_left_out, ["one", "two", "three"]);
   assert.equal(pub.completeness, "thin");
+  // G3: the legacy projection must also carry the verbatim boundary sentence (same
+  // single source as P4), so every mode's share renders it — no drift, no gap.
+  assert.equal(pub.boundary, RECEIPT_BOUNDARY);
 });
 
 test("recordToPublic single: gap null → empty label; garbage Findings JSON → []", () => {
@@ -346,6 +349,158 @@ test("handler: idempotent — an existing (hash,mode) share dedupes and mints no
   assert.equal(res.body.deduped, true);
   assert.equal(res.body.share_id, "existing123ABCdef456ghi");
   assert.ok(!mock.calls.some((c) => c.method === "POST"), "no duplicate row is minted");
+});
+
+// ── create-then-requery reconciliation (Item 7a) ─────────────────────────────────
+// Two concurrent first-time creates for one (Receipt Hash, Mode) can both miss the
+// read-before-write idempotency check and both write. The handler re-reads the key
+// after its own create and converges on the canonical row (earliest Created At,
+// record-ID tie-break) — deleting ONLY its own just-created row if it lost, NEVER a
+// pre-existing row and NEVER a row picked merely for sharing the key (binding safety
+// rule). Together the "loser" and "winner" cases below are the two sides of one race.
+
+test("pickCanonicalShare: earliest Created At wins; equal timestamps break by record ID; empty → null", () => {
+  assert.equal(pickCanonicalShare([]), null);
+  assert.equal(pickCanonicalShare(null), null);
+  assert.equal(
+    pickCanonicalShare([
+      { id: "recB", fields: { "Created At": "2026-07-11T00:00:00.001Z" } },
+      { id: "recA", fields: { "Created At": "2026-07-11T00:00:00.000Z" } },
+      { id: "recC", fields: { "Created At": "2026-07-11T00:00:00.002Z" } },
+    ]).id,
+    "recA",
+    "earliest Created At is canonical",
+  );
+  assert.equal(
+    pickCanonicalShare([
+      { id: "recZ", fields: { "Created At": "2026-07-11T00:00:00.000Z" } },
+      { id: "recA", fields: { "Created At": "2026-07-11T00:00:00.000Z" } },
+    ]).id,
+    "recA",
+    "a Created At tie breaks by lowest record ID",
+  );
+  assert.equal(
+    pickCanonicalShare([{ fields: {} }, { id: "recX", fields: { "Created At": "2026-01-01T00:00:00.000Z" } }]).id,
+    "recX",
+    "rows without an id are ignored",
+  );
+});
+
+// The idempotency GET (maxRecords=1) misses so the handler creates; the POST returns
+// recMINE; the post-create requery (maxRecords=10) returns whatever concurrent snapshot
+// the test wants; DELETEs are recorded so a test can assert exactly which id was removed.
+function reconcileAirtable({ verifiedHash, requeryOk = true, requery = [] }) {
+  const calls = [];
+  const impl = async (url, init = {}) => {
+    const u = String(url);
+    const method = (init.method || "GET").toUpperCase();
+    const body = init.body ? JSON.parse(init.body) : null;
+    calls.push({ url: u, method, body });
+    if (method === "GET" && (u.includes(RUNS_TABLE) || u.includes(PAIRED_TABLE))) {
+      return { ok: true, json: async () => ({ records: [{ id: "recRUN", fields: { "Receipt Hash": verifiedHash } }] }) };
+    }
+    if (method === "GET" && u.includes(TEST_TABLE)) {
+      if (u.includes("maxRecords=10")) {
+        if (!requeryOk) return { ok: false, status: 500, text: async () => "requery-err" };
+        return { ok: true, json: async () => ({ records: requery }) };
+      }
+      return { ok: true, json: async () => ({ records: [] }) }; // idempotency miss → create
+    }
+    if (method === "POST" && u.includes(TEST_TABLE)) {
+      return { ok: true, json: async () => ({ id: "recMINE", fields: body.fields }) };
+    }
+    if (method === "DELETE" && u.includes(TEST_TABLE)) {
+      return { ok: true, json: async () => ({ deleted: true }) };
+    }
+    throw new Error(`unexpected fetch ${method} ${u}`);
+  };
+  return { impl, calls };
+}
+
+test("reconcile: my row loses the tie-break → delete ONLY my own row, return the canonical URL (deduped)", async () => {
+  const receipt = singleReceipt();
+  const verifiedHash = receipt.integrity.content_hash;
+  const CANON = "canonWIN12345678abcd"; // 20 chars, valid Share ID
+  const mock = reconcileAirtable({
+    verifiedHash,
+    requery: [
+      { id: "recWIN", fields: { "Share ID": CANON, "Created At": "2000-01-01T00:00:00.000Z" } }, // earlier → canonical
+      { id: "recMINE", fields: { "Share ID": "mineLATE0000000000000", "Created At": "2099-01-01T00:00:00.000Z" } },
+    ],
+  });
+  let res;
+  await withFetch(mock, async () => {
+    res = mockRes();
+    await handler(mockReq({ receipt }), res);
+  });
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.deduped, true);
+  assert.equal(res.body.share_id, CANON, "converges on the canonical URL");
+  assert.ok(res.body.share_url.includes(`/inspection/${CANON}`));
+  const deletes = mock.calls.filter((c) => c.method === "DELETE");
+  assert.equal(deletes.length, 1, "exactly one delete");
+  assert.ok(deletes[0].url.endsWith("/recMINE"), "deletes ONLY this request's own just-created row");
+  assert.ok(!mock.calls.some((c) => c.method === "DELETE" && c.url.includes("recWIN")), "never deletes the canonical row");
+});
+
+test("reconcile: my row IS canonical → keep it, delete nothing (never touches a concurrent duplicate)", async () => {
+  const receipt = singleReceipt();
+  const verifiedHash = receipt.integrity.content_hash;
+  const mock = reconcileAirtable({
+    verifiedHash,
+    requery: [
+      { id: "recMINE", fields: { "Share ID": "mineEARLY00000000000", "Created At": "2000-01-01T00:00:00.000Z" } }, // canonical
+      { id: "recLATE", fields: { "Share ID": "otherDUP0000000000000", "Created At": "2099-01-01T00:00:00.000Z" } },
+    ],
+  });
+  let res;
+  await withFetch(mock, async () => {
+    res = mockRes();
+    await handler(mockReq({ receipt }), res);
+  });
+  assert.equal(res.statusCode, 200);
+  assert.notEqual(res.body.deduped, true, "the winner mints normally, not a dedupe");
+  assert.match(res.body.share_id, SHARE_ID_RE);
+  assert.ok(
+    !mock.calls.some((c) => c.method === "DELETE"),
+    "the winner deletes nothing — the concurrent duplicate is the loser's/operator's to remove, never touched here",
+  );
+});
+
+test("reconcile: a requery error fails safe → keep my row, delete nothing", async () => {
+  const receipt = singleReceipt();
+  const verifiedHash = receipt.integrity.content_hash;
+  const mock = reconcileAirtable({ verifiedHash, requeryOk: false });
+  let res;
+  await withFetch(mock, async () => {
+    res = mockRes();
+    await handler(mockReq({ receipt }), res);
+  });
+  assert.equal(res.statusCode, 200);
+  assert.notEqual(res.body.deduped, true);
+  assert.match(res.body.share_id, SHARE_ID_RE);
+  assert.ok(!mock.calls.some((c) => c.method === "DELETE"), "never delete on an uncertain view");
+});
+
+test("reconcile: my own row absent from the snapshot → keep it, delete nothing (never delete on a partial view)", async () => {
+  const receipt = singleReceipt();
+  const verifiedHash = receipt.integrity.content_hash;
+  const mock = reconcileAirtable({
+    verifiedHash,
+    requery: [{ id: "recOTHER", fields: { "Share ID": "otherONLY00000000000", "Created At": "2000-01-01T00:00:00.000Z" } }],
+  });
+  let res;
+  await withFetch(mock, async () => {
+    res = mockRes();
+    await handler(mockReq({ receipt }), res);
+  });
+  assert.equal(res.statusCode, 200);
+  assert.notEqual(res.body.deduped, true);
+  assert.match(res.body.share_id, SHARE_ID_RE);
+  assert.ok(
+    !mock.calls.some((c) => c.method === "DELETE"),
+    "my row is not in the snapshot → it cannot be proven non-canonical → it is kept, nothing is deleted",
+  );
 });
 
 // ── reportShareById: flag-only, never a takedown, never reverts an operator ───────

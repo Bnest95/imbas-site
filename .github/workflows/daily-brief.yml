@@ -45,6 +45,11 @@ jobs:
           AIRTABLE_CASES_TABLE: ${{ secrets.AIRTABLE_CASES_TABLE }}
           AIRTABLE_REPO_TABLE: ${{ secrets.AIRTABLE_REPO_TABLE }}
           AIRTABLE_RUNS_TABLE: ${{ secrets.AIRTABLE_RUNS_TABLE }}
+          # Inspection Shares table id is non-secret (published in DELETION-PROCEDURE.md),
+          # so it is wired as a repository VARIABLE rather than a secret. Sibling table ids
+          # stay secrets for now. Unset -> the reported-shares moderation queue degrades to a
+          # labeled gap in the brief (never faked); see collect-airtable.mjs.
+          AIRTABLE_INSPECTION_SHARES_TABLE: ${{ vars.AIRTABLE_INSPECTION_SHARES_TABLE }}
         run: |
           node scripts/collect-airtable.mjs --out .founder-ops/input.json
           node scripts/founder-ops-brief.mjs --input .founder-ops/input.json --audit --out .founder-ops/brief.md

@@ -124,6 +124,58 @@ async function airtableSelectOne(table, formula) {
   }
 }
 
+// Read EVERY row matching an already-safe formula (bounded). The share-mint
+// reconciliation uses this to enumerate all rows sharing one idempotency key so it can
+// pick the canonical survivor. Fails safe: any error/timeout returns { ok:false,
+// records:[] } so the caller keeps its own row rather than delete on an uncertain view.
+async function airtableSelectAll(table, formula, maxRecords = 10) {
+  const url =
+    `https://api.airtable.com/v0/${BASE}/${table}` +
+    `?filterByFormula=${encodeURIComponent(formula)}&maxRecords=${maxRecords}`;
+  try {
+    const r = await fetchWithTimeout(url, {
+      headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` },
+    });
+    if (!r.ok) return { ok: false, records: [] };
+    const data = await r.json();
+    return { ok: true, records: Array.isArray(data.records) ? data.records : [] };
+  } catch {
+    return { ok: false, records: [] };
+  }
+}
+
+// Best-effort DELETE of ONE record by id. Returns { ok } only; never throws. The
+// share-mint reconciliation calls this solely with the id its OWN create returned —
+// never a pre-existing id, never a target chosen for merely sharing the key — so a
+// failure at most leaves a self-authored duplicate for operator cleanup and can never
+// remove another request's row.
+async function airtableDeleteRecord(table, recordId) {
+  try {
+    const r = await fetchWithTimeout(`https://api.airtable.com/v0/${BASE}/${table}/${recordId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${process.env.AIRTABLE_TOKEN}` },
+    });
+    return { ok: r.ok };
+  } catch {
+    return { ok: false };
+  }
+}
+
+// The canonical row among rows sharing an idempotency key: earliest "Created At", with
+// record ID as the deterministic tie-break so every concurrent requester converges on
+// the same winner without coordination. "Created At" is an ISO-8601 UTC string, which
+// sorts lexicographically in chronological order. Pure — unit-tested without I/O.
+export function pickCanonicalShare(records) {
+  const rows = (Array.isArray(records) ? records : []).filter((x) => x && x.id);
+  if (rows.length === 0) return null;
+  return rows.slice().sort((a, b) => {
+    const ca = str(a.fields && a.fields["Created At"]);
+    const cb = str(b.fields && b.fields["Created At"]);
+    if (ca !== cb) return ca < cb ? -1 : 1;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  })[0];
+}
+
 // ── Receipt verification (possession proof, part 1) ───────────────────────────
 // Same integrity rule as api/read.js and api/reader-perception.js: recompute the
 // content_hash over the canonical envelope (content_hash nulled by
@@ -242,8 +294,11 @@ function p4RecordToPublic(fields, shareId, mode) {
   };
 }
 
-// Pre-P4 rows: the original denormalized shape, raw answer included (G3). Unchanged
-// from the v1 share so existing links render exactly as before.
+// Pre-P4 rows: the original denormalized shape, raw answer included (G3). The full-
+// answer render is unchanged from the v1 share so existing links resolve exactly as
+// before; the one addition is `boundary` (the verbatim receipt sentence), which G3
+// requires on every mode and which now travels on the legacy projection too — same
+// single source (RECEIPT_BOUNDARY) as the P4 rows, so the sentence cannot drift.
 function legacyRecordToPublic(fields, shareId) {
   const leftOutRaw = fields["What Was Left Out"];
   const leftOut =
@@ -267,6 +322,7 @@ function legacyRecordToPublic(fields, shareId) {
     inspection_note: fields["Inspection Note"] || "",
     source_label: fields["Source Label"] || "Workbench inspection",
     case_label: fields["Case Label"] || "",
+    boundary: RECEIPT_BOUNDARY,
     reviewed_status: fields["Reviewed Status"] || "Unreviewed",
     visibility: fields.Visibility || "unlisted",
     source: "Workbench inspection",
@@ -436,8 +492,53 @@ export default async function handler(req, res) {
       console.error("[inspection-share] airtable write failed:", r.status, t.slice(0, 300));
       return res.status(502).json({ ok: false, error: "airtable" });
     }
-    // Only a confirmed write advances the global per-day counter (best-effort).
+    // Only a confirmed write advances the global per-day counter (best-effort). A row
+    // was written even if the reconciliation below removes it — capacity was consumed —
+    // so the count stands; over-counting a rare race-loser errs toward rate-limiting,
+    // never looser.
     await recordShareCreation();
+
+    // Capture the EXACT record this request created. The reconciliation may delete only
+    // this id (binding safety rule) — never a pre-existing row, never a row chosen for
+    // merely sharing the key.
+    let myRecordId = "";
+    try {
+      const created = await r.json();
+      myRecordId = created && created.id ? created.id : "";
+    } catch {}
+
+    // Create-then-requery reconciliation. The read-before-write idempotency check above
+    // has a race: two concurrent first-time creates for one (Receipt Hash, Mode) can
+    // both miss it and both write. Re-read every row for the key and keep the canonical
+    // one (earliest Created At, record-ID tie-break); if THIS request's own row is not
+    // canonical, delete THIS row and return the canonical URL so every caller converges
+    // on one link. The delete decision is made ONLY from a snapshot that includes my own
+    // row, so my row is provably non-canonical within that snapshot before it is removed.
+    // Fails safe: without my own row in the snapshot, or on any requery error, keep my
+    // row — never delete on an uncertain view. This narrows but cannot fully close the
+    // window (Airtable has no cross-row transaction); a rare surviving double-write is
+    // left for operator dedupe, never resolved by deleting anything but my own row.
+    if (myRecordId) {
+      const all = await airtableSelectAll(TABLE, `AND({Receipt Hash}='${verifiedHash}',{Mode}='${mode}')`);
+      const mine = all.records.find((x) => x.id === myRecordId);
+      if (all.ok && mine) {
+        const canonical = pickCanonicalShare(all.records);
+        if (canonical && canonical.id !== myRecordId) {
+          const canonicalId = str(canonical.fields && canonical.fields["Share ID"]);
+          if (SHARE_ID_RE.test(canonicalId)) {
+            await airtableDeleteRecord(TABLE, myRecordId); // removes ONLY my own row
+            return res.status(200).json({
+              ok: true,
+              share_id: canonicalId,
+              share_url: shareUrl(req, canonicalId),
+              mode,
+              deduped: true,
+            });
+          }
+        }
+      }
+    }
+
     return res.status(200).json({ ok: true, share_id: shareId, share_url: shareUrl(req, shareId), mode });
   } catch (e) {
     console.error("[inspection-share] network:", e && e.message);

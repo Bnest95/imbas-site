@@ -241,6 +241,7 @@ function renderLegacy(root, record) {
   const inspectionNote = (record.inspection_note || "").trim();
   const paragraphs = (record.the_read || "").split(/\n\n+/).filter(Boolean);
   const provenance = [record.source_label, record.case_label].filter(Boolean).join(" · ");
+  const boundary = (record.boundary || "").trim();
 
   root.innerHTML = `
     <header class="insp-record__mast">
@@ -305,6 +306,7 @@ function renderLegacy(root, record) {
           <p class="wb-reader-result__inspection-note">${escapeHtml(inspectionNote)}</p>
         </article>` : ""}
         <p class="wb-reader-result__trust">Behavior, not intent.</p>
+        ${boundary ? `<p class="wb-reader-result__trust wb-measure__boundary">${escapeHtml(boundary)}</p>` : ""}
       </div>
     </section>
 

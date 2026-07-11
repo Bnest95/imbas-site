@@ -3117,13 +3117,46 @@ function ShareConsentDialog({ mode, busy, error, onConfirm, onCancel }) {
   const copy = READER_SHARE_CONSENT[mode] || READER_SHARE_CONSENT.single;
   const panelRef = useRef(null);
   const titleId = `wb-share-consent-title--${mode}`;
+  const descId = `wb-share-consent-desc--${mode}`;
+  const descIds = copy.lines.map((_, i) => `${descId}-${i}`).join(" ");
 
   useEffect(() => {
     if (panelRef.current) panelRef.current.focus();
   }, []);
+  // Escape dismisses (unless a create is in flight); Tab is trapped inside the panel so
+  // keyboard focus can never land on the page behind this aria-modal dialog. Focus is
+  // restored to the trigger by ReaderShareAction.closeConsent when the dialog unmounts.
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === "Escape" && !busy) onCancel();
+      if (e.key === "Escape") {
+        if (!busy) onCancel();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.prototype.slice.call(
+        panel.querySelectorAll('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'),
+      );
+      // While busy both buttons are disabled → nothing is tabbable; park focus on the panel.
+      if (focusable.length === 0) {
+        e.preventDefault();
+        panel.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+      const inside = panel.contains(active);
+      if (e.shiftKey) {
+        if (!inside || active === first || active === panel) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (!inside || active === last || active === panel) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -3138,11 +3171,12 @@ function ShareConsentDialog({ mode, busy, error, onConfirm, onCancel }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={descIds}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 id={titleId} className="wb-share-consent__title">{copy.title}</h3>
         {copy.lines.map((line, i) => (
-          <p key={i} className="wb-share-consent__line">{line}</p>
+          <p key={i} id={`${descId}-${i}`} className="wb-share-consent__line">{line}</p>
         ))}
         {error ? <p className="wb-share-consent__error" role="alert">{error}</p> : null}
         <div className="wb-share-consent__actions">

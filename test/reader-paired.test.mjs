@@ -587,6 +587,37 @@ test("capturePaired treats an unconfigured store as certain (no uncertain flag)"
   assert.equal(r.capture_uncertain, false);
 });
 
+test("capturePaired never auto-deletes: a raced duplicate is left for operator dedupe (7b)", async () => {
+  // findExistingPaired is a read-before-write check, so a true concurrent race can write
+  // a duplicate paired-analysis row. This path must NOT reconcile by deletion: the row is
+  // a possession-proof TARGET (share minting verifies a Receipt Hash against it), so
+  // auto-deleting a duplicate could break an in-flight mint. Assert the only write method
+  // is POST and a DELETE never occurs — the duplicate is left for manual operator dedupe.
+  const ctx = createRuntimeContext({ route: "/api/read-paired" });
+  const record = {
+    openRunId: hexId("cap-nodelete"),
+    targetedPrompt: "p",
+    targetedPromptHash: sha256Hex("p"),
+    targetedAnswer: "a",
+    answerHash: sha256Hex("a"),
+    pm: parsePairedMeasurement(sampleModelPaired()),
+    receiptHash: "ef".repeat(32),
+  };
+  const methods = [];
+  const fetch = async (url, o = {}) => {
+    methods.push((o.method || "GET").toUpperCase());
+    return { ok: true, json: async () => ({ id: "recPairedDup" }) };
+  };
+  const r = await capturePaired(record, ctx, { env: ENV, fetch });
+  assert.equal(r.ok, true);
+  assert.ok(methods.length >= 1, "a write was attempted");
+  assert.ok(methods.includes("POST"), "the capture write is a POST");
+  assert.ok(
+    methods.every((m) => m !== "DELETE"),
+    "capturePaired issues no DELETE — no automatic reconciliation of a possession-proof paired row",
+  );
+});
+
 test("endpoint: a failed capture still returns the analysis, flagged capture_uncertain", async () => {
   const { status, body } = await runPaired({
     receipt: buildOpenReceipt(),
