@@ -1,6 +1,6 @@
 (function () {
   var FALLBACK = 77;
-  var MORE_PAGES = ['/field-notes', '/methodology.html', '/public-interest.html', '/faq.html', '/contact.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html'];
+  var MORE_PAGES = ['/field-notes', '/methodology.html', '/public-interest.html', '/faq.html', '/contact.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html', '/exploration-pack.html'];
 
   function isFieldNotesPath(path) {
     return path === '/field-notes' || path.indexOf('/field-notes/') === 0;
@@ -70,6 +70,7 @@
       { href: '/field-notes/', label: 'Field Notes', fieldNotes: true, desktopOnly: true },
       { href: '/methodology.html', label: 'Methodology' },
       { href: '/glossary.html', label: 'Glossary' },
+      { href: '/exploration-pack.html', label: 'Exploration Pack' },
       { href: '/public-interest.html', label: 'Public Interest' },
       { href: '/independence.html', label: 'Independence' },
       { href: '/challenge.html', label: 'Challenge' },
