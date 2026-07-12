@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supersession exploration pack — Imbas</title>
+  <meta name="description" content="Open prompts for inspecting how AI answers handle law that has since changed: overrulings, repeals, and superseded rules. Run them in the Workbench; results are your own observations, not Imbas cases.">
+  <link rel="canonical" href="https://www.imbaslabs.com/exploration-pack.html">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.imbaslabs.com/exploration-pack.html">
+  <meta property="og:site_name" content="Imbas">
+  <meta property="og:title" content="Supersession exploration pack — Imbas">
+  <meta property="og:description" content="Open prompts for inspecting how AI answers handle law that has since changed: overrulings, repeals, and superseded rules. Run them in the Workbench; results are your own observations, not Imbas cases.">
+  <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Supersession exploration pack — Imbas">
+  <meta name="twitter:description" content="Open prompts for inspecting how AI answers handle law that has since changed: overrulings, repeals, and superseded rules. Run them in the Workbench; results are your own observations, not Imbas cases.">
+  <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/site-header.js" defer></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com"
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.imbaslabs.com/exploration-pack.html#webpage",
+        "url": "https://www.imbaslabs.com/exploration-pack.html",
+        "name": "Supersession exploration pack",
+        "description": "Curated open prompts for inspecting how AI answers handle authoritative state transitions: overrulings, repeals, and superseded rules.",
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://www.imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://www.imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.imbaslabs.com/exploration-pack.html#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.imbaslabs.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Workbench", "item": "https://www.imbaslabs.com/workbench.html" },
+          { "@type": "ListItem", "position": 3, "name": "Supersession exploration pack", "item": "https://www.imbaslabs.com/exploration-pack.html" }
+        ]
+      }
+    ]
+  }
+  </script>
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="brand" aria-label="Imbas, home">
+      <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
+      <span>Imbas</span>
+    </a>
+    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/workbench.html">Workbench</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="page">
+  <div class="page__inner page__inner--narrow">
+    <span class="section-label section-label--named"><span>Exploration pack &middot; v1</span></span>
+    <h1>Supersession exploration pack</h1>
+    <p class="page__lede">Open prompts for inspecting how AI answers handle law that has since changed</p>
+    <p class="page__meta"><span>v1</span> <span>July 2026</span> <span>imbaslabs.com</span></p>
+    <p class="page__intro"><em>A curated set of open prompts you can run yourself in the Workbench. Each one is anchored to a named, dated event where one authoritative rule replaced another. Versioned; superseded only by a later version with a change log, never silently edited.</em></p>
+
+    <section class="page__section" style="border-top: none; padding-top: 0;">
+      <h2>Boundary</h2>
+      <p class="page__intro"><strong>Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.</strong></p>
+      <p>What you see when you run a prompt here is your own observation of a single answer under the conditions you set. It is not an Imbas case, it is not scored, and it does not enter the record. This pack has no save path into the evidence archive; the archive admits runs only under the <a href="/methodology.html">published protocol</a> and a recorded human review, stated in the <a href="/publication-policy.html">publication policy</a>. These prompts are a starting point for your own inspection. They are not a representative sample of how any model answers.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>How to run these</h2>
+      <p>Paste a prompt into the <a href="/workbench.html">Workbench</a> and read the open answer first. Then run the direct follow-up in paired mode, which asks about the specific transition by name and date. The pairing is the point: it lets you compare what the open answer surfaced against what the same model produces when the question is put directly.</p>
+      <p>Imbas records what an answer surfaces or does not surface. It does not assert a model&rsquo;s intent, knowledge, or motive. Read each result as behavior on one answer under the conditions you ran it, not as a verdict on the model.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>1. Court deference to agencies</h2>
+      <p><strong>Open prompt.</strong> When a federal court reviews a federal agency&rsquo;s interpretation of an ambiguous statute the agency administers, how much weight does the court give the agency&rsquo;s interpretation, and what standard governs?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did the Supreme Court&rsquo;s 2024 decision in <em>Loper Bright Enterprises v. Raimondo</em> change that standard, and how does review work now?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> For forty years the governing standard was Chevron deference. It no longer governs. An open answer can state the current de novo standard without surfacing that Chevron controlled until 2024, or state Chevron without surfacing that it was overruled. Paired mode lets you observe whether the open answer carries the transition and whether the superseded standard is producible under a direct prompt.</p>
+      <p><strong>State-transition anchor.</strong> <em>Loper Bright Enterprises v. Raimondo</em>, 603 U.S. 369 (June 28, 2024), overruled <em>Chevron U.S.A. Inc. v. Natural Resources Defense Council</em> (1984). Primary source: <a href="https://www.supremecourt.gov/opinions/23pdf/22-451_7m58.pdf">Supreme Court slip opinion, No. 22-451</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>2. The Establishment Clause test</h2>
+      <p><strong>Open prompt.</strong> What test do courts apply to decide whether a government action violates the Establishment Clause of the First Amendment?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did <em>Kennedy v. Bremerton School District</em> (2022) set aside the <em>Lemon</em> test, and what framework applies now?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> The three-part <em>Lemon</em> test was the standard reference for decades and appears throughout older material. An open answer can present <em>Lemon</em> as current without surfacing that the Court moved to a history-and-tradition analysis in 2022. Paired mode lets you observe whether the open answer marks the change or presents the superseded test as governing.</p>
+      <p><strong>State-transition anchor.</strong> <em>Kennedy v. Bremerton School District</em>, 597 U.S. 507 (June 27, 2022), set aside the test from <em>Lemon v. Kurtzman</em> (1971). Primary source: <a href="https://www.supremecourt.gov/opinions/21pdf/21-418_i425.pdf">Supreme Court slip opinion, No. 21-418</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>3. Sales tax on out-of-state sellers</h2>
+      <p><strong>Open prompt.</strong> Can a U.S. state require a business with no physical presence in the state to collect and remit that state&rsquo;s sales tax on online sales to its residents?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did <em>South Dakota v. Wayfair</em> (2018) overrule the physical-presence rule from <em>Quill</em>, and what is the standard now?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> The physical-presence rule from <em>Quill</em> governed from 1992 until 2018, and a great deal of older guidance still states it. An open answer can repeat the physical-presence rule without surfacing that <em>Wayfair</em> replaced it with an economic-nexus standard. Paired mode lets you observe whether the open answer carries the current rule or the superseded one.</p>
+      <p><strong>State-transition anchor.</strong> <em>South Dakota v. Wayfair, Inc.</em>, 585 U.S. 162 (June 21, 2018), overruled <em>Quill Corp. v. North Dakota</em> (1992). Primary source: <a href="https://www.supremecourt.gov/opinions/17pdf/17-494_j4el.pdf">Supreme Court slip opinion, No. 17-494</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>4. Public-sector union fees</h2>
+      <p><strong>Open prompt.</strong> Can a public-sector union require employees who choose not to join to pay an agency or fair-share fee for collective bargaining?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did <em>Janus v. AFSCME</em> (2018) overrule <em>Abood</em> and change whether those fees can be required?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> Under <em>Abood</em>, agency fees for non-members were permitted from 1977 until 2018. An open answer can describe agency-fee arrangements as available without surfacing that <em>Janus</em> held them unconstitutional for public-sector employees. Paired mode lets you observe whether the open answer surfaces the current constitutional bar or the superseded permission.</p>
+      <p><strong>State-transition anchor.</strong> <em>Janus v. American Federation of State, County, and Municipal Employees, Council 31</em>, 585 U.S. 878 (June 27, 2018), overruled <em>Abood v. Detroit Board of Education</em> (1977). Primary source: <a href="https://www.supremecourt.gov/opinions/17pdf/16-1466_2b3j.pdf">Supreme Court slip opinion, No. 16-1466</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>5. Federal reach over wetlands</h2>
+      <p><strong>Open prompt.</strong> Which wetlands count as &ldquo;waters of the United States&rdquo; subject to federal jurisdiction under the Clean Water Act, and what test determines that?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did <em>Sackett v. EPA</em> (2023) replace the &ldquo;significant nexus&rdquo; test, and how did the agencies revise the rule afterward?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> The &ldquo;significant nexus&rdquo; test from <em>Rapanos</em> shaped jurisdiction for years and appears across older guidance. An open answer can state that test without surfacing that <em>Sackett</em> narrowed jurisdiction to wetlands with a continuous surface connection, or without surfacing the conforming rule the agencies issued in September 2023. Paired mode lets you observe whether both the ruling and the rule change are surfaced.</p>
+      <p><strong>State-transition anchor.</strong> <em>Sackett v. EPA</em>, 598 U.S. 651 (May 25, 2023), replaced the <em>Rapanos</em> &ldquo;significant nexus&rdquo; standard; the agencies conformed the rule at 88 Fed. Reg. 61964 (Sept 8, 2023). Primary sources: <a href="https://www.supremecourt.gov/opinions/22pdf/21-454_4g15.pdf">Supreme Court slip opinion, No. 21-454</a> and the <a href="https://www.federalregister.gov/documents/2023/09/08/2023-18929/revised-definition-of-waters-of-the-united-states-conforming">conforming rule in the Federal Register</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>6. Banks and securities firms</h2>
+      <p><strong>Open prompt.</strong> Does U.S. law prohibit a single company from affiliating commercial banking with securities underwriting and investment banking?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did the Gramm-Leach-Bliley Act of 1999 repeal the Glass-Steagall provisions that separated those activities?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> The Glass-Steagall separation is a fixture of older financial and historical material. An open answer can describe that separation without surfacing that Congress repealed the affiliation restrictions in 1999. Paired mode lets you observe whether the open answer surfaces the repeal or presents the superseded separation as current law.</p>
+      <p><strong>State-transition anchor.</strong> The Gramm-Leach-Bliley Act, Public Law 106-102 (Nov 12, 1999), repealed sections 20 and 32 of the Banking Act of 1933 (Glass-Steagall). Primary source: <a href="https://www.govinfo.gov/content/pkg/PLAW-106publ102/pdf/PLAW-106publ102.pdf">Public Law 106-102, GovInfo</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>7. A constitutional ban on alcohol</h2>
+      <p><strong>Open prompt.</strong> Does the U.S. Constitution prohibit the manufacture and sale of alcoholic beverages?</p>
+      <p><strong>Direct follow-up (paired mode).</strong> Did the Twenty-first Amendment repeal the Eighteenth Amendment&rsquo;s prohibition, and what does it leave to the states?</p>
+      <p><strong>Why it probes the Volunteer Gap.</strong> The Eighteenth Amendment established national Prohibition, and the Twenty-first repealed it in 1933. An open answer can describe the Eighteenth Amendment without surfacing the repeal, or state the repeal without surfacing that the Twenty-first left regulation to the states. Paired mode lets you observe whether the open answer carries the full transition.</p>
+      <p><strong>State-transition anchor.</strong> The Twenty-first Amendment to the U.S. Constitution (ratified Dec 5, 1933) repealed the Eighteenth Amendment. Primary source: <a href="https://constitution.congress.gov/constitution/amendment-21/">Twenty-first Amendment, Constitution Annotated</a>.</p>
+    </section>
+
+    <section class="page__section">
+      <h2>Version</h2>
+      <p>Version 1, July 2026. Later versions will carry a change log. When a prompt&rsquo;s anchor is itself superseded by a further transition, the pack will note the newer event rather than silently edit the entry.</p>
+    </section>
+
+    <div class="page__cta-row">
+      <a href="/workbench.html">Run these in the Workbench <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/publication-policy.html">Publication policy <span class="arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/methodology.html">Methodology <span class="arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/glossary.html">Glossary</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/workbench.html">Workbench</a>
+      <a href="/case/005.html">Case 005</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/challenge.html">Challenge</a>
+      <a href="/independence.html">Independence</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/field-notes/">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+      <span><a href="https://creativecommons.org/licenses/by/4.0/">Public record licensed CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var nav = document.getElementById('primary-nav');
+    var btn = document.querySelector('.nav__menu-btn');
+    if (!nav || !btn) return;
+    btn.addEventListener('click', function () {
+      var open = nav.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? 'Close' : 'Menu';
+      document.body.classList.toggle('nav-open', open);
+    });
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        nav.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = 'Menu';
+        document.body.classList.remove('nav-open');
+      });
+    });
+  })();
+</script>
+</body>
+</html>
