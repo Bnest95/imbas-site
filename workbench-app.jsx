@@ -18,7 +18,7 @@ import {
   CHECK_QUICK_COPY,
   CHECK_CLEANER_COPY,
 } from "./reader-paired.js";
-import { READER_EVENTS, buildEvent } from "./reader-telemetry.js";
+import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 
@@ -1612,6 +1612,13 @@ function emitReaderEvent(name, props = {}) {
   return event;
 }
 
+// The opaque run id for an open (Act 1) result, if the server minted one. Used only
+// to correlate events for one run inside this browser's own log — it is an id, not
+// content, and sanitizeEventProps caps it at 64 chars regardless.
+function readerRunId(result) {
+  return result?.receipt?.open_run?.provenance?.request_id || "";
+}
+
 function EmailGate({ onUnlock }) {
   const [email, setEmail] = useState("");
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
@@ -1996,6 +2003,17 @@ function isReaderWorkbenchEnabled() {
     if (window.localStorage.getItem("imbasReader") === "1") return true;
   } catch {}
   return true;
+}
+
+// ?funnel=1 opens a read-only view of THIS browser's own event log reduced to the
+// north-star funnel. Off by default; never persisted, never sent — a local
+// instrument for the founder, not a shipped user surface.
+function isFunnelPanelEnabled() {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("funnel") === "1";
+  } catch {}
+  return false;
 }
 
 const READER_API = "/api/read";
@@ -4186,6 +4204,79 @@ function SecondRunLoop({ mode, sel, onAnother }) {
   );
 }
 
+// Return-flow nudge for a visitor who copied a targeted question in an earlier
+// session but never came back with a completed loop. It resumes nothing (no old
+// content is stored or restored), it just points them back at the input. Dismissible.
+function ReturnNudge({ onDismiss }) {
+  return (
+    <section className="wb-return" aria-label="Welcome back">
+      <div className="wb-return__body">
+        <p className="wb-return__headline">Welcome back.</p>
+        <p className="wb-return__text">You started a check here before. Paste an answer to run another and watch what it leaves out.</p>
+      </div>
+      <button type="button" className="wb-return__dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+    </section>
+  );
+}
+
+// ?funnel=1 diagnostic: THIS browser's own event log reduced to the north-star
+// funnel. Read-only, one-shot read on mount. Every number is a count of
+// content-minimal events — no answer or question text ever entered the log.
+function ReaderFunnelPanel() {
+  const [funnel] = useState(() => buildFunnel(readReaderEvents()));
+  const rate = funnel.loop_completion_rate;
+  const pct = rate == null ? "—" : `${Math.round(rate * 100)}%`;
+  const c = funnel.counts || {};
+  const rows = [
+    ["Runs started", c.run_started],
+    ["Runs completed", c.run_completed],
+    ["Results viewed", c.result_viewed],
+    ["Questions copied", c.target_question_copied],
+    ["Loops returned", c.loop_returned],
+    ["Loops completed", c.loop_completed],
+    ["States corrected", c.state_corrected],
+    ["Cards exported", c.card_exported],
+    ["Candidates submitted", c.candidate_submitted],
+    ["Return visits", c.return_visit],
+  ];
+  const states = funnel.completed_by_state || {};
+  const hasStates = Object.keys(states).length > 0;
+  return (
+    <section className="wb-funnel" aria-label="Reader funnel (this browser only)">
+      <div className="wb-funnel__head">
+        <span className="wb-funnel__eyebrow">Reader funnel · this browser only</span>
+        <p className="wb-funnel__northstar">
+          <span className="wb-funnel__northstar-num">{pct}</span>
+          <span className="wb-funnel__northstar-label">of copied questions returned as completed loops</span>
+        </p>
+      </div>
+      <dl className="wb-funnel__grid">
+        {rows.map(([label, n]) => (
+          <div key={label} className="wb-funnel__row">
+            <dt className="wb-funnel__label">{label}</dt>
+            <dd className="wb-funnel__val">{n || 0}</dd>
+          </div>
+        ))}
+      </dl>
+      {hasStates ? (
+        <div className="wb-funnel__states">
+          <span className="wb-funnel__states-label">Completed by state</span>
+          <ul className="wb-funnel__states-list">
+            {LOOP_STATES.map((s) =>
+              states[s] ? (
+                <li key={s} className="wb-funnel__states-item">
+                  {((LOOP_STATE_COPY[s] && LOOP_STATE_COPY[s].chip) || s)}: {states[s]}
+                </li>
+              ) : null
+            )}
+          </ul>
+        </div>
+      ) : null}
+      <p className="wb-funnel__note">[Content-minimal: ids, enums, counts only — never answer or question text. Stored in this browser, nothing leaves your device.]</p>
+    </section>
+  );
+}
+
 function ReaderWorkbench() {
   const [mode, setMode] = useState("own");
   const [sel, setSel] = useState(CURATED[0]);
@@ -4196,10 +4287,19 @@ function ReaderWorkbench() {
   const [busy, setBusy] = useState(false);
   const [readerResult, setReaderResult] = useState(null);
   const [errors, setErrors] = useState({});
+  // A returning visitor who copied a targeted question last session but never came
+  // back with a completed loop. Set once from this browser's own event log (no server
+  // read, no user content) to drive the finish-your-loop nudge below.
+  const [returning, setReturning] = useState(false);
+  const [showFunnel] = useState(() => isFunnelPanelEnabled());
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
   const scrollState = useRef(initialScrollState());
+  // Guards RESULT_VIEWED to one emit per distinct result: holds the run id (or a
+  // synthetic marker) of the result already counted as viewed. Reset when the result
+  // clears so the next real result is counted once.
+  const viewedRunRef = useRef(null);
 
   const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
   const hasAnswer = !!answer.trim();
@@ -4248,6 +4348,47 @@ function ReaderWorkbench() {
     }
     return undefined;
   }, [readerResult]);
+
+  // RESULT_VIEWED once per distinct result. The run id keys the guard when present;
+  // a fallback result has none, so a stable marker stands in. Clearing the result
+  // re-arms the guard for the next run.
+  useEffect(() => {
+    if (!readerResult) {
+      viewedRunRef.current = null;
+      return;
+    }
+    const key = readerRunId(readerResult) || (readerResult.source ? `src:${readerResult.source}` : "result");
+    if (viewedRunRef.current === key) return;
+    viewedRunRef.current = key;
+    emitReaderEvent(READER_EVENTS.RESULT_VIEWED, {
+      run: readerRunId(readerResult),
+      source: readerResult.source || "agent",
+    });
+  }, [readerResult]);
+
+  // Return flow, browser-local only. Once per browser session (sessionStorage guard),
+  // if this browser's own event log shows prior activity, emit RETURN_VISIT. If it
+  // shows more targeted questions copied than loops completed, there's an open loop —
+  // flag it so the finish-your-loop nudge renders. No server read, no user content;
+  // buildFunnel reduces the same content-minimal log the emitter already wrote.
+  useEffect(() => {
+    let alreadyThisSession = false;
+    try {
+      alreadyThisSession = sessionStorage.getItem("imbas_reader_session") === "1";
+    } catch {}
+    const events = readReaderEvents();
+    if (events.length === 0) return;
+    if (!alreadyThisSession) {
+      emitReaderEvent(READER_EVENTS.RETURN_VISIT);
+      try {
+        sessionStorage.setItem("imbas_reader_session", "1");
+      } catch {}
+    }
+    const funnel = buildFunnel(events);
+    const copied = funnel.counts.target_question_copied || 0;
+    const completed = funnel.counts.loop_completed || 0;
+    if (copied > completed) setReturning(true);
+  }, []);
 
   const switchMode = (next) => {
     if (next === mode) return;
@@ -4312,6 +4453,7 @@ function ReaderWorkbench() {
     setErrors({});
     setBusy(true);
     setReaderResult(null);
+    emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode });
     const request = buildReaderRequest({
       mode,
       sel,
@@ -4323,6 +4465,12 @@ function ReaderWorkbench() {
     try {
       const data = await runReader(request);
       setReaderResult(data);
+      emitReaderEvent(READER_EVENTS.RUN_COMPLETED, {
+        run: readerRunId(data),
+        mode,
+        source: data.source || "agent",
+        eligible: !!(data.act2 && data.act2.eligible),
+      });
     } catch (err) {
       if (err && err.message === "too_long") {
         setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
@@ -4335,6 +4483,7 @@ function ReaderWorkbench() {
           how_it_was_shaped: "",
           reason: String(err.message || "network"),
         });
+        emitReaderEvent(READER_EVENTS.RUN_COMPLETED, { mode, source: "fallback", eligible: false });
       }
     } finally {
       setBusy(false);
@@ -4344,6 +4493,7 @@ function ReaderWorkbench() {
   return (
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
+        {returning && !readerResult ? <ReturnNudge onDismiss={() => setReturning(false)} /> : null}
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
@@ -4537,6 +4687,12 @@ function ReaderWorkbench() {
         <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
           <SuggestInvestigation variant="reader-secondary" />
         </div>
+
+        {showFunnel ? (
+          <div className="wb-reader-v2__follow wb-reader-v2__follow--funnel">
+            <ReaderFunnelPanel />
+          </div>
+        ) : null}
       </div>
     </div>
   );
