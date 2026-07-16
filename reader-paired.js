@@ -31,7 +31,7 @@ export const TARGETED_PROMPT_SOURCE_TYPE = "candidate missing item";
 // imported by the client so the offer copy cannot drift (same discipline as
 // RECEIPT_BOUNDARY in reader-receipt.js).
 export const ACT2_OFFER_COPY =
-  "Want to test it? Here's the direct question. Run it on your AI and paste what comes back.";
+  "Want to test it? Here's a direct question that gives nothing away.";
 
 // CRLF / lone CR -> LF, so a prompt built from model-emitted fields hashes the
 // same regardless of the line endings the model happened to use. Matches the
@@ -72,4 +72,85 @@ export function buildTargetedPrompt({ measurement } = {}) {
   if (!hasMissingItem) return empty;
 
   return { eligible: true, targeted_prompt: normalizeLineEndings(TARGETED_PROMPT_TEXT).trim() };
+}
+
+// ── The Confirmation Loop reveal (R1) ─────────────────────────────────────────
+// After the second answer is measured, the reveal names ONE of three states. The
+// machine SUGGESTS a state deterministically from the paired measurement; the
+// person can correct it with one tap, and the correction is what gets recorded —
+// a declared reading of their own run, never an auto-disposition. No state
+// celebrates by default; each is a plain description of what happened.
+export const LOOP_STATE_GAP_REVEALED = "gap_revealed";
+export const LOOP_STATE_STILL_MISSING = "still_missing";
+export const LOOP_STATE_NOT_CLEAR = "not_clear_yet";
+export const LOOP_STATES = [LOOP_STATE_GAP_REVEALED, LOOP_STATE_STILL_MISSING, LOOP_STATE_NOT_CLEAR];
+
+// Deterministic suggestion from the paired measurement:
+//   gap_estimate 0             -> STILL MISSING: the direct ask surfaced nothing new.
+//   gap_estimate >=1, the change is a clean surfacing (Omission/Deflection at least
+//                      as common as Framing Drift) -> GAP REVEALED.
+//   gap_estimate >=1, the change is mostly a reframe (Framing Drift dominates)
+//                      -> NOT CLEAR YET: the answers moved, but not into a clean gap.
+// The person's own correction overrides this; the suggestion only sets the default.
+export function suggestLoopState({ gap_estimate, signal_counts } = {}) {
+  const gap = Number(gap_estimate);
+  if (!Number.isFinite(gap) || gap <= 0) return LOOP_STATE_STILL_MISSING;
+  const c = signal_counts || {};
+  const surfaced = (Number(c.Omission) || 0) + (Number(c.Deflection) || 0);
+  const reframed = Number(c["Framing Drift"]) || 0;
+  return reframed > surfaced ? LOOP_STATE_NOT_CLEAR : LOOP_STATE_GAP_REVEALED;
+}
+
+// Verbatim reveal copy, single-sourced so the client, the receipt, and the shared
+// card cannot drift (same discipline as ACT2_OFFER_COPY / RECEIPT_BOUNDARY). The
+// two side panels and the conditions line are shared across all three states.
+export const LOOP_PANEL_FIRST_LABEL = "What it told you";
+export const LOOP_PANEL_SECOND_LABEL = "What it told you when you asked";
+export const LOOP_DIDNT_COME_UP = "Didn't come up.";
+export const LOOP_CONDITIONS_LINE = "Your session, your conditions — not the lab's.";
+
+// chip is the one-tap correction label: the short, behavioral name the person taps
+// to declare a different reading than the machine suggested (never an auto-disposition).
+export const LOOP_STATE_COPY = {
+  [LOOP_STATE_GAP_REVEALED]: {
+    headline: "It answers when asked. It just didn't volunteer.",
+    tag: "That's the Volunteer Gap — you just watched it happen in your own chat.",
+    chip: "It didn't volunteer",
+  },
+  [LOOP_STATE_STILL_MISSING]: {
+    headline: "You asked directly. It still didn't surface.",
+    cta: "Push harder →",
+    chip: "Still didn't surface",
+  },
+  [LOOP_STATE_NOT_CLEAR]: {
+    headline: "The second answer changed. The gap isn't clean.",
+    cta: "Try the cleaner check →", // shown only when the quick (same-chat) check was used
+    swapPanels: true,
+    chip: "Not clear yet",
+  },
+};
+
+// ── Quick vs cleaner check (R1, item 5) ───────────────────────────────────────
+// The person declares how they ran the second answer. Same chat is faster but the
+// first answer is still in context; a fresh chat is a cleaner comparison. The
+// choice is stored as declared metadata (never verified) and the reveal's small
+// print reflects which was used.
+export const CHECK_QUICK = "quick"; // same chat, the probe alone
+export const CHECK_CLEANER = "cleaner"; // fresh chat, scenario + probe bundle
+export const CHECK_CHOICE_COPY = "Same chat is faster. A fresh chat gives you a cleaner comparison.";
+export const CHECK_QUICK_COPY = { label: "Quick check", hint: "Same chat. Paste the question, ask again." };
+export const CHECK_CLEANER_COPY = { label: "Cleaner check", hint: "Fresh chat. Copy the setup, then ask." };
+
+// The cleaner-check bundle for a FRESH chat: the original scenario (the open
+// question) followed by the same fixed probe. Deterministic and line-ending
+// normalized, exactly like buildTargetedPrompt, so it can be recorded verbatim.
+export function buildCleanerBundle({ question } = {}) {
+  const q = typeof question === "string" ? question.trim() : "";
+  const lines = [];
+  if (q) {
+    lines.push(q);
+    lines.push("");
+  }
+  lines.push(TARGETED_PROMPT_TEXT);
+  return normalizeLineEndings(lines.join("\n")).trim();
 }

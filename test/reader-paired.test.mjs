@@ -29,7 +29,18 @@ import {
   capturePaired,
 } from "../api/read-paired.js";
 import { createRuntimeContext } from "../reader-runtime.js";
-import { PAIRED_METHOD_VERSION, buildTargetedPrompt, TARGETED_PROMPT_TEXT } from "../reader-paired.js";
+import {
+  PAIRED_METHOD_VERSION,
+  buildTargetedPrompt,
+  TARGETED_PROMPT_TEXT,
+  suggestLoopState,
+  buildCleanerBundle,
+  LOOP_STATE_GAP_REVEALED,
+  LOOP_STATE_STILL_MISSING,
+  LOOP_STATE_NOT_CLEAR,
+  LOOP_STATES,
+  LOOP_STATE_COPY,
+} from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
   RECEIPT_BOUNDARY,
@@ -302,6 +313,45 @@ test("no candidate missing item means no offer: eligible is false and the prompt
   const r = buildTargetedPrompt({ question: "q", measurement: openMeasurement(false) });
   assert.equal(r.eligible, false);
   assert.equal(r.targeted_prompt, "");
+});
+
+// ── 2b. Loop-state suggestion + cleaner bundle (R1) ───────────────────────────
+
+test("suggestLoopState: a zero gap suggests STILL MISSING (the direct ask surfaced nothing new)", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 0, signal_counts: { Omission: 0, "Framing Drift": 0, Deflection: 0 } }), LOOP_STATE_STILL_MISSING);
+  assert.equal(suggestLoopState({ gap_estimate: NaN }), LOOP_STATE_STILL_MISSING);
+  assert.equal(suggestLoopState({}), LOOP_STATE_STILL_MISSING);
+});
+
+test("suggestLoopState: a real gap of surfaced material suggests GAP REVEALED", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 3, signal_counts: { Omission: 2, "Framing Drift": 0, Deflection: 0 } }), LOOP_STATE_GAP_REVEALED);
+  // Deflection counts as a clean surfacing too (the hedge got the direct version).
+  assert.equal(suggestLoopState({ gap_estimate: 1, signal_counts: { Omission: 0, "Framing Drift": 1, Deflection: 1 } }), LOOP_STATE_GAP_REVEALED);
+});
+
+test("suggestLoopState: a gap that is mostly a reframe suggests NOT CLEAR YET", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 2, signal_counts: { Omission: 0, "Framing Drift": 2, Deflection: 0 } }), LOOP_STATE_NOT_CLEAR);
+});
+
+test("LOOP_STATE_COPY carries a headline for every state, no state is empty", () => {
+  for (const s of LOOP_STATES) {
+    assert.ok(LOOP_STATE_COPY[s] && LOOP_STATE_COPY[s].headline.trim(), `state ${s} has a headline`);
+  }
+  assert.ok(LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED].tag.includes("Volunteer Gap"));
+  assert.equal(LOOP_STATE_COPY[LOOP_STATE_NOT_CLEAR].swapPanels, true);
+});
+
+test("buildCleanerBundle folds the original scenario in front of the fixed probe, LF-normalized", () => {
+  const bundle = buildCleanerBundle({ question: "What should I know before signing this lease?\r\n" });
+  assert.ok(bundle.startsWith("What should I know before signing this lease?"));
+  assert.ok(bundle.endsWith(TARGETED_PROMPT_TEXT));
+  assert.ok(!/\r/.test(bundle), "line endings normalized to LF");
+  assert.equal(bundle, buildCleanerBundle({ question: "What should I know before signing this lease?\r\n" }));
+});
+
+test("buildCleanerBundle with no scenario is just the fixed probe", () => {
+  assert.equal(buildCleanerBundle({}), TARGETED_PROMPT_TEXT);
+  assert.equal(buildCleanerBundle(), TARGETED_PROMPT_TEXT);
 });
 
 // ── 3. Delta assembly (parsePairedMeasurement) ────────────────────────────────

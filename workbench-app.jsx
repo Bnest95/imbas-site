@@ -1,5 +1,24 @@
 import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
-import { ACT2_OFFER_COPY } from "./reader-paired.js";
+import {
+  ACT2_OFFER_COPY,
+  TARGETED_PROMPT_TEXT,
+  buildCleanerBundle,
+  suggestLoopState,
+  LOOP_STATE_STILL_MISSING,
+  LOOP_STATE_NOT_CLEAR,
+  LOOP_STATES,
+  LOOP_STATE_COPY,
+  LOOP_PANEL_FIRST_LABEL,
+  LOOP_PANEL_SECOND_LABEL,
+  LOOP_DIDNT_COME_UP,
+  LOOP_CONDITIONS_LINE,
+  CHECK_QUICK,
+  CHECK_CLEANER,
+  CHECK_CHOICE_COPY,
+  CHECK_QUICK_COPY,
+  CHECK_CLEANER_COPY,
+} from "./reader-paired.js";
+import { READER_EVENTS, buildEvent } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 
@@ -1560,6 +1579,37 @@ function persistWorkbenchEmail(email) {
     if (email) localStorage.setItem(WB_EMAIL_STORAGE_KEY, email);
     else localStorage.removeItem(WB_EMAIL_STORAGE_KEY);
   } catch {}
+}
+
+// ---- READER TELEMETRY (content-minimal, browser-local; Reader v2 R1 item 3) ----
+// buildEvent (reader-telemetry.js) sanitizes every event to a fixed allowlist of
+// short scalar props, so no answer text, question text, or measured span can ride an
+// event even if a caller passes one. Events append to a capped browser-local log —
+// no third-party analytics vendor, no server user-content payload. buildFunnel
+// reduces this same log to the north-star loop_completion_rate.
+const READER_EVENTS_STORAGE_KEY = "imbas_reader_events";
+const READER_EVENTS_CAP = 500;
+
+function readReaderEvents() {
+  try {
+    const raw = localStorage.getItem(READER_EVENTS_STORAGE_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function emitReaderEvent(name, props = {}) {
+  const event = buildEvent(name, props);
+  if (!event) return null;
+  try {
+    const list = readReaderEvents();
+    list.push(event);
+    const trimmed = list.length > READER_EVENTS_CAP ? list.slice(list.length - READER_EVENTS_CAP) : list;
+    localStorage.setItem(READER_EVENTS_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch {}
+  return event;
 }
 
 function EmailGate({ onUnlock }) {
@@ -3674,17 +3724,106 @@ function MeasurementPanel({ result, context }) {
 // instrument. The formal signal patterns and the "Machine gap estimate" label appear
 // HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
 // note when the response carries them.
-function PairedDeltaView({ paired, onReset }) {
+function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
   const items = Array.isArray(paired.delta_items) ? paired.delta_items : [];
   const counts = paired.signal_counts || {};
+
+  // The machine SUGGESTS a state from the paired measurement; the person can correct
+  // it with one tap, and the correction is what gets recorded (reader-paired.js law).
+  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts });
+  const [userState, setUserState] = useState(suggested);
+
+  // loop_completed is the north-star event: the second answer came back and was
+  // classified. Fire once on mount with the machine-suggested state; a later human
+  // correction is its own state_corrected event, never a second completion.
+  useEffect(() => {
+    emitReaderEvent(READER_EVENTS.LOOP_COMPLETED, {
+      run,
+      state: suggested,
+      check,
+      gap: paired.gap_estimate,
+      source: paired.source,
+      idempotent: paired.idempotent,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const correctTo = (next) => {
+    if (next === userState) return;
+    emitReaderEvent(READER_EVENTS.STATE_CORRECTED, { run, from_state: userState, to_state: next, check });
+    setUserState(next);
+  };
+
+  const copy = LOOP_STATE_COPY[userState] || {};
+  const primary = items[0] || {};
+  // The two panels are the evidence (the two answers' relevant spans); the state is
+  // the reading. A missing span on either side reads as "Didn't come up." — which is
+  // exactly the STILL MISSING case (no delta -> both sides empty -> both panels blank).
+  const firstText = (primary.open_side || "").trim() || LOOP_DIDNT_COME_UP;
+  const secondText = (primary.targeted_side || "").trim() || LOOP_DIDNT_COME_UP;
+  const firstPanel = (
+    <div className="wb-loop__panel wb-loop__panel--first" key="first">
+      <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
+      <p className="wb-loop__panel-body">{firstText}</p>
+    </div>
+  );
+  const secondPanel = (
+    <div className="wb-loop__panel wb-loop__panel--second" key="second">
+      <span className="wb-loop__panel-label">{LOOP_PANEL_SECOND_LABEL}</span>
+      <p className="wb-loop__panel-body">{secondText}</p>
+    </div>
+  );
+  const panels = copy.swapPanels ? [secondPanel, firstPanel] : [firstPanel, secondPanel];
+
+  const openRunId = (paired.receipt && paired.receipt.paired_analysis && paired.receipt.paired_analysis.open_run_id) || run || "";
+  const generatedAt = (paired.receipt && paired.receipt.generated_at) || "";
+  const dateStr = generatedAt ? String(generatedAt).slice(0, 10) : "";
+  const smallPrint = [openRunId ? `Run ${openRunId}` : "", dateStr, LOOP_CONDITIONS_LINE].filter(Boolean).join(" · ");
+
   return (
-    <div className="wb-act2__delta wb-scroll-anchor">
+    <div className="wb-act2__delta wb-loop wb-scroll-anchor">
       {paired.idempotent ? (
         <p className="wb-act2__notice" role="status">You already ran this pair. This is the analysis from that run.</p>
       ) : null}
       {paired.capture_uncertain ? (
         <p className="wb-act2__notice" role="status">The analysis is below. The Reader couldn't confirm it saved its own copy, so download this receipt to keep a full copy.</p>
       ) : null}
+
+      {/* The reveal — the hero. Machine suggests; the person corrects with one tap. */}
+      <div className="wb-loop__reveal">
+        <h3 className="wb-loop__headline">{copy.headline}</h3>
+        <div className="wb-loop__panels">{panels}</div>
+        {copy.tag ? <p className="wb-loop__tag">{copy.tag}</p> : null}
+
+        {userState === LOOP_STATE_STILL_MISSING && copy.cta ? (
+          <div className="wb-action-row wb-loop__cta-row">
+            <Btn kind="ghost" small onClick={onReset}>{copy.cta}</Btn>
+          </div>
+        ) : null}
+        {userState === LOOP_STATE_NOT_CLEAR && copy.cta && check === CHECK_QUICK && onTryCleaner ? (
+          <div className="wb-action-row wb-loop__cta-row">
+            <Btn kind="ghost" small onClick={onTryCleaner}>{copy.cta}</Btn>
+          </div>
+        ) : null}
+
+        <div className="wb-loop__correct" role="group" aria-label="Mark what you actually saw">
+          <span className="wb-loop__correct-label">Read it differently?</span>
+          {LOOP_STATES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`wb-loop__chip${s === userState ? " is-active" : ""}`}
+              aria-pressed={s === userState}
+              onClick={() => correctTo(s)}
+            >
+              {(LOOP_STATE_COPY[s] || {}).chip || s}
+            </button>
+          ))}
+        </div>
+
+        <p className="wb-loop__smallprint">{smallPrint}</p>
+        <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+      </div>
 
       <div className="wb-measure__estimate wb-act2__estimate">
         <div className="wb-measure__estimate-value">{paired.gap_estimate_label}</div>
@@ -3759,7 +3898,7 @@ function pairedRunErrorCopy(err) {
 // double-submit guard; the server's idempotency lookup is the other half), then the
 // delta view. Failure isolation: a failed second read only sets a local error and
 // leaves the first read and its receipt untouched, so Act 2 can be retried.
-function PairedTest({ openReceipt }) {
+function PairedTest({ openReceipt, run, check, onTryCleaner }) {
   const [targeted, setTargeted] = useState("");
   const [busy, setBusy] = useState(false);
   const [paired, setPaired] = useState(null);
@@ -3790,6 +3929,7 @@ function PairedTest({ openReceipt }) {
     setFieldError("");
     setRunError("");
     setBusy(true);
+    emitReaderEvent(READER_EVENTS.LOOP_RETURNED, { run, check });
     try {
       const data = await runPairedReader(openReceipt, targeted);
       setPaired(data);
@@ -3812,7 +3952,7 @@ function PairedTest({ openReceipt }) {
   if (paired) {
     return (
       <div className="wb-act2__test">
-        <PairedDeltaView paired={paired} onReset={reset} />
+        <PairedDeltaView paired={paired} onReset={reset} run={run} check={check} onTryCleaner={onTryCleaner} />
       </div>
     );
   }
@@ -3852,14 +3992,25 @@ function PairedTest({ openReceipt }) {
 // never degrades Act 1. The paste box + paired analysis mount at the seam below.
 function Act2Offer({ result }) {
   const act2 = result?.act2;
+  const run = result?.receipt?.open_run?.provenance?.request_id || "";
+  const question = result?.receipt?.open_run?.question || "";
   const [copied, setCopied] = useState(false);
   const [copyFail, setCopyFail] = useState("");
+  // How the person will run the second answer, stored as declared metadata (never
+  // verified). Quick = the fixed probe alone, same chat. Cleaner = the original
+  // scenario folded in front of the same probe, fresh chat. Both texts are
+  // deterministic (reader-paired.js), so what they copy is what gets recorded.
+  const [check, setCheck] = useState(CHECK_QUICK);
   if (!act2 || !act2.eligible) return null;
+
+  const promptText = check === CHECK_CLEANER ? buildCleanerBundle({ question }) : (act2.targeted_prompt || TARGETED_PROMPT_TEXT);
+
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(act2.targeted_prompt || "");
+      await navigator.clipboard.writeText(promptText);
       setCopied(true);
       setCopyFail("");
+      emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check });
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopyFail("Could not copy");
@@ -3874,14 +4025,43 @@ function Act2Offer({ result }) {
       {act2.available ? (
         <>
           <p className="wb-act2__offer">{ACT2_OFFER_COPY}</p>
-          <pre className="wb-act2__prompt" aria-label="The direct question to run on your AI">{act2.targeted_prompt}</pre>
+
+          <div className="wb-act2__check" role="group" aria-label="How you'll run the second answer">
+            <p className="wb-act2__check-copy">{CHECK_CHOICE_COPY}</p>
+            <div className="wb-act2__check-opts">
+              <button
+                type="button"
+                className={`wb-act2__check-opt${check === CHECK_QUICK ? " is-active" : ""}`}
+                aria-pressed={check === CHECK_QUICK}
+                onClick={() => setCheck(CHECK_QUICK)}
+              >
+                <span className="wb-act2__check-label">{CHECK_QUICK_COPY.label}</span>
+                <span className="wb-act2__check-hint">{CHECK_QUICK_COPY.hint}</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-act2__check-opt${check === CHECK_CLEANER ? " is-active" : ""}`}
+                aria-pressed={check === CHECK_CLEANER}
+                onClick={() => setCheck(CHECK_CLEANER)}
+              >
+                <span className="wb-act2__check-label">{CHECK_CLEANER_COPY.label}</span>
+                <span className="wb-act2__check-hint">{CHECK_CLEANER_COPY.hint}</span>
+              </button>
+            </div>
+          </div>
+
+          <pre className="wb-act2__prompt" aria-label="What to run on your AI">{promptText}</pre>
+          <p className="wb-act2__prompt-note">Generated from this Reader run. Any question shapes an answer — this one included.</p>
+
           <div className="wb-reader-result__copy wb-act2__actions">
-            <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyPrompt}>
-              {copied ? "Copied" : "Copy the question"}
+            <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyPrompt}>
+              {copied ? "Copied — now ask your AI" : "Ask your AI →"}
             </Btn>
             {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
           </div>
-          <PairedTest openReceipt={result.receipt} />
+          <p className="wb-act2__sub">Copy this question. Drop it in your chat. Paste what comes back.</p>
+
+          <PairedTest key={check} openReceipt={result.receipt} run={run} check={check} onTryCleaner={() => setCheck(CHECK_CLEANER)} />
         </>
       ) : (
         <p className="wb-act2__degraded" role="status">
