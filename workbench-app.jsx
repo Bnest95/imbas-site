@@ -4802,7 +4802,7 @@ function ReaderWorkbench() {
                 <ReaderStatusLine state={statusState} />
                 <details className="wb-reader-v2__privacy">
                   <summary className="wb-reader-v2__privacy-line">
-                    Inspections aren't saved to our public record. Don't paste anything sensitive.
+                    Inspections aren't published to our reviewed archive. Don't paste anything sensitive.
                   </summary>
                   <p className="wb-reader-v2__privacy-full">
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
@@ -4861,7 +4861,7 @@ function ReaderWorkbench() {
               <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
             </div>
             <p className="wb-reader-v2__post-privacy">
-              This inspection wasn't saved to our public record. See <a href="/retention.html">what deletion means</a>.
+              This inspection wasn't published to our reviewed archive. See <a href="/retention.html">what deletion means</a>.
             </p>
           </div>
         ) : null}
