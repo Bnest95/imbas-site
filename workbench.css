@@ -4629,6 +4629,164 @@
   }
 }
 
+/* Instant demo (Reader v2, item 4). A first-timer opens a canned, deterministic
+   walkthrough of the whole loop on one public example. Trigger is understated; the
+   panel reuses the paste-prompt and loop-reveal idioms so the demo looks like the
+   real thing it previews. No new accent — ember only on the flagged omission. */
+.wb-demo-trigger-row {
+  margin-bottom: 1rem;
+}
+
+.wb-demo-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: none;
+  border: 1px solid rgba(var(--ember-rgb), 0.34);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: max(0.7rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.wb-demo-trigger:hover {
+  border-color: rgba(var(--ember-rgb), 0.7);
+  color: var(--ink);
+}
+
+.wb-demo {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.15rem 1rem;
+  border: 1px solid rgba(242, 232, 220, 0.12);
+  border-top: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.5);
+}
+
+.wb-demo__head {
+  margin-bottom: 1rem;
+}
+
+.wb-demo__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ember);
+  margin-bottom: 0.4rem;
+}
+
+.wb-demo__title {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.6vw, 1.4rem);
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.wb-demo__context {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+}
+
+.wb-demo__beat {
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(242, 232, 220, 0.07);
+}
+
+.wb-demo__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.4rem;
+}
+
+.wb-demo__q {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.wb-demo__answer {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.wb-demo__leftout {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.wb-demo__mark {
+  background: rgba(var(--ember-rgb), 0.16);
+  color: var(--ink);
+  padding: 0.05rem 0.2rem;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.wb-demo__prompt.wb-act2__prompt {
+  margin-bottom: 0;
+}
+
+.wb-demo__reveal.wb-loop__reveal {
+  margin-top: 1rem;
+}
+
+.wb-loop__panel-body--muted {
+  color: var(--ink-dim);
+  font-style: italic;
+}
+
+.wb-demo__smallprint {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+.wb-demo__cta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.wb-demo__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: max(0.66rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  transition: color 0.15s ease;
+}
+
+.wb-demo__close:hover {
+  color: var(--ink);
+}
+
 .wb-reader-archive {
   margin-bottom: 1.5rem;
   opacity: 0.88;

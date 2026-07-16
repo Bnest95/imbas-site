@@ -4,6 +4,7 @@ import {
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
   suggestLoopState,
+  LOOP_STATE_GAP_REVEALED,
   LOOP_STATE_STILL_MISSING,
   LOOP_STATE_NOT_CLEAR,
   LOOP_STATES,
@@ -4277,6 +4278,84 @@ function ReaderFunnelPanel() {
   );
 }
 
+// The instant demo (Reader v2, item 4). A first-timer can watch the whole
+// Confirmation Loop without pasting anything, on ONE public example drawn from the
+// Supersession exploration pack (exploration-pack.html §1, Chevron → Loper Bright).
+// Everything here is canned and deterministic — no /api/read call, no model, no
+// spend. It is explicitly NOT the visitor's own run and NOT an Imbas case: the copy
+// never says "your chat," the boundary sentence and small print say so outright.
+const DEMO_EXAMPLE = {
+  context: "Public example · U.S. administrative law",
+  question:
+    "When a court reviews a federal agency's reading of an ambiguous statute, how much weight does the agency's interpretation get?",
+  openAnswer:
+    "Courts apply Chevron deference. If the statute is ambiguous, the court defers to the agency's interpretation as long as it's reasonable — the two-step framework from Chevron v. NRDC (1984).",
+  leftOut:
+    "Chevron was overruled. In Loper Bright Enterprises v. Raimondo (June 2024), the Supreme Court ended Chevron deference — courts now interpret ambiguous statutes themselves, de novo, without deferring to the agency.",
+  targetedPrompt: TARGETED_PROMPT_TEXT,
+  surfaced:
+    "Chevron no longer governs. Loper Bright v. Raimondo (2024) overruled it; courts now decide a statute's meaning de novo under the Administrative Procedure Act. Governing source: Loper Bright Enterprises v. Raimondo, 603 U.S. 369 (2024).",
+  // A demo-honest reveal tag. The live reveal says "you just watched it happen in
+  // your own chat"; that would be false here, so the demo states plainly what this is.
+  tag: "That's the Volunteer Gap — the open answer left it out; the direct question surfaced it. Run your own answer to watch it live.",
+};
+
+function ReaderDemo({ onTryOwn, onClose }) {
+  const d = DEMO_EXAMPLE;
+  const headline = (LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED] || {}).headline || "";
+  return (
+    <section className="wb-demo" aria-labelledby="wb-demo-heading">
+      <div className="wb-demo__head">
+        <span className="wb-demo__eyebrow">WORKED EXAMPLE</span>
+        <h3 id="wb-demo-heading" className="wb-demo__title">Watch the loop on one public example.</h3>
+        <p className="wb-demo__context">{d.context}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">The question</span>
+        <p className="wb-demo__q">{d.question}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">What the AI said</span>
+        <p className="wb-demo__answer">{d.openAnswer}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">What the open answer left out</span>
+        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.leftOut}</mark></p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">The direct question Imbas builds</span>
+        <p className="wb-act2__prompt wb-demo__prompt">{d.targetedPrompt}</p>
+      </div>
+
+      <div className="wb-loop__reveal wb-demo__reveal">
+        <p className="wb-loop__headline">{headline}</p>
+        <div className="wb-loop__panels">
+          <div className="wb-loop__panel">
+            <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
+            <p className="wb-loop__panel-body wb-loop__panel-body--muted">{LOOP_DIDNT_COME_UP}</p>
+          </div>
+          <div className="wb-loop__panel wb-loop__panel--second">
+            <span className="wb-loop__panel-label">{LOOP_PANEL_SECOND_LABEL}</span>
+            <p className="wb-loop__panel-body">{d.surfaced}</p>
+          </div>
+        </div>
+        <p className="wb-loop__tag">{d.tag}</p>
+        <p className="wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+        <p className="wb-demo__smallprint">[A canned demonstration on a public example. Not your run, not an Imbas case — nothing here was recorded.]</p>
+      </div>
+
+      <div className="wb-demo__cta-row">
+        <Btn kind="primary" small onClick={onTryOwn}>Now try your own →</Btn>
+        <button type="button" className="wb-demo__close" onClick={onClose}>Hide example</button>
+      </div>
+    </section>
+  );
+}
+
 function ReaderWorkbench() {
   const [mode, setMode] = useState("own");
   const [sel, setSel] = useState(CURATED[0]);
@@ -4292,6 +4371,11 @@ function ReaderWorkbench() {
   // read, no user content) to drive the finish-your-loop nudge below.
   const [returning, setReturning] = useState(false);
   const [showFunnel] = useState(() => isFunnelPanelEnabled());
+  // The instant demo (item 4). Off until a first-timer opens it; deterministic and
+  // canned, so it never calls the API. demoEmittedRef keeps the demo-open signal to
+  // one emit per mount and out of the copied/completed north-star counts.
+  const [demoOpen, setDemoOpen] = useState(false);
+  const demoEmittedRef = useRef(false);
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
@@ -4399,6 +4483,26 @@ function ReaderWorkbench() {
     if (next === "own") setAnswer("");
   };
 
+  // Open the canned demo. Emit the demo-open signal ONCE per mount, tagged
+  // mode/source "demo" so it stays filterable and never inflates the copied/completed
+  // north star. The demo itself makes no API call.
+  const openDemo = () => {
+    setDemoOpen(true);
+    if (!demoEmittedRef.current) {
+      demoEmittedRef.current = true;
+      emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode: "demo", source: "demo" });
+    }
+  };
+
+  // Leave the demo and drop the visitor at the paste box, ready to run their own.
+  const tryOwnFromDemo = () => {
+    setDemoOpen(false);
+    if (mode !== "own") switchMode("own");
+    if (stageRef.current) {
+      window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
+    }
+  };
+
   const pickCase = (c) => {
     if (!c.ready || c.id === sel.id) return;
     setSel(c);
@@ -4494,6 +4598,17 @@ function ReaderWorkbench() {
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
         {returning && !readerResult ? <ReturnNudge onDismiss={() => setReturning(false)} /> : null}
+        <div className="wb-demo-trigger-row">
+          <button
+            type="button"
+            className="wb-demo-trigger"
+            onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
+            aria-expanded={demoOpen}
+          >
+            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
+          </button>
+        </div>
+        {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
