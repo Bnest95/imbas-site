@@ -1620,6 +1620,31 @@ function readerRunId(result) {
   return result?.receipt?.open_run?.provenance?.request_id || "";
 }
 
+// First-use signal for the clarity strip (Reader v2 R1 item 6): has this browser ever
+// completed a Reader run? A run_completed event is the earliest "you've used The Reader"
+// marker — the instant demo emits only run_started {mode:"demo"}, so watching the demo
+// never flips this off. Browser-local, content-free (a name check on the same
+// allowlisted log the emitter already writes).
+function hasCompletedReaderRun() {
+  return readReaderEvents().some((e) => e && e.name === READER_EVENTS.RUN_COMPLETED);
+}
+
+// The clarity strip is dismissible; the choice persists as a tiny UI flag (a boolean,
+// never user content) so a first-timer who waved it off does not see it again.
+const READER_CLARITY_DISMISS_KEY = "imbas_reader_clarity_dismissed";
+function isClarityDismissed() {
+  try {
+    return localStorage.getItem(READER_CLARITY_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function dismissClarityStripFlag() {
+  try {
+    localStorage.setItem(READER_CLARITY_DISMISS_KEY, "1");
+  } catch {}
+}
+
 function EmailGate({ onUnlock }) {
   const [email, setEmail] = useState("");
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
@@ -4220,6 +4245,35 @@ function ReturnNudge({ onDismiss }) {
   );
 }
 
+// The first-use clarity strip (Reader v2 R1 item 6). A newcomer landing on a blank
+// paste box sees the whole Confirmation Loop as three plain moves before they start.
+// Product register: second person, kinetic, no hedging beyond the one sanctioned
+// "might." It never asserts a specific omission — it describes what the instrument
+// does, not a verdict on any answer. Shown only when this browser has never completed
+// a run and only in own mode; dismissible, and the dismissal persists.
+const READER_CLARITY_STEPS = [
+  "Paste an AI answer to see what it might be missing.",
+  "Copy the one question Imbas builds, then ask your own AI.",
+  "Paste its reply back and watch what surfaces.",
+];
+
+function ReaderClarityStrip({ onDismiss }) {
+  return (
+    <section className="wb-clarity" aria-label="How the Confirmation Loop works">
+      <button type="button" className="wb-clarity__dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+      <span className="wb-clarity__eyebrow">The Confirmation Loop</span>
+      <ol className="wb-clarity__steps">
+        {READER_CLARITY_STEPS.map((text, i) => (
+          <li key={i} className="wb-clarity__step">
+            <span className="wb-clarity__num" aria-hidden="true">{i + 1}</span>
+            <span className="wb-clarity__text">{text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 // ?funnel=1 diagnostic: THIS browser's own event log reduced to the north-star
 // funnel. Read-only, one-shot read on mount. Every number is a count of
 // content-minimal events — no answer or question text ever entered the log.
@@ -4376,6 +4430,11 @@ function ReaderWorkbench() {
   // one emit per mount and out of the copied/completed north-star counts.
   const [demoOpen, setDemoOpen] = useState(false);
   const demoEmittedRef = useRef(false);
+  // First-use clarity strip (item 6): show the three-move loop to a visitor whose own
+  // browser log holds no completed run. Both flags read once from browser-local state —
+  // no server read, no user content — and the dismissal persists across visits.
+  const [firstTime] = useState(() => !hasCompletedReaderRun());
+  const [clarityDismissed, setClarityDismissed] = useState(() => isClarityDismissed());
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
@@ -4481,6 +4540,11 @@ function ReaderWorkbench() {
     setReaderResult(null);
     setBusy(false);
     if (next === "own") setAnswer("");
+  };
+
+  const dismissClarity = () => {
+    dismissClarityStripFlag();
+    setClarityDismissed(true);
   };
 
   // Open the canned demo. Emit the demo-open signal ONCE per mount, tagged
@@ -4598,6 +4662,9 @@ function ReaderWorkbench() {
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
         {returning && !readerResult ? <ReturnNudge onDismiss={() => setReturning(false)} /> : null}
+        {mode === "own" && firstTime && !clarityDismissed && !returning && !demoOpen && !readerResult && !busy ? (
+          <ReaderClarityStrip onDismiss={dismissClarity} />
+        ) : null}
         <div className="wb-demo-trigger-row">
           <button
             type="button"

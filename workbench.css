@@ -4507,6 +4507,81 @@
   color: var(--ink);
 }
 
+/* First-use clarity strip (Reader v2 R1, item 6). Slim instrument card naming the three
+   moves of the Confirmation Loop for a first-time visitor; hidden once a run completes.
+   Same ember-left-rule idiom as the return nudge. Ember lands only on the step numbers
+   (marks) — never on the body text. */
+.wb-clarity {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.05rem 1rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.42);
+}
+
+.wb-clarity__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.7rem;
+  padding-right: 1.4rem;
+}
+
+.wb-clarity__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.wb-clarity__step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.wb-clarity__num {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ember);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-clarity__text {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.wb-clarity__dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  padding: 0.1rem 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-dim);
+  transition: color 0.15s ease;
+}
+
+.wb-clarity__dismiss:hover {
+  color: var(--ink);
+}
+
 /* ?funnel=1 diagnostic panel (Reader v2 R1, item 3). Read-only view of THIS browser's
    own content-minimal event log. Never shipped by default; a local instrument. */
 .wb-funnel {
