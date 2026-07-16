@@ -3760,6 +3760,34 @@ function MeasurementPanel({ result, context }) {
   );
 }
 
+// Reader v2 R1 (item 9) — the Gap X-ray. A compact, single-glance read of the
+// delta's signal composition: the same Omission / Framing Drift / Deflection counts
+// rendered as a thin proportional bar so the SHAPE of the gap is legible before the
+// numbers are read (mostly left out? mostly reframed?). Purely additive and
+// decorative (aria-hidden) — the counts line directly beneath stays the precise,
+// screen-reader-accessible source of truth. No new hue: the three segments are
+// ember-ramp shades only. Renders nothing when the delta is empty (total 0).
+const GAP_XRAY_SEGMENTS = [
+  { key: "Omission", cls: "is-omission" },
+  { key: "Framing Drift", cls: "is-framing" },
+  { key: "Deflection", cls: "is-deflection" },
+];
+function GapXray({ counts }) {
+  const c = counts || {};
+  const segs = GAP_XRAY_SEGMENTS.map((s) => ({ ...s, n: Number(c[s.key]) || 0 }));
+  const total = segs.reduce((t, s) => t + s.n, 0);
+  if (total <= 0) return null;
+  return (
+    <div className="wb-xray" aria-hidden="true">
+      {segs
+        .filter((s) => s.n > 0)
+        .map((s) => (
+          <span key={s.key} className={`wb-xray__seg ${s.cls}`} style={{ flexGrow: s.n }} />
+        ))}
+    </div>
+  );
+}
+
 // Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
 // /api/read-paired: the machine gap estimate with its unvalidated label, the
 // itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
@@ -3879,6 +3907,7 @@ function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section">
           <h3 className="wb-reader-result__section-title">The delta</h3>
+          <GapXray counts={counts} />
           <p className="wb-measure__counts">
             {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
           </p>

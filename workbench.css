@@ -4086,6 +4086,39 @@
   color: rgba(185, 172, 195, 0.78);
 }
 
+/* Reader v2 R1 (item 9) — Gap X-ray. A thin proportional bar rendering the delta's
+   signal composition as a single-glance shape directly above the precise counts
+   line. Segment widths come from flex-grow (set inline from each count); ember-ramp
+   shades only, no second hue. Decorative (aria-hidden); the counts line is the
+   accessible source of truth. A 3px floor keeps a tiny count from vanishing. */
+.wb-xray {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 7px;
+  margin: 0 0 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.wb-xray__seg {
+  flex-basis: 0;
+  min-width: 3px;
+  border-radius: 2px;
+}
+
+.wb-xray__seg.is-omission {
+  background: rgba(222, 111, 56, 0.92);
+}
+
+.wb-xray__seg.is-framing {
+  background: rgba(200, 88, 48, 0.82);
+}
+
+.wb-xray__seg.is-deflection {
+  background: rgba(240, 143, 88, 0.92);
+}
+
 .wb-measure__list {
   list-style: none;
   margin: 0;
