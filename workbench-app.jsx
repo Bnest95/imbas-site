@@ -3166,6 +3166,27 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
 const readerCreditLine = (shareUrl) =>
   `Inspected with the Imbas Reader · ${shareUrl && shareUrl.trim() ? shareUrl.trim() : "imbaslabs.com"}`;
 
+// Reader v2 R1 (item 10) — the Inspection Card. A short, human-readable summary of ONE
+// Confirmation Loop run, STATE-AWARE: the headline and the panel order follow the state
+// the person landed on (or corrected to), mirroring the on-screen reveal (not_clear_yet
+// swaps the two panels). This is a shareable paste artifact, not the audit receipt —
+// behavioral verbs only (the state copy already says "didn't volunteer / didn't
+// surface", never measured/proven), the boundary sentence verbatim, and the run's truth
+// small-print in [brackets]. Pure string builder, mirroring formatReaderResultCopy.
+function formatInspectionCard({ state, firstText, secondText, smallPrint }) {
+  const c = LOOP_STATE_COPY[state] || {};
+  const first = { label: LOOP_PANEL_FIRST_LABEL, text: (firstText || "").trim() };
+  const second = { label: LOOP_PANEL_SECOND_LABEL, text: (secondText || "").trim() };
+  const ordered = c.swapPanels ? [second, first] : [first, second];
+  const lines = ["IMBAS READER — Confirmation Loop", ""];
+  if (c.headline) lines.push(c.headline, "");
+  for (const p of ordered) lines.push(`${p.label}:`, p.text || LOOP_DIDNT_COME_UP, "");
+  if (c.tag) lines.push(c.tag, "");
+  if ((smallPrint || "").trim()) lines.push(`[${smallPrint.trim()}]`, "");
+  lines.push(RECEIPT_BOUNDARY, "", readerCreditLine());
+  return lines.join("\n").trim();
+}
+
 // Pre-publish consent disclosure (design §D, claims-checked — do not reword). Shown
 // in a modal before a share is minted, so nothing is published until the person has
 // seen exactly what the page will carry. Mode-aware: single names the candidate gaps
@@ -3598,6 +3619,67 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
   );
 }
 
+// Reader v2 R1 (item 10) — the Inspection Card export. Copy or download the state-aware
+// summary built by formatInspectionCard. Distinct from the audit receipt (full JSON /
+// text) and the share page (server-minted URL): this is the light, paste-anywhere
+// artifact. A successful export emits the card_exported event (ids + enums only, via the
+// content-minimal emitter) — the funnel already reserves a row for it. Client-only:
+// clipboard + a Blob download, no network, no persistence.
+function InspectionCardAction({ state, firstText, secondText, smallPrint, run, check }) {
+  const [copied, setCopied] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [failMsg, setFailMsg] = useState("");
+  const flash = (setter) => {
+    setter(true);
+    setFailMsg("");
+    setTimeout(() => setter(false), 1800);
+  };
+  const fail = (msg) => {
+    setFailMsg(msg);
+    setTimeout(() => setFailMsg(""), 2200);
+  };
+  const cardText = () => formatInspectionCard({ state, firstText, secondText, smallPrint });
+  const noteExport = () => emitReaderEvent(READER_EVENTS.CARD_EXPORTED, { run, state, check });
+  const copyCard = async () => {
+    try {
+      await navigator.clipboard.writeText(cardText());
+      noteExport();
+      flash(setCopied);
+    } catch {
+      fail("Could not copy");
+    }
+  };
+  const downloadCard = () => {
+    try {
+      const blob = new Blob([cardText()], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imbas-inspection-card-${run || "run"}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      noteExport();
+      flash(setDownloaded);
+    } catch {
+      fail("Could not download card");
+    }
+  };
+  return (
+    <div className="wb-reader-result__copy wb-measure__actions wb-card-export">
+      <span className="wb-card-export__label">Share what you saw</span>
+      <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyCard}>
+        {copied ? "Copied" : "Copy card"}
+      </Btn>
+      <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={downloadCard}>
+        {downloaded ? "Downloaded" : "Download card"}
+      </Btn>
+      {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
+    </div>
+  );
+}
+
 // Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
 // gap-estimate line. Candidate vocabulary only ("candidate missing items"), never
 // "left out / skipped / hid". Counts come straight from the measurement's finding
@@ -3942,6 +4024,15 @@ function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
         This is a machine estimate over one answer pair. Not a human-scored result, not evidence.
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+
+      <InspectionCardAction
+        state={userState}
+        firstText={firstText}
+        secondText={secondText}
+        smallPrint={smallPrint}
+        run={openRunId}
+        check={check}
+      />
 
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
 

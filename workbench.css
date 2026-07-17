@@ -4119,6 +4119,20 @@
   background: rgba(240, 143, 88, 0.92);
 }
 
+/* Reader v2 R1 (item 10) — Inspection Card export row. Reuses the receipt copy-row
+   layout (.wb-reader-result__copy + .wb-measure__actions); adds only a small full-width
+   caption so "Copy card" reads as a shareable summary of the run, not another receipt
+   button. Muted mono, no accent. */
+.wb-card-export__label {
+  flex: 1 1 100%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(185, 172, 195, 0.7);
+}
+
 .wb-measure__list {
   list-style: none;
   margin: 0;
