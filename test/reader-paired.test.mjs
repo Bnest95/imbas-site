@@ -107,7 +107,7 @@ function openMeasurement(eligible = true) {
   };
 }
 
-// A hash-valid single receipt: the client-held, server-signed open run the paired
+// A hash-valid single receipt: the client-held, unkeyed-hash-protected open run the paired
 // endpoint consumes. content_hash is computed last, exactly as the server does, so
 // verifyReceiptIntegrity passes until a test deliberately tampers with it.
 function buildOpenReceipt({ eligible = true, requestId } = {}) {
