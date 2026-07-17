@@ -11,3 +11,7 @@ build/
 .env*
 .founder-ops/
 qa-screenshots*/
+
+# Sprint 3 R2 inspector probe — raw artifacts and local run IDs never enter git.
+probe-artifacts/
+probe/r2-inspector/inputs/run-ids.local.json
