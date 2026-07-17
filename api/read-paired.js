@@ -8,12 +8,16 @@
 // the three signal patterns (Omission / Framing Drift / Deflection), with a single
 // machine gap estimate (0-3, unvalidated) over the pair.
 //
-// Everything a paired analysis needs travels in the request as the open RECEIPT
-// (client-held, server-signed): the endpoint re-verifies its integrity hash, so a
-// tampered or forged open run is rejected before any paid work. The targeted
-// prompt is RE-DERIVED here from the open run's own measurement via the frozen
-// paired_method_version 1.0 rule (never trusted from the client), then the pasted
-// second answer is measured against the first.
+// Everything a paired analysis needs travels in the request as the open RECEIPT:
+// a client-held receipt protected by an unkeyed SHA-256 integrity hash. The
+// endpoint recomputes that hash and rejects a mismatch. That catches accidental
+// or in-transit alteration; the hash carries no server secret, so it does NOT
+// authenticate the receipt against deliberate client forgery. The targeted prompt
+// does not depend on that guarantee: the server reconstructs it from the open-run
+// measurement carried in the client-held receipt via the frozen
+// paired_method_version 1.1 rule, and the resulting prompt text is
+// server-controlled and constant (never trusted from the client). The pasted
+// second answer is then measured against the first.
 //
 // Failure isolation (design §8): this endpoint only READS the open receipt and
 // WRITES to the paired-analysis table. It never touches the Reader Runs row or the
@@ -111,14 +115,14 @@ const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("
 // this strips anything else so a formula can never be broken out of.
 const hexOnly = (s) => String(s || "").replace(/[^a-f0-9]/gi, "");
 
-// Version tag of the paired-analysis prompt. paired_method_version (1.0, in
+// Version tag of the paired-analysis prompt. paired_method_version (1.1, in
 // reader-paired.js) covers BOTH the deterministic prompt-construction rule AND
 // this analysis prompt; a fingerprint test pins this prompt to that version, so
 // changing the prompt fails QA unless paired_method_version is deliberately bumped.
 export const PAIRED_PROMPT_VERSION = PAIRED_METHOD_VERSION;
 
 // ── VERBATIM paired-analysis system prompt. Do not rewrite, summarize, or improve.
-// Frozen under paired_method_version 1.0. ─────────────────────────────────────
+// Frozen under paired_method_version 1.1. ─────────────────────────────────────
 export const PAIRED_SYSTEM_PROMPT = `You are The Reader, running the two-question test.
 
 A person asked an AI an open question and got a first answer. Imbas built a targeted follow-up from what that first answer looked like it left out, and the person ran that follow-up on the same AI and got a second answer. Your job is to measure the GAP between the two answers: what the second answer surfaces that the first one did not, and whether that gap is material to the original question.
@@ -270,8 +274,11 @@ export function validateOpenReceipt(receipt) {
 
 // Recompute the content_hash over the canonical receipt (with content_hash nulled,
 // per reader-receipt.js) and compare to the received one. canonicalizeForHash
-// deep-copies, so the received receipt is not mutated. A mismatch means the receipt
-// was tampered with or forged — reject before deriving anything from it.
+// deep-copies, so the received receipt is not mutated. This is an unkeyed SHA-256
+// integrity hash, not a signature: a mismatch catches accidental or in-transit
+// alteration and is rejected before anything is derived. Because the hash carries
+// no server secret, it does NOT authenticate against deliberate client forgery; a
+// client can recompute a matching hash over a crafted receipt.
 export function verifyReceiptIntegrity(receipt) {
   const recomputed = sha256Hex(canonicalizeForHash(receipt));
   return recomputed === receipt.integrity.content_hash;
@@ -577,10 +584,11 @@ export function createReadPairedHandler(deps = {}) {
     const openQuestion = openRun.question || "";
     const openAnswer = openRun.answer || "";
 
-    // Re-derive the targeted prompt from the open run's OWN measurement via the
-    // frozen paired_method_version 1.1 rule — never trusted from the client. A run
-    // with no eligible missing item never earned an offer, so a submit against it is
-    // a client bug or a forged request.
+    // Reconstruct the targeted prompt from the open-run measurement carried in the
+    // client-held receipt via the frozen paired_method_version 1.1 rule; the
+    // resulting prompt text is server-controlled and constant, never trusted from
+    // the client. A run whose measurement flags no eligible missing item never
+    // earned an offer, so a submit against it is rejected as not_eligible.
     const { eligible, targeted_prompt } = buildTargetedPrompt({
       question: openQuestion,
       measurement: openRun.measurement,
