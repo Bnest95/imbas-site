@@ -12,7 +12,7 @@
 // (client-held, server-signed): the endpoint re-verifies its integrity hash, so a
 // tampered or forged open run is rejected before any paid work. The targeted
 // prompt is RE-DERIVED here from the open run's own measurement via the frozen
-// paired_method_version 1.0 rule (never trusted from the client), then the pasted
+// paired_method_version 1.1 rule (never trusted from the client), then the pasted
 // second answer is measured against the first.
 //
 // Failure isolation (design §8): this endpoint only READS the open receipt and
@@ -111,14 +111,14 @@ const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("
 // this strips anything else so a formula can never be broken out of.
 const hexOnly = (s) => String(s || "").replace(/[^a-f0-9]/gi, "");
 
-// Version tag of the paired-analysis prompt. paired_method_version (1.0, in
+// Version tag of the paired-analysis prompt. paired_method_version (1.1, in
 // reader-paired.js) covers BOTH the deterministic prompt-construction rule AND
 // this analysis prompt; a fingerprint test pins this prompt to that version, so
 // changing the prompt fails QA unless paired_method_version is deliberately bumped.
 export const PAIRED_PROMPT_VERSION = PAIRED_METHOD_VERSION;
 
 // ── VERBATIM paired-analysis system prompt. Do not rewrite, summarize, or improve.
-// Frozen under paired_method_version 1.0. ─────────────────────────────────────
+// Frozen under paired_method_version 1.1. ─────────────────────────────────────
 export const PAIRED_SYSTEM_PROMPT = `You are The Reader, running the two-question test.
 
 A person asked an AI an open question and got a first answer. Imbas built a targeted follow-up from what that first answer looked like it left out, and the person ran that follow-up on the same AI and got a second answer. Your job is to measure the GAP between the two answers: what the second answer surfaces that the first one did not, and whether that gap is material to the original question.
