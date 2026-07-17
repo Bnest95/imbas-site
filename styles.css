@@ -2104,8 +2104,10 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .proof-strip--landing .proof-strip__meta {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  row-gap: 0.6rem;
   width: 100%;
   max-width: none;
   margin: 0;
@@ -2119,8 +2121,8 @@ body:has(main > section.hero) .nav__menu-btn {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  column-gap: 0.55em;
-  row-gap: 0.35rem;
+  column-gap: 1.4em;
+  row-gap: 0.4rem;
   line-height: 1.15;
   transform: translateY(-4px);
 }
@@ -2174,6 +2176,7 @@ body:has(main > section.hero) .nav__menu-btn {
   font-size: 0.88rem;
   font-weight: 500;
   letter-spacing: 0.03em;
+  line-height: 1.4;
   text-transform: none;
   color: rgba(212, 207, 194, 0.94);
 }
@@ -2181,10 +2184,7 @@ body:has(main > section.hero) .nav__menu-btn {
   display: none;
 }
 .proof-strip--landing .proof-strip__metric::after {
-  content: "\00a0·";
-  color: rgba(180, 192, 210, 0.78);
-  line-height: 1;
-  user-select: none;
+  content: none;
 }
 .proof-strip--landing .proof-strip__metrics > .proof-strip__metric:last-child::after {
   content: none;
@@ -9571,6 +9571,28 @@ main > .close::before {
   }
   main > .hero + .proof-strip--landing .proof-strip__metric::after {
     color: rgba(180, 192, 210, 0.45);
+  }
+}
+
+/* Proof-strip lead+subline items: stack full-width and wrap internally so
+   longer sublines never overflow or scroll on narrow viewports (≤680px). */
+@media (max-width: 680px) {
+  main > .hero + .proof-strip--landing .proof-strip__metrics {
+    row-gap: 0.5rem;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__lead,
+  main > .hero + .proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
+    flex: 0 0 100%;
+    justify-content: center;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__metric {
+    flex-wrap: wrap;
+    justify-content: center;
+    white-space: normal;
+    row-gap: 0.05rem;
+  }
+  main > .hero + .proof-strip--landing .proof-strip__metric::after {
+    content: none;
   }
 }
 
