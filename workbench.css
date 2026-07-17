@@ -4086,6 +4086,53 @@
   color: rgba(185, 172, 195, 0.78);
 }
 
+/* Reader v2 R1 (item 9) — Gap X-ray. A thin proportional bar rendering the delta's
+   signal composition as a single-glance shape directly above the precise counts
+   line. Segment widths come from flex-grow (set inline from each count); ember-ramp
+   shades only, no second hue. Decorative (aria-hidden); the counts line is the
+   accessible source of truth. A 3px floor keeps a tiny count from vanishing. */
+.wb-xray {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  height: 7px;
+  margin: 0 0 0.5rem;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.wb-xray__seg {
+  flex-basis: 0;
+  min-width: 3px;
+  border-radius: 2px;
+}
+
+.wb-xray__seg.is-omission {
+  background: rgba(222, 111, 56, 0.92);
+}
+
+.wb-xray__seg.is-framing {
+  background: rgba(200, 88, 48, 0.82);
+}
+
+.wb-xray__seg.is-deflection {
+  background: rgba(240, 143, 88, 0.92);
+}
+
+/* Reader v2 R1 (item 10) — Inspection Card export row. Reuses the receipt copy-row
+   layout (.wb-reader-result__copy + .wb-measure__actions); adds only a small full-width
+   caption so "Copy card" reads as a shareable summary of the run, not another receipt
+   button. Muted mono, no accent. */
+.wb-card-export__label {
+  flex: 1 1 100%;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(185, 172, 195, 0.7);
+}
+
 .wb-measure__list {
   list-style: none;
   margin: 0;
@@ -4250,6 +4297,616 @@
 
 .wb-act2__reset-row {
   margin-top: 0.85rem;
+}
+
+/* Reader v2 R1 — the quick/cleaner choice (item 5), the item-1c small print, and
+   the Confirmation Loop reveal (item 2). Umber system throughout; ember appears
+   only as a mark (the active option/chip, the gap-surface panel border, the signal
+   tag border, the primary CTA is the Btn's own). No new hue, no large fill. */
+
+/* Item 5 — how the person will run the second answer. */
+.wb-act2__check {
+  margin: 0 0 0.95rem;
+}
+
+.wb-act2__check-copy {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(205, 192, 176, 0.82);
+}
+
+.wb-act2__check-opts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.wb-act2__check-opt {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border: 1px solid rgba(242, 232, 220, 0.14);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.4);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.wb-act2__check-opt:hover {
+  border-color: rgba(242, 232, 220, 0.26);
+}
+
+.wb-act2__check-opt.is-active {
+  border-color: rgba(222, 111, 56, 0.6);
+  background: rgba(222, 111, 56, 0.08);
+}
+
+.wb-act2__check-label {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(242, 232, 220, 0.95);
+}
+
+.wb-act2__check-hint {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(205, 192, 176, 0.78);
+}
+
+/* Item 1c — small print under the prompt, sub under the CTA. */
+.wb-act2__prompt-note {
+  margin: -0.55rem 0 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(190, 178, 164, 0.7);
+}
+
+.wb-act2__sub {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(205, 192, 176, 0.8);
+}
+
+/* Item 2 — the reveal (the hero: two answers, the state headline, the signal tag,
+   a one-tap correction row, then the small print and the boundary sentence). */
+.wb-loop__reveal {
+  margin: 0 0 1.5rem;
+  padding: 1.15rem 1.15rem 1.25rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(30, 23, 18, 0.55) 0%, rgba(20, 17, 14, 0.55) 100%);
+}
+
+.wb-loop__headline {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 1.22rem;
+  line-height: 1.32;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: #f2e8dc;
+}
+
+.wb-loop__panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0 0 0.9rem;
+}
+
+.wb-loop__panel {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 6px;
+  background: rgba(18, 16, 13, 0.45);
+}
+
+.wb-loop__panel--second {
+  border-left: 2px solid rgba(222, 111, 56, 0.55);
+}
+
+.wb-loop__panel-label {
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(185, 172, 155, 0.72);
+}
+
+.wb-loop__panel-body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  color: rgba(228, 216, 200, 0.92);
+}
+
+.wb-loop__tag {
+  margin: 0 0 0.9rem;
+  padding: 0.5rem 0 0.5rem 0.75rem;
+  border-left: 2px solid rgba(222, 111, 56, 0.55);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(235, 222, 205, 0.94);
+}
+
+.wb-loop__cta-row {
+  margin: 0 0 0.9rem;
+}
+
+.wb-loop__correct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-loop__correct-label {
+  margin-right: 0.15rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: rgba(190, 178, 164, 0.75);
+}
+
+.wb-loop__chip {
+  padding: 0.32rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(242, 232, 220, 0.16);
+  border-radius: 999px;
+  background: rgba(26, 20, 16, 0.4);
+  color: rgba(205, 192, 176, 0.8);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.wb-loop__chip:hover {
+  border-color: rgba(242, 232, 220, 0.3);
+  color: rgba(228, 216, 200, 0.95);
+}
+
+.wb-loop__chip.is-active {
+  border-color: rgba(222, 111, 56, 0.6);
+  background: rgba(222, 111, 56, 0.12);
+  color: #f2e8dc;
+}
+
+.wb-loop__smallprint {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: rgba(180, 168, 154, 0.66);
+}
+
+.wb-loop__reveal .wb-measure__boundary {
+  margin: 0.2rem 0 0;
+}
+
+/* Return flow (Reader v2 R1, item 3). A slim re-entry strip for a visitor whose own
+   browser log shows a copied question with no completed loop. Resumes nothing; it
+   only points back at the input. Ember left-rule, same idiom as the paste prompt. */
+.wb-return {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.42);
+}
+
+.wb-return__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wb-return__headline {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.wb-return__text {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+.wb-return__dismiss {
+  flex: 0 0 auto;
+  margin: -0.15rem -0.2rem 0 0;
+  padding: 0.1rem 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-dim);
+  transition: color 0.15s ease;
+}
+
+.wb-return__dismiss:hover {
+  color: var(--ink);
+}
+
+/* First-use clarity strip (Reader v2 R1, item 6). Slim instrument card naming the three
+   moves of the Confirmation Loop for a first-time visitor; hidden once a run completes.
+   Same ember-left-rule idiom as the return nudge. Ember lands only on the step numbers
+   (marks) — never on the body text. */
+.wb-clarity {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.05rem 1rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-left: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.42);
+}
+
+.wb-clarity__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.7rem;
+  padding-right: 1.4rem;
+}
+
+.wb-clarity__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.wb-clarity__step {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.wb-clarity__num {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ember);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-clarity__text {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.wb-clarity__dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  padding: 0.1rem 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--ink-dim);
+  transition: color 0.15s ease;
+}
+
+.wb-clarity__dismiss:hover {
+  color: var(--ink);
+}
+
+/* ?funnel=1 diagnostic panel (Reader v2 R1, item 3). Read-only view of THIS browser's
+   own content-minimal event log. Never shipped by default; a local instrument. */
+.wb-funnel {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(242, 232, 220, 0.12);
+  border-radius: 6px;
+  background: rgba(18, 16, 13, 0.5);
+}
+
+.wb-funnel__head {
+  margin-bottom: 0.85rem;
+}
+
+.wb-funnel__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.5rem;
+}
+
+.wb-funnel__northstar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.wb-funnel__northstar-num {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.1rem);
+  line-height: 1;
+  color: var(--ember);
+}
+
+.wb-funnel__northstar-label {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.wb-funnel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem 1.5rem;
+  margin: 0 0 0.85rem;
+}
+
+.wb-funnel__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.28rem 0;
+  border-bottom: 1px solid rgba(242, 232, 220, 0.06);
+}
+
+.wb-funnel__label {
+  font-family: var(--font-mono);
+  font-size: max(0.68rem, var(--mono-min));
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+.wb-funnel__val {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, 13px);
+  color: var(--ink);
+}
+
+.wb-funnel__states {
+  margin-bottom: 0.75rem;
+}
+
+.wb-funnel__states-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.35rem;
+}
+
+.wb-funnel__states-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+}
+
+.wb-funnel__states-item {
+  font-family: var(--font-mono);
+  font-size: max(0.66rem, var(--mono-min));
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba(var(--ember-rgb), 0.28);
+  border-radius: 3px;
+  color: var(--ink-soft);
+}
+
+.wb-funnel__note {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+@media (max-width: 640px) {
+  .wb-funnel__grid {
+    grid-template-columns: 1fr;
+    gap: 0 0;
+  }
+}
+
+/* Instant demo (Reader v2, item 4). A first-timer opens a canned, deterministic
+   walkthrough of the whole loop on one public example. Trigger is understated; the
+   panel reuses the paste-prompt and loop-reveal idioms so the demo looks like the
+   real thing it previews. No new accent — ember only on the flagged omission. */
+.wb-demo-trigger-row {
+  margin-bottom: 1rem;
+}
+
+.wb-demo-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  background: none;
+  border: 1px solid rgba(var(--ember-rgb), 0.34);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: max(0.7rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.wb-demo-trigger:hover {
+  border-color: rgba(var(--ember-rgb), 0.7);
+  color: var(--ink);
+}
+
+.wb-demo {
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.15rem 1rem;
+  border: 1px solid rgba(242, 232, 220, 0.12);
+  border-top: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.5);
+}
+
+.wb-demo__head {
+  margin-bottom: 1rem;
+}
+
+.wb-demo__eyebrow {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ember);
+  margin-bottom: 0.4rem;
+}
+
+.wb-demo__title {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 3.6vw, 1.4rem);
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.wb-demo__context {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+}
+
+.wb-demo__beat {
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(242, 232, 220, 0.07);
+}
+
+.wb-demo__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-bottom: 0.4rem;
+}
+
+.wb-demo__q {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+.wb-demo__answer {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.wb-demo__leftout {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.wb-demo__mark {
+  background: rgba(var(--ember-rgb), 0.16);
+  color: var(--ink);
+  padding: 0.05rem 0.2rem;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.wb-demo__prompt.wb-act2__prompt {
+  margin-bottom: 0;
+}
+
+.wb-demo__reveal.wb-loop__reveal {
+  margin-top: 1rem;
+}
+
+.wb-loop__panel-body--muted {
+  color: var(--ink-dim);
+  font-style: italic;
+}
+
+.wb-demo__smallprint {
+  margin: 0.55rem 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  line-height: 1.5;
+  color: var(--ink-dim);
+}
+
+.wb-demo__cta-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.wb-demo__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: max(0.66rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: var(--ink-dim);
+  transition: color 0.15s ease;
+}
+
+.wb-demo__close:hover {
+  color: var(--ink);
 }
 
 .wb-reader-archive {
@@ -4847,6 +5504,11 @@
 
 @media (max-width: 640px) {
   .wb-reader-v2__modes {
+    grid-template-columns: 1fr;
+  }
+
+  .wb-act2__check-opts,
+  .wb-loop__panels {
     grid-template-columns: 1fr;
   }
 

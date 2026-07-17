@@ -411,10 +411,10 @@ function parseMeasurement(raw) {
 }
 
 // ── Act 2 offer (Reader v2 P2, Phase A) ───────────────────────────────────────
-// After the single-mode panel, the Reader offers a targeted follow-up prompt built
-// deterministically from the P1 candidate missing items (buildTargetedPrompt — no
-// third model call), carried on the response so the client can show it with a copy
-// button and record it verbatim + hashed later (design §1).
+// After the single-mode panel, the Reader offers a fixed, non-leading follow-up
+// prompt whenever the P1 measurement flagged a candidate missing item
+// (buildTargetedPrompt — no third model call), carried on the response so the client
+// can show it with a copy button and record it verbatim + hashed later (design §1).
 //
 // Capacity grounding (design §8): the two live controls are the per-IP rate limiter
 // (checkReaderRateLimits) and the global monthly spend ceiling

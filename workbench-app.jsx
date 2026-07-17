@@ -1,5 +1,25 @@
 import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
-import { ACT2_OFFER_COPY } from "./reader-paired.js";
+import {
+  ACT2_OFFER_COPY,
+  TARGETED_PROMPT_TEXT,
+  buildCleanerBundle,
+  suggestLoopState,
+  LOOP_STATE_GAP_REVEALED,
+  LOOP_STATE_STILL_MISSING,
+  LOOP_STATE_NOT_CLEAR,
+  LOOP_STATES,
+  LOOP_STATE_COPY,
+  LOOP_PANEL_FIRST_LABEL,
+  LOOP_PANEL_SECOND_LABEL,
+  LOOP_DIDNT_COME_UP,
+  LOOP_CONDITIONS_LINE,
+  CHECK_QUICK,
+  CHECK_CLEANER,
+  CHECK_CHOICE_COPY,
+  CHECK_QUICK_COPY,
+  CHECK_CLEANER_COPY,
+} from "./reader-paired.js";
+import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 
@@ -1562,6 +1582,69 @@ function persistWorkbenchEmail(email) {
   } catch {}
 }
 
+// ---- READER TELEMETRY (content-minimal, browser-local; Reader v2 R1 item 3) ----
+// buildEvent (reader-telemetry.js) sanitizes every event to a fixed allowlist of
+// short scalar props, so no answer text, question text, or measured span can ride an
+// event even if a caller passes one. Events append to a capped browser-local log —
+// no third-party analytics vendor, no server user-content payload. buildFunnel
+// reduces this same log to the north-star loop_completion_rate.
+const READER_EVENTS_STORAGE_KEY = "imbas_reader_events";
+const READER_EVENTS_CAP = 500;
+
+function readReaderEvents() {
+  try {
+    const raw = localStorage.getItem(READER_EVENTS_STORAGE_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+function emitReaderEvent(name, props = {}) {
+  const event = buildEvent(name, props);
+  if (!event) return null;
+  try {
+    const list = readReaderEvents();
+    list.push(event);
+    const trimmed = list.length > READER_EVENTS_CAP ? list.slice(list.length - READER_EVENTS_CAP) : list;
+    localStorage.setItem(READER_EVENTS_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch {}
+  return event;
+}
+
+// The opaque run id for an open (Act 1) result, if the server minted one. Used only
+// to correlate events for one run inside this browser's own log — it is an id, not
+// content, and sanitizeEventProps caps it at 64 chars regardless.
+function readerRunId(result) {
+  return result?.receipt?.open_run?.provenance?.request_id || "";
+}
+
+// First-use signal for the clarity strip (Reader v2 R1 item 6): has this browser ever
+// completed a Reader run? A run_completed event is the earliest "you've used The Reader"
+// marker — the instant demo emits only run_started {mode:"demo"}, so watching the demo
+// never flips this off. Browser-local, content-free (a name check on the same
+// allowlisted log the emitter already writes).
+function hasCompletedReaderRun() {
+  return readReaderEvents().some((e) => e && e.name === READER_EVENTS.RUN_COMPLETED);
+}
+
+// The clarity strip is dismissible; the choice persists as a tiny UI flag (a boolean,
+// never user content) so a first-timer who waved it off does not see it again.
+const READER_CLARITY_DISMISS_KEY = "imbas_reader_clarity_dismissed";
+function isClarityDismissed() {
+  try {
+    return localStorage.getItem(READER_CLARITY_DISMISS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function dismissClarityStripFlag() {
+  try {
+    localStorage.setItem(READER_CLARITY_DISMISS_KEY, "1");
+  } catch {}
+}
+
 function EmailGate({ onUnlock }) {
   const [email, setEmail] = useState("");
   const valid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
@@ -1946,6 +2029,17 @@ function isReaderWorkbenchEnabled() {
     if (window.localStorage.getItem("imbasReader") === "1") return true;
   } catch {}
   return true;
+}
+
+// ?funnel=1 opens a read-only view of THIS browser's own event log reduced to the
+// north-star funnel. Off by default; never persisted, never sent — a local
+// instrument for the founder, not a shipped user surface.
+function isFunnelPanelEnabled() {
+  if (typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("funnel") === "1";
+  } catch {}
+  return false;
 }
 
 const READER_API = "/api/read";
@@ -3072,6 +3166,27 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
 const readerCreditLine = (shareUrl) =>
   `Inspected with the Imbas Reader · ${shareUrl && shareUrl.trim() ? shareUrl.trim() : "imbaslabs.com"}`;
 
+// Reader v2 R1 (item 10) — the Inspection Card. A short, human-readable summary of ONE
+// Confirmation Loop run, STATE-AWARE: the headline and the panel order follow the state
+// the person landed on (or corrected to), mirroring the on-screen reveal (not_clear_yet
+// swaps the two panels). This is a shareable paste artifact, not the audit receipt —
+// behavioral verbs only (the state copy already says "didn't volunteer / didn't
+// surface", never measured/proven), the boundary sentence verbatim, and the run's truth
+// small-print in [brackets]. Pure string builder, mirroring formatReaderResultCopy.
+function formatInspectionCard({ state, firstText, secondText, smallPrint }) {
+  const c = LOOP_STATE_COPY[state] || {};
+  const first = { label: LOOP_PANEL_FIRST_LABEL, text: (firstText || "").trim() };
+  const second = { label: LOOP_PANEL_SECOND_LABEL, text: (secondText || "").trim() };
+  const ordered = c.swapPanels ? [second, first] : [first, second];
+  const lines = ["IMBAS READER — Confirmation Loop", ""];
+  if (c.headline) lines.push(c.headline, "");
+  for (const p of ordered) lines.push(`${p.label}:`, p.text || LOOP_DIDNT_COME_UP, "");
+  if (c.tag) lines.push(c.tag, "");
+  if ((smallPrint || "").trim()) lines.push(`[${smallPrint.trim()}]`, "");
+  lines.push(RECEIPT_BOUNDARY, "", readerCreditLine());
+  return lines.join("\n").trim();
+}
+
 // Pre-publish consent disclosure (design §D, claims-checked — do not reword). Shown
 // in a modal before a share is minted, so nothing is published until the person has
 // seen exactly what the page will carry. Mode-aware: single names the candidate gaps
@@ -3504,6 +3619,67 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
   );
 }
 
+// Reader v2 R1 (item 10) — the Inspection Card export. Copy or download the state-aware
+// summary built by formatInspectionCard. Distinct from the audit receipt (full JSON /
+// text) and the share page (server-minted URL): this is the light, paste-anywhere
+// artifact. A successful export emits the card_exported event (ids + enums only, via the
+// content-minimal emitter) — the funnel already reserves a row for it. Client-only:
+// clipboard + a Blob download, no network, no persistence.
+function InspectionCardAction({ state, firstText, secondText, smallPrint, run, check }) {
+  const [copied, setCopied] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  const [failMsg, setFailMsg] = useState("");
+  const flash = (setter) => {
+    setter(true);
+    setFailMsg("");
+    setTimeout(() => setter(false), 1800);
+  };
+  const fail = (msg) => {
+    setFailMsg(msg);
+    setTimeout(() => setFailMsg(""), 2200);
+  };
+  const cardText = () => formatInspectionCard({ state, firstText, secondText, smallPrint });
+  const noteExport = () => emitReaderEvent(READER_EVENTS.CARD_EXPORTED, { run, state, check });
+  const copyCard = async () => {
+    try {
+      await navigator.clipboard.writeText(cardText());
+      noteExport();
+      flash(setCopied);
+    } catch {
+      fail("Could not copy");
+    }
+  };
+  const downloadCard = () => {
+    try {
+      const blob = new Blob([cardText()], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `imbas-inspection-card-${run || "run"}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      noteExport();
+      flash(setDownloaded);
+    } catch {
+      fail("Could not download card");
+    }
+  };
+  return (
+    <div className="wb-reader-result__copy wb-measure__actions wb-card-export">
+      <span className="wb-card-export__label">Share what you saw</span>
+      <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyCard}>
+        {copied ? "Copied" : "Copy card"}
+      </Btn>
+      <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={downloadCard}>
+        {downloaded ? "Downloaded" : "Download card"}
+      </Btn>
+      {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
+    </div>
+  );
+}
+
 // Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
 // gap-estimate line. Candidate vocabulary only ("candidate missing items"), never
 // "left out / skipped / hid". Counts come straight from the measurement's finding
@@ -3666,6 +3842,34 @@ function MeasurementPanel({ result, context }) {
   );
 }
 
+// Reader v2 R1 (item 9) — the Gap X-ray. A compact, single-glance read of the
+// delta's signal composition: the same Omission / Framing Drift / Deflection counts
+// rendered as a thin proportional bar so the SHAPE of the gap is legible before the
+// numbers are read (mostly left out? mostly reframed?). Purely additive and
+// decorative (aria-hidden) — the counts line directly beneath stays the precise,
+// screen-reader-accessible source of truth. No new hue: the three segments are
+// ember-ramp shades only. Renders nothing when the delta is empty (total 0).
+const GAP_XRAY_SEGMENTS = [
+  { key: "Omission", cls: "is-omission" },
+  { key: "Framing Drift", cls: "is-framing" },
+  { key: "Deflection", cls: "is-deflection" },
+];
+function GapXray({ counts }) {
+  const c = counts || {};
+  const segs = GAP_XRAY_SEGMENTS.map((s) => ({ ...s, n: Number(c[s.key]) || 0 }));
+  const total = segs.reduce((t, s) => t + s.n, 0);
+  if (total <= 0) return null;
+  return (
+    <div className="wb-xray" aria-hidden="true">
+      {segs
+        .filter((s) => s.n > 0)
+        .map((s) => (
+          <span key={s.key} className={`wb-xray__seg ${s.cls}`} style={{ flexGrow: s.n }} />
+        ))}
+    </div>
+  );
+}
+
 // Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
 // /api/read-paired: the machine gap estimate with its unvalidated label, the
 // itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
@@ -3674,17 +3878,106 @@ function MeasurementPanel({ result, context }) {
 // instrument. The formal signal patterns and the "Machine gap estimate" label appear
 // HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
 // note when the response carries them.
-function PairedDeltaView({ paired, onReset }) {
+function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
   const items = Array.isArray(paired.delta_items) ? paired.delta_items : [];
   const counts = paired.signal_counts || {};
+
+  // The machine SUGGESTS a state from the paired measurement; the person can correct
+  // it with one tap, and the correction is what gets recorded (reader-paired.js law).
+  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts });
+  const [userState, setUserState] = useState(suggested);
+
+  // loop_completed is the north-star event: the second answer came back and was
+  // classified. Fire once on mount with the machine-suggested state; a later human
+  // correction is its own state_corrected event, never a second completion.
+  useEffect(() => {
+    emitReaderEvent(READER_EVENTS.LOOP_COMPLETED, {
+      run,
+      state: suggested,
+      check,
+      gap: paired.gap_estimate,
+      source: paired.source,
+      idempotent: paired.idempotent,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const correctTo = (next) => {
+    if (next === userState) return;
+    emitReaderEvent(READER_EVENTS.STATE_CORRECTED, { run, from_state: userState, to_state: next, check });
+    setUserState(next);
+  };
+
+  const copy = LOOP_STATE_COPY[userState] || {};
+  const primary = items[0] || {};
+  // The two panels are the evidence (the two answers' relevant spans); the state is
+  // the reading. A missing span on either side reads as "Didn't come up." — which is
+  // exactly the STILL MISSING case (no delta -> both sides empty -> both panels blank).
+  const firstText = (primary.open_side || "").trim() || LOOP_DIDNT_COME_UP;
+  const secondText = (primary.targeted_side || "").trim() || LOOP_DIDNT_COME_UP;
+  const firstPanel = (
+    <div className="wb-loop__panel wb-loop__panel--first" key="first">
+      <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
+      <p className="wb-loop__panel-body">{firstText}</p>
+    </div>
+  );
+  const secondPanel = (
+    <div className="wb-loop__panel wb-loop__panel--second" key="second">
+      <span className="wb-loop__panel-label">{LOOP_PANEL_SECOND_LABEL}</span>
+      <p className="wb-loop__panel-body">{secondText}</p>
+    </div>
+  );
+  const panels = copy.swapPanels ? [secondPanel, firstPanel] : [firstPanel, secondPanel];
+
+  const openRunId = (paired.receipt && paired.receipt.paired_analysis && paired.receipt.paired_analysis.open_run_id) || run || "";
+  const generatedAt = (paired.receipt && paired.receipt.generated_at) || "";
+  const dateStr = generatedAt ? String(generatedAt).slice(0, 10) : "";
+  const smallPrint = [openRunId ? `Run ${openRunId}` : "", dateStr, LOOP_CONDITIONS_LINE].filter(Boolean).join(" · ");
+
   return (
-    <div className="wb-act2__delta wb-scroll-anchor">
+    <div className="wb-act2__delta wb-loop wb-scroll-anchor">
       {paired.idempotent ? (
         <p className="wb-act2__notice" role="status">You already ran this pair. This is the analysis from that run.</p>
       ) : null}
       {paired.capture_uncertain ? (
         <p className="wb-act2__notice" role="status">The analysis is below. The Reader couldn't confirm it saved its own copy, so download this receipt to keep a full copy.</p>
       ) : null}
+
+      {/* The reveal — the hero. Machine suggests; the person corrects with one tap. */}
+      <div className="wb-loop__reveal">
+        <h3 className="wb-loop__headline">{copy.headline}</h3>
+        <div className="wb-loop__panels">{panels}</div>
+        {copy.tag ? <p className="wb-loop__tag">{copy.tag}</p> : null}
+
+        {userState === LOOP_STATE_STILL_MISSING && copy.cta ? (
+          <div className="wb-action-row wb-loop__cta-row">
+            <Btn kind="ghost" small onClick={onReset}>{copy.cta}</Btn>
+          </div>
+        ) : null}
+        {userState === LOOP_STATE_NOT_CLEAR && copy.cta && check === CHECK_QUICK && onTryCleaner ? (
+          <div className="wb-action-row wb-loop__cta-row">
+            <Btn kind="ghost" small onClick={onTryCleaner}>{copy.cta}</Btn>
+          </div>
+        ) : null}
+
+        <div className="wb-loop__correct" role="group" aria-label="Mark what you actually saw">
+          <span className="wb-loop__correct-label">Read it differently?</span>
+          {LOOP_STATES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`wb-loop__chip${s === userState ? " is-active" : ""}`}
+              aria-pressed={s === userState}
+              onClick={() => correctTo(s)}
+            >
+              {(LOOP_STATE_COPY[s] || {}).chip || s}
+            </button>
+          ))}
+        </div>
+
+        <p className="wb-loop__smallprint">{smallPrint}</p>
+        <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+      </div>
 
       <div className="wb-measure__estimate wb-act2__estimate">
         <div className="wb-measure__estimate-value">{paired.gap_estimate_label}</div>
@@ -3696,6 +3989,7 @@ function PairedDeltaView({ paired, onReset }) {
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section">
           <h3 className="wb-reader-result__section-title">The delta</h3>
+          <GapXray counts={counts} />
           <p className="wb-measure__counts">
             {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
           </p>
@@ -3731,6 +4025,15 @@ function PairedDeltaView({ paired, onReset }) {
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
+      <InspectionCardAction
+        state={userState}
+        firstText={firstText}
+        secondText={secondText}
+        smallPrint={smallPrint}
+        run={openRunId}
+        check={check}
+      />
+
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
 
       <ReaderShareAction mode="paired" receipt={paired.receipt} />
@@ -3759,7 +4062,7 @@ function pairedRunErrorCopy(err) {
 // double-submit guard; the server's idempotency lookup is the other half), then the
 // delta view. Failure isolation: a failed second read only sets a local error and
 // leaves the first read and its receipt untouched, so Act 2 can be retried.
-function PairedTest({ openReceipt }) {
+function PairedTest({ openReceipt, run, check, onTryCleaner }) {
   const [targeted, setTargeted] = useState("");
   const [busy, setBusy] = useState(false);
   const [paired, setPaired] = useState(null);
@@ -3790,6 +4093,7 @@ function PairedTest({ openReceipt }) {
     setFieldError("");
     setRunError("");
     setBusy(true);
+    emitReaderEvent(READER_EVENTS.LOOP_RETURNED, { run, check });
     try {
       const data = await runPairedReader(openReceipt, targeted);
       setPaired(data);
@@ -3812,7 +4116,7 @@ function PairedTest({ openReceipt }) {
   if (paired) {
     return (
       <div className="wb-act2__test">
-        <PairedDeltaView paired={paired} onReset={reset} />
+        <PairedDeltaView paired={paired} onReset={reset} run={run} check={check} onTryCleaner={onTryCleaner} />
       </div>
     );
   }
@@ -3852,14 +4156,25 @@ function PairedTest({ openReceipt }) {
 // never degrades Act 1. The paste box + paired analysis mount at the seam below.
 function Act2Offer({ result }) {
   const act2 = result?.act2;
+  const run = result?.receipt?.open_run?.provenance?.request_id || "";
+  const question = result?.receipt?.open_run?.question || "";
   const [copied, setCopied] = useState(false);
   const [copyFail, setCopyFail] = useState("");
+  // How the person will run the second answer, stored as declared metadata (never
+  // verified). Quick = the fixed probe alone, same chat. Cleaner = the original
+  // scenario folded in front of the same probe, fresh chat. Both texts are
+  // deterministic (reader-paired.js), so what they copy is what gets recorded.
+  const [check, setCheck] = useState(CHECK_QUICK);
   if (!act2 || !act2.eligible) return null;
+
+  const promptText = check === CHECK_CLEANER ? buildCleanerBundle({ question }) : (act2.targeted_prompt || TARGETED_PROMPT_TEXT);
+
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(act2.targeted_prompt || "");
+      await navigator.clipboard.writeText(promptText);
       setCopied(true);
       setCopyFail("");
+      emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check });
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopyFail("Could not copy");
@@ -3874,14 +4189,43 @@ function Act2Offer({ result }) {
       {act2.available ? (
         <>
           <p className="wb-act2__offer">{ACT2_OFFER_COPY}</p>
-          <pre className="wb-act2__prompt" aria-label="The direct question to run on your AI">{act2.targeted_prompt}</pre>
+
+          <div className="wb-act2__check" role="group" aria-label="How you'll run the second answer">
+            <p className="wb-act2__check-copy">{CHECK_CHOICE_COPY}</p>
+            <div className="wb-act2__check-opts">
+              <button
+                type="button"
+                className={`wb-act2__check-opt${check === CHECK_QUICK ? " is-active" : ""}`}
+                aria-pressed={check === CHECK_QUICK}
+                onClick={() => setCheck(CHECK_QUICK)}
+              >
+                <span className="wb-act2__check-label">{CHECK_QUICK_COPY.label}</span>
+                <span className="wb-act2__check-hint">{CHECK_QUICK_COPY.hint}</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-act2__check-opt${check === CHECK_CLEANER ? " is-active" : ""}`}
+                aria-pressed={check === CHECK_CLEANER}
+                onClick={() => setCheck(CHECK_CLEANER)}
+              >
+                <span className="wb-act2__check-label">{CHECK_CLEANER_COPY.label}</span>
+                <span className="wb-act2__check-hint">{CHECK_CLEANER_COPY.hint}</span>
+              </button>
+            </div>
+          </div>
+
+          <pre className="wb-act2__prompt" aria-label="What to run on your AI">{promptText}</pre>
+          <p className="wb-act2__prompt-note">Generated from this Reader run. Any question shapes an answer — this one included.</p>
+
           <div className="wb-reader-result__copy wb-act2__actions">
-            <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyPrompt}>
-              {copied ? "Copied" : "Copy the question"}
+            <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyPrompt}>
+              {copied ? "Copied — now ask your AI" : "Ask your AI →"}
             </Btn>
             {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
           </div>
-          <PairedTest openReceipt={result.receipt} />
+          <p className="wb-act2__sub">Copy this question. Drop it in your chat. Paste what comes back.</p>
+
+          <PairedTest key={check} openReceipt={result.receipt} run={run} check={check} onTryCleaner={() => setCheck(CHECK_CLEANER)} />
         </>
       ) : (
         <p className="wb-act2__degraded" role="status">
@@ -4006,6 +4350,186 @@ function SecondRunLoop({ mode, sel, onAnother }) {
   );
 }
 
+// Return-flow nudge for a visitor who copied a targeted question in an earlier
+// session but never came back with a completed loop. It resumes nothing (no old
+// content is stored or restored), it just points them back at the input. Dismissible.
+function ReturnNudge({ onDismiss }) {
+  return (
+    <section className="wb-return" aria-label="Welcome back">
+      <div className="wb-return__body">
+        <p className="wb-return__headline">Welcome back.</p>
+        <p className="wb-return__text">You started a check here before. Paste an answer to run another and watch what it leaves out.</p>
+      </div>
+      <button type="button" className="wb-return__dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+    </section>
+  );
+}
+
+// The first-use clarity strip (Reader v2 R1 item 6). A newcomer landing on a blank
+// paste box sees the whole Confirmation Loop as three plain moves before they start.
+// Product register: second person, kinetic, no hedging beyond the one sanctioned
+// "might." It never asserts a specific omission — it describes what the instrument
+// does, not a verdict on any answer. Shown only when this browser has never completed
+// a run and only in own mode; dismissible, and the dismissal persists.
+const READER_CLARITY_STEPS = [
+  "Paste an AI answer to see what it might be missing.",
+  "Copy the one question Imbas builds, then ask your own AI.",
+  "Paste its reply back and watch what surfaces.",
+];
+
+function ReaderClarityStrip({ onDismiss }) {
+  return (
+    <section className="wb-clarity" aria-label="How the Confirmation Loop works">
+      <button type="button" className="wb-clarity__dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+      <span className="wb-clarity__eyebrow">The Confirmation Loop</span>
+      <ol className="wb-clarity__steps">
+        {READER_CLARITY_STEPS.map((text, i) => (
+          <li key={i} className="wb-clarity__step">
+            <span className="wb-clarity__num" aria-hidden="true">{i + 1}</span>
+            <span className="wb-clarity__text">{text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+// ?funnel=1 diagnostic: THIS browser's own event log reduced to the north-star
+// funnel. Read-only, one-shot read on mount. Every number is a count of
+// content-minimal events — no answer or question text ever entered the log.
+function ReaderFunnelPanel() {
+  const [funnel] = useState(() => buildFunnel(readReaderEvents()));
+  const rate = funnel.loop_completion_rate;
+  const pct = rate == null ? "—" : `${Math.round(rate * 100)}%`;
+  const c = funnel.counts || {};
+  const rows = [
+    ["Runs started", c.run_started],
+    ["Runs completed", c.run_completed],
+    ["Results viewed", c.result_viewed],
+    ["Questions copied", c.target_question_copied],
+    ["Loops returned", c.loop_returned],
+    ["Loops completed", c.loop_completed],
+    ["States corrected", c.state_corrected],
+    ["Cards exported", c.card_exported],
+    ["Candidates submitted", c.candidate_submitted],
+    ["Return visits", c.return_visit],
+  ];
+  const states = funnel.completed_by_state || {};
+  const hasStates = Object.keys(states).length > 0;
+  return (
+    <section className="wb-funnel" aria-label="Reader funnel (this browser only)">
+      <div className="wb-funnel__head">
+        <span className="wb-funnel__eyebrow">Reader funnel · this browser only</span>
+        <p className="wb-funnel__northstar">
+          <span className="wb-funnel__northstar-num">{pct}</span>
+          <span className="wb-funnel__northstar-label">of copied questions returned as completed loops</span>
+        </p>
+      </div>
+      <dl className="wb-funnel__grid">
+        {rows.map(([label, n]) => (
+          <div key={label} className="wb-funnel__row">
+            <dt className="wb-funnel__label">{label}</dt>
+            <dd className="wb-funnel__val">{n || 0}</dd>
+          </div>
+        ))}
+      </dl>
+      {hasStates ? (
+        <div className="wb-funnel__states">
+          <span className="wb-funnel__states-label">Completed by state</span>
+          <ul className="wb-funnel__states-list">
+            {LOOP_STATES.map((s) =>
+              states[s] ? (
+                <li key={s} className="wb-funnel__states-item">
+                  {((LOOP_STATE_COPY[s] && LOOP_STATE_COPY[s].chip) || s)}: {states[s]}
+                </li>
+              ) : null
+            )}
+          </ul>
+        </div>
+      ) : null}
+      <p className="wb-funnel__note">[Content-minimal: ids, enums, counts only — never answer or question text. Stored in this browser, nothing leaves your device.]</p>
+    </section>
+  );
+}
+
+// The instant demo (Reader v2, item 4). A first-timer can watch the whole
+// Confirmation Loop without pasting anything, on ONE public example drawn from the
+// Supersession exploration pack (exploration-pack.html §1, Chevron → Loper Bright).
+// Everything here is canned and deterministic — no /api/read call, no model, no
+// spend. It is explicitly NOT the visitor's own run and NOT an Imbas case: the copy
+// never says "your chat," the boundary sentence and small print say so outright.
+const DEMO_EXAMPLE = {
+  context: "Public example · U.S. administrative law",
+  question:
+    "When a court reviews a federal agency's reading of an ambiguous statute, how much weight does the agency's interpretation get?",
+  openAnswer:
+    "Courts apply Chevron deference. If the statute is ambiguous, the court defers to the agency's interpretation as long as it's reasonable — the two-step framework from Chevron v. NRDC (1984).",
+  leftOut:
+    "Chevron was overruled. In Loper Bright Enterprises v. Raimondo (June 2024), the Supreme Court ended Chevron deference — courts now interpret ambiguous statutes themselves, de novo, without deferring to the agency.",
+  targetedPrompt: TARGETED_PROMPT_TEXT,
+  surfaced:
+    "Chevron no longer governs. Loper Bright v. Raimondo (2024) overruled it; courts now decide a statute's meaning de novo under the Administrative Procedure Act. Governing source: Loper Bright Enterprises v. Raimondo, 603 U.S. 369 (2024).",
+  // A demo-honest reveal tag. The live reveal says "you just watched it happen in
+  // your own chat"; that would be false here, so the demo states plainly what this is.
+  tag: "That's the Volunteer Gap — the open answer left it out; the direct question surfaced it. Run your own answer to watch it live.",
+};
+
+function ReaderDemo({ onTryOwn, onClose }) {
+  const d = DEMO_EXAMPLE;
+  const headline = (LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED] || {}).headline || "";
+  return (
+    <section className="wb-demo" aria-labelledby="wb-demo-heading">
+      <div className="wb-demo__head">
+        <span className="wb-demo__eyebrow">WORKED EXAMPLE</span>
+        <h3 id="wb-demo-heading" className="wb-demo__title">Watch the loop on one public example.</h3>
+        <p className="wb-demo__context">{d.context}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">The question</span>
+        <p className="wb-demo__q">{d.question}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">What the AI said</span>
+        <p className="wb-demo__answer">{d.openAnswer}</p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">What the open answer left out</span>
+        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.leftOut}</mark></p>
+      </div>
+
+      <div className="wb-demo__beat">
+        <span className="wb-demo__label">The direct question Imbas builds</span>
+        <p className="wb-act2__prompt wb-demo__prompt">{d.targetedPrompt}</p>
+      </div>
+
+      <div className="wb-loop__reveal wb-demo__reveal">
+        <p className="wb-loop__headline">{headline}</p>
+        <div className="wb-loop__panels">
+          <div className="wb-loop__panel">
+            <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
+            <p className="wb-loop__panel-body wb-loop__panel-body--muted">{LOOP_DIDNT_COME_UP}</p>
+          </div>
+          <div className="wb-loop__panel wb-loop__panel--second">
+            <span className="wb-loop__panel-label">{LOOP_PANEL_SECOND_LABEL}</span>
+            <p className="wb-loop__panel-body">{d.surfaced}</p>
+          </div>
+        </div>
+        <p className="wb-loop__tag">{d.tag}</p>
+        <p className="wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
+        <p className="wb-demo__smallprint">[A canned demonstration on a public example. Not your run, not an Imbas case — nothing here was recorded.]</p>
+      </div>
+
+      <div className="wb-demo__cta-row">
+        <Btn kind="primary" small onClick={onTryOwn}>Now try your own →</Btn>
+        <button type="button" className="wb-demo__close" onClick={onClose}>Hide example</button>
+      </div>
+    </section>
+  );
+}
+
 function ReaderWorkbench() {
   const [mode, setMode] = useState("own");
   const [sel, setSel] = useState(CURATED[0]);
@@ -4016,10 +4540,29 @@ function ReaderWorkbench() {
   const [busy, setBusy] = useState(false);
   const [readerResult, setReaderResult] = useState(null);
   const [errors, setErrors] = useState({});
+  // A returning visitor who copied a targeted question last session but never came
+  // back with a completed loop. Set once from this browser's own event log (no server
+  // read, no user content) to drive the finish-your-loop nudge below.
+  const [returning, setReturning] = useState(false);
+  const [showFunnel] = useState(() => isFunnelPanelEnabled());
+  // The instant demo (item 4). Off until a first-timer opens it; deterministic and
+  // canned, so it never calls the API. demoEmittedRef keeps the demo-open signal to
+  // one emit per mount and out of the copied/completed north-star counts.
+  const [demoOpen, setDemoOpen] = useState(false);
+  const demoEmittedRef = useRef(false);
+  // First-use clarity strip (item 6): show the three-move loop to a visitor whose own
+  // browser log holds no completed run. Both flags read once from browser-local state —
+  // no server read, no user content — and the dismissal persists across visits.
+  const [firstTime] = useState(() => !hasCompletedReaderRun());
+  const [clarityDismissed, setClarityDismissed] = useState(() => isClarityDismissed());
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
   const scrollState = useRef(initialScrollState());
+  // Guards RESULT_VIEWED to one emit per distinct result: holds the run id (or a
+  // synthetic marker) of the result already counted as viewed. Reset when the result
+  // clears so the next real result is counted once.
+  const viewedRunRef = useRef(null);
 
   const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
   const hasAnswer = !!answer.trim();
@@ -4069,6 +4612,47 @@ function ReaderWorkbench() {
     return undefined;
   }, [readerResult]);
 
+  // RESULT_VIEWED once per distinct result. The run id keys the guard when present;
+  // a fallback result has none, so a stable marker stands in. Clearing the result
+  // re-arms the guard for the next run.
+  useEffect(() => {
+    if (!readerResult) {
+      viewedRunRef.current = null;
+      return;
+    }
+    const key = readerRunId(readerResult) || (readerResult.source ? `src:${readerResult.source}` : "result");
+    if (viewedRunRef.current === key) return;
+    viewedRunRef.current = key;
+    emitReaderEvent(READER_EVENTS.RESULT_VIEWED, {
+      run: readerRunId(readerResult),
+      source: readerResult.source || "agent",
+    });
+  }, [readerResult]);
+
+  // Return flow, browser-local only. Once per browser session (sessionStorage guard),
+  // if this browser's own event log shows prior activity, emit RETURN_VISIT. If it
+  // shows more targeted questions copied than loops completed, there's an open loop —
+  // flag it so the finish-your-loop nudge renders. No server read, no user content;
+  // buildFunnel reduces the same content-minimal log the emitter already wrote.
+  useEffect(() => {
+    let alreadyThisSession = false;
+    try {
+      alreadyThisSession = sessionStorage.getItem("imbas_reader_session") === "1";
+    } catch {}
+    const events = readReaderEvents();
+    if (events.length === 0) return;
+    if (!alreadyThisSession) {
+      emitReaderEvent(READER_EVENTS.RETURN_VISIT);
+      try {
+        sessionStorage.setItem("imbas_reader_session", "1");
+      } catch {}
+    }
+    const funnel = buildFunnel(events);
+    const copied = funnel.counts.target_question_copied || 0;
+    const completed = funnel.counts.loop_completed || 0;
+    if (copied > completed) setReturning(true);
+  }, []);
+
   const switchMode = (next) => {
     if (next === mode) return;
     setMode(next);
@@ -4076,6 +4660,31 @@ function ReaderWorkbench() {
     setReaderResult(null);
     setBusy(false);
     if (next === "own") setAnswer("");
+  };
+
+  const dismissClarity = () => {
+    dismissClarityStripFlag();
+    setClarityDismissed(true);
+  };
+
+  // Open the canned demo. Emit the demo-open signal ONCE per mount, tagged
+  // mode/source "demo" so it stays filterable and never inflates the copied/completed
+  // north star. The demo itself makes no API call.
+  const openDemo = () => {
+    setDemoOpen(true);
+    if (!demoEmittedRef.current) {
+      demoEmittedRef.current = true;
+      emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode: "demo", source: "demo" });
+    }
+  };
+
+  // Leave the demo and drop the visitor at the paste box, ready to run their own.
+  const tryOwnFromDemo = () => {
+    setDemoOpen(false);
+    if (mode !== "own") switchMode("own");
+    if (stageRef.current) {
+      window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
+    }
   };
 
   const pickCase = (c) => {
@@ -4132,6 +4741,7 @@ function ReaderWorkbench() {
     setErrors({});
     setBusy(true);
     setReaderResult(null);
+    emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode });
     const request = buildReaderRequest({
       mode,
       sel,
@@ -4143,6 +4753,12 @@ function ReaderWorkbench() {
     try {
       const data = await runReader(request);
       setReaderResult(data);
+      emitReaderEvent(READER_EVENTS.RUN_COMPLETED, {
+        run: readerRunId(data),
+        mode,
+        source: data.source || "agent",
+        eligible: !!(data.act2 && data.act2.eligible),
+      });
     } catch (err) {
       if (err && err.message === "too_long") {
         setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
@@ -4155,6 +4771,7 @@ function ReaderWorkbench() {
           how_it_was_shaped: "",
           reason: String(err.message || "network"),
         });
+        emitReaderEvent(READER_EVENTS.RUN_COMPLETED, { mode, source: "fallback", eligible: false });
       }
     } finally {
       setBusy(false);
@@ -4164,6 +4781,21 @@ function ReaderWorkbench() {
   return (
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
+        {returning && !readerResult ? <ReturnNudge onDismiss={() => setReturning(false)} /> : null}
+        {mode === "own" && firstTime && !clarityDismissed && !returning && !demoOpen && !readerResult && !busy ? (
+          <ReaderClarityStrip onDismiss={dismissClarity} />
+        ) : null}
+        <div className="wb-demo-trigger-row">
+          <button
+            type="button"
+            className="wb-demo-trigger"
+            onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
+            aria-expanded={demoOpen}
+          >
+            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
+          </button>
+        </div>
+        {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
@@ -4290,7 +4922,7 @@ function ReaderWorkbench() {
                 <ReaderStatusLine state={statusState} />
                 <details className="wb-reader-v2__privacy">
                   <summary className="wb-reader-v2__privacy-line">
-                    Inspections aren't saved to our public record. Don't paste anything sensitive.
+                    Inspections aren't published to our reviewed archive. Don't paste anything sensitive.
                   </summary>
                   <p className="wb-reader-v2__privacy-full">
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
@@ -4349,7 +4981,7 @@ function ReaderWorkbench() {
               <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
             </div>
             <p className="wb-reader-v2__post-privacy">
-              This inspection wasn't saved to our public record. See <a href="/retention.html">what deletion means</a>.
+              This inspection wasn't published to our reviewed archive. See <a href="/retention.html">what deletion means</a>.
             </p>
           </div>
         ) : null}
@@ -4357,6 +4989,12 @@ function ReaderWorkbench() {
         <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
           <SuggestInvestigation variant="reader-secondary" />
         </div>
+
+        {showFunnel ? (
+          <div className="wb-reader-v2__follow wb-reader-v2__follow--funnel">
+            <ReaderFunnelPanel />
+          </div>
+        ) : null}
       </div>
     </div>
   );

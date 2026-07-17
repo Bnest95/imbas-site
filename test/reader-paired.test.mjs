@@ -29,7 +29,18 @@ import {
   capturePaired,
 } from "../api/read-paired.js";
 import { createRuntimeContext } from "../reader-runtime.js";
-import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
+import {
+  PAIRED_METHOD_VERSION,
+  buildTargetedPrompt,
+  TARGETED_PROMPT_TEXT,
+  suggestLoopState,
+  buildCleanerBundle,
+  LOOP_STATE_GAP_REVEALED,
+  LOOP_STATE_STILL_MISSING,
+  LOOP_STATE_NOT_CLEAR,
+  LOOP_STATES,
+  LOOP_STATE_COPY,
+} from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
   RECEIPT_BOUNDARY,
@@ -67,7 +78,7 @@ const hexId = (seed) => sha256Hex(`openrun:${seed}`).slice(0, 16);
 
 // A parsed P1 measurement as it sits embedded on the open receipt. With eligible
 // true it carries a candidate missing item (with materiality), the one finding
-// type that seeds a targeted re-ask; with eligible false it carries only a framing
+// type that makes the offer eligible; with eligible false it carries only a framing
 // issue, so buildTargetedPrompt returns eligible:false and no offer exists.
 function openMeasurement(eligible = true) {
   const findings = eligible
@@ -268,7 +279,7 @@ test("PAIRED_SYSTEM_PROMPT fingerprint matches the pin for paired_method_version
 
 test("PAIRED_PROMPT_VERSION tracks paired_method_version (single source of truth)", () => {
   assert.equal(PAIRED_PROMPT_VERSION, PAIRED_METHOD_VERSION);
-  assert.equal(PAIRED_METHOD_VERSION, "1.0");
+  assert.equal(PAIRED_METHOD_VERSION, "1.1");
 });
 
 // ── 2. Deterministic prompt construction + hash ───────────────────────────────
@@ -283,11 +294,18 @@ test("buildTargetedPrompt is deterministic: same measurement in, same prompt + h
   assert.equal(sha256Hex(a.targeted_prompt), sha256Hex(b.targeted_prompt));
 });
 
-test("the constructed prompt folds in the open question and each candidate materiality", () => {
+test("the targeted prompt is the fixed non-leading probe, naming none of the findings", () => {
   const question = "What are the risks of relying on AI for triage?";
   const { targeted_prompt } = buildTargetedPrompt({ question, measurement: openMeasurement(true) });
-  assert.ok(targeted_prompt.includes(question));
-  assert.ok(targeted_prompt.includes("the failure modes are never named"));
+  // The fixed probe (paired_method_version 1.1): an eligible run yields exactly the
+  // constant, and it must not echo the question or name any measured finding — a
+  // probe that listed the omissions would hand the second read its answer.
+  assert.equal(targeted_prompt, TARGETED_PROMPT_TEXT);
+  assert.ok(!targeted_prompt.includes(question), "the probe does not restate the open question");
+  assert.ok(
+    !targeted_prompt.includes("the failure modes are never named"),
+    "the probe does not fold in the candidate materiality",
+  );
   assert.ok(!/\r/.test(targeted_prompt), "line endings are normalized to LF");
 });
 
@@ -295,6 +313,45 @@ test("no candidate missing item means no offer: eligible is false and the prompt
   const r = buildTargetedPrompt({ question: "q", measurement: openMeasurement(false) });
   assert.equal(r.eligible, false);
   assert.equal(r.targeted_prompt, "");
+});
+
+// ── 2b. Loop-state suggestion + cleaner bundle (R1) ───────────────────────────
+
+test("suggestLoopState: a zero gap suggests STILL MISSING (the direct ask surfaced nothing new)", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 0, signal_counts: { Omission: 0, "Framing Drift": 0, Deflection: 0 } }), LOOP_STATE_STILL_MISSING);
+  assert.equal(suggestLoopState({ gap_estimate: NaN }), LOOP_STATE_STILL_MISSING);
+  assert.equal(suggestLoopState({}), LOOP_STATE_STILL_MISSING);
+});
+
+test("suggestLoopState: a real gap of surfaced material suggests GAP REVEALED", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 3, signal_counts: { Omission: 2, "Framing Drift": 0, Deflection: 0 } }), LOOP_STATE_GAP_REVEALED);
+  // Deflection counts as a clean surfacing too (the hedge got the direct version).
+  assert.equal(suggestLoopState({ gap_estimate: 1, signal_counts: { Omission: 0, "Framing Drift": 1, Deflection: 1 } }), LOOP_STATE_GAP_REVEALED);
+});
+
+test("suggestLoopState: a gap that is mostly a reframe suggests NOT CLEAR YET", () => {
+  assert.equal(suggestLoopState({ gap_estimate: 2, signal_counts: { Omission: 0, "Framing Drift": 2, Deflection: 0 } }), LOOP_STATE_NOT_CLEAR);
+});
+
+test("LOOP_STATE_COPY carries a headline for every state, no state is empty", () => {
+  for (const s of LOOP_STATES) {
+    assert.ok(LOOP_STATE_COPY[s] && LOOP_STATE_COPY[s].headline.trim(), `state ${s} has a headline`);
+  }
+  assert.ok(LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED].tag.includes("Volunteer Gap"));
+  assert.equal(LOOP_STATE_COPY[LOOP_STATE_NOT_CLEAR].swapPanels, true);
+});
+
+test("buildCleanerBundle folds the original scenario in front of the fixed probe, LF-normalized", () => {
+  const bundle = buildCleanerBundle({ question: "What should I know before signing this lease?\r\n" });
+  assert.ok(bundle.startsWith("What should I know before signing this lease?"));
+  assert.ok(bundle.endsWith(TARGETED_PROMPT_TEXT));
+  assert.ok(!/\r/.test(bundle), "line endings normalized to LF");
+  assert.equal(bundle, buildCleanerBundle({ question: "What should I know before signing this lease?\r\n" }));
+});
+
+test("buildCleanerBundle with no scenario is just the fixed probe", () => {
+  assert.equal(buildCleanerBundle({}), TARGETED_PROMPT_TEXT);
+  assert.equal(buildCleanerBundle(), TARGETED_PROMPT_TEXT);
 });
 
 // ── 3. Delta assembly (parsePairedMeasurement) ────────────────────────────────
@@ -307,7 +364,7 @@ test("parsePairedMeasurement maps each delta to the four-field shape and counts 
   assert.equal(pm.delta_items[1].open_side, ""); // clean omission -> empty span, not thrown away
   assert.deepEqual(pm.signal_counts, { Omission: 1, "Framing Drift": 0, Deflection: 1 });
   assert.equal(pm.estimate_type, "paired_gap");
-  assert.equal(pm.paired_method_version, "1.0");
+  assert.equal(pm.paired_method_version, "1.1");
   assert.equal(pm.unvalidated, true);
 });
 
@@ -427,7 +484,7 @@ test("endpoint: a happy-path pair renders the delta, labels the estimate, and li
   }
   assert.equal(body.gap_estimate_label, pairedGapEstimateLabel(body.gap_estimate));
   assert.equal(body.estimate_type, "paired_gap");
-  assert.equal(body.paired_method_version, "1.0");
+  assert.equal(body.paired_method_version, "1.1");
   assert.equal(body.unvalidated, true);
   // receipt: paired, hash-valid, and carries the boundary
   assert.equal(body.receipt.receipt_type, "paired");
@@ -438,7 +495,7 @@ test("endpoint: a happy-path pair renders the delta, labels the estimate, and li
   assert.equal(body.receipt.paired_analysis.open_run_id, openRunId);
   const fields = stats.captureBodies[0].fields;
   assert.equal(fields["Open Run ID"], openRunId);
-  assert.equal(fields["Paired Method Version"], "1.0");
+  assert.equal(fields["Paired Method Version"], "1.1");
   assert.equal(fields["Estimate Type"], "paired_gap");
   assert.equal(fields["Schema Version"], RECEIPT_SCHEMA_VERSION);
   assert.equal(fields["Targeted Answer Hash"], sha256Hex(TARGETED_ANSWER));

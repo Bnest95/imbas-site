@@ -578,7 +578,7 @@ export function createReadPairedHandler(deps = {}) {
     const openAnswer = openRun.answer || "";
 
     // Re-derive the targeted prompt from the open run's OWN measurement via the
-    // frozen paired_method_version 1.0 rule — never trusted from the client. A run
+    // frozen paired_method_version 1.1 rule — never trusted from the client. A run
     // with no eligible missing item never earned an offer, so a submit against it is
     // a client bug or a forged request.
     const { eligible, targeted_prompt } = buildTargetedPrompt({
