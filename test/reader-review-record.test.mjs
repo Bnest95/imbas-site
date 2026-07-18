@@ -50,7 +50,6 @@ import { lintUserFacingStrings } from "../reader-check-vocab.js";
 import {
   buildSingleReceipt,
   canonicalizeForHash,
-  RECEIPT_BOUNDARY,
 } from "../reader-receipt.js";
 
 // ── Synthetic fixtures (content-blind) ───────────────────────────────────────────
@@ -307,11 +306,10 @@ test("assembly: the artifact is the pasted answer, verbatim, unverified, role or
   assert.equal(a.verified, false);
 });
 
-test("assembly: inspector provenance rides through (model + prompt_version), boundary is byte-identical", async () => {
+test("assembly: inspector provenance rides through (model + prompt_version)", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
   assert.equal(record.contents.inspector.model, "claude-opus-4-8");
   assert.equal(record.contents.inspector.prompt_version, "reader.v3");
-  assert.equal(record.contents.boundary, RECEIPT_BOUNDARY);
 });
 
 test("assembly: client-held check status overrides the register status; a missing/invalid override falls back", async () => {

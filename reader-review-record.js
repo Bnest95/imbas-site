@@ -23,8 +23,6 @@
 // Tests additionally recompute the digest with node:crypto over the same canonical
 // string to prove the two primitives agree byte-for-byte (schema AT-14 parity).
 
-import { RECEIPT_BOUNDARY } from "./reader-receipt.js";
-
 // Version ids. The schema version tracks the frozen Review Graph erratum; the
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
@@ -230,7 +228,6 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt } = {
       inspection_run_at: inspectionRunAt,
     },
     method_note: METHOD_NOTE,
-    boundary: RECEIPT_BOUNDARY, // byte-identical to the receipt boundary line
   };
 
   return {
