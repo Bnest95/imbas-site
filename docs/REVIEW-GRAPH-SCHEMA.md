@@ -1,0 +1,266 @@
+REVIEW GRAPH — SCHEMA v0.2.2 (FROZEN ERRATUM)
+Status: FROZEN for the R3 v1 build. v0.2.2 issued 2026-07-17 as a freeze
+erratum to v0.2.1 (same day): demonstration shapes were defined only for
+local-integrity detectors while Check.demonstration is mandatory — the
+finding_derived comparative shape is now defined, and a minimal
+profile_derived shape is defined to close the same defect class before the
+profile lane can hit it. Every other v0.2.1 provision unchanged.
+Chain: v0.2.2 ← v0.2.1 (verification made optional, per-family rules)
+← v0.2 (four freeze-pass corrections) ← v0.1 (PROPOSED).
+Home: imbas-site, committed by the first R3 lane. Product object model — not
+instrument doctrine; creates no instrument-repo file.
+Governance base of record: imbas-instrument master
+7c625c8c1c59200957698cdb382cd7b94dd9caba (D-033/D-034/D-035 §8 RECORDED
+2026-07-17, all decisions PROPOSED; recording adopts nothing).
+Sequencing preserved: finding-derived ships first; local-integrity detectors
+ship only behind their negative suite and are the first cut under time
+pressure; contradiction carries its own independent ship gate; the
+deterministic Inspection Profile remains conditional.
+
+== 1. OBJECTS ==
+
+Inspection
+- id, created_at
+- inspector: {model, model_version, prompt_version}
+- mode: single | paired
+- input_artifact_id, supplied_material_ids[]
+- status: "provisional"   // constant; Reader output is never instrument-grade
+
+Artifact   // answers and supplied materials share this
+- id, role: original_answer | targeted_answer | supplied_source
+- body   // verbatim as pasted
+- source_model_user_reported: {name?, version?}, verified: false   // always false in Reader
+- supplied_at
+
+PairRun   // run-the-pair; mode = paired
+- targeted_prompt   // Reader-generated, non-leading, v1.1 style
+- original_artifact_id, targeted_artifact_id
+- capture: {same_model_claimed: bool, model_version_user_reported?,
+            user_edits_disclosed: bool, conditions_matched: true|false|unverified}
+- rule: conditions_matched != true → unmatched-conditions warning renders
+  on every surface derived from this run
+
+DetectorEvent   // the gate: no Check exists without one
+- id, family: comparative | local_integrity | profile
+- detector_id + detector_version
+  // named + versioned: vg.omission / vg.framing_drift / vg.active_foreclosure
+  // (any rename lands as a versioned enum change per the item-6 adjudication),
+  // li.contradiction.v1 / li.arith.v1 / li.temporal.v1 / li.quote.v1,
+  // prof.<profile_id>.<criterion_id>
+- evidence_spans[]: {artifact_id, start, end, quote}   // verbatim, offsets must resolve
+- verification?:
+    mode: mechanical | model_nominated
+    status: verified | nominated
+    verifier_id?
+    verifier_version?
+  // binding family rules:
+  // - comparative: verification MUST be absent. Inspector provenance
+  //   (model, model_version, prompt_version) is carried through the parent
+  //   Inspection and finding provenance. A comparative event FAILS
+  //   VALIDATION if a verification block is attached.
+  // - local_integrity:
+  //   - li.arith / li.temporal / li.quote require mode=mechanical and
+  //     status=verified; a Check may emit only at status=verified;
+  //   - li.contradiction requires mode=model_nominated and status=nominated;
+  //     its cards visibly state "model-nominated" and are never stored,
+  //     rendered, exported, or queried as mechanically verified; the
+  //     negative suite is mandatory but does not convert nomination into
+  //     verification.
+  // - profile: verification is REQUIRED when a profile criterion evaluator
+  //   runs — mode=mechanical, status=verified, with verifier_id and
+  //   verifier_version set to the criterion evaluator id and version.
+  //   Profile verification remains profile-derived and is never queried or
+  //   rendered as local-integrity verification; family remains
+  //   independently binding.
+
+Check   // the R3 card
+- id, detector_event_id   // REQUIRED
+- subclass: finding_derived | local_integrity | profile_derived
+- proposition_at_issue: {text, spans[]}   // must quote the artifact
+- dependent_output?: {text, spans[]}
+  // binding rule:
+  // - required when ranking.propagation is final_conclusion,
+  //   recommendation_or_action, or calculation
+  // - optional and normally absent when propagation is isolated_detail;
+  //   absence must not suppress an otherwise demonstrable check
+  // - when present, spans must resolve exactly
+  // - subclass interaction: finding_derived ALWAYS requires dependent_output
+  //   (the both-ends-quotable rule) — no demonstrable dependency, no check;
+  //   the conditional rule above governs local_integrity and profile_derived
+- demonstration: per-family structured block
+  // For subclass=finding_derived, DetectorEvent.family=comparative:
+  //   finding_type: omission | framing_drift | active_foreclosure
+  //   proposition_span_refs[]      // resolve only to spans already present
+  //                                // in proposition_at_issue
+  //   dependent_output_span_refs[] // resolve only to spans already present
+  //                                // in dependent_output
+  //   dependency_statement: string // answer-internal only: how the quoted
+  //                                // dependent output rests on the quoted
+  //                                // proposition; must not assert either
+  //                                // world-claim true, false, correct, or
+  //                                // incorrect
+  //   Binding: finding_type must agree with detector_id
+  //   (vg.omission → omission; vg.framing_drift → framing_drift;
+  //   vg.active_foreclosure → active_foreclosure); no comparative check
+  //   emits unless both referenced span sets are non-empty and valid
+  //   (satisfiable for every finding_derived check, which always carries
+  //   dependent_output under the both-ends rule); this demonstration is
+  //   inspector-derived and provisional — it is not mechanical verification.
+  // For subclass=local_integrity, per detector:
+  //   contradiction: both spans; arithmetic: stated numbers + operation +
+  //   recompute; temporal: dates side by side + the impossible ordering;
+  //   quotation: quoted text + normalized search result.
+  // For subclass=profile_derived, DetectorEvent.family=profile:
+  //   criterion_id                 // must equal the criterion segment of
+  //                                // detector_id
+  //   criterion_type: field_present | string_present | value_stated
+  //   target                       // the profile-supplied expectation,
+  //                                // restated verbatim
+  //   observed: present | absent | value_mismatch
+  //   evidence_spans[]             // exact spans when observed is present or
+  //                                // value_mismatch; empty permitted only
+  //                                // when observed=absent — the
+  //                                // demonstration of an absence is the
+  //                                // verbatim target plus the evaluator's
+  //                                // verified search (verification block
+  //                                // carries evaluator id/version)
+- verification_action: {question (copyable, non-leading),
+                        resolver: authority | document | calculation | direct_question}
+- status: open | resolved | dismissed
+- resolution?: {at, evidence_ids[], note, dismissal_reason?}
+- ranking: {demonstrability: mechanical_verified | model_nominated | comparative,
+            propagation: final_conclusion | recommendation_or_action |
+                         calculation | isolated_detail,
+            independent_conflict_count}
+  // demonstrability ranks in that order; v0.1's two-value enum could not
+  // represent a nominated contradiction after the verification split
+
+ResolutionEvidence
+- id, check_id, body, supplied_at, provisional: true
+
+Profile   // deterministic v1
+- profile_id, org_supplied: true
+- criteria[]: {criterion_id, description,
+               type: field_present | string_present | value_stated, target}
+- provenance: organization_profile_criterion   // NEVER "anchor"
+- evaluation: criterion → DetectorEvent(family=profile) → Check(profile_derived)
+
+ReviewRecord   // the export; "Review Packet"
+- id, inspection_ids[], created_at
+- contents: artifacts, pair runs, detector events, checks with status +
+  demonstrations, resolution evidence, inspector provenance, versions,
+  timestamps, method note
+- integrity:
+    algorithm: sha256
+    canonicalization: review-record.c14n.v1
+    digest: string
+  // unkeyed integrity, stated as such — never "signature"
+- vocabulary: "record of what was examined and resolved" —
+  never defensibility / compliance / adequate-care claims
+
+review-record.c14n.v1 (canonicalization contract)
+- UTF-8
+- fixed object-key ordering
+- array order preserved
+- timestamps normalized to RFC 3339 UTC
+- no insignificant whitespace
+- the integrity block itself is excluded from the hashed body
+
+CandidateSubmission   // schema-only; runtime dark
+- id, inspection_id, explicit_consent: bool, submitted_at
+- admission_status: "none"
+- activation_decision_id?: string
+- no write path activates until a separate, dated founder decision expressly
+  authorizes governed candidate intake and names:
+  - the permitted source surface
+  - required consent
+  - custody destination
+  - provenance fields
+  - human review boundary
+  - retention/deletion rule
+- absent activation_decision_id → the write path throws
+- the authorizing decision is an instrument-ledger act and must satisfy the
+  instrument's telemetry-boundary law; no such decision exists today, and
+  this schema does not invent one. D-033 (downstream corpus eligibility) and
+  D-034 (financial independence) do NOT authorize intake and are not this gate.
+
+== 2. DETECTOR PIPELINE (binding — kills "deterministic" drift) ==
+Extraction may be model-assisted; emission is family-specific:
+- mechanical families (li.arith, li.temporal, li.quote): a code verifier must
+  run and reach status=verified before any Check emits —
+  arithmetic: recompute from stated numbers/units/operation, rounding
+  tolerance honored;
+  temporal: date parse + ordering check — impossible, not merely unusual;
+  quotation: normalized string search per norm.v1 (quote marks, whitespace,
+  line breaks, hyphenation, ellipses); fixed output string:
+  "The quoted language was not found as quoted in the supplied source."
+- li.contradiction: no mechanical verifier exists; model-nominated only,
+  both-spans demonstration mandatory, ships only behind the green negative
+  suite; if it cannot pass, it drops to v1.1 alone — the other three do not
+  wait for it. Nomination never upgrades to mechanical verification.
+- comparative (vg.*): emitted from the inspector's findings under its own
+  model + prompt_version provenance, carried on the parent Inspection;
+  comparative events carry no verification block; their checks carry the
+  finding_derived comparative demonstration.
+- profile (prof.*): criterion evaluator runs as code; verification block
+  carries evaluator id/version; checks carry the profile_derived
+  demonstration.
+V1 cost shape: R3 rides the existing inspector call; mechanical verification
+is code; no second model call.
+
+== 3. ACCEPTANCE TESTS (lane build gates) ==
+AT-1  Gating: Check creation without a resolving detector_event_id fails
+      validation. No ambient checks.
+AT-2  Quotability: proposition spans always resolve to exact substrings.
+      dependent_output follows the binding rule — required for
+      final_conclusion / recommendation_or_action / calculation propagation
+      and for every finding_derived check (no demonstrable dependency → not
+      emitted); optional for isolated_detail, and its absence must not
+      suppress an otherwise demonstrable check; when present, spans resolve
+      exactly. Failure mode is silence, not degradation.
+AT-3  Demonstration: the required structured demonstration for the event
+      family and Check subclass is enforced. finding_derived comparative:
+      finding_type must match detector_id, both span-reference sets must
+      resolve to the Check's exact quoted spans, and the dependency
+      statement must be present. local_integrity: per-detector required
+      fields. profile_derived: criterion demonstration with criterion_id
+      matching the detector_id's criterion segment. Missing or inconsistent
+      fields → invalid and no Check emitted.
+AT-4  Separation: local_integrity and profile_derived stored and rendered
+      apart from comparative findings; "measurement findings" queries never
+      return them.
+AT-5  Vocabulary lint (CI, site repo): banned constructions on all
+      user-facing strings — true/false/correct/incorrect/wrong for
+      world-claims; safe/unsafe-to-rely; defensible/compliance-proof/
+      adequate-review; reliance-verdict forms. Lint list versioned; this is
+      the v1 slice of the claims compiler.
+AT-6  Provenance rendering: every card shows family + detector_id +
+      provisional status; a screenshotted card in isolation still carries them.
+AT-7  Provisional invariant: no instrument-grade language anywhere in
+      Reader/R3 output; the packet states unkeyed integrity honestly.
+AT-8  Intake dark: no CandidateSubmission write path exists in v1; a
+      guardrail test pins that any future write path throws absent an
+      activation_decision_id referencing a dated founder intake-activation
+      decision; the dark default is pinned by test. This gate is the generic
+      intake-activation decision — not D-033/D-034 adoption.
+AT-9  Ranking determinism: fixed inputs → identical top-3
+      (demonstrability, then propagation, then count; stable tiebreak =
+      earliest span offset).
+AT-10 Negative suite (ship gate, local-integrity only): all four detectors
+      silent on the apparent-but-not-actual set — scoped claims, rounding
+      within tolerance, legitimate hedging, restatement/paraphrase. Suite
+      ships with the feature.
+AT-11 norm.v1: quotation-normalization test vectors included and pinned.
+AT-12 Pair capture: unmatched or unverified conditions always render the
+      warning; source model stored user-reported, verified: false.
+AT-13 Mode and family non-conflation: a comparative event cannot carry a
+      verification block — attaching one fails validation; mechanically
+      verified and model-nominated local-integrity checks cannot be
+      conflated in storage, rendering, export, or query results — a
+      nominated check never surfaces as verified anywhere; profile
+      mechanical verification cannot be conflated with local-integrity
+      mechanical verification, because family remains independently binding.
+AT-14 Integrity digest: identical logical records produce identical digests;
+      any artifact, span, status, resolution, provenance, version, or
+      timestamp mutation changes the digest; presentation-only formatting
+      outside the canonical body does not.
