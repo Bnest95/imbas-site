@@ -23,6 +23,7 @@ import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 import { CHECK_UI } from "./reader-checks.js";
+import { buildReviewRecord, reviewRecordFilename, REVIEW_RECORD_UI } from "./reader-review-record.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -4165,8 +4166,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
 // Copying the question fires target_question_copied; marking the check resolved
 // fires loop_completed once — so a completed check-loop counts toward the north-star
 // exactly like the Confirmation Loop.
-function CheckCard({ card, run }) {
-  const [status, setStatus] = useState(card.status || "open");
+function CheckCard({ card, run, status, onStatus }) {
   const [copied, setCopied] = useState(false);
   const [copyFail, setCopyFail] = useState("");
   const completedRef = useRef(false);
@@ -4187,7 +4187,9 @@ function CheckCard({ card, run }) {
 
   const setStatusTo = (next) => {
     if (next === status) return;
-    setStatus(next);
+    // Status is lifted to the register panel so the review-record export reflects it;
+    // this card stays the control surface. No server persistence — client state only.
+    onStatus(card.id, next);
     // A completed loop is the person closing the check after running it. Fire once
     // per card — reopening and re-resolving is not a second completion.
     if (next === "resolved" && !completedRef.current) {
@@ -4254,6 +4256,12 @@ function CheckRegisterPanel({ result }) {
   const reg = result?.checks;
   const run = result?.receipt?.open_run?.provenance?.request_id || "";
   const [showAll, setShowAll] = useState(false);
+  // Client-held check status, lifted out of the cards so the review-record export
+  // reflects every mark. Sparse: only touched cards appear; untouched checks keep
+  // the register's "open". No server persistence — this map never leaves the tab.
+  const [statuses, setStatuses] = useState({});
+  const setStatus = (id, next) =>
+    setStatuses((m) => (m[id] === next ? m : { ...m, [id]: next }));
   if (!reg || !Array.isArray(reg.cards) || reg.cards.length === 0) return null;
   const topN = reg.default_top_n || 3;
   const hasMore = reg.cards.length > topN;
@@ -4267,7 +4275,13 @@ function CheckRegisterPanel({ result }) {
       {hasMore && !showAll ? <p className="wb-checks__eyebrow">{CHECK_UI.top_label}</p> : null}
       <ul className="wb-checks__list">
         {cards.map((card) => (
-          <CheckCard key={card.id} card={card} run={run} />
+          <CheckCard
+            key={card.id}
+            card={card}
+            run={run}
+            status={statuses[card.id] || card.status || "open"}
+            onStatus={setStatus}
+          />
         ))}
       </ul>
       {hasMore ? (
@@ -4275,8 +4289,58 @@ function CheckRegisterPanel({ result }) {
           {showAll ? CHECK_UI.collapse_label : `${CHECK_UI.expand_label} (${reg.cards.length})`}
         </button>
       ) : null}
+      <ReviewRecordExport result={result} statuses={statuses} />
       <p className="wb-reader-result__trust wb-checks__boundary">{RECEIPT_BOUNDARY}</p>
     </section>
+  );
+}
+
+// Download the whole inspection as a ReviewRecord (the "Review Packet"): the pasted
+// answer as an Artifact, the checks with their client-held status, the detector
+// events, inspector provenance, versions, timestamps, a method note, and an
+// unkeyed SHA-256 integrity digest over the record's canonical form. Built and
+// hashed entirely in the tab and handed to the browser as a JSON file — no server
+// round-trip, no persistence of the pasted answer anywhere. JSON only in v1.
+function ReviewRecordExport({ result, statuses }) {
+  const [downloaded, setDownloaded] = useState(false);
+  const [failMsg, setFailMsg] = useState("");
+  const busyRef = useRef(false);
+  const download = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    try {
+      const record = await buildReviewRecord({
+        result,
+        checkStates: statuses,
+        createdAt: new Date().toISOString(),
+      });
+      const blob = new Blob([JSON.stringify(record, null, 2)], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = reviewRecordFilename(record);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      setFailMsg("");
+      setDownloaded(true);
+      setTimeout(() => setDownloaded(false), 1800);
+    } catch {
+      setFailMsg(REVIEW_RECORD_UI.download_error);
+      setTimeout(() => setFailMsg(""), 2200);
+    } finally {
+      busyRef.current = false;
+    }
+  };
+  return (
+    <div className="wb-checks__export">
+      <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={download}>
+        {downloaded ? REVIEW_RECORD_UI.downloaded_label : REVIEW_RECORD_UI.action_label}
+      </Btn>
+      <span className="wb-checks__export-hint">{REVIEW_RECORD_UI.action_hint}</span>
+      {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
+    </div>
   );
 }
 

@@ -4389,6 +4389,25 @@
   margin-top: 0.9rem;
 }
 
+/* Review-record export — the ghost button reuses the shared .btn chrome; this row
+   only sets the separator, spacing, and the muted mono hint beside it. */
+.wb-checks__export {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.1);
+}
+
+.wb-checks__export-hint {
+  font-family: var(--font-mono);
+  font-size: max(0.68rem, var(--mono-min));
+  letter-spacing: 0.03em;
+  color: rgba(205, 192, 176, 0.62);
+}
+
 /* Act 2 — the two-question test offer.
    Reuses the .wb-reader-result.is-agent card chrome and the shared copy-row
    idiom; these overrides carry only the offer sentence, the constructed prompt
