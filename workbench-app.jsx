@@ -18,6 +18,12 @@ import {
   CHECK_CHOICE_COPY,
   CHECK_QUICK_COPY,
   CHECK_CLEANER_COPY,
+  buildPairCapture,
+  pairConditionsUnmatched,
+  PAIR_SAME_MODEL,
+  PAIR_EDITS,
+  PAIR_CAPTURE_UI,
+  PAIRED_METHOD_VERSION,
 } from "./reader-paired.js";
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
@@ -3880,9 +3886,17 @@ function GapXray({ counts }) {
 // instrument. The formal signal patterns and the "Machine gap estimate" label appear
 // HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
 // note when the response carries them.
-function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
+function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTryCleaner }) {
   const items = Array.isArray(paired.delta_items) ? paired.delta_items : [];
   const counts = paired.signal_counts || {};
+
+  // Run-the-pair v1: when the capture didn't come through as matched conditions
+  // (a different model, a disclosed edit, or a setup the person wasn't sure about),
+  // the same one-function rule that governs the review record fires the warning here
+  // on the side-by-side. pairConditionsUnmatched keys off conditions_matched != true,
+  // so the rule can never drift between this surface and the exported pair_runs entry.
+  const capture = pair && pair.capture;
+  const unmatched = pairConditionsUnmatched(capture);
 
   // The machine SUGGESTS a state from the paired measurement; the person can correct
   // it with one tap, and the correction is what gets recorded (reader-paired.js law).
@@ -3949,6 +3963,12 @@ function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
       <div className="wb-loop__reveal">
         <h3 className="wb-loop__headline">{copy.headline}</h3>
         <div className="wb-loop__panels">{panels}</div>
+        {unmatched ? (
+          <div className="wb-loop__unmatched" role="note">
+            <span className="wb-loop__unmatched-badge">{PAIR_CAPTURE_UI.unmatched_badge}</span>
+            <p className="wb-loop__unmatched-warning">{PAIR_CAPTURE_UI.unmatched_warning}</p>
+          </div>
+        ) : null}
         {copy.tag ? <p className="wb-loop__tag">{copy.tag}</p> : null}
 
         {userState === LOOP_STATE_STILL_MISSING && copy.cta ? (
@@ -4038,6 +4058,13 @@ function PairedDeltaView({ paired, onReset, run, check, onTryCleaner }) {
 
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
 
+      {/* Run-the-pair v1: the paired inspection exports as a ReviewRecord with the
+          SECOND answer stored as a targeted_answer Artifact and one schema PairRun
+          carrying the capture block (mode = paired). No checks ride along — the paired
+          inspection produces a delta, not comparative checks (schema Checks from paired
+          findings are v1.1). The single-mode export lives on the Check Register panel. */}
+      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} />
+
       <ReaderShareAction mode="paired" receipt={paired.receipt} />
 
       <PerceptionTap mode="paired" receipt={paired.receipt} />
@@ -4070,8 +4097,33 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
   const [paired, setPaired] = useState(null);
   const [fieldError, setFieldError] = useState("");
   const [runError, setRunError] = useState("");
+  // Capture discipline (run-the-pair v1): how the person ran the two answers. Each
+  // stays unset until tapped; an untouched question derives conditions_matched =
+  // "unverified" (never invented as a positive claim). Never gates the compare — the
+  // loop always completes (schema §1). buildPairCapture owns the conservative rule.
+  const [sameModel, setSameModel] = useState(null);
+  const [modelVersion, setModelVersion] = useState("");
+  const [edits, setEdits] = useState(null);
   if (!openReceipt) return null;
   const hasAnswer = !!targeted.trim();
+
+  // The capture the side-by-side and the review record both key off. Built from the
+  // three loose-voice inputs; the second answer is stored verbatim as pasted. The
+  // paired inspection ran on the production model under paired_method_version — a
+  // populated pair_runs array is the schema's mode=paired marker.
+  const capture = buildPairCapture({ same_model: sameModel, model_version: modelVersion, edits });
+  const openRun = (openReceipt && openReceipt.open_run) || {};
+  const readerModel = (openRun.provenance && openRun.provenance.reader_model_version) || "";
+  const pair = {
+    targeted_answer: targeted,
+    targeted_prompt: (paired && paired.targeted_prompt) || TARGETED_PROMPT_TEXT,
+    capture,
+    targeted_source_model: {
+      name: sameModel === PAIR_SAME_MODEL.YES ? (openRun.declared_model || "") : "",
+      version: modelVersion.trim(),
+    },
+    inspector: { model: readerModel, model_version: readerModel, prompt_version: PAIRED_METHOD_VERSION },
+  };
 
   const touch = (v) => {
     setTargeted(v);
@@ -4084,6 +4136,9 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
     setTargeted("");
     setFieldError("");
     setRunError("");
+    setSameModel(null);
+    setModelVersion("");
+    setEdits(null);
   };
 
   const submit = async () => {
@@ -4118,7 +4173,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
   if (paired) {
     return (
       <div className="wb-act2__test">
-        <PairedDeltaView paired={paired} onReset={reset} run={run} check={check} onTryCleaner={onTryCleaner} />
+        <PairedDeltaView paired={paired} pair={pair} openReceipt={openReceipt} onReset={reset} run={run} check={check} onTryCleaner={onTryCleaner} />
       </div>
     );
   }
@@ -4133,6 +4188,62 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
         placeholder="Paste what your AI came back with…"
         minAckLength={1}
       />
+
+      <div className="wb-act2__capture" role="group" aria-label="How you ran the two answers">
+        <p className="wb-act2__capture-heading">{PAIR_CAPTURE_UI.heading}</p>
+        <p className="wb-act2__capture-intro">{PAIR_CAPTURE_UI.intro}</p>
+
+        <fieldset className="wb-act2__capture-q">
+          <legend className="wb-act2__capture-label">{PAIR_CAPTURE_UI.same_model.question}</legend>
+          <div className="wb-act2__capture-opts">
+            {[PAIR_SAME_MODEL.YES, PAIR_SAME_MODEL.NO, PAIR_SAME_MODEL.NOT_SURE].map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`wb-act2__capture-opt${sameModel === v ? " is-active" : ""}`}
+                aria-pressed={sameModel === v}
+                onClick={() => setSameModel(v)}
+              >
+                {PAIR_CAPTURE_UI.same_model.options[v]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="wb-act2__capture-q">
+          <label className="wb-act2__capture-label" htmlFor="wb-pair-model">{PAIR_CAPTURE_UI.model_version.question}</label>
+          <span className="wb-act2__capture-hint">{PAIR_CAPTURE_UI.model_version.hint}</span>
+          <input
+            id="wb-pair-model"
+            type="text"
+            className="wb-act2__capture-input"
+            value={modelVersion}
+            maxLength={80}
+            placeholder={PAIR_CAPTURE_UI.model_version.placeholder}
+            onChange={(e) => setModelVersion(e.target.value)}
+          />
+        </div>
+
+        <fieldset className="wb-act2__capture-q">
+          <legend className="wb-act2__capture-label">{PAIR_CAPTURE_UI.edits.question}</legend>
+          <div className="wb-act2__capture-opts">
+            {[PAIR_EDITS.NONE, PAIR_EDITS.EDITED].map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={`wb-act2__capture-opt${edits === v ? " is-active" : ""}`}
+                aria-pressed={edits === v}
+                onClick={() => setEdits(v)}
+              >
+                {PAIR_CAPTURE_UI.edits.options[v]}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <p className="wb-act2__capture-disclosure">{PAIR_CAPTURE_UI.disclosure}</p>
+      </div>
+
       <div className="wb-action-row wb-act2__test-cta">
         <Btn
           kind="primary"
@@ -4301,7 +4412,7 @@ function CheckRegisterPanel({ result }) {
 // unkeyed SHA-256 integrity digest over the record's canonical form. Built and
 // hashed entirely in the tab and handed to the browser as a JSON file — no server
 // round-trip, no persistence of the pasted answer anywhere. JSON only in v1.
-function ReviewRecordExport({ result, statuses }) {
+function ReviewRecordExport({ result, statuses, pair = null }) {
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
   const busyRef = useRef(false);
@@ -4313,6 +4424,7 @@ function ReviewRecordExport({ result, statuses }) {
         result,
         checkStates: statuses,
         createdAt: new Date().toISOString(),
+        pair,
       });
       const blob = new Blob([JSON.stringify(record, null, 2)], { type: "application/json;charset=utf-8" });
       const url = URL.createObjectURL(blob);

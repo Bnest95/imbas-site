@@ -4575,6 +4575,120 @@
   color: rgba(205, 192, 176, 0.78);
 }
 
+/* Run-the-pair v1 — capture discipline at paste-back. Marks how the person ran the
+   two answers (same model? which one? edited?). Loose voice, never a gate. Same umber
+   idiom as the quick/cleaner choice above: ember appears only on the active option. */
+.wb-act2__capture {
+  margin: 1rem 0 0.95rem;
+  padding: 0.9rem 0.95rem 0.95rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 8px;
+  background: rgba(24, 19, 15, 0.4);
+}
+
+.wb-act2__capture-heading {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(242, 232, 220, 0.94);
+}
+
+.wb-act2__capture-intro {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(190, 178, 164, 0.72);
+}
+
+.wb-act2__capture-q {
+  margin: 0 0 0.85rem;
+  padding: 0;
+  border: 0;
+}
+
+.wb-act2__capture-q:last-of-type {
+  margin-bottom: 0;
+}
+
+.wb-act2__capture-label {
+  display: block;
+  margin: 0 0 0.45rem;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(228, 216, 200, 0.9);
+}
+
+.wb-act2__capture-hint {
+  display: block;
+  margin: -0.3rem 0 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: rgba(185, 172, 155, 0.68);
+}
+
+.wb-act2__capture-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.wb-act2__capture-opt {
+  padding: 0.5rem 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  text-align: left;
+  border: 1px solid rgba(242, 232, 220, 0.14);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.4);
+  color: rgba(205, 192, 176, 0.85);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.wb-act2__capture-opt:hover {
+  border-color: rgba(242, 232, 220, 0.26);
+  color: rgba(228, 216, 200, 0.95);
+}
+
+.wb-act2__capture-opt.is-active {
+  border-color: rgba(222, 111, 56, 0.6);
+  background: rgba(222, 111, 56, 0.1);
+  color: #f2e8dc;
+}
+
+.wb-act2__capture-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: #f2e8dc;
+  border: 1px solid rgba(242, 232, 220, 0.16);
+  border-radius: 6px;
+  background: rgba(18, 16, 13, 0.5);
+}
+
+.wb-act2__capture-input:focus {
+  outline: none;
+  border-color: rgba(222, 111, 56, 0.55);
+}
+
+.wb-act2__capture-input::placeholder {
+  color: rgba(180, 168, 154, 0.5);
+}
+
+.wb-act2__capture-disclosure {
+  margin: 0.85rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: rgba(185, 172, 155, 0.66);
+}
+
 /* Item 1c — small print under the prompt, sub under the CTA. */
 .wb-act2__prompt-note {
   margin: -0.55rem 0 1rem;
@@ -4656,6 +4770,37 @@
   font-size: 0.95rem;
   line-height: 1.5;
   color: rgba(235, 222, 205, 0.94);
+}
+
+/* Run-the-pair v1 — the unmatched-conditions warning. Fires on the side-by-side
+   whenever conditions_matched != true (a different model, a disclosed edit, or an
+   unsure setup). Points at HOW to read the pair; never a verdict on either answer.
+   Ember left-rule, same idiom as the return strip — a mark, not a fill. */
+.wb-loop__unmatched {
+  margin: 0 0 0.9rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-left: 2px solid rgba(222, 111, 56, 0.55);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.42);
+}
+
+.wb-loop__unmatched-badge {
+  display: inline-block;
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(222, 150, 120, 0.9);
+}
+
+.wb-loop__unmatched-warning {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(220, 208, 192, 0.9);
 }
 
 .wb-loop__cta-row {
