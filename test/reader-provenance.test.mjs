@@ -14,7 +14,7 @@ import { createRuntimeContext } from "../reader-runtime.js";
 import { _resetMemoryStateForTests } from "../reader-security.js";
 
 const MODEL = "claude-opus-4-8";
-const PROMPT_VERSION = "reader.v2";
+const PROMPT_VERSION = "reader.v3";
 const LONG_ANSWER =
   "This is a sufficiently long pasted model answer with more than enough words to clear the validation gate cleanly.";
 

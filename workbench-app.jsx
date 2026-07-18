@@ -22,6 +22,7 @@ import {
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
+import { CHECK_UI } from "./reader-checks.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -4154,6 +4155,131 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
 // clear the observable capacity (design §8). Renders nothing otherwise — no
 // measurement, or a clean/framing-only answer with nothing to probe — so its absence
 // never degrades Act 1. The paste box + paired analysis mount at the seam below.
+// Check Register v1 (Reader v3 R3) — one finding-derived comparative check card.
+// Each card points at a single place where a later output in the answer rests on an
+// earlier proposition in the SAME answer — both quoted verbatim — and hands over a
+// copyable, non-leading verification question. It is a provisional pointer, never a
+// verdict. The head carries family + detector id + provisional status so a card
+// screenshotted in isolation still shows its provenance (AT-6). The status control
+// (open / resolved / set aside) is client-side only — no server persistence.
+// Copying the question fires target_question_copied; marking the check resolved
+// fires loop_completed once — so a completed check-loop counts toward the north-star
+// exactly like the Confirmation Loop.
+function CheckCard({ card, run }) {
+  const [status, setStatus] = useState(card.status || "open");
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  const completedRef = useRef(false);
+  const labels = CHECK_UI.labels;
+
+  const copyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(card.verification_question || "");
+      setCopied(true);
+      setCopyFail("");
+      emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check: card.finding_type });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+
+  const setStatusTo = (next) => {
+    if (next === status) return;
+    setStatus(next);
+    // A completed loop is the person closing the check after running it. Fire once
+    // per card — reopening and re-resolving is not a second completion.
+    if (next === "resolved" && !completedRef.current) {
+      completedRef.current = true;
+      emitReaderEvent(READER_EVENTS.LOOP_COMPLETED, { run, check: card.finding_type, state: "resolved" });
+    }
+  };
+
+  return (
+    <li className={`wb-check wb-check--${status}`}>
+      <div className="wb-check__head">
+        <span className="wb-check__family">{card.family}</span>
+        <span className="wb-check__detector">{card.detector_id}</span>
+        <span className="wb-check__finding">{card.finding_label}</span>
+        <span className="wb-check__provisional">{card.provisional_label}</span>
+      </div>
+
+      <div className="wb-check__pair">
+        <span className="wb-check__label">{labels.proposition}</span>
+        <blockquote className="wb-check__quote">{card.proposition?.text}</blockquote>
+      </div>
+      <div className="wb-check__pair">
+        <span className="wb-check__label">{labels.dependent}</span>
+        <blockquote className="wb-check__quote">{card.dependent_output?.text}</blockquote>
+      </div>
+      <p className="wb-check__dependency">
+        <span className="wb-check__label">{labels.dependency}</span> {card.dependency_statement}
+      </p>
+
+      <div className="wb-check__verify">
+        <span className="wb-check__label">{labels.verification}</span>
+        <p className="wb-check__question">{card.verification_question}</p>
+        <div className="wb-check__actions">
+          <Btn kind="primary" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
+            {copied ? CHECK_UI.copied_affordance : CHECK_UI.copy_affordance}
+          </Btn>
+          <span className="wb-check__resolver">{card.resolver_label}</span>
+          {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+        </div>
+      </div>
+
+      <div className="wb-check__status" role="group" aria-label="Status">
+        <span className="wb-check__label">{labels.status}</span>
+        {["open", "resolved", "dismissed"].map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={`wb-check__status-opt${status === s ? " is-active" : ""}`}
+            aria-pressed={status === s}
+            onClick={() => setStatusTo(s)}
+          >
+            {CHECK_UI.status_labels[s]}
+          </button>
+        ))}
+      </div>
+    </li>
+  );
+}
+
+// The Check Register panel: the top few cards by default, expandable to the full
+// register. Renders nothing when the register carries no cards (the both-ends rule
+// leaves most answers with none — silence, not an empty ceremony).
+function CheckRegisterPanel({ result }) {
+  const reg = result?.checks;
+  const run = result?.receipt?.open_run?.provenance?.request_id || "";
+  const [showAll, setShowAll] = useState(false);
+  if (!reg || !Array.isArray(reg.cards) || reg.cards.length === 0) return null;
+  const topN = reg.default_top_n || 3;
+  const hasMore = reg.cards.length > topN;
+  const cards = showAll ? reg.cards : reg.cards.slice(0, topN);
+  return (
+    <section className="wb-reader-result is-agent wb-checks wb-scroll-anchor" aria-labelledby="wb-checks-heading">
+      <div className="wb-reader-result__head">
+        <h2 id="wb-checks-heading" className="wb-reader-result__title">{CHECK_UI.register_heading}</h2>
+      </div>
+      <p className="wb-checks__note">{CHECK_UI.register_note}</p>
+      {hasMore && !showAll ? <p className="wb-checks__eyebrow">{CHECK_UI.top_label}</p> : null}
+      <ul className="wb-checks__list">
+        {cards.map((card) => (
+          <CheckCard key={card.id} card={card} run={run} />
+        ))}
+      </ul>
+      {hasMore ? (
+        <button type="button" className="wb-checks__more wb-focus" onClick={() => setShowAll((v) => !v)}>
+          {showAll ? CHECK_UI.collapse_label : `${CHECK_UI.expand_label} (${reg.cards.length})`}
+        </button>
+      ) : null}
+      <p className="wb-reader-result__trust wb-checks__boundary">{RECEIPT_BOUNDARY}</p>
+    </section>
+  );
+}
+
 function Act2Offer({ result }) {
   const act2 = result?.act2;
   const run = result?.receipt?.open_run?.provenance?.request_id || "";
@@ -4965,6 +5091,11 @@ function ReaderWorkbench() {
                   result={readerResult}
                   context={{ mode, sel, question, answer, model, topic }}
                 />
+              </div>
+            ) : null}
+            {readerResult.checks && Array.isArray(readerResult.checks.cards) && readerResult.checks.cards.length ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
+                <CheckRegisterPanel result={readerResult} />
               </div>
             ) : null}
             {readerResult.measurement && readerResult.receipt ? (
