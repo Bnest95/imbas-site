@@ -1,12 +1,15 @@
-REVIEW GRAPH — SCHEMA v0.2.2 (FROZEN ERRATUM)
-Status: FROZEN for the R3 v1 build. v0.2.2 issued 2026-07-17 as a freeze
-erratum to v0.2.1 (same day): demonstration shapes were defined only for
-local-integrity detectors while Check.demonstration is mandatory — the
-finding_derived comparative shape is now defined, and a minimal
-profile_derived shape is defined to close the same defect class before the
-profile lane can hit it. Every other v0.2.1 provision unchanged.
-Chain: v0.2.2 ← v0.2.1 (verification made optional, per-family rules)
-← v0.2 (four freeze-pass corrections) ← v0.1 (PROPOSED).
+REVIEW GRAPH — SCHEMA v0.2.3 (FROZEN ERRATUM)
+Status: FROZEN for the v1 build. v0.2.3 issued 2026-07-17 as a freeze
+erratum to v0.2.2 (same day): AT-14's timestamp-mutation rule contradicted
+the c14n contract's RFC 3339 UTC normalization — the rule now keys on the
+represented instant; the c14n contract gains a pinned canonical timestamp
+form and an explicit timestamps-only-normalization / verbatim-strings
+clause. Every other v0.2.2 provision unchanged. R3 shipped against v0.2.2
+(no shipped code or test touches the amended provisions); the Review
+Record lane ships against v0.2.3.
+Chain: v0.2.3 ← v0.2.2 (demonstration shapes for comparative and profile)
+← v0.2.1 (verification made optional, per-family rules) ← v0.2 (four
+freeze-pass corrections) ← v0.1 (PROPOSED).
 Home: imbas-site, committed by the first R3 lane. Product object model — not
 instrument doctrine; creates no instrument-repo file.
 Governance base of record: imbas-instrument master
@@ -160,10 +163,17 @@ ReviewRecord   // the export; "Review Packet"
 
 review-record.c14n.v1 (canonicalization contract)
 - UTF-8
-- fixed object-key ordering
+- fixed object-key ordering (recursive lexicographic)
 - array order preserved
-- timestamps normalized to RFC 3339 UTC
-- no insignificant whitespace
+- timestamps normalized to RFC 3339 UTC; canonical form is millisecond
+  precision, YYYY-MM-DDTHH:mm:ss.sssZ (the JavaScript Date#toISOString
+  form); sub-millisecond precision is truncated; equivalent
+  representations of the same instant canonicalize identically
+- no insignificant whitespace (JSON structural whitespace only;
+  whitespace inside string values is significant and preserved)
+- normalization applies to timestamps only; every other string value,
+  including Artifact.body ("verbatim as pasted"), hashes verbatim — no
+  Unicode normalization, no trimming (span offsets depend on it)
 - the integrity block itself is excluded from the hashed body
 
 CandidateSubmission   // schema-only; runtime dark
@@ -260,7 +270,16 @@ AT-13 Mode and family non-conflation: a comparative event cannot carry a
       nominated check never surfaces as verified anywhere; profile
       mechanical verification cannot be conflated with local-integrity
       mechanical verification, because family remains independently binding.
-AT-14 Integrity digest: identical logical records produce identical digests;
-      any artifact, span, status, resolution, provenance, version, or
-      timestamp mutation changes the digest; presentation-only formatting
-      outside the canonical body does not.
+AT-14 Integrity digest: identical logical records produce identical
+      digests; timestamp strings representing the same instant produce
+      identical digests after RFC 3339 UTC normalization (offset forms
+      and fractional-zero forms included); changing the represented
+      instant changes the digest; any artifact, span, status, resolution,
+      provenance, version, or other canonical-body value mutation changes
+      the digest; presentation-only formatting outside the canonical body
+      does not; changes confined to the excluded integrity block do not
+      alter the digest recomputed from the canonical body. Test vectors
+      pinned, including: 2026-07-17T12:00:00Z ≡ 2026-07-17T08:00:00-04:00
+      ≡ 2026-07-17T12:00:00.000Z (identical digests);
+      2026-07-17T12:00:00Z vs 2026-07-17T12:00:01Z (different digests);
+      integrity-block-only mutation (recomputed digest unchanged).
