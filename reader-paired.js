@@ -154,3 +154,108 @@ export function buildCleanerBundle({ question } = {}) {
   lines.push(TARGETED_PROMPT_TEXT);
   return normalizeLineEndings(lines.join("\n")).trim();
 }
+
+// ── Run-the-pair v1: capture discipline + schema PairRun ──────────────────────
+// The paste-back step records HOW the person ran the two answers, in loose voice,
+// and derives one conservative flag — conditions_matched — that the schema PairRun
+// (docs/REVIEW-GRAPH-SCHEMA.md §1) carries. Nothing here gates the loop: the reveal
+// always completes. Disclosure marks how clean the capture was; it never decides
+// whether the conditions lined up, and it can't suppress the warning when they
+// didn't (the conditions_matched != true rule renders on every derived surface).
+//
+// Pure JS, like the rest of this module: no DOM, no storage, no model call. The
+// client (workbench-app.jsx) collects the three inputs and calls buildPairCapture;
+// the review record (reader-review-record.js) embeds the returned PairRun verbatim.
+
+// Capture input enums — the three answers the paste-back form can yield. Anything
+// outside these (including an unanswered/skipped question, undefined) is treated as
+// unresolved, never as a positive claim in either direction.
+export const PAIR_SAME_MODEL = { YES: "yes", NO: "no", NOT_SURE: "not_sure" };
+export const PAIR_EDITS = { NONE: "none", EDITED: "edited" };
+// The third conditions_matched state. true and false are booleans; unverified is
+// this literal string, so the schema's `conditions_matched != true` rule catches
+// BOTH a false and an unverified with one `!== true` comparison.
+export const PAIR_CONDITIONS_UNVERIFIED = "unverified";
+const PAIR_MODEL_VERSION_MAX = 80;
+
+// Conservative derivation (the AT-12 truth table). FALSE WINS: any disclosed edit,
+// or a different model, forces conditions_matched = false — an edited or cross-model
+// pair was NOT run under matched conditions, whatever else was said. true is earned
+// only by the one clean case: same model affirmed AND neither answer edited.
+// Everything unresolved — "not sure", or a question left unanswered — is unverified,
+// never invented as either matched or unmatched.
+export function deriveConditionsMatched({ same_model, edits } = {}) {
+  if (edits === PAIR_EDITS.EDITED) return false; // a disclosed edit is never matched
+  if (same_model === PAIR_SAME_MODEL.NO) return false; // a different model is never matched
+  if (same_model === PAIR_SAME_MODEL.YES && edits === PAIR_EDITS.NONE) return true;
+  return PAIR_CONDITIONS_UNVERIFIED; // not sure / skipped / otherwise unresolved
+}
+
+// Build the schema PairRun.capture block from the three paste-back inputs. The two
+// booleans project the disclosure; model_version_user_reported is OPTIONAL and
+// carried only when the person supplied one (trimmed + capped so it stays short
+// metadata, never a payload). conditions_matched is the conservative derivation.
+export function buildPairCapture({ same_model, model_version, edits } = {}) {
+  const capture = {
+    same_model_claimed: same_model === PAIR_SAME_MODEL.YES,
+    user_edits_disclosed: edits === PAIR_EDITS.EDITED,
+    conditions_matched: deriveConditionsMatched({ same_model, edits }),
+  };
+  const version = typeof model_version === "string" ? model_version.trim() : "";
+  if (version) capture.model_version_user_reported = version.slice(0, PAIR_MODEL_VERSION_MAX);
+  return capture;
+}
+
+// The schema rule as a predicate: true when a capture's conditions did NOT come
+// through as matched (conditions_matched != true). Every surface derived from a
+// PairRun — the side-by-side view, the review record — keys the unmatched-conditions
+// warning off this one function so the rule can never drift between surfaces.
+export function pairConditionsUnmatched(capture) {
+  return !capture || capture.conditions_matched !== true;
+}
+
+// Build the schema PairRun (mode = paired; the object's mere presence IS the paired
+// mode marker per schema §1). The targeted prompt is the v1.1-style non-leading
+// probe; the two artifact ids point at the stored-verbatim answers; the capture
+// block carries the conservative conditions_matched flag. Deterministic — no time,
+// no randomness — so a paired run records and hashes reproducibly.
+export function buildPairRun({ targeted_prompt, original_artifact_id, targeted_artifact_id, capture } = {}) {
+  return {
+    targeted_prompt: typeof targeted_prompt === "string" ? targeted_prompt : "",
+    original_artifact_id: typeof original_artifact_id === "string" ? original_artifact_id : "",
+    targeted_artifact_id: typeof targeted_artifact_id === "string" ? targeted_artifact_id : "",
+    capture: capture && typeof capture === "object" ? capture : {},
+  };
+}
+
+// Loose-voice capture UI copy, single-sourced like the reveal copy above and covered
+// by the AT-5 vocabulary lint. Pointer register: the warning points at HOW to read
+// the side-by-side; it never renders a verdict on either answer.
+export const PAIR_CAPTURE_UI = {
+  heading: "One quick thing before the side-by-side",
+  intro: "This just marks how you ran the two answers. It never changes what they say.",
+  same_model: {
+    question: "Did both answers come from the same AI — same provider, same model?",
+    options: {
+      [PAIR_SAME_MODEL.YES]: "Yes, the same one",
+      [PAIR_SAME_MODEL.NO]: "No, a different one",
+      [PAIR_SAME_MODEL.NOT_SURE]: "Not sure",
+    },
+  },
+  model_version: {
+    question: "Which model did you use? Optional.",
+    hint: "The name or version, as you remember it.",
+    placeholder: "e.g. the model or version you ran",
+  },
+  edits: {
+    question: "Did you edit either answer before pasting?",
+    options: {
+      [PAIR_EDITS.NONE]: "No, neither was edited",
+      [PAIR_EDITS.EDITED]: "Yes, I edited one or both",
+    },
+  },
+  disclosure: "This marks how clean the capture was. It doesn't decide whether the conditions lined up.",
+  unmatched_warning:
+    "The conditions behind these two answers aren't confirmed as matched — a different model, an edit, or a setup you weren't sure about. Read the side-by-side as a looser comparison, not a like-for-like.",
+  unmatched_badge: "Unmatched conditions",
+};

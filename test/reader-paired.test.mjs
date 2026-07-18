@@ -40,6 +40,13 @@ import {
   LOOP_STATE_NOT_CLEAR,
   LOOP_STATES,
   LOOP_STATE_COPY,
+  deriveConditionsMatched,
+  buildPairCapture,
+  buildPairRun,
+  pairConditionsUnmatched,
+  PAIR_SAME_MODEL,
+  PAIR_EDITS,
+  PAIR_CONDITIONS_UNVERIFIED,
 } from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
@@ -749,4 +756,126 @@ test("buildPairedReceipt tolerates an absent paired analysis without throwing", 
   });
   assert.deepEqual(r.paired_analysis.delta_items, []);
   assert.equal(r.receipt_type, "paired");
+});
+
+// ── Run-the-pair v1: capture discipline + schema PairRun ──────────────────────
+// The conservative conditions_matched truth table (AT-12), the capture-block shape,
+// the schema PairRun, and the unmatched-conditions predicate. Pure logic — no
+// endpoint, no model call, content-blind.
+
+// Every combination of the two capture inputs, INCLUDING skipped/undefined, mapped
+// to its expected conditions_matched. FALSE WINS: a disclosed edit or a different
+// model forces false; true is earned only by same-model + neither-edited; every
+// unresolved case is "unverified", never invented as matched or unmatched.
+const CONDITIONS_TRUTH_TABLE = [
+  ["yes", "none", true],
+  ["yes", "edited", false],
+  ["yes", undefined, PAIR_CONDITIONS_UNVERIFIED],
+  ["no", "none", false],
+  ["no", "edited", false],
+  ["no", undefined, false],
+  ["not_sure", "none", PAIR_CONDITIONS_UNVERIFIED],
+  ["not_sure", "edited", false],
+  ["not_sure", undefined, PAIR_CONDITIONS_UNVERIFIED],
+  [undefined, "none", PAIR_CONDITIONS_UNVERIFIED],
+  [undefined, "edited", false],
+  [undefined, undefined, PAIR_CONDITIONS_UNVERIFIED],
+];
+
+test("AT-12: deriveConditionsMatched — the full conservative truth table (edited-but-disclosed never true)", () => {
+  for (const [same_model, edits, expected] of CONDITIONS_TRUTH_TABLE) {
+    assert.equal(
+      deriveConditionsMatched({ same_model, edits }),
+      expected,
+      `same_model=${same_model} edits=${edits} → ${JSON.stringify(expected)}`,
+    );
+  }
+  // The specific mission clause: an edit disclosed always derives false, even when
+  // the same model is affirmed — disclosure never upgrades an edited pair to matched.
+  assert.equal(deriveConditionsMatched({ same_model: "yes", edits: "edited" }), false);
+});
+
+test("AT-12: conditions_matched is exactly true | false | 'unverified' — never another value", () => {
+  const seen = new Set();
+  for (const [same_model, edits] of CONDITIONS_TRUTH_TABLE) seen.add(deriveConditionsMatched({ same_model, edits }));
+  for (const v of seen) {
+    assert.ok(v === true || v === false || v === PAIR_CONDITIONS_UNVERIFIED, `unexpected value ${JSON.stringify(v)}`);
+  }
+  // No arguments is unverified, not a throw (the loop never breaks on a skipped form).
+  assert.equal(deriveConditionsMatched(), PAIR_CONDITIONS_UNVERIFIED);
+});
+
+test("buildPairCapture: booleans project the disclosure; conditions_matched is the conservative derivation", () => {
+  const clean = buildPairCapture({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE });
+  assert.deepEqual(clean, { same_model_claimed: true, user_edits_disclosed: false, conditions_matched: true });
+
+  const edited = buildPairCapture({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED });
+  assert.equal(edited.same_model_claimed, true);
+  assert.equal(edited.user_edits_disclosed, true);
+  assert.equal(edited.conditions_matched, false, "an edit disclosed derives false even with same model");
+
+  const diff = buildPairCapture({ same_model: PAIR_SAME_MODEL.NO, edits: PAIR_EDITS.NONE });
+  assert.equal(diff.same_model_claimed, false);
+  assert.equal(diff.conditions_matched, false);
+
+  const unsure = buildPairCapture({ same_model: PAIR_SAME_MODEL.NOT_SURE });
+  assert.equal(unsure.same_model_claimed, false);
+  assert.equal(unsure.conditions_matched, PAIR_CONDITIONS_UNVERIFIED);
+});
+
+test("buildPairCapture: model_version_user_reported is optional, trimmed, capped, and omitted when blank", () => {
+  const none = buildPairCapture({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE });
+  assert.ok(!("model_version_user_reported" in none), "omitted when no version supplied");
+
+  const blank = buildPairCapture({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE, model_version: "   " });
+  assert.ok(!("model_version_user_reported" in blank), "omitted when the version is whitespace only");
+
+  const named = buildPairCapture({
+    same_model: PAIR_SAME_MODEL.YES,
+    edits: PAIR_EDITS.NONE,
+    model_version: "  claude-opus-4-8  ",
+  });
+  assert.equal(named.model_version_user_reported, "claude-opus-4-8");
+
+  const long = buildPairCapture({
+    same_model: PAIR_SAME_MODEL.YES,
+    edits: PAIR_EDITS.NONE,
+    model_version: "x".repeat(200),
+  });
+  assert.equal(long.model_version_user_reported.length, 80, "capped to short metadata, never a payload");
+});
+
+test("pairConditionsUnmatched: the schema rule (conditions_matched != true) as one predicate", () => {
+  assert.equal(pairConditionsUnmatched(buildPairCapture({ same_model: "yes", edits: "none" })), false);
+  assert.equal(pairConditionsUnmatched(buildPairCapture({ same_model: "yes", edits: "edited" })), true);
+  assert.equal(pairConditionsUnmatched(buildPairCapture({ same_model: "not_sure" })), true);
+  assert.equal(pairConditionsUnmatched({ conditions_matched: "unverified" }), true);
+  assert.equal(pairConditionsUnmatched(null), true, "a missing capture is treated as unmatched");
+});
+
+test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids, capture)", () => {
+  const capture = buildPairCapture({ same_model: "yes", edits: "none" });
+  const pr = buildPairRun({
+    targeted_prompt: TARGETED_PROMPT_TEXT,
+    original_artifact_id: "original_answer",
+    targeted_artifact_id: "targeted_answer",
+    capture,
+  });
+  assert.deepEqual(Object.keys(pr).sort(), [
+    "capture",
+    "original_artifact_id",
+    "targeted_artifact_id",
+    "targeted_prompt",
+  ]);
+  assert.equal(pr.targeted_prompt, TARGETED_PROMPT_TEXT);
+  assert.equal(pr.original_artifact_id, "original_answer");
+  assert.equal(pr.targeted_artifact_id, "targeted_answer");
+  assert.equal(pr.capture, capture);
+  // Defensive defaults: bad inputs never throw, they yield empty scalars / {}.
+  assert.deepEqual(buildPairRun(), {
+    targeted_prompt: "",
+    original_artifact_id: "",
+    targeted_artifact_id: "",
+    capture: {},
+  });
 });

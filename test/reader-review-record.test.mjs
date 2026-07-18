@@ -51,6 +51,14 @@ import {
   buildSingleReceipt,
   canonicalizeForHash,
 } from "../reader-receipt.js";
+import {
+  buildPairCapture,
+  pairConditionsUnmatched,
+  PAIR_SAME_MODEL,
+  PAIR_EDITS,
+  PAIR_CONDITIONS_UNVERIFIED,
+  PAIRED_METHOD_VERSION,
+} from "../reader-paired.js";
 
 // ── Synthetic fixtures (content-blind) ───────────────────────────────────────────
 
@@ -405,6 +413,192 @@ test("additivity: a reader-receipt content_hash minted from the same open run is
   assert.equal(receiptHashAfter, receiptHashBefore, "the receipt content_hash must not shift when a record is built");
   // The record digest is its own artifact under a distinct canonicalization contract.
   assert.notEqual(record.integrity.digest, receiptHashBefore);
+});
+
+// ── Run-the-pair v1: a populated pair_runs record ────────────────────────────────
+// A paired inspection exports with the SECOND answer as a targeted_answer Artifact,
+// one schema PairRun linking the two answers, and the conservative capture block
+// (AT-12). Single-mode stays byte-identical (additivity). Content-blind: the second
+// answer is synthetic, with a CRLF and a date-shaped string so the verbatim rule is
+// exercised on the targeted artifact exactly as on the original.
+const TARGETED_ANSWER =
+  "Asked directly, it adds: a filing deadline of 2026-08-01 applies,\r\n" +
+  "and the projected 4.2 million figure traces to the Q2 forecast memo.";
+
+// The fixed non-leading probe the Reader constructs (paired_method_version 1.1); a
+// literal here so the test pins the recorded prompt without importing Act-2 internals.
+const TARGETED_PROMPT =
+  "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.";
+
+// A `pair` input shaped the way the Workbench paste-back step will hand it to the
+// exporter: the second answer verbatim, the capture derived from the three loose-voice
+// inputs, and the paired inspector provenance (production model + paired_method_version).
+// same_model / edits / model_version drive the conservative conditions_matched flag.
+function buildPair({
+  same_model = PAIR_SAME_MODEL.YES,
+  edits = PAIR_EDITS.NONE,
+  model_version,
+  targetedAnswer = TARGETED_ANSWER,
+} = {}) {
+  return {
+    targeted_answer: targetedAnswer,
+    targeted_prompt: TARGETED_PROMPT,
+    targeted_source_model: {
+      name: same_model === PAIR_SAME_MODEL.YES ? "claude-opus-4-8" : "",
+      version: model_version || "",
+    },
+    capture: buildPairCapture({ same_model, edits, model_version }),
+    inspector: { model: "claude-opus-4-8", model_version: "claude-opus-4-8", prompt_version: PAIRED_METHOD_VERSION },
+  };
+}
+
+test("paired assembly: both answers are stored as artifacts — targeted_answer verbatim, unverified", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  assert.deepEqual(record.contents.artifacts.map((a) => a.role), ["original_answer", "targeted_answer"]);
+  const targeted = record.contents.artifacts.find((a) => a.role === "targeted_answer");
+  assert.equal(targeted.id, "targeted_answer");
+  assert.equal(targeted.body, TARGETED_ANSWER, "second answer stored byte-for-byte as pasted (CRLF preserved)");
+  assert.equal(targeted.verified, false);
+  assert.equal(targeted.source_model_user_reported.name, "claude-opus-4-8");
+});
+
+test("paired assembly: one PairRun links the two artifacts and carries the capture block", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  assert.equal(record.contents.pair_runs.length, 1);
+  const pr = record.contents.pair_runs[0];
+  assert.equal(pr.original_artifact_id, "original_answer");
+  assert.equal(pr.targeted_artifact_id, "targeted_answer");
+  assert.equal(pr.targeted_prompt, TARGETED_PROMPT);
+  assert.equal(pr.capture.same_model_claimed, true);
+  assert.equal(pr.capture.user_edits_disclosed, false);
+  assert.equal(pr.capture.conditions_matched, true);
+  assert.ok(validateReviewRecord(record).ok, validateReviewRecord(record).reason);
+});
+
+test("paired assembly: the paired inspector provenance overrides the single-mode triple", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  assert.equal(record.contents.inspector.model, "claude-opus-4-8");
+  assert.equal(record.contents.inspector.prompt_version, PAIRED_METHOD_VERSION);
+});
+
+test("paired assembly: an optional reported model/version rides into the capture, capped, when supplied", async () => {
+  const record = await buildReviewRecord({
+    result: buildResult().result,
+    createdAt: CREATED,
+    pair: buildPair({ model_version: "  GPT-5 (2026-06)  " }),
+  });
+  assert.equal(record.contents.pair_runs[0].capture.model_version_user_reported, "GPT-5 (2026-06)");
+});
+
+test("AT-12: an edited-but-disclosed pair records conditions_matched=false (never true) and still validates", async () => {
+  const record = await buildReviewRecord({
+    result: buildResult().result,
+    createdAt: CREATED,
+    pair: buildPair({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED }),
+  });
+  const cap = record.contents.pair_runs[0].capture;
+  assert.equal(cap.user_edits_disclosed, true);
+  assert.equal(cap.conditions_matched, false, "a disclosed edit can never read as matched, even same-model");
+  assert.equal(pairConditionsUnmatched(cap), true, "the unmatched-conditions warning fires on this exported record");
+  assert.ok(validateReviewRecord(record).ok, "disclosure never gates — the record still validates");
+});
+
+test("AT-12: a 'not sure' pair records conditions_matched='unverified', warns, and validates", async () => {
+  const record = await buildReviewRecord({
+    result: buildResult().result,
+    createdAt: CREATED,
+    pair: buildPair({ same_model: PAIR_SAME_MODEL.NOT_SURE, edits: PAIR_EDITS.NONE }),
+  });
+  const cap = record.contents.pair_runs[0].capture;
+  assert.equal(cap.conditions_matched, PAIR_CONDITIONS_UNVERIFIED);
+  assert.equal(pairConditionsUnmatched(cap), true);
+  assert.ok(validateReviewRecord(record).ok);
+});
+
+test("AT-14: a populated pair_runs record is digest-deterministic and collapses a same-instant timestamp", async () => {
+  const base = buildResult().result;
+  const a = await buildReviewRecord({ result: base, createdAt: "2026-07-17T12:00:00Z", pair: buildPair() });
+  const b = await buildReviewRecord({ result: base, createdAt: "2026-07-17T12:00:00Z", pair: buildPair() });
+  assert.equal(a.integrity.digest, b.integrity.digest, "identical paired inputs → identical digest");
+  const offset = await digestReviewRecord(
+    assembleReviewRecord({ result: base, createdAt: "2026-07-17T08:00:00-04:00", pair: buildPair() }),
+  );
+  assert.equal(offset, a.integrity.digest, "an offset form of the same instant collapses to the same digest");
+});
+
+test("AT-14: the capture disclosure and the second answer sit inside the hashed body", async () => {
+  const base = buildResult().result;
+  const matched = await buildReviewRecord({
+    result: base,
+    createdAt: CREATED,
+    pair: buildPair({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE }),
+  });
+  const edited = await buildReviewRecord({
+    result: base,
+    createdAt: CREATED,
+    pair: buildPair({ same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED }),
+  });
+  assert.notEqual(matched.integrity.digest, edited.integrity.digest, "a different conditions_matched changes the digest");
+
+  const otherAnswer = await buildReviewRecord({
+    result: base,
+    createdAt: CREATED,
+    pair: buildPair({ targetedAnswer: TARGETED_ANSWER + " One more line." }),
+  });
+  assert.notEqual(matched.integrity.digest, otherAnswer.integrity.digest, "different second-answer bytes change the digest");
+});
+
+test("additivity: a single-mode record is byte-identical whether pair is omitted, null, or undefined", async () => {
+  const base = buildResult().result;
+  const omitted = await digestReviewRecord(assembleReviewRecord({ result: base, createdAt: CREATED }));
+  const nulled = await digestReviewRecord(assembleReviewRecord({ result: base, createdAt: CREATED, pair: null }));
+  const undef = await digestReviewRecord(assembleReviewRecord({ result: base, createdAt: CREATED, pair: undefined }));
+  assert.equal(nulled, omitted, "pair:null serializes exactly like single mode");
+  assert.equal(undef, omitted, "pair:undefined serializes exactly like single mode");
+
+  const single = assembleReviewRecord({ result: base, createdAt: CREATED, pair: null });
+  assert.deepEqual(single.contents.pair_runs, [], "no PairRun is added in single mode");
+  assert.equal(single.contents.artifacts.length, 1, "single mode holds only the original artifact");
+
+  const paired = await buildReviewRecord({ result: base, createdAt: CREATED, pair: buildPair() });
+  assert.notEqual(paired.integrity.digest, omitted, "the paired record is its own distinct artifact");
+});
+
+test("scope-5: a paired inspection with no checks assembles a valid pair_runs record (checks ship separately)", async () => {
+  // buildPairedPayload carries no `checks`; a paired export must still be well-formed
+  // with an empty checks/detector_events set and exactly one PairRun.
+  const noChecks = buildResult({ findings: [] }).result;
+  const record = await buildReviewRecord({ result: noChecks, createdAt: CREATED, pair: buildPair() });
+  assert.deepEqual(record.contents.checks, []);
+  assert.deepEqual(record.contents.detector_events, []);
+  assert.equal(record.contents.pair_runs.length, 1);
+  assert.ok(validateReviewRecord(record).ok, "a checkless paired record is valid");
+});
+
+test("validation: rejects paired records that break the schema PairRun shape", async () => {
+  const good = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+
+  // A PairRun pointing at an artifact id that isn't stored.
+  const dangling = JSON.parse(JSON.stringify(good));
+  dangling.contents.pair_runs[0].targeted_artifact_id = "ghost_artifact";
+  assert.match(validateReviewRecord(dangling).reason, /targeted_artifact_id must resolve/);
+
+  // A populated pair_runs with the targeted_answer artifact removed (AT-12). Re-point
+  // the id at the surviving artifact so we hit the AT-12 rule, not the id-resolve rule.
+  const noTargeted = JSON.parse(JSON.stringify(good));
+  noTargeted.contents.artifacts = noTargeted.contents.artifacts.filter((a) => a.role !== "targeted_answer");
+  noTargeted.contents.pair_runs[0].targeted_artifact_id = "original_answer";
+  assert.match(validateReviewRecord(noTargeted).reason, /targeted_answer artifact \(AT-12\)/);
+
+  // conditions_matched outside { true, false, "unverified" }.
+  const badCond = JSON.parse(JSON.stringify(good));
+  badCond.contents.pair_runs[0].capture.conditions_matched = "maybe";
+  assert.match(validateReviewRecord(badCond).reason, /conditions_matched must be/);
+
+  // A non-boolean disclosure flag.
+  const badDisclosure = JSON.parse(JSON.stringify(good));
+  badDisclosure.contents.pair_runs[0].capture.user_edits_disclosed = "no";
+  assert.match(validateReviewRecord(badDisclosure).reason, /user_edits_disclosed must be boolean/);
 });
 
 // ── No new server-side write path in api/** ──────────────────────────────────────

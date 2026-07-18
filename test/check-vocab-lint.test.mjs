@@ -21,6 +21,7 @@ import {
   hasWorldClaimVerdict,
 } from "../reader-check-vocab.js";
 import { CHECK_UI } from "../reader-checks.js";
+import { PAIR_CAPTURE_UI } from "../reader-paired.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -37,6 +38,11 @@ test("the vocab list is versioned", () => {
 test("AT-5: CHECK_UI (all shipped register/card copy) contains no banned construction", () => {
   const violations = lintUserFacingStrings(CHECK_UI);
   assert.deepEqual(violations, [], `banned constructions in CHECK_UI:\n${JSON.stringify(violations, null, 2)}`);
+});
+
+test("AT-5: PAIR_CAPTURE_UI (run-the-pair paste-back copy + unmatched warning) contains no banned construction", () => {
+  const violations = lintUserFacingStrings(PAIR_CAPTURE_UI);
+  assert.deepEqual(violations, [], `banned constructions in PAIR_CAPTURE_UI:\n${JSON.stringify(violations, null, 2)}`);
 });
 
 // ── AT-5: the list catches each banned family ───────────────────────────────────

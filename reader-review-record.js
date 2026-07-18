@@ -23,6 +23,11 @@
 // Tests additionally recompute the digest with node:crypto over the same canonical
 // string to prove the two primitives agree byte-for-byte (schema AT-14 parity).
 
+// The schema PairRun shape is single-sourced in reader-paired.js (run-the-pair
+// lane); this module embeds it when a paired capture is exported. Pure-JS import,
+// no cycle (reader-paired.js imports nothing from here) and already in the bundle.
+import { buildPairRun } from "./reader-paired.js";
+
 // Version ids. The schema version tracks the frozen Review Graph erratum; the
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
@@ -156,7 +161,7 @@ function normalizeStatus(s) {
 // pair_runs and resolution_evidence are always present as arrays (empty in this
 // lane) so the run-the-pair and resolution lanes slot in with no record-format
 // change. Deterministic: no Date.now, no random — identical inputs, identical body.
-export function assembleReviewRecord({ result, checkStates = {}, createdAt } = {}) {
+export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair = null } = {}) {
   const created = str(createdAt);
   if (!created) throw new Error("assembleReviewRecord: createdAt (ISO 8601) is required");
 
@@ -184,6 +189,55 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt } = {
     },
   ];
 
+  // The single-mode inspector provenance: the register's inspector, falling back to
+  // the open run's provenance. Computed here so the paired branch can override it.
+  const single = {
+    model: str(inspector.model) || str(provenance.reader_model_version),
+    model_version: str(inspector.model_version) || str(provenance.reader_model_version),
+    prompt_version: str(inspector.prompt_version) || str(provenance.inspector_prompt_version),
+  };
+  let inspectorBlock = single;
+
+  // Run-the-pair v1: when a paired capture rides along, add the SECOND answer as a
+  // targeted_answer Artifact (verbatim as pasted, verified:false like the first) and
+  // record the schema PairRun. A populated pair_runs array is the schema's mode=paired
+  // marker (§1: "PairRun // run-the-pair; mode = paired"). Absent `pair`, everything
+  // below is skipped and the single-mode record serializes byte-for-byte as before —
+  // so an existing single-mode digest is never perturbed (additivity).
+  const pairRuns = [];
+  if (pair && typeof pair === "object" && typeof pair.targeted_answer === "string") {
+    const targetedModel =
+      pair.targeted_source_model && typeof pair.targeted_source_model === "object" ? pair.targeted_source_model : {};
+    artifacts.push({
+      id: "targeted_answer",
+      role: "targeted_answer",
+      body: pair.targeted_answer, // verbatim as pasted — c14n.v1 hashes it byte-for-byte
+      source_model_user_reported: {
+        name: str(targetedModel.name),
+        version: str(targetedModel.version),
+      },
+      verified: false, // always false in the Reader
+      supplied_at: str(pair.targeted_supplied_at) || inspectionRunAt,
+    });
+    pairRuns.push(
+      buildPairRun({
+        targeted_prompt: str(pair.targeted_prompt),
+        original_artifact_id: "original_answer",
+        targeted_artifact_id: "targeted_answer",
+        capture: pair.capture,
+      }),
+    );
+    // The paired inspection ran under the production model + paired_method_version;
+    // the caller supplies that provenance, falling back to the single-mode triple.
+    if (pair.inspector && typeof pair.inspector === "object") {
+      inspectorBlock = {
+        model: str(pair.inspector.model) || single.model,
+        model_version: str(pair.inspector.model_version) || single.model_version,
+        prompt_version: str(pair.inspector.prompt_version) || single.prompt_version,
+      };
+    }
+  }
+
   const detectorEvents = Array.isArray(register.detector_events) ? register.detector_events : [];
   const registerChecks = Array.isArray(register.checks) ? register.checks : [];
 
@@ -208,15 +262,11 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt } = {
 
   const contents = {
     artifacts,
-    pair_runs: [], // single mode; shape supports paired (schema PairRun) with no format change
+    pair_runs: pairRuns, // populated for a paired run (schema PairRun); [] in single mode
     detector_events: detectorEvents,
     checks,
     resolution_evidence: [], // ResolutionEvidence is a later lane; present-but-empty here
-    inspector: {
-      model: str(inspector.model) || str(provenance.reader_model_version),
-      model_version: str(inspector.model_version) || str(provenance.reader_model_version),
-      prompt_version: str(inspector.prompt_version) || str(provenance.inspector_prompt_version),
-    },
+    inspector: inspectorBlock,
     versions: {
       schema: REVIEW_GRAPH_SCHEMA_VERSION,
       canonicalization: REVIEW_RECORD_C14N_VERSION,
@@ -305,6 +355,41 @@ export function validateReviewRecord(record) {
     if (!ARTIFACT_ROLES.has(a.role)) return { ok: false, reason: `bad artifact.role: ${a && a.role}` };
     if (typeof a.body !== "string") return { ok: false, reason: "artifact.body must be a string" };
     if (a.verified !== false) return { ok: false, reason: "artifact.verified must be false in the Reader" };
+  }
+
+  // pair_runs: each is a schema PairRun (run-the-pair). Its two artifact ids must
+  // resolve to stored artifacts, and its capture must carry the conservative
+  // conditions_matched flag (true | false | "unverified") plus the two disclosure
+  // booleans; model_version_user_reported is optional. A populated pair_runs array is
+  // the schema's mode=paired marker, so it REQUIRES a targeted_answer artifact — the
+  // pair's capture rides with it (AT-12), verified:false like every Reader artifact.
+  const artifactIds = new Set(c.artifacts.map((a) => a && a.id).filter(Boolean));
+  for (const pr of c.pair_runs) {
+    if (!pr || typeof pr !== "object") return { ok: false, reason: "pair_run must be an object" };
+    if (typeof pr.targeted_prompt !== "string") return { ok: false, reason: "pair_run.targeted_prompt required" };
+    if (!artifactIds.has(pr.original_artifact_id)) {
+      return { ok: false, reason: "pair_run.original_artifact_id must resolve to an artifact" };
+    }
+    if (!artifactIds.has(pr.targeted_artifact_id)) {
+      return { ok: false, reason: "pair_run.targeted_artifact_id must resolve to an artifact" };
+    }
+    const cap = pr.capture;
+    if (!cap || typeof cap !== "object") return { ok: false, reason: "pair_run.capture required" };
+    if (typeof cap.same_model_claimed !== "boolean") {
+      return { ok: false, reason: "pair_run.capture.same_model_claimed must be boolean" };
+    }
+    if (typeof cap.user_edits_disclosed !== "boolean") {
+      return { ok: false, reason: "pair_run.capture.user_edits_disclosed must be boolean" };
+    }
+    if (cap.conditions_matched !== true && cap.conditions_matched !== false && cap.conditions_matched !== "unverified") {
+      return { ok: false, reason: "pair_run.capture.conditions_matched must be true, false, or 'unverified'" };
+    }
+    if (cap.model_version_user_reported !== undefined && typeof cap.model_version_user_reported !== "string") {
+      return { ok: false, reason: "pair_run.capture.model_version_user_reported must be a string when present" };
+    }
+  }
+  if (c.pair_runs.length > 0 && !c.artifacts.some((a) => a && a.role === "targeted_answer")) {
+    return { ok: false, reason: "paired record must include a targeted_answer artifact (AT-12)" };
   }
 
   const eventIds = new Set(c.detector_events.map((e) => e && e.id).filter(Boolean));
