@@ -9,7 +9,7 @@
 // record is assembled and hashed in the browser and downloaded as JSON.
 //
 // Implements the review-record.c14n.v1 canonicalization contract frozen in
-// docs/REVIEW-GRAPH-SCHEMA.md (v0.2.3). That contract is DELIBERATELY DISTINCT
+// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.0). That contract is DELIBERATELY DISTINCT
 // from reader-receipt.js's canonicalization_version 1.0: the receipt normalizes
 // string line endings, but c14n.v1 normalizes ONLY timestamps and hashes every
 // other string value verbatim (span offsets into Artifact.body depend on the
@@ -32,7 +32,7 @@ import { buildPairRun } from "./reader-paired.js";
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
 // below change, so a digest recorded under the old rules stays reproducible.
-export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.2.3";
+export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.0";
 export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
 export const REVIEW_RECORD_VERSION = "review-record.v1";
 export const REVIEW_RECORD_HASH_ALGORITHM = "sha256";
@@ -149,7 +149,7 @@ function normalizeStatus(s) {
   return RECORD_STATUSES.has(s) ? s : null;
 }
 
-// Assemble a ReviewRecord (schema v0.2.3) from an inspection result + client-held
+// Assemble a ReviewRecord (schema v0.3.0) from an inspection result + client-held
 // check states, with the integrity.digest left empty for buildReviewRecord to fill.
 //
 //   result      — the Reader read response: { receipt.open_run, checks (register) }
@@ -317,7 +317,7 @@ export function reviewRecordFilename(record) {
   return `imbas-review-record-${datePart}-${shortDigest}.json`;
 }
 
-// Validate a record against the schema v0.2.3 shapes. Returns { ok, reason? }.
+// Validate a record against the schema v0.3.0 shapes. Returns { ok, reason? }.
 // Defense in depth for the export path and a fixture for the schema-conformance
 // tests; not a substitute for the register's own validators.
 export function validateReviewRecord(record) {

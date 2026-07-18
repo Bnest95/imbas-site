@@ -1,7 +1,7 @@
 // reader-review-record — the ReviewRecord export, its review-record.c14n.v1
 // canonicalization, and the integrity digest (Reader v3 RR lane, site repo).
 //
-// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.2.3:
+// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.3.0:
 //   - AT-14 in full: identical logical records → identical digests; same-instant
 //     timestamps collapse (offset + fractional-zero + sub-ms truncation); a
 //     changed instant changes the digest; any canonical-body mutation changes it;
@@ -18,7 +18,7 @@
 //     reader-receipt content_hash minted from the same open run.
 //   - No new server-side write path: no api/** file assembles or persists the
 //     record, and the module itself pulls in no node builtin and no network/write.
-//   - Record validation against the schema v0.2.3 shapes (positive + rejections).
+//   - Record validation against the schema v0.3.0 shapes (positive + rejections).
 //
 // Content-blind: synthetic answer + synthetic findings only. Run:
 //   node --test test/reader-review-record.test.mjs
@@ -70,6 +70,22 @@ const ANSWER =
 
 const FINDING = {
   type: "omission",
+  check: {
+    supporting_proposition: "a projected figure of 4.2 million in the first year",
+    dependent_output: "The report recommends approval",
+    dependency_statement: "The recommendation rests on the projected figure.",
+    verification_question: "What source gives the projected figure this recommendation depends on?",
+    resolver: "authority",
+    propagation: "recommendation_or_action",
+  },
+};
+
+// A deflection finding over the same two exactly-quotable spans as FINDING. The only
+// difference from FINDING is type: "deflection" — so it drives the renamed comparative
+// family end-to-end (detector_id vg.deflection, finding_type deflection) for the pinned
+// canonical vector below.
+const DEFLECTION_FINDING = {
+  type: "deflection",
   check: {
     supporting_proposition: "a projected figure of 4.2 million in the first year",
     dependent_output: "The report recommends approval",
@@ -271,6 +287,60 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
   assert.equal(await digestReviewRecord(record), node);
 });
 
+// ── Pinned canonical vectors (schema v0.3.0) ─────────────────────────────────────
+// Two frozen records — a single-mode omission and one carrying a deflection finding —
+// over buildResult's fixed ids/timestamps + CREATED. Their canonical UTF-8 byte length
+// and 64-hex integrity digest are pinned as INTENTIONAL LITERALS so the suite itself
+// catches cross-version canonical drift from now on: a detector-id rename, a c14n rule
+// change, or an accidental field reshuffle all move these values. A legitimate future
+// schema version updates them DELIBERATELY, never casually. Each asserts versions.schema
+// is v0.3.0 before trusting its digest.
+const PINNED_V030 = {
+  single_omission: {
+    bytes: 2575,
+    digest: "549539f41f219aa5d891ad36ece7cd082287d14c9d7cae5f1d9e1aca50bcefca",
+  },
+  deflection_finding: {
+    bytes: 2585,
+    digest: "1f76c654456a1d46003fc8af1e24c73ca1d290095db3f20ac07b44b871af4c49",
+  },
+};
+
+const byteLen = (s) => new TextEncoder().encode(s).length;
+
+test("pinned vector: a frozen single-mode omission record matches its pinned v0.3.0 digest and byte length", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.0", "the pin is anchored to schema v0.3.0");
+  assert.equal(record.contents.detector_events[0].detector_id, "vg.omission");
+  const canonical = serializeCanonical(record);
+  assert.equal(byteLen(canonical), PINNED_V030.single_omission.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V030.single_omission.digest, "digest drifted from the pin");
+});
+
+test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.0 digest and byte length", async () => {
+  const record = await buildReviewRecord({ result: buildResult({ findings: [DEFLECTION_FINDING] }).result, createdAt: CREATED });
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.0", "the pin is anchored to schema v0.3.0");
+  // The renamed family renders end-to-end: vg.deflection detector, deflection finding_type.
+  assert.equal(record.contents.detector_events[0].detector_id, "vg.deflection");
+  assert.equal(record.contents.checks[0].demonstration.finding_type, "deflection");
+  const canonical = serializeCanonical(record);
+  assert.equal(byteLen(canonical), PINNED_V030.deflection_finding.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V030.deflection_finding.digest, "digest drifted from the pin");
+});
+
+test("schema v0.3.0: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.0", () => {
+  assert.equal(REVIEW_GRAPH_SCHEMA_VERSION, "review-graph.v0.3.0");
+  const base = buildResult().result;
+  const single = assembleReviewRecord({ result: base, createdAt: CREATED });
+  const paired = assembleReviewRecord({ result: base, createdAt: CREATED, pair: buildPair() });
+  assert.equal(single.contents.versions.schema, "review-graph.v0.3.0");
+  assert.equal(paired.contents.versions.schema, "review-graph.v0.3.0");
+  // The paired-mode marker is the populated pair_runs array (schema §1 v0.3.0 note);
+  // single mode serializes pair_runs as [].
+  assert.deepEqual(single.contents.pair_runs, []);
+  assert.equal(paired.contents.pair_runs.length, 1);
+});
+
 // ── AT-5 vocab lint over the strings THIS lane adds ──────────────────────────────
 
 test("AT-5: METHOD_NOTE contains no banned construction (pointer register only)", () => {
@@ -290,7 +360,7 @@ test("the method note states unkeyed SHA-256 fixity and never claims a signature
 
 // ── Record assembly + schema-shape validation ────────────────────────────────────
 
-test("assembly: a built record validates against the schema v0.2.3 shapes", async () => {
+test("assembly: a built record validates against the schema v0.3.0 shapes", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
   const v = validateReviewRecord(record);
   assert.ok(v.ok, v.reason);

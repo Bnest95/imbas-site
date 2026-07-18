@@ -401,7 +401,7 @@ const QUOTE_MAX = 2000;
 const CANDIDATE_TO_DETECTOR_FINDING = {
   "candidate missing item": "omission",
   "candidate framing issue": "framing_drift",
-  "candidate deflection": "active_foreclosure",
+  "candidate deflection": "deflection",
 };
 
 // Normalize one raw model "check" block into the shape reader-checks.js consumes,
