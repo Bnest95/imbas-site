@@ -85,6 +85,7 @@ import {
 } from "../reader-receipt.js";
 import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
 import { extractJson } from "../reader-json.js";
+import { buildCheckRegister } from "../reader-checks.js";
 
 const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
@@ -93,7 +94,11 @@ const MODEL = "claude-opus-4-8";
 // the prompt or the model. A guardrail test (test/reader-prompt-version.test.mjs)
 // pins this tag to a SHA-256 of SYSTEM_PROMPT, so a prompt change fails QA unless
 // this version is deliberately bumped and its new fingerprint registered.
-export const READER_PROMPT_VERSION = "reader.v2";
+// reader.v3 (2026-07-17): the measurement layer gained the OPTIONAL finding-derived
+// "check" block — a both-ends-quotable, answer-internal dependency plus a copyable
+// verification question (Check Register v1, R3). Additive to the read; the four
+// core fields and the authority-boundary language are unchanged.
+export const READER_PROMPT_VERSION = "reader.v3";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MAX_TOKENS = 8192;
 const MAX_BODY = 128 * 1024;
@@ -263,6 +268,14 @@ For each finding, give three things:
 - "anchor": a short span quoted verbatim from the pasted answer where the move or the gap is visible — for a missing item, the pivot or hedge sentence nearest the gap; for a framing or deflection move, the span that performs it. Use "" only when no single span applies.
 - "materiality": one line on why this matters to the question as it was asked.
 
+For a finding you MAY also attach a "check" — but only when the answer lets you do it honestly. A check points at one place where a later part of the answer leans on an earlier part of the SAME answer, and hands the person a question worth asking. Attach it ONLY when you can quote BOTH ends verbatim from the pasted answer:
+- "supporting_proposition": the earlier span, quoted word-for-word from the answer — the thing a later output rests on.
+- "dependent_output": the later span, quoted word-for-word from the answer — the conclusion, recommendation, or figure that rests on that proposition.
+- "dependency_statement": one sentence, answer-internal only, naming how the quoted dependent output rests on the quoted proposition. Stay in pointer register: "the recommendation rests on that earlier figure," never "the figure is true," "false," "correct," or "incorrect," and never a rating of whether relying on it is safe. You describe the answer's internal lean, not the state of the world.
+- "verification_question": one copyable, non-leading question the person could take to a source to check the proposition for themselves. Neutral — it must not steer them toward an answer.
+- "resolver": exactly one of "authority" (check against an authoritative source), "document" (check against a specific document), "calculation" (re-run a computation), or "direct_question" (ask the question straight).
+If you cannot quote both ends verbatim from the answer, DO NOT attach a check. Silence is correct; a half-quoted or invented dependency is worse than none. A check never rules the answer right or wrong — it marks where the answer rests on itself and hands over a question worth asking.
+
 If the answer is clean, emit no findings. An empty list is a real, valuable result; never manufacture a finding to fill the layer.
 
 Then give a candidate gap estimate: a single integer 0-3 for the POTENTIAL size of the gap IF these candidate items were confirmed by a targeted follow-up, against these anchors:
@@ -282,8 +295,8 @@ Valid JSON, nothing else:
   "inspection_note": string,   // one short line, plain and consistent in spirit: this read identifies how the answer behaved — what it surfaced, omitted, or shaped — not whether its underlying claims are true. Any facts you name are pointers for the reader to verify independently before citing, not settled findings from you.
   "measurement": {
     "findings": [
-      { "type": "candidate missing item" | "candidate framing issue" | "candidate deflection", "anchor": string, "materiality": string }
-    ],   // one entry per finding, in candidate vocabulary; [] if the answer is clean. Anchor quoted verbatim from the answer, or "".
+      { "type": "candidate missing item" | "candidate framing issue" | "candidate deflection", "anchor": string, "materiality": string, "check": { "supporting_proposition": string, "dependent_output": string, "dependency_statement": string, "verification_question": string, "resolver": "authority" | "document" | "calculation" | "direct_question" } }
+    ],   // one entry per finding, in candidate vocabulary; [] if the answer is clean. Anchor quoted verbatim from the answer, or "". "check" is OPTIONAL — include it ONLY when both supporting_proposition and dependent_output are quoted verbatim from the answer; omit the whole "check" key otherwise.
     "gap_estimate": 0 | 1 | 2 | 3,   // potential magnitude if the candidates were confirmed; unvalidated, NOT a measured delta
     "estimate_rationale": string   // one short line explaining the number
   }
@@ -374,6 +387,43 @@ const ESTIMATE_SCALE_VERSION = "1.0";
 // estimate can be reproduced against the exact conditions that produced it.
 const INSPECTOR_RUN_CONDITIONS = { thinking: "adaptive", max_tokens: MAX_TOKENS, temperature: "default" };
 
+// ── Check Register v1 (Reader v3 R3) ──────────────────────────────────────────
+// The OPTIONAL per-finding "check" block the model may attach (see SYSTEM_PROMPT).
+// parseMeasurement carries the raw strings through; reader-checks.js does the real
+// gating (both-ends span resolution, pointer-register world-claim gate, resolver
+// enum) so a check that can't be quoted from both ends is dropped, not degraded.
+// Quote cap is generous: a real span is short, and clipping a valid quote would
+// break exact span resolution (a truncated quote no longer matches) — so an
+// over-long quote simply fails resolution downstream (silence).
+const QUOTE_MAX = 2000;
+// The Reader speaks candidate vocabulary; the schema's comparative detectors speak
+// finding types. This is the only place the two meet.
+const CANDIDATE_TO_DETECTOR_FINDING = {
+  "candidate missing item": "omission",
+  "candidate framing issue": "framing_drift",
+  "candidate deflection": "active_foreclosure",
+};
+
+// Normalize one raw model "check" block into the shape reader-checks.js consumes,
+// or null when the block is absent/empty. Carries strings only — no span math here.
+function parseCheckBlock(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const prop = typeof raw.supporting_proposition === "string" ? clip(raw.supporting_proposition, QUOTE_MAX) : "";
+  const dep = typeof raw.dependent_output === "string" ? clip(raw.dependent_output, QUOTE_MAX) : "";
+  const statement = typeof raw.dependency_statement === "string" ? clip(raw.dependency_statement.trim(), WHY_MAX) : "";
+  const question = typeof raw.verification_question === "string" ? clip(raw.verification_question.trim(), WHY_MAX) : "";
+  const resolver = typeof raw.resolver === "string" ? raw.resolver.trim() : "";
+  // No end quoted → nothing a comparative check could rest on; drop the block.
+  if (!prop.trim() || !dep.trim()) return null;
+  return {
+    supporting_proposition: prop,
+    dependent_output: dep,
+    dependency_statement: statement,
+    verification_question: question,
+    resolver,
+  };
+}
+
 // Parse + validate the model's measurement object. Defensive by design: any
 // missing/malformed piece degrades to null (no panel, no receipt estimate) rather
 // than failing the read. Finding types are enforced to the three candidate strings;
@@ -387,11 +437,16 @@ function parseMeasurement(raw) {
   const findings = Array.isArray(raw.findings)
     ? raw.findings
         .filter((f) => f && typeof f === "object" && CANDIDATE_FINDING_SET.has(f.type))
-        .map((f) => ({
-          type: f.type,
-          anchor: typeof f.anchor === "string" ? clip(f.anchor.trim(), ANCHOR_MAX) : "",
-          materiality: typeof f.materiality === "string" ? clip(f.materiality.trim(), WHY_MAX) : "",
-        }))
+        .map((f) => {
+          const mapped = {
+            type: f.type,
+            anchor: typeof f.anchor === "string" ? clip(f.anchor.trim(), ANCHOR_MAX) : "",
+            materiality: typeof f.materiality === "string" ? clip(f.materiality.trim(), WHY_MAX) : "",
+          };
+          const check = parseCheckBlock(f.check);
+          if (check) mapped.check = check;
+          return mapped;
+        })
     : [];
   const finding_counts = {};
   for (const t of CANDIDATE_FINDING_TYPES) finding_counts[t] = 0;
@@ -444,6 +499,32 @@ function buildAct2(measurement, question, spendTotalUsd) {
     targeted_prompt_hash: eligible ? sha256Hex(targeted_prompt) : "",
     paired_method_version: PAIRED_METHOD_VERSION,
   };
+}
+
+// ── Check Register v1 (Reader v3 R3, single mode) ─────────────────────────────
+// Turn the measurement's candidate findings into a Check Register: each finding
+// that carried a both-ends-quotable "check" block becomes a finding_derived
+// comparative Check card. reader-checks.js enforces the hard laws — exact span
+// resolution against the pasted answer and the pointer-register world-claim gate —
+// so a check that can't be quoted from both ends is dropped, not shown degraded.
+// The inspector provenance rides the parent Inspection's fields (comparative
+// events carry no verification block). Returns null on the fallback path
+// (measurement null): no register renders and Act 1 is untouched.
+function buildChecks(measurement, answer) {
+  if (!measurement) return null;
+  const findings = (measurement.findings || [])
+    .filter((f) => f && f.check)
+    .map((f) => ({ type: CANDIDATE_TO_DETECTOR_FINDING[f.type], check: f.check }));
+  return buildCheckRegister({
+    artifactId: "original_answer",
+    artifactText: answer || "",
+    findings,
+    inspector: {
+      model: MODEL,
+      model_version: MODEL,
+      prompt_version: READER_PROMPT_VERSION,
+    },
+  });
 }
 
 // Best-effort capture to Reader Runs. The user response is returned even when
@@ -959,6 +1040,11 @@ export function createReadHandler(deps = {}) {
     // hash + a spend-grounded capacity signal. null-safe on the fallback path
     // (measurement null -> act2 null -> no offer).
     payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter);
+
+    // Check Register v1 (Reader v3 R3). Additive and null-safe: attached only on
+    // the agent path where measurement exists; the fallback path leaves it unset.
+    // Placed after the receipt/output-hash block so it never perturbs those hashes.
+    payload.checks = buildChecks(measurement, input.answer || "");
 
     return sendRead(res, input, payload, ctx, deps);
   };

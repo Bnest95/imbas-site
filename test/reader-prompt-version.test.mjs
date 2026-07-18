@@ -29,6 +29,7 @@ import { SYSTEM_PROMPT, READER_PROMPT_VERSION } from "../api/read.js";
 const KNOWN_FINGERPRINTS = {
   "reader.v1": "e30ee03560916b143ccf2dbeafc0bc367f2b02080e1d7765db2fff8404ba16be",
   "reader.v2": "d7c31671fe3f5c156ea780b7acc446d0add312bcc63a0439cff44ea30acacf3a",
+  "reader.v3": "b57fedf13419c2ebc8dd36c09294c052bf5fd932fab6c84271445ab24f4b294e",
 };
 
 const fingerprint = (s) => createHash("sha256").update(s, "utf8").digest("hex");
