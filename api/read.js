@@ -152,7 +152,7 @@ const CAPTURE_RETRY_BACKOFF_MS = 250;
 // Monthly estimated spend cap. Durable only when Upstash Redis REST is configured;
 // otherwise falls back to per-instance memory in reader-security.js.
 const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
-const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.7 list
+const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.8 list
 const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a little while.";
 
 const str = (v) => (typeof v === "string" ? v : "");
