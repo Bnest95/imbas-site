@@ -1,15 +1,16 @@
-REVIEW GRAPH — SCHEMA v0.2.3 (FROZEN ERRATUM)
-Status: FROZEN for the v1 build. v0.2.3 issued 2026-07-17 as a freeze
-erratum to v0.2.2 (same day): AT-14's timestamp-mutation rule contradicted
-the c14n contract's RFC 3339 UTC normalization — the rule now keys on the
-represented instant; the c14n contract gains a pinned canonical timestamp
-form and an explicit timestamps-only-normalization / verbatim-strings
-clause. Every other v0.2.2 provision unchanged. R3 shipped against v0.2.2
-(no shipped code or test touches the amended provisions); the Review
-Record lane ships against v0.2.3.
-Chain: v0.2.3 ← v0.2.2 (demonstration shapes for comparative and profile)
-← v0.2.1 (verification made optional, per-family rules) ← v0.2 (four
-freeze-pass corrections) ← v0.1 (PROPOSED).
+REVIEW GRAPH — SCHEMA v0.3.0 (FROZEN)
+Status: FROZEN. v0.3.0 issued 2026-07-18 as a DELIBERATE VERSIONED CHANGE
+(not an erratum): the third comparative behavior class renames from
+active_foreclosure to deflection per the founder naming ruling of
+2026-07-17/18 — Deflection is canonical everywhere; Active Foreclosure is
+the former v1 name, historical notes only. vg.active_foreclosure →
+vg.deflection; the demonstration finding_type enum renames accordingly.
+Records exported under v0.2.x remain valid under their own declared
+versions.schema; no retroactive migration or reinterpretation. This version
+also documents the paired-mode representation convention (no new field).
+Chain: v0.3.0 ← v0.2.3 (AT-14 timestamp rule + c14n pinning) ← v0.2.2
+(demonstration shapes) ← v0.2.1 (verification optional, per-family rules)
+← v0.2 (four freeze-pass corrections) ← v0.1 (PROPOSED).
 Home: imbas-site, committed by the first R3 lane. Product object model — not
 instrument doctrine; creates no instrument-repo file.
 Governance base of record: imbas-instrument master
@@ -46,8 +47,9 @@ PairRun   // run-the-pair; mode = paired
 DetectorEvent   // the gate: no Check exists without one
 - id, family: comparative | local_integrity | profile
 - detector_id + detector_version
-  // named + versioned: vg.omission / vg.framing_drift / vg.active_foreclosure
-  // (any rename lands as a versioned enum change per the item-6 adjudication),
+  // named + versioned: vg.omission / vg.framing_drift / vg.deflection
+  // (vg.deflection renamed from vg.active_foreclosure in v0.3.0 per the
+  // founder naming ruling; the item-6 adjudication is resolved),
   // li.contradiction.v1 / li.arith.v1 / li.temporal.v1 / li.quote.v1,
   // prof.<profile_id>.<criterion_id>
 - evidence_spans[]: {artifact_id, start, end, quote}   // verbatim, offsets must resolve
@@ -92,7 +94,7 @@ Check   // the R3 card
   //   the conditional rule above governs local_integrity and profile_derived
 - demonstration: per-family structured block
   // For subclass=finding_derived, DetectorEvent.family=comparative:
-  //   finding_type: omission | framing_drift | active_foreclosure
+  //   finding_type: omission | framing_drift | deflection
   //   proposition_span_refs[]      // resolve only to spans already present
   //                                // in proposition_at_issue
   //   dependent_output_span_refs[] // resolve only to spans already present
@@ -104,7 +106,7 @@ Check   // the R3 card
   //                                // incorrect
   //   Binding: finding_type must agree with detector_id
   //   (vg.omission → omission; vg.framing_drift → framing_drift;
-  //   vg.active_foreclosure → active_foreclosure); no comparative check
+  //   vg.deflection → deflection); no comparative check
   //   emits unless both referenced span sets are non-empty and valid
   //   (satisfiable for every finding_derived check, which always carries
   //   dependent_output under the both-ends rule); this demonstration is
@@ -153,6 +155,11 @@ ReviewRecord   // the export; "Review Packet"
 - contents: artifacts, pair runs, detector events, checks with status +
   demonstrations, resolution evidence, inspector provenance, versions,
   timestamps, method note
+- mode representation (v0.3.0, no field): paired mode is expressed SOLELY by a
+  populated pair_runs array — bijective with the presence of a targeted_answer
+  artifact and validator-enforced (AT-12); single mode serializes pair_runs as
+  []. This convention is the designated mode marker; no mode field exists on the
+  export.
 - integrity:
     algorithm: sha256
     canonicalization: review-record.c14n.v1

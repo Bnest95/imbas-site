@@ -153,7 +153,7 @@ created on this base on 2026-07-03 (via the Airtable schema API, not auto-create
 |-------|--------|-------|
 | `Request ID` | server-side `ctx.request_id` (16 hex) | Ties the row to the `reader_runtime` logs for the same run |
 | `Reader Model` | `MODEL` constant (`claude-opus-4-8`) | The configured Reader model |
-| `Reader Prompt Version` | `READER_PROMPT_VERSION` (`reader.v1`) | Bump when `SYSTEM_PROMPT` / output contract changes |
+| `Reader Prompt Version` | `READER_PROMPT_VERSION` (`reader.v3`) | Bump when `SYSTEM_PROMPT` / output contract changes |
 | `Topic` | request `case.topic` | Empty when the request carries none |
 | `Anchor` | request `case.anchor` | Empty when the request carries none |
 | `Inspected AI Model` | request `inspected_model` (Workbench model select) | Empty when unknown; no new UI, no user requirement |

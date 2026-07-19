@@ -1,7 +1,7 @@
 // reader-checks.js — Check Register v1 object model (Reader v3 R3).
 //
 // The R3 lane builds ONE family of checks: finding_derived comparative
-// (vg.omission / vg.framing_drift / vg.active_foreclosure). Each qualifying
+// (vg.omission / vg.framing_drift / vg.deflection). Each qualifying
 // inspector finding that carries a fully-quotable answer-internal dependency
 // becomes a Check card. Local-integrity and profile detectors are NOT built
 // here — but their storage shapes, validators, and family-separated queries
@@ -52,7 +52,7 @@ export const DEMONSTRABILITIES = new Set(["mechanical_verified", "model_nominate
 export const FINDING_TYPE_TO_DETECTOR = {
   omission: { detector_id: "vg.omission", finding_type: "omission" },
   framing_drift: { detector_id: "vg.framing_drift", finding_type: "framing_drift" },
-  active_foreclosure: { detector_id: "vg.active_foreclosure", finding_type: "active_foreclosure" },
+  deflection: { detector_id: "vg.deflection", finding_type: "deflection" },
 };
 
 // Ranking order (AT-9): demonstrability, then propagation, then conflict count,
@@ -69,8 +69,9 @@ export const PROPAGATION_RANK = {
 // User-facing static copy for the register and cards. Every string here is
 // linted by the AT-5 vocab test (lintUserFacingStrings over CHECK_UI): pointer
 // register only, no world-claim verdicts, no reliance/defensibility claims.
-// "Deflection" is the shipped label for the active_foreclosure family
-// (locked decision; "Active Foreclosure" is a v1-docs-only name).
+// "Deflection" is the shipped label for the deflection family (detector id
+// renamed in schema v0.3.0 per the founder naming ruling; "Active
+// Foreclosure" is the v1-docs-only name).
 // ---------------------------------------------------------------------------
 export const CHECK_UI = {
   register_heading: "Questions worth asking",
@@ -95,7 +96,7 @@ export const CHECK_UI = {
   finding_labels: {
     omission: "Omission",
     framing_drift: "Framing Drift",
-    active_foreclosure: "Deflection",
+    deflection: "Deflection",
   },
   resolver_labels: {
     authority: "Check against an authority",

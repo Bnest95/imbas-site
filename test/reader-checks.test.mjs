@@ -389,9 +389,9 @@ test("AT-6: a card carries family + detector_id + provisional, and survives isol
   assert.equal(alone.provisional, true);
 });
 
-test("finding labels use the shipped Deflection name for active_foreclosure", () => {
-  assert.equal(CHECK_UI.finding_labels.active_foreclosure, "Deflection");
-  assert.equal(FINDING_TYPE_TO_DETECTOR.active_foreclosure.detector_id, "vg.active_foreclosure");
+test("finding labels use the shipped Deflection name for deflection", () => {
+  assert.equal(CHECK_UI.finding_labels.deflection, "Deflection");
+  assert.equal(FINDING_TYPE_TO_DETECTOR.deflection.detector_id, "vg.deflection");
 });
 
 // ── AT-7: provisional invariant + AT-4 separation via the assembled register ────
