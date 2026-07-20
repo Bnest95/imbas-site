@@ -30,6 +30,7 @@ import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 import { CHECK_UI } from "./reader-checks.js";
 import { buildReviewRecord, reviewRecordFilename, REVIEW_RECORD_UI } from "./reader-review-record.js";
+import { selectInspectionMeaning } from "./reader-explain-panel.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -4042,6 +4043,17 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         </article>
       </div>
 
+      {/* Render-only interpretation of the pair just shown. Keyed off the same state
+          the side-by-side already carries: one pair_run ([pair]), the delta_items as
+          findings, and conditions_matched (so the S5 wrapper fires exactly when the
+          UNMATCHED CONDITIONS callout above fires — the panel adds interpretation
+          beside that callout, never a second copy of it). Perturbs no record. */}
+      <InspectionMeaningPanel
+        pairRuns={[pair]}
+        findings={items}
+        conditionsMatched={capture ? capture.conditions_matched : undefined}
+      />
+
       <p className="wb-measure__unvalidated">
         This is a machine estimate over one answer pair. Not a human-scored result, not evidence.
       </p>
@@ -4453,6 +4465,42 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
       <span className="wb-checks__export-hint">{REVIEW_RECORD_UI.action_hint}</span>
       {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
     </div>
+  );
+}
+
+// The Inspection Meaning panel — one reusable, RENDER-ONLY interpretation block that
+// sits beside the results and translates what the record ALREADY establishes into
+// three short sections (What happened / Why this matters / What you can do next) plus
+// the closing archive-boundary block. The copy is deterministic, selected by
+// selectInspectionMeaning from existing inspection state (reader-explain-panel.js);
+// this component invents no fact and touches no record. Nothing it renders enters the
+// ReviewRecord, the canonical body, the digest, the receipt, or any export — it is
+// presentation over existing state. aria-label (not a fixed id) because a single-mode
+// and a paired instance can both be mounted, and a shared id would collide.
+function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatched }) {
+  const { state_id, copy } = selectInspectionMeaning({ pairRuns, findings, conditionsMatched });
+  return (
+    <section className="wb-explain" data-state={state_id} aria-label={copy.heading}>
+      <h3 className="wb-explain__heading">{copy.heading}</h3>
+      <div className="wb-explain__section">
+        <span className="wb-explain__label">{copy.section_labels.what}</span>
+        <p className="wb-explain__body">{copy.what}</p>
+      </div>
+      <div className="wb-explain__section">
+        <span className="wb-explain__label">{copy.section_labels.why}</span>
+        {copy.why.map((line, i) => (
+          <p key={i} className="wb-explain__body">{line}</p>
+        ))}
+      </div>
+      <div className="wb-explain__section">
+        <span className="wb-explain__label">{copy.section_labels.next}</span>
+        <p className="wb-explain__body">{copy.next}</p>
+      </div>
+      <p className="wb-explain__boundary">{copy.archive_boundary}</p>
+      <p className="wb-explain__method">
+        <a className="wb-explain__method-link" href={copy.method_link.href}>{copy.method_link.label} →</a>
+      </p>
+    </section>
   );
 }
 
@@ -5272,6 +5320,18 @@ function ReaderWorkbench() {
             {readerResult.checks && Array.isArray(readerResult.checks.cards) && readerResult.checks.cards.length ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
                 <CheckRegisterPanel result={readerResult} />
+              </div>
+            ) : null}
+            {/* Render-only interpretation of the single inspection. Gated on measurement
+                (not on checks) so it renders for both S1 (no findings surfaced) and S2
+                (findings present); single mode → no pair_runs, so conditions are never
+                consulted. Findings are the Check Register cards. Perturbs no record. */}
+            {readerResult.measurement ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
+                <InspectionMeaningPanel
+                  pairRuns={[]}
+                  findings={(readerResult.checks && readerResult.checks.cards) || []}
+                />
               </div>
             ) : null}
             {readerResult.measurement && readerResult.receipt ? (
