@@ -4192,6 +4192,81 @@
   border-top: 1px solid rgba(242, 232, 220, 0.08);
 }
 
+/* Inspection Meaning panel (Reader v3 EXPLAIN) — one RENDER-ONLY interpretation
+   surface beside the results: a heading, three labelled sections (what happened /
+   why this matters / what you can do next), and the closing archive-boundary line
+   with the admission link. Umber + amber tokens only, matching the check-register
+   idiom; no new accent, no new system. Nothing here enters any record — this styles
+   presentation over existing inspection state. */
+.wb-explain {
+  margin-top: 1.1rem;
+  padding: 1rem 1.15rem 1.05rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-left: 2px solid rgba(180, 106, 90, 0.5);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(26, 20, 16, 0.42) 0%, rgba(18, 16, 13, 0.42) 100%);
+}
+
+.wb-explain__heading {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(240, 228, 212, 0.95);
+}
+
+.wb-explain__section {
+  margin-top: 0.85rem;
+}
+
+.wb-explain__section:first-of-type {
+  margin-top: 0;
+}
+
+.wb-explain__label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(200, 168, 150, 0.85);
+}
+
+.wb-explain__body {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(228, 216, 200, 0.92);
+}
+
+.wb-explain__body:last-child {
+  margin-bottom: 0;
+}
+
+.wb-explain__boundary {
+  margin: 1rem 0 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.1);
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(205, 192, 176, 0.72);
+}
+
+.wb-explain__method-link {
+  color: rgba(200, 168, 150, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.wb-explain__method-link:hover {
+  color: rgba(216, 186, 166, 1);
+}
+
 /* Check Register v1 (Reader v3 R3) — finding-derived comparative check cards.
    Reuses the .wb-reader-result.is-agent card chrome; these overrides carry the
    register note, the per-card provenance head, the both-ends quote pair, the
