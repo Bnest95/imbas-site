@@ -34,7 +34,7 @@ import { pairConditionsUnmatched } from "./reader-paired.js";
 // Versioned so a copy result is traceable to the copy that produced it. Bump when the
 // copy table or the selection rule changes (never edit a shipped state's meaning in
 // place without a bump).
-export const EXPLAIN_PANEL_VERSION = "explain-panel.v1";
+export const EXPLAIN_PANEL_VERSION = "explain-panel.v2";
 
 // The five deterministic states, keyed off existing state:
 //   mode       — paired iff the schema pair_runs array is populated (schema §1);
@@ -69,13 +69,13 @@ export const EXPLAIN_PANEL_UI = {
       why:
         "That's a record of what was inspected, not a verdict on the answer. An inspection that surfaces nothing is not a clean bill of health.",
       next:
-        "Ask the targeted follow-up in your own AI and paste the second answer back, or export the record of this inspection.",
+        "Run the same inspection on a fresh question, or copy the record of this inspection.",
     },
     [EXPLAIN_STATE_S2]: {
       what:
         "The inspection surfaced {N} item(s) worth checking before this answer gets used.",
       why:
-        "Each check shows what the answer rests on and where it strains its own construction, with the exact lines quoted. The checks point at what to verify; they don't settle the question.",
+        "The checks point to what the answer rests on or where its construction needs verification, with the relevant lines quoted. They point at what to verify; they don't settle the question.",
       next:
         "Open the checks, copy a verification question into your own AI, or export the review record.",
     },
@@ -97,11 +97,15 @@ export const EXPLAIN_PANEL_UI = {
   // S5 adds exactly this one line to the Why section (it never replaces the base copy).
   s5_condition_line:
     "The compared answers were produced under unmatched or unverified conditions, so differences may reflect changed conditions rather than response behavior alone.",
-  // Mandatory closing element on all five states. how-it-works.html explains protocol
-  // capture, human review, and the reviewed archive — the admission pipeline — so it
-  // is the archive-boundary link's destination (an existing page, not invented).
+  // Mandatory closing element on all five states. This is the canonical Reader boundary
+  // line (RECEIPT_BOUNDARY in reader-receipt.js) carried here VERBATIM — the same one
+  // sentence that rides the receipt, whitepaper §7, and construct paper §5. It is held
+  // byte-for-byte rather than imported: the render-only invariant keeps this file free of
+  // reader-receipt.js, exactly as every other surface carries the line by copy, not import.
+  // how-it-works.html explains protocol capture, human review, and the reviewed archive —
+  // the admission pipeline — so it is the method link's destination (an existing page).
   archive_boundary:
-    "This inspection is provisional. The Reader is not the governed archive — nothing here enters the evidentiary record automatically. Admission is a separate, governed process.",
+    "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
   method_link: {
     label: "How admission works",
     href: "/how-it-works.html",

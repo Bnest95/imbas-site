@@ -4496,9 +4496,9 @@ function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatche
         <span className="wb-explain__label">{copy.section_labels.next}</span>
         <p className="wb-explain__body">{copy.next}</p>
       </div>
-      <p className="wb-explain__boundary">
-        {copy.archive_boundary}{" "}
-        <a className="wb-explain__method-link" href={copy.method_link.href}>{copy.method_link.label}</a>
+      <p className="wb-explain__boundary">{copy.archive_boundary}</p>
+      <p className="wb-explain__method">
+        <a className="wb-explain__method-link" href={copy.method_link.href}>{copy.method_link.label} →</a>
       </p>
     </section>
   );
