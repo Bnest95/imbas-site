@@ -1,0 +1,35 @@
+# Test suite gate — runs `npm test` on pushes and pull requests to master.
+#
+# The vocabulary lint and the rest of the Node test suite are documented as a CI
+# gate (AT-5 in docs/REVIEW-GRAPH-SCHEMA.md; reader-check-vocab.js header names
+# test/check-vocab-lint.test.mjs as the CI caller), but no push or pull-request
+# workflow executed them. This wires `npm test` so enforcement matches the rule.
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
