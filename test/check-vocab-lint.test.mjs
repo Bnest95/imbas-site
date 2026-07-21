@@ -23,6 +23,7 @@ import {
 import { CHECK_UI } from "../reader-checks.js";
 import { PAIR_CAPTURE_UI } from "../reader-paired.js";
 import { EXPLAIN_PANEL_UI } from "../reader-explain-panel.js";
+import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -49,6 +50,20 @@ test("AT-5: PAIR_CAPTURE_UI (run-the-pair paste-back copy + unmatched warning) c
 test("AT-5: EXPLAIN_PANEL_UI (Inspection Meaning panel copy table, all five states) contains no banned construction", () => {
   const violations = lintUserFacingStrings(EXPLAIN_PANEL_UI);
   assert.deepEqual(violations, [], `banned constructions in EXPLAIN_PANEL_UI:\n${JSON.stringify(violations, null, 2)}`);
+});
+
+test("AT-5: SECOND_QUESTION_BANK user-facing copy (six labels + six instruction texts) contains no banned construction", () => {
+  // The chip a person taps and the instruction it sends are both displayed strings, so
+  // they enter the same pointer-register lint as every other user-facing surface. Derived
+  // from the bank rather than a second exported copy — the module ships exactly three
+  // exports, so the user-facing strings are read off the entries here.
+  const userFacing = SECOND_QUESTION_BANK.flatMap((e) => [e.approved_ui_label, e.instruction_text]);
+  const violations = lintUserFacingStrings(userFacing);
+  assert.deepEqual(
+    violations,
+    [],
+    `banned constructions in SECOND_QUESTION_BANK copy:\n${JSON.stringify(violations, null, 2)}`,
+  );
 });
 
 // ── AT-5: the list catches each banned family ───────────────────────────────────
