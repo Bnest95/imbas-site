@@ -1,7 +1,7 @@
 // reader-review-record — the ReviewRecord export, its review-record.c14n.v1
 // canonicalization, and the integrity digest (Reader v3 RR lane, site repo).
 //
-// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.3.0:
+// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.3.1:
 //   - AT-14 in full: identical logical records → identical digests; same-instant
 //     timestamps collapse (offset + fractional-zero + sub-ms truncation); a
 //     changed instant changes the digest; any canonical-body mutation changes it;
@@ -18,7 +18,8 @@
 //     reader-receipt content_hash minted from the same open run.
 //   - No new server-side write path: no api/** file assembles or persists the
 //     record, and the module itself pulls in no node builtin and no network/write.
-//   - Record validation against the schema v0.3.0 shapes (positive + rejections).
+//   - Record validation against the schema v0.3.1 shapes (positive + rejections),
+//     including PairRun run provenance (initiator, targeted_prompt_hash, chip fields).
 //
 // Content-blind: synthetic answer + synthetic findings only. Run:
 //   node --test test/reader-review-record.test.mjs
@@ -57,6 +58,7 @@ import {
   PAIR_SAME_MODEL,
   PAIR_EDITS,
   PAIR_CONDITIONS_UNVERIFIED,
+  PAIR_INITIATOR,
   PAIRED_METHOD_VERSION,
 } from "../reader-paired.js";
 
@@ -287,54 +289,56 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
   assert.equal(await digestReviewRecord(record), node);
 });
 
-// ── Pinned canonical vectors (schema v0.3.0) ─────────────────────────────────────
+// ── Pinned canonical vectors (schema v0.3.1) ─────────────────────────────────────
 // Two frozen records — a single-mode omission and one carrying a deflection finding —
 // over buildResult's fixed ids/timestamps + CREATED. Their canonical UTF-8 byte length
 // and 64-hex integrity digest are pinned as INTENTIONAL LITERALS so the suite itself
 // catches cross-version canonical drift from now on: a detector-id rename, a c14n rule
 // change, or an accidental field reshuffle all move these values. A legitimate future
-// schema version updates them DELIBERATELY, never casually. Each asserts versions.schema
-// is v0.3.0 before trusting its digest.
-const PINNED_V030 = {
+// schema version updates them DELIBERATELY, never casually. Both are single-mode (no
+// pair_runs), so v0.3.1's PairRun additions leave their bytes unchanged; only the
+// versions.schema string (…v0.3.0 → …v0.3.1) moves, so the byte length holds and the
+// digest turns over deliberately. Each asserts versions.schema is v0.3.1 first.
+const PINNED_V031 = {
   single_omission: {
     bytes: 2575,
-    digest: "549539f41f219aa5d891ad36ece7cd082287d14c9d7cae5f1d9e1aca50bcefca",
+    digest: "66ffc618883616f632e184765b6059a3a9c4f04700cc48c32e4a3ed4ec1e2aba",
   },
   deflection_finding: {
     bytes: 2585,
-    digest: "1f76c654456a1d46003fc8af1e24c73ca1d290095db3f20ac07b44b871af4c49",
+    digest: "fbdf12c1cb2cc16bdaa72d108703d134598f056ee4f9b816f1e5a5398904912c",
   },
 };
 
 const byteLen = (s) => new TextEncoder().encode(s).length;
 
-test("pinned vector: a frozen single-mode omission record matches its pinned v0.3.0 digest and byte length", async () => {
+test("pinned vector: a frozen single-mode omission record matches its pinned v0.3.1 digest and byte length", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
-  assert.equal(record.contents.versions.schema, "review-graph.v0.3.0", "the pin is anchored to schema v0.3.0");
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.1", "the pin is anchored to schema v0.3.1");
   assert.equal(record.contents.detector_events[0].detector_id, "vg.omission");
   const canonical = serializeCanonical(record);
-  assert.equal(byteLen(canonical), PINNED_V030.single_omission.bytes, "canonical byte length drifted from the pin");
-  assert.equal(record.integrity.digest, PINNED_V030.single_omission.digest, "digest drifted from the pin");
+  assert.equal(byteLen(canonical), PINNED_V031.single_omission.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V031.single_omission.digest, "digest drifted from the pin");
 });
 
-test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.0 digest and byte length", async () => {
+test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.1 digest and byte length", async () => {
   const record = await buildReviewRecord({ result: buildResult({ findings: [DEFLECTION_FINDING] }).result, createdAt: CREATED });
-  assert.equal(record.contents.versions.schema, "review-graph.v0.3.0", "the pin is anchored to schema v0.3.0");
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.1", "the pin is anchored to schema v0.3.1");
   // The renamed family renders end-to-end: vg.deflection detector, deflection finding_type.
   assert.equal(record.contents.detector_events[0].detector_id, "vg.deflection");
   assert.equal(record.contents.checks[0].demonstration.finding_type, "deflection");
   const canonical = serializeCanonical(record);
-  assert.equal(byteLen(canonical), PINNED_V030.deflection_finding.bytes, "canonical byte length drifted from the pin");
-  assert.equal(record.integrity.digest, PINNED_V030.deflection_finding.digest, "digest drifted from the pin");
+  assert.equal(byteLen(canonical), PINNED_V031.deflection_finding.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V031.deflection_finding.digest, "digest drifted from the pin");
 });
 
-test("schema v0.3.0: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.0", () => {
-  assert.equal(REVIEW_GRAPH_SCHEMA_VERSION, "review-graph.v0.3.0");
+test("schema v0.3.1: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.1", () => {
+  assert.equal(REVIEW_GRAPH_SCHEMA_VERSION, "review-graph.v0.3.1");
   const base = buildResult().result;
   const single = assembleReviewRecord({ result: base, createdAt: CREATED });
   const paired = assembleReviewRecord({ result: base, createdAt: CREATED, pair: buildPair() });
-  assert.equal(single.contents.versions.schema, "review-graph.v0.3.0");
-  assert.equal(paired.contents.versions.schema, "review-graph.v0.3.0");
+  assert.equal(single.contents.versions.schema, "review-graph.v0.3.1");
+  assert.equal(paired.contents.versions.schema, "review-graph.v0.3.1");
   // The paired-mode marker is the populated pair_runs array (schema §1 v0.3.0 note);
   // single mode serializes pair_runs as [].
   assert.deepEqual(single.contents.pair_runs, []);
@@ -360,7 +364,7 @@ test("the method note states unkeyed SHA-256 fixity and never claims a signature
 
 // ── Record assembly + schema-shape validation ────────────────────────────────────
 
-test("assembly: a built record validates against the schema v0.3.0 shapes", async () => {
+test("assembly: a built record validates against the schema v0.3.1 shapes", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
   const v = validateReviewRecord(record);
   assert.ok(v.ok, v.reason);
@@ -500,6 +504,10 @@ const TARGETED_ANSWER =
 const TARGETED_PROMPT =
   "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.";
 
+// The 64-hex sha256 the paired receipt carries over the verbatim probe (schema
+// v0.3.1). The exporter threads it onto the PairRun; it is never recomputed there.
+const TARGETED_PROMPT_HASH = createHash("sha256").update(TARGETED_PROMPT, "utf8").digest("hex");
+
 // A `pair` input shaped the way the Workbench paste-back step will hand it to the
 // exporter: the second answer verbatim, the capture derived from the three loose-voice
 // inputs, and the paired inspector provenance (production model + paired_method_version).
@@ -513,6 +521,7 @@ function buildPair({
   return {
     targeted_answer: targetedAnswer,
     targeted_prompt: TARGETED_PROMPT,
+    targeted_prompt_hash: TARGETED_PROMPT_HASH,
     targeted_source_model: {
       name: same_model === PAIR_SAME_MODEL.YES ? "claude-opus-4-8" : "",
       version: model_version || "",
@@ -542,6 +551,14 @@ test("paired assembly: one PairRun links the two artifacts and carries the captu
   assert.equal(pr.capture.same_model_claimed, true);
   assert.equal(pr.capture.user_edits_disclosed, false);
   assert.equal(pr.capture.conditions_matched, true);
+  // v0.3.1 run provenance: the shipped path stamps inspection_followup and carries the
+  // receipt's probe hash; the chip-only fields stay OMITTED on an inspection follow-up.
+  assert.equal(pr.initiator, PAIR_INITIATOR.INSPECTION_FOLLOWUP);
+  assert.equal(pr.initiator, "inspection_followup");
+  assert.equal(pr.targeted_prompt_hash, TARGETED_PROMPT_HASH);
+  assert.match(pr.targeted_prompt_hash, /^[0-9a-f]{64}$/);
+  assert.ok(!("chip_id" in pr), "chip_id is omitted (never null) unless a user chip initiated the pair");
+  assert.ok(!("instruction_version" in pr), "instruction_version is omitted unless a user chip initiated the pair");
   assert.ok(validateReviewRecord(record).ok, validateReviewRecord(record).reason);
 });
 
@@ -669,6 +686,59 @@ test("validation: rejects paired records that break the schema PairRun shape", a
   const badDisclosure = JSON.parse(JSON.stringify(good));
   badDisclosure.contents.pair_runs[0].capture.user_edits_disclosed = "no";
   assert.match(validateReviewRecord(badDisclosure).reason, /user_edits_disclosed must be boolean/);
+});
+
+test("validation (v0.3.1): enforces PairRun run provenance — initiator, hash, and the user_chip-only fields", async () => {
+  const good = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  assert.ok(validateReviewRecord(good).ok, "the inspection-follow-up baseline validates");
+
+  // An initiator outside the enum.
+  const badInitiator = JSON.parse(JSON.stringify(good));
+  badInitiator.contents.pair_runs[0].initiator = "magic";
+  assert.match(validateReviewRecord(badInitiator).reason, /initiator must be/);
+
+  // A targeted_prompt_hash that isn't 64-hex lowercase.
+  const badHash = JSON.parse(JSON.stringify(good));
+  badHash.contents.pair_runs[0].targeted_prompt_hash = "NOTAHASH";
+  assert.match(validateReviewRecord(badHash).reason, /targeted_prompt_hash must be a 64-char/);
+
+  // A missing hash is equally rejected (the record must be self-contained).
+  const noHash = JSON.parse(JSON.stringify(good));
+  delete noHash.contents.pair_runs[0].targeted_prompt_hash;
+  assert.match(validateReviewRecord(noHash).reason, /targeted_prompt_hash must be a 64-char/);
+
+  // chip_id / instruction_version present on an inspection_followup run — the
+  // "absent otherwise" rule: chip fields exist ONLY for a user_chip run.
+  const strayChipId = JSON.parse(JSON.stringify(good));
+  strayChipId.contents.pair_runs[0].chip_id = "sq.deadlines";
+  assert.match(validateReviewRecord(strayChipId).reason, /chip_id must be absent unless initiator is user_chip/);
+
+  const strayVersion = JSON.parse(JSON.stringify(good));
+  strayVersion.contents.pair_runs[0].instruction_version = "v1";
+  assert.match(
+    validateReviewRecord(strayVersion).reason,
+    /instruction_version must be absent unless initiator is user_chip/,
+  );
+
+  // A well-formed user_chip PairRun (schema-complete here; the endpoint lands in a
+  // later lane) carries both chip fields and validates.
+  const userChip = JSON.parse(JSON.stringify(good));
+  userChip.contents.pair_runs[0].initiator = "user_chip";
+  userChip.contents.pair_runs[0].chip_id = "sq.deadlines";
+  userChip.contents.pair_runs[0].instruction_version = "v1";
+  assert.ok(validateReviewRecord(userChip).ok, validateReviewRecord(userChip).reason);
+
+  // …and a user_chip run missing either required field is rejected.
+  const chipNoId = JSON.parse(JSON.stringify(userChip));
+  delete chipNoId.contents.pair_runs[0].chip_id;
+  assert.match(validateReviewRecord(chipNoId).reason, /chip_id required when initiator is user_chip/);
+
+  const chipNoVersion = JSON.parse(JSON.stringify(userChip));
+  delete chipNoVersion.contents.pair_runs[0].instruction_version;
+  assert.match(
+    validateReviewRecord(chipNoVersion).reason,
+    /instruction_version required when initiator is user_chip/,
+  );
 });
 
 // ── No new server-side write path in api/** ──────────────────────────────────────

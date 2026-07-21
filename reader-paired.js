@@ -214,18 +214,59 @@ export function pairConditionsUnmatched(capture) {
   return !capture || capture.conditions_matched !== true;
 }
 
+// Run provenance (schema v0.3.1). How a PairRun came to exist — the shipped
+// inspection follow-up writes inspection_followup; the user-chip lane (schema-only
+// here, wired in a later lane) writes user_chip; anything not attributable is
+// legacy_unknown. Provenance is NEVER inferred for convenience.
+export const PAIR_INITIATOR = {
+  INSPECTION_FOLLOWUP: "inspection_followup",
+  USER_CHIP: "user_chip",
+  LEGACY_UNKNOWN: "legacy_unknown",
+};
+
+// Normalize an initiator to the enum. Only the two named provenances pass through;
+// an absent, unknown, or malformed value falls to legacy_unknown — it is never
+// promoted to inspection_followup. The one shipped write path stamps its own value
+// explicitly, so the fallback here can only mark the genuinely unattributable.
+export function normalizeInitiator(initiator) {
+  return initiator === PAIR_INITIATOR.INSPECTION_FOLLOWUP || initiator === PAIR_INITIATOR.USER_CHIP
+    ? initiator
+    : PAIR_INITIATOR.LEGACY_UNKNOWN;
+}
+
 // Build the schema PairRun (mode = paired; the object's mere presence IS the paired
 // mode marker per schema §1). The targeted prompt is the v1.1-style non-leading
 // probe; the two artifact ids point at the stored-verbatim answers; the capture
-// block carries the conservative conditions_matched flag. Deterministic — no time,
-// no randomness — so a paired run records and hashes reproducibly.
-export function buildPairRun({ targeted_prompt, original_artifact_id, targeted_artifact_id, capture } = {}) {
-  return {
+// block carries the conservative conditions_matched flag. v0.3.1 adds run
+// provenance: initiator (always present, normalized) and targeted_prompt_hash (the
+// lowercase-hex sha256 of the verbatim targeted_prompt, threaded from the receipt
+// the server already computed — never recomputed here, so this stays pure and sync);
+// chip_id + instruction_version are present ONLY for a user_chip run and OMITTED
+// otherwise (absence is the signal, never a serialized null — see schema v0.3.1).
+// Deterministic — no time, no randomness — so a paired run records and hashes reproducibly.
+export function buildPairRun({
+  targeted_prompt,
+  original_artifact_id,
+  targeted_artifact_id,
+  capture,
+  initiator,
+  targeted_prompt_hash,
+  chip_id,
+  instruction_version,
+} = {}) {
+  const run = {
     targeted_prompt: typeof targeted_prompt === "string" ? targeted_prompt : "",
     original_artifact_id: typeof original_artifact_id === "string" ? original_artifact_id : "",
     targeted_artifact_id: typeof targeted_artifact_id === "string" ? targeted_artifact_id : "",
     capture: capture && typeof capture === "object" ? capture : {},
+    initiator: normalizeInitiator(initiator),
+    targeted_prompt_hash: typeof targeted_prompt_hash === "string" ? targeted_prompt_hash : "",
   };
+  if (run.initiator === PAIR_INITIATOR.USER_CHIP) {
+    run.chip_id = typeof chip_id === "string" ? chip_id : "";
+    run.instruction_version = typeof instruction_version === "string" ? instruction_version : "";
+  }
+  return run;
 }
 
 // Loose-voice capture UI copy, single-sourced like the reveal copy above and covered
