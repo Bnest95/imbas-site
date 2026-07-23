@@ -201,6 +201,59 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
   };
 }
 
+// ── Envelope assembly (user-chip paired mode) ─────────────────────────────────
+// The SAME "paired" envelope, built for a USER-DIRECTED follow-up instead of an
+// inspection-generated probe. It is descriptive, not measured: paired_analysis
+// carries the delta items (what visibly changed between the two answers) but NO
+// gap estimate, NO estimate rationale, and NO signal-pattern classification — a
+// chip pair asserts no inspection finding. Its provenance fields (initiator,
+// chip_id, instruction_version) mark it as a user_chip run per the review-graph
+// schema (v0.3.1). The initiator literal "user_chip" is inlined rather than
+// imported so this module stays a pure leaf (it imports nothing), exactly as the
+// receipt_type "single"/"paired" literals are; the value is schema-frozen.
+//
+// The suggested loop state is deliberately NOT stored here. It depends on the
+// person's paste-back conditions (a client-side capture the server never sees) and
+// this artifact is hashed, so the state is derived at render — never frozen into a
+// receipt where it could contradict the conditions actually disclosed. The caller
+// computes content_hash from canonicalizeForHash(envelope) exactly as in
+// single/paired mode; canonicalization_version is identical.
+export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis }) {
+  const ca = chipAnalysis || {};
+  const deltaItems = Array.isArray(ca.delta_items)
+    ? ca.delta_items.map((d) => ({
+        point: (d && d.point) || "",
+        open_side: (d && d.open_side) || "",
+        targeted_side: (d && d.targeted_side) || "",
+      }))
+    : [];
+  return {
+    receipt_type: "paired",
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    generated_at: generatedAt,
+    open_run: openRun || null,
+    paired_analysis: {
+      initiator: "user_chip",
+      chip_id: ca.chip_id || "",
+      instruction_version: ca.instruction_version || "",
+      open_run_id: ca.open_run_id || "",
+      targeted_prompt: ca.targeted_prompt || "",
+      targeted_prompt_hash: ca.targeted_prompt_hash || "",
+      targeted_answer: ca.targeted_answer || "",
+      targeted_answer_hash: ca.targeted_answer_hash || "",
+      delta_items: deltaItems,
+      paired_method_version: ca.paired_method_version || "",
+      unvalidated: true,
+    },
+    boundary: RECEIPT_BOUNDARY,
+    integrity: {
+      algorithm: RECEIPT_HASH_ALGORITHM,
+      canonicalization_version: CANONICALIZATION_VERSION,
+      content_hash: null,
+    },
+  };
+}
+
 // ── Human-readable receipt (.txt) ─────────────────────────────────────────────
 // Plain text so it is universally readable and self-contained. Carries the
 // boundary line AND the unvalidated label inside the artifact, not just the UI.
@@ -346,6 +399,59 @@ export function formatPairedReceiptText(envelope) {
   L.push("");
   L.push(
     "These are machine estimates over a single answer pair, not validated classifications or evidence.",
+  );
+  L.push("");
+  for (const line of integrityLines(e.integrity)) L.push(line);
+  L.push("");
+  L.push(RECEIPT_BOUNDARY);
+  return L.join("\n");
+}
+
+// Human-readable user-chip paired receipt (.txt). Same header/boundary/integrity
+// frame as the paired receipt; the embedded open run renders via the shared body
+// helper so the first-answer record reads identically. The chip section is
+// DESCRIPTIVE: it names the follow-up the person chose and lists what visibly
+// changed between the two answers — no gap estimate, no signal-pattern label, no
+// verdict on either answer. The closing disclaimer is authored to the chip copy
+// law (it never says the first answer failed or that the second is better).
+export function formatChipPairedReceiptText(envelope) {
+  const e = envelope || {};
+  const run = e.open_run || {};
+  const pa = e.paired_analysis || {};
+  const L = [];
+  L.push("IMBAS READER — USER-DIRECTED FOLLOW-UP RECEIPT");
+  L.push(`Generated: ${e.generated_at || ""}`);
+  L.push(`Schema: ${e.schema_version || ""}`);
+  L.push("");
+  L.push(RECEIPT_BOUNDARY);
+  L.push("");
+  L.push("—— THE FIRST ANSWER ——");
+  L.push("");
+  for (const line of openRunBodyLines(run)) L.push(line);
+  L.push("");
+  L.push("—— THE FOLLOW-UP YOU CHOSE ——");
+  if (pa.open_run_id) L.push(`Open run ID: ${pa.open_run_id}`);
+  if (pa.chip_id) {
+    L.push(`Follow-up: ${pa.chip_id}${pa.instruction_version ? ` (${pa.instruction_version})` : ""}`);
+  }
+  L.push("");
+  L.push("Instruction you sent:");
+  L.push((pa.targeted_prompt || "").trim());
+  L.push("");
+  L.push("What changed in the second answer:");
+  const deltas = Array.isArray(pa.delta_items) ? pa.delta_items : [];
+  if (deltas.length) {
+    deltas.forEach((d, i) => {
+      L.push(`${i + 1}. ${(d.point || "").trim()}`);
+      if ((d.open_side || "").trim()) L.push(`   first answer: "${d.open_side.trim()}"`);
+      if ((d.targeted_side || "").trim()) L.push(`   second answer: "${d.targeted_side.trim()}"`);
+    });
+  } else {
+    L.push("- (nothing visibly changed under this instruction)");
+  }
+  L.push("");
+  L.push(
+    "This is a user-directed follow-up, not an Imbas inspection finding. It shows what changed under the conditions you recorded; it does not establish that the second answer is correct, complete, or better supported.",
   );
   L.push("");
   for (const line of integrityLines(e.integrity)) L.push(line);

@@ -64,9 +64,12 @@ test("buildEvent rejects an unknown name and stamps a known one", () => {
 });
 
 test("every event name is covered by the exported list", () => {
-  assert.equal(READER_EVENT_NAMES.length, 10);
+  assert.equal(READER_EVENT_NAMES.length, 15);
   assert.ok(READER_EVENT_NAMES.includes("target_question_copied"));
   assert.ok(READER_EVENT_NAMES.includes("loop_completed"));
+  // User-chip lane events (design: item 3 telemetry, user-chip follow-up).
+  assert.ok(READER_EVENT_NAMES.includes("chip_instruction_copied"));
+  assert.ok(READER_EVENT_NAMES.includes("chip_pair_completed"));
 });
 
 // ── Funnel + north star ───────────────────────────────────────────────────────

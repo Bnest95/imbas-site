@@ -12,8 +12,9 @@
 // imports, no DOM, no storage — the impure emit + persistence live with the client
 // so this stays unit-testable in isolation.
 
-// The ten Confirmation Loop events (design: item 3 telemetry list). Names are the
-// wire values; use the constants so a typo is a build error, not a silent miss.
+// The Confirmation Loop and user-chip events (design: item 3 telemetry list, plus
+// the user-chip lane). Names are the wire values; use the constants so a typo is a
+// build error, not a silent miss.
 export const READER_EVENTS = {
   RUN_STARTED: "run_started",
   RUN_COMPLETED: "run_completed",
@@ -25,6 +26,14 @@ export const READER_EVENTS = {
   CARD_EXPORTED: "card_exported",
   CANDIDATE_SUBMITTED: "candidate_submitted",
   RETURN_VISIT: "return_visit",
+  // User-chip lane (user-directed follow-up). The person picks a follow-up from the
+  // Second Question Bank rather than the Reader constructing a probe; the correction
+  // (STATE_CORRECTED) and export (CARD_EXPORTED) events are reused, not duplicated.
+  CHIP_ROW_RENDERED: "chip_row_rendered",
+  CHIP_SELECTED: "chip_selected",
+  CHIP_INSTRUCTION_COPIED: "chip_instruction_copied",
+  CHIP_PAIR_INITIATED: "chip_pair_initiated",
+  CHIP_PAIR_COMPLETED: "chip_pair_completed",
 };
 export const READER_EVENT_NAMES = Object.values(READER_EVENTS);
 const READER_EVENT_NAME_SET = new Set(READER_EVENT_NAMES);
@@ -33,7 +42,7 @@ const READER_EVENT_NAME_SET = new Set(READER_EVENT_NAMES);
 // integer, or a boolean — never free text. Anything outside this set is dropped.
 const ALLOWED_PROP_KEYS = [
   "run", // opaque run/request id (not content)
-  "state", // loop state id (gap_revealed | still_missing | not_clear_yet)
+  "state", // loop/chip state id (gap_revealed | still_missing | not_clear_yet | chip_change_visible | chip_change_not_visible | chip_change_unclear)
   "from_state", // state_corrected: machine-suggested state
   "to_state", // state_corrected: person-declared state
   "check", // quick | cleaner
@@ -42,6 +51,10 @@ const ALLOWED_PROP_KEYS = [
   "eligible", // boolean: did the run earn an Act 2 offer
   "source", // agent | fallback | demo
   "idempotent", // boolean: replayed paired result
+  "initiator", // inspection_followup | user_chip (pair provenance)
+  "instruction_version", // user_chip: bank entry instruction_version (e.g. v1)
+  "chip", // user_chip: bank entry id (e.g. sq.sources) — an id, never content
+  "conditions", // user_chip: matched | unmatched | unverified (paste-back segmentation)
 ];
 const ALLOWED_PROP_SET = new Set(ALLOWED_PROP_KEYS);
 const STRING_PROP_CAP = 64;
@@ -81,11 +94,17 @@ export function buildFunnel(events) {
   const count = (name) => list.reduce((n, e) => (e.name === name ? n + 1 : n), 0);
   const copied = count(READER_EVENTS.TARGET_QUESTION_COPIED);
   const completed = count(READER_EVENTS.LOOP_COMPLETED);
+  const chipCopied = count(READER_EVENTS.CHIP_INSTRUCTION_COPIED);
+  const chipCompleted = count(READER_EVENTS.CHIP_PAIR_COMPLETED);
 
   const completedByState = {};
+  const chipCompletedByState = {};
   for (const e of list) {
     if (e.name === READER_EVENTS.LOOP_COMPLETED && e.state) {
       completedByState[e.state] = (completedByState[e.state] || 0) + 1;
+    }
+    if (e.name === READER_EVENTS.CHIP_PAIR_COMPLETED && e.state) {
+      chipCompletedByState[e.state] = (chipCompletedByState[e.state] || 0) + 1;
     }
   }
 
@@ -95,7 +114,10 @@ export function buildFunnel(events) {
   return {
     counts,
     completed_by_state: completedByState,
+    chip_completed_by_state: chipCompletedByState,
     // NORTH STAR — % of copied questions that return as completed loops.
     loop_completion_rate: copied > 0 ? completed / copied : null,
+    // User-chip loop: % of copied instructions that return as a completed pair.
+    chip_completion_rate: chipCopied > 0 ? chipCompleted / chipCopied : null,
   };
 }
