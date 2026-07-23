@@ -4129,6 +4129,11 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
   const pair = {
     targeted_answer: targeted,
     targeted_prompt: (paired && paired.targeted_prompt) || TARGETED_PROMPT_TEXT,
+    // The receipt already carries the sha256 of the verbatim probe; thread it so the
+    // review record binds the exact prompt text (schema v0.3.1, never recomputed here).
+    targeted_prompt_hash:
+      (paired && paired.receipt && paired.receipt.paired_analysis && paired.receipt.paired_analysis.targeted_prompt_hash) ||
+      "",
     capture,
     targeted_source_model: {
       name: sameModel === PAIR_SAME_MODEL.YES ? (openRun.declared_model || "") : "",

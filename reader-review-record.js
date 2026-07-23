@@ -9,7 +9,7 @@
 // record is assembled and hashed in the browser and downloaded as JSON.
 //
 // Implements the review-record.c14n.v1 canonicalization contract frozen in
-// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.0). That contract is DELIBERATELY DISTINCT
+// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.1). That contract is DELIBERATELY DISTINCT
 // from reader-receipt.js's canonicalization_version 1.0: the receipt normalizes
 // string line endings, but c14n.v1 normalizes ONLY timestamps and hashes every
 // other string value verbatim (span offsets into Artifact.body depend on the
@@ -26,13 +26,13 @@
 // The schema PairRun shape is single-sourced in reader-paired.js (run-the-pair
 // lane); this module embeds it when a paired capture is exported. Pure-JS import,
 // no cycle (reader-paired.js imports nothing from here) and already in the bundle.
-import { buildPairRun } from "./reader-paired.js";
+import { buildPairRun, PAIR_INITIATOR } from "./reader-paired.js";
 
 // Version ids. The schema version tracks the frozen Review Graph erratum; the
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
 // below change, so a digest recorded under the old rules stays reproducible.
-export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.0";
+export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.1";
 export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
 export const REVIEW_RECORD_VERSION = "review-record.v1";
 export const REVIEW_RECORD_HASH_ALGORITHM = "sha256";
@@ -149,7 +149,7 @@ function normalizeStatus(s) {
   return RECORD_STATUSES.has(s) ? s : null;
 }
 
-// Assemble a ReviewRecord (schema v0.3.0) from an inspection result + client-held
+// Assemble a ReviewRecord (schema v0.3.1) from an inspection result + client-held
 // check states, with the integrity.digest left empty for buildReviewRecord to fill.
 //
 //   result      — the Reader read response: { receipt.open_run, checks (register) }
@@ -225,6 +225,11 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair
         original_artifact_id: "original_answer",
         targeted_artifact_id: "targeted_answer",
         capture: pair.capture,
+        // The shipped path IS the inspection follow-up; stamp it explicitly (never
+        // inferred) and carry the hash the receipt already computed over the verbatim
+        // probe, so the record is self-contained without recomputing async (schema v0.3.1).
+        initiator: PAIR_INITIATOR.INSPECTION_FOLLOWUP,
+        targeted_prompt_hash: str(pair.targeted_prompt_hash),
       }),
     );
     // The paired inspection ran under the production model + paired_method_version;
@@ -317,7 +322,7 @@ export function reviewRecordFilename(record) {
   return `imbas-review-record-${datePart}-${shortDigest}.json`;
 }
 
-// Validate a record against the schema v0.3.0 shapes. Returns { ok, reason? }.
+// Validate a record against the schema v0.3.1 shapes. Returns { ok, reason? }.
 // Defense in depth for the export path and a fixture for the schema-conformance
 // tests; not a substitute for the register's own validators.
 export function validateReviewRecord(record) {
@@ -386,6 +391,31 @@ export function validateReviewRecord(record) {
     }
     if (cap.model_version_user_reported !== undefined && typeof cap.model_version_user_reported !== "string") {
       return { ok: false, reason: "pair_run.capture.model_version_user_reported must be a string when present" };
+    }
+    // v0.3.1 run provenance: initiator is one of the three named values, the
+    // targeted_prompt_hash is a 64-char lowercase-hex sha256, and the chip fields
+    // are present iff a user chip initiated the run and absent otherwise (OMITTED,
+    // never null — the schema's structural-absence convention).
+    if (
+      pr.initiator !== "inspection_followup" &&
+      pr.initiator !== "user_chip" &&
+      pr.initiator !== "legacy_unknown"
+    ) {
+      return { ok: false, reason: "pair_run.initiator must be inspection_followup, user_chip, or legacy_unknown" };
+    }
+    if (!/^[0-9a-f]{64}$/.test(str(pr.targeted_prompt_hash))) {
+      return { ok: false, reason: "pair_run.targeted_prompt_hash must be a 64-char lowercase hex sha256" };
+    }
+    if (pr.initiator === "user_chip") {
+      if (!str(pr.chip_id)) return { ok: false, reason: "pair_run.chip_id required when initiator is user_chip" };
+      if (!str(pr.instruction_version)) {
+        return { ok: false, reason: "pair_run.instruction_version required when initiator is user_chip" };
+      }
+    } else {
+      if ("chip_id" in pr) return { ok: false, reason: "pair_run.chip_id must be absent unless initiator is user_chip" };
+      if ("instruction_version" in pr) {
+        return { ok: false, reason: "pair_run.instruction_version must be absent unless initiator is user_chip" };
+      }
     }
   }
   if (c.pair_runs.length > 0 && !c.artifacts.some((a) => a && a.role === "targeted_answer")) {

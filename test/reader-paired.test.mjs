@@ -44,9 +44,11 @@ import {
   buildPairCapture,
   buildPairRun,
   pairConditionsUnmatched,
+  normalizeInitiator,
   PAIR_SAME_MODEL,
   PAIR_EDITS,
   PAIR_CONDITIONS_UNVERIFIED,
+  PAIR_INITIATOR,
 } from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
@@ -853,29 +855,85 @@ test("pairConditionsUnmatched: the schema rule (conditions_matched != true) as o
   assert.equal(pairConditionsUnmatched(null), true, "a missing capture is treated as unmatched");
 });
 
-test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids, capture)", () => {
+test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids, capture, v0.3.1 provenance)", () => {
   const capture = buildPairCapture({ same_model: "yes", edits: "none" });
+  const hash = sha256Hex(TARGETED_PROMPT_TEXT);
   const pr = buildPairRun({
     targeted_prompt: TARGETED_PROMPT_TEXT,
     original_artifact_id: "original_answer",
     targeted_artifact_id: "targeted_answer",
     capture,
+    initiator: PAIR_INITIATOR.INSPECTION_FOLLOWUP,
+    targeted_prompt_hash: hash,
   });
+  // An inspection_followup run carries no chip fields (OMITTED, never null).
   assert.deepEqual(Object.keys(pr).sort(), [
     "capture",
+    "initiator",
     "original_artifact_id",
     "targeted_artifact_id",
     "targeted_prompt",
+    "targeted_prompt_hash",
   ]);
   assert.equal(pr.targeted_prompt, TARGETED_PROMPT_TEXT);
   assert.equal(pr.original_artifact_id, "original_answer");
   assert.equal(pr.targeted_artifact_id, "targeted_answer");
   assert.equal(pr.capture, capture);
-  // Defensive defaults: bad inputs never throw, they yield empty scalars / {}.
+  assert.equal(pr.initiator, "inspection_followup");
+  assert.equal(pr.targeted_prompt_hash, hash);
+  assert.ok(!("chip_id" in pr));
+  assert.ok(!("instruction_version" in pr));
+
+  // Defensive defaults: bad inputs never throw. An absent initiator is NEVER promoted
+  // to inspection_followup — it falls to legacy_unknown; the hash defaults to "".
   assert.deepEqual(buildPairRun(), {
     targeted_prompt: "",
     original_artifact_id: "",
     targeted_artifact_id: "",
     capture: {},
+    initiator: "legacy_unknown",
+    targeted_prompt_hash: "",
   });
+});
+
+test("buildPairRun: a user_chip run carries chip_id + instruction_version; other initiators omit them", () => {
+  const base = {
+    targeted_prompt: "Use this exact instruction.",
+    original_artifact_id: "original_answer",
+    targeted_artifact_id: "targeted_answer",
+    capture: buildPairCapture({ same_model: "yes", edits: "none" }),
+    targeted_prompt_hash: sha256Hex("Use this exact instruction."),
+  };
+  const chip = buildPairRun({
+    ...base,
+    initiator: PAIR_INITIATOR.USER_CHIP,
+    chip_id: "sq.deadlines",
+    instruction_version: "v1",
+  });
+  assert.equal(chip.initiator, "user_chip");
+  assert.equal(chip.chip_id, "sq.deadlines");
+  assert.equal(chip.instruction_version, "v1");
+
+  // The same chip fields, passed under a non-user_chip initiator, are dropped —
+  // they exist ONLY on a user_chip run.
+  const followup = buildPairRun({
+    ...base,
+    initiator: PAIR_INITIATOR.INSPECTION_FOLLOWUP,
+    chip_id: "sq.deadlines",
+    instruction_version: "v1",
+  });
+  assert.ok(!("chip_id" in followup));
+  assert.ok(!("instruction_version" in followup));
+});
+
+test("normalizeInitiator: only the two named provenances pass; everything else is legacy_unknown", () => {
+  assert.equal(normalizeInitiator("inspection_followup"), "inspection_followup");
+  assert.equal(normalizeInitiator("user_chip"), "user_chip");
+  // Absent, unknown, or malformed values NEVER become inspection_followup.
+  assert.equal(normalizeInitiator(undefined), "legacy_unknown");
+  assert.equal(normalizeInitiator(null), "legacy_unknown");
+  assert.equal(normalizeInitiator(""), "legacy_unknown");
+  assert.equal(normalizeInitiator("legacy_unknown"), "legacy_unknown");
+  assert.equal(normalizeInitiator("INSPECTION_FOLLOWUP"), "legacy_unknown", "case-sensitive; not coerced");
+  assert.equal(normalizeInitiator(42), "legacy_unknown");
 });

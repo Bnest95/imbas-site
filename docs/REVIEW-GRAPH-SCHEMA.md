@@ -1,16 +1,42 @@
-REVIEW GRAPH — SCHEMA v0.3.0 (FROZEN)
-Status: FROZEN. v0.3.0 issued 2026-07-18 as a DELIBERATE VERSIONED CHANGE
-(not an erratum): the third comparative behavior class renames from
-active_foreclosure to deflection per the founder naming ruling of
-2026-07-17/18 — Deflection is canonical everywhere; Active Foreclosure is
-the former v1 name, historical notes only. vg.active_foreclosure →
-vg.deflection; the demonstration finding_type enum renames accordingly.
-Records exported under v0.2.x remain valid under their own declared
-versions.schema; no retroactive migration or reinterpretation. This version
-also documents the paired-mode representation convention (no new field).
-Chain: v0.3.0 ← v0.2.3 (AT-14 timestamp rule + c14n pinning) ← v0.2.2
-(demonstration shapes) ← v0.2.1 (verification optional, per-family rules)
-← v0.2 (four freeze-pass corrections) ← v0.1 (PROPOSED).
+REVIEW GRAPH — SCHEMA v0.3.1 (FROZEN)
+Status: FROZEN. v0.3.1 issued 2026-07-21 as a DELIBERATE VERSIONED CHANGE
+(not an erratum): PairRun gains run provenance so a Review Record is
+self-contained about how each pair was created. Four additive fields —
+- initiator: inspection_followup | user_chip | legacy_unknown. The shipped
+  inspection follow-up write stamps inspection_followup; the user-chip lane
+  (schema-defined here, wired in a later lane) stamps user_chip; anything not
+  attributable is legacy_unknown. Provenance is NEVER inferred for
+  convenience — an absent or unknown initiator normalizes to legacy_unknown,
+  never to inspection_followup.
+- chip_id: the bank sq.* id of the selected instruction. Present (required)
+  IFF initiator=user_chip; OMITTED otherwise.
+- instruction_version: the immutable bank-entry version of that instruction.
+  Present (required) IFF initiator=user_chip; OMITTED otherwise.
+- targeted_prompt_hash: the lowercase-hex SHA-256 of the verbatim
+  targeted_prompt. Present on EVERY PairRun and therefore carried in the
+  ReviewRecord export (contents.pair_runs), so the digest binds the exact
+  probe text without re-fetching it. Two initiator semantics for the SAME
+  field: for inspection_followup it hashes the Reader-generated non-leading
+  probe (the server already computes this on the receipt; it is threaded
+  through, never recomputed); for user_chip it hashes the chip's instruction
+  text carried as the targeted_prompt.
+null vs omitted (decided against live c14n.v1): the chip fields, and any
+gap-estimate or signal-pattern field, are OMITTED (structurally absent) when
+they do not apply — NEVER serialized as null. Rationale: v0.3.0 already makes
+structural absence the semantic (paired mode is a populated pair_runs array,
+no mode field); under c14n.v1 an explicit null enters the hashed body and
+falsely implies an empty-but-present slot, whereas absence keeps the
+inspection-path bytes reproducible and states "not applicable" truthfully.
+Binding: a chip selection may not, by itself, create a finding, behavior
+classification, DetectorEvent, or any evidence-record (ResolutionEvidence)
+entry — user_chip PairRuns therefore carry no gap estimate and no
+signal-pattern classification (the Option B ceiling).
+Records exported under v0.2.x and v0.3.0 remain valid under their own declared
+versions.schema; no retroactive migration or reinterpretation.
+Chain: v0.3.1 ← v0.3.0 (deflection rename; paired-mode marker convention) ←
+v0.2.3 (AT-14 timestamp rule + c14n pinning) ← v0.2.2 (demonstration shapes)
+← v0.2.1 (verification optional, per-family rules) ← v0.2 (four freeze-pass
+corrections) ← v0.1 (PROPOSED).
 Home: imbas-site, committed by the first R3 lane. Product object model — not
 instrument doctrine; creates no instrument-repo file.
 Governance base of record: imbas-instrument master
@@ -41,8 +67,27 @@ PairRun   // run-the-pair; mode = paired
 - original_artifact_id, targeted_artifact_id
 - capture: {same_model_claimed: bool, model_version_user_reported?,
             user_edits_disclosed: bool, conditions_matched: true|false|unverified}
+- initiator: inspection_followup | user_chip | legacy_unknown   // v0.3.1;
+  // how this pair was created. inspection_followup = the shipped follow-up
+  // write; user_chip = a bank instruction the reader selected; legacy_unknown
+  // = not attributable. Normalized on build: an absent/unknown value falls to
+  // legacy_unknown and is NEVER promoted to inspection_followup (provenance is
+  // not inferred for convenience).
+- targeted_prompt_hash   // v0.3.1; lowercase-hex SHA-256 of the verbatim
+  // targeted_prompt. Present on EVERY PairRun, so the exported record binds the
+  // exact probe text (self-contained). inspection_followup: the hash the
+  // receipt already carries (threaded, not recomputed). user_chip: the hash of
+  // the chip's instruction text carried as the targeted_prompt.
+- chip_id?              // v0.3.1; bank sq.* id. Required IFF initiator=user_chip;
+  // OMITTED otherwise (structurally absent, never null).
+- instruction_version? // v0.3.1; immutable bank-entry version of that
+  // instruction. Required IFF initiator=user_chip; OMITTED otherwise.
 - rule: conditions_matched != true → unmatched-conditions warning renders
   on every surface derived from this run
+- rule (v0.3.1): a user_chip PairRun carries no gap estimate and no
+  signal-pattern classification, and by itself creates no finding, behavior
+  classification, DetectorEvent, or ResolutionEvidence entry. Gap-estimate and
+  signal-pattern fields are OMITTED, never null, when they do not apply.
 
 DetectorEvent   // the gate: no Check exists without one
 - id, family: comparative | local_integrity | profile
@@ -160,6 +205,11 @@ ReviewRecord   // the export; "Review Packet"
   artifact and validator-enforced (AT-12); single mode serializes pair_runs as
   []. This convention is the designated mode marker; no mode field exists on the
   export.
+- self-containment (v0.3.1): each embedded PairRun carries targeted_prompt_hash,
+  so the canonical body — and therefore the integrity digest — binds the exact
+  probe text of every pair without re-fetching the live probe. initiator (and,
+  for user_chip, chip_id + instruction_version) travels in the same PairRun,
+  so the record states how each pair was created without any external lookup.
 - integrity:
     algorithm: sha256
     canonicalization: review-record.c14n.v1
@@ -290,3 +340,13 @@ AT-14 Integrity digest: identical logical records produce identical
       ≡ 2026-07-17T12:00:00.000Z (identical digests);
       2026-07-17T12:00:00Z vs 2026-07-17T12:00:01Z (different digests);
       integrity-block-only mutation (recomputed digest unchanged).
+AT-15 Pair provenance (v0.3.1): every PairRun carries initiator ∈
+      {inspection_followup, user_chip, legacy_unknown} and a 64-char
+      lowercase-hex targeted_prompt_hash over the verbatim targeted_prompt;
+      chip_id and instruction_version are present IFF initiator=user_chip and
+      absent otherwise (a present chip field under any other initiator fails
+      validation). An absent or unknown initiator normalizes to legacy_unknown,
+      never to inspection_followup — provenance is not inferred. A chip
+      selection alone creates no finding, behavior classification,
+      DetectorEvent, or ResolutionEvidence entry. Records exported under an
+      earlier versions.schema remain valid unchanged.
