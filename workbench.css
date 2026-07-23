@@ -5011,6 +5011,22 @@
   color: rgba(205, 192, 176, 0.8);
 }
 
+/* Compact boundary treatment for the chip reveal. The locked Reader boundary sentence
+   and the chip lane's user-attribution line share ONE toned block under a single top
+   rule (inherited from .wb-reader-result__trust) — one treatment, never two stacked
+   warning panels. Both lines inherit the mono boundary tone and stay opaque so neither
+   drops below the 4.5:1 AA ratio that color guarantees; line-height relaxes slightly so
+   the full sentences read as prose rather than a mono label. */
+.wb-chip__boundary-lock {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.wb-chip__boundary-attr {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
+}
+
 /* Professional cue — one quiet line pointing a professional user at the receipt, set
    off by a subtle top rule. Rendered as plain text (no link target ships in this lane). */
 .wb-chip__pro-cue {

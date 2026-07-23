@@ -208,7 +208,10 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
 // gap estimate, NO estimate rationale, and NO signal-pattern classification — a
 // chip pair asserts no inspection finding. Its provenance fields (initiator,
 // chip_id, instruction_version) mark it as a user_chip run per the review-graph
-// schema (v0.3.1). The initiator literal "user_chip" is inlined rather than
+// schema (v0.3.1), and it carries the human-facing chip_label — the approved label
+// the person actually tapped — so the receipt names the follow-up in plain words,
+// not by id alone (the id and version stay as explicit provenance beside it). The
+// initiator literal "user_chip" is inlined rather than
 // imported so this module stays a pure leaf (it imports nothing), exactly as the
 // receipt_type "single"/"paired" literals are; the value is schema-frozen.
 //
@@ -235,6 +238,7 @@ export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis }) {
     paired_analysis: {
       initiator: "user_chip",
       chip_id: ca.chip_id || "",
+      chip_label: ca.chip_label || "",
       instruction_version: ca.instruction_version || "",
       open_run_id: ca.open_run_id || "",
       targeted_prompt: ca.targeted_prompt || "",
@@ -425,15 +429,27 @@ export function formatChipPairedReceiptText(envelope) {
   L.push("");
   L.push(RECEIPT_BOUNDARY);
   L.push("");
+  // The first answer only — verbatim, no inspection layer. A chip pair asserts no
+  // inspection finding, so THE READ / MEASUREMENT / inspector provenance are never
+  // rendered here and are never blank-filled; the receipt carries only the answer
+  // the follow-up actually ran against.
   L.push("—— THE FIRST ANSWER ——");
   L.push("");
-  for (const line of openRunBodyLines(run)) L.push(line);
-  L.push("");
-  L.push("—— THE FOLLOW-UP YOU CHOSE ——");
-  if (pa.open_run_id) L.push(`Open run ID: ${pa.open_run_id}`);
-  if (pa.chip_id) {
-    L.push(`Follow-up: ${pa.chip_id}${pa.instruction_version ? ` (${pa.instruction_version})` : ""}`);
+  if ((run.question || "").trim()) {
+    L.push(`Question: ${run.question.trim()}`);
+    L.push("");
   }
+  L.push((run.answer || "").trim());
+  L.push("");
+  // The follow-up the person chose: the human-facing label leads (what they tapped,
+  // in plain words), with the stable chip_id and instruction_version kept beside it
+  // as explicit provenance — the id is never replaced by the label.
+  L.push("—— THE FOLLOW-UP YOU CHOSE ——");
+  if ((pa.chip_label || "").trim()) L.push(pa.chip_label.trim());
+  L.push("");
+  if (pa.chip_id) L.push(`Chip ID: ${pa.chip_id}`);
+  if (pa.instruction_version) L.push(`Instruction version: ${pa.instruction_version}`);
+  if (pa.open_run_id) L.push(`Open run ID: ${pa.open_run_id}`);
   L.push("");
   L.push("Instruction you sent:");
   L.push((pa.targeted_prompt || "").trim());

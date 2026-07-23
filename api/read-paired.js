@@ -635,9 +635,15 @@ function reconstructChipFromRecord(recordFields, embed) {
     const parsed = JSON.parse(f["Delta Items"] || "[]");
     if (Array.isArray(parsed)) delta_items = parsed;
   } catch {}
+  const chipId = f["Chip ID"] || embed.chipId || "";
+  // The human label is not persisted on the row (the review-graph carries Chip ID +
+  // Instruction Version only); re-derive it from the FROZEN bank by id so a replayed
+  // receipt names the follow-up in the same words as the fresh one.
+  const chipEntry = SECOND_QUESTION_BANK.find((e) => e.id === chipId) || null;
   const chipAnalysis = {
     initiator: PAIR_INITIATOR.USER_CHIP,
-    chip_id: f["Chip ID"] || embed.chipId || "",
+    chip_id: chipId,
+    chip_label: chipEntry ? chipEntry.approved_ui_label : "",
     instruction_version: f["Instruction Version"] || embed.instructionVersion || "",
     open_run_id: embed.openRunId,
     targeted_prompt: f["Targeted Prompt"] || embed.targetedPrompt,
@@ -959,6 +965,7 @@ export function createReadPairedHandler(deps = {}) {
       const chipAnalysis = {
         initiator: PAIR_INITIATOR.USER_CHIP,
         chip_id: body.chip_id,
+        chip_label: chipEntry.approved_ui_label,
         instruction_version: chipEntry.instruction_version,
         open_run_id: openRunId,
         targeted_prompt: targetedPrompt,

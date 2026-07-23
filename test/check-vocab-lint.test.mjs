@@ -28,6 +28,7 @@ import { CHECK_UI } from "../reader-checks.js";
 import { PAIR_CAPTURE_UI, CHIP_UI, CHIP_LOOP_STATE_COPY } from "../reader-paired.js";
 import { EXPLAIN_PANEL_UI } from "../reader-explain-panel.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
+import { RECEIPT_BOUNDARY } from "../reader-receipt.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -192,6 +193,18 @@ test("chip lint leaves the chip lane's legitimate register untouched", () => {
   for (const s of chipCopy) {
     assert.deepEqual(lintChipString(s), [], `chip-register copy tripped a chip rule: "${s}"`);
   }
+});
+
+test("the locked Reader boundary sentence is registered on the chip surface (clears BOTH lists)", () => {
+  // Correction: ChipDeltaView now carries RECEIPT_BOUNDARY verbatim beside the chip
+  // attribution line, so a string authored for the inspection lane newly renders on a
+  // chip surface. Any string on a chip surface must pass the chip lint — it borrows
+  // none of the chip lane's banned constructions (no Imbas-action / improvement claim,
+  // no borrowed construct vocabulary, no percentage). It also clears the world-claim
+  // list, exactly as on every inspection surface, so the one sentence renders
+  // identically on both lanes with zero drift.
+  assert.deepEqual(lintChipString(RECEIPT_BOUNDARY), []);
+  assert.deepEqual(lintString(RECEIPT_BOUNDARY), []);
 });
 
 test("the two registers are genuinely separate: the chip meaning line clears the chip list but trips the world-claim list", () => {

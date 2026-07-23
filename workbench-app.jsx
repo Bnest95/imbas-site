@@ -4809,7 +4809,14 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
           panel, which speaks in inspection constructs) so the chip lane never borrows the
           instrument's vocabulary. */}
       <p className="wb-chip__meaning">{CHIP_UI.meaning_panel_line}</p>
-      <p className="wb-reader-result__trust wb-measure__boundary">{CHIP_UI.boundary}</p>
+      {/* One compact boundary treatment (NOT two stacked warning panels): the locked
+          Reader boundary sentence, verbatim, carried on this surface exactly as it
+          reads on every other — with the chip lane's user-attribution line beneath it,
+          visually subordinate but part of the same block. */}
+      <div className="wb-reader-result__trust wb-chip__boundary" role="note">
+        <p className="wb-chip__boundary-lock">{RECEIPT_BOUNDARY}</p>
+        <p className="wb-chip__boundary-attr">{CHIP_UI.boundary}</p>
+      </div>
 
       <div className="wb-chip__pro-cue">
         <span className="wb-chip__pro-line">{CHIP_UI.professional_cue.line}</span>
