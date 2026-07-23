@@ -11,6 +11,7 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 
 import { createReadHandler } from "../api/read.js";
 import { _resetMemoryStateForTests } from "../reader-security.js";
@@ -23,6 +24,8 @@ import {
   canonicalizeForHash,
   buildSingleReceipt,
   formatReceiptText,
+  buildChipPairedReceipt,
+  formatChipPairedReceiptText,
 } from "../reader-receipt.js";
 
 const sha256Hex = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -204,6 +207,132 @@ test("formatReceiptText degrades gracefully when no measurement is present", () 
   });
   assert.ok(txt.includes("No measurement layer was produced for this run."));
   assert.ok(txt.includes(RECEIPT_BOUNDARY));
+});
+
+// ── Pure module: user-chip receipt (descriptive, no inspection layer) ─────────
+// The chip receipt shares the envelope + boundary + integrity frame but renders a
+// DESCRIPTIVE user-directed follow-up: the first answer, the human-facing label the
+// person tapped (with chip_id + instruction_version kept beside it as explicit
+// provenance), the instruction they sent, and what visibly changed. It must NOT
+// render any inspection-only section, and must never blank-fill one — a chip pair
+// asserts no inspection finding.
+
+const CHIP_FIRST_ANSWER =
+  "Remote work boosts focus and cuts commuting, and most teams adapt within a quarter.";
+
+function buildSampleChipReceipt(over = {}) {
+  const generatedAt = "2026-07-20T00:00:00.000Z";
+  const openRun = {
+    question: "",
+    answer: CHIP_FIRST_ANSWER,
+    provenance: { request_id: "abc123def4567890" },
+  };
+  const chipAnalysis = {
+    initiator: "user_chip",
+    chip_id: "sq.sources",
+    chip_label: "Doesn't show where its claims came from",
+    instruction_version: "v1",
+    open_run_id: "abc123def4567890",
+    targeted_prompt: "Show me where each important factual claim comes from. Name the source behind it.",
+    targeted_prompt_hash: sha256Hex("prompt"),
+    targeted_answer: "Second answer, now with sources.",
+    targeted_answer_hash: sha256Hex("second"),
+    delta_items: [
+      {
+        point: "The second answer names a source for the adaptation-time claim.",
+        open_side: "most teams adapt within a quarter",
+        targeted_side: "per a 2024 workforce survey, about 70% adapt within a quarter",
+      },
+    ],
+    paired_method_version: "1.0",
+    ...over,
+  };
+  const e = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis });
+  e.integrity.content_hash = sha256Hex(canonicalizeForHash(e));
+  return e;
+}
+
+test("buildChipPairedReceipt carries the human label beside the stable id + version, and no estimate", () => {
+  const pa = buildSampleChipReceipt().paired_analysis;
+  assert.equal(pa.initiator, "user_chip");
+  assert.equal(pa.chip_id, "sq.sources");
+  assert.equal(pa.chip_label, "Doesn't show where its claims came from");
+  assert.equal(pa.instruction_version, "v1");
+  // Descriptive lane: no gap estimate / rationale / signal classification on the envelope.
+  assert.ok(!("gap_estimate" in pa));
+  assert.ok(!("estimate_rationale" in pa));
+  assert.ok(!("signal_pattern" in (pa.delta_items[0] || {})));
+});
+
+test("formatChipPairedReceiptText renders the human label prominently, id + version as explicit provenance", () => {
+  const txt = formatChipPairedReceiptText(buildSampleChipReceipt());
+  assert.ok(txt.includes("Doesn't show where its claims came from"), "human label present");
+  assert.ok(txt.includes("Chip ID: sq.sources"), "stable chip id retained (not replaced)");
+  assert.ok(txt.includes("Instruction version: v1"), "instruction version retained");
+  // The label leads the follow-up section, above the id/version provenance lines.
+  const labelAt = txt.indexOf("Doesn't show where its claims came from");
+  const idAt = txt.indexOf("Chip ID: sq.sources");
+  assert.ok(labelAt > -1 && idAt > -1 && labelAt < idAt, "human label precedes the machine id");
+});
+
+test("formatChipPairedReceiptText omits every inspection-only heading and field (never blank-filled)", () => {
+  const txt = formatChipPairedReceiptText(buildSampleChipReceipt());
+  for (const banned of [
+    "THE ANSWER INSPECTED",
+    "THE READ",
+    "Completeness:",
+    "What was left out:",
+    "How it was shaped:",
+    "MEASUREMENT",
+    "candidate observations",
+    "Reader model:",
+    "Inspector prompt version:",
+    "(none identified)",
+    "(none detected)",
+    "No measurement layer was produced",
+  ]) {
+    assert.ok(!txt.includes(banned), `chip receipt must not carry inspection scaffolding: "${banned}"`);
+  }
+  // It uses the neutral first-answer heading and carries the answer itself.
+  assert.ok(txt.includes("—— THE FIRST ANSWER ——"));
+  assert.ok(txt.includes(CHIP_FIRST_ANSWER));
+});
+
+test("formatChipPairedReceiptText keeps the user-directed disclaimer and frames the artifact in the boundary", () => {
+  const txt = formatChipPairedReceiptText(buildSampleChipReceipt());
+  assert.ok(
+    txt.includes("This is a user-directed follow-up, not an Imbas inspection finding."),
+    "user-directed disclaimer retained",
+  );
+  assert.ok(txt.startsWith("IMBAS READER — USER-DIRECTED FOLLOW-UP RECEIPT"));
+  assert.ok(txt.trimEnd().endsWith(RECEIPT_BOUNDARY), "boundary closes the artifact");
+  const first = txt.indexOf(RECEIPT_BOUNDARY);
+  const last = txt.lastIndexOf(RECEIPT_BOUNDARY);
+  assert.ok(first > -1 && last > first, "boundary appears at head and close");
+});
+
+test("the chip_label addition does not leak into single (inspection) receipts", () => {
+  // Guards the byte-for-byte stability of the inspection receipts: the new chip field
+  // lives ONLY on the chip envelope; the single receipt's shape is untouched.
+  const single = buildSample();
+  assert.equal(single.paired_analysis, null);
+  assert.ok(!JSON.stringify(single).includes("chip_label"));
+  assert.ok(!formatReceiptText(single).includes("THE FOLLOW-UP YOU CHOSE"));
+});
+
+test("ChipDeltaView renders the locked Reader boundary verbatim on the chip reveal surface", () => {
+  // The one sentence, three surfaces guarantee, extended to the chip reveal: the
+  // compact boundary block references the single-sourced RECEIPT_BOUNDARY constant
+  // (not a copy-pasted literal), so the sentence can never drift from the receipt's.
+  const src = readFileSync(new URL("../workbench-app.jsx", import.meta.url), "utf8");
+  assert.ok(
+    src.includes('className="wb-reader-result__trust wb-chip__boundary"'),
+    "compact boundary block present in ChipDeltaView",
+  );
+  assert.ok(
+    /wb-chip__boundary-lock">\{RECEIPT_BOUNDARY\}/.test(src),
+    "the locked boundary constant is rendered inside the block",
+  );
 });
 
 // ── Handler integration: measurement path ────────────────────────────────────

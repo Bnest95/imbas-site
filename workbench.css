@@ -4944,6 +4944,112 @@
   margin: 0.2rem 0 0;
 }
 
+/* User-diagnosis chips (Reader v2, user-chip lane). A self-contained follow-up flow
+   below the inspection card: pick the follow-up that bothered you, copy its exact
+   instruction, bring back the second answer, read what visibly changed. Reuses the
+   .wb-act2 / .wb-loop / .wb-reader-result card chrome; these overrides carry only the
+   full-sentence pick chips (which can't wear the mono pill), the instruction divider,
+   the selected-follow-up line, the descriptive register note, and the professional
+   cue. Umber + amber tokens only — no new accent. */
+.wb-chip {
+  margin-top: 0.35rem;
+}
+
+.wb-chip__choose {
+  margin-top: 0.9rem;
+}
+
+.wb-chip__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+/* Override the mono pill (.wb-loop__chip) for a full sentence: sans face, normal
+   tracking, left-aligned, wraps to auto height, gentle radius instead of 999px. Keeps
+   the umber-rest / ember-active states inherited from .wb-loop__chip. On a narrow
+   screen the 14rem basis lets each choice take its own row; wider, they pair up. */
+.wb-chip__pick {
+  flex: 1 1 14rem;
+  max-width: 100%;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  letter-spacing: normal;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  border-radius: 8px;
+}
+
+/* The instruction card appears once a follow-up is picked. Top-rule divider, same
+   idiom as .wb-act2__test. */
+.wb-chip__instruction {
+  margin-top: 1.15rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+/* "Follow-up selected by you: <label>" — a quiet provenance line under the reveal
+   headline, so the person always sees which instruction produced the comparison. */
+.wb-chip__reason {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(190, 178, 164, 0.78);
+}
+
+/* The descriptive register note. Body-readable like .wb-explain__boundary; no top rule
+   of its own — the boundary line directly beneath it carries the divider. */
+.wb-chip__meaning {
+  margin: 1rem 0 0;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.55;
+  color: rgba(205, 192, 176, 0.8);
+}
+
+/* Compact boundary treatment for the chip reveal. The locked Reader boundary sentence
+   and the chip lane's user-attribution line share ONE toned block under a single top
+   rule (inherited from .wb-reader-result__trust) — one treatment, never two stacked
+   warning panels. Both lines inherit the mono boundary tone and stay opaque so neither
+   drops below the 4.5:1 AA ratio that color guarantees; line-height relaxes slightly so
+   the full sentences read as prose rather than a mono label. */
+.wb-chip__boundary-lock {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.wb-chip__boundary-attr {
+  margin: 0.4rem 0 0;
+  line-height: 1.5;
+}
+
+/* Professional cue — one quiet line pointing a professional user at the receipt, set
+   off by a subtle top rule. Rendered as plain text (no link target ships in this lane). */
+.wb-chip__pro-cue {
+  display: block;
+  margin-top: 0.85rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-chip__pro-line {
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(205, 192, 176, 0.72);
+}
+
+.wb-chip__pro-link {
+  margin-left: 0.35rem;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  color: rgba(200, 168, 150, 0.95);
+}
+
 /* Return flow (Reader v2 R1, item 3). A slim re-entry strip for a visitor whose own
    browser log shows a copied question with no completed loop. Resumes nothing; it
    only points back at the input. Ember left-rule, same idiom as the paste prompt. */

@@ -19,11 +19,16 @@ import {
   lintString,
   lintUserFacingStrings,
   hasWorldClaimVerdict,
+  CHIP_VOCAB_VERSION,
+  CHIP_BANNED_CONSTRUCTIONS,
+  lintChipString,
+  lintChipStrings,
 } from "../reader-check-vocab.js";
 import { CHECK_UI } from "../reader-checks.js";
-import { PAIR_CAPTURE_UI } from "../reader-paired.js";
+import { PAIR_CAPTURE_UI, CHIP_UI, CHIP_LOOP_STATE_COPY } from "../reader-paired.js";
 import { EXPLAIN_PANEL_UI } from "../reader-explain-panel.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
+import { RECEIPT_BOUNDARY } from "../reader-receipt.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -118,4 +123,94 @@ test("hasWorldClaimVerdict trips on verdict words but not on reliance/defensibil
   // handled by the CI lint over authored copy, not by the per-check runtime drop.
   assert.equal(hasWorldClaimVerdict("The exemption rests on the 2019 date."), false);
   assert.equal(hasWorldClaimVerdict("What source establishes the premise?"), false);
+});
+
+// ── Chip lane vocabulary (user-directed follow-up copy) ──────────────────────────
+// A SEPARATE register from the Check copy above, with its own list and linter. A chip
+// pair reports what visibly changed under an instruction the person chose; its copy
+// legitimately says "correct" / "complete" / "better" (in the standing disclaimer) and
+// "verified" (in the not-verified caption) — words the world-claim list bans — so the
+// chip surfaces are linted through lintChipStrings, NEVER lintUserFacingStrings. In
+// return the chip list bans what this descriptive lane must never borrow: Imbas-action /
+// improvement claims, the instrument's construct vocabulary, and quantified improvement.
+
+test("the chip vocab list is versioned with unique rule ids", () => {
+  assert.match(CHIP_VOCAB_VERSION, /^chip-vocab\.v\d+$/);
+  assert.ok(CHIP_BANNED_CONSTRUCTIONS.length > 0);
+  const ids = CHIP_BANNED_CONSTRUCTIONS.map((r) => r.id);
+  assert.equal(new Set(ids).size, ids.length);
+});
+
+test("chip lint: CHIP_UI (every authored chip string) contains no banned construction", () => {
+  const violations = lintChipStrings(CHIP_UI);
+  assert.deepEqual(violations, [], `banned chip constructions in CHIP_UI:\n${JSON.stringify(violations, null, 2)}`);
+});
+
+test("chip lint: CHIP_LOOP_STATE_COPY (the three loop-state headlines/notes/chips) contains no banned construction", () => {
+  const violations = lintChipStrings(CHIP_LOOP_STATE_COPY);
+  assert.deepEqual(
+    violations,
+    [],
+    `banned chip constructions in CHIP_LOOP_STATE_COPY:\n${JSON.stringify(violations, null, 2)}`,
+  );
+});
+
+test("chip lint catches Imbas-action / improvement claims", () => {
+  for (const word of [
+    "found", "detected", "identified", "fixed", "repaired", "improved", "improvement", "validated", "proven",
+  ]) {
+    assert.ok(
+      lintChipString(`Imbas ${word} the answer.`).some((h) => h.id === "chip-imbas-action"),
+      `expected "${word}" to trip chip-imbas-action`,
+    );
+  }
+});
+
+test("chip lint catches borrowed instrument construct vocabulary", () => {
+  for (const word of ["gap", "volunteer", "volunteered", "surface", "surfaced", "omission", "deflection", "framing"]) {
+    assert.ok(
+      lintChipString(`This shows a ${word} in the answer.`).some((h) => h.id === "chip-construct-vocab"),
+      `expected "${word}" to trip chip-construct-vocab`,
+    );
+  }
+});
+
+test("chip lint catches a quantified (percentage) improvement claim", () => {
+  assert.ok(lintChipString("40% more complete").some((h) => h.id === "chip-percentage-claim"));
+  assert.ok(lintChipString("a 12.5 % change").some((h) => h.id === "chip-percentage-claim"));
+});
+
+test("chip lint leaves the chip lane's legitimate register untouched", () => {
+  // The words the chip lane is allowed to use — the world-claim list is not the authority
+  // here. "correct" / "complete" / "better" ride in the standing disclaimer; "verified"
+  // rides in the not-verified caption. None of these may trip a CHIP rule.
+  const chipCopy = [
+    CHIP_UI.meaning_panel_line,
+    CHIP_UI.side_by_side.second_answer_caption,
+    "the second answer is correct, complete, or better supported",
+    "Not verified by Imbas.",
+  ];
+  for (const s of chipCopy) {
+    assert.deepEqual(lintChipString(s), [], `chip-register copy tripped a chip rule: "${s}"`);
+  }
+});
+
+test("the locked Reader boundary sentence is registered on the chip surface (clears BOTH lists)", () => {
+  // Correction: ChipDeltaView now carries RECEIPT_BOUNDARY verbatim beside the chip
+  // attribution line, so a string authored for the inspection lane newly renders on a
+  // chip surface. Any string on a chip surface must pass the chip lint — it borrows
+  // none of the chip lane's banned constructions (no Imbas-action / improvement claim,
+  // no borrowed construct vocabulary, no percentage). It also clears the world-claim
+  // list, exactly as on every inspection surface, so the one sentence renders
+  // identically on both lanes with zero drift.
+  assert.deepEqual(lintChipString(RECEIPT_BOUNDARY), []);
+  assert.deepEqual(lintString(RECEIPT_BOUNDARY), []);
+});
+
+test("the two registers are genuinely separate: the chip meaning line clears the chip list but trips the world-claim list", () => {
+  // The whole reason two lists exist. The mandated chip disclaimer contains "correct" (a
+  // world-claim verdict word), so it clears lintChipString but WOULD fail the world-claim
+  // lint — proving the chip surfaces must never be routed through lintUserFacingStrings.
+  assert.deepEqual(lintChipString(CHIP_UI.meaning_panel_line), []);
+  assert.ok(lintUserFacingStrings([CHIP_UI.meaning_panel_line]).some((v) => v.id === "world-claim-verdict"));
 });

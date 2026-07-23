@@ -1,4 +1,12 @@
-import { RECEIPT_BOUNDARY, gapEstimateLabel, formatReceiptText, formatPairedReceiptText } from "./reader-receipt.js";
+import {
+  RECEIPT_BOUNDARY,
+  RECEIPT_SCHEMA_VERSION,
+  gapEstimateLabel,
+  formatReceiptText,
+  formatPairedReceiptText,
+  formatChipPairedReceiptText,
+  canonicalizeForHash,
+} from "./reader-receipt.js";
 import {
   ACT2_OFFER_COPY,
   TARGETED_PROMPT_TEXT,
@@ -24,7 +32,13 @@ import {
   PAIR_EDITS,
   PAIR_CAPTURE_UI,
   PAIRED_METHOD_VERSION,
+  PAIR_INITIATOR,
+  CHIP_UI,
+  CHIP_LOOP_STATES,
+  CHIP_LOOP_STATE_COPY,
+  suggestChipState,
 } from "./reader-paired.js";
+import { SECOND_QUESTION_BANK } from "./reader-second-question-bank.js";
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
@@ -2138,6 +2152,76 @@ async function runPairedReader(openReceipt, targetedAnswer) {
   return data;
 }
 
+// ── User-chip lane client (user-directed follow-up) ───────────────────────────
+// The chip lane hits the SAME /api/read-paired endpoint, but the person supplies the
+// "first answer" directly (no Reader inspection ran before it) and picks the follow-up
+// from the Second Question Bank. So the client mints the open receipt itself — a minimal
+// single-mode receipt over the pasted first answer, with an integrity hash the server
+// re-verifies exactly as for an inspection receipt. That hash is INTEGRITY, not
+// authentication (both reader-receipt.js and api/read-paired.js say a client can
+// legitimately recompute it): a self-built receipt is by-design here, not a forgery.
+
+// SHA-256 → lowercase hex in the browser (WebCrypto), mirroring the server's sha256Hex
+// so a client-built receipt's content_hash matches the server's recompute byte-for-byte.
+async function sha256HexClient(str) {
+  const bytes = new TextEncoder().encode(String(str));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// Build the client-side open receipt for a chip pair from the first answer. The
+// open_run_id is the first 16 hex of the answer's OWN hash: deterministic (an identical
+// first answer re-derives the same id, so a resubmit of the identical pair stays
+// idempotent) and hex by construction (the server's idempotency lookup sanitizes the id
+// to hex, so a non-hex id would silently mismatch). Shape is the minimum
+// validateOpenReceipt requires; content_hash is taken over the canonical envelope with
+// content_hash nulled — identical to the server's rule (reader-receipt.js).
+async function buildChipOpenReceipt(firstAnswer, generatedAt) {
+  const answerHex = await sha256HexClient(firstAnswer);
+  const receipt = {
+    receipt_type: "single",
+    schema_version: RECEIPT_SCHEMA_VERSION,
+    generated_at: generatedAt,
+    open_run: {
+      question: "",
+      answer: firstAnswer,
+      provenance: { request_id: answerHex.slice(0, 16) },
+    },
+    integrity: { content_hash: null },
+  };
+  receipt.integrity.content_hash = await sha256HexClient(canonicalizeForHash(receipt));
+  return receipt;
+}
+
+// Chip second read. Same endpoint + failure contract as runPairedReader, plus the
+// user-chip provenance the server needs to look the instruction up in the FROZEN bank:
+// the server never trusts client-supplied instruction text, only chip_id +
+// instruction_version. Builds the open receipt on the way out.
+async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion }) {
+  const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString());
+  const res = await fetch(READER_PAIRED_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      open_receipt: openReceipt,
+      targeted_answer: targetedAnswer,
+      initiator: PAIR_INITIATOR.USER_CHIP,
+      chip_id: chipId,
+      instruction_version: instructionVersion,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error((data && data.error) || `chip_paired_${res.status}`);
+    err.status = res.status;
+    err.info = data || {};
+    throw err;
+  }
+  return data;
+}
+
 const RESULT_GAP_COUNT_MS = 800;
 const RESULT_CHIP_STAGGER_MS = 100;
 const RESULT_VERDICT_BEAT_MS = 80;
@@ -3575,7 +3659,11 @@ const MEASURE_FINDING_LABEL = {
   "candidate deflection": "Candidate deflection",
 };
 
-function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePrefix = "imbas-reader-receipt" }) {
+// onExport is an OPTIONAL success hook (kind "json" | "receipt"). Inspection callers
+// omit it (unchanged); the user-chip lane passes one to emit the reused CARD_EXPORTED
+// event, so a downloaded follow-up receipt counts on the same funnel row as an
+// inspection card export — no duplicate export UI, no chip-specific event.
+function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePrefix = "imbas-reader-receipt", onExport }) {
   const [copiedJson, setCopiedJson] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
@@ -3593,6 +3681,7 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
     try {
       await navigator.clipboard.writeText(JSON.stringify(receipt, null, 2));
       flash(setCopiedJson);
+      if (onExport) onExport("json");
     } catch {
       fail("Could not copy");
     }
@@ -3611,6 +3700,7 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 0);
       flash(setDownloaded);
+      if (onExport) onExport("receipt");
     } catch {
       fail("Could not download receipt");
     }
@@ -4591,6 +4681,416 @@ function Act2Offer({ result }) {
   );
 }
 
+// User-chip lane — the result view. DESCRIPTIVE register only: it reports what visibly
+// changed between the two answers under the instruction the person chose. It asserts no
+// Imbas inspection finding, carries no gap estimate and no signal patterns, and borrows
+// no construct vocabulary (those belong to the inspection lane). The machine SUGGESTS one
+// of three chip states from delta presence + recorded conditions (suggestChipState); the
+// person overrides it with one tap, and that correction — not the suggestion — is what a
+// later state_corrected event records. No state celebrates, and none asserts the first
+// answer failed or that the second is better.
+function ChipDeltaView({ chip, entry, capture, onReset }) {
+  const items = Array.isArray(chip.delta_items) ? chip.delta_items : [];
+  const unmatched = pairConditionsUnmatched(capture);
+  const conditionsTag =
+    capture.conditions_matched === true
+      ? "matched"
+      : capture.conditions_matched === false
+        ? "unmatched"
+        : "unverified";
+  const run = (chip.receipt && chip.receipt.paired_analysis && chip.receipt.paired_analysis.open_run_id) || "";
+
+  const suggested = suggestChipState({ delta_count: chip.delta_count, conditions_matched: capture.conditions_matched });
+  const [userState, setUserState] = useState(suggested);
+
+  // chip_pair_completed is the chip lane's north-star completion: the second answer came
+  // back and was read into a state. Fire once on mount with the machine-suggested state;
+  // a later human correction is its own state_corrected event, never a re-completion.
+  useEffect(() => {
+    emitReaderEvent(READER_EVENTS.CHIP_PAIR_COMPLETED, {
+      run,
+      chip: entry ? entry.id : "",
+      instruction_version: entry ? entry.instruction_version : "",
+      state: suggested,
+      conditions: conditionsTag,
+      source: chip.source,
+      idempotent: chip.idempotent,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const correctTo = (next) => {
+    if (next === userState) return;
+    emitReaderEvent(READER_EVENTS.STATE_CORRECTED, { run, from_state: userState, to_state: next });
+    setUserState(next);
+  };
+
+  const copy = CHIP_LOOP_STATE_COPY[userState] || {};
+
+  return (
+    <div className="wb-act2__delta wb-loop wb-scroll-anchor">
+      {chip.idempotent ? (
+        <p className="wb-act2__notice" role="status">{CHIP_UI.reveal.idempotent_notice}</p>
+      ) : null}
+      {chip.capture_uncertain ? (
+        <p className="wb-act2__notice" role="status">{CHIP_UI.reveal.capture_uncertain_notice}</p>
+      ) : null}
+
+      <div className="wb-loop__reveal">
+        <h3 className="wb-loop__headline">{copy.headline}</h3>
+        {entry ? (
+          <p className="wb-chip__reason">{CHIP_UI.side_by_side.reason_prefix}{entry.approved_ui_label}</p>
+        ) : null}
+
+        <div className="wb-loop__panels">
+          <div className="wb-loop__panel wb-loop__panel--first">
+            <span className="wb-loop__panel-label">{CHIP_UI.side_by_side.first_answer_caption}</span>
+          </div>
+          <div className="wb-loop__panel wb-loop__panel--second">
+            <span className="wb-loop__panel-label">{CHIP_UI.side_by_side.second_answer_caption}</span>
+          </div>
+        </div>
+
+        {unmatched ? (
+          <div className="wb-loop__unmatched" role="note">
+            <span className="wb-loop__unmatched-badge">{PAIR_CAPTURE_UI.unmatched_badge}</span>
+            <p className="wb-loop__unmatched-warning">{PAIR_CAPTURE_UI.unmatched_warning}</p>
+          </div>
+        ) : null}
+
+        {copy.note ? <p className="wb-loop__tag">{copy.note}</p> : null}
+
+        <div className="wb-loop__correct" role="group" aria-label="Mark what you actually saw">
+          <span className="wb-loop__correct-label">{CHIP_UI.reveal.correct_label}</span>
+          {CHIP_LOOP_STATES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`wb-loop__chip${s === userState ? " is-active" : ""}`}
+              aria-pressed={s === userState}
+              onClick={() => correctTo(s)}
+            >
+              {(CHIP_LOOP_STATE_COPY[s] || {}).chip || s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="wb-reader-result__sections">
+        <article className="wb-reader-result__section">
+          <h3 className="wb-reader-result__section-title">{CHIP_UI.reveal.delta_heading}</h3>
+          {items.length ? (
+            <ol className="wb-measure__list">
+              {items.map((d, i) => (
+                <li key={i} className="wb-measure__finding">
+                  <p className="wb-measure__finding-why">{d.point}</p>
+                  {(d.open_side || "").trim() ? (
+                    <blockquote className="wb-measure__anchor wb-act2__side">
+                      <span className="wb-act2__side-label">{CHIP_UI.reveal.first_side_label}</span>
+                      {`"${d.open_side.trim()}"`}
+                    </blockquote>
+                  ) : null}
+                  {(d.targeted_side || "").trim() ? (
+                    <blockquote className="wb-measure__anchor wb-act2__side wb-act2__side--targeted">
+                      <span className="wb-act2__side-label">{CHIP_UI.reveal.second_side_label}</span>
+                      {`"${d.targeted_side.trim()}"`}
+                    </blockquote>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="wb-reader-result__empty">{CHIP_UI.reveal.empty_delta}</p>
+          )}
+        </article>
+      </div>
+
+      {/* The full register note for this lane. Plain paragraph (NOT the InspectionMeaning
+          panel, which speaks in inspection constructs) so the chip lane never borrows the
+          instrument's vocabulary. */}
+      <p className="wb-chip__meaning">{CHIP_UI.meaning_panel_line}</p>
+      {/* One compact boundary treatment (NOT two stacked warning panels): the locked
+          Reader boundary sentence, verbatim, carried on this surface exactly as it
+          reads on every other — with the chip lane's user-attribution line beneath it,
+          visually subordinate but part of the same block. */}
+      <div className="wb-reader-result__trust wb-chip__boundary" role="note">
+        <p className="wb-chip__boundary-lock">{RECEIPT_BOUNDARY}</p>
+        <p className="wb-chip__boundary-attr">{CHIP_UI.boundary}</p>
+      </div>
+
+      <div className="wb-chip__pro-cue">
+        <span className="wb-chip__pro-line">{CHIP_UI.professional_cue.line}</span>
+        <span className="wb-chip__pro-link">{CHIP_UI.professional_cue.link}</span>
+      </div>
+
+      <ReaderReceiptActions
+        receipt={chip.receipt}
+        formatter={formatChipPairedReceiptText}
+        filePrefix="imbas-reader-followup-receipt"
+        onExport={() =>
+          emitReaderEvent(READER_EVENTS.CARD_EXPORTED, {
+            run,
+            chip: entry ? entry.id : "",
+            instruction_version: entry ? entry.instruction_version : "",
+          })
+        }
+      />
+
+      <div className="wb-action-row wb-act2__reset-row">
+        <Btn kind="ghost" small onClick={onReset}>{CHIP_UI.reveal.reset_label}</Btn>
+      </div>
+    </div>
+  );
+}
+
+// Reader v2 (user-chip lane) — the user-directed follow-up. A self-contained flow that
+// does NOT require a prior inspection: paste the answer or draft you started with, tap the
+// follow-up that bothered you (a Second Question Bank entry), copy the exact instruction to
+// paste back into your own AI, then bring the second answer back to compare. It runs the
+// same /api/read-paired endpoint as the inspection follow-up, but on the user_chip
+// provenance path — the client mints its own open receipt (buildChipOpenReceipt) and the
+// server derives the instruction text from the FROZEN bank by chip_id, never from the
+// client. No chip is preselected: Imbas has determined nothing about the answer until the
+// person chooses a follow-up.
+function ChipLane() {
+  const [firstAnswer, setFirstAnswer] = useState("");
+  const [chipId, setChipId] = useState("");
+  const [secondAnswer, setSecondAnswer] = useState("");
+  const [sameModel, setSameModel] = useState(null);
+  const [modelVersion, setModelVersion] = useState("");
+  const [edits, setEdits] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [chipResult, setChipResult] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  const [fieldError, setFieldError] = useState("");
+  const [runError, setRunError] = useState("");
+  const rowSeenRef = useRef(false);
+
+  // chip_row_rendered fires once: the person has been shown the follow-up choices.
+  useEffect(() => {
+    if (rowSeenRef.current) return;
+    rowSeenRef.current = true;
+    emitReaderEvent(READER_EVENTS.CHIP_ROW_RENDERED, {});
+  }, []);
+
+  const entry = SECOND_QUESTION_BANK.find((e) => e.id === chipId) || null;
+  const capture = buildPairCapture({ same_model: sameModel, model_version: modelVersion, edits });
+  const canCompare = !!entry && !!firstAnswer.trim() && !!secondAnswer.trim();
+
+  const clearErrors = () => {
+    if (fieldError) setFieldError("");
+    if (runError) setRunError("");
+  };
+
+  const reset = () => {
+    setChipResult(null);
+    setFirstAnswer("");
+    setChipId("");
+    setSecondAnswer("");
+    setSameModel(null);
+    setModelVersion("");
+    setEdits(null);
+    setFieldError("");
+    setRunError("");
+    setCopied(false);
+  };
+
+  const pickChip = (e) => {
+    setChipId(e.id);
+    clearErrors();
+    emitReaderEvent(READER_EVENTS.CHIP_SELECTED, { chip: e.id, instruction_version: e.instruction_version });
+  };
+
+  const copyInstruction = async () => {
+    if (!entry) return;
+    try {
+      await navigator.clipboard.writeText(entry.instruction_text);
+      setCopied(true);
+      setCopyFail("");
+      emitReaderEvent(READER_EVENTS.CHIP_INSTRUCTION_COPIED, { chip: entry.id, instruction_version: entry.instruction_version });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+
+  const submit = async () => {
+    if (busy) return;
+    if (!entry) { setFieldError(CHIP_UI.compose.chip_missing); return; }
+    if (!firstAnswer.trim()) { setFieldError(CHIP_UI.compose.first_answer_missing); return; }
+    if (!secondAnswer.trim()) { setFieldError(CHIP_UI.compose.second_answer_missing); return; }
+    setFieldError("");
+    setRunError("");
+    setBusy(true);
+    emitReaderEvent(READER_EVENTS.CHIP_PAIR_INITIATED, { chip: entry.id, instruction_version: entry.instruction_version });
+    try {
+      const data = await runChipPairedReader({
+        firstAnswer,
+        targetedAnswer: secondAnswer,
+        chipId: entry.id,
+        instructionVersion: entry.instruction_version,
+      });
+      setChipResult(data);
+    } catch (err) {
+      const info = (err && err.info) || {};
+      if (err && err.status === 400 && info.error === "too_long") {
+        setFieldError(CHIP_UI.compose.too_long);
+      } else if (err && err.status === 400 && info.error === "empty") {
+        setFieldError(CHIP_UI.compose.too_short);
+      } else if (err && err.status === 400 && info.error === "not_eligible") {
+        setRunError(CHIP_UI.compose.not_eligible);
+      } else if (err && err.status === 400) {
+        setRunError(CHIP_UI.compose.blocked);
+      } else {
+        setRunError((info && info.message) || CHIP_UI.compose.run_error);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const head = (
+    <div className="wb-reader-result__head">
+      <h2 id="wb-chip-heading" className="wb-reader-result__title">{CHIP_UI.value_statement.headline}</h2>
+    </div>
+  );
+
+  if (chipResult) {
+    return (
+      <section className="wb-reader-result is-agent wb-act2 wb-chip wb-scroll-anchor" aria-labelledby="wb-chip-heading">
+        {head}
+        <ChipDeltaView chip={chipResult} entry={entry} capture={capture} onReset={reset} />
+      </section>
+    );
+  }
+
+  return (
+    <section className="wb-reader-result is-agent wb-act2 wb-chip wb-scroll-anchor" aria-labelledby="wb-chip-heading">
+      {head}
+      <p className="wb-act2__offer">{CHIP_UI.value_statement.sub}</p>
+
+      <PasteField
+        label={CHIP_UI.compose.first_answer_label}
+        value={firstAnswer}
+        onChange={(v) => { setFirstAnswer(v); clearErrors(); }}
+        placeholder={CHIP_UI.compose.first_answer_placeholder}
+        minAckLength={1}
+      />
+
+      <div className="wb-act2__capture wb-chip__choose" role="group" aria-label="Pick a follow-up">
+        <p className="wb-act2__capture-heading">{CHIP_UI.row_header}</p>
+        <p className="wb-act2__capture-intro">{CHIP_UI.row_support}</p>
+        <div className="wb-chip__row">
+          {SECOND_QUESTION_BANK.map((e) => (
+            <button
+              key={e.id}
+              type="button"
+              className={`wb-loop__chip wb-chip__pick${e.id === chipId ? " is-active" : ""}`}
+              aria-pressed={e.id === chipId}
+              onClick={() => pickChip(e)}
+            >
+              {e.approved_ui_label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {entry ? (
+        <div className="wb-chip__instruction">
+          <p className="wb-act2__prompt-note">{CHIP_UI.card.framing}</p>
+          <pre className="wb-act2__prompt" aria-label="Instruction to paste into your AI">{entry.instruction_text}</pre>
+          <div className="wb-reader-result__copy wb-act2__actions">
+            <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyInstruction}>
+              {copied ? CHIP_UI.compose.copy_done : CHIP_UI.compose.copy_label}
+            </Btn>
+            {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+          </div>
+
+          <PasteField
+            label={CHIP_UI.compose.second_answer_label}
+            value={secondAnswer}
+            onChange={(v) => { setSecondAnswer(v); clearErrors(); }}
+            placeholder={CHIP_UI.compose.second_answer_placeholder}
+            minAckLength={1}
+          />
+
+          <div className="wb-act2__capture" role="group" aria-label="How you ran the two answers">
+            <p className="wb-act2__capture-heading">{PAIR_CAPTURE_UI.heading}</p>
+            <p className="wb-act2__capture-intro">{PAIR_CAPTURE_UI.intro}</p>
+
+            <fieldset className="wb-act2__capture-q">
+              <legend className="wb-act2__capture-label">{PAIR_CAPTURE_UI.same_model.question}</legend>
+              <div className="wb-act2__capture-opts">
+                {[PAIR_SAME_MODEL.YES, PAIR_SAME_MODEL.NO, PAIR_SAME_MODEL.NOT_SURE].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`wb-act2__capture-opt${sameModel === v ? " is-active" : ""}`}
+                    aria-pressed={sameModel === v}
+                    onClick={() => setSameModel(v)}
+                  >
+                    {PAIR_CAPTURE_UI.same_model.options[v]}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="wb-act2__capture-q">
+              <label className="wb-act2__capture-label" htmlFor="wb-chip-model">{PAIR_CAPTURE_UI.model_version.question}</label>
+              <span className="wb-act2__capture-hint">{PAIR_CAPTURE_UI.model_version.hint}</span>
+              <input
+                id="wb-chip-model"
+                type="text"
+                className="wb-act2__capture-input"
+                value={modelVersion}
+                maxLength={80}
+                placeholder={PAIR_CAPTURE_UI.model_version.placeholder}
+                onChange={(e) => setModelVersion(e.target.value)}
+              />
+            </div>
+
+            <fieldset className="wb-act2__capture-q">
+              <legend className="wb-act2__capture-label">{PAIR_CAPTURE_UI.edits.question}</legend>
+              <div className="wb-act2__capture-opts">
+                {[PAIR_EDITS.NONE, PAIR_EDITS.EDITED].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    className={`wb-act2__capture-opt${edits === v ? " is-active" : ""}`}
+                    aria-pressed={edits === v}
+                    onClick={() => setEdits(v)}
+                  >
+                    {PAIR_CAPTURE_UI.edits.options[v]}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+
+            <p className="wb-act2__capture-disclosure">{PAIR_CAPTURE_UI.disclosure}</p>
+          </div>
+
+          <div className="wb-action-row wb-act2__test-cta">
+            <Btn
+              kind="primary"
+              disabled={busy || !canCompare}
+              onClick={submit}
+              className={`wb-reader-cta${canCompare && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+            >
+              {busy ? CHIP_UI.compose.comparing_label : CHIP_UI.compose.compare_label}
+            </Btn>
+          </div>
+          {fieldError ? <p className="wb-act2__run-error" role="status">{fieldError}</p> : null}
+          {runError ? <p className="wb-act2__run-error" role="status">{runError}</p> : null}
+        </div>
+      ) : null}
+
+      <p className="wb-reader-result__trust wb-measure__boundary">{CHIP_UI.boundary}</p>
+    </section>
+  );
+}
+
 function ArchiveSignalPanel({ sel, answer }) {
   if (!sel || !answer) return null;
   const anchors = detectAnchors(answer, sel.detect, sel.keyDetect);
@@ -5357,6 +5857,13 @@ function ReaderWorkbench() {
             </p>
           </div>
         ) : null}
+
+        {/* User-chip lane — a self-contained user-directed follow-up, always available and
+            independent of whether an inspection ran above. Its own value statement heads it
+            off, so it never reads as part of the inspection flow. */}
+        <div className="wb-reader-v2__follow wb-reader-v2__follow--chips">
+          <ChipLane />
+        </div>
 
         <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
           <SuggestInvestigation variant="reader-secondary" />

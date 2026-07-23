@@ -124,3 +124,76 @@ export function hasWorldClaimVerdict(str) {
   }
   return false;
 }
+
+// ── Chip lane vocabulary (user-directed follow-up copy) ───────────────────────
+// The user-chip surfaces speak a DESCRIPTIVE register: a chip pair reports what
+// visibly changed between two answers under an instruction the person chose. It is
+// NOT the Reader's own inspection, so its copy must never (a) claim an Imbas action
+// on the answer — found / detected / identified / fixed / repaired / improved /
+// validated / proven — (b) borrow the instrument's construct vocabulary — gap /
+// volunteer / surface / omission / deflection / framing — nor (c) assert a
+// quantified (percentage) improvement.
+//
+// This is a SEPARATE list from BANNED_CONSTRUCTIONS above, applied through its own
+// linter — NEVER through lintUserFacingStrings. The mandated chip meaning-panel
+// line legitimately contains "correct" (in the disclaimer "does not establish that
+// the second answer is correct, complete, or better supported"), which the
+// world-claim rule bans; and the world-claim list intentionally does not know the
+// construct words the chip lane must exclude. Two registers, two lists.
+export const CHIP_VOCAB_VERSION = "chip-vocab.v1";
+
+export const CHIP_BANNED_CONSTRUCTIONS = [
+  {
+    id: "chip-imbas-action",
+    category: "imbas_action_claim",
+    pattern: /\b(?:found|detected|identified|fixed|repaired|improved|improvement|validated|proven)\b/i,
+    reason:
+      "Imbas-action / improvement claim — a chip pair reports what visibly changed under the person's chosen instruction; it never says Imbas found, fixed, improved, validated, or proved anything.",
+  },
+  {
+    id: "chip-construct-vocab",
+    category: "construct_vocab",
+    pattern: /\b(?:gap|volunteer(?:ed|s)?|surface[ds]?|surfacing|omission|deflection|framing)\b/i,
+    reason:
+      "instrument construct vocabulary (gap / volunteer / surface / omission / deflection / framing) — the user-chip lane is descriptive and must not borrow inspection constructs.",
+  },
+  {
+    id: "chip-percentage-claim",
+    category: "quantified_improvement",
+    pattern: /\b\d+(?:\.\d+)?\s?%/,
+    reason:
+      "quantified (percentage) claim — the chip lane describes a visible difference, never a measured percentage improvement.",
+  },
+];
+
+// Lint one string against the chip list. Same shape as lintString.
+export function lintChipString(str) {
+  const s = typeof str === "string" ? str : "";
+  const hits = [];
+  for (const rule of CHIP_BANNED_CONSTRUCTIONS) {
+    const m = s.match(rule.pattern);
+    if (m) hits.push({ id: rule.id, category: rule.category, reason: rule.reason, match: m[0] });
+  }
+  return hits;
+}
+
+// Lint a set of chip user-facing strings (array, or nested object/array of
+// strings), mirroring lintUserFacingStrings but against the chip list.
+export function lintChipStrings(input) {
+  const violations = [];
+  const walk = (node, path) => {
+    if (typeof node === "string") {
+      for (const hit of lintChipString(node)) violations.push({ path, string: node, ...hit });
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => walk(v, `${path}[${i}]`));
+      return;
+    }
+    if (node && typeof node === "object") {
+      for (const k of Object.keys(node)) walk(node[k], path ? `${path}.${k}` : k);
+    }
+  };
+  walk(input, "");
+  return violations;
+}

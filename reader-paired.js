@@ -300,3 +300,137 @@ export const PAIR_CAPTURE_UI = {
     "The conditions behind these two answers aren't confirmed as matched — a different model, an edit, or a setup you weren't sure about. Read the side-by-side as a looser comparison, not a like-for-like.",
   unmatched_badge: "Unmatched conditions",
 };
+
+// ── User-chip paired method (chip.1.0) ────────────────────────────────────────
+// The user-chip lane reuses the paired plumbing above but is a DIFFERENT method:
+// the follow-up is an instruction the PERSON chose from the Second Question Bank,
+// not a probe the Reader constructed from its own measurement. So it carries its
+// own method version, its own three loop states, and its own copy — kept apart
+// from the inspection reveal so neither can borrow the other's register. No
+// construct vocabulary crosses into this lane by contract (see the chip vocabulary
+// lint in reader-check-vocab.js): a chip pair reports what visibly changed under the
+// recorded conditions and asserts no Imbas inspection finding.
+export const CHIP_PAIRED_METHOD_VERSION = "chip.1.0";
+
+// The three user-chip loop states. Parallel to LOOP_STATES but describing a
+// user-directed change, never a measured gap: the second answer either shows the
+// change the person asked for (visible), doesn't (not visible), or can't be read
+// like-for-like because the run's conditions weren't matched (unclear).
+export const CHIP_LOOP_STATE_VISIBLE = "chip_change_visible";
+export const CHIP_LOOP_STATE_NOT_VISIBLE = "chip_change_not_visible";
+export const CHIP_LOOP_STATE_UNCLEAR = "chip_change_unclear";
+export const CHIP_LOOP_STATES = [
+  CHIP_LOOP_STATE_VISIBLE,
+  CHIP_LOOP_STATE_NOT_VISIBLE,
+  CHIP_LOOP_STATE_UNCLEAR,
+];
+
+// Deterministic suggestion for a chip pair. Delta presence is the primary driver;
+// matched conditions gate the clean "visible" reading:
+//   no delta items (or a non-count)     -> NOT VISIBLE: nothing changed that this
+//                                          comparison catches.
+//   >=1 delta AND conditions matched    -> VISIBLE: the asked-for change shows up,
+//                                          under conditions you can read like-for-like.
+//   >=1 delta AND conditions NOT matched -> UNCLEAR: something moved, but a different
+//                                          model / an edit / an unsure setup means it
+//                                          can't be read like-for-like.
+// The person's one-tap correction overrides this; the suggestion only sets the default.
+// Judgment call: a zero-delta run reads NOT VISIBLE even under unmatched conditions —
+// there is nothing ambiguous to look at, and the note carries the "absence isn't an
+// all-clear" caveat. UNCLEAR is reserved for a visible-but-untrustworthy change.
+export function suggestChipState({ delta_count, conditions_matched } = {}) {
+  const n = Number(delta_count);
+  if (!Number.isFinite(n) || n <= 0) return CHIP_LOOP_STATE_NOT_VISIBLE;
+  return conditions_matched === true ? CHIP_LOOP_STATE_VISIBLE : CHIP_LOOP_STATE_UNCLEAR;
+}
+
+// Verbatim chip reveal copy, single-sourced like LOOP_STATE_COPY and covered by the
+// chip vocabulary lint (NOT the world-claim list — the mandated meaning-panel line
+// legitimately says "correct"). headline: the plain description of the state. note:
+// the standing caveat. chip: the one-tap correction label (the human-voice name the
+// person taps to declare a different reading than the machine suggested). No state
+// celebrates; none asserts the first answer failed or that the second is better.
+export const CHIP_LOOP_STATE_COPY = {
+  [CHIP_LOOP_STATE_VISIBLE]: {
+    headline: "The change you asked for shows up in the second answer.",
+    note: "That's under the conditions you recorded. It doesn't mean the second answer is correct or complete.",
+    chip: "The change shows up",
+  },
+  [CHIP_LOOP_STATE_NOT_VISIBLE]: {
+    headline: "The second answer doesn't show the change you asked for.",
+    note: "No visible difference isn't an all-clear. The change could be there in a way this comparison doesn't catch.",
+    chip: "I don't see the change",
+  },
+  [CHIP_LOOP_STATE_UNCLEAR]: {
+    headline: "Something changed, but not under matched conditions.",
+    note: "A different model, an edit, or a setup you weren't sure about. Read this as a looser comparison, not like-for-like.",
+    chip: "Hard to tell",
+  },
+};
+
+// User-facing chip lane copy, single-sourced and covered by the chip vocabulary lint.
+// Every string here is authored to the chip copy law: non-presumptive (it never says
+// the first answer failed), no Imbas-asserted improvement, no construct vocabulary,
+// and no verdict on either answer. boundary is the lane's standing disclaimer;
+// meaning_panel_line is the full register note for the Inspection Meaning panel.
+export const CHIP_UI = {
+  value_statement: {
+    headline: "Tell your AI exactly what to do next.",
+    sub: "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back.",
+  },
+  row_header: "What would you like the next answer to do differently?",
+  row_support:
+    "These are optional follow-ups you choose. Imbas has not determined that any of these problems are present.",
+  card: {
+    framing:
+      "Paste this into the same AI, in the same conversation if possible. If you start a new conversation, include the original answer and any material it relied on. Bring the new answer back.",
+  },
+  side_by_side: {
+    reason_prefix: "Follow-up selected by you: ",
+    first_answer_caption: "The answer or draft you started with.",
+    second_answer_caption: "Second answer after your follow-up. Not verified by Imbas.",
+  },
+  meaning_panel_line:
+    "This comparison follows a user-selected instruction, not an inspection-generated follow-up. It shows what changed under the recorded conditions; it does not establish that the second answer is correct, complete, or better supported. Absence of a visible difference is not an all-clear.",
+  boundary: "User-directed follow-up. No Imbas inspection finding asserted.",
+  professional_cue: {
+    line: "AI made the draft. Your name still goes on it.",
+    link: "For professional work →",
+  },
+  // Compose-phase strings (the paste boxes, the instruction card action, the compare
+  // button, and the field-missing prompts). Single-sourced here so the chip vocabulary
+  // lint covers every authored chip string, not just the reveal copy.
+  compose: {
+    first_answer_label: "The answer or draft you started with",
+    first_answer_placeholder: "Paste the answer or draft you want to change…",
+    second_answer_label: "Second answer after your follow-up",
+    second_answer_placeholder: "Paste what your AI came back with…",
+    copy_label: "Copy the instruction",
+    copy_done: "Copied — now paste it into your AI",
+    compare_label: "Compare the two answers",
+    comparing_label: "Comparing…",
+    first_answer_missing: "Paste the answer or draft you started with.",
+    second_answer_missing: "Paste the second answer your AI gave.",
+    chip_missing: "Pick a follow-up above first.",
+    too_long: "Second answer is over 1200 words. Trim it and re-run.",
+    too_short: "That's too short to compare. Paste the full second answer.",
+    not_eligible: "That follow-up isn't available right now. Pick another and try again.",
+    blocked: "This follow-up can't run right now. Check what you pasted and try again.",
+    run_error: "The comparison didn't reach the Reader. Nothing you pasted was changed. Try again shortly.",
+  },
+  // Reveal-phase chrome (section heading, empty-delta line, the two side labels, the
+  // correction group label, reset, and the two status notices). The three state
+  // headlines/notes live in CHIP_LOOP_STATE_COPY; this is everything around them.
+  reveal: {
+    delta_heading: "What changed",
+    empty_delta:
+      "No visible difference under the instruction you chose. That isn't an all-clear: the change could be there in a way this comparison doesn't catch.",
+    first_side_label: "First answer",
+    second_side_label: "Second answer",
+    correct_label: "Read it differently?",
+    reset_label: "Try another follow-up",
+    idempotent_notice: "You already ran this follow-up. This is the comparison from that run.",
+    capture_uncertain_notice:
+      "The comparison is below. The Reader couldn't confirm it saved its own copy, so download this receipt to keep a full copy.",
+  },
+};
