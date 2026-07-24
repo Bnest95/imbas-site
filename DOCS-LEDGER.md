@@ -22,7 +22,7 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 |------|---------|
 | `CLAUDE.md` | Operating contract. Self-governing. |
 | `IMBAS-CANON.md` | Canon (cross-model state). Self-governing. |
-| `AGENT-DOCTRINE.md` | Doctrine. Self-governing. |
+| `AGENT-DOCTRINE.md` | Doctrine. Self-governing. Tracked here as of 2026-07-24. |
 
 ## FROZEN — frozen artifacts, never moved or rewritten (canon rule 5)
 
@@ -35,8 +35,9 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 
 | File | Pointer |
 |------|---------|
-| `STATE.md` | Current-truth file. Governs; rewritten in place. |
-| `VOICE.md` | Voice contract. Governs all copy. |
+| `STATE.md` | Current-truth file. Governs; rewritten in place. Tracked here as of 2026-07-24; the tracked copy is a redacted public copy, its private full version held outside this repository. |
+| `VOICE.md` | Voice contract. Governs all copy. Tracked here as of 2026-07-24. |
+| `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md` | Workbench product architecture, adopted 2026-07-24. Governs Passes 0, 1, 2A, 2B. Ranks below STATE.md and above page bodies. |
 | `README.md` | Repo readme. Matches live static site. |
 | `DEPLOY.md` | Deploy notes. Matches live build (workbench bundle, field-notes API). |
 | `CLAIMS-LEDGER.md` | Governing authority for every public claim / all copy. |
