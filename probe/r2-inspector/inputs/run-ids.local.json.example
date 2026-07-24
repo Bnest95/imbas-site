@@ -1,0 +1,11 @@
+{
+  "_README": "Copy this file to run-ids.local.json (SAME directory) and fill in EXACTLY the two founder-authorized Reader Run record IDs. run-ids.local.json is gitignored and must never be committed. The harness fetches each record by DIRECT record-ID GET only — it never lists, filters, searches, or enumerates the Reader Runs table. Do not add any other record IDs here; the R2 authorization covers these two records only.",
+  "partners_run": {
+    "record_id": "recXXXXXXXXXXXXXX",
+    "_note": "The founder-owned OpenAI-partners run. Airtable record ID (starts with 'rec') from base appfxHraqlcpP1AAP, table tblqmHiOCQ5YSXBN3 (Reader Runs)."
+  },
+  "genocide_run": {
+    "record_id": "recYYYYYYYYYYYYYY",
+    "_note": "The founder-owned genocide-question run. Airtable record ID (starts with 'rec') from the same base/table."
+  }
+}

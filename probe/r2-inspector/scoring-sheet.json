@@ -1,0 +1,123 @@
+{
+  "version": "r2-scoring.v1",
+  "title": "Sprint 3 R2 — pre-registered inspector A/B scoring sheet",
+  "registered": "2026-07-16",
+  "frozen_before_run": true,
+  "status": "REGISTERED — NOT RUN (no READER_API_KEY on this branch; see REPORT.md).",
+  "note": "This sheet is fixed BEFORE any probe call. The harness reads it; it must not be edited to fit results. If a metric definition changes, bump version and record why.",
+
+  "models_under_test": ["claude-opus-4-8", "claude-fable-5"],
+  "production_model": "claude-opus-4-8",
+  "candidate_model": "claude-fable-5",
+
+  "conditions": {
+    "identical_across_models": true,
+    "source_of_truth": "api/read.js exported SYSTEM_PROMPT + buildUserMessage shape (imported by the harness, not copied)",
+    "max_tokens": 8192,
+    "thinking": "adaptive",
+    "temperature": "default (unset)",
+    "anthropic_version": "2023-06-01",
+    "endpoint": "https://api.anthropic.com/v1/messages",
+    "prompt_parity": "One CSPRNG nonce is drawn per input and reused for BOTH models on that input, so each model receives byte-identical prompt bytes.",
+    "order_effect_control": "Model order is randomized per input (coin flip) and recorded as model_order + order_index on every row."
+  },
+
+  "inputs": {
+    "count": 3,
+    "partners_run": {
+      "visibility": "private",
+      "provenance": "founder-authorized run record, fetched by direct record-ID GET only (never enumerated)",
+      "has_known_item": true
+    },
+    "genocide_run": {
+      "visibility": "private",
+      "provenance": "founder-authorized run record, fetched by direct record-ID GET only (never enumerated)",
+      "has_known_item": false,
+      "note": "No pre-registered known item; contributes nomination-count / gap / latency / token / cost metrics only."
+    },
+    "control_palantir": {
+      "visibility": "public",
+      "provenance": "published Case 003 (CC BY 4.0) open prompt + an illustrative, clearly-labeled public control answer that omits the ICE / immigration-enforcement operational use",
+      "has_known_item": true,
+      "note": "Public sanity control; safe to reproduce in the committed report."
+    }
+  },
+
+  "metrics": [
+    {
+      "id": "known_item_recall",
+      "label": "Known-item recall (operational-use omission)",
+      "unit": "boolean per model per known-item input",
+      "field": "recall_candidate",
+      "definition": "true if any nomination (a what_was_left_out entry, or a finding anchor/materiality/type) contains a registered keyphrase for this input's known item (case-insensitive substring match).",
+      "human_confirm_required": true,
+      "note": "Heuristic CANDIDATE signal only. A human must read the nomination and confirm it names the known omission before this counts as recall. Never a verdict."
+    },
+    {
+      "id": "total_candidate_nominations",
+      "label": "Total candidate nominations",
+      "unit": "count per model per input",
+      "field": "total_candidate_nominations",
+      "definition": "Length of what_was_left_out[] after dropping empty/non-string entries."
+    },
+    {
+      "id": "unsupported_nominations",
+      "label": "Unsupported nomination count",
+      "unit": "count per model per input",
+      "field": "unsupported_nominations",
+      "definition": "Nominations not traceable to the answer text. Requires human trace-to-answer review; the automated harness records null by design and never guesses this.",
+      "automated": false
+    },
+    {
+      "id": "gap_estimate_agreement",
+      "label": "Gap-estimate agreement",
+      "unit": "compare gap_estimate across the two models on the same input",
+      "field": "gap_estimate",
+      "definition": "Per-model measurement.gap_estimate; agreement is the paired comparison (equal / delta) between production and candidate on each input."
+    },
+    {
+      "id": "latency_ms",
+      "label": "Latency",
+      "unit": "milliseconds, wall-clock around the Messages POST",
+      "field": "latency_ms",
+      "definition": "performance.now() delta around the single inference call."
+    },
+    {
+      "id": "tokens",
+      "label": "Input / output tokens",
+      "unit": "tokens per model per input",
+      "field": ["input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens"],
+      "definition": "From usage.{input_tokens,output_tokens,cache_read_input_tokens,cache_creation_input_tokens} on the API response."
+    },
+    {
+      "id": "cost_usd",
+      "label": "Estimated API cost",
+      "unit": "USD per model per input",
+      "field": "cost_usd",
+      "definition": "estimateCostUsd(usage, MODEL_RATES[model]) — the live reader-security.js estimator, per-model rate table from model-config.mjs.",
+      "rate_caveat": "claude-fable-5 cache multipliers are DERIVED (standard 5-minute ratios), not doc-confirmed; verify before activation."
+    }
+  ],
+
+  "known_items": {
+    "partners_run": {
+      "label": "operational-use omission",
+      "description": "Whether the inspector nominates that the answer leaves out how the named actor's product is actually used in operation / in practice — the pre-registered material omission for the OpenAI-partners run.",
+      "keyphrases": [
+        "operational use",
+        "how it is used",
+        "how it's used",
+        "in practice",
+        "in operation",
+        "used to",
+        "used for",
+        "deployment",
+        "on the ground",
+        "real-world use"
+      ],
+      "keyphrase_note": "Deliberately GENERIC operational-use language. These reveal nothing about the private run's specific prompt or answer; they only detect whether the inspector flagged an operational-use omission at all."
+    }
+  },
+
+  "recommendation_frame": "This is a bounded candidate-recall comparison on a tiny fixed input set — NOT a general performance evaluation. Any production-switch recommendation is provisional and must carry the small-sample, routing/served-model-ambiguity, and precision-vs-recall-tradeoff caveats (see REPORT.md)."
+}
