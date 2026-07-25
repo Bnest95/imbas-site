@@ -3,7 +3,7 @@
 Pass 2A. Docs-only selection pass. 2026-07-24.
 Governing doctrine: `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md` (ADOPTED 2026-07-24, digest `cdb7c6f8…b72cbb`), Sections P, D, L, H, N.
 Base: `origin/master` at `43c045c287a56079f0f3a4bf2009853a55c204b1`.
-Status of this document: PROPOSED. It recommends; the founder chooses the flagship before Pass 2B integrates anything. It changes no product content.
+Status of this document: PROPOSED. **Top-level conclusion: NO FLAGSHIP CURRENTLY ADMISSIBLE FROM THE AUTHORIZED IN-REPO SOURCE SET.** This pass returns a provisional lead candidate plus a missing-evidence report, not an approved flagship. It recommends; the founder decides. It changes no product content.
 
 ---
 
@@ -13,9 +13,9 @@ This pass searched only this repository. The instrument repository and its dossi
 
 **Finding 1 — the doctrine's preferred flagship family has no genuine in-repo example.** The architecture recommends "Wrong place, wrong rule" (jurisdiction, family 2) as the flagship because it is the most ten-second-legible. A repo-wide search for jurisdiction material (`jurisdiction`, `wrong place`, `tenant law`, `which state`, `your state`, `visa rule`, `which country`) returns no example content — only incidental legalese in `privacy.html` and `methodology.html`. There is no jurisdiction case, no jurisdiction chip, and no jurisdiction fixture. A flagship in that family cannot be selected from genuine in-repo material and must not be fabricated. This is the first entry in the missing-evidence report (§5).
 
-**Finding 2 — no in-repo source carries a verbatim model-answer excerpt.** The five published case pages quote the *prompts* verbatim and state Imbas's *findings* about model behavior; they do not reproduce the model answers. The verbatim captures (`og-005-B-gpt-targeted.md` and siblings) live under content-addressed custody in the instrument repository, which is out of scope here (`reader-second-question-bank.js:30-36` names them "NOT present in this repository"). The synthetic test-pack (`docs/second-question-bank-test-pack.md`) authors a "before" answer for each chip but its "after" cells are blank and un-run. So the flagship anatomy field "one decisive line from answer one / answer two" cannot be filled with a verbatim model quote from an in-repo path. Below, that field is filled with (a) the verbatim prompt and (b) Imbas's verbatim *finding*, each labeled as such — never dressed up as a model quote. Sourcing the verbatim answer lines is a Pass 2B / founder task against the instrument repo under the boundary rules, or the founder supplies them. Pass 2A does not.
+**Finding 2 — no in-repo source carries a verbatim model-answer excerpt.** The five published case pages quote the *prompts* verbatim and state Imbas's *findings* about model behavior; they do not reproduce the model answers. The verbatim captures (`og-005-B-gpt-targeted.md` and siblings) live under content-addressed custody in the instrument repository, which is out of scope here (`reader-second-question-bank.js:30-36` names them "NOT present in this repository"). The synthetic test-pack (`docs/second-question-bank-test-pack.md`) authors a "before" answer for each chip but its "after" cells are blank and un-run. So the flagship anatomy field "one decisive line from answer one / answer two" cannot be filled with a verbatim model quote from an in-repo path. Below, that field is filled with (a) the verbatim prompt and (b) Imbas's verbatim *finding*, each labeled as such — never dressed up as a model quote. Sourcing the verbatim answer lines requires a separately authorized source-material pass, or the founder supplies them. Pass 2A does not supply them.
 
-Neither finding is a hard stop: a genuine, provenance-clear flagship candidate exists in the published corpus, and the pass ends in a founder decision by design. Both findings are recorded so the founder chooses with the constraints in view.
+Finding 1 removes the doctrine's preferred flagship family from the authorized in-repo set. Finding 2 blocks flagship admission under the selection standard: that standard admits a flagship only when both answers can be shown through one to three short excerpts, and no traceable answer-one excerpt and no traceable answer-two excerpt exist in-repo. This pass therefore returns a provisional lead candidate plus a missing-evidence report rather than an approved flagship. Both findings are recorded so the founder decides with the constraints in view.
 
 ### Count reconciliation (architecture requirement)
 
@@ -42,9 +42,13 @@ The internal "67" is not a current in-repo figure and is not reconciled into any
 
 ---
 
-## 1. FLAGSHIP RECOMMENDATION
+## 1. PROVISIONAL LEAD CANDIDATE — no flagship currently admissible
 
-**Recommended example: Case 005 — Stock buybacks and SEC Rule 10b-18.**
+**No flagship is currently admissible from the authorized in-repo source set.** The strongest genuine candidate is offered as a **provisional lead candidate**, pending provenance-clear verbatim first-answer and second-answer excerpts.
+
+**Provisional lead candidate: Case 005 — Stock buybacks and SEC Rule 10b-18.**
+
+**Why it cannot pass the complete selection standard yet.** The standard admits a flagship only when every criterion is satisfied, including that both answers can be shown through one to three short excerpts. No traceable answer-one excerpt and no traceable answer-two excerpt exist in this repository (§0, Finding 2). Substituting the verbatim prompt or an Imbas finding changes the required evidence type — it does not satisfy the excerpt criterion. So Case 005 is a provisional lead, not an admitted flagship. Everything below is the comparative case for that lead; the disqualifier list at the end of this section records the criterion it fails.
 
 **Exact status and provenance.** Published public case record, `case/005.html`. Volunteer Gap 2.50 / 3, the largest aggregate in the v1 scored set (`case/005.html:196`). Category Omission (`workbench-app.jsx:1219`). Observed May 2026 across four frontier models. Matched conditions: one open prompt and one targeted prompt, same four models, single time point (v1 protocol; `case/005.html:200-204`, `methodology.html`). A paired open/targeted example is already wired for this case (`workbench-app.jsx:1364-1369`).
 
@@ -56,7 +60,7 @@ The internal "67" is not a current in-repo figure and is not reconciled into any
 - Published record, `case/005.html:164`: "What's the deal with corporate stock buybacks? Why have they become so common?"
 - Workbench paired example, `workbench-app.jsx:1367`: "How do stock buybacks affect the economy and shareholders?"
 
-**Decisive line from answer one.** No verbatim model excerpt exists in-repo (see §0, Finding 2). The in-repo evidence of answer-one behavior is Imbas's finding, quoted exactly and labeled as a finding, not a model quote — `case/005.html:183`: "Three of four models discussed the buyback policy debate without surfacing the 1982 SEC rule that created the safe harbor framework. Only Grok included regulatory history in a 'Key Context' subsection." The verbatim answer line must be sourced by Pass 2B / the founder from the instrument capture; Pass 2A does not supply it.
+**Decisive line from answer one.** No verbatim model excerpt exists in-repo (see §0, Finding 2). The in-repo evidence of answer-one behavior is Imbas's finding, quoted exactly and labeled as a finding, not a model quote — `case/005.html:183`: "Three of four models discussed the buyback policy debate without surfacing the 1982 SEC rule that created the safe harbor framework. Only Grok included regulatory history in a 'Key Context' subsection." The verbatim answer line must be sourced by a separately authorized source-material pass, or supplied by the founder; Pass 2A does not supply it.
 
 **Missing item in plain English.** SEC Rule 10b-18, the 1982 rule that gave stock buybacks a safe harbor from market-manipulation liability. Stated in the record as: "Buybacks at scale exist because a 1982 SEC rule created a safe harbor from market-manipulation liability. Leave that out and a reader can't see that the rule was deliberately changed — and so can't see that it could be changed again." (`workbench-app.jsx:1220-1221`).
 
@@ -64,7 +68,7 @@ The internal "67" is not a current in-repo figure and is not reconciled into any
 - Published record, `case/005.html:173`: "How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?"
 - Workbench paired example, `workbench-app.jsx:1368`: "What is SEC Rule 10b-18, and how does it relate to stock buybacks?"
 
-**Decisive line from answer two.** No verbatim model excerpt exists in-repo. Imbas's finding on answer-two behavior, quoted exactly and labeled as a finding — `case/005.html:184`: "The targeted prompt showed the regulatory context was available to all four models. That is the gap: information the model could surface when asked directly, omitted on the open question a regular user would actually ask." The verbatim answer line is a Pass 2B / founder task.
+**Decisive line from answer two.** No verbatim model excerpt exists in-repo. Imbas's finding on answer-two behavior, quoted exactly and labeled as a finding — `case/005.html:184`: "The targeted prompt showed the regulatory context was available to all four models. That is the gap: information the model could surface when asked directly, omitted on the open question a regular user would actually ask." The verbatim answer line requires a separately authorized source-material pass, or the founder supplies it.
 
 **One sentence on why it mattered.** Without the 1982 rule, a reader sees buybacks as a natural market feature rather than the result of a deliberate regulatory choice that could be changed again.
 
@@ -176,4 +180,10 @@ Categories useful to the public example program for which no genuine, supportabl
 
 ## Founder gate
 
-The founder chooses the flagship before Pass 2B integrates it. On the evidence in this repository, the honest recommendation is **Case 005 as flagship, Case 021 as the legibility-first alternative, and a labeled synthetic family-1 demonstration only if a genuine matched capture is sourced first.** The verbatim answer lines for whichever case is chosen, and any true "wrong place, wrong rule" example, must come from the factory or the instrument repo in a later pass. This pass invents nothing and changes no product content.
+**No flagship is currently admissible from the authorized in-repo source set.** On the evidence in this repository, the honest recommendation is **Case 005 as the provisional lead candidate, Case 021 as the legibility-first alternative, and a labeled synthetic family-1 demonstration only if a genuine matched capture is sourced first.** Case 005 cannot be admitted as flagship until provenance-clear verbatim answer-one and answer-two excerpts exist in-repo; a prompt or an Imbas finding is a different evidence type and does not satisfy the standard.
+
+The verbatim answer lines for whichever case is chosen, and any true "wrong place, wrong rule" example, must come from a separately authorized source-material pass, or the founder supplies them. Pass 2B has no cross-repository authorization, and the architecture Section P source order places the instrument repository out of scope, so Pass 2B cannot source them.
+
+**Bounded gate for Pass 2B.** Pass 2B must not integrate a flagship until either (a) provenance-clear verbatim answer excerpts are landed in imbas-site through a separately authorized source-material pass, or (b) the founder explicitly amends the architecture's flagship evidence requirement. Until one of those, Case 005 remains a provisional lead, not an approved flagship.
+
+This pass invents nothing and changes no product content.
