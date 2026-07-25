@@ -2,7 +2,8 @@
 //
 // A Reader run is downloadable as a self-contained, timestamped record: the
 // pasted answer, the inspection, the candidate measurement with quoted anchors,
-// the unvalidated estimate, provenance, and an integrity block whose content_hash
+// the unvalidated estimate, provenance (including a versioned condition fingerprint
+// for longitudinal comparability, §E), and an integrity block whose content_hash
 // is a SHA-256 over the canonical JSON serialization. Two formats, one envelope:
 // Copy JSON (the envelope verbatim) and a human-readable .txt receipt.
 //
@@ -78,6 +79,38 @@ export function canonicalizeForHash(envelope) {
   return JSON.stringify(copy);
 }
 
+// ── Condition fingerprint (Phase 0 §E — longitudinal comparability) ────────────
+// A deterministic, versioned fingerprint over the RECORDED measurement conditions
+// ONLY: model identity, inspector prompt version, and the run conditions (thinking,
+// max_tokens, temperature). Two receipts sharing a fingerprint were produced under
+// the same conditions, so their candidate estimates are comparable over time; any
+// conditions change yields a different fingerprint, flagging the comparability
+// break rather than letting estimates drift silently across a model or prompt swap.
+//
+// Derived, not hashed: this module stays crypto-free (see header), so the
+// fingerprint is a canonical, order-independent join — client and server agree
+// byte-for-byte, and it reads ONLY provenance fields already in the envelope, so it
+// introduces no new recorded input and stays additive to the schema.
+export const CONDITION_FINGERPRINT_VERSION = "cfp.1";
+
+export function conditionFingerprint(provenanceLike) {
+  const p = provenanceLike && typeof provenanceLike === "object" ? provenanceLike : {};
+  const model = normalizeLineEndings(String(p.reader_model_version || ""));
+  const prompt = normalizeLineEndings(String(p.inspector_prompt_version || ""));
+  const rc =
+    p.inspector_run_conditions && typeof p.inspector_run_conditions === "object" && !Array.isArray(p.inspector_run_conditions)
+      ? p.inspector_run_conditions
+      : {};
+  const condParts = Object.keys(rc)
+    .sort()
+    .map((k) => {
+      const v = rc[k];
+      const val = v === null || v === undefined ? "" : normalizeLineEndings(String(v));
+      return `${k}=${val}`;
+    });
+  return [CONDITION_FINGERPRINT_VERSION, `model=${model}`, `prompt=${prompt}`, ...condParts].join("|");
+}
+
 // ── Envelope assembly (single mode) ───────────────────────────────────────────
 // Pure structure — no hashing here. The caller computes content_hash from
 // canonicalizeForHash(envelope) and assigns it to integrity.content_hash. Every
@@ -136,6 +169,9 @@ export function buildSingleReceipt({
         reader_output_hash: (provenance && provenance.reader_output_hash) || "",
         run_timestamp: (provenance && provenance.run_timestamp) || generatedAt,
         request_id: (provenance && provenance.request_id) || "",
+        // Longitudinal comparability (§E): derived from the recorded conditions above.
+        condition_fingerprint: conditionFingerprint(provenance),
+        fingerprint_version: CONDITION_FINGERPRINT_VERSION,
       },
     },
     paired_analysis: null,
@@ -324,6 +360,9 @@ function openRunBodyLines(run) {
   L.push(`Inspector prompt version: ${prov.inspector_prompt_version || ""}`);
   if (prov.inspector_run_conditions) {
     L.push(`Inspector run conditions: ${JSON.stringify(prov.inspector_run_conditions)}`);
+  }
+  if (prov.condition_fingerprint) {
+    L.push(`Condition fingerprint (${prov.fingerprint_version || CONDITION_FINGERPRINT_VERSION}): ${prov.condition_fingerprint}`);
   }
   L.push(`Source content hash: ${prov.source_content_hash || ""}`);
   L.push(`Reader output hash: ${prov.reader_output_hash || ""}`);

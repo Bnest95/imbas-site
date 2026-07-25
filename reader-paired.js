@@ -33,6 +33,15 @@ export const TARGETED_PROMPT_SOURCE_TYPE = "candidate missing item";
 export const ACT2_OFFER_COPY =
   "Want to test it? Here's a direct question that gives nothing away.";
 
+// The capacity-degradation line, verbatim (Phase 0 §C, founder-approved). Shown in
+// place of the automated comparison when the metered lane is withheld (spend
+// ceiling, model timeout, or provider-unavailable — one coherent path). It NEVER
+// hides the instruction: the person can still generate and run the follow-up in
+// their own AI. Matches the server CAPACITY_MESSAGE (api/read.js, api/read-paired.js)
+// byte-for-byte so the free/metered boundary reads identically wherever it surfaces.
+export const ACT2_CAPACITY_COPY =
+  "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
+
 // CRLF / lone CR -> LF, so a prompt built from model-emitted fields hashes the
 // same regardless of the line endings the model happened to use. Matches the
 // receipt canonicalization rule.

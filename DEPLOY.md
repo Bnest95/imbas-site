@@ -81,7 +81,15 @@ Existing Reader env vars (unchanged):
 
 - `READER_API_KEY` — Anthropic key
 - `READER_ENABLED` — `"0"` manual kill switch (returns honest fallback, no inference)
-- `READER_SPEND_CEILING_USD` — optional monthly estimated spend cap (default `8`)
+- `READER_SPEND_CEILING_USD` — monthly estimated spend cap. **The `8` default is a
+  development PLACEHOLDER, not a launch ceiling.** Set an explicit interim ceiling in
+  Production before public traffic (founder input). When the var is unset, the server
+  logs a one-time `spend_ceiling_placeholder` runtime event so a placeholder run is
+  visible in the logs rather than silent.
+- `READER_MODEL_TIMEOUT_MS` — bound on every Workbench model call (default `45000`).
+  A stalled provider aborts into the coherent capacity-degradation path (§ below),
+  never hangs the request. Distinguished from a plain network error in the logs
+  (`failure_class: timeout`) and on the fallback body (`(timeout)` vs `(network)`).
 
 Setup:
 
@@ -94,6 +102,25 @@ Setup:
 3. Redeploy. Confirm Vercel logs show a `reader_security` `inference_usage` event carrying
    `durable_spend: true` and `durable_rate: true` after a test read. (The `rate_limited` and
    `spend_ceiling` events only carry `durable: true` when they actually block a request.)
+
+### Protection coverage (which endpoints)
+
+Durable rate limiting + spend ceiling are the **existing provisioned mechanism** (Upstash
+REST; no new paid infra). They cover the metered model-call endpoints — the Phase 0
+concern, since those are the ones that spend:
+
+| Endpoint | Durable rate limit | Spend ceiling |
+|----------|:-----:|:-----:|
+| `POST /api/read` | ✅ | ✅ |
+| `POST /api/read-paired` | ✅ | ✅ |
+
+**Not rate-limited (pre-existing, unchanged this pass — founder decision):** the Airtable
+POST endpoints `api/repository.js`, `api/experience.js`, `api/field-notes-signup.js`,
+`api/inspection-share.js`, and the content-free `api/reader-perception.js` tap (scope-locked
+to touch no rate/spend control). They make no model call, so they carry no inference spend;
+extending durable limiting to them would reuse the **same** Upstash infra (so it is **not**
+blocked on new infrastructure — it is a scope/priority call). This pass does **not** modify
+them and does **not** weaken any existing control.
 
 ## Reader runtime observability
 
@@ -121,7 +148,7 @@ unavailable (`store_unavailable`, `action: memory_fallback`).
 
 | Log type | Meaning |
 |----------|---------|
-| `fallback_returned` | User got honest placeholder, not agent read (`reason`: `disabled`, `no_key`, `api_error`, `network`, `bad_json`) |
+| `fallback_returned` | User got honest placeholder, not agent read (`reason`: `disabled`, `no_key`, `api_error`, `network`, `timeout`, `bad_json`) |
 | `inference_failed` | Anthropic call failed; check `upstream_status` or `failure_class` |
 | `parse_failed` | Model returned unparseable JSON (`parse_error_class`, `model_text_len` only — no raw output) |
 | `capture_failed` | Reader Runs row not written; user still got 200 (`user_response_returned: true`) |
@@ -140,6 +167,70 @@ unavailable (`store_unavailable`, `action: memory_fallback`).
 
 Error responses (400/429) include `request_id` for correlation. They do not include stack traces,
 provider bodies, or user content.
+
+## Phase 0 — capacity degradation, telemetry, unit economics (v3.1 §D)
+
+### Three-tier cost model
+
+The Workbench separates what costs money from what does not, so degradation withholds only
+the metered lane:
+
+| Tier | What | Cost | Behavior under capacity |
+|------|------|------|-------------------------|
+| 1 | Follow-up **instruction generation** (the targeted prompt / cleaner bundle) | Free — deterministic, client-side | **Always available**, even at capacity |
+| 2 | The person **runs the follow-up in their own AI** | Free to Imbas | Always available |
+| 3 | **Reader inspection + automated comparison** (`/api/read`, `/api/read-paired`) | Metered (Anthropic Opus) | Withheld coherently when capacity is reached |
+
+### One coherent capacity-degradation path
+
+Spend ceiling, model timeout, and provider-unavailable resolve to a **single** path, in one
+voice. Instruction generation (tiers 1–2) stays available; only the metered comparison (tier 3)
+is withheld. The founder-approved capacity sentence is defined **once** and reused byte-for-byte
+across every surface — server (`CAPACITY_MESSAGE` in `api/read.js` + `api/read-paired.js`) and
+client (`ACT2_CAPACITY_COPY` in `reader-paired.js`):
+
+> The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.
+
+- **Soft boundary** — a read that tips the month total over the ceiling still returns 200; its
+  `act2.available` is `false`, so the client shows the instruction plus the capacity line in
+  place of the automated comparison, and emits a `capacity_degradation` event.
+- **Hard boundary** — once over the ceiling (or rate-limited), `/api/read` returns **429**
+  `error: capacity` and the client shows the honest fallback read.
+- **Ceiling trip** is logged server-side (`security_rejected`, `reason: spend_ceiling`) — it is
+  not a client event.
+
+### Telemetry privacy boundary (implemented, DISABLED)
+
+Confirmation-loop + operational events are **browser-local only** today (`reader-telemetry.js`,
+`localStorage`; no analytics vendor, no server user-content payload). Two structural guarantees:
+
+- **Content-minimal by construction.** `sanitizeEventProps` allowlists a fixed set of short
+  scalar keys (ids, enums, small integers, booleans, `ms`, `reason`) and drops everything else —
+  no answer, question, quotation, receipt body, or measured span can ride an event.
+- **Transmission is off.** `TELEMETRY_TRANSMIT_ENABLED = false`; the only wire path
+  (`prepareTelemetryBatch`) re-runs the allowlist, so even a hand-forged local row is stripped
+  to `{name, ts, …allowlisted}`. Proven by `test/reader-telemetry.test.mjs`. **Do not flip the
+  flag until the privacy line is founder-approved.**
+
+Event coverage: run started, Reader completed, follow-up revealed, chip selected, pair
+initiated/completed, loop completed, `timeout`, `capacity_degradation`, `capture_uncertain`
+(persistence uncertainty), `restored_session`. Ceiling-trip is the server-side event above.
+
+### Unit-economics metric definitions
+
+All are derived from the content-free event log (`buildFunnel` + the operational events) plus
+Anthropic usage. None require user content:
+
+| Metric | Definition |
+|--------|------------|
+| Median / p95 latency | Percentiles of `reader_runtime` `inference_duration_ms` (server) over a window |
+| Avg cost per Reader result | Anthropic spend over the window ÷ count of `run_completed` (`source: agent`) |
+| Avg cost per completed comparison | Paired-endpoint spend ÷ count of `chip_pair_completed` + inspection paired completions |
+| Completion rate (north star) | `loop_completed` ÷ `target_question_copied` (`buildFunnel.loop_completion_rate`) |
+| Cost per completed loop | Window spend ÷ `loop_completed` |
+| Failure frequencies | Counts of `timeout`, `capacity_degradation`, `capture_uncertain`, and server `fallback_returned` by `reason` |
+
+No dashboard ships in this pass — these are definitions for when transmission is approved.
 
 ## Reader Runs capture fields (provenance)
 
@@ -184,6 +275,23 @@ fingerprint and fails `npm test` until someone deliberately (1) bumps `READER_PR
 prompt change can't ship while silently mislabelling every capture with the old version tag. The
 test imports the two constants only — no model call, no Airtable, no spend — and never prints the
 prompt text.
+
+### Receipt condition fingerprint (§E — longitudinal comparability)
+
+The downloadable receipt envelope (`reader-receipt.js`) carries a **versioned condition
+fingerprint** in `open_run.provenance`, derived deterministically from the recorded conditions
+only — `reader_model_version`, `inspector_prompt_version`, and `inspector_run_conditions`:
+
+- `condition_fingerprint` — e.g. `cfp.1|model=claude-opus-4-8|prompt=reader.v3|max_tokens=8192|temperature=default|thinking=adaptive`
+- `fingerprint_version` — `CONDITION_FINGERPRINT_VERSION` (`cfp.1`)
+
+Two receipts sharing a fingerprint were produced under the same measurement conditions, so their
+candidate estimates are comparable over time; any model/prompt/condition change yields a different
+fingerprint, making the comparability break visible rather than silent. It is **additive** — no
+schema-version bump — and does not change the deterministic `content_hash` rule
+(`canonicalizeForHash` is unchanged; the hash simply recomputes over the present fields).
+Backward-compatible: older receipts verify against their own stored hash unchanged. Proven by
+`test/reader-condition-fingerprint.test.mjs`.
 
 ## Case lineage + review-state fields
 

@@ -94,13 +94,36 @@ const PAIRED_TABLE = "tblP1ekWWWscz6pBG";
 const CAPTURE_TIMEOUT_MS = 4500;
 const CAPTURE_RETRY_BACKOFF_MS = 250;
 
+// PLACEHOLDER default — a development guard, NOT a launch ceiling. The interim launch
+// value is a founder input (DEPLOY.md); until READER_SPEND_CEILING_USD is set this runs
+// on the placeholder and logs a one-time notice (checkSpendCeilingConfig).
 const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 };
-const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a little while.";
+// Bounded, config-driven ceiling on the second paid model call. Aborts a stalled
+// provider connection into the coherent failure-isolation path (Act 1 intact) instead
+// of hanging. Keep below the platform function ceiling (DEPLOY.md).
+const MODEL_CALL_TIMEOUT_MS = Number(process.env.READER_MODEL_TIMEOUT_MS) || 45000;
+// The one capacity-degradation sentence, verbatim and founder-approved (architecture
+// v3.1 §D) — identical across the Reader 429, the paired 429, and the client Act 2
+// degraded state so every capacity surface speaks with one voice.
+const CAPACITY_MESSAGE =
+  "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
 const UNAVAILABLE_MESSAGE =
   "The Reader can't run the second read right now. Your first read is safe. Try the two-question test again shortly.";
 const ANALYSIS_FAILED_MESSAGE =
   "The second read didn't come back cleanly. Your first read is safe. Try again.";
+
+// One-time operational notice when the spend ceiling runs on its PLACEHOLDER default
+// (READER_SPEND_CEILING_USD unset). Content-free; emits at most once per instance so the
+// placeholder is visible in logs and never mistaken for a launch ceiling.
+let ceilingPlaceholderNoticed = false;
+function checkSpendCeilingConfig() {
+  if (ceilingPlaceholderNoticed) return;
+  ceilingPlaceholderNoticed = true;
+  if (!process.env.READER_SPEND_CEILING_USD) {
+    logRuntimeEvent("spend_ceiling_placeholder", { ceiling_usd: SPEND_CEILING_USD, placeholder: true });
+  }
+}
 
 const ESTIMATE_TYPE_PAIRED = "paired_gap";
 const RUBRIC_VERSION = "1.0";
@@ -816,6 +839,7 @@ export function createReadPairedHandler(deps = {}) {
       });
     }
 
+    checkSpendCeilingConfig();
     const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
     if (spend.blocked) {
       return rejectSecurity(res, ctx, "spend_ceiling", 429, {
@@ -858,6 +882,11 @@ export function createReadPairedHandler(deps = {}) {
       durable_rate: rate.durable,
       durable_spend: spend.durable,
     });
+    // Bound the second paid call: abort after MODEL_CALL_TIMEOUT_MS so a stalled
+    // provider connection resolves into failure isolation (Act 1 intact) instead of
+    // hanging. clearTimeout runs in finally, so the timer never fires late.
+    const modelCtrl = new AbortController();
+    const modelTimer = setTimeout(() => modelCtrl.abort(), MODEL_CALL_TIMEOUT_MS);
     try {
       const r = await fetchImpl(ANTHROPIC_URL, {
         method: "POST",
@@ -884,6 +913,7 @@ export function createReadPairedHandler(deps = {}) {
             },
           ],
         }),
+        signal: modelCtrl.signal,
       });
       if (!r.ok) {
         logRuntimeEvent("inference_failed", {
@@ -927,6 +957,8 @@ export function createReadPairedHandler(deps = {}) {
         message: ANALYSIS_FAILED_MESSAGE,
         retryable: true,
       });
+    } finally {
+      clearTimeout(modelTimer);
     }
 
     markPhase(ctx, "parse_start");

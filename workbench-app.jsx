@@ -9,6 +9,7 @@ import {
 } from "./reader-receipt.js";
 import {
   ACT2_OFFER_COPY,
+  ACT2_CAPACITY_COPY,
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
   suggestLoopState,
@@ -3193,7 +3194,7 @@ function readerFallbackReasonCode(result) {
 function readerFallbackDisplayMessage(result) {
   const code = readerFallbackReasonCode(result).toLowerCase();
   if (code === "ceiling") return "Reader limit reached — showing fallback check.";
-  if (["no_key", "disabled", "api_error", "network", "bad_json"].includes(code)) {
+  if (["no_key", "disabled", "api_error", "network", "bad_json", "timeout"].includes(code)) {
     return "Reader temporarily unavailable — showing fallback check.";
   }
   return "Reader unavailable — showing fallback check.";
@@ -4610,6 +4611,17 @@ function Act2Offer({ result }) {
   // scenario folded in front of the same probe, fresh chat. Both texts are
   // deterministic (reader-paired.js), so what they copy is what gets recorded.
   const [check, setCheck] = useState(CHECK_QUICK);
+  // Fire once per reveal: the follow-up offer surfaced, and — if the metered
+  // comparison lane is withheld — the capacity-degradation signal. Keyed on the
+  // run id so a fresh result re-emits but a check toggle does not. Content-free.
+  useEffect(() => {
+    if (!act2 || !act2.eligible) return;
+    emitReaderEvent(READER_EVENTS.FOLLOW_UP_REVEALED, { run });
+    if (!act2.available) {
+      emitReaderEvent(READER_EVENTS.CAPACITY_DEGRADATION, { run, reason: act2.degraded_reason || "spend_ceiling" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run]);
   if (!act2 || !act2.eligible) return null;
 
   const promptText = check === CHECK_CLEANER ? buildCleanerBundle({ question }) : (act2.targeted_prompt || TARGETED_PROMPT_TEXT);
@@ -4631,51 +4643,51 @@ function Act2Offer({ result }) {
       <div className="wb-reader-result__head">
         <h2 id="wb-act2-heading" className="wb-reader-result__title">THE TWO-QUESTION TEST</h2>
       </div>
+      {/* Instruction generation is free and stays available even under capacity
+          degradation (§C tier 1): the person can always copy the follow-up and run
+          it in their own AI (tier 2). Only the metered automated comparison
+          (PairedTest, tier 3) is gated below. */}
+      <p className="wb-act2__offer">{ACT2_OFFER_COPY}</p>
+
+      <div className="wb-act2__check" role="group" aria-label="How you'll run the second answer">
+        <p className="wb-act2__check-copy">{CHECK_CHOICE_COPY}</p>
+        <div className="wb-act2__check-opts">
+          <button
+            type="button"
+            className={`wb-act2__check-opt${check === CHECK_QUICK ? " is-active" : ""}`}
+            aria-pressed={check === CHECK_QUICK}
+            onClick={() => setCheck(CHECK_QUICK)}
+          >
+            <span className="wb-act2__check-label">{CHECK_QUICK_COPY.label}</span>
+            <span className="wb-act2__check-hint">{CHECK_QUICK_COPY.hint}</span>
+          </button>
+          <button
+            type="button"
+            className={`wb-act2__check-opt${check === CHECK_CLEANER ? " is-active" : ""}`}
+            aria-pressed={check === CHECK_CLEANER}
+            onClick={() => setCheck(CHECK_CLEANER)}
+          >
+            <span className="wb-act2__check-label">{CHECK_CLEANER_COPY.label}</span>
+            <span className="wb-act2__check-hint">{CHECK_CLEANER_COPY.hint}</span>
+          </button>
+        </div>
+      </div>
+
+      <pre className="wb-act2__prompt" aria-label="What to run on your AI">{promptText}</pre>
+      <p className="wb-act2__prompt-note">Generated from this Reader run. Any question shapes an answer — this one included.</p>
+
+      <div className="wb-reader-result__copy wb-act2__actions">
+        <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyPrompt}>
+          {copied ? "Copied — now ask your AI" : "Ask your AI →"}
+        </Btn>
+        {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+      </div>
+      <p className="wb-act2__sub">Copy this question. Drop it in your chat. Paste what comes back.</p>
+
       {act2.available ? (
-        <>
-          <p className="wb-act2__offer">{ACT2_OFFER_COPY}</p>
-
-          <div className="wb-act2__check" role="group" aria-label="How you'll run the second answer">
-            <p className="wb-act2__check-copy">{CHECK_CHOICE_COPY}</p>
-            <div className="wb-act2__check-opts">
-              <button
-                type="button"
-                className={`wb-act2__check-opt${check === CHECK_QUICK ? " is-active" : ""}`}
-                aria-pressed={check === CHECK_QUICK}
-                onClick={() => setCheck(CHECK_QUICK)}
-              >
-                <span className="wb-act2__check-label">{CHECK_QUICK_COPY.label}</span>
-                <span className="wb-act2__check-hint">{CHECK_QUICK_COPY.hint}</span>
-              </button>
-              <button
-                type="button"
-                className={`wb-act2__check-opt${check === CHECK_CLEANER ? " is-active" : ""}`}
-                aria-pressed={check === CHECK_CLEANER}
-                onClick={() => setCheck(CHECK_CLEANER)}
-              >
-                <span className="wb-act2__check-label">{CHECK_CLEANER_COPY.label}</span>
-                <span className="wb-act2__check-hint">{CHECK_CLEANER_COPY.hint}</span>
-              </button>
-            </div>
-          </div>
-
-          <pre className="wb-act2__prompt" aria-label="What to run on your AI">{promptText}</pre>
-          <p className="wb-act2__prompt-note">Generated from this Reader run. Any question shapes an answer — this one included.</p>
-
-          <div className="wb-reader-result__copy wb-act2__actions">
-            <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyPrompt}>
-              {copied ? "Copied — now ask your AI" : "Ask your AI →"}
-            </Btn>
-            {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
-          </div>
-          <p className="wb-act2__sub">Copy this question. Drop it in your chat. Paste what comes back.</p>
-
-          <PairedTest key={check} openReceipt={result.receipt} run={run} check={check} onTryCleaner={() => setCheck(CHECK_CLEANER)} />
-        </>
+        <PairedTest key={check} openReceipt={result.receipt} run={run} check={check} onTryCleaner={() => setCheck(CHECK_CLEANER)} />
       ) : (
-        <p className="wb-act2__degraded" role="status">
-          The test runs a second read, and the Reader is at capacity right now. Try again in a little while.
-        </p>
+        <p className="wb-act2__degraded" role="status">{ACT2_CAPACITY_COPY}</p>
       )}
     </section>
   );
@@ -5505,7 +5517,13 @@ function ReaderWorkbench() {
     const funnel = buildFunnel(events);
     const copied = funnel.counts.target_question_copied || 0;
     const completed = funnel.counts.loop_completed || 0;
-    if (copied > completed) setReturning(true);
+    // An open loop from a prior visit is restorable: flag the finish-your-loop flow
+    // and record the restore. Distinct from RETURN_VISIT (any prior activity) — this
+    // fires only when there is resumable state. Content-free.
+    if (copied > completed) {
+      emitReaderEvent(READER_EVENTS.RESTORED_SESSION, {});
+      setReturning(true);
+    }
   }, []);
 
   const switchMode = (next) => {
@@ -5608,12 +5626,24 @@ function ReaderWorkbench() {
     try {
       const data = await runReader(request);
       setReaderResult(data);
+      const run = readerRunId(data);
       emitReaderEvent(READER_EVENTS.RUN_COMPLETED, {
-        run: readerRunId(data),
+        run,
         mode,
         source: data.source || "agent",
         eligible: !!(data.act2 && data.act2.eligible),
       });
+      // Distinguish a server-side model timeout (fail-open fallback, §A) so it can be
+      // measured apart from a plain unavailable fallback. Reason is parsed from the
+      // fallback body's "(timeout)" marker — an enum, never content.
+      if (data.source === "fallback" && readerFallbackReasonCode(data).toLowerCase() === "timeout") {
+        emitReaderEvent(READER_EVENTS.TIMEOUT, { run, mode, reason: "timeout" });
+      }
+      // Capture/persistence uncertainty: the run displayed but the pipeline write was
+      // not confirmed. Content-free operational signal (§D).
+      if (data.capture_uncertain) {
+        emitReaderEvent(READER_EVENTS.CAPTURE_UNCERTAIN, { run, mode });
+      }
     } catch (err) {
       if (err && err.message === "too_long") {
         setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
@@ -5627,6 +5657,11 @@ function ReaderWorkbench() {
           reason: String(err.message || "network"),
         });
         emitReaderEvent(READER_EVENTS.RUN_COMPLETED, { mode, source: "fallback", eligible: false });
+        // A hard 429 is the Reader's coherent capacity trip (rate or spend ceiling);
+        // the ceiling-trip itself is logged server-side, this is the client's view.
+        if (err && err.message === "read_429") {
+          emitReaderEvent(READER_EVENTS.CAPACITY_DEGRADATION, { mode, reason: "capacity" });
+        }
       }
     } finally {
       setBusy(false);

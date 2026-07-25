@@ -6,6 +6,9 @@ import {
   sanitizeEventProps,
   buildEvent,
   buildFunnel,
+  TELEMETRY_TRANSMIT_ENABLED,
+  shouldTransmitTelemetry,
+  prepareTelemetryBatch,
 } from "../reader-telemetry.js";
 
 // ── Content-minimal by construction ───────────────────────────────────────────
@@ -64,12 +67,18 @@ test("buildEvent rejects an unknown name and stamps a known one", () => {
 });
 
 test("every event name is covered by the exported list", () => {
-  assert.equal(READER_EVENT_NAMES.length, 15);
+  assert.equal(READER_EVENT_NAMES.length, 20);
   assert.ok(READER_EVENT_NAMES.includes("target_question_copied"));
   assert.ok(READER_EVENT_NAMES.includes("loop_completed"));
   // User-chip lane events (design: item 3 telemetry, user-chip follow-up).
   assert.ok(READER_EVENT_NAMES.includes("chip_instruction_copied"));
   assert.ok(READER_EVENT_NAMES.includes("chip_pair_completed"));
+  // Operational / resilience lane (Phase 0 §D).
+  assert.ok(READER_EVENT_NAMES.includes("follow_up_revealed"));
+  assert.ok(READER_EVENT_NAMES.includes("timeout"));
+  assert.ok(READER_EVENT_NAMES.includes("capacity_degradation"));
+  assert.ok(READER_EVENT_NAMES.includes("capture_uncertain"));
+  assert.ok(READER_EVENT_NAMES.includes("restored_session"));
 });
 
 // ── Funnel + north star ───────────────────────────────────────────────────────
@@ -92,4 +101,47 @@ test("buildFunnel north star is null with no baseline, a ratio once questions ar
 test("buildFunnel ignores malformed rows", () => {
   const f = buildFunnel([null, {}, { name: 5 }, buildEvent(READER_EVENTS.RUN_STARTED, {})]);
   assert.equal(f.counts.run_started, 1);
+});
+
+// ── Transmission boundary (Phase 0 §D — disabled + content-free on the wire) ────
+
+test("transmission is hard-off by default and cannot be flipped by config alone", () => {
+  assert.equal(TELEMETRY_TRANSMIT_ENABLED, false);
+  assert.equal(shouldTransmitTelemetry({ enabled: true }), false); // module gate still wins
+  assert.equal(shouldTransmitTelemetry({}), false);
+  assert.equal(shouldTransmitTelemetry(), false);
+});
+
+test("prepareTelemetryBatch strips content even from a hand-forged persisted row", () => {
+  // Simulate a tampered/legacy localStorage row that smuggled raw user text.
+  const forged = [
+    {
+      name: "run_completed",
+      ts: 1000,
+      run: "r-1",
+      mode: "own",
+      answer: "the entire pasted answer text that must never transmit",
+      question: "the user's private question",
+      the_read: "a measured omission body",
+      email: "person@example.com",
+    },
+    { name: "timeout", ts: 2000, run: "r-1", reason: "timeout", ms: 45000 },
+    { name: "not_a_real_event", ts: 3000, answer: "leak" }, // unknown name → dropped
+    null,
+    { name: 5 },
+  ];
+  const batch = prepareTelemetryBatch(forged);
+  assert.equal(batch.length, 2); // only the two known-name rows survive
+  assert.deepEqual(batch[0], { name: "run_completed", ts: 1000, run: "r-1", mode: "own" });
+  assert.deepEqual(batch[1], { name: "timeout", ts: 2000, run: "r-1", reason: "timeout", ms: 45000 });
+  // No content key survives on any row of the wire batch.
+  const wire = JSON.stringify(batch);
+  for (const leak of ["answer", "question", "the_read", "email", "pasted", "private"]) {
+    assert.ok(!wire.includes(leak), `wire batch must not contain "${leak}"`);
+  }
+});
+
+test("prepareTelemetryBatch preserves the original timestamp, not a fresh one", () => {
+  const batch = prepareTelemetryBatch([{ name: "restored_session", ts: 42, run: "r-9" }]);
+  assert.deepEqual(batch, [{ name: "restored_session", ts: 42, run: "r-9" }]);
 });

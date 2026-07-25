@@ -151,9 +151,37 @@ const CAPTURE_RETRY_BACKOFF_MS = 250;
 
 // Monthly estimated spend cap. Durable only when Upstash Redis REST is configured;
 // otherwise falls back to per-instance memory in reader-security.js.
+// PLACEHOLDER default — a development guard, NOT a launch ceiling. The interim launch
+// value is a founder input (see DEPLOY.md); until READER_SPEND_CEILING_USD is set this
+// module runs on the placeholder and logs a one-time notice (checkSpendCeilingConfig).
 const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.8 list
-const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a little while.";
+// Bounded, config-driven ceiling on a single Workbench model call. A stalled provider
+// connection must abort into the coherent capacity-degradation path (fallback), never
+// hang the invocation until the platform kills it. Default is generous for adaptive
+// thinking + MAX_TOKENS yet finite; keep it below the platform function ceiling so OUR
+// catch runs first (DEPLOY.md).
+const MODEL_CALL_TIMEOUT_MS = Number(process.env.READER_MODEL_TIMEOUT_MS) || 45000;
+// The one capacity-degradation sentence, verbatim and founder-approved (architecture
+// v3.1 §D). One string across every capacity surface — Reader 429, paired 429, and the
+// client Act 2 degraded state — so the three failure modes (ceiling, timeout, provider
+// unavailable) speak with one voice: instruction generation stays free and available,
+// only the metered automated comparison may be unavailable.
+const CAPACITY_MESSAGE =
+  "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
+
+// One-time operational notice when the spend ceiling runs on its PLACEHOLDER default
+// (READER_SPEND_CEILING_USD unset). Content-free — surfaces the "no interim launch
+// ceiling set" state in logs so the placeholder is never mistaken for a launch value.
+// Emits at most once per instance; import stays side-effect-free (guarded, handler-lazy).
+let ceilingPlaceholderNoticed = false;
+function checkSpendCeilingConfig() {
+  if (ceilingPlaceholderNoticed) return;
+  ceilingPlaceholderNoticed = true;
+  if (!process.env.READER_SPEND_CEILING_USD) {
+    logRuntimeEvent("spend_ceiling_placeholder", { ceiling_usd: SPEND_CEILING_USD, placeholder: true });
+  }
+}
 
 const str = (v) => (typeof v === "string" ? v : "");
 const clip = (v, max) => (typeof v === "string" && v.length > max ? v.slice(0, max) : v);
@@ -849,6 +877,7 @@ export function createReadHandler(deps = {}) {
       return sendRead(res, input, fallback(input, "no_key"), ctx, deps);
     }
 
+    checkSpendCeilingConfig();
     const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
     const security_duration_ms = elapsedMs(ctx, "security_start");
     if (spend.blocked) {
@@ -878,6 +907,12 @@ export function createReadHandler(deps = {}) {
       security_duration_ms,
     });
 
+    // Bound the paid model call: abort after MODEL_CALL_TIMEOUT_MS so a stalled
+    // provider connection resolves into the fallback (timeout) path instead of
+    // hanging. clearTimeout runs in finally, so the timer never fires late and the
+    // call never dangles.
+    const modelCtrl = new AbortController();
+    const modelTimer = setTimeout(() => modelCtrl.abort(), MODEL_CALL_TIMEOUT_MS);
     try {
       const r = await fetchImpl(ANTHROPIC_URL, {
         method: "POST",
@@ -893,6 +928,7 @@ export function createReadHandler(deps = {}) {
           system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
           messages: [{ role: "user", content: buildUserMessage(input) }],
         }),
+        signal: modelCtrl.signal,
       });
 
       if (!r.ok) {
@@ -935,16 +971,19 @@ export function createReadHandler(deps = {}) {
         ...usageFields,
       });
     } catch (e) {
+      const reason = e && e.name === "AbortError" ? "timeout" : "network";
       logRuntimeEvent("inference_failed", {
         request_id: ctx.request_id,
         route: ctx.route,
-        failure_class: e && e.name === "AbortError" ? "timeout" : "network",
+        failure_class: reason,
         inference_duration_ms: elapsedMs(ctx, "inference_start"),
         durable_rate: ctx.durable_rate,
         durable_spend: ctx.durable_spend,
       });
-      ctx.fallback_reason = "network";
-      return sendRead(res, input, fallback(input, "network"), ctx, deps);
+      ctx.fallback_reason = reason;
+      return sendRead(res, input, fallback(input, reason), ctx, deps);
+    } finally {
+      clearTimeout(modelTimer);
     }
 
     markPhase(ctx, "parse_start");
