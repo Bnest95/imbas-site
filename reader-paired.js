@@ -33,6 +33,29 @@ export const TARGETED_PROMPT_SOURCE_TYPE = "candidate missing item";
 export const ACT2_OFFER_COPY =
   "Want to test it? Here's a direct question that gives nothing away.";
 
+// The capacity-degradation line, verbatim (Phase 0 §C, founder-approved). Shown in
+// place of the automated comparison when the metered lane is withheld (spend
+// ceiling, model timeout, or provider-unavailable — one coherent path). It NEVER
+// hides the instruction: the person can still generate and run the follow-up in
+// their own AI. Matches the server CAPACITY_MESSAGE (api/read.js, api/read-paired.js)
+// byte-for-byte so the free/metered boundary reads identically wherever it surfaces.
+export const ACT2_CAPACITY_COPY =
+  "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
+
+// The single-read fallback reasons that mean the metered lane was withheld — the one
+// coherent capacity family: spend ceiling, model timeout, provider-unavailable (upstream
+// error or network), and a rate-limited response. On these the client shows
+// ACT2_CAPACITY_COPY so the failure modes speak with one voice, DISTINCT from a
+// disabled/keyless Reader (a configuration state, not capacity) which keeps the generic
+// "temporarily unavailable" line. Reason strings match api/read.js fallback(input, reason)
+// — "ceiling" | "timeout" | "network" | "api_error" — plus "capacity"/"429" the client
+// may derive from a rate-limited response.
+export const CAPACITY_FALLBACK_REASONS = ["ceiling", "timeout", "network", "api_error", "capacity", "429"];
+
+export function isCapacityFallbackReason(reason) {
+  return CAPACITY_FALLBACK_REASONS.includes(String(reason == null ? "" : reason).toLowerCase());
+}
+
 // CRLF / lone CR -> LF, so a prompt built from model-emitted fields hashes the
 // same regardless of the line endings the model happened to use. Matches the
 // receipt canonicalization rule.

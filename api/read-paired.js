@@ -94,13 +94,40 @@ const PAIRED_TABLE = "tblP1ekWWWscz6pBG";
 const CAPTURE_TIMEOUT_MS = 4500;
 const CAPTURE_RETRY_BACKOFF_MS = 250;
 
-const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
+// No production default: the ceiling is a founder input (DEPLOY.md). Until
+// READER_SPEND_CEILING_USD is set to a positive number, resolveSpendCeiling returns null
+// and the paired (second) model call fails closed into the capacity state — an unset
+// ceiling is never silently treated as a launch value.
+function resolveSpendCeiling(raw) {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 };
-const CAPACITY_MESSAGE = "The Reader is at capacity right now. Try again in a little while.";
+// Bounded, config-driven ceiling on the second paid model call. Aborts a stalled
+// provider connection into the coherent failure-isolation path (Act 1 intact) instead
+// of hanging. Keep below the platform function ceiling (DEPLOY.md).
+const MODEL_CALL_TIMEOUT_MS = Number(process.env.READER_MODEL_TIMEOUT_MS) || 45000;
+// The one capacity-degradation sentence, verbatim and founder-approved (architecture
+// v3.1 §D) — identical across the Reader 429, the paired 429, and the client Act 2
+// degraded state so every capacity surface speaks with one voice.
+const CAPACITY_MESSAGE =
+  "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
 const UNAVAILABLE_MESSAGE =
   "The Reader can't run the second read right now. Your first read is safe. Try the two-question test again shortly.";
 const ANALYSIS_FAILED_MESSAGE =
   "The second read didn't come back cleanly. Your first read is safe. Try again.";
+
+// One-time operational notice describing the spend-ceiling configuration state.
+// Content-free; emits at most once per instance so an UNSET ceiling is visible in logs as
+// a fail-closed state and never mistaken for a launch ceiling.
+let spendCeilingConfigNoticed = false;
+function noteSpendCeilingConfig(ceilingUsd) {
+  if (spendCeilingConfigNoticed) return;
+  spendCeilingConfigNoticed = true;
+  if (ceilingUsd == null) {
+    logRuntimeEvent("spend_ceiling_unset", { configured: false, fail_closed: true });
+  }
+}
 
 const ESTIMATE_TYPE_PAIRED = "paired_gap";
 const RUBRIC_VERSION = "1.0";
@@ -816,7 +843,20 @@ export function createReadPairedHandler(deps = {}) {
       });
     }
 
-    const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
+    const spendCeilingUsd = resolveSpendCeiling(env.READER_SPEND_CEILING_USD);
+    noteSpendCeilingConfig(spendCeilingUsd);
+    // No honest fallback exists for a paired analysis (it requires the model). With no
+    // founder ceiling configured the metered second read fails closed into the same
+    // retryable capacity state as an exceeded ceiling — Act 1 stays intact client-side —
+    // rather than proceeding on an unset ceiling.
+    if (spendCeilingUsd == null) {
+      return rejectSecurity(res, ctx, "spend_ceiling_unset", 429, {
+        error: "capacity",
+        message: CAPACITY_MESSAGE,
+        ceiling_configured: false,
+      });
+    }
+    const spend = await checkGlobalSpendCeiling(spendCeilingUsd, deps);
     if (spend.blocked) {
       return rejectSecurity(res, ctx, "spend_ceiling", 429, {
         error: "capacity",
@@ -858,6 +898,11 @@ export function createReadPairedHandler(deps = {}) {
       durable_rate: rate.durable,
       durable_spend: spend.durable,
     });
+    // Bound the second paid call: abort after MODEL_CALL_TIMEOUT_MS so a stalled
+    // provider connection resolves into failure isolation (Act 1 intact) instead of
+    // hanging. clearTimeout runs in finally, so the timer never fires late.
+    const modelCtrl = new AbortController();
+    const modelTimer = setTimeout(() => modelCtrl.abort(), MODEL_CALL_TIMEOUT_MS);
     try {
       const r = await fetchImpl(ANTHROPIC_URL, {
         method: "POST",
@@ -884,6 +929,7 @@ export function createReadPairedHandler(deps = {}) {
             },
           ],
         }),
+        signal: modelCtrl.signal,
       });
       if (!r.ok) {
         logRuntimeEvent("inference_failed", {
@@ -927,6 +973,8 @@ export function createReadPairedHandler(deps = {}) {
         message: ANALYSIS_FAILED_MESSAGE,
         retryable: true,
       });
+    } finally {
+      clearTimeout(modelTimer);
     }
 
     markPhase(ctx, "parse_start");

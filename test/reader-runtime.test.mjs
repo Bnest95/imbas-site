@@ -119,7 +119,7 @@ test("validation rejection logs do not include answer content", async () => {
 
 test("inference failure logs structured event and returns safe fallback response", async () => {
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", READER_SPEND_CEILING_USD: "8" },
     fetch: async () => ({ ok: false, status: 503, json: async () => ({}), text: async () => "" }),
   });
   const req = {
@@ -150,7 +150,7 @@ test("inference failure logs structured event and returns safe fallback response
 
 test("parse failure logs parse_failed without model text content", async () => {
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", READER_SPEND_CEILING_USD: "8" },
     fetch: async () => ({
       ok: true,
       json: async () => ({

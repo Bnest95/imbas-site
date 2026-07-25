@@ -386,7 +386,7 @@ function mockRes() {
 async function runHandler(rawMeasurement) {
   let airtableBody = null;
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token", READER_SPEND_CEILING_USD: "8" },
     fetch: agentFetch(rawMeasurement, (b) => {
       airtableBody = b;
     }),

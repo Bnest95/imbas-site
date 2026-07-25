@@ -77,7 +77,9 @@ const PAIRED_PROMPT_FINGERPRINT_1_0 =
 const PAIRED_TABLE_ID = "tblP1ekWWWscz6pBG"; // Reader Paired Analyses
 const SHARES_TABLE_ID = "tbliYeeM5n0TSVrxf"; // Inspection Shares — never touched by a paired write
 
-const ENV = { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token" };
+// The spend ceiling is stated explicitly here (no production default exists): tests that
+// reach the metered path assert against this configured ceiling, not an implicit fallback.
+const ENV = { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token", READER_SPEND_CEILING_USD: "8" };
 const TARGETED_ANSWER =
   "Here is the second answer. It names the failure modes the first one left out: acute cases can be misrouted, and the clinician still carries the liability when the model is wrong.";
 
@@ -543,7 +545,7 @@ test("offer gating: a run with no eligible missing item cannot start a paired an
 });
 
 test("capacity gating: the spend ceiling blocks a paired run before the paid call", async () => {
-  await addGlobalSpend(20, { env: ENV }); // seed monthly spend past the 8 USD ceiling
+  await addGlobalSpend(20, { env: ENV }); // seed monthly spend past the configured 8 USD ceiling
   const { status, body, stats } = await runPaired({ receipt: buildOpenReceipt() });
   assert.equal(status, 429);
   assert.equal(body.error, "capacity");

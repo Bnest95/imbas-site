@@ -8,6 +8,12 @@
 // events to browser-local storage; no third-party analytics vendor, no server
 // user-content payload. buildFunnel reduces those events to the north-star metric.
 //
+// Transmission is implemented but DISABLED by default: events stay browser-local
+// unless the server delivers an explicit enable flag (config.enabled === true) and a
+// founder approves the privacy line. The only wire path, prepareTelemetryBatch,
+// re-runs the allowlist, so the content-minimal guarantee holds on the wire too —
+// proven by test/reader-telemetry.test.mjs.
+//
 // Pure JS by contract, like reader-paired.js / reader-receipt.js: no node:
 // imports, no DOM, no storage — the impure emit + persistence live with the client
 // so this stays unit-testable in isolation.
@@ -34,6 +40,18 @@ export const READER_EVENTS = {
   CHIP_INSTRUCTION_COPIED: "chip_instruction_copied",
   CHIP_PAIR_INITIATED: "chip_pair_initiated",
   CHIP_PAIR_COMPLETED: "chip_pair_completed",
+  // Operational / resilience lane (Phase 0 §D). Content-free by construction like
+  // the rest: they carry an opaque run id, an enum reason, and small operational
+  // integers, never user text. Ceiling *trip* is a server-side runtime event
+  // (fallback_returned reason:ceiling — the read fails closed to the instruction-only
+  // capacity fallback, no paid call), so the only client-visible capacity
+  // signal is CAPACITY_DEGRADATION — the moment the automated comparison lane is
+  // withheld and the person is routed to the self-run path.
+  FOLLOW_UP_REVEALED: "follow_up_revealed",
+  TIMEOUT: "timeout",
+  CAPACITY_DEGRADATION: "capacity_degradation",
+  CAPTURE_UNCERTAIN: "capture_uncertain",
+  RESTORED_SESSION: "restored_session",
 };
 export const READER_EVENT_NAMES = Object.values(READER_EVENTS);
 const READER_EVENT_NAME_SET = new Set(READER_EVENT_NAMES);
@@ -55,6 +73,8 @@ const ALLOWED_PROP_KEYS = [
   "instruction_version", // user_chip: bank entry instruction_version (e.g. v1)
   "chip", // user_chip: bank entry id (e.g. sq.sources) — an id, never content
   "conditions", // user_chip: matched | unmatched | unverified (paste-back segmentation)
+  "ms", // operational latency, integer milliseconds (never content)
+  "reason", // operational cause enum: timeout | network | ceiling | api_error | disabled | no_key | bad_json
 ];
 const ALLOWED_PROP_SET = new Set(ALLOWED_PROP_KEYS);
 const STRING_PROP_CAP = 64;
@@ -120,4 +140,39 @@ export function buildFunnel(events) {
     // User-chip loop: % of copied instructions that return as a completed pair.
     chip_completion_rate: chipCopied > 0 ? chipCompleted / chipCopied : null,
   };
+}
+
+// ── Transmission (Phase 0 §D — implemented, DISABLED by default) ────────────────
+//
+// Events are collected browser-local today; nothing leaves the device. This scaffold
+// is the ONLY path that could ever transmit, and it is off unless the server delivers
+// an explicit enable flag (see DEPLOY.md → "Telemetry privacy boundary"). Two gates
+// make an accidental leak structurally impossible:
+//   1. shouldTransmitTelemetry — the gate is the server-delivered config alone. It
+//      returns true ONLY for a config object with enabled === true; undefined, null,
+//      malformed, or enabled-not-strictly-true all resolve to false. There is no
+//      in-source enable constant: this module compiles into the browser bundle, which
+//      carries no process.env, so a build-time default would be the wrong switch.
+//      Absent a server flag, transmission stays off.
+//   2. prepareTelemetryBatch — re-runs every row through the same allowlist as
+//      capture, so the wire shape is provably {name, ts, ...allowlisted-scalars}.
+//      Even a hand-forged localStorage row carrying answer text is stripped here.
+export function shouldTransmitTelemetry(config) {
+  // The server-delivered flag is the whole gate: default off, malformed off.
+  return !!(config && typeof config === "object" && config.enabled === true);
+}
+
+// Re-sanitize a persisted event list into the wire batch. Unknown names are dropped,
+// the original timestamp is preserved, and props are re-allowlisted — so no content
+// can ride the wire even if it was somehow persisted locally.
+export function prepareTelemetryBatch(events) {
+  const list = Array.isArray(events) ? events : [];
+  const out = [];
+  for (const e of list) {
+    if (!e || typeof e !== "object" || Array.isArray(e)) continue;
+    if (!READER_EVENT_NAME_SET.has(e.name)) continue;
+    const ts = Number.isFinite(e.ts) ? Math.round(e.ts) : 0;
+    out.push({ name: e.name, ts, ...sanitizeEventProps(e) });
+  }
+  return out;
 }
