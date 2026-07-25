@@ -42,6 +42,20 @@ export const ACT2_OFFER_COPY =
 export const ACT2_CAPACITY_COPY =
   "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
 
+// The single-read fallback reasons that mean the metered lane was withheld — the one
+// coherent capacity family: spend ceiling, model timeout, provider-unavailable (upstream
+// error or network), and a rate-limited response. On these the client shows
+// ACT2_CAPACITY_COPY so the failure modes speak with one voice, DISTINCT from a
+// disabled/keyless Reader (a configuration state, not capacity) which keeps the generic
+// "temporarily unavailable" line. Reason strings match api/read.js fallback(input, reason)
+// — "ceiling" | "timeout" | "network" | "api_error" — plus "capacity"/"429" the client
+// may derive from a rate-limited response.
+export const CAPACITY_FALLBACK_REASONS = ["ceiling", "timeout", "network", "api_error", "capacity", "429"];
+
+export function isCapacityFallbackReason(reason) {
+  return CAPACITY_FALLBACK_REASONS.includes(String(reason == null ? "" : reason).toLowerCase());
+}
+
 // CRLF / lone CR -> LF, so a prompt built from model-emitted fields hashes the
 // same regardless of the line endings the model happened to use. Matches the
 // receipt canonicalization rule.

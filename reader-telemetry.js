@@ -8,10 +8,11 @@
 // events to browser-local storage; no third-party analytics vendor, no server
 // user-content payload. buildFunnel reduces those events to the north-star metric.
 //
-// Transmission is implemented but DISABLED (TELEMETRY_TRANSMIT_ENABLED = false):
-// events stay browser-local until a founder approves the privacy line. The only
-// wire path, prepareTelemetryBatch, re-runs the allowlist, so the content-minimal
-// guarantee holds on the wire too — proven by test/reader-telemetry.test.mjs.
+// Transmission is implemented but DISABLED by default: events stay browser-local
+// unless the server delivers an explicit enable flag (config.enabled === true) and a
+// founder approves the privacy line. The only wire path, prepareTelemetryBatch,
+// re-runs the allowlist, so the content-minimal guarantee holds on the wire too —
+// proven by test/reader-telemetry.test.mjs.
 //
 // Pure JS by contract, like reader-paired.js / reader-receipt.js: no node:
 // imports, no DOM, no storage — the impure emit + persistence live with the client
@@ -42,7 +43,8 @@ export const READER_EVENTS = {
   // Operational / resilience lane (Phase 0 §D). Content-free by construction like
   // the rest: they carry an opaque run id, an enum reason, and small operational
   // integers, never user text. Ceiling *trip* is a server-side runtime event
-  // (security_rejected reason:spend_ceiling), so the only client-visible capacity
+  // (fallback_returned reason:ceiling — the read fails closed to the instruction-only
+  // capacity fallback, no paid call), so the only client-visible capacity
   // signal is CAPACITY_DEGRADATION — the moment the automated comparison lane is
   // withheld and the person is routed to the self-run path.
   FOLLOW_UP_REVEALED: "follow_up_revealed",
@@ -143,19 +145,21 @@ export function buildFunnel(events) {
 // ── Transmission (Phase 0 §D — implemented, DISABLED by default) ────────────────
 //
 // Events are collected browser-local today; nothing leaves the device. This scaffold
-// is the ONLY path that could ever transmit, and it is hard-off until a founder
-// approves the privacy line (see DEPLOY.md → "Telemetry privacy boundary"). Two
-// gates make an accidental leak structurally impossible:
-//   1. shouldTransmitTelemetry — defaults false; a caller must both flip the module
-//      default and pass an explicit enabled config before anything transmits.
+// is the ONLY path that could ever transmit, and it is off unless the server delivers
+// an explicit enable flag (see DEPLOY.md → "Telemetry privacy boundary"). Two gates
+// make an accidental leak structurally impossible:
+//   1. shouldTransmitTelemetry — the gate is the server-delivered config alone. It
+//      returns true ONLY for a config object with enabled === true; undefined, null,
+//      malformed, or enabled-not-strictly-true all resolve to false. There is no
+//      in-source enable constant: this module compiles into the browser bundle, which
+//      carries no process.env, so a build-time default would be the wrong switch.
+//      Absent a server flag, transmission stays off.
 //   2. prepareTelemetryBatch — re-runs every row through the same allowlist as
 //      capture, so the wire shape is provably {name, ts, ...allowlisted-scalars}.
 //      Even a hand-forged localStorage row carrying answer text is stripped here.
-export const TELEMETRY_TRANSMIT_ENABLED = false;
-
-export function shouldTransmitTelemetry(config = {}) {
-  if (!TELEMETRY_TRANSMIT_ENABLED) return false;
-  return config && config.enabled === true;
+export function shouldTransmitTelemetry(config) {
+  // The server-delivered flag is the whole gate: default off, malformed off.
+  return !!(config && typeof config === "object" && config.enabled === true);
 }
 
 // Re-sanitize a persisted event list into the wire batch. Unknown names are dropped,

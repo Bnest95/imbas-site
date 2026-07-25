@@ -6,7 +6,6 @@ import {
   sanitizeEventProps,
   buildEvent,
   buildFunnel,
-  TELEMETRY_TRANSMIT_ENABLED,
   shouldTransmitTelemetry,
   prepareTelemetryBatch,
 } from "../reader-telemetry.js";
@@ -105,11 +104,21 @@ test("buildFunnel ignores malformed rows", () => {
 
 // ── Transmission boundary (Phase 0 §D — disabled + content-free on the wire) ────
 
-test("transmission is hard-off by default and cannot be flipped by config alone", () => {
-  assert.equal(TELEMETRY_TRANSMIT_ENABLED, false);
-  assert.equal(shouldTransmitTelemetry({ enabled: true }), false); // module gate still wins
-  assert.equal(shouldTransmitTelemetry({}), false);
-  assert.equal(shouldTransmitTelemetry(), false);
+test("transmission is off by default and only a server-delivered enabled:true flag opens it", () => {
+  // No in-source constant gates this anymore — the server-delivered config IS the whole
+  // switch (the module compiles into the browser bundle, which has no process.env). So
+  // absent/malformed all resolve to off, and only a config object with a strict
+  // boolean-true enabled opens the wire.
+  assert.equal(shouldTransmitTelemetry(), false); // absent
+  assert.equal(shouldTransmitTelemetry(undefined), false); // unset
+  assert.equal(shouldTransmitTelemetry(null), false); // null
+  assert.equal(shouldTransmitTelemetry({}), false); // no flag
+  assert.equal(shouldTransmitTelemetry({ enabled: false }), false);
+  assert.equal(shouldTransmitTelemetry({ enabled: "true" }), false); // string, not boolean
+  assert.equal(shouldTransmitTelemetry({ enabled: 1 }), false); // truthy, not boolean-true
+  assert.equal(shouldTransmitTelemetry("enabled"), false); // non-object
+  assert.equal(shouldTransmitTelemetry(true), false); // non-object truthy
+  assert.equal(shouldTransmitTelemetry({ enabled: true }), true); // the only open state
 });
 
 test("prepareTelemetryBatch strips content even from a hand-forged persisted row", () => {

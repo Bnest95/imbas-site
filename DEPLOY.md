@@ -81,11 +81,19 @@ Existing Reader env vars (unchanged):
 
 - `READER_API_KEY` — Anthropic key
 - `READER_ENABLED` — `"0"` manual kill switch (returns honest fallback, no inference)
-- `READER_SPEND_CEILING_USD` — monthly estimated spend cap. **The `8` default is a
-  development PLACEHOLDER, not a launch ceiling.** Set an explicit interim ceiling in
-  Production before public traffic (founder input). When the var is unset, the server
-  logs a one-time `spend_ceiling_placeholder` runtime event so a placeholder run is
-  visible in the logs rather than silent.
+- `READER_SPEND_CEILING_USD` — monthly estimated spend cap (USD). **There is no
+  production default.** `resolveSpendCeiling` accepts only a finite number `> 0`; unset,
+  non-numeric, or `≤ 0` all resolve to `null`. While it resolves to `null`, every metered
+  model call **fails closed** with no paid call, converging on the same capacity outcome
+  (Act 1 intact; the capacity line in place of the automated comparison). Transport differs by
+  lane: `/api/read` returns a 200 instruction-only fallback (`fallback_returned` `reason:
+  ceiling`); `/api/read-paired`, which has no second-read fallback, returns a 429
+  `security_rejected` (`reason: spend_ceiling_unset`, `error: capacity`). Either way the server
+  logs `spend_ceiling_unset` `{configured:false, fail_closed:true}` once per instance, so an
+  unset ceiling is visible as a fail-closed state, never mistaken for a launch value. Set an
+  explicit positive ceiling in Production before public traffic (founder input); tests and
+  local dev inject a test-only value through `deps.env`. No public or operational claim
+  treats any historical development number as a launch ceiling.
 - `READER_MODEL_TIMEOUT_MS` — bound on every Workbench model call (default `45000`).
   A stalled provider aborts into the coherent capacity-degradation path (§ below),
   never hangs the request. Distinguished from a plain network error in the logs
@@ -152,7 +160,7 @@ unavailable (`store_unavailable`, `action: memory_fallback`).
 | `inference_failed` | Anthropic call failed; check `upstream_status` or `failure_class` |
 | `parse_failed` | Model returned unparseable JSON (`parse_error_class`, `model_text_len` only — no raw output) |
 | `capture_failed` | Reader Runs row not written; user still got 200 (`user_response_returned: true`) |
-| `security_rejected` | Rate limit or spend ceiling (`reason`: `rate_limited`, `spend_ceiling`) |
+| `security_rejected` | HTTP 429 `error: capacity`. `reason: rate_limited` (rate limit, both endpoints). On `/api/read-paired` also `reason: spend_ceiling` (ceiling reached) or `spend_ceiling_unset` (no ceiling configured) — the second read has no fallback, so its capacity trip rejects. On `/api/read` the ceiling does **not** reject here; it fails closed to a 200 `fallback_returned` `reason: ceiling` |
 | `validation_rejected` | Bad input (`reason`: `empty`, `too_long`, `body_too_large`, etc.) |
 
 ### What to do
@@ -161,7 +169,7 @@ unavailable (`store_unavailable`, `action: memory_fallback`).
 - **`parse_failed` spike** — Model output shape drift; inspect frequency, not log content (privacy). Fallback reads are honest but thin.
 - **`capture_failed`** — Check `AIRTABLE_TOKEN` permissions on base `appfxHraqlcpP1AAP`, Reader Runs table `tblqmHiOCQ5YSXBN3`. Reads still work; only logging is affected.
 - **`security_rejected` + `store_error: true`** — Upstash/KV unreachable; rate limits may fail closed. Verify `KV_REST_API_*` or `UPSTASH_REDIS_REST_*` on Vercel.
-- **`security_rejected` + `reason: spend_ceiling`** — Monthly cap hit (`READER_SPEND_CEILING_USD`, default 8). Raise cap or wait for month rollover.
+- **`fallback_returned` + `reason: ceiling`** — The spend ceiling is unset, or the month total has reached `READER_SPEND_CEILING_USD`; the primary read (`/api/read`) failed closed to the instruction-only capacity fallback (no paid call). The paired comparison (`/api/read-paired`) surfaces the same trip as `security_rejected` `reason: spend_ceiling` / `spend_ceiling_unset` (429) instead, since it has no fallback. Set or raise the ceiling, or wait for month rollover. An unset ceiling additionally logs `spend_ceiling_unset` once per instance.
 - **`reader_security` + `memory_fallback`** — Durable store not configured or down; per-instance counters only. Fix Redis env vars and redeploy.
 - **`/api/reader-health` `mode: degraded`** — Missing model key and/or durable store; inspect flags before traffic.
 
@@ -192,12 +200,23 @@ client (`ACT2_CAPACITY_COPY` in `reader-paired.js`):
 > The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.
 
 - **Soft boundary** — a read that tips the month total over the ceiling still returns 200; its
-  `act2.available` is `false`, so the client shows the instruction plus the capacity line in
-  place of the automated comparison, and emits a `capacity_degradation` event.
-- **Hard boundary** — once over the ceiling (or rate-limited), `/api/read` returns **429**
-  `error: capacity` and the client shows the honest fallback read.
-- **Ceiling trip** is logged server-side (`security_rejected`, `reason: spend_ceiling`) — it is
-  not a client event.
+  `act2.available` is `false` (`degraded_reason: "spend_ceiling"`), so the client shows the
+  instruction plus the capacity line in place of the automated comparison, and emits a
+  `capacity_degradation` event.
+- **Ceiling reached or unset** — both metered lanes fail closed with no paid call and converge on
+  the same user-facing capacity outcome (Act 1 intact; the capacity line in place of the automated
+  comparison). Transport differs by lane: the primary read (`/api/read`) returns a **200 fallback
+  read** (`source: "fallback"`, reason `ceiling`); the paired comparison (`/api/read-paired`), which
+  has no second-read fallback, returns a **429** (`error: capacity`, `reason: spend_ceiling` reached
+  / `spend_ceiling_unset`). Within each lane an exhausted ceiling and an unconfigured one are
+  unified. This is the single coherent capacity path shared with model timeout and
+  provider-unavailable.
+- **Rate limit** — a hard **429** (`error: capacity`, same capacity sentence) on either endpoint;
+  the client then shows the capacity line / honest fallback read.
+- **Server-side logs** — `/api/read`: `fallback_returned` `reason: ceiling` (ceiling reached or
+  unset). `/api/read-paired`: `security_rejected` `reason: spend_ceiling` or `spend_ceiling_unset`.
+  Both lanes: `spend_ceiling_unset` `{configured:false}` when unconfigured (once per instance) and
+  `security_rejected` `reason: rate_limited` (the rate-limit 429). None is a client event.
 
 ### Telemetry privacy boundary (implemented, DISABLED)
 
@@ -207,10 +226,18 @@ Confirmation-loop + operational events are **browser-local only** today (`reader
 - **Content-minimal by construction.** `sanitizeEventProps` allowlists a fixed set of short
   scalar keys (ids, enums, small integers, booleans, `ms`, `reason`) and drops everything else —
   no answer, question, quotation, receipt body, or measured span can ride an event.
-- **Transmission is off.** `TELEMETRY_TRANSMIT_ENABLED = false`; the only wire path
-  (`prepareTelemetryBatch`) re-runs the allowlist, so even a hand-forged local row is stripped
-  to `{name, ts, …allowlisted}`. Proven by `test/reader-telemetry.test.mjs`. **Do not flip the
-  flag until the privacy line is founder-approved.**
+- **Transmission is off, and only a server-delivered flag can open it.** There is no in-source
+  enable constant (the module compiles into `workbench.bundle.js` and runs in the browser, which
+  has no `process.env`). The gate is `shouldTransmitTelemetry(config)`: it returns `true` **only**
+  for a config object whose `enabled === true` (strict boolean). Absent, `null`, `{}`,
+  `{enabled:false}`, `{enabled:"true"}`, `{enabled:1}`, and any non-object all resolve to `false`.
+  The only wire path (`prepareTelemetryBatch`) re-runs the allowlist, so even a hand-forged local
+  row is stripped to `{name, ts, …allowlisted}`. Proven by `test/reader-telemetry.test.mjs`.
+- **Config key / default / where set / how to enable.** The flag is `config.enabled` on the
+  server-delivered client config. The default — and every malformed value — is **disabled**. It
+  is set at deploy by having the server deliver `{enabled:true}` to the client; there is currently
+  **no production caller**, so this is latent scaffold, not a live wire. The exact enable action
+  is strict `{enabled:true}` **plus** founder approval of the privacy line. Until both, it stays off.
 
 Event coverage: run started, Reader completed, follow-up revealed, chip selected, pair
 initiated/completed, loop completed, `timeout`, `capacity_degradation`, `capture_uncertain`

@@ -10,6 +10,7 @@ import {
 import {
   ACT2_OFFER_COPY,
   ACT2_CAPACITY_COPY,
+  isCapacityFallbackReason,
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
   suggestLoopState,
@@ -3193,8 +3194,12 @@ function readerFallbackReasonCode(result) {
 
 function readerFallbackDisplayMessage(result) {
   const code = readerFallbackReasonCode(result).toLowerCase();
-  if (code === "ceiling") return "Reader limit reached — showing fallback check.";
-  if (["no_key", "disabled", "api_error", "network", "bad_json", "timeout"].includes(code)) {
+  // Capacity family (ceiling / timeout / provider-unavailable / rate-limited): show the
+  // one founder-approved capacity sentence verbatim so the three modes speak with one
+  // voice. The follow-up instruction stays available below via the always-on chips.
+  if (isCapacityFallbackReason(code)) return ACT2_CAPACITY_COPY;
+  // Configuration or parse states are not capacity — keep the neutral line.
+  if (["no_key", "disabled", "bad_json"].includes(code)) {
     return "Reader temporarily unavailable — showing fallback check.";
   }
   return "Reader unavailable — showing fallback check.";
@@ -5633,11 +5638,19 @@ function ReaderWorkbench() {
         source: data.source || "agent",
         eligible: !!(data.act2 && data.act2.eligible),
       });
-      // Distinguish a server-side model timeout (fail-open fallback, §A) so it can be
-      // measured apart from a plain unavailable fallback. Reason is parsed from the
-      // fallback body's "(timeout)" marker — an enum, never content.
-      if (data.source === "fallback" && readerFallbackReasonCode(data).toLowerCase() === "timeout") {
-        emitReaderEvent(READER_EVENTS.TIMEOUT, { run, mode, reason: "timeout" });
+      // Capacity family (ceiling / timeout / provider-unavailable): the metered lane was
+      // withheld and the client shows the one capacity sentence, so log the coherent
+      // capacity-degradation signal with its cause (§C/§D). Reason is the fallback enum
+      // parsed from the body's "(reason)" marker — an enum, never content.
+      if (data.source === "fallback") {
+        const reasonCode = readerFallbackReasonCode(data).toLowerCase();
+        if (isCapacityFallbackReason(reasonCode)) {
+          emitReaderEvent(READER_EVENTS.CAPACITY_DEGRADATION, { run, mode, reason: reasonCode });
+        }
+        // A model timeout is additionally a distinct §A operational signal.
+        if (reasonCode === "timeout") {
+          emitReaderEvent(READER_EVENTS.TIMEOUT, { run, mode, reason: "timeout" });
+        }
       }
       // Capture/persistence uncertainty: the run displayed but the pipeline write was
       // not confirmed. Content-free operational signal (§D).

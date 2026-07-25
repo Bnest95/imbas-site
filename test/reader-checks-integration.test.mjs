@@ -61,7 +61,7 @@ function modelPayload(findings) {
 // only ever serves the single inference call.
 function handlerReturning(modelObj) {
   return createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", READER_SPEND_CEILING_USD: "8" },
     fetch: async () => ({
       ok: true,
       json: async () => ({
@@ -212,7 +212,7 @@ test("AT-7: attaching the check register does not change the receipt's reader_ou
 
 test("the fallback path (bad model JSON) returns no check register", async () => {
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", READER_SPEND_CEILING_USD: "8" },
     fetch: async () => ({
       ok: true,
       json: async () => ({ content: [{ type: "text", text: "not json at all" }], usage: {} }),

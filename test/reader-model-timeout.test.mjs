@@ -74,7 +74,7 @@ beforeEach(() => {
 
 async function runSingle(err, sawSignal) {
   const handler = createReadHandler({
-    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t" },
+    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t", READER_SPEND_CEILING_USD: "8" },
     fetch: throwingModelFetch(err, sawSignal),
   });
   const req = {
@@ -109,6 +109,43 @@ test("single: a plain network error is DISTINGUISHED from a timeout", async () =
   assert.equal(out.body.source, "fallback");
   assert.ok(out.body.the_read.includes("(network)"), "network failure keeps the network reason");
   assert.ok(!out.body.the_read.includes("(timeout)"), "a network error is never mislabeled a timeout");
+});
+
+// ── Condition 3: an unset spend ceiling fails closed (no production default) ─────
+// With READER_SPEND_CEILING_USD unset the metered model call must not run: the read
+// fails closed into the same honest instruction-only capacity fallback as an exceeded
+// ceiling (source "fallback", reason "ceiling"), and no paid provider call is attempted.
+test("single: an unset spend ceiling fails closed into the capacity fallback, no model call", async () => {
+  const modelCalled = { value: false };
+  const handler = createReadHandler({
+    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t" }, // no READER_SPEND_CEILING_USD
+    fetch: async (url, opts = {}) => {
+      if (String(url).includes("anthropic")) {
+        modelCalled.value = true;
+        return { ok: true, json: async () => ({ content: [{ type: "text", text: "{}" }] }) };
+      }
+      const method = (opts && opts.method) || "GET";
+      if (method === "GET") return { ok: true, json: async () => ({ records: [] }) };
+      return { ok: true, status: 200, json: async () => ({ id: "rec1" }), text: async () => "" };
+    },
+  });
+  const req = {
+    method: "POST",
+    headers: { "x-forwarded-for": `203.0.113.${ip++}` },
+    body: {
+      open_question: "What are the risks of relying on AI for triage?",
+      answer: LONG_ANSWER,
+      case: { topic: "triage" },
+      inspected_model: "ChatGPT",
+      textcheck: { surfaced: false, found: [], missing: [] },
+    },
+  };
+  const res = mockRes();
+  await handler(req, res);
+  assert.equal(res.out.statusCode, 200, "unset ceiling stays fail-open 200 with a fallback body");
+  assert.equal(res.out.body.source, "fallback");
+  assert.ok(res.out.body.the_read.includes("(ceiling)"), "the fallback names the ceiling reason");
+  assert.equal(modelCalled.value, false, "no paid model call is attempted when the ceiling is unset");
 });
 
 // ── Paired read ───────────────────────────────────────────────────────────────
@@ -156,7 +193,7 @@ function buildOpenReceipt(requestId) {
 test("paired: a model-call abort isolates the failure (502 analysis_failed, retryable)", async () => {
   const sawSignal = { value: false };
   const handler = createReadPairedHandler({
-    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t" },
+    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t", READER_SPEND_CEILING_USD: "8" },
     fetch: throwingModelFetch(abortError(), sawSignal),
   });
   const req = {
@@ -174,4 +211,37 @@ test("paired: a model-call abort isolates the failure (502 analysis_failed, retr
   assert.equal(res.out.body.error, "analysis_failed");
   assert.equal(res.out.body.retryable, true);
   assert.ok(sawSignal.value, "an abort signal was attached to the second model call");
+});
+
+// ── Condition 3 (paired): an unset spend ceiling fails closed before the paid call ──
+// A pair has no honest fallback (it requires the model), so an unset ceiling returns the
+// retryable capacity response — Act 1 stays intact client-side — and never spends.
+test("paired: an unset spend ceiling fails closed to a retryable capacity response, no model call", async () => {
+  const modelCalled = { value: false };
+  const handler = createReadPairedHandler({
+    env: { READER_API_KEY: "k", READER_ENABLED: "1", AIRTABLE_TOKEN: "t" }, // no READER_SPEND_CEILING_USD
+    fetch: async (url, opts = {}) => {
+      if (String(url).includes("anthropic")) {
+        modelCalled.value = true;
+        return { ok: true, json: async () => ({ content: [{ type: "text", text: "{}" }] }) };
+      }
+      const method = (opts && opts.method) || "GET";
+      if (method === "GET") return { ok: true, json: async () => ({ records: [] }) };
+      return { ok: true, status: 200, json: async () => ({ id: "rec1" }), text: async () => "" };
+    },
+  });
+  const req = {
+    method: "POST",
+    headers: { "x-forwarded-for": `198.51.100.${ip++}` },
+    body: {
+      open_receipt: buildOpenReceipt(sha256Hex("openrun:ceiling").slice(0, 16)),
+      targeted_answer:
+        "Here is the second answer. It names the failure modes the first one left out: acute cases can be misrouted.",
+    },
+  };
+  const res = mockRes();
+  await handler(req, res);
+  assert.equal(res.out.statusCode, 429, "the paired read fails closed when no ceiling is configured");
+  assert.equal(res.out.body.error, "capacity");
+  assert.equal(modelCalled.value, false, "no paid model call is attempted when the ceiling is unset");
 });

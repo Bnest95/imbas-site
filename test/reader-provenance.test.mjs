@@ -284,7 +284,7 @@ test("captureRun is fail-safe when Airtable rejects unknown fields (422)", async
 
 test("handler still returns the inspection when capture rejects unknown fields", async () => {
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token", READER_SPEND_CEILING_USD: "8" },
     fetch: agentFetch(() => ({ ok: false, status: 422, text: async () => "UNKNOWN_FIELD_NAME" })),
   });
   const req = {
@@ -348,7 +348,7 @@ test("fallback captures still carry provenance and stay labelled fallback", asyn
 test("handler threads request id, topic, anchor, and inspected model into the capture", async () => {
   let airtableBody = null;
   const handler = createReadHandler({
-    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token" },
+    env: { READER_API_KEY: "test-key", READER_ENABLED: "1", AIRTABLE_TOKEN: "test-token", READER_SPEND_CEILING_USD: "8" },
     fetch: agentFetch(null, (b) => {
       airtableBody = b;
     }),

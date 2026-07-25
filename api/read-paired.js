@@ -94,10 +94,14 @@ const PAIRED_TABLE = "tblP1ekWWWscz6pBG";
 const CAPTURE_TIMEOUT_MS = 4500;
 const CAPTURE_RETRY_BACKOFF_MS = 250;
 
-// PLACEHOLDER default — a development guard, NOT a launch ceiling. The interim launch
-// value is a founder input (DEPLOY.md); until READER_SPEND_CEILING_USD is set this runs
-// on the placeholder and logs a one-time notice (checkSpendCeilingConfig).
-const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
+// No production default: the ceiling is a founder input (DEPLOY.md). Until
+// READER_SPEND_CEILING_USD is set to a positive number, resolveSpendCeiling returns null
+// and the paired (second) model call fails closed into the capacity state — an unset
+// ceiling is never silently treated as a launch value.
+function resolveSpendCeiling(raw) {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 };
 // Bounded, config-driven ceiling on the second paid model call. Aborts a stalled
 // provider connection into the coherent failure-isolation path (Act 1 intact) instead
@@ -113,15 +117,15 @@ const UNAVAILABLE_MESSAGE =
 const ANALYSIS_FAILED_MESSAGE =
   "The second read didn't come back cleanly. Your first read is safe. Try again.";
 
-// One-time operational notice when the spend ceiling runs on its PLACEHOLDER default
-// (READER_SPEND_CEILING_USD unset). Content-free; emits at most once per instance so the
-// placeholder is visible in logs and never mistaken for a launch ceiling.
-let ceilingPlaceholderNoticed = false;
-function checkSpendCeilingConfig() {
-  if (ceilingPlaceholderNoticed) return;
-  ceilingPlaceholderNoticed = true;
-  if (!process.env.READER_SPEND_CEILING_USD) {
-    logRuntimeEvent("spend_ceiling_placeholder", { ceiling_usd: SPEND_CEILING_USD, placeholder: true });
+// One-time operational notice describing the spend-ceiling configuration state.
+// Content-free; emits at most once per instance so an UNSET ceiling is visible in logs as
+// a fail-closed state and never mistaken for a launch ceiling.
+let spendCeilingConfigNoticed = false;
+function noteSpendCeilingConfig(ceilingUsd) {
+  if (spendCeilingConfigNoticed) return;
+  spendCeilingConfigNoticed = true;
+  if (ceilingUsd == null) {
+    logRuntimeEvent("spend_ceiling_unset", { configured: false, fail_closed: true });
   }
 }
 
@@ -839,8 +843,20 @@ export function createReadPairedHandler(deps = {}) {
       });
     }
 
-    checkSpendCeilingConfig();
-    const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
+    const spendCeilingUsd = resolveSpendCeiling(env.READER_SPEND_CEILING_USD);
+    noteSpendCeilingConfig(spendCeilingUsd);
+    // No honest fallback exists for a paired analysis (it requires the model). With no
+    // founder ceiling configured the metered second read fails closed into the same
+    // retryable capacity state as an exceeded ceiling — Act 1 stays intact client-side —
+    // rather than proceeding on an unset ceiling.
+    if (spendCeilingUsd == null) {
+      return rejectSecurity(res, ctx, "spend_ceiling_unset", 429, {
+        error: "capacity",
+        message: CAPACITY_MESSAGE,
+        ceiling_configured: false,
+      });
+    }
+    const spend = await checkGlobalSpendCeiling(spendCeilingUsd, deps);
     if (spend.blocked) {
       return rejectSecurity(res, ctx, "spend_ceiling", 429, {
         error: "capacity",

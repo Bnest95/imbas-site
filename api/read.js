@@ -59,7 +59,9 @@
 // ── Env vars ─────────────────────────────────────────────────────────────────
 //   READER_API_KEY    — Anthropic key, server-side only, never committed
 //   READER_ENABLED    — kill switch ("0" → skip the call, fall back honestly)
-//   READER_SPEND_CEILING_USD — optional monthly estimated spend cap (default 8)
+//   READER_SPEND_CEILING_USD — monthly estimated spend cap in USD; REQUIRED for the
+//                              metered model call. No production default: unset (or ≤0)
+//                              fails closed into the instruction-only capacity state.
 //   UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN — durable rate + spend (recommended)
 
 import {
@@ -149,12 +151,16 @@ const CAPTURE_TIMEOUT_MS = 4500;
 // never retried.
 const CAPTURE_RETRY_BACKOFF_MS = 250;
 
-// Monthly estimated spend cap. Durable only when Upstash Redis REST is configured;
+// Monthly estimated spend cap (USD). Durable only when Upstash Redis REST is configured;
 // otherwise falls back to per-instance memory in reader-security.js.
-// PLACEHOLDER default — a development guard, NOT a launch ceiling. The interim launch
-// value is a founder input (see DEPLOY.md); until READER_SPEND_CEILING_USD is set this
-// module runs on the placeholder and logs a one-time notice (checkSpendCeilingConfig).
-const SPEND_CEILING_USD = Number(process.env.READER_SPEND_CEILING_USD) || 8;
+// There is NO production default. The ceiling is a founder input (see DEPLOY.md): until
+// READER_SPEND_CEILING_USD is set to a positive number, resolveSpendCeiling returns null
+// and the metered model call fails closed into the instruction-only capacity state — an
+// unset ceiling is never silently treated as a launch value.
+function resolveSpendCeiling(raw) {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 const USD_PER_MTOK = { in: 5, out: 25, cacheWrite: 6.25, cacheRead: 0.5 }; // Opus 4.8 list
 // Bounded, config-driven ceiling on a single Workbench model call. A stalled provider
 // connection must abort into the coherent capacity-degradation path (fallback), never
@@ -170,16 +176,16 @@ const MODEL_CALL_TIMEOUT_MS = Number(process.env.READER_MODEL_TIMEOUT_MS) || 450
 const CAPACITY_MESSAGE =
   "The Reader is at capacity today. You can still generate and run a follow-up in your own AI. Automated comparison may remain unavailable until capacity resets.";
 
-// One-time operational notice when the spend ceiling runs on its PLACEHOLDER default
-// (READER_SPEND_CEILING_USD unset). Content-free — surfaces the "no interim launch
-// ceiling set" state in logs so the placeholder is never mistaken for a launch value.
-// Emits at most once per instance; import stays side-effect-free (guarded, handler-lazy).
-let ceilingPlaceholderNoticed = false;
-function checkSpendCeilingConfig() {
-  if (ceilingPlaceholderNoticed) return;
-  ceilingPlaceholderNoticed = true;
-  if (!process.env.READER_SPEND_CEILING_USD) {
-    logRuntimeEvent("spend_ceiling_placeholder", { ceiling_usd: SPEND_CEILING_USD, placeholder: true });
+// One-time operational notice describing the spend-ceiling configuration state.
+// Content-free — surfaces whether a founder ceiling is set so an UNSET ceiling shows in
+// logs as a fail-closed state, never mistaken for a launch value. Emits at most once per
+// instance; import stays side-effect-free (guarded, handler-lazy).
+let spendCeilingConfigNoticed = false;
+function noteSpendCeilingConfig(ceilingUsd) {
+  if (spendCeilingConfigNoticed) return;
+  spendCeilingConfigNoticed = true;
+  if (ceilingUsd == null) {
+    logRuntimeEvent("spend_ceiling_unset", { configured: false, fail_closed: true });
   }
 }
 
@@ -515,10 +521,10 @@ function parseMeasurement(raw) {
 //
 // Returns null when there is no measurement (fallback path / older rows): the offer
 // never renders and Act 1 is untouched.
-function buildAct2(measurement, question, spendTotalUsd) {
+function buildAct2(measurement, question, spendTotalUsd, spendCeilingUsd) {
   if (!measurement) return null;
   const { eligible, targeted_prompt } = buildTargetedPrompt({ question, measurement });
-  const available = !(Number(spendTotalUsd) >= SPEND_CEILING_USD);
+  const available = spendCeilingUsd != null && !(Number(spendTotalUsd) >= spendCeilingUsd);
   return {
     eligible,
     available,
@@ -877,17 +883,25 @@ export function createReadHandler(deps = {}) {
       return sendRead(res, input, fallback(input, "no_key"), ctx, deps);
     }
 
-    checkSpendCeilingConfig();
-    const spend = await checkGlobalSpendCeiling(SPEND_CEILING_USD, deps);
+    const spendCeilingUsd = resolveSpendCeiling(env.READER_SPEND_CEILING_USD);
+    noteSpendCeilingConfig(spendCeilingUsd);
+    // No founder ceiling configured: fail closed into the same honest instruction-only
+    // capacity fallback as an exceeded ceiling. No paid call is attempted, and the unset
+    // ceiling is never treated as a launch value.
+    if (spendCeilingUsd == null) {
+      ctx.fallback_reason = "ceiling";
+      ctx.inference_skipped = true;
+      return sendRead(res, input, fallback(input, "ceiling"), ctx, deps);
+    }
+    const spend = await checkGlobalSpendCeiling(spendCeilingUsd, deps);
     const security_duration_ms = elapsedMs(ctx, "security_start");
     if (spend.blocked) {
-      return rejectSecurity(res, ctx, "spend_ceiling", 429, {
-        error: "capacity",
-        message: CAPACITY_MESSAGE,
-        durable_spend: spend.durable,
-        store_error: !!spend.storeError,
-        security_duration_ms,
-      });
+      // Recorded spend has reached the ceiling: unify with the unset path — one honest
+      // instruction-only fallback (reason "ceiling") rather than a bare 429, so the
+      // client shows one coherent capacity behavior across ceiling/timeout/provider.
+      ctx.fallback_reason = "ceiling";
+      ctx.inference_skipped = true;
+      return sendRead(res, input, fallback(input, "ceiling"), ctx, deps);
     }
     ctx.durable_rate = rate.durable;
     ctx.durable_spend = spend.durable;
@@ -1078,7 +1092,7 @@ export function createReadHandler(deps = {}) {
     // Act 2 offer (Reader v2 P2, Phase A): the deterministic targeted prompt + its
     // hash + a spend-grounded capacity signal. null-safe on the fallback path
     // (measurement null -> act2 null -> no offer).
-    payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter);
+    payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter, spendCeilingUsd);
 
     // Check Register v1 (Reader v3 R3). Additive and null-safe: attached only on
     // the agent path where measurement exists; the fallback path leaves it unset.
