@@ -40,6 +40,15 @@ export const READER_EVENTS = {
   CHIP_INSTRUCTION_COPIED: "chip_instruction_copied",
   CHIP_PAIR_INITIATED: "chip_pair_initiated",
   CHIP_PAIR_COMPLETED: "chip_pair_completed",
+  // Stage spine (reader-stage.js). STAGE_CHANGED means one thing only: an explicit
+  // in-product stage advance the person initiated through that stage's primary
+  // action. NOT emitted for initial render, restore, stale-hash normalization,
+  // browser Back, browser Forward, a bare hashchange, a React remount, a retry that
+  // stays in the same stage, or a degraded-state rerender. The stage lives in the
+  // hash, so Back and Forward both fire hashchange — stageTransition() gates the emit
+  // on cause, and navigation moves the view without moving the funnel. Carries
+  // from_state/to_state (already-allowlisted keys) holding stage ids, never content.
+  STAGE_CHANGED: "stage_changed",
   // Operational / resilience lane (Phase 0 §D). Content-free by construction like
   // the rest: they carry an opaque run id, an enum reason, and small operational
   // integers, never user text. Ceiling *trip* is a server-side runtime event
