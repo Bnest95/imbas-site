@@ -396,3 +396,34 @@ This analysis changes no code. The flags below are for the implementing session,
 ---
 
 *End of analysis. This document is the input to a later redesign; it performs none of it.*
+
+---
+
+## PART 4 — RULINGS ADOPTED AFTER THIS ANALYSIS
+
+Recorded 2026-07-26, after the analysis above closed. Everything in this part is adopted. None of it is analysis, and none of it is an option. It sits in this document because this document already carries the Reader output ruling, and the ruling set belongs in one place.
+
+The clauses are numbered so later work can cite them. The wording is the founder's.
+
+> **READER ACT 2 RULING**
+>
+> 1. The Reader's second question is a content-neutral completeness probe. Its job is to get the person a better answer and show what the first one omitted. It does not exist to confirm the first inspection. Act 1 and Act 2 are independent passes, and Act 2 surfacing different real items than Act 1 flagged is the tool working, not a broken loop. A non-leading probe is a stronger demonstration of withholding than a derived prompt, because a derived prompt supplies the answer inside the question.
+> 2. The public Reader may name the Volunteer Gap only when the probe answer contains material the first answer omitted and matched conditions are affirmatively established. When conditions are unmatched, unverified, absent, or cannot be preserved in the artifact, the Reader reports the observed difference descriptively and does not name the construct.
+> 3. Note the consequence, given the persistence gap recorded in the calibration queue: if conditions provenance is not carried into an artifact, the construct can be named only in a live session and never in a receipt, share, or export. Any surface that cannot establish matched conditions from its own data must use descriptive language.
+> 4. Whether Act 1 predicted the surfaced item is recorded in the receipt and never controls the user-facing claim. Overlap and non-overlap vocabulary stays in the receipt and out of the interface.
+> 5. Item-specific derived prompts are reserved for an explicit verify-this action and for instrument-grade protocol capture. Accepted tradeoff: item-level attribution now requires matched conditions plus the verify action.
+
+> **PRODUCT DECISION PRINCIPLE**
+>
+> Product decisions are evaluated against current user and organizational utility, not inherited because a prior method, artifact, label, or implementation already exists. The v1 study was a manual proof of concept. It proved the phenomenon exists. It is a citation, not a specification. Never treat v1 methodology, the 0-3 scale, matched-conditions purity, or the open-versus-targeted design as authoritative constraints on the Reader product, and never call production a defect merely for deviating from a v1 design without first asking whether the v1 design is right for this product.
+
+> **BOUNDARY (restated)**
+>
+> Reader inspections are discovery, not evidence. This is the architectural permission that lets the public Reader optimize for utility and speed without contaminating the governed record. It stays visible on every Reader surface.
+
+### Where these rulings land on Part 3
+
+Two things above are affected. This part resolves neither; it names them so a later reader does not take Part 3 as untouched.
+
+- **Option B's matched-state headline.** The recommended option keeps the headline "It answers when asked. It just didn't volunteer." and the tag "That's the Volunteer Gap — you just watched it happen." Act 2 Ruling §1 withdraws the confirmation implication that headline carries: Act 2 does not exist to confirm Act 1. The string is live in production. It is logged as an open item in `docs/IMBAS-READER-OPEN-QUEUES.md` (Pass 2B queue, item 4) and is not ruled on here.
+- **The reach of the conditions gate.** Number-System Ruling §3 gates the construct on `conditions_matched` in the paired view. Act 2 Ruling §2 and §3 carry that gate to every surface, including surfaces that cannot establish matched conditions from their own data. `docs/IMBAS-READER-OPEN-QUEUES.md` (calibration queue, item 1) records the verified trace of which surfaces those are today.

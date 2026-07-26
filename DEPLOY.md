@@ -39,8 +39,10 @@ When changing Workbench logic or copy:
 2. Run `npm run build:workbench`
 3. Commit `workbench-app.jsx` and `workbench.bundle.js`
 4. Run `npm test` (or `npm run check:workbench`) to confirm the bundle is in sync
-5. Run `node qa-screenshots-case-structure-fix/final-check.mjs`
-6. Run `node qa-screenshots-case-structure-fix/metadata-check.mjs`
+5. Run `node scripts/qa/visual-acceptance.mjs --all --diff` to compare the rebuilt Workbench against the committed baselines
+6. If a diff is intended, run `node scripts/qa/visual-acceptance.mjs --update <scenario>` for each changed scenario and commit the updated baseline
+
+Step 5 writes nothing. Step 6 takes one scenario at a time and prints the full diff before it writes; there is no `--update-all`. See **Visual acceptance harness** below for the baselines, the flags, and the reason an image diff on a machine other than the capture machine is not a regression signal.
 
 First-time or after pulling changes that touch `package.json`:
 
@@ -52,6 +54,148 @@ npm run build:workbench
 Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `workbench.html`). Do not edit `Workbench.jsx` unless diffed against `workbench-app.jsx` first — it may be stale.
 
 Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
+
+## Visual acceptance harness (committed screenshots)
+
+`scripts/qa/visual-acceptance.mjs` drives the Workbench into a named app state, then writes a PNG and a
+structured text snapshot to disk. It exists because visual acceptance evidence kept being produced and
+then lost — harnesses built under gitignored directories and never committed, and screenshots that lived
+only as inline images in a chat transcript with no file path. This one is committed, writes real files,
+records a checksum for every image, and can compare a fresh run against the committed baseline.
+
+```bash
+node scripts/qa/visual-acceptance.mjs --list
+node scripts/qa/visual-acceptance.mjs --all --out docs/qa/<pass-name>
+node scripts/qa/visual-acceptance.mjs --scenario single-findings --viewport desktop,mobile --out docs/qa/<pass-name>
+node scripts/qa/visual-acceptance.mjs --all --diff              # compare, write nothing
+node scripts/qa/visual-acceptance.mjs --update single-findings  # print the diff, then rewrite that one baseline
+```
+
+Flags: `--scenario <name>` (repeatable), `--all` (every drivable scenario), `--viewport` (comma-separated;
+`desktop` 1440x900@2x, `mobile` 375x812@3x, `mobile-tall` 375x1600@3x), `--out <dir>`, `--list`,
+`--diff`, `--update <scenario>`.
+
+**No dependency, no metered call.** It speaks Chrome DevTools Protocol over Node's global `WebSocket`
+(Node >= 22) to a headless Chrome already on the machine — nothing is installed, and `esbuild` remains
+the only dependency. It probes for a browser in a fixed order and prints which one it used; if none is
+found it stops and lists every path it tried. App states are reached by stubbing `fetch` with canned
+payloads, so no model call happens: the stub answers `/api/*` in-page, the static server treats any
+`/api/*` request as a hard abort (it means the stub failed to install), and CDP request interception
+denies every origin except `127.0.0.1` and the three asset hosts the page needs.
+
+Scenarios and their payloads live in `scripts/qa/scenarios.mjs`. Payloads are **built by the real
+product modules** (`reader-receipt.js`, `reader-paired.js`, `reader-checks.js`) rather than hand-written
+JSON, so a fixture cannot encode a response the server could never emit — receipt hashes are genuine and
+check-register quotes really resolve against the answer text. Only model-authored prose is canned. Every
+fixture is synthetic and marked as such: it demonstrates interface behavior and is never evidence.
+
+A scenario with `drivable: false` has payloads but no drive steps. The harness refuses to capture it
+rather than driving some other flow and filing the image under that name.
+
+**Fixtures stay live-built, and the snapshot baselines the payload as well as the render.** Building
+fixtures from the product modules is what makes them trustworthy, so freezing them was rejected. But it
+creates a coupling: a change that moves both the render and the payload would regenerate the fixture and
+diff clean, with the state silently moved. The snapshot closes that by recording the fully resolved
+payload in its own `## payload` section, so a changed receipt hash, a changed field, or a dropped key is
+a red diff even when the pixels are unchanged. What it still cannot see: the fixture route table is a
+hand-built stand-in for `api/read.js`, which this harness never executes, so a change to the endpoint's
+own request handling, validation, or error paths is invisible here; and the constants at the top of
+`scenarios.mjs` are hand-mirrored from that endpoint, so if `api/read.js` changes one of them, the
+fixture keeps the old value and nothing reports it. Edit both together.
+
+**Assets.** React and the webfonts are fetched once into `.qa-cache/` (gitignored) and served from
+there afterwards, so runs after the first are offline. Blocking them instead would render in fallback
+fonts at the wrong metrics — a misleading capture.
+
+**What the guards catch.** The harness fails loudly rather than emitting a wrong image:
+
+- it GETs the page before capturing anything, because a dead static server once made every capture
+  byte-identical (each image was the browser's connection-error page)
+- it binds and serves on `127.0.0.1`, never `localhost`, which resolved to `::1` against an IPv4-only
+  listener and produced connection refusals
+- it verifies a stubbed route was actually called, so a captured screen is really a Reader result
+- it waits for webfonts and for layout height to stop changing before framing, and every one of those
+  waits is bounded — an unbounded `document.fonts.ready` or `requestAnimationFrame` hung a run silently
+- it asserts the target is present, has a non-zero box, has its text rendered, **and** falls inside the
+  rectangle being photographed
+- it rejects any PNG under 5 KB, since a near-uniform image deflates to almost nothing
+- it compares checksums across a run and refuses to write a manifest if two supposedly distinct states
+  produced identical bytes
+
+**Captures are viewport-sized, with the state scrolled into view.** Full-page capture was tried and
+rejected on evidence: `captureBeyondViewport` wedges `Page.captureScreenshot` in `chrome-headless-shell`,
+and resizing the viewport to full content height instead produced a 1440x7446 image whose lower two
+thirds were never painted — the panel passed every DOM assertion and still did not appear in the pixels.
+
+Output goes to `docs/qa/<pass-name>/`, which is tracked. Alongside the images the harness writes
+`manifest.md` recording, per image: filename, SHA-256, byte size, viewport, what was framed, the state
+captured, the expected behavior, and `captured_against_sha`. That field is the commit the working tree
+sat on top of — the manifest says plainly that images were captured against that SHA **plus the
+uncommitted working tree**, not against their own commit, which did not exist yet when the shutter fired.
+Scratch, diagnostic, retry, and rejected captures are gitignored; only accepted images are tracked.
+
+### Regression diff
+
+Attesting to an image is not the same as noticing it changed. `--diff` recaptures every selected
+scenario and compares it against the committed baseline in two layers.
+
+**Layer 1 — the snapshot, `<scenario>--<viewport>.snapshot.txt`.** A committed line-oriented text file
+in three sections: `## environment` (the pinned settings), `## payload` (the resolved fixture payloads as
+canonical JSON, keys sorted), and `## render` (one line per element). It is the layer to trust, because
+it carries no rasterized pixels and is therefore portable across machines. It records only what was
+**visible inside the captured region** — decided from rendered geometry and computed style, not DOM
+presence, so an element that exists but is `display:none`, zero-opacity, or scrolled out of frame is not
+in the file. Each line records the tag, an ARIA or implicit role, the element's own text, and its state:
+`disabled`, `readonly`, `checked`, `expanded`, `selected`, input type, and value length. Text is
+canonicalized — whitespace collapsed, line endings normalized, ordering fixed by document order — and
+`href` is normalized to repo-relative so a changing dev-server port is not a diff.
+
+Volatile values are **normalized to a token, never deleted**: timestamps become `<TIMESTAMP>`, run and
+request ids `<UUID>` or `<ID>`, 64-hex digests `<HASH64>`, and absolute local paths `<ABSPATH>`. The line
+still exists, so a field disappearing is still a red diff. Excluded outright: `<script>`, `<style>`,
+`<link>`, `<meta>`, `<title>`, the harness's own animation-suppression node, and browser-injected
+markup. Product text is never dropped to buy stability — if a real sentence is unstable, that is a
+finding about the product, not something to normalize away.
+
+**Layer 2 — image bytes.** Byte comparison only, no pixel library. Reported as identical, changed, or
+missing. It is **gated** on the snapshot's recorded environment: if the baseline was captured under a
+different browser build, viewport, device-scale factor, or mobile flag — or recorded no environment at
+all — the image compare is skipped with a printed reason instead of being reported as a regression.
+
+> **Image baselines are machine-specific and browser-specific.** PNG bytes depend on the platform's font
+> rasterizer and the Chromium encoder, so the same page on another machine, another OS, or another
+> Chromium build encodes to different bytes while looking identical. Do not treat an image diff on a
+> different machine, or in CI, as a regression signal. The snapshots are the portable layer.
+
+**Both layers are kept.** Deterministic capture did land, so images alone would in fact catch the
+wrong-state defect class on this machine — but only on this machine, and only as "these bytes differ,"
+which names no cause. The snapshot survives a browser upgrade, reviews as text in a pull request, points
+at the line that moved, and covers payload shape that never reaches the pixels. Dropping it would trade
+a portable, readable signal for an unportable, opaque one.
+
+**A failed capture is a hard failure.** Capture and commit are separate phases: nothing is written until
+every selected capture has succeeded. If a capture errors, times out, fails a DOM assertion, or lands on
+a non-deterministic scroll offset, the run aborts, the baseline on disk is left untouched, and the exit
+code is non-zero. It can never report a clean diff by failing to look. `test/qa-visual-diff.test.mjs`
+holds that path down.
+
+**Updating a baseline costs a decision.** `--update` requires naming one scenario and prints the full
+diff before it writes. There is deliberately no `--update-all`, `--accept-all`, or `-u`; passing one is a
+hard error rather than an unknown flag. `--diff` and `--update` cannot be combined.
+
+**Determinism.** Captures are byte-reproducible on a fixed machine and browser build: three consecutive
+runs of `single-findings--desktop` produced identical SHA-256 and identical byte counts. The one
+remaining source of drift was `scrollIntoView({block:"center"})`, which landed within a few pixels of a
+different offset each run; it is replaced by an absolute integer scroll target computed after layout has
+settled, and the harness re-asserts the landed offset and fails rather than photographing a frame it did
+not ask for. Locale, timezone, color scheme, reduced motion, viewport, device-scale factor, format,
+capture region, URL, and font strategy are pinned and recorded in both the manifest and every snapshot.
+
+**Known limits.** The proof fixture covers **single mode only** — the two paired scenarios are
+`drivable: false`, so paired states have payload coverage but no captured render. And the engine is
+whatever headless Chromium is already on the machine: the harness probes the usual install locations and
+the Playwright and Puppeteer caches, prints the executable and version it selected, and fails with the
+list of paths it tried. It never installs a browser.
 
 ## Reader inference security (rate limits + spend ceiling)
 
