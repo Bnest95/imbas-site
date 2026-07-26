@@ -10,18 +10,20 @@ with what it does and does not establish.
 **The framing rule for everything in this file.** It shows what was found and what was removed. It
 never asserts a legal consequence as an Imbas claim.
 
-**Companion file.** The three surviving examples live in
-[IMBAS-PUBLIC-EXAMPLE-PACKET.md](IMBAS-PUBLIC-EXAMPLE-PACKET.md). That file is a publication input
-and its status is separate from this one. The selection rules cited by number throughout this
-ledger are adopted there, in Section 2.
+**Companion file.** The three examples that survived into the packet live in
+[IMBAS-PUBLIC-EXAMPLE-PACKET.md](IMBAS-PUBLIC-EXAMPLE-PACKET.md). One of the three survived
+ranking; the other two were demoted there and the disposition is recorded here at R6. That file is
+a publication input and its status is separate from this one. The selection rules cited by number
+throughout this ledger are adopted there, in Section 2.
 
 **Provenance labels.** Same two statuses the packet uses, and the distinction is load-bearing.
 **VERIFIED IN THIS PASS** means this pass read the source and reports the date. That set is
-enumerated in the packet, Section 1.1, and it covers repository source only. **REPORTED BY THE
-SESSION** means a factory session states it and this pass did not verify it. Every statute, every
-model identity, every timestamp, every run identifier, every hash, and every conditions
-determination below is REPORTED. Where a session reports that it verified something against a
-primary source, that verification is itself reported here.
+enumerated in the packet, Sections 1.1 and 1.3. **REPORTED BY THE SESSION** means a factory
+session states it and this pass did not verify it. Every model identity, every timestamp, every
+run identifier, every hash, and every conditions determination below is REPORTED, and so is every
+statute except the one carried at R3, where the codified text was retrieved in this pass. Where a
+session reports that it verified something against a primary source, that verification is itself
+reported here.
 
 **Preserved material is reproduced as supplied.** Not cleaned up, not normalized, not reconciled,
 not strengthened. Contradictions inside the material stay visible. Prose this pass wrote is marked
@@ -34,7 +36,7 @@ Recorded 2026-07-26, from two factory sessions run that day.
 
 ---
 
-## Section 1 — Rejected candidates
+## Section 1 — Rejected candidates and demotions
 
 ### R1 — Illinois home alone. The correction rested on a bill that never became law
 
@@ -126,9 +128,14 @@ is or when any phase-out ends.
 **Where it was caught.** Inside the proposed flagship's own delta table.
 
 The session reports the targeted side of delta 2 in that capture quoted a **7-day** employer notice
-period, and that current codified text at MCA § 39-2-911(3) says **14 days**, retrieved 2026-07-26
-from the Montana Code Annotated 2025 edition. It reports the recapture returned "(The current
-statute provides a 14-day period.)" and is correct. All REPORTED.
+period. REPORTED.
+
+Current codified text at MCA § 39-2-911(3) reads **14 days**. **VERIFIED IN THIS PASS**, retrieved
+2026-07-26 from the Montana Code Annotated 2025 edition, same retrieval and same source as the
+packet's Section 8. No 7-day period appears anywhere in the section.
+
+The session reports the recapture returned "(The current statute provides a 14-day period.)"
+REPORTED — this pass verified the codified figure, not the recapture's text.
 
 The barred row, preserved as supplied, because this entry is the record of what was removed:
 
@@ -148,8 +155,9 @@ attached.
 caught it, not luck, and it caught it before publication rather than after. That is the strongest
 single thing in this ledger and it should be said whenever this material is described.
 
-**No legal consequence is asserted here.** This entry records that two figures disagree and which
-one the session reports as current.
+**No legal consequence is asserted here.** This entry records that two figures disagree, and it
+records what the current codified text reads, verified against the section. It does not state what
+any notice period requires of any employer or entitles any employee to.
 
 ---
 
@@ -183,6 +191,49 @@ the difference after the fact.
 *Editorial.* The reformatting was cosmetic and the session says so. That is not the point. The point
 is that it was undetectable from the artifact until someone checked a delimiter, and a capture whose
 fidelity depends on the capturer's memory is not evidence.
+
+---
+
+### R6 — Two of the packet's three examples were demoted by the packet's own rule 2.1
+
+**This is a demotion, not a rejection.** R1 through R5 record candidates that never reached the
+packet. These two reached it, were written up in full Section P anatomy, and were ranked second
+and third. They were then unranked. The entry sits here because the disposition mechanism is the
+same one, applied later.
+
+**Unit: examples.** Three examples entered primary-source verification. One survived ranking.
+
+| Example | Propositions its takeaway needs | Verified | Disposition |
+|---|---|---|---|
+| Montana, at-will firing recapture | 3 | 3 | Ranked. Flagship. |
+| Car insurance | 3 | 1 | **PROVISIONAL AND UNRANKED** |
+| Rent | 2 | 0 | **PROVISIONAL AND UNRANKED** |
+
+**Car insurance.** The FCRA correction right verifies. The advance-notice right and the
+state-complaint right have no controlling primary source to check against at all: insurance
+regulation is state law, and the capture named no state. Nothing was found to be false. The
+propositions were found to be uncheckable on the capture as it stands.
+
+**Rent.** Neither proposition can be verified. The mid-lease point turns on the asker's own lease,
+which was never captured — the model's second answer says so itself. The retaliation point is
+state law behind a redaction this example has to keep. The route back for both is recorded in the
+packet, Sections 6.4 and 7.4. Neither is repairable from the existing capture; both need a new
+capture.
+
+**Second and independent ground.** Section P requires model identity prominently, and the packet's
+Section 9.1 resolves model identity as not recoverable for these runs. Either ground alone unranks
+them.
+
+*Editorial, and it is the reason this entry was written rather than left implicit in the packet.*
+Every other entry in this section records the rule cutting a candidate. This one records the rule
+cutting the operator's own finished work — material Imbas produced, wrote up, and had already
+ranked. That is a harder test of a selection rule than rejecting an incoming candidate, because
+there is no one else to disagree with. A rule that only ever removes other people's material is
+not doing much. Two of three is the honest yield of this material, and it should be reported as
+the yield rather than repaired by lowering the bar.
+
+**No legal consequence is asserted here.** This entry records that certain propositions could not
+be checked against a controlling source. It does not state that any of them is wrong.
 
 ---
 
@@ -632,14 +683,18 @@ publication pass to disclose it.
    toward their traps rather than only on the ones that did not. Setup requirements, not research
    findings.
 6. One Reader call from round 1 remains unspent and is held.
+7. The two examples demoted at R6. Neither is repairable from its existing capture, so each needs
+   a new capture to be restorable. Whether either is worth recapturing is undecided.
 
 ---
 
 ## Section 8 — What this ledger does not do
 
 It does not assert a legal consequence as an Imbas claim. Every statute, regulation, bill status,
-council action, and effective date above is reported by a factory session, and a reader who needs the
-proposition must retrieve the controlling source. It does not promote anything into an adopted
+council action, and effective date above is reported by a factory session — except the codified
+text at R3, retrieved in this pass and labeled there — and a reader who needs the proposition must
+retrieve the controlling source. Reading a codified figure off the source is not the same as
+asserting what it requires of anyone, and this ledger does the first and not the second. It does not promote anything into an adopted
 ruling. It does not enter anything into the Imbas record: every Reader run described here carries
 `unvalidated: true` and the standing boundary, "Reader inspections are discovery, not evidence.
 Nothing enters the Imbas record without protocol capture and a recorded human review."
