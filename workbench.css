@@ -1114,6 +1114,23 @@
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.34) !important;
 }
 
+/* A read-only field keeps its content on screen as context but must stop reading as the
+   live one. It drops the two editable affordances above — the ember border and the inset
+   shadow — and takes the passive border every settled surface here uses. !important is
+   load-bearing: .wb-input.is-paste-received animates border-color with `forwards`, and
+   that animated value persists onto the field after it goes read-only. */
+.wb-input[readonly],
+.wb-input[readonly][style] {
+  border-color: var(--wb-border-passive) !important;
+  box-shadow: none !important;
+  color: rgba(245, 235, 221, 0.62) !important;
+  cursor: default;
+}
+
+.wb-input[readonly]:focus-visible {
+  border-color: var(--wb-border-panel) !important;
+}
+
 /* Segmented instrument control */
 .wb-mode-toggle {
   gap: 0;
