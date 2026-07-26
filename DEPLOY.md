@@ -75,6 +75,12 @@ Flags: `--scenario <name>` (repeatable), `--all` (every drivable scenario), `--v
 `desktop` 1440x900@2x, `mobile` 375x812@3x, `mobile-tall` 375x1600@3x), `--out <dir>`, `--list`,
 `--diff`, `--update <scenario>`.
 
+**Capturing requires `--out`, and it may not point at the baselines.** `--out` used to default to
+`docs/qa/visual-acceptance-harness/`, the committed baseline directory, so a bare `--all` rewrote every
+accepted baseline without saying so. Capture mode now refuses to run without a destination and refuses a
+destination inside that directory; both fail on the command line, before a browser starts. Baselines move
+only under `--update <scenario>`. See **Baseline write safety** below.
+
 **No dependency, no metered call.** It speaks Chrome DevTools Protocol over Node's global `WebSocket`
 (Node >= 22) to a headless Chrome already on the machine — nothing is installed, and `esbuild` remains
 the only dependency. It probes for a browser in a fixed order and prints which one it used; if none is
@@ -182,6 +188,34 @@ holds that path down.
 **Updating a baseline costs a decision.** `--update` requires naming one scenario and prints the full
 diff before it writes. There is deliberately no `--update-all`, `--accept-all`, or `-u`; passing one is a
 hard error rather than an unknown flag. `--diff` and `--update` cannot be combined.
+
+### Baseline write safety
+
+That guarded interface was for a while decorative, because `--out` defaulted to the committed baseline
+directory. `--all` with no destination therefore rewrote every accepted baseline silently, and a `--diff`
+run immediately afterwards compared a fresh capture against a baseline that same run had just written and
+reported no regressions. The evidence survived because a person noticed, restored the baselines,
+reproduced them from a clean tree, and bisected the real pixel change to one approved copy string. The
+tool must not depend on someone noticing.
+
+Two layers now stand between a run and the baselines, and the second does not trust the first:
+
+- **Destination.** Capture mode demands `--out` and rejects any path resolving inside the baseline
+  directory. This resolves before the browser launches, so a misaimed run costs a command line rather
+  than a full capture.
+- **The write itself.** Every byte the harness puts on disk goes through one function, `writeArtifact`.
+  It checks the *resolved path*, not a flag: a write landing inside the baseline directory must carry a
+  grant naming the scenario that owns that exact filename. A grant is constructed in exactly one place,
+  update mode, from names a person typed, and it refuses unknown and `drivable: false` scenarios. Every
+  other mode reaches the guard empty-handed. Path traversal does not help, because the check runs after
+  resolution.
+
+The path check is the load-bearing half. A flag check only covers the code paths someone remembered to
+check, and the defect was precisely a code path nobody remembered. `test/qa-baseline-write-safety.test.mjs`
+drives the real CLI — not just the helpers, since the defect lived in the entry point's own argument
+handling — and asserts a content hash for every committed baseline before and after each run. It also
+asserts the structural property directly: exactly one raw write call exists in the module, inside the
+guard.
 
 **Determinism.** Captures are byte-reproducible on a fixed machine and browser build: three consecutive
 runs of `single-findings--desktop` produced identical SHA-256 and identical byte counts. The one
