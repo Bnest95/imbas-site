@@ -153,6 +153,46 @@ export const LOOP_STATE_COPY = {
   },
 };
 
+// ── What the reveal may claim under unmatched conditions (founder ruling 2026-07-25)
+// conditions_matched != true means the two answers were NOT run like-for-like: a
+// different model, a disclosed edit, or a setup the person wasn't sure about. The
+// view may still report the difference it observed, but it may not name the Volunteer
+// Gap or assert volunteering behavior. The warning alone was never enough — it sat
+// between a headline asserting the behavior and a tag naming the construct, so the
+// reveal asserted above and below precisely what the notice was trying to retract.
+export const LOOP_UNMATCHED_HEADLINE = "The targeted answer included information the open answer did not.";
+
+// The states whose headline asserts the construct, so the headline is replaced when
+// the conditions aren't matched. GAP_REVEALED says the model didn't volunteer and
+// names the Volunteer Gap outright. NOT_CLEAR's "the gap isn't clean" presupposes a
+// gap that unmatched conditions cannot establish.
+//
+// STILL_MISSING is deliberately absent, and NOT because it is exempt from the rule.
+// It fires only at gap_estimate 0, where the analysis returns no delta items: it
+// asserts no gap and names no construct, so there is nothing to retract. The
+// replacement headline claims a difference that run did not find, and substituting
+// it would print "the targeted answer included information the open answer did not"
+// directly above this panel's own "No material gap" line — the same headline-contra-
+// body defect this gate exists to remove. Do not extend the substitution uniformly.
+export const LOOP_CONSTRUCT_STATES = [LOOP_STATE_GAP_REVEALED, LOOP_STATE_NOT_CLEAR];
+
+// Resolve the reveal copy for one state under one reading of the conditions. The
+// caller determines `unmatched` ONCE — pairConditionsUnmatched, the same value that
+// fires the badge and the warning — and passes it in, so the headline, the tag, the
+// badge, the warning and the copied Inspection Card cannot disagree about one run.
+// The tag names the construct in every state that carries one, so no tag survives an
+// unmatched run whatever headline shows. Panel order, cta and chip are untouched:
+// the correction chips stay available because a chip is the person's own declared
+// reading of their run, never a claim the view is making.
+export function loopRevealCopy(state, unmatched) {
+  const copy = LOOP_STATE_COPY[state] || {};
+  if (!unmatched) return copy;
+  const next = { ...copy };
+  delete next.tag;
+  if (LOOP_CONSTRUCT_STATES.includes(state)) next.headline = LOOP_UNMATCHED_HEADLINE;
+  return next;
+}
+
 // ── Quick vs cleaner check (R1, item 5) ───────────────────────────────────────
 // The person declares how they ran the second answer. Same chat is faster but the
 // first answer is still in context; a fresh chat is a cleaner comparison. The
@@ -184,7 +224,11 @@ export function buildCleanerBundle({ question } = {}) {
 // (docs/REVIEW-GRAPH-SCHEMA.md §1) carries. Nothing here gates the loop: the reveal
 // always completes. Disclosure marks how clean the capture was; it never decides
 // whether the conditions lined up, and it can't suppress the warning when they
-// didn't (the conditions_matched != true rule renders on every derived surface).
+// didn't. In the Workbench paired view one determination — pairConditionsUnmatched,
+// read once at the render site — drives the badge, the warning, the headline, the
+// construct tag and the copied Inspection Card together, via loopRevealCopy. The
+// share/permalink view (inspection.js renderPaired) does NOT carry it yet; that gap
+// is logged separately, so this rule is not yet true of every derived surface.
 //
 // Pure JS, like the rest of this module: no DOM, no storage, no model call. The
 // client (workbench-app.jsx) collects the three inputs and calls buildPairCapture;

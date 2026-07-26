@@ -19,6 +19,7 @@ import {
   LOOP_STATE_NOT_CLEAR,
   LOOP_STATES,
   LOOP_STATE_COPY,
+  loopRevealCopy,
   LOOP_PANEL_FIRST_LABEL,
   LOOP_PANEL_SECOND_LABEL,
   LOOP_DIDNT_COME_UP,
@@ -3272,8 +3273,13 @@ const readerCreditLine = (shareUrl) =>
 // behavioral verbs only (the state copy already says "didn't volunteer / didn't
 // surface", never measured/proven), the boundary sentence verbatim, and the run's truth
 // small-print in [brackets]. Pure string builder, mirroring formatReaderResultCopy.
-function formatInspectionCard({ state, firstText, secondText, smallPrint }) {
-  const c = LOOP_STATE_COPY[state] || {};
+//
+// It takes the ALREADY-RESOLVED copy object, never a bare state: this artifact leaves
+// the page without the unmatched badge or warning attached, so it is the one surface
+// where an ungated construct tag travels with nothing to qualify it. Resolving here
+// would be a second read of conditions_matched and the two could drift apart again.
+function formatInspectionCard({ copy, firstText, secondText, smallPrint }) {
+  const c = copy || {};
   const first = { label: LOOP_PANEL_FIRST_LABEL, text: (firstText || "").trim() };
   const second = { label: LOOP_PANEL_SECOND_LABEL, text: (secondText || "").trim() };
   const ordered = c.swapPanels ? [second, first] : [first, second];
@@ -3730,7 +3736,7 @@ function ReaderReceiptActions({ receipt, formatter = formatReceiptText, filePref
 // artifact. A successful export emits the card_exported event (ids + enums only, via the
 // content-minimal emitter) — the funnel already reserves a row for it. Client-only:
 // clipboard + a Blob download, no network, no persistence.
-function InspectionCardAction({ state, firstText, secondText, smallPrint, run, check }) {
+function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, run, check }) {
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
@@ -3743,7 +3749,7 @@ function InspectionCardAction({ state, firstText, secondText, smallPrint, run, c
     setFailMsg(msg);
     setTimeout(() => setFailMsg(""), 2200);
   };
-  const cardText = () => formatInspectionCard({ state, firstText, secondText, smallPrint });
+  const cardText = () => formatInspectionCard({ copy, firstText, secondText, smallPrint });
   const noteExport = () => emitReaderEvent(READER_EVENTS.CARD_EXPORTED, { run, state, check });
   const copyCard = async () => {
     try {
@@ -4021,7 +4027,12 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
     setUserState(next);
   };
 
-  const copy = LOOP_STATE_COPY[userState] || {};
+  // The reveal copy is resolved from the state AND the one `unmatched` determination
+  // above, so the headline and the construct tag answer to the same flag that fires
+  // the badge and the warning. Under unmatched conditions the construct-asserting
+  // headlines are replaced with the descriptive one and no tag renders — the notice
+  // no longer sits between a headline and a tag that assert what it retracts.
+  const copy = loopRevealCopy(userState, unmatched);
   const primary = items[0] || {};
   // The two panels are the evidence (the two answers' relevant spans); the state is
   // the reading. A missing span on either side reads as "Didn't come up." — which is
@@ -4157,6 +4168,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
 
       <InspectionCardAction
         state={userState}
+        copy={copy}
         firstText={firstText}
         secondText={secondText}
         smallPrint={smallPrint}
