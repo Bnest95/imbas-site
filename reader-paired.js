@@ -474,6 +474,9 @@ export const CHIP_UI = {
     second_answer_placeholder: "Paste what your AI came back with…",
     copy_label: "Copy the instruction",
     copy_done: "Copied — now paste it into your AI",
+    // The way back out of the second paste box. Picking a follow-up opens a second answer
+    // field, so the first one goes read-only; this returns the lane to a single live box.
+    edit_first_answer: "Edit the first answer",
     compare_label: "Compare the two answers",
     comparing_label: "Comparing…",
     first_answer_missing: "Paste the answer or draft you started with.",

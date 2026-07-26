@@ -66,9 +66,13 @@ test("buildEvent rejects an unknown name and stamps a known one", () => {
 });
 
 test("every event name is covered by the exported list", () => {
-  assert.equal(READER_EVENT_NAMES.length, 20);
+  assert.equal(READER_EVENT_NAMES.length, 21);
   assert.ok(READER_EVENT_NAMES.includes("target_question_copied"));
   assert.ok(READER_EVENT_NAMES.includes("loop_completed"));
+  // Stage spine (reader-stage.js). stage_changed was renamed: it recorded only clicked
+  // forward advances, so the result and degraded stages never appeared in the funnel.
+  assert.ok(READER_EVENT_NAMES.includes("stage_entered"));
+  assert.ok(!READER_EVENT_NAMES.includes("stage_changed"));
   // User-chip lane events (design: item 3 telemetry, user-chip follow-up).
   assert.ok(READER_EVENT_NAMES.includes("chip_instruction_copied"));
   assert.ok(READER_EVENT_NAMES.includes("chip_pair_completed"));
@@ -95,6 +99,31 @@ test("buildFunnel north star is null with no baseline, a ratio once questions ar
   assert.equal(f.counts.loop_completed, 1);
   assert.equal(f.loop_completion_rate, 0.5);
   assert.deepEqual(f.completed_by_state, { gap_revealed: 1 });
+});
+
+test("buildFunnel exposes the four stage milestones, not one lumped stage count", () => {
+  const enter = (stage, occurrence) =>
+    buildEvent(READER_EVENTS.STAGE_ENTERED, { stage, cause: "advance", occurrence });
+  const f = buildFunnel([
+    // Run 1 reached the delta. Run 2 got a read with no follow-up offer and stopped.
+    enter("compose", 1),
+    enter("inspecting", 1),
+    enter("followup", 1),
+    enter("compare", 1),
+    enter("delta", 1),
+    enter("compose", 2),
+    enter("inspecting", 2),
+    enter("result", 2),
+  ]);
+  assert.deepEqual(f.stage_funnel, {
+    inspection_started: 2,
+    result_delivered: 2, // one via followup, one via result — never both for one run
+    follow_up_opened: 1,
+    comparison_completed: 1,
+  });
+  assert.equal(f.stage_entries.result, 1, "the degraded run is visible on its own stage");
+  assert.equal(f.stage_entries.chips, 0, "every stage is present, including the unreached");
+  assert.equal(f.counts.stage_entered, 8, "the lumped count still exists, and is not the funnel");
 });
 
 test("buildFunnel ignores malformed rows", () => {

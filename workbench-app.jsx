@@ -48,6 +48,25 @@ import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-cli
 import { CHECK_UI } from "./reader-checks.js";
 import { buildReviewRecord, reviewRecordFilename, REVIEW_RECORD_UI } from "./reader-review-record.js";
 import { selectInspectionMeaning } from "./reader-explain-panel.js";
+import {
+  LANE_INSPECT,
+  LANE_CHIPS,
+  STAGE_COMPOSE,
+  STAGE_COMPARE,
+  STAGE_CHIPS,
+  CAUSE_ADVANCE,
+  CAUSE_ASYNC,
+  CAUSE_DEGRADED,
+  CAUSE_INIT,
+  CAUSE_POP,
+  deriveStage,
+  stageView,
+  stageEntry,
+  startsNewOccurrence,
+  parseArrival,
+  normalizeArrivalStage,
+  stageHash,
+} from "./reader-stage.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -1527,7 +1546,9 @@ function CollapsedAnswerRow({ text, terms, litTerms, showHighlights = false, def
   );
 }
 
-function PasteField({ label, value, onChange, error, placeholder, rows = 9, style, minAckLength = 1 }) {
+// `readOnly` keeps a submitted answer VISIBLE as context without leaving it an active
+// competing input once a later stage owns the keyboard (reader-stage.js holds the rule).
+function PasteField({ label, value, onChange, error, placeholder, rows = 9, style, minAckLength = 1, readOnly = false, inputRef = null }) {
   const [received, setReceived] = useState(false);
   const [ackWords, setAckWords] = useState(null);
   const handleChange = (e) => {
@@ -1545,6 +1566,7 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
   return (
     <Field label={label}>
       <textarea
+        ref={inputRef}
         rows={rows}
         value={value}
         onChange={handleChange}
@@ -1552,6 +1574,8 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
         className={`${INPUT_CLS}${received ? " is-paste-received" : ""}`}
         style={style || inputStyle}
         aria-invalid={error ? true : undefined}
+        readOnly={readOnly || undefined}
+        aria-readonly={readOnly || undefined}
       />
       {ackWords && !error ? (
         <div className="wb-paste-ack">{ackWords} words received</div>
@@ -1644,31 +1668,6 @@ function emitReaderEvent(name, props = {}) {
 // content, and sanitizeEventProps caps it at 64 chars regardless.
 function readerRunId(result) {
   return result?.receipt?.open_run?.provenance?.request_id || "";
-}
-
-// First-use signal for the clarity strip (Reader v2 R1 item 6): has this browser ever
-// completed a Reader run? A run_completed event is the earliest "you've used The Reader"
-// marker — the instant demo emits only run_started {mode:"demo"}, so watching the demo
-// never flips this off. Browser-local, content-free (a name check on the same
-// allowlisted log the emitter already writes).
-function hasCompletedReaderRun() {
-  return readReaderEvents().some((e) => e && e.name === READER_EVENTS.RUN_COMPLETED);
-}
-
-// The clarity strip is dismissible; the choice persists as a tiny UI flag (a boolean,
-// never user content) so a first-timer who waved it off does not see it again.
-const READER_CLARITY_DISMISS_KEY = "imbas_reader_clarity_dismissed";
-function isClarityDismissed() {
-  try {
-    return localStorage.getItem(READER_CLARITY_DISMISS_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-function dismissClarityStripFlag() {
-  try {
-    localStorage.setItem(READER_CLARITY_DISMISS_KEY, "1");
-  } catch {}
 }
 
 function EmailGate({ onUnlock }) {
@@ -4211,7 +4210,7 @@ function pairedRunErrorCopy(err) {
 // double-submit guard; the server's idempotency lookup is the other half), then the
 // delta view. Failure isolation: a failed second read only sets a local error and
 // leaves the first read and its receipt untouched, so Act 2 can be retried.
-function PairedTest({ openReceipt, run, check, onTryCleaner }) {
+function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inputRef }) {
   const [targeted, setTargeted] = useState("");
   const [busy, setBusy] = useState(false);
   const [paired, setPaired] = useState(null);
@@ -4264,6 +4263,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
     setSameModel(null);
     setModelVersion("");
     setEdits(null);
+    if (onPairedChange) onPairedChange(false);
   };
 
   const submit = async () => {
@@ -4279,6 +4279,10 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
     try {
       const data = await runPairedReader(openReceipt, targeted);
       setPaired(data);
+      // The delta replaces this paste box, so the stage moves. It lands async but the
+      // person's "Compare the two answers" click is what initiated it — one action, one
+      // stage change, one event.
+      if (onPairedChange) onPairedChange(true);
     } catch (err) {
       const info = (err && err.info) || {};
       if (err && err.status === 400 && info.error === "too_long") {
@@ -4312,6 +4316,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner }) {
         error={fieldError}
         placeholder="Paste what your AI came back with…"
         minAckLength={1}
+        inputRef={inputRef}
       />
 
       <div className="wb-act2__capture" role="group" aria-label="How you ran the two answers">
@@ -4617,7 +4622,7 @@ function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatche
   );
 }
 
-function Act2Offer({ result }) {
+function Act2Offer({ result, open = false, onOpen, onPairedChange, pairedInputRef }) {
   const act2 = result?.act2;
   const run = result?.receipt?.open_run?.provenance?.request_id || "";
   const question = result?.receipt?.open_run?.question || "";
@@ -4649,6 +4654,9 @@ function Act2Offer({ result }) {
       setCopied(true);
       setCopyFail("");
       emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check });
+      // Door 1 of 2 into the compare stage. Copying is the common path, so it opens the
+      // paste box directly and the person comes back to a box already waiting.
+      if (onOpen) onOpen();
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopyFail("Could not copy");
@@ -4693,16 +4701,33 @@ function Act2Offer({ result }) {
       <pre className="wb-act2__prompt" aria-label="What to run on your AI">{promptText}</pre>
       <p className="wb-act2__prompt-note">Generated from this Reader run. Any question shapes an answer — this one included.</p>
 
+      {/* Two doors into the compare stage, side by side and the same size. Copying is
+          door 1. Door 2 exists because reading the question and retyping it into your own
+          AI is a normal path, and gating the paste box on the clipboard would dead-end it
+          one step from the payoff. It also carries anyone whose clipboard call failed. */}
       <div className="wb-reader-result__copy wb-act2__actions">
         <Btn kind="primary" className={copied ? "is-copied" : ""} onClick={copyPrompt}>
           {copied ? "Copied — now ask your AI" : "Ask your AI →"}
         </Btn>
+        {act2.available && !open ? (
+          <Btn kind="ghost" onClick={onOpen}>Paste what came back</Btn>
+        ) : null}
         {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
       </div>
       <p className="wb-act2__sub">Copy this question. Drop it in your chat. Paste what comes back.</p>
 
       {act2.available ? (
-        <PairedTest key={check} openReceipt={result.receipt} run={run} check={check} onTryCleaner={() => setCheck(CHECK_CLEANER)} />
+        open ? (
+          <PairedTest
+            key={check}
+            openReceipt={result.receipt}
+            run={run}
+            check={check}
+            onTryCleaner={() => setCheck(CHECK_CLEANER)}
+            onPairedChange={onPairedChange}
+            inputRef={pairedInputRef}
+          />
+        ) : null
       ) : (
         <p className="wb-act2__degraded" role="status">{ACT2_CAPACITY_COPY}</p>
       )}
@@ -5000,13 +5025,23 @@ function ChipLane() {
       {head}
       <p className="wb-act2__offer">{CHIP_UI.value_statement.sub}</p>
 
+      {/* Picking a follow-up opens the second paste box below, so this one stops accepting
+          input and stays as context. One live answer field at a time, in this lane too. */}
       <PasteField
         label={CHIP_UI.compose.first_answer_label}
         value={firstAnswer}
         onChange={(v) => { setFirstAnswer(v); clearErrors(); }}
         placeholder={CHIP_UI.compose.first_answer_placeholder}
         minAckLength={1}
+        readOnly={!!entry}
       />
+      {entry ? (
+        <div className="wb-chip__edit-first">
+          <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={() => setChipId("")}>
+            {`← ${CHIP_UI.compose.edit_first_answer}`}
+          </button>
+        </div>
+      ) : null}
 
       <div className="wb-act2__capture wb-chip__choose" role="group" aria-label="Pick a follow-up">
         <p className="wb-act2__capture-heading">{CHIP_UI.row_header}</p>
@@ -5194,12 +5229,25 @@ function ReaderCaseEvidence({ sel }) {
 // Hard rule: a question NEVER goes into the answer paste field. "Copy question" puts it
 // on the clipboard for the reader to ask their own AI; "Test another question" resets
 // the run (clearing the answer) and, in guided mode, switches to the suggested case.
+// Loop close. Two shapes, because the two modes close differently.
+//
+// GUIDED: suggest the next curated case and hand over its open prompt to copy.
+// OWN: suggest nothing. `mode` was accepted here and never read, and `sel` is seeded
+// CURATED[0] for every visitor regardless of mode, so BOTH the `suggestion` lookup and
+// the `sel?.openPrompt` fallback resolved to a curated question inside own-mode
+// results — that is how "How does the FDA ensure drug safety?" reached people who had
+// pasted their own answer. Own mode now reads no CURATED entry on either path.
+//
+// Dropping the question must not drop the restart: this sits exactly where §N's
+// north-star (cross-user loop completion) is measured, so own mode keeps the reset
+// action and loses only the borrowed content.
 function SecondRunLoop({ mode, sel, onAnother }) {
   const [copied, setCopied] = useState(false);
   const [copyFail, setCopyFail] = useState("");
-  const suggestion = CURATED.find((c) => c.ready && c.id !== sel?.id) || null;
-  const question = suggestion?.openPrompt || sel?.openPrompt || "";
-  if (!question) return null;
+  const guided = mode === "guided";
+  const suggestion = guided ? CURATED.find((c) => c.ready && c.id !== sel?.id) || null : null;
+  const question = guided ? suggestion?.openPrompt || sel?.openPrompt || "" : "";
+  if (guided && !question) return null;
   const copyQuestion = async () => {
     try {
       await navigator.clipboard.writeText(question);
@@ -5216,18 +5264,28 @@ function SecondRunLoop({ mode, sel, onAnother }) {
       <div className="wb-reader-result__head">
         <h2 id="wb-loop-heading" className="wb-reader-result__title">TEST ANOTHER QUESTION</h2>
       </div>
-      <p className="wb-loop__lead">Run the same check on a fresh question. Copy it, ask your AI, paste what it says back.</p>
-      <ol className="wb-guided-steps">
-        <li><span className="wb-guided-steps__n" aria-hidden="true">1</span> Copy the question</li>
-        <li><span className="wb-guided-steps__n" aria-hidden="true">2</span> Ask your AI</li>
-        <li><span className="wb-guided-steps__n" aria-hidden="true">3</span> Paste the answer back</li>
-      </ol>
-      <PromptCard text={question} />
+      {guided ? (
+        <>
+          <p className="wb-loop__lead">Run the same check on a fresh question. Copy it, ask your AI, paste what it says back.</p>
+          <ol className="wb-guided-steps">
+            <li><span className="wb-guided-steps__n" aria-hidden="true">1</span> Copy the question</li>
+            <li><span className="wb-guided-steps__n" aria-hidden="true">2</span> Ask your AI</li>
+            <li><span className="wb-guided-steps__n" aria-hidden="true">3</span> Paste the answer back</li>
+          </ol>
+          <PromptCard text={question} />
+        </>
+      ) : (
+        <p className="wb-loop__lead">Run the same check on another answer.</p>
+      )}
       <div className="wb-loop__actions">
-        <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
-          {copied ? "Copied" : "Copy question"}
-        </Btn>
-        {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+        {guided ? (
+          <>
+            <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
+              {copied ? "Copied" : "Copy question"}
+            </Btn>
+            {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+          </>
+        ) : null}
         <Btn kind="primary" small onClick={() => onAnother(suggestion)}>Test another question</Btn>
       </div>
     </section>
@@ -5261,22 +5319,6 @@ const READER_CLARITY_STEPS = [
   "Paste its reply back and watch what surfaces.",
 ];
 
-function ReaderClarityStrip({ onDismiss }) {
-  return (
-    <section className="wb-clarity" aria-label="How the Confirmation Loop works">
-      <button type="button" className="wb-clarity__dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
-      <span className="wb-clarity__eyebrow">The Confirmation Loop</span>
-      <ol className="wb-clarity__steps">
-        {READER_CLARITY_STEPS.map((text, i) => (
-          <li key={i} className="wb-clarity__step">
-            <span className="wb-clarity__num" aria-hidden="true">{i + 1}</span>
-            <span className="wb-clarity__text">{text}</span>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
-}
 
 // ?funnel=1 diagnostic: THIS browser's own event log reduced to the north-star
 // funnel. Read-only, one-shot read on mount. Every number is a count of
@@ -5437,8 +5479,13 @@ function ReaderWorkbench() {
   // First-use clarity strip (item 6): show the three-move loop to a visitor whose own
   // browser log holds no completed run. Both flags read once from browser-local state —
   // no server read, no user content — and the dismissal persists across visits.
-  const [firstTime] = useState(() => !hasCompletedReaderRun());
-  const [clarityDismissed, setClarityDismissed] = useState(() => isClarityDismissed());
+  // Stage spine (reader-stage.js). `lane` reads the arrival intent once — ?start=chips
+  // is the permanent chip door (§D). `followUpOpen` and `hasDelta` are the two facts
+  // the render tree cannot derive on its own; every other stage input is already here.
+  const [lane, setLane] = useState(() => parseArrival(window.location).lane);
+  const [chipMounted, setChipMounted] = useState(() => parseArrival(window.location).lane === LANE_CHIPS);
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [hasDelta, setHasDelta] = useState(false);
   const stageRef = useRef(null);
   const resultRef = useRef(null);
   const scrollReady = useRef(false);
@@ -5447,6 +5494,25 @@ function ReaderWorkbench() {
   // synthetic marker) of the result already counted as viewed. Reset when the result
   // clears so the next real result is counted once.
   const viewedRunRef = useRef(null);
+  // Previous stage + why it moved. The cause defaults to CAUSE_POP so an unattributed
+  // stage change can never be mistaken for a forward advance; only code paths that ARE
+  // the person's primary action set CAUSE_ADVANCE, and the effect clears it each time.
+  // enteredRef is the stages already recorded in the CURRENT run occurrence, which keeps
+  // a stage entry to one record however many times the person walks back over it within
+  // that run. occurrenceRef counts which run this is within the page's life; both reset
+  // together at the occurrence boundary so a second inspection is a second full funnel.
+  const prevStageRef = useRef(null);
+  const causeRef = useRef(CAUSE_INIT);
+  const enteredRef = useRef([]);
+  const occurrenceRef = useRef(1);
+  const composeAnswerRef = useRef(null);
+  const pairedAnswerRef = useRef(null);
+  const resultHeadingRef = useRef(null);
+  // Both of these skip their own first run. The transition effect above already
+  // consumed prevStageRef by the time these fire, so they cannot reuse it to detect
+  // mount.
+  const hashSyncedRef = useRef(false);
+  const focusStageRef = useRef(null);
 
   const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
   const hasAnswer = !!answer.trim();
@@ -5461,6 +5527,134 @@ function ReaderWorkbench() {
         : ownQuestionPrompt
           ? "needQuestion"
           : "idle";
+
+  // The stage is DERIVED, never stored — a stage is a view of the data, not a fact of
+  // its own, so it cannot drift out of sync with what actually exists. `view` is the
+  // visibility contract: at most one live answer-entry input, and which one.
+  const stage = deriveStage({
+    lane,
+    busy,
+    hasResult: !!readerResult,
+    hasAct2: !!(readerResult && readerResult.act2),
+    followUpOpen,
+    hasDelta,
+  });
+  const view = stageView(stage);
+  const composeLive = view.answerEntry === "compose-answer";
+
+  // Mark the next stage change as the person's own forward move. Called from the
+  // primary action itself, immediately before the state setter that moves the stage.
+  const advance = () => {
+    causeRef.current = CAUSE_ADVANCE;
+  };
+
+  // One place records that a stage was reached. It fires on the first paint too: the
+  // stage a person lands on is a stage they entered, and leaving it unrecorded is what
+  // left ?start=chips visitors with a first event that advanced out of nowhere.
+  //
+  // The cause rides along and is never the gate. Back and Forward reach here as
+  // CAUSE_POP and record a real entry that countsAsProgress excludes; whichever stage a
+  // settling run lands on reaches here as CAUSE_ASYNC and counts, because reaching a
+  // read is the middle of the funnel whether or not anyone clicked for it.
+  //
+  // Landing back on compose ends the occurrence and starts the next one, so the counters
+  // clear here rather than persisting for the page's life. Without that, a person's
+  // second inspection would record nothing at all.
+  useEffect(() => {
+    const from = prevStageRef.current;
+    const cause = causeRef.current;
+    causeRef.current = CAUSE_POP;
+    prevStageRef.current = stage;
+    if (startsNewOccurrence(from, stage)) {
+      occurrenceRef.current += 1;
+      enteredRef.current = [];
+    }
+    const entry = stageEntry(stage, { from, cause, seen: enteredRef.current });
+    if (!entry.emit) return;
+    enteredRef.current = enteredRef.current.concat(stage);
+    emitReaderEvent(READER_EVENTS.STAGE_ENTERED, {
+      stage: entry.stage,
+      prior_stage: entry.prior_stage,
+      cause: entry.cause,
+      occurrence: occurrenceRef.current,
+      mode,
+    });
+  }, [stage]);
+
+  // Arrival (§D/§E), read through the query-flag pattern the repo already uses for
+  // `reader` and `funnel`. Nothing here persists run content, so a #stage hash pointing
+  // past the available data is stale by construction: normalize DOWN to what the data
+  // supports and replaceState the dead entry away, so Back returns to wherever the
+  // visitor actually came from instead of bouncing on a hash that resolves nowhere.
+  useEffect(() => {
+    const { stage: requested } = parseArrival(window.location);
+    const norm = normalizeArrivalStage(requested, { lane, busy: false, hasResult: false });
+    if (norm.rewrite) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, []);
+
+  // The hash mirrors the stage so deep links and bookmarks name something real. It is
+  // maintained with replaceState, never pushState.
+  //
+  // APPROVED SCOPE AMENDMENT, and the consequences stated plainly rather than implied.
+  // Browser history represents document navigation, not transient Workbench stages, so
+  // stage advances add no history entries and browser Back exits the Workbench. Back
+  // loses the current run. Run content is not restored after navigation or tab closure —
+  // nothing here persists it, and a #stage hash is a bookmark, not a save file
+  // (normalizeArrivalStage resolves a stage the data cannot support back down).
+  //
+  // Reversal inside the Workbench is handled by explicit in-product controls instead,
+  // and changing an upstream answer may discard downstream results, because a result
+  // derived from an answer stops being valid once that answer changes.
+  //
+  // The alternative was rejected on structural grounds: the stage is derived, never
+  // stored, so making history able to set it would need either a stored stage — a second
+  // source of truth, which is what the one-live-input fix rests on not having — or a
+  // cache of per-stage results, which reintroduces stale async results one layer down.
+  useEffect(() => {
+    if (!hashSyncedRef.current) {
+      // Mount leaves the arriving hash alone. The visitor's own anchor (#wb-reader-console)
+      // still has to be readable by the handler below, and replaceState fires no hashchange,
+      // so writing here would silently break that deep link. The arrival effect above has
+      // already dealt with a stale #stage.
+      hashSyncedRef.current = true;
+      return;
+    }
+    const target = stageHash(stage);
+    if (window.location.hash === target) return;
+    window.history.replaceState(null, "", window.location.pathname + window.location.search + target);
+  }, [stage]);
+
+  // The follow-up flags belong to the result. When the result goes — a re-run, an edit,
+  // a mode switch, "Test another question" — they go with it, so a later result can
+  // never inherit a stale open follow-up and skip its own result stage.
+  useEffect(() => {
+    if (readerResult) return;
+    setFollowUpOpen(false);
+    setHasDelta(false);
+  }, [readerResult]);
+
+  // Focus follows the stage. Each transition puts the caret or the reading position on
+  // the target the stage contract names, so a keyboard or screen-reader user is never
+  // left behind on the previous stage. It never runs on mount: moving focus on first
+  // paint would take a visitor straight past the hero they arrived to read.
+  //
+  // The two stages whose target is a live input get that input. Every other stage names
+  // a heading or a status line, all of which sit inside the result region — and landing
+  // on the top of the region a person just opened is the point, since tabbing forward
+  // from there walks the new stage in order.
+  const FOCUS_TARGETS = {
+    "compose-answer": composeAnswerRef,
+    "paired-answer": pairedAnswerRef,
+  };
+  useEffect(() => {
+    const prev = focusStageRef.current;
+    focusStageRef.current = stage;
+    if (prev === null || prev === stage) return;
+    const target = (FOCUS_TARGETS[view.focus] || resultHeadingRef).current;
+    if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+  }, [stage]);
 
   useEffect(() => {
     const goOwnFromHash = () => {
@@ -5549,13 +5743,53 @@ function ReaderWorkbench() {
     setErrors({});
     setReaderResult(null);
     setBusy(false);
+    setLane(LANE_INSPECT);
     if (next === "own") setAnswer("");
   };
 
-  const dismissClarity = () => {
-    dismissClarityStripFlag();
-    setClarityDismissed(true);
+  // The permanent chip door (§D): the follow-up path is never more than one tap deep.
+  // Opening it is the person's own forward move, so it advances the funnel; closing it
+  // returns to the inspect lane and does not. Opening also latches chipMounted, which
+  // never returns to false: closing hides the lane instead of unmounting it, so a
+  // half-typed answer is still there when the person opens it again. Latching is what
+  // keeps chip_row_rendered honest — the lane is not mounted until it is opened, so the
+  // event still means "the follow-up choices were shown".
+  const openChipLane = () => {
+    if (lane === LANE_CHIPS) return;
+    advance();
+    setChipMounted(true);
+    setLane(LANE_CHIPS);
   };
+  const closeChipLane = () => setLane(LANE_INSPECT);
+
+  // Both doors into the compare stage land here: the copy action and the explicit
+  // "Paste what came back" control. Either one is the person's own forward move.
+  const openFollowUp = () => {
+    if (followUpOpen) return;
+    advance();
+    setFollowUpOpen(true);
+  };
+  const setPairedDelta = (present) => {
+    if (present === hasDelta) return;
+    if (present) advance();
+    setHasDelta(present);
+  };
+
+  // In-product reversal from a result back to the paste box. Browser Back deliberately
+  // does not do this (no stage pushes history), so this is the affordance that keeps
+  // read-only context from being a one-way door.
+  //
+  // It does not call advance(), so the entry carries CAUSE_POP and counts as no forward
+  // motion. It does still emit: landing back on compose is the run-occurrence boundary,
+  // and that is where the next inspection's funnel begins.
+  const editAnswer = () => {
+    setReaderResult(null);
+    setErrors({});
+    if (stageRef.current) {
+      window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
+    }
+  };
+
 
   // Open the canned demo. Emit the demo-open signal ONCE per mount, tagged
   // mode/source "demo" so it stays filterable and never inflates the copied/completed
@@ -5595,11 +5829,11 @@ function ReaderWorkbench() {
     setErrors({});
     setBusy(false);
     setAnswer("");
-    if (mode === "guided") {
-      if (suggestion) setSel(suggestion);
-    } else if (suggestion) {
-      setQuestion(suggestion.openPrompt);
-    }
+    // Only guided mode carries a suggested next case. Own mode used to write the
+    // suggestion's openPrompt into the question field, which was the third route a
+    // curated question took into an own-mode run; own mode now clears the answer and
+    // keeps whatever question the person wrote themselves.
+    if (mode === "guided" && suggestion) setSel(suggestion);
     if (stageRef.current) {
       window.requestAnimationFrame(() => scrollWorkbenchAnchor(stageRef.current));
     }
@@ -5629,6 +5863,10 @@ function ReaderWorkbench() {
       return;
     }
     setErrors({});
+    // Validation passed, so this click really is the stage's primary action. Set the
+    // cause here, adjacent to the setter that moves the stage — never earlier, or a
+    // bailed-out run would leave CAUSE_ADVANCE armed for an unrelated later change.
+    advance();
     setBusy(true);
     setReaderResult(null);
     emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode });
@@ -5642,6 +5880,12 @@ function ReaderWorkbench() {
     });
     try {
       const data = await runReader(request);
+      // The settle moves the stage a second time, and nobody clicked for it. Which stage
+      // it lands on is deriveStage's call: `followup` when the payload carries an Act 2
+      // offer, `result` when it does not — the whole degraded population. Attribute the
+      // move here or that stage is entered with no cause of its own and reads as history
+      // navigation, which is how the funnel lost its middle.
+      causeRef.current = data.source === "fallback" ? CAUSE_DEGRADED : CAUSE_ASYNC;
       setReaderResult(data);
       const run = readerRunId(data);
       emitReaderEvent(READER_EVENTS.RUN_COMPLETED, {
@@ -5673,6 +5917,7 @@ function ReaderWorkbench() {
       if (err && err.message === "too_long") {
         setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
       } else {
+        causeRef.current = CAUSE_DEGRADED;
         setReaderResult({
           source: "fallback",
           completeness: "thin",
@@ -5697,20 +5942,10 @@ function ReaderWorkbench() {
     <div className="wb-reader-v2">
       <div className="wb-reader-v2__stack">
         {returning && !readerResult ? <ReturnNudge onDismiss={() => setReturning(false)} /> : null}
-        {mode === "own" && firstTime && !clarityDismissed && !returning && !demoOpen && !readerResult && !busy ? (
-          <ReaderClarityStrip onDismiss={dismissClarity} />
-        ) : null}
-        <div className="wb-demo-trigger-row">
-          <button
-            type="button"
-            className="wb-demo-trigger"
-            onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
-            aria-expanded={demoOpen}
-          >
-            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
-          </button>
-        </div>
-        {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
+        {/* The chip lane is self-contained (§D): it brings its own answer box, so the
+            console has nothing to offer there. Leaving it mounted put an empty read-only
+            paste box above the lane a ?start=chips visitor arrived for. */}
+        {view.pasteBox ? (
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
             <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
@@ -5785,6 +6020,8 @@ function ReaderWorkbench() {
                         error={errors.answer}
                         placeholder="Paste the full AI answer here…"
                         minAckLength={1}
+                        readOnly={!composeLive}
+                        inputRef={composeAnswerRef}
                       />
                     </div>
                   </>
@@ -5798,6 +6035,8 @@ function ReaderWorkbench() {
                         error={errors.answer}
                         placeholder="Paste an AI answer. Anything from ChatGPT, Gemini, Claude…"
                         minAckLength={1}
+                        readOnly={!composeLive}
+                        inputRef={composeAnswerRef}
                       />
                     </div>
                     {hasAnswer || hasQuestion ? (
@@ -5812,6 +6051,8 @@ function ReaderWorkbench() {
                               rows={3}
                               style={inputStyle}
                               aria-invalid={!!errors.question}
+                              readOnly={!composeLive || undefined}
+                              aria-readonly={!composeLive || undefined}
                             />
                           </Field>
                           {errors.question ? <div className="wb-field-error" role="alert">{errors.question}</div> : null}
@@ -5859,9 +6100,62 @@ function ReaderWorkbench() {
             </div>
           </div>
         </div>
+        ) : null}
+
+        {/* Both of these explain the paste box, so they follow it. In the chip lane there is
+            no paste box to explain, and the demo's own "try your own" exit leads back to a
+            console that lane does not render. */}
+        {view.pasteBox ? (
+        <React.Fragment>
+        {/* §E: the paste box leads, and the ready example is the one quiet secondary under
+            it. The demo used to sit above the box, where it competed with the thing it was
+            meant to explain. Nothing was deleted — it moved. */}
+        <div className="wb-demo-trigger-row">
+          <button
+            type="button"
+            className="wb-demo-trigger"
+            onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
+            aria-expanded={demoOpen}
+          >
+            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
+          </button>
+        </div>
+        {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
+
+        {/* The collapsed "How it works". Same three steps the first-run strip used to push
+            above the paste box, now one tap away and available to everyone every time
+            rather than to first-timers once. */}
+        <details className="wb-clarity">
+          <summary className="wb-clarity__summary">How it works</summary>
+          <ol className="wb-clarity__steps">
+            {READER_CLARITY_STEPS.map((text, i) => (
+              <li key={i} className="wb-clarity__step">
+                <span className="wb-clarity__num" aria-hidden="true">{i + 1}</span>
+                <span className="wb-clarity__text">{text}</span>
+              </li>
+            ))}
+          </ol>
+        </details>
+        </React.Fragment>
+        ) : null}
 
         {readerResult ? (
-          <div ref={resultRef} className="wb-reader-v2__result wb-scroll-anchor">
+          <div
+            ref={(node) => {
+              resultRef.current = node;
+              resultHeadingRef.current = node;
+            }}
+            tabIndex={-1}
+            className="wb-reader-v2__result wb-scroll-anchor"
+          >
+            {/* The way back. The compose fields above go read-only once a result exists, so
+                without this the only route to a second answer is a page reload. It clears the
+                result and returns to compose, which is a backward move and emits nothing. */}
+            <div className="wb-reader-v2__result-nav">
+              <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={editAnswer}>
+                ← Edit the answer
+              </button>
+            </div>
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--hero">
                 <ReaderResultHero result={readerResult} />
@@ -5914,24 +6208,60 @@ function ReaderWorkbench() {
             ) : null}
             {readerResult.act2 ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--act2">
-                <Act2Offer result={readerResult} />
+                <Act2Offer
+                  result={readerResult}
+                  open={followUpOpen}
+                  onOpen={openFollowUp}
+                  onPairedChange={setPairedDelta}
+                  pairedInputRef={pairedAnswerRef}
+                />
               </div>
             ) : null}
-            <div className="wb-reader-v2__follow wb-reader-v2__follow--loop">
-              <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
-            </div>
+            {view.loop ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--loop">
+                <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
+              </div>
+            ) : null}
             <p className="wb-reader-v2__post-privacy">
               This inspection wasn't published to our reviewed archive. See <a href="/retention.html">what deletion means</a>.
             </p>
           </div>
         ) : null}
 
-        {/* User-chip lane — a self-contained user-directed follow-up, always available and
-            independent of whether an inspection ran above. Its own value statement heads it
-            off, so it never reads as part of the inspection flow. */}
-        <div className="wb-reader-v2__follow wb-reader-v2__follow--chips">
-          <ChipLane />
-        </div>
+        {/* User-chip lane — a self-contained user-directed follow-up, independent of whether
+            an inspection ran above. Its own value statement heads it off, so it never reads as
+            part of the inspection flow. The lane owns an answer-entry textarea, so it renders
+            behind a door instead of unconditionally: two answer boxes on first load competed
+            for the same first keystroke. The door closes at the compare stage, where a
+            stage-specific paired-answer input is already live. */}
+        {view.chipDoor ? (
+          <div className="wb-reader-v2__follow wb-reader-v2__follow--chip-door">
+            <button
+              type="button"
+              className="wb-demo-trigger wb-chip-door"
+              onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
+              aria-expanded={lane === LANE_CHIPS}
+              aria-controls="wb-chip-lane"
+            >
+              {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
+                  keeps whatever was typed in it, so "close" would describe the wrong
+                  thing. The value statement is not lost — it heads the lane itself. */}
+              {lane === LANE_CHIPS ? "Hide follow-up checks" : "Show follow-up checks"}
+            </button>
+          </div>
+        ) : null}
+        {/* Mounted on first open and never unmounted after: `hidden` takes the lane out of
+            the layout, the tab order and the accessibility tree, so the one-live-input
+            invariant holds while a half-typed answer survives a close and reopen. */}
+        {chipMounted ? (
+          <div
+            id="wb-chip-lane"
+            className="wb-reader-v2__follow wb-reader-v2__follow--chips"
+            hidden={!view.chipLane}
+          >
+            <ChipLane />
+          </div>
+        ) : null}
 
         <div className="wb-reader-v2__follow wb-reader-v2__follow--suggest">
           <SuggestInvestigation variant="reader-secondary" />
@@ -5974,21 +6304,23 @@ function Workbench() {
           <div className="wb-reader-v2__flow">
             <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
-              See what your AI might be missing.
+              Check your AI answer.
             </h1>
             <p className="wb-reader-v2__subcopy">
               Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped.
             </p>
-            <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
-              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
-              <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
-            </div>
             <ReaderWorkbench />
             <div className="wb-reader-v2__trust">
               <div className="wb-reader-v2__trust-rule" aria-hidden="true" />
               <p className="wb-reader-v2__trust-note">
                 Behavior, not intent. Results are provisional. Archive entries are reviewed before publication.
               </p>
+            </div>
+            {/* §E puts nothing between the headline and the paste box. These two doors are
+                kept, not deleted — they move below the instrument they used to sit above. */}
+            <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
+              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
           </div>
         ) : (
