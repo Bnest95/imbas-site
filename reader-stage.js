@@ -48,10 +48,11 @@ export const ENTRY_CHIP_ANSWER = "chip-answer";
 
 // ── Transition causes ──────────────────────────────────────────────────────────
 // WHY the stage moved, kept strictly separate from WHETHER the stage was entered. An
-// earlier cut fused the two and gated the emit on ADVANCE alone, which meant the two
-// stages a person never clicks their way into — the result that arrives when a fetch
-// settles, and the degraded body that replaces it — were never recorded at all. The
-// funnel could not see its own middle.
+// earlier cut fused the two and gated the emit on ADVANCE alone, so no stage a person
+// does not click their way into was recorded at all — whichever stage a settling fetch
+// lands on, and STAGE_RESULT in particular, which is the derived stage for every run
+// that returns a read with no follow-up offer. That is the whole degraded population.
+// The funnel could not see its own middle.
 export const CAUSE_ADVANCE = "advance"; // the stage's primary action, clicked
 export const CAUSE_ASYNC = "async"; // a run settled and moved the stage on its own
 export const CAUSE_DEGRADED = "degraded"; // a fallback body arrived instead of a read
@@ -60,6 +61,7 @@ export const CAUSE_POP = "pop"; // history navigation, or anything unattributed
 export const CAUSE_RESTORE = "restore"; // put back where they were
 export const CAUSE_NORMALIZE = "normalize"; // a stale stage hash resolved down
 export const CAUSE_REMOUNT = "remount"; // React rebuilt the tree
+export const CAUSE_REVERSE = "reverse"; // a forward cause landed on an earlier stage
 
 // The causes that mean the person moved themselves deeper into the product. Only these
 // count toward forward conversion. Arrival, history navigation, restore, remount and
@@ -233,20 +235,35 @@ export function isForwardStage(from, to) {
 /**
  * The single decision point for stage telemetry.
  *
- * STAGE_ENTERED means: this stage was reached. Once per stage, per session. Every way
- * of reaching it qualifies — clicking its primary action, a fetch settling, a degraded
- * body arriving, landing on it from a deep link — because a funnel that only counts
- * clicked stages cannot see whether anyone got a result.
+ * STAGE_ENTERED means: this stage was reached. Once per stage, PER RUN OCCURRENCE — not
+ * per session. Every way of reaching it qualifies — clicking its primary action, a fetch
+ * settling, a degraded body arriving, landing on it from a deep link — because a funnel
+ * that only counts clicked stages cannot see whether anyone got a result.
  *
- * `seen` is the stages already recorded this session. Re-entering one records nothing:
- * that is what makes "recorded once" true even when a person walks back and forth. It
- * is passed in rather than held here so this module stays pure and the caller's ref
- * remains the single copy.
+ * Per occurrence rather than per session is load-bearing. Deduping across the whole
+ * session would make a person's second inspection record nothing, so the north star
+ * would count first attempts only and go blind to repeat use — which is the strongest
+ * signal available that the product is worth coming back to. startsNewOccurrence marks
+ * the boundary; the caller clears `seen` there, and a second inspection produces a
+ * second complete, separately countable sequence.
  *
- * `progress` is the second, orthogonal answer: did the person move themselves forward.
- * It is NOT on the wire — the wire carries `cause`, and conversion analysis reads
- * countsAsProgress. Keeping it here means the product and the analysis cannot drift
- * into two different definitions of the funnel.
+ * `seen` is the stages already recorded in the CURRENT occurrence. Re-entering one
+ * records nothing: that is what makes "recorded once" true even when a person walks back
+ * and forth within one run. It is passed in rather than held here so this module stays
+ * pure and the caller's ref remains the single copy.
+ *
+ * Direction is folded into the cause rather than left for the reader to recompute. A
+ * caller can only ever claim a cause; it cannot know whether the stage it lands on is
+ * forward of the one it left, because that depends on where the person already was. So a
+ * forward cause that lands on an earlier stage is reported as CAUSE_REVERSE. The record
+ * that the stage was entered still exists — only the claim of forward motion is dropped.
+ *
+ * This is what makes `cause` sufficient on its own. The wire carries no progress flag, so
+ * conversion analysis reads countsAsProgress(cause) and nothing else; if a backward move
+ * could reach the wire still labelled "advance", that one query would silently
+ * over-count. Causes that already fail countsAsProgress are left alone: `pop` on a
+ * backward move is accurate and excluded anyway, and rewriting it would lose the fact
+ * that it was history navigation.
  *
  * Skipping a stage is permitted (result → compare via the direct door, compose →
  * result when a fallback returns without an inspecting frame). prior_stage records the
@@ -254,14 +271,34 @@ export function isForwardStage(from, to) {
  */
 export function stageEntry(to, { from = null, cause = CAUSE_POP, seen = [] } = {}) {
   const emit = !seen.includes(to);
+  const forward = from === null || isForwardStage(from, to);
+  const reported = forward || !countsAsProgress(cause) ? cause : CAUSE_REVERSE;
   return {
     stage: to,
     prior_stage: from,
-    cause,
+    cause: reported,
     emit,
-    progress: emit && countsAsProgress(cause) && (from === null || isForwardStage(from, to)),
+    progress: emit && countsAsProgress(reported),
     skipped: from !== null && skippedBetween(from, to),
   };
+}
+
+/**
+ * Does moving from → to begin a new run occurrence?
+ *
+ * A run occurrence is one pass through the funnel: one answer composed, inspected, and
+ * followed up on. The boundary is landing back on STAGE_COMPOSE from anywhere else,
+ * which is exact rather than approximate — deriveStage only returns STAGE_COMPOSE when
+ * no result exists, so arriving there means the previous run's output is off the screen
+ * and the person is composing again.
+ *
+ * Coming back from the chip lane counts, and should: chips → compose is a person who
+ * left the follow-up and returned to the paste box, and the alternative — treating it as
+ * the same occurrence — would leave their next run entirely unrecorded, which is the
+ * failure this boundary exists to prevent.
+ */
+export function startsNewOccurrence(from, to) {
+  return to === STAGE_COMPOSE && from !== null && from !== STAGE_COMPOSE;
 }
 
 function skippedBetween(from, to) {

@@ -1,13 +1,13 @@
 # Visual acceptance manifest
 
-captured_against_sha: `2f57071810b466d6f70d91e6a534af4cf75d51db`
+captured_against_sha: `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4`
 
-**These images were captured against commit `2f57071810b466d6f70d91e6a534af4cf75d51db` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
+**These images were captured against commit `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
 
 - working tree at capture time: **dirty**
 - browser: `/Users/brendan/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
 - browser version: `HeadlessChrome/148.0.7778.96`
-- captured: 2026-07-26T19:03:22.739Z
+- captured: 2026-07-26T19:56:26.686Z
 - fixtures: synthetic, from `scripts/qa/scenarios.mjs` — not captures, not evidence
 - network: deny-by-default; no model API call is reachable from this harness
 
@@ -49,17 +49,17 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2508 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `2f57071810b466d6f70d91e6a534af4cf75d51db` + uncommitted working tree |
+| captured_against_sha | `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` + uncommitted working tree |
 
 ### `single-findings--mobile.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `115343eccca57f9f56b2b7f2a05c687056cfe9fe8f6a71d8b2c1c6bd94b5eb97` |
-| bytes | 605776 |
+| sha256 | `aeacaf3492fb23f2775d063ba202a0c63f17f53c27bdfb3fe79555a500ec1641` |
+| bytes | 605969 |
 | viewport | 375x812@3x (mobile) |
 | snapshot | `single-findings--mobile.snapshot.txt` |
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2817 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `2f57071810b466d6f70d91e6a534af4cf75d51db` + uncommitted working tree |
+| captured_against_sha | `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` + uncommitted working tree |

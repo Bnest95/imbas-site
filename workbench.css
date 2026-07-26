@@ -1118,12 +1118,23 @@
    live one. It drops the two editable affordances above — the ember border and the inset
    shadow — and takes the passive border every settled surface here uses. !important is
    load-bearing: .wb-input.is-paste-received animates border-color with `forwards`, and
-   that animated value persists onto the field after it goes read-only. */
+   that animated value persists onto the field after it goes read-only.
+
+   The ink is the same opaque dim as .wb-reader-result__trust, and opaque for the reason
+   that rule already records: an rgba value makes the ratio depend on whatever happens to
+   sit behind the field. Measured in the browser at 6.46:1, against the background this
+   field actually composites to on the confirm block — rgba(10,7,6,.92) over
+   .wb-confirm-block rgba(14,11,9,.82) over .wb-stage rgb(24,18,16) = rgb(10, 7, 6) —
+   and 6.39:1 in the lightest case the umber system can put behind it. Both clear the
+   4.5:1 floor. Read-only text is still text a person reads.
+
+   --ink-dim is deliberately NOT used: it is declared nowhere in the repo, so its 14 uses
+   in this file compute to `inherit` and carry no dimming at all. */
 .wb-input[readonly],
 .wb-input[readonly][style] {
   border-color: var(--wb-border-passive) !important;
   box-shadow: none !important;
-  color: rgba(245, 235, 221, 0.62) !important;
+  color: rgb(158, 144, 131) !important;
   cursor: default;
 }
 

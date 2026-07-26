@@ -16,7 +16,17 @@
 //
 // Pure JS by contract, like reader-paired.js / reader-receipt.js: no node:
 // imports, no DOM, no storage — the impure emit + persistence live with the client
-// so this stays unit-testable in isolation.
+// so this stays unit-testable in isolation. The one import is reader-stage.js, which is
+// itself pure and is the single place stage ids are named: the funnel has to speak the
+// same stage vocabulary as the spine, and re-typing the ids here is how the two drift.
+import {
+  STAGE_INSPECTING,
+  STAGE_RESULT,
+  STAGE_FOLLOWUP,
+  STAGE_COMPARE,
+  STAGE_DELTA,
+  ALL_STAGES as FUNNEL_STAGES,
+} from "./reader-stage.js";
 
 // The Confirmation Loop and user-chip events (design: item 3 telemetry list, plus
 // the user-chip lane). Names are the wire values; use the constants so a typo is a
@@ -52,8 +62,11 @@ export const READER_EVENTS = {
   // produce real entries with causes that reader-stage.countsAsProgress excludes, so
   // conversion analysis drops them without the record disappearing.
   //
-  // Carries stage / prior_stage / cause / mode — stage ids and enums, never content,
-  // never identity.
+  // Carries stage / prior_stage / cause / occurrence / mode — stage ids, enums and a
+  // small counter, never content, never identity. `occurrence` is which run within the
+  // current page life (1, 2, 3…): it resets on reload, is held only in memory, and
+  // exists so a person's second inspection is a second countable funnel rather than
+  // silence. Deduping across a whole session would blind the north star to repeat use.
   STAGE_ENTERED: "stage_entered",
   // Operational / resilience lane (Phase 0 §D). Content-free by construction like
   // the rest: they carry an opaque run id, an enum reason, and small operational
@@ -80,7 +93,8 @@ const ALLOWED_PROP_KEYS = [
   "to_state", // state_corrected: person-declared state
   "stage", // stage_entered: the stage reached (reader-stage.js id)
   "prior_stage", // stage_entered: the stage left, absent on the first entry
-  "cause", // stage_entered: advance | async | degraded | init | pop | restore | normalize | remount
+  "cause", // stage_entered: advance | async | degraded | init | pop | restore | normalize | remount | reverse
+  "occurrence", // stage_entered: which run within this page life — 1, 2, 3…
   "check", // quick | cleaner
   "mode", // own | guided | demo
   "gap", // integer gap estimate 0-3
@@ -149,8 +163,33 @@ export function buildFunnel(events) {
   const counts = {};
   for (const name of READER_EVENT_NAMES) counts[name] = count(name);
 
+  // Stage entries broken out by stage id. counts.stage_entered is one number for every
+  // stage in the product, so on its own it cannot answer whether anyone got a result.
+  const stageEntries = {};
+  for (const stage of FUNNEL_STAGES) stageEntries[stage] = 0;
+  for (const e of list) {
+    if (e.name === READER_EVENTS.STAGE_ENTERED && typeof e.stage === "string") {
+      stageEntries[e.stage] = (stageEntries[e.stage] || 0) + 1;
+    }
+  }
+
   return {
     counts,
+    stage_entries: stageEntries,
+    // The four milestones, named in the same stage vocabulary the code and tests use.
+    //
+    // result_delivered sums `result` and `followup` because those are the only two
+    // stages a run can land on first once a read exists: deriveStage returns `followup`
+    // when the payload carries an Act 2 offer and `result` when it does not, and
+    // normalizeArrivalStage only ever resolves a deep link DOWN, so `compare` and
+    // `delta` are unreachable without passing through one of them. Counting all four
+    // would count the same run up to three times.
+    stage_funnel: {
+      inspection_started: stageEntries[STAGE_INSPECTING],
+      result_delivered: stageEntries[STAGE_RESULT] + stageEntries[STAGE_FOLLOWUP],
+      follow_up_opened: stageEntries[STAGE_COMPARE],
+      comparison_completed: stageEntries[STAGE_DELTA],
+    },
     completed_by_state: completedByState,
     chip_completed_by_state: chipCompletedByState,
     // NORTH STAR — % of copied questions that return as completed loops.

@@ -101,6 +101,31 @@ test("buildFunnel north star is null with no baseline, a ratio once questions ar
   assert.deepEqual(f.completed_by_state, { gap_revealed: 1 });
 });
 
+test("buildFunnel exposes the four stage milestones, not one lumped stage count", () => {
+  const enter = (stage, occurrence) =>
+    buildEvent(READER_EVENTS.STAGE_ENTERED, { stage, cause: "advance", occurrence });
+  const f = buildFunnel([
+    // Run 1 reached the delta. Run 2 got a read with no follow-up offer and stopped.
+    enter("compose", 1),
+    enter("inspecting", 1),
+    enter("followup", 1),
+    enter("compare", 1),
+    enter("delta", 1),
+    enter("compose", 2),
+    enter("inspecting", 2),
+    enter("result", 2),
+  ]);
+  assert.deepEqual(f.stage_funnel, {
+    inspection_started: 2,
+    result_delivered: 2, // one via followup, one via result — never both for one run
+    follow_up_opened: 1,
+    comparison_completed: 1,
+  });
+  assert.equal(f.stage_entries.result, 1, "the degraded run is visible on its own stage");
+  assert.equal(f.stage_entries.chips, 0, "every stage is present, including the unreached");
+  assert.equal(f.counts.stage_entered, 8, "the lumped count still exists, and is not the funnel");
+});
+
 test("buildFunnel ignores malformed rows", () => {
   const f = buildFunnel([null, {}, { name: 5 }, buildEvent(READER_EVENTS.RUN_STARTED, {})]);
   assert.equal(f.counts.run_started, 1);

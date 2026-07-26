@@ -62,6 +62,7 @@ import {
   deriveStage,
   stageView,
   stageEntry,
+  startsNewOccurrence,
   parseArrival,
   normalizeArrivalStage,
   stageHash,
@@ -5496,11 +5497,14 @@ function ReaderWorkbench() {
   // Previous stage + why it moved. The cause defaults to CAUSE_POP so an unattributed
   // stage change can never be mistaken for a forward advance; only code paths that ARE
   // the person's primary action set CAUSE_ADVANCE, and the effect clears it each time.
-  // enteredRef is the stages already recorded this session, which is what keeps a stage
-  // entry to one record however many times the person walks back over it.
+  // enteredRef is the stages already recorded in the CURRENT run occurrence, which keeps
+  // a stage entry to one record however many times the person walks back over it within
+  // that run. occurrenceRef counts which run this is within the page's life; both reset
+  // together at the occurrence boundary so a second inspection is a second full funnel.
   const prevStageRef = useRef(null);
   const causeRef = useRef(CAUSE_INIT);
   const enteredRef = useRef([]);
+  const occurrenceRef = useRef(1);
   const composeAnswerRef = useRef(null);
   const pairedAnswerRef = useRef(null);
   const resultHeadingRef = useRef(null);
@@ -5549,14 +5553,22 @@ function ReaderWorkbench() {
   // left ?start=chips visitors with a first event that advanced out of nowhere.
   //
   // The cause rides along and is never the gate. Back and Forward reach here as
-  // CAUSE_POP and record a real entry that countsAsProgress excludes; the settle after
-  // a run reaches here as CAUSE_ASYNC and counts, because reaching a result is the
-  // middle of the funnel whether or not anyone clicked for it.
+  // CAUSE_POP and record a real entry that countsAsProgress excludes; whichever stage a
+  // settling run lands on reaches here as CAUSE_ASYNC and counts, because reaching a
+  // read is the middle of the funnel whether or not anyone clicked for it.
+  //
+  // Landing back on compose ends the occurrence and starts the next one, so the counters
+  // clear here rather than persisting for the page's life. Without that, a person's
+  // second inspection would record nothing at all.
   useEffect(() => {
     const from = prevStageRef.current;
     const cause = causeRef.current;
     causeRef.current = CAUSE_POP;
     prevStageRef.current = stage;
+    if (startsNewOccurrence(from, stage)) {
+      occurrenceRef.current += 1;
+      enteredRef.current = [];
+    }
     const entry = stageEntry(stage, { from, cause, seen: enteredRef.current });
     if (!entry.emit) return;
     enteredRef.current = enteredRef.current.concat(stage);
@@ -5564,6 +5576,7 @@ function ReaderWorkbench() {
       stage: entry.stage,
       prior_stage: entry.prior_stage,
       cause: entry.cause,
+      occurrence: occurrenceRef.current,
       mode,
     });
   }, [stage]);
@@ -5582,10 +5595,23 @@ function ReaderWorkbench() {
   }, []);
 
   // The hash mirrors the stage so deep links and bookmarks name something real. It is
-  // maintained with replaceState, never pushState: stage advances add no history
-  // entries, so browser Back leaves the page exactly as it does today rather than
-  // unmounting a stage and taking typed content with it. In-product reversal is an
-  // explicit control instead.
+  // maintained with replaceState, never pushState.
+  //
+  // APPROVED SCOPE AMENDMENT, and the consequences stated plainly rather than implied.
+  // Browser history represents document navigation, not transient Workbench stages, so
+  // stage advances add no history entries and browser Back exits the Workbench. Back
+  // loses the current run. Run content is not restored after navigation or tab closure —
+  // nothing here persists it, and a #stage hash is a bookmark, not a save file
+  // (normalizeArrivalStage resolves a stage the data cannot support back down).
+  //
+  // Reversal inside the Workbench is handled by explicit in-product controls instead,
+  // and changing an upstream answer may discard downstream results, because a result
+  // derived from an answer stops being valid once that answer changes.
+  //
+  // The alternative was rejected on structural grounds: the stage is derived, never
+  // stored, so making history able to set it would need either a stored stage — a second
+  // source of truth, which is what the one-live-input fix rests on not having — or a
+  // cache of per-stage results, which reintroduces stale async results one layer down.
   useEffect(() => {
     if (!hashSyncedRef.current) {
       // Mount leaves the arriving hash alone. The visitor's own anchor (#wb-reader-console)
@@ -5751,7 +5777,11 @@ function ReaderWorkbench() {
 
   // In-product reversal from a result back to the paste box. Browser Back deliberately
   // does not do this (no stage pushes history), so this is the affordance that keeps
-  // read-only context from being a one-way door. Backward, so it emits nothing.
+  // read-only context from being a one-way door.
+  //
+  // It does not call advance(), so the entry carries CAUSE_POP and counts as no forward
+  // motion. It does still emit: landing back on compose is the run-occurrence boundary,
+  // and that is where the next inspection's funnel begins.
   const editAnswer = () => {
     setReaderResult(null);
     setErrors({});
@@ -5850,9 +5880,11 @@ function ReaderWorkbench() {
     });
     try {
       const data = await runReader(request);
-      // The settle moves the stage a second time, and nobody clicked for it. Attribute
-      // it here or the result stage is entered with no cause of its own and reads as
-      // history navigation — which is how the funnel lost its middle.
+      // The settle moves the stage a second time, and nobody clicked for it. Which stage
+      // it lands on is deriveStage's call: `followup` when the payload carries an Act 2
+      // offer, `result` when it does not — the whole degraded population. Attribute the
+      // move here or that stage is entered with no cause of its own and reads as history
+      // navigation, which is how the funnel lost its middle.
       causeRef.current = data.source === "fallback" ? CAUSE_DEGRADED : CAUSE_ASYNC;
       setReaderResult(data);
       const run = readerRunId(data);
@@ -6211,7 +6243,10 @@ function ReaderWorkbench() {
               aria-expanded={lane === LANE_CHIPS}
               aria-controls="wb-chip-lane"
             >
-              {lane === LANE_CHIPS ? "Close this" : `${CHIP_UI.value_statement.headline} →`}
+              {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
+                  keeps whatever was typed in it, so "close" would describe the wrong
+                  thing. The value statement is not lost — it heads the lane itself. */}
+              {lane === LANE_CHIPS ? "Hide follow-up checks" : "Show follow-up checks"}
             </button>
           </div>
         ) : null}
