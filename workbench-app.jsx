@@ -5878,12 +5878,20 @@ function ReaderWorkbench() {
             {/* Render-only interpretation of the single inspection. Gated on measurement
                 (not on checks) so it renders for both S1 (no findings surfaced) and S2
                 (findings present); single mode → no pair_runs, so conditions are never
-                consulted. Findings are the Check Register cards. Perturbs no record. */}
+                consulted. The items the reader sees are the candidate findings
+                (measurement.findings) MeasurementPanel renders; the Check Register cards
+                are a derived subset of those same findings (api/read.js buildChecks →
+                reader-checks.js buildCheckRegister), not independent items. So S1 fires
+                only when BOTH are empty, and the S2 count is the union cardinality =
+                max of the two lengths. Perturbs no record. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
                 <InspectionMeaningPanel
                   pairRuns={[]}
-                  findings={(readerResult.checks && readerResult.checks.cards) || []}
+                  findings={Math.max(
+                    Array.isArray(readerResult.measurement.findings) ? readerResult.measurement.findings.length : 0,
+                    readerResult.checks && Array.isArray(readerResult.checks.cards) ? readerResult.checks.cards.length : 0,
+                  )}
                 />
               </div>
             ) : null}
