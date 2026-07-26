@@ -62,6 +62,16 @@ quoted text, rather than hardcoding three classes or a paired-comparison shape. 
 measurements ship as detectors. A result view that hardcodes today's three classes forces
 a redesign for every future measurement.
 
+*Verified, with the symbols corrected.* The brief that produced this queue named the map
+wrong, so the names are recorded here. The mapping runs in two hops across two files.
+`CANDIDATE_TO_DETECTOR_FINDING` (`api/read.js:435`) maps the Reader's candidate vocabulary
+to finding types. `FINDING_TYPE_TO_DETECTOR` (`reader-checks.js:52`) maps a finding type to
+a detector id. `reader-checks.js` contains no `CANDIDATE_TO_DETECTOR_FINDING`. The
+architecture claim holds: `FAMILIES` (`reader-checks.js:37`) already covers `comparative`,
+`local_integrity`, and `profile`; `validateDetectorEvent` (`390`) validates each family
+independently; `buildCheckRegister` (`339`) assembles and ranks. A detector can be added
+without changing the construct.
+
 ---
 
 ## CALIBRATION QUEUE
@@ -101,11 +111,19 @@ matched-conditions claim.
 - **Not in the API response.** `buildPairedPayload` and `buildChipPairedPayload` are built
   from `pairedAnalysis` / `chipAnalysis` (`api/read-paired.js:1012-1066`). Neither object
   holds a conditions field.
-- **Not in the receipt.** `buildPairedReceipt` carries no conditions field. For the chip
-  receipt this is deliberate and documented: `reader-receipt.js:254-257` records that the
-  loop state "depends on the person's paste-back conditions (a client-side capture the
-  server never sees)" and is therefore derived at render rather than frozen into a hashed
-  artifact.
+- **Not in either paired receipt. This absence is a design decision with recorded
+  reasoning, not data loss.** Neither `buildPairedReceipt` (`reader-receipt.js:201`) nor
+  `buildChipPairedReceipt` (`260`) carries a conditions field. The chip receipt's omission
+  has its reasoning written directly above it at `reader-receipt.js:254-257`: the state
+  "depends on the person's paste-back conditions (a client-side capture the server never
+  sees)", and the artifact is hashed, so the state is derived at render and "never frozen
+  into a receipt where it could contradict the conditions actually disclosed." The
+  inspection paired receipt sits under both of the same constraints, a client-side capture
+  and a hashed artifact, but no comment there states the decision.
+  **Whoever closes this gap must reckon with that reasoning before adding the field to a
+  hashed artifact.** A future reader who simply adds it is overriding a documented decision
+  without having seen it. This constrains the shape of any remedy. It does not decide one,
+  and nothing in this file rules on it.
 - **Not in Airtable.** `capturePaired` writes neither branch's conditions
   (`api/read-paired.js:531-563`). No Same Model, Conditions Matched, User Edits Disclosed,
   or Model Version column is written.
