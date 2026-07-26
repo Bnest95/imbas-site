@@ -14,6 +14,21 @@ re-deriving anything. It is a publication input. It is not a publication.
 - Nothing in this file amends `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md`,
   `docs/IMBAS-READER-OUTPUT-DESIGN.md`, or `docs/IMBAS-READER-OPEN-QUEUES.md`.
 
+**Ranking, after the primary-source verification in Section 1.3.** One example is ranked. Two are
+not.
+
+- **Section 5, Montana, is the flagship.** Both propositions its takeaway rests on were verified
+  in this pass against the controlling primary source.
+- **Section 6, car insurance, is PROVISIONAL AND UNRANKED.** Two of the three propositions its
+  takeaway asserts have no controlling primary source to check against, because the capture named
+  no jurisdiction. Section 1.3 records what was checked and Section 6.4 records the route back.
+- **Section 7, rent, is PROVISIONAL AND UNRANKED.** Neither proposition its takeaway rests on can
+  be verified: one turns on a lease Imbas does not hold, the other is jurisdiction-locked behind a
+  redaction this example must keep. Sections 1.3 and 7.4 record both.
+
+This supersedes the earlier second and third rankings. An unranked example is still a preserved
+record; it is not publishable as a ranked public example, and rule 2.1 is why.
+
 **Companion file.** The rejections, the null results, and the ruled scores live in
 [IMBAS-PUBLIC-EXAMPLE-FAILURE-LEDGER.md](IMBAS-PUBLIC-EXAMPLE-FAILURE-LEDGER.md). That file is a
 record, not a publication input, and its status is separate from this one. Read it before citing
@@ -31,19 +46,19 @@ nothing wider.
 
 ---
 
-## Section 1 — How to read the provenance labels
+## Section 1 — Provenance: the labels, the source corpus, the verifications
 
 Every factual claim in this file carries one of two statuses. The distinction is load-bearing and
 a future pass must not collapse it.
 
 **VERIFIED IN THIS PASS.** This pass read the source and reports what it found, with the source
-and the date. The full set is small and it is enumerated in Section 1.1.
+and the date. The full set is small and it is enumerated in Sections 1.1 and 1.3.
 
 **REPORTED BY THE SESSION.** A factory session states it. This pass did not independently verify
-it. This includes every statutory citation, every model identity, every timestamp, every run
-identifier, every hash, and every conditions determination in the material. Where a session
-reports that *it* verified something against a primary source, that is still a reported claim
-here: the session's verification is reported, not repeated.
+it. This includes every model identity, every timestamp, every run identifier, every hash, and
+every conditions determination in the material, and every statutory citation other than the four
+retrieved in Section 1.3. Where a session reports that *it* verified something against a primary
+source, that is still a reported claim here: the session's verification is reported, not repeated.
 
 Two further conventions:
 
@@ -74,7 +89,136 @@ Read against source in this repository at `BASE_SHA`
 | The Review Packet export embeds the client-side capture block | `reader-review-record.js:227` |
 | The server hashes the submitted targeted answer | `api/read-paired.js:816`, `sha256Hex(targetedAnswer)` |
 
-Everything else in this file is REPORTED BY THE SESSION.
+### 1.2 — Source corpus manifest
+
+*Editorial.* This packet is built from four supplied factory documents and nothing else. The
+manifest fixes them, so a later pass can tell whether it is holding the same corpus this pass held
+rather than a similar one.
+
+The four documents arrived concatenated in a single paste with no inter-document delimiter. The
+boundaries below are the four top-level titles at which the supplied documents begin. Document 2
+carries two further capture blocks appended under horizontal rules, at corpus lines 833 (`C5–C8 —
+second capture block`) and 1054 (`C1, C2, C4 — Gemini cross-check block`); they are sections of
+document 2, not separate documents. The corpus-level hash does not depend on where the boundaries
+are drawn, so it is the authoritative fixed point and the per-document rows are a convenience.
+
+| # | Document, by its own title | Corpus lines | Lines | Bytes | SHA-256 |
+|---|---|---|---|---|---|
+| 1 | Public-example factory session — 2026-07-26 | 1–464 | 464 | 56,020 | `0e468f7b8d9f43b8f5a09ee54af1908694cd1e8595a8684d289fcb9b3173e149` |
+| 2 | Round 2 — Stage 1 screening captures | 465–1278 | 814 | 57,180 | `61321aaca406841145908860d37ee1fa5d6b335bb070a90047170f9583339e26` |
+| 3 | Round 2, Stage 1 — screening report | 1279–1467 | 189 | 23,867 | `bc9076fde568eea7ce32017c27775fc395b522e7656abe9a8599c82d7e59cbdf` |
+| 4 | Pre-registration — COBRA foreclosure framing | 1468–1632 | 165 | 13,194 | `e1ebbf483e49d8eb32b72cc832eacd76c8adfa92c1e826f05e9ae2de406c863d` |
+| — | **Whole corpus, UTF-8, no trailing newline** | 1–1632 | **1,632** | **150,264** | **`616a29c85cc5f4d760c3754fb20e871f0bd21dd304f215d92dc960cd9eac1b4a`** |
+
+Each per-document hash is taken over the exact line range with `\n` joins and no trailing newline,
+so `awk 'NR>=a && NR<=b' corpus | perl -0pe 's/\n\z//' | shasum -a 256` reproduces the row.
+
+**Attestation.** An earlier draft of this packet was built from a copy of the same corpus obtained
+a different way. The two were compared line for line before this correction was written. `diff -u`
+returns a single hunk: one blank line present in the authoritative copy and absent from the
+earlier one, immediately before the document 3 title at corpus line 1279 — a paste-boundary
+artifact. `diff -w -B` reports the two files identical. The earlier copy is 1,631 lines and
+150,263 bytes, SHA-256
+`3de1e594a505c1d755dfe18955acd32742badedf2e5f9a363e722181494a82f4`; the one-byte difference is
+that newline. **No content discrepancy was found, so no correction to either file arises from the
+comparison.** The hashes in the table above are of the authoritative copy.
+
+### 1.3 — Primary-source verification record
+
+*Editorial.* Rule 2.1 requires the controlling primary source, retrieved and dated, for any
+proposition an example's public takeaway needs. An earlier draft ranked three examples on
+verifications the factory sessions reported. A reported verification is not a verification. This
+section replaces them. Everything below was retrieved in this pass on **2026-07-26**.
+
+Two conventions. **Applicable effective date** is what the source itself states about its currency
+— an edition, a history line, a "laws in effect on" statement — not an inference. **Admissible**
+means the example may be ranked and published on this proposition; it says nothing about the other
+publication constraints recorded elsewhere in this file.
+
+**Example 1, Montana. Both propositions verified.**
+
+| | |
+|---|---|
+| Controlling primary source | Montana Code Annotated § 39-2-911, **Montana Code Annotated 2025** edition, retrieved from `mca.legmt.gov` on 2026-07-26 |
+| Retrieval note | The session's cited host `archive.legmt.gov` returns HTTP 301 to `mca.legmt.gov` at the same path. The redirect was followed and the current host read. |
+| Proposition A checked | Does § 39-2-911(1) currently impose a one-year filing deadline for a wrongful discharge action? |
+| Result A | **VERIFIED.** Text as printed: "An action under this part must be filed within 1 year after the date of discharge." |
+| Proposition B checked | Does § 39-2-911(3) currently state 14 days rather than 7? |
+| Result B | **VERIFIED, 14 days.** Text as printed: "the employer shall within 14 days of the date of the discharge notify the discharged employee in writing or electronically of the existence of the internal procedures." No 7-day period appears anywhere in the section as retrieved. |
+| Proposition C checked | Does the takeaway's second limb — that an employee generally must use the employer's internal appeal first — hold? |
+| Result C | **VERIFIED.** § 39-2-911(2): "the employee shall first exhaust those procedures prior to filing an action under this part," and "The employee's failure to initiate or exhaust available internal procedures is a defense to an action brought under this part." The subsection is conditional on the employer maintaining written internal procedures, which is why the takeaway's "generally" is doing necessary work and must survive any edit. |
+| Applicable effective date | History line as printed: "En. Sec. 6, Ch. 641, L. 1987; amd. Sec. 5, Ch. 117, L. 2021." The section was enacted by Ch. 641, L. 1987 and last amended by Ch. 117, L. 2021, and the text above is the text currently in force in the 2025 edition. The history line does not say which subsections the 2021 amendment reached, and this pass does not infer it. The round-1 session's secondary-sourced claim that the pre-2021 text read 7 days was **not** checked here and remains a reported claim in the failure ledger. |
+| Admissible | **Yes. Example 1 remains ranked as the flagship.** |
+
+Two consequences. The bar on delta 2 of the superseded capture in Section 8 is now verified rather
+than reported: the 7-day figure is not the current text. And the flagship's Section 5.4 no longer
+rests on a reported check.
+
+**Example 2, car insurance. One of three verified. The takeaway needs all three.**
+
+First, the attributed-content reading, because the answer to it decides whether rule 2.1 applies
+at all. **The reading is confirmed for the delta table and it fails for the takeaway.** Section 6.2
+quotes all three rights from the second answer with the model's hedges intact — "Many states
+require", "You generally can", "you may have rights to… potentially" — and attributes them. That is
+rule 2.3 material. Section 6.1(3) then states the same three as fact in Imbas voice: that the
+insurer *had to* warn you, that you *can* complain to the regulator, that you *can force* a
+correction. Anatomy element (3) is the example's public takeaway. Rule 2.2 is explicit that the
+rule applies wherever a proposition is necessary to the takeaway regardless of where it came from.
+So all three are load-bearing and all three need verification.
+
+| Proposition | Controlling primary source | Result |
+|---|---|---|
+| The insurer had to give advance notice before a renewal premium increase, often 30–60 days | **None identifiable.** Insurance rate and notice regulation is state law: 15 U.S.C. § 1012(a), retrieved from `uscode.house.gov` 2026-07-26, "The business of insurance, and every person engaged therein, shall be subject to the laws of the several States which relate to the regulation or taxation of such business," and § 1012(b) bars construing a federal Act to supersede state insurance regulation unless it specifically relates to that business. The capture named no jurisdiction, so there is no controlling state code to retrieve. | **NOT VERIFIED — no controlling source exists to check.** Not a failed retrieval. A jurisdiction-free claim has no controlling primary source, which is exactly the case rule 2.1 cannot be satisfied in. |
+| You can file a complaint with your state Department of Insurance | **None identifiable**, on the same § 1012 grounds. The complaint mechanism, and whether one exists in the form described, is created by each state's insurance code. | **NOT VERIFIED — no controlling source exists to check.** |
+| If a credit report drove the increase you can force them to correct it | 15 U.S.C. §§ 1681a(k), 1681i, 1681m, retrieved from `uscode.house.gov` 2026-07-26. Currency as printed on each page: "Text contains those laws in effect on July 25, 2026." | **VERIFIED**, in the three parts below. |
+
+The FCRA chain, since it is the one that holds:
+
+- **§ 1681a(k)(1)(B)(i)** brings an insurance premium increase inside "adverse action": "a denial or
+  cancellation of, an increase in any charge for, or a reduction or other adverse or unfavorable
+  change in the terms of coverage or amount of, any insurance, existing or applied for, in
+  connection with the underwriting of insurance". *Transcription caveat, recorded rather than
+  smoothed:* the retrieval tool visibly self-corrected mid-response on this clause across two
+  separate attempts, and an earlier attempt garbled one conjunction. The substance was stable
+  across both attempts. A publication pass should read this clause off the page itself.
+- **§ 1681m(a)** imposes the notice duty: "If any person takes any adverse action with respect to
+  any consumer that is based in whole or in part on any information contained in a consumer
+  report, the person shall— (1) provide oral, written, or electronic notice of the adverse action
+  to the consumer".
+- **§ 1681i(a)(1)(A)** supplies the correction right: on a consumer's dispute the agency "shall,
+  free of charge, conduct a reasonable reinvestigation to determine whether the disputed
+  information is inaccurate and record the current status of the disputed information, or delete
+  the item from the file… before the end of the 30-day period beginning on the date on which the
+  agency receives the notice of the dispute".
+
+*Editorial, and the boundary matters.* Even verified, the FCRA chain establishes a dispute-and-
+reinvestigation right against the consumer reporting agency. "Force them to correct it" overstates
+what § 1681i guarantees, which is a reinvestigation on a deadline, not an outcome.
+
+**Admissible: no. Example 2 is PROVISIONAL AND UNRANKED.** Its takeaway asserts three propositions
+and one verifies.
+
+**Example 3, rent. The takeaway rests on two propositions and neither is verifiable.**
+
+The attributed-content reading is confirmed for Section 7.2, on the same basis as Example 2: rows
+1 and 3 quote the second answer's hedged statements and attribute them. Section 7.1(3) is again the
+takeaway, and again it asserts. It rests on exactly two propositions.
+
+| Proposition | Controlling primary source | Result |
+|---|---|---|
+| A landlord generally cannot raise rent mid-lease at all | **The asker's own lease**, which was never captured and is not in the material. The second answer says so itself: "unless the lease itself allows a mid-term increase." Any statutory override would be state landlord-tenant law. | **NOT VERIFIED.** The controlling instrument is a private contract Imbas does not hold. The statutory fallback is jurisdiction-locked, and the jurisdiction is under a standing redaction this example must keep. |
+| Raising rent because a tenant complained is retaliation | State landlord-tenant law. The second answer named no source for this point, and this pass identified no federal provision to check it against. | **NOT VERIFIED.** Same jurisdiction bar. Recorded as "no controlling source identified," not as "no such rule exists." |
+
+One observation from the supplied material rather than from a retrieval, because it bears on
+whether a retrieval could ever have helped. The only statutory citation the second answer supplied
+is labeled, in the material itself, as a notice-to-quit provision. Notice to quit governs ending a
+tenancy. It is not authority for whether rent may be changed inside a running lease term. So the
+example's one citation does not reach its decisive proposition even before the redaction bar
+applies.
+
+**Admissible: no. Example 3 is PROVISIONAL AND UNRANKED.**
+
+Everything in this file outside Sections 1.1, 1.2 and 1.3 is REPORTED BY THE SESSION.
 
 ---
 
@@ -299,16 +443,18 @@ deadline, an exhaustion requirement, a remedies figure, an exclusivity clause. T
 additive rather than a contradiction. The first answer is not wrong; it stops before the part that
 costs the reader the case. And it is the only example in the set free of a publication constraint.
 
-**Rule 2.1 status.** The session reports verifying the load-bearing proposition against primary
-source: MCA § 39-2-911(1), retrieved 2026-07-26 from the Montana Code Annotated 2025 edition, text
-"An action under this part must be filed within 1 year after the date of discharge.", history line
-"En. Sec. 6, Ch. 641, L. 1987; amd. Sec. 5, Ch. 117, L. 2021." REPORTED BY THE SESSION. This pass
-did not retrieve it.
+**Rule 2.1 status. SATISFIED, VERIFIED IN THIS PASS.** Both propositions the takeaway rests on
+were retrieved from MCA § 39-2-911, Montana Code Annotated 2025 edition, on 2026-07-26. The
+one-year deadline at subsection (1) and the internal-appeal exhaustion requirement at subsection
+(2) both read as the takeaway states them, and subsection (3) reads 14 days. Section 1.3 carries
+the quoted text, the retrieval host and redirect, the history line, and the qualification on
+subsection (2) that the word "generally" is carrying.
 
-*Editorial.* Under rule 2.1 the retrieval date, effective-date history, and verification status are
-all present in the reported record, so the rule is satisfied on the record as supplied. A
-publication pass that wants to stand behind the figure itself should pull the section again on the
-day it publishes.
+The session also reported verifying subsection (1). That report is no longer what the example
+stands on.
+
+*Editorial.* A publication pass should still pull the section on the day it publishes. Verified
+2026-07-26 is a fact about 2026-07-26.
 
 ### 5.5 Disclose if used
 
@@ -319,18 +465,24 @@ this run should not present the two acts as agreeing.
 
 ---
 
-## Section 6 — Example 2. Car insurance increase
+## Section 6 — Example 2. Car insurance increase. PROVISIONAL AND UNRANKED
 
 **Run `747a50be7e4e34f5`.** The session's ask-order label is run 10.
+
+> **NOT PUBLICATION-READY, ON TWO INDEPENDENT GROUNDS.** Rule 2.1 is unsatisfied: the takeaway
+> asserts three legal propositions and only the FCRA one could be verified, per Section 1.3. And
+> model identity is not recoverable for this run, per Section 9, while Section P requires model
+> identity prominently. Either ground alone bars ranking. Section 6.4 records what would lift the
+> first; nothing available now lifts the second.
 
 | | |
 |---|---|
 | Provider | OpenAI ChatGPT, web interface, logged out, fresh chat. REPORTED |
-| Model identity | **MISSING IN SUPPLIED MATERIAL** at build level. The session reports the slug was not read for this run, that logged-out sessions carried no history, and that Airtable stores only the dropdown value `ChatGPT`. It states plainly that this run "cannot be attributed to a specific model build." Section 9 records a conflicting session-level statement and does not reconcile it. |
+| Model identity | **NOT RECOVERABLE.** The slug was not read for this run, logged-out sessions carried no history, and Airtable stores only the dropdown value `ChatGPT`. The session states plainly that this run "cannot be attributed to a specific model build." Section 9 resolves the apparent session-level conflict in favor of that statement; it is not a dispute left open. |
 | Capture date | 2026-07-26. Act 1 run 16:19:38.683Z, Act 2 receipt 16:26:54.223Z. Browser-side capture timestamps **MISSING IN SUPPLIED MATERIAL**. REPORTED |
 | Browsing | Session-level attestation only, web search on. No per-message evidence supplied for this run. REPORTED |
 | Airtable | open `rece3bSZp4OZL5fxw`, paired `rec1ckeCpVupUOQ0M`. REPORTED |
-| Tier | Small tier. Not frontier. See Section 9. |
+| Tier | **Not recoverable**, and therefore not assertable as small. See Section 9. The bar on the word "frontier" holds regardless: an unknown tier cannot support a frontier claim either. |
 
 ### 6.1 Required anatomy
 
@@ -348,6 +500,13 @@ open answer gave eight reasons and closed with this line.
 your premium went up, and not one of them tells you that your insurer had to warn you first, that
 you can complain to your state regulator, or that if a credit report drove the increase you can
 force them to correct it.
+
+> **This takeaway is the reason the example is unranked. Do not publish it as written.** It states
+> three legal propositions in Imbas voice. Section 1.3 verified one of the three and found no
+> controlling primary source for the other two. It also found that "force them to correct it"
+> overstates the one that did verify: 15 U.S.C. § 1681i guarantees a free reinvestigation within
+> 30 days, not a corrected outcome. The line is preserved here because it is the session's
+> takeaway and this file preserves what was supplied; preserving it is not endorsing it.
 
 **(4) The probe that surfaced it.** The same constant string quoted at 5.1(4).
 **MISSING IN SUPPLIED MATERIAL as a per-run quoted string.** The session establishes it for this
@@ -393,25 +552,41 @@ Act 1 returned completeness `partial`, gap_estimate **2**, counts `{missing 1, f
 deflection 0}`, and flagged a different thing: price optimization and the loyalty penalty.
 REPORTED.
 
-### 6.3 Rule 2.1 status. NOT SATISFIED as written
+### 6.3 Rule 2.1 status. NOT SATISFIED, and now tested rather than predicted
 
 *Editorial.* The three deltas are hedged rights statements attributed to the second answer
 ("many states", "generally", "potentially"), and the session's position is that the catch rests on
-what the second answer named rather than on Imbas asserting current law. That reading is
-defensible under rule 2.3.
+what the second answer named rather than on Imbas asserting current law. **That reading is
+confirmed for Section 6.2 and it does not survive into Section 6.1(3).** Rule 2.2 settles the
+point: the rule reaches any proposition necessary to the public takeaway, whatever its origin.
+Anatomy element (3) is the takeaway.
 
-It stops being defensible the moment a public takeaway says a reader *has* a notice right, a
-complaint right, or an FCRA correction right. At that point rule 2.1 applies and no primary source
-has been retrieved for any of the three. **Before publication, a pass must either verify the
-FCRA correction right against primary source and record the retrieval and effective dates, or
-write the takeaway so that it reports what the second answer said and nothing more.**
+An earlier draft left this as work a publication pass owed. This pass did it. Section 1.3 records
+the result: the FCRA correction right verifies against 15 U.S.C. §§ 1681a(k), 1681i and 1681m; the
+advance-notice right and the state-complaint right have **no controlling primary source to check
+against at all**, because insurance regulation is state law under 15 U.S.C. § 1012 and this
+capture named no state. That is a stronger finding than a failed retrieval, and it does not
+improve with effort.
 
-### 6.4 Why this one ranks second
+### 6.4 Why this one is unranked, and what would restore it
 
-*Editorial.* It has the broadest audience in the set, and the demonstration is strong precisely
-because the first answer is good. A thorough, consumer-friendly answer that tells you to call and
-shop still left out three rights. That kills the objection that the instrument only catches bad
-answers.
+*Editorial, and the merits are still real.* It has the broadest audience in the set, and the
+demonstration is strong precisely because the first answer is good. A thorough, consumer-friendly
+answer that tells you to call and shop still left out three rights. That kills the objection that
+the instrument only catches bad answers. None of that is in doubt. What is in doubt is whether
+Imbas can stand behind the sentence it would print underneath.
+
+Two things would have to change, and they are not the same size.
+
+1. **Narrow the takeaway to the FCRA limb and state it accurately.** Something that reports a
+   reinvestigation right on a 30-day clock, not a guaranteed correction, and drops the notice and
+   complaint limbs. That is achievable now from Section 1.3 and it would satisfy rule 2.1. It costs
+   the example two of its three rights and most of its punch.
+2. **Recover model identity.** Section 9 finds it is not recoverable for this run. Section P
+   requires it prominently. Nothing in the supplied material closes this, and no amount of legal
+   verification substitutes for it. A recapture would.
+
+Until both are done the example stays a preserved record, not a ranked one.
 
 ### 6.5 Disclose if used
 
@@ -429,29 +604,41 @@ output hash `772a01a99769a273f2a41cab7214ab1f6932ef69233128fc5163b8284c11904c` �
 
 ---
 
-## Section 7 — Example 3. Rent increase
+## Section 7 — Example 3. Rent increase. PROVISIONAL AND UNRANKED
 
 **Run `0b149cf5d00f6da6`.** The session's ask-order label is run 9.
 
 > **PUBLICATION CONSTRAINT, READ FIRST.** The second answer opens by naming the asker's town,
 > which the model inferred from IP geolocation on a logged-out session where the question named no
-> jurisdiction. That name must be scrubbed from anything public. The supplied material has it
-> redacted and it stays redacted here. This pass also redacts the state name and the statute
-> citation the second answer carried, because both narrow the location. The stored Airtable row
-> is untouched; it is the capture.
+> jurisdiction. That name must be scrubbed from anything public. This pass also redacts the state
+> name and the statute citation the second answer carried, because both narrow the location. The
+> stored Airtable row is untouched; it is the capture.
+>
+> **Where the location is, and why it is not here.** The model emitted the town name and the
+> capture recorded it. It is in the stored targeted answer in the underlying Airtable row, and it
+> was in the browser at capture time. The factory session redacted it before handing the material
+> to this pass, so this pass never held it. State it that way and not as "the location was never
+> captured," because it was. The redaction is a handling decision applied to a real captured
+> value.
 >
 > The town name and the raw-answer sentence naming it are **withheld by design, not missing from
-> the supplied material**. The distinction matters: a future pass must not go looking for them to
-> "complete the record."
+> the supplied material**. The distinction matters in both directions: a future pass must not go
+> looking for them to "complete the record," and must not conclude the geolocation behavior is
+> unevidenced because the evidence is not printed here. The Airtable row is the evidence.
 
 | | |
 |---|---|
 | Provider | OpenAI ChatGPT, web interface, logged out, fresh chat. REPORTED |
-| Model identity | **MISSING IN SUPPLIED MATERIAL** at build level, on the same grounds as Section 6. REPORTED |
+| Model identity | **NOT RECOVERABLE**, on the same grounds as Section 6 and resolved the same way in Section 9. |
 | Capture date | 2026-07-26. Act 1 run 16:08:02.332Z, Act 2 receipt 16:14:42.864Z. Browser-side capture timestamps **MISSING IN SUPPLIED MATERIAL**. REPORTED |
 | Browsing | Session-level attestation, web search on. The session reports this run's targeted answer carried citation text. REPORTED |
 | Airtable | open `recQLR3nYCw9FkZkm`, paired `recD7I2oh7uVS0uh1`. REPORTED |
-| Tier | Small tier. Not frontier. See Section 9. |
+| Tier | **Not recoverable**, and therefore not assertable as small. See Section 9. The bar on "frontier" holds regardless. |
+
+> **NOT PUBLICATION-READY, ON THREE GROUNDS.** Rule 2.1 is unsatisfied and cannot be satisfied from
+> what exists: neither proposition the takeaway rests on has a reachable controlling source, per
+> Section 1.3. Model identity is not recoverable. And the location redaction that this example
+> requires is the same fact that puts its statutory grounding out of reach.
 
 ### 7.1 Required anatomy
 
@@ -472,6 +659,12 @@ publication pass that wants a decisive first-answer line for the lead catch does
 **(3) The missing item in plain English.** *Editorial, from the session's takeaway.* Six reasons
 your rent went up, and none of them mention that your landlord generally cannot raise it mid-lease
 at all, or that raising it because you complained is retaliation.
+
+> **This takeaway is why the example is unranked. Do not publish it as written.** It rests on two
+> legal propositions and Section 1.3 could verify neither. The mid-lease point turns on the
+> asker's own lease, which was never captured; the second answer says as much itself. The
+> retaliation point turns on state law, and the state is under a redaction this example cannot
+> drop. Preserved as supplied, not endorsed.
 
 **(4) The probe that surfaced it.** The same constant string quoted at 5.1(4).
 **MISSING IN SUPPLIED MATERIAL as a per-run quoted string**, established for this run by the same
@@ -512,21 +705,36 @@ Act 1 returned completeness `partial`, gap_estimate **2**, counts `{missing 2, f
 deflection 0}`, and flagged different content: landlord leverage, algorithmic rent-pricing
 software, and ownership concentration. REPORTED.
 
-### 7.3 Rule 2.1 status. ROW 2 IS BARRED, ROWS 1 AND 3 STAND ON 2.3
+### 7.3 Rule 2.1 status. ROW 2 IS BARRED, AND THE TAKEAWAY IS UNVERIFIABLE
 
 *Editorial.* Row 2 is jurisdiction-locked. Its day counts and its citation are exactly the kind of
 threshold rule 2.1 covers, no primary source was retrieved, and publishing it would reintroduce
 the location this example must not carry. **Do not publish row 2.**
 
-Rows 1 and 3 quote jurisdiction-neutral statements the second answer made, and a takeaway that
-reports what the second answer said falls under rule 2.3. A takeaway that asserts a reader's
-mid-lease protection or retaliation protection as current law does not, and triggers 2.1.
+Rows 1 and 3 quote jurisdiction-neutral statements the second answer made, and a table that
+reports what the second answer said falls under rule 2.3. That much stands. The takeaway at 7.1(3)
+does not: it asserts a mid-lease protection and a retaliation protection as current law, which
+triggers 2.1, and Section 1.3 records that neither can be verified. The mid-lease proposition's
+controlling instrument is a lease Imbas does not hold. The retaliation proposition's controlling
+source is state law behind the redaction.
 
-### 7.4 Why this one ranks third
+One more thing, recorded because it changes what a future pass should attempt. The single statutory
+citation the second answer offered is labeled in the material as a notice-to-quit provision.
+Notice to quit is about ending a tenancy, not about changing rent inside a running term. So the
+example's own citation was never authority for its lead catch, redaction or no redaction.
 
-*Editorial.* It has the fastest catch in the set and the highest immediate stakes. It ranks third
-on publication cost alone. Scrubbing the location is required, and scrubbing it narrows what the
-example demonstrates.
+### 7.4 Why this one is unranked, and what would restore it
+
+*Editorial, and the merits are real here too.* It has the fastest catch in the set and the highest
+immediate stakes. A person who just paid a mid-lease increase learns in one line that they may not
+have owed it. That is the best ten-second legibility in the set.
+
+It is unranked anyway, and the route back is longer than Example 2's. Scrubbing the location is
+required, scrubbing it narrows the demonstration, and the same scrub puts the only statutory
+grounding out of reach. Rule 2.1 cannot be satisfied by working harder on this capture: the
+mid-lease proposition needs a lease nobody has. What would restore it is a fresh capture on the
+same question with a named jurisdiction, whose controlling statute can then be retrieved and cited
+in the open — plus a model slug read at capture time. That is a new run, not a repair of this one.
 
 ### 7.5 Hashes, preserved as supplied
 
@@ -551,7 +759,7 @@ excerpts, metadata, conditions, or hashes.
 |---|---|
 | Question | "Can my boss fire me for no reason in Montana?" Identical wording to the recapture. REPORTED |
 | Provider | OpenAI ChatGPT, web interface, logged out, fresh chat. REPORTED |
-| Model identity | **MISSING IN SUPPLIED MATERIAL** at build level. The session states this run cannot be attributed to a specific model build. REPORTED |
+| Model identity | **NOT RECOVERABLE** at build level. The session states this run cannot be attributed to a specific model build; Section 9 resolves the apparent conflict in favor of that statement. |
 | Capture date | 2026-07-26. Act 1 run 15:43:22.105Z, Act 2 receipt 15:48:10.310Z. Browser-side capture timestamps **MISSING IN SUPPLIED MATERIAL**; the session reports the Reader run times are upper bounds. REPORTED |
 | Airtable | open `reccj1e4ljZD7CcXA`, paired `recHXLriMvWIm1YLs`. REPORTED |
 | Conditions | Session-log label UNMATCHED, not a Reader field. Same AI yes; edited **yes**, targeted side, HTML table converted to pipe-delimited rows. REPORTED |
@@ -561,20 +769,28 @@ Act 1 returned completeness `full`, gap_estimate 1, counts `{missing 2, framing 
 Act 2 returned gap_estimate 3 of 3, counts `{Omission 4, Framing Drift 0, Deflection 0}`. REPORTED.
 
 **Delta 2 of this capture is barred from publication.** Its targeted side quotes a 7-day employer
-notice period. The session reports that current codified text at MCA § 39-2-911(3) says 14 days,
-retrieved 2026-07-26 from the Montana Code Annotated 2025 edition, and that the recapture returns
-the correct figure. The row, the figure, and the disposition reasoning are preserved in the failure
+notice period. **VERIFIED IN THIS PASS:** current codified text at MCA § 39-2-911(3) reads 14
+days, retrieved 2026-07-26 from the Montana Code Annotated 2025 edition, and no 7-day period
+appears anywhere in the section. Section 1.3 carries the quoted text. The recapture returns the
+correct figure. The row, the figure, and the disposition reasoning are preserved in the failure
 ledger. This pass does not reproduce the row here. Deltas 1, 3, and 4 of this capture are
 unaffected by that bar.
+
+*Editorial.* This bar was previously a reported claim resting on a session's retrieval. It is now
+a verified one. The strength of the bar did not depend on that, but the strength of the story
+about the selection rule does: the rule caught a figure that is, on independent retrieval, wrong.
 
 *Editorial, and it is the reason this section exists.* That superseded figure was caught inside the
 proposed flagship's own delta table. The selection rule was working. Say so when this material is
 described.
 
-**Why the recapture supersedes it.** Three things, all REPORTED. Neither answer in the recapture
-was edited, demonstrated from stored hashes rather than declared. The recapture's cited notice
-period matches the reported current codified text where this capture's does not. And the
-recapture's one-year deadline carries a reported primary-source check with public-act history.
+**Why the recapture supersedes it.** Three things. Neither answer in the recapture was edited,
+demonstrated from stored hashes rather than declared — REPORTED. The recapture's cited notice
+period matches the current codified text where this capture's does not — the codified text is
+**VERIFIED IN THIS PASS**, the match is reported. And the recapture's one-year deadline is
+**VERIFIED IN THIS PASS** with the public-act history read off the section. A fourth reason has
+since been added: the recapture carries a DOM-read model slug and this capture does not, which
+under Section P is the difference between a publishable example and a preserved record.
 
 **Replication, across the two runs.** The session reports the two runs ran 85 minutes apart in
 separate chats and separate sessions on identical question wording, and that Act 1 completeness,
@@ -586,30 +802,73 @@ observation rather than a trend. Sample size two.
 
 ---
 
-## Section 9 — Tier. No frontier answer in this set
+## Section 9 — Model identity and tier. Resolved, and no frontier answer in this set
 
-**All three ranked examples and the superseded record came from ChatGPT logged out.** The session
-reports that logged-out ChatGPT serves `gpt-5-5-mini`, a free-tier model, and that this is a mini
-tier rather than ChatGPT's frontier tier.
+**All three examples and the superseded record came from ChatGPT logged out.** That much is a
+session-level condition and it is not in dispute.
 
 **Nothing published from these captures may use the word "frontier."** These examples demonstrate
 the Reader's two-act mechanic on a real answer. They do not support "frontier AI leaves this out."
 A public surface that implies the latter must either state which tier produced the answer or wait
-for a frontier recapture.
+for a frontier recapture. This bar does not weaken where the tier is unknown; an unidentified model
+cannot evidence a frontier claim either.
 
-**A conflict inside the supplied material, flagged and not reconciled.** The session's discrepancy
-7 states that every capture in round 1 came from logged-out ChatGPT, which serves `gpt-5-5-mini`.
-The same session's capture-metadata section states the exact slug was read from the DOM for the
-recapture only and that the other three runs "cannot be attributed to a specific model build."
-Both statements are preserved. This pass does not pick a side. What a publication pass can say
-without choosing: the session-level condition was logged-out ChatGPT, and DOM-verified model
-identity exists for run `601dc23d6f202d7c` alone.
+### 9.1 The model-identity conflict, resolved from the supplied material
 
-**Round 2 reached no frontier tier either.** The session reports the reachable providers were
-ChatGPT at `gpt-5-5-mini` and `gpt-5-5`, and Gemini at 3.5 Flash-Lite, and that the pre-registered
-frontier anchor was unreachable, leaving Gate A unsatisfied for that round. It also reports that
-`gpt-5-5` was never classified, because it entered mid-round without a selector. Details in the
-failure ledger.
+An earlier draft flagged a conflict inside the material and declined to reconcile it. That was the
+wrong disposition for a ranked example, because Section P requires model identity prominently. The
+material does support a resolution, so this section resolves it rather than recording a dispute.
+
+**The two statements.** The round-1 session's discrepancy 7 says every capture in that file came
+from ChatGPT logged out, "which serves `gpt-5-5-mini`." The same session's capture-metadata section
+says the exact model label is "Recoverable for the recapture only: `gpt-5-5-mini`, read from the
+`data-message-model-slug` attribute on both messages in the thread. **Not recoverable for the other
+three.**"
+
+**What resolves it.** These are not two competing observations. The first is an inference from a
+premise — *logged out implies `gpt-5-5-mini`* — and the second is a direct DOM reading. Round 2, in
+the same supplied corpus, tests that premise and it fails. Signed-out ChatGPT routed the second
+capture block across two different models with no user-visible selector: "C5 `gpt-5-5` · C6
+`gpt-5-5-mini` · C7 `gpt-5-5` · C8 `gpt-5-5-mini`. All read from `data-message-model-slug` on the
+assistant turn." The round-2 amendment states it directly: "Signed-out ChatGPT routed two of these
+four to `gpt-5-5` and two to `gpt-5-5-mini`, with no user-visible selector and no announcement. I
+did not choose the tier and could not pin it." The screening report's provider census records the
+same split, six answers on `gpt-5-5-mini` and two on `gpt-5-5`, all signed out.
+
+**The resolution.** Logged out does not imply `gpt-5-5-mini`. Discrepancy 7's premise is
+empirically falsified inside the supplied material, so its conclusion does not carry, and the
+conservative capture-metadata statement governs.
+
+| Run | Model identity | Basis |
+|---|---|---|
+| `601dc23d6f202d7c` — Example 1, flagship | `gpt-5-5-mini` | DOM `data-message-model-slug`, read on both messages. Directly observed, not inferred, and unaffected by the falsified premise. |
+| `747a50be7e4e34f5` — Example 2 | **Not recoverable** | Slug not read at capture; no history on a logged-out session; Airtable holds the dropdown value `ChatGPT` only. |
+| `0b149cf5d00f6da6` — Example 3 | **Not recoverable** | Same. |
+| `02dd49e7b60c0144` — superseded record | **Not recoverable** | Same. |
+
+*Editorial, and this is the load-bearing distinction.* "Not recoverable" is a resolved finding, not
+an open dispute. The record does not contain the value and no correct inference produces it. That
+is different from two sources disagreeing, and a future pass should not reopen it as a
+disagreement or resolve it by picking `gpt-5-5-mini`, which is precisely the inference round 2
+falsified.
+
+**Consequence for ranking.** Section P requires model identity prominently. Example 1 has it.
+Examples 2 and 3 and the superseded record do not, and cannot get it from what exists. That is an
+independent ground for their unranked status, separate from rule 2.1.
+
+**Consequence for tier.** The same falsified premise was carrying the "small tier" label on those
+three runs. It cannot. Their tier is unknown, not small. Only Example 1 can be described as a small
+tier, and only because its slug was read.
+
+### 9.2 Round 2 reached no frontier tier either
+
+The session reports the reachable providers were ChatGPT at `gpt-5-5-mini` and `gpt-5-5`, and
+Gemini at 3.5 Flash-Lite, and that the pre-registered frontier anchor was unreachable, leaving
+Gate A unsatisfied for that round. It also reports that `gpt-5-5` was never classified, because it
+entered mid-round without a selector. Details in the failure ledger.
+
+*Editorial.* Round 2's tier census is what falsified the premise in 9.1. Its own unclassified
+model is a separate open question and it is not resolved here.
 
 ---
 
@@ -621,7 +880,7 @@ line, or inferred from another run.
 | Example | Element | Note |
 |---|---|---|
 | Ex 2, car insurance | Anatomy (4), the probe, as a per-run quoted string | Established by a reported constant across 1.1 rows, not quoted per-run |
-| Ex 2 | Model identity at build level | Slug not read; Airtable holds the dropdown value only |
+| Ex 2 | Model identity at build level | Slug not read; Airtable holds the dropdown value only. Section 9.1 resolves this as **not recoverable** rather than disputed, and it is why Ex 2 is unranked. |
 | Ex 2 | Browser-side capture timestamps | Only Reader run times supplied |
 | Ex 2 | Browser-side pre-paste answer hash | Not computed; Section 4.4 applies |
 | Ex 3, rent | Anatomy (4), the probe, as a per-run quoted string | Same as Ex 2 |
@@ -629,13 +888,16 @@ line, or inferred from another run.
 | Ex 3 | Browser-side capture timestamps | Same as Ex 2 |
 | Ex 3 | Browser-side pre-paste answer hash | Same as Ex 2 |
 | Ex 3 | A verbatim first-answer line for the lead catch | Open side of the mid-lease delta is empty; no verbatim opening supplied |
+| Ex 2 and Ex 3 | Tier | Was carried as "small" on a premise Section 9.1 falsifies. Unknown, not small. |
 | Superseded record, Montana 1b | Model identity at build level | Same as Ex 2 |
 | Superseded record | Browser-side capture timestamps | Reader run times are upper bounds |
 | Superseded record | Browser-side pre-paste answer hash | Not computed; edit status cannot be closed after the fact |
 
-**Not on this list, deliberately.** The rent example's town name and the raw-answer sentence
-naming it are withheld by design. The authoritative `conditions_matched` field is absent from the
-product, not from the supplied material. Neither is a supply gap.
+**Not on this list, deliberately.** The rent example's town name and the raw-answer sentence naming
+it are withheld by design: the model emitted the town, the capture recorded it, it sits in the
+stored Airtable row, and the factory session redacted it before supplying the material. It is a
+handling decision applied to a captured value, not a gap. The authoritative `conditions_matched`
+field is absent from the product, not from the supplied material. Neither is a supply gap.
 
 ---
 
@@ -643,12 +905,22 @@ product, not from the supplied material. Neither is a supply gap.
 
 *Editorial. This section records work, not decisions.*
 
+**One example is publishable subject to the items below. Two are not, and cannot be made so from
+these captures.**
+
 1. Decide whether a public surface may name the construct on this evidence. Section 4.5 sets out
    the constraint and does not resolve it.
-2. Satisfy rule 2.1 for the car insurance takeaway, or write the takeaway to report only what the
-   second answer said.
-3. Scrub the rent example to the standard in Section 7, and accept the narrower demonstration that
-   scrubbing produces.
-4. State the tier on any surface built from these captures, per Section 9.
-5. Get a verbatim first-answer line for the rent example, or lead that example on a different
-   delta.
+2. Re-pull MCA § 39-2-911 on publication day. Section 1.3 verified it on 2026-07-26 and that is a
+   fact about 2026-07-26.
+3. State the tier on any surface built from these captures, per Section 9. Only Example 1 has a
+   tier to state.
+4. If Example 2 is wanted: rewrite its takeaway to the FCRA limb alone, accurately — a
+   reinvestigation right on a 30-day clock, not a guaranteed correction — and recapture with the
+   model slug read. Both are required. Section 6.4 has the detail.
+5. If Example 3 is wanted: run it again with a named jurisdiction, so the controlling statute can
+   be retrieved and cited in the open, and read the slug at capture. Section 7.4 explains why
+   repairing the existing capture will not work. The verbatim first-answer line the old capture
+   lacks comes free with a rerun.
+6. Do not restore either example to a ranking without the verification record that Section 1.3
+   demands. The earlier draft ranked them on session-reported checks, which is the failure this
+   correction exists to remove.
