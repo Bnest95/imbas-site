@@ -35,7 +35,9 @@ import { buildCheckRegister } from "../../reader-checks.js";
 const sha256Hex = (s) => createHash("sha256").update(s).digest("hex");
 
 // Mirrors api/read.js — kept as local constants because the endpoint does not
-// export them. A drift here is caught by scripts/qa/check-fixture-shape.mjs.
+// export them. Nothing checks these against the endpoint: if api/read.js changes
+// one of these values, this file keeps the old one and the harness reports no
+// change. Edit both together.
 const MODEL = "claude-opus-4-8";
 const READER_PROMPT_VERSION = "reader.v3";
 const CANDIDATE_METHOD_VERSION = "1.0";

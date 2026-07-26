@@ -34,6 +34,18 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { SCENARIOS, resolvePayloads, assertScenarioIntegrity } from "./scenarios.mjs";
+import {
+  EXTRACTOR_SOURCE,
+  normalizeEntries,
+  serializeSnapshot,
+  parseSnapshot,
+  diffSnapshots,
+  diffImageBuffers,
+  imageComparability,
+  detectErrorPage,
+  assertScenarioCapturable,
+  formatDiff,
+} from "./snapshot.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -53,6 +65,28 @@ const VIEWPORTS = {
   desktop: { width: 1440, height: 900, dsf: 2, mobile: false },
   mobile: { width: 375, height: 812, dsf: 3, mobile: true },
   "mobile-tall": { width: 375, height: 1600, dsf: 3, mobile: true },
+};
+
+// ── Pinned environment ───────────────────────────────────────────────────────
+// Recorded into the manifest and into every snapshot so a future run can explain
+// why a baseline is or is not comparable. Locale and timezone are pinned because
+// any product code reaching for toLocaleDateString would otherwise render one
+// string on this machine and another on a machine set to a different zone.
+const PINNED = {
+  locale: "en-US",
+  timezone: "UTC",
+  color_scheme: "light",
+  reduced_motion: "reduce",
+  screenshot_format: "png",
+  // Byte-reproducible output was proven on this machine: three consecutive captures
+  // of single-findings produced one checksum once the scroll offset was made
+  // deterministic. Recorded per baseline so a future run can tell whether the image
+  // layer was trustworthy when that baseline was written.
+  image_diff: "enabled",
+  capture_region: "viewport (state scrolled into it)",
+  url: "/workbench.html",
+  query_parameters: "(none)",
+  font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
 };
 
 // ── Browser resolution ───────────────────────────────────────────────────────
@@ -400,12 +434,27 @@ function buildStubScript(payloads) {
       const r = el.getBoundingClientRect();
       return { top: r.top, left: r.left, width: r.width, height: r.height, bottom: r.bottom };
     },
-    scrollTo(sel) {
+    // Deterministic framing. scrollIntoView({block:"center"}) was measured landing on
+    // a DIFFERENT offset on every run (2507, 2428, 2436 across three runs) while the
+    // element's absolute document position stayed constant at 2823.21875 — it resolves
+    // its target against layout as it reads at call time, and never corrects. That was
+    // the sole remaining source of capture nondeterminism.
+    //
+    // This computes the target from the element's ABSOLUTE position, rounds to an
+    // integer CSS pixel, clamps to the scrollable range, and returns the target so the
+    // caller can verify the browser actually landed there.
+    scrollToDeterministic(sel) {
       const el = document.querySelector(sel);
       if (!el) return { ok: false, why: "no match for " + sel };
-      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
-      return { ok: true };
+      const r = el.getBoundingClientRect();
+      const absTop = r.top + window.scrollY;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const ideal = absTop + r.height / 2 - window.innerHeight / 2;
+      const target = Math.min(Math.max(Math.round(ideal), 0), maxScroll);
+      window.scrollTo(0, target);
+      return { ok: true, target, actual: window.scrollY, absTop, maxScroll };
     },
+    scrollY() { return window.scrollY; },
     viewport() { return { w: window.innerWidth, h: window.innerHeight, scrollH: document.documentElement.scrollHeight }; },
     fontsReady(ms) {
       const bounded = new Promise((r) => setTimeout(() => r("timeout"), ms));
@@ -483,7 +532,7 @@ async function settle(cdp) {
 // ── Capture one scenario at one viewport ─────────────────────────────────────
 const MIN_PNG_BYTES = 5000; // A solid-colour page deflates to a few hundred bytes.
 
-async function capture({ cdp, scenario, viewportName, outDir, serverState, blocked }) {
+async function capture({ cdp, scenario, viewportName, serverState, blocked, payloads, browserVersion }) {
   const vp = VIEWPORTS[viewportName];
   if (!vp) fail(`Unknown viewport "${viewportName}". Known: ${Object.keys(VIEWPORTS).join(", ")}`);
 
@@ -493,6 +542,19 @@ async function capture({ cdp, scenario, viewportName, outDir, serverState, block
     deviceScaleFactor: vp.dsf,
     mobile: vp.mobile,
   });
+
+  // Pin everything the page can read that would otherwise vary by machine. Locale
+  // and timezone matter because any toLocaleDateString in product code renders a
+  // different string under a different zone; the media features matter because a
+  // machine set to dark mode would capture a different palette.
+  await cdp.send("Emulation.setLocaleOverride", { locale: PINNED.locale }).catch(() => {});
+  await cdp.send("Emulation.setTimezoneOverride", { timezoneId: PINNED.timezone }).catch(() => {});
+  await cdp.send("Emulation.setEmulatedMedia", {
+    features: [
+      { name: "prefers-color-scheme", value: PINNED.color_scheme },
+      { name: "prefers-reduced-motion", value: PINNED.reduced_motion },
+    ],
+  }).catch(() => {});
 
   await cdp.send("Page.navigate", { url: `${serverState.origin}/workbench.html` });
   await waitUntil(cdp, "document.readyState === 'complete'", { label: "document ready" });
@@ -558,10 +620,33 @@ async function capture({ cdp, scenario, viewportName, outDir, serverState, block
   // A viewport-sized capture is bounded, always painted, and is also the honest
   // artefact: it is what someone at this viewport actually sees.
   const focus = scenario.focus || scenario.assertSelector;
+  let scrollTarget = 0;
   if (focus) {
-    const r = await evaluate(cdp, `__qa.scrollTo(${JSON.stringify(focus)})`);
+    // Settle BEFORE measuring. The old code scrolled first and settled after, so the
+    // scroll target was computed against a layout that was still moving.
+    await settle(cdp);
+    const r = await evaluate(cdp, `__qa.scrollToDeterministic(${JSON.stringify(focus)})`);
     if (!r.ok) fail(`Cannot scroll focus target into view: ${r.why}`);
     await settle(cdp);
+    scrollTarget = r.target;
+
+    // Re-assert after settling: if anything shifted the page between the scroll and
+    // the shutter, the capture is not the frame we computed and must not be filed as
+    // a comparable baseline.
+    const landed = await evaluate(cdp, "__qa.scrollY()");
+    if (landed !== r.target) {
+      const retry = await evaluate(cdp, `__qa.scrollToDeterministic(${JSON.stringify(focus)})`);
+      await settle(cdp);
+      const landedAgain = await evaluate(cdp, "__qa.scrollY()");
+      if (landedAgain !== retry.target) {
+        fail(
+          `Scroll position is not deterministic: asked for ${retry.target}, landed on ${landedAgain} ` +
+            `(first attempt asked ${r.target}, landed ${landed}). The capture would not be byte-comparable, ` +
+            `so it is not being written.`
+        );
+      }
+      scrollTarget = retry.target;
+    }
 
     // The state must be inside the rectangle we are about to photograph. Without
     // this, "element exists and is visible" can still mean "scrolled off-screen".
@@ -578,6 +663,22 @@ async function capture({ cdp, scenario, viewportName, outDir, serverState, block
     }
   }
 
+  // Snapshot the rendered region BEFORE the shutter, so the text record and the
+  // pixels describe the same frame.
+  const entries = await evaluate(cdp, EXTRACTOR_SOURCE);
+  const renderLines = normalizeEntries(entries, serverState.origin);
+  if (!renderLines.length) {
+    fail("Snapshot extractor found no visible elements in the captured region — the frame is empty.");
+  }
+  const errorMarker = detectErrorPage(renderLines);
+  if (errorMarker) {
+    fail(
+      `The captured frame is a browser error page (matched ${JSON.stringify(errorMarker)}), not the app. ` +
+        `A previous run filed a set of connection-error pages as captures and they compared byte-identical, ` +
+        `which is the most dangerous possible false green. Nothing was written.`
+    );
+  }
+
   const shot = await cdp.send("Page.captureScreenshot", { format: "png" });
   const buf = Buffer.from(shot.data, "base64");
 
@@ -590,36 +691,74 @@ async function capture({ cdp, scenario, viewportName, outDir, serverState, block
     log(`    note: ${blocked.length} non-allowlisted request(s) denied: ${[...new Set(blocked)].slice(0, 5).join(", ")}`);
   }
 
-  fs.mkdirSync(outDir, { recursive: true });
-  const filename = `${scenario.name}--${viewportName}.png`;
-  const outPath = path.join(outDir, filename);
-  fs.writeFileSync(outPath, buf);
+  const env = {
+    ...PINNED,
+    browser_version: browserVersion,
+    viewport: `${vp.width}x${vp.height}`,
+    device_scale_factor: String(vp.dsf),
+    mobile_emulation: String(vp.mobile),
+    scroll_offset: String(scrollTarget),
+    framed_on: focus || "(page top)",
+  };
 
+  const snapshotText = serializeSnapshot({ env, payload: payloads, lines: renderLines });
+
+  // NOTHING is written here. The caller decides whether this run may touch a
+  // baseline — so a capture that throws above cannot leave a partial file behind,
+  // and diff mode cannot overwrite the thing it is comparing against.
   return {
-    filename,
-    path: outPath,
+    filename: `${scenario.name}--${viewportName}.png`,
+    snapshotFilename: `${scenario.name}--${viewportName}.snapshot.txt`,
+    buf,
+    snapshotText,
     sha256: sha256(buf),
     bytes: buf.length,
     viewport: `${vp.width}x${vp.height}@${vp.dsf}x`,
     viewport_name: viewportName,
     focus,
+    scrollTarget,
+    env,
     state: scenario.state,
     expected: scenario.expected,
   };
 }
 
 // ── Main ─────────────────────────────────────────────────────────────────────
-function parseArgs(argv) {
-  const out = { scenarios: [], viewports: ["desktop", "mobile"], outDir: null, list: false, all: false };
+export function parseArgs(argv) {
+  const out = {
+    scenarios: [],
+    viewports: ["desktop", "mobile"],
+    outDir: null,
+    list: false,
+    all: false,
+    diff: false,
+    update: [],
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--list") out.list = true;
     else if (a === "--all") out.all = true;
+    else if (a === "--diff") out.diff = true;
     else if (a === "--scenario") out.scenarios.push(argv[++i]);
     else if (a === "--viewport") out.viewports = argv[++i].split(",").map((s) => s.trim());
     else if (a === "--out") out.outDir = argv[++i];
-    else fail(`Unknown argument: ${a}`);
+    else if (a === "--update") {
+      const name = argv[++i];
+      // A red diff should cost a decision, not a keystroke. There is deliberately
+      // no --update-all: accepting every changed baseline in one keystroke is how a
+      // real regression gets blessed into the baseline without anyone reading it.
+      if (!name || name.startsWith("--")) {
+        fail("--update requires a scenario name: --update <scenario>. There is no bulk update flag.");
+      }
+      out.update.push(name);
+    } else if (a === "--update-all" || a === "--accept-all" || a === "-u") {
+      fail(
+        `${a} does not exist, deliberately. Update one scenario at a time with --update <scenario> ` +
+          `so every accepted baseline change is read before it is written.`
+      );
+    } else fail(`Unknown argument: ${a}`);
   }
+  if (out.diff && out.update.length) fail("--diff and --update are different modes; pass one.");
   return out;
 }
 
@@ -639,8 +778,12 @@ async function main() {
   // rejected loudly if named explicitly, so nobody gets a silently-missing capture.
   const names = args.all
     ? Object.keys(SCENARIOS).filter((n) => SCENARIOS[n].drivable)
-    : args.scenarios;
-  if (!names.length) fail("Nothing to do. Pass --scenario <name>, or --all, or --list.");
+    : args.update.length
+      ? args.update
+      : args.scenarios;
+  if (!names.length) {
+    fail("Nothing to do. Pass --scenario <name>, --update <name>, --all, --diff, or --list.");
+  }
   for (const n of names) {
     if (!SCENARIOS[n]) fail(`Unknown scenario "${n}". Known: ${Object.keys(SCENARIOS).join(", ")}`);
     if (!SCENARIOS[n].drivable) {
@@ -658,8 +801,10 @@ async function main() {
 
   const outDir = path.resolve(REPO_ROOT, args.outDir || "docs/qa/visual-acceptance-harness");
 
-  // Fixture integrity before anything expensive.
+  // Fixture integrity and scenario shape before anything expensive.
   for (const n of names) {
+    const shape = assertScenarioCapturable(n, SCENARIOS[n]);
+    if (shape.length) fail(`Scenario "${n}" is malformed:\n  - ${shape.join("\n  - ")}`);
     const problems = assertScenarioIntegrity(SCENARIOS[n]);
     if (problems.length) fail(`Scenario "${n}" is not internally consistent:\n  - ${problems.join("\n  - ")}`);
   }
@@ -684,6 +829,9 @@ async function main() {
   log(`✓ static server: ${origin} (preflight 200, bundle referenced)`);
 
   const { proc, userDataDir, port: cdpPort } = await launchBrowser(binary);
+  const versionInfo = await (await fetch(`http://127.0.0.1:${cdpPort}/json/version`)).json();
+  const browserVersion = versionInfo.Browser || "unknown";
+  log(`✓ browser version: ${browserVersion}`);
   const targets = await (await fetch(`http://127.0.0.1:${cdpPort}/json/list`)).json();
   const page = targets.find((t) => t.type === "page");
   if (!page) fail("No page target exposed by the browser.");
@@ -746,12 +894,13 @@ async function main() {
         source: buildStubScript(payloads),
       });
 
-      for (const viewportName of args.viewports) {
+      const captured = await captureAll(args.viewports, async (viewportName) => {
         log(`\n▶ ${name} @ ${viewportName}`);
-        const r = await capture({ cdp, scenario, viewportName, outDir, serverState, blocked });
-        results.push(r);
-        log(`  ✓ ${r.filename}  ${r.bytes} bytes  sha256=${r.sha256.slice(0, 16)}…`);
-      }
+        const r = await capture({ cdp, scenario, viewportName, serverState, blocked, payloads, browserVersion });
+        log(`  ✓ ${r.filename}  ${r.bytes} bytes  sha256=${r.sha256.slice(0, 16)}…  scroll=${r.scrollTarget}`);
+        return r;
+      });
+      results.push(...captured);
 
       await cdp.send("Page.removeScriptToEvaluateOnNewDocument", { identifier });
     }
@@ -785,12 +934,155 @@ async function main() {
   }
   log(`\n✓ ${results.length} capture(s), all checksums distinct`);
 
-  writeManifest(outDir, results, blocked, binary);
+  // Every capture above SUCCEEDED — capture() throws on any failure and this line is
+  // unreachable otherwise. Only now may anything touch a baseline.
+  if (args.diff) return runDiff(outDir, results);
+  if (args.update.length) return runUpdate(outDir, results, { blocked, binary, browserVersion });
+
+  commitResults(outDir, results);
+  for (const r of results) r.path = path.join(outDir, r.filename);
+  writeManifest(outDir, results, blocked, binary, browserVersion);
   log(`✓ manifest: ${path.relative(REPO_ROOT, path.join(outDir, "manifest.md"))}`);
 }
 
+// ── Diff mode ────────────────────────────────────────────────────────────────
+// Compares a fresh capture against the committed baseline. Writes NOTHING.
+function runDiff(outDir, results) {
+  let changed = 0;
+  let missing = 0;
+  log("\n══ regression diff ══");
+
+  for (const r of results) {
+    const snapPath = path.join(outDir, r.snapshotFilename);
+    const imgPath = path.join(outDir, r.filename);
+    log(`\n▶ ${r.filename.replace(/\.png$/, "")}`);
+
+    if (!fs.existsSync(snapPath)) {
+      log(`  ✗ no baseline snapshot at ${path.relative(REPO_ROOT, snapPath)}`);
+      log(`    create one with: --update ${r.filename.split("--")[0]}`);
+      missing++;
+      continue;
+    }
+
+    let d;
+    try {
+      d = diffSnapshots(fs.readFileSync(snapPath, "utf8"), r.snapshotText);
+    } catch (e) {
+      log(`  ✗ baseline is unreadable: ${e.message}`);
+      missing++;
+      continue;
+    }
+
+    if (d.identical) {
+      log("  ✓ snapshot: no change");
+    } else {
+      changed++;
+      log(formatDiff("payload", d.payload));
+      log(formatDiff("render", d.render));
+    }
+
+    // Only compare pixels when both sides were produced under the same conditions.
+    // A baseline from another machine or Chromium build encodes differently even
+    // when the page is identical, and reporting that as a regression is the
+    // always-red failure this tooling exists to avoid.
+    const baseEnv = (() => {
+      try {
+        return parseSnapshot(fs.readFileSync(snapPath, "utf8")).env;
+      } catch {
+        return {};
+      }
+    })();
+    const cmp = imageComparability(baseEnv, r.env);
+    if (!cmp.comparable) {
+      log(`  – image: skipped (${cmp.reason})`);
+      continue;
+    }
+
+    const baselineImg = fs.existsSync(imgPath) ? fs.readFileSync(imgPath) : null;
+    const img = diffImageBuffers(baselineImg, r.buf);
+    if (img.status === "identical") log(`  ✓ image: byte-identical (${img.baselineBytes} bytes)`);
+    else if (img.status === "missing-baseline") {
+      log(`  ✗ image: no baseline on disk`);
+      missing++;
+    } else {
+      log(`  ✗ image: bytes differ (baseline ${img.baselineBytes}, fresh ${img.freshBytes})`);
+      changed++;
+    }
+  }
+
+  log("");
+  if (missing) log(`✗ ${missing} baseline(s) missing or unreadable.`);
+  if (changed) {
+    log(`✗ ${changed} difference(s) found. Nothing was written.`);
+    log(`  If a change is intended, accept it one scenario at a time: --update <scenario>`);
+    process.exitCode = 1;
+    return;
+  }
+  if (missing) {
+    process.exitCode = 1;
+    return;
+  }
+  log("✓ no regressions — every snapshot and image matches its baseline.");
+}
+
+// ── Update mode ──────────────────────────────────────────────────────────────
+// Named scenarios only, and the diff is PRINTED BEFORE anything is written, so an
+// accepted baseline change is always read first.
+function runUpdate(outDir, results, updateCtx) {
+  log("\n══ baseline update ══");
+  for (const r of results) {
+    const snapPath = path.join(outDir, r.snapshotFilename);
+    const imgPath = path.join(outDir, r.filename);
+    log(`\n▶ ${r.filename.replace(/\.png$/, "")}`);
+
+    if (fs.existsSync(snapPath)) {
+      try {
+        const d = diffSnapshots(fs.readFileSync(snapPath, "utf8"), r.snapshotText);
+        if (d.identical) log("  snapshot: no change");
+        else {
+          log("  snapshot changes being accepted:");
+          log(formatDiff("payload", d.payload));
+          log(formatDiff("render", d.render));
+        }
+      } catch (e) {
+        log(`  (previous baseline unreadable: ${e.message})`);
+      }
+      const prev = fs.existsSync(imgPath) ? fs.readFileSync(imgPath) : null;
+      const img = diffImageBuffers(prev, r.buf);
+      log(`  image: ${img.status}${img.status === "changed" ? ` (${img.baselineBytes} → ${img.freshBytes} bytes)` : ""}`);
+    } else {
+      log("  new baseline (nothing on disk yet)");
+    }
+
+    fs.mkdirSync(outDir, { recursive: true });
+    fs.writeFileSync(snapPath, r.snapshotText);
+    fs.writeFileSync(imgPath, r.buf);
+    r.path = imgPath;
+    log(`  ✓ written: ${path.relative(REPO_ROOT, snapPath)}`);
+    log(`  ✓ written: ${path.relative(REPO_ROOT, imgPath)}`);
+  }
+
+  // The manifest attests a sha256 per image. Updating one scenario without
+  // regenerating it would leave the manifest asserting a checksum that no longer
+  // matches the file next to it, so either it is rewritten completely or it is
+  // reported as stale — never silently left wrong.
+  const onDisk = safeReaddir(outDir).filter((f) => f.endsWith(".png"));
+  const covered = new Set(results.map((r) => r.filename));
+  const uncovered = onDisk.filter((f) => !covered.has(f));
+  if (uncovered.length) {
+    log(
+      `\n! manifest.md NOT regenerated: this run did not re-capture ${uncovered.join(", ")}, ` +
+        `and rewriting it now would drop them. Its checksums for the updated image(s) are stale ` +
+        `until you run a full capture.`
+    );
+  } else {
+    writeManifest(outDir, results, updateCtx.blocked, updateCtx.binary, updateCtx.browserVersion);
+    log(`\n✓ manifest regenerated: ${path.relative(REPO_ROOT, path.join(outDir, "manifest.md"))}`);
+  }
+}
+
 // ── Manifest ─────────────────────────────────────────────────────────────────
-function writeManifest(outDir, results, blocked, binary) {
+function writeManifest(outDir, results, blocked, binary, browserVersion) {
   const baseSha = execSync("git rev-parse HEAD", { cwd: REPO_ROOT }).toString().trim();
   const dirty = execSync("git status --porcelain", { cwd: REPO_ROOT }).toString().trim();
 
@@ -805,11 +1097,39 @@ function writeManifest(outDir, results, blocked, binary) {
   lines.push("");
   lines.push(`- working tree at capture time: **${dirty ? "dirty" : "clean"}**`);
   lines.push(`- browser: \`${binary}\``);
+  lines.push(`- browser version: \`${browserVersion}\``);
   lines.push(`- captured: ${new Date().toISOString()}`);
   lines.push(`- fixtures: synthetic, from \`scripts/qa/scenarios.mjs\` — not captures, not evidence`);
   lines.push(`- network: deny-by-default; no model API call is reachable from this harness`);
   if (blocked.length) {
     lines.push(`- denied origins: ${[...new Set(blocked.map((u) => safeHost(u)))].join(", ")}`);
+  }
+  lines.push("");
+  lines.push(`## Portability`);
+  lines.push("");
+  lines.push(
+    `**Image baselines are specific to the machine and browser build that produced them.** ` +
+      `PNG bytes depend on the platform's font rasterizer and the Chromium encoder, so the same ` +
+      `page on another machine, another OS, or another Chromium version encodes to different bytes ` +
+      `even when it looks identical. Do not treat an image diff on a different machine, or in CI, ` +
+      `as a regression signal — it will report changed for reasons that have nothing to do with the ` +
+      `product. The **snapshot** baselines (\`*.snapshot.txt\`) carry no rasterized pixels and are ` +
+      `portable; they are the layer to trust when the machine changes.`
+  );
+  lines.push("");
+  lines.push(`## Pinned environment`);
+  lines.push("");
+  lines.push(`Recorded so a future run can explain why a baseline is or is not comparable.`);
+  lines.push("");
+  lines.push(`| pinned value | setting |`);
+  lines.push(`| --- | --- |`);
+  const shared = { ...PINNED, browser_version: browserVersion, browser_executable: binary };
+  for (const k of Object.keys(shared).sort()) lines.push(`| ${k} | \`${shared[k]}\` |`);
+  for (const r of results) {
+    lines.push(
+      `| viewport \`${r.viewport_name}\` | \`${r.env.viewport} @ dsf ${r.env.device_scale_factor}, ` +
+        `mobile=${r.env.mobile_emulation}, scroll offset ${r.env.scroll_offset}\` |`
+    );
   }
   lines.push("");
   lines.push(`## Images`);
@@ -822,7 +1142,8 @@ function writeManifest(outDir, results, blocked, binary) {
     lines.push(`| sha256 | \`${r.sha256}\` |`);
     lines.push(`| bytes | ${r.bytes} |`);
     lines.push(`| viewport | ${r.viewport} (${r.viewport_name}) |`);
-    lines.push(`| framed on | \`${r.focus || "(page top)"}\` scrolled into the viewport |`);
+    lines.push(`| snapshot | \`${r.snapshotFilename}\` |`);
+    lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
     lines.push(`| state captured | ${r.state} |`);
     lines.push(`| expected behaviour | ${r.expected} |`);
     lines.push(`| captured_against_sha | \`${baseSha}\` + uncommitted working tree |`);
@@ -840,7 +1161,39 @@ function safeHost(u) {
   }
 }
 
-main().catch((e) => {
-  console.error(`\n✗ ${e.message}`);
-  process.exit(1);
-});
+// ── Capture-then-commit boundary ─────────────────────────────────────────────
+// The write path is separated from the capture path so a capture that errors, times
+// out, or fails its DOM assertion can never leave a baseline in place and report a
+// clean diff. captureAll resolves ONLY when every capture succeeded; if any one
+// rejects, the whole run rejects and commitResults is never reached.
+export async function captureAll(items, captureFn) {
+  const results = [];
+  for (const item of items) {
+    // No try/catch: a rejection propagates and aborts the run by design.
+    results.push(await captureFn(item));
+  }
+  return results;
+}
+
+export function commitResults(outDir, results, writeFile = fs.writeFileSync) {
+  fs.mkdirSync(outDir, { recursive: true });
+  const written = [];
+  for (const r of results) {
+    const img = path.join(outDir, r.filename);
+    const snap = path.join(outDir, r.snapshotFilename);
+    writeFile(img, r.buf);
+    writeFile(snap, r.snapshotText);
+    written.push(img, snap);
+  }
+  return written;
+}
+
+const INVOKED_DIRECTLY =
+  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+
+if (INVOKED_DIRECTLY) {
+  main().catch((e) => {
+    console.error(`\n✗ ${e.message}`);
+    process.exit(1);
+  });
+}
