@@ -53,6 +53,71 @@ Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `w
 
 Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
 
+## Visual acceptance harness (committed screenshots)
+
+`scripts/qa/visual-acceptance.mjs` drives the Workbench into a named app state and writes a PNG
+to disk. It exists because visual acceptance evidence kept being produced and then lost — harnesses
+built under gitignored directories and never committed, and screenshots that lived only as inline
+images in a chat transcript with no file path. This one is committed, writes real files, and records
+a checksum for every image.
+
+```bash
+node scripts/qa/visual-acceptance.mjs --list
+node scripts/qa/visual-acceptance.mjs --all --out docs/qa/<pass-name>
+node scripts/qa/visual-acceptance.mjs --scenario single-findings --viewport desktop,mobile --out docs/qa/<pass-name>
+```
+
+Flags: `--scenario <name>` (repeatable), `--all` (every drivable scenario), `--viewport` (comma-separated;
+`desktop` 1440x900@2x, `mobile` 375x812@3x, `mobile-tall` 375x1600@3x), `--out <dir>`, `--list`.
+
+**No dependency, no metered call.** It speaks Chrome DevTools Protocol over Node's global `WebSocket`
+(Node >= 22) to a headless Chrome already on the machine — nothing is installed, and `esbuild` remains
+the only dependency. It probes for a browser in a fixed order and prints which one it used; if none is
+found it stops and lists every path it tried. App states are reached by stubbing `fetch` with canned
+payloads, so no model call happens: the stub answers `/api/*` in-page, the static server treats any
+`/api/*` request as a hard abort (it means the stub failed to install), and CDP request interception
+denies every origin except `127.0.0.1` and the three asset hosts the page needs.
+
+Scenarios and their payloads live in `scripts/qa/scenarios.mjs`. Payloads are **built by the real
+product modules** (`reader-receipt.js`, `reader-paired.js`, `reader-checks.js`) rather than hand-written
+JSON, so a fixture cannot encode a response the server could never emit — receipt hashes are genuine and
+check-register quotes really resolve against the answer text. Only model-authored prose is canned. Every
+fixture is synthetic and marked as such: it demonstrates interface behavior and is never evidence.
+
+A scenario with `drivable: false` has payloads but no drive steps. The harness refuses to capture it
+rather than driving some other flow and filing the image under that name.
+
+**Assets.** React and the webfonts are fetched once into `.qa-cache/` (gitignored) and served from
+there afterwards, so runs after the first are offline. Blocking them instead would render in fallback
+fonts at the wrong metrics — a misleading capture.
+
+**What the guards catch.** The harness fails loudly rather than emitting a wrong image:
+
+- it GETs the page before capturing anything, because a dead static server once made every capture
+  byte-identical (each image was the browser's connection-error page)
+- it binds and serves on `127.0.0.1`, never `localhost`, which resolved to `::1` against an IPv4-only
+  listener and produced connection refusals
+- it verifies a stubbed route was actually called, so a captured screen is really a Reader result
+- it waits for webfonts and for layout height to stop changing before framing, and every one of those
+  waits is bounded — an unbounded `document.fonts.ready` or `requestAnimationFrame` hung a run silently
+- it asserts the target is present, has a non-zero box, has its text rendered, **and** falls inside the
+  rectangle being photographed
+- it rejects any PNG under 5 KB, since a near-uniform image deflates to almost nothing
+- it compares checksums across a run and refuses to write a manifest if two supposedly distinct states
+  produced identical bytes
+
+**Captures are viewport-sized, with the state scrolled into view.** Full-page capture was tried and
+rejected on evidence: `captureBeyondViewport` wedges `Page.captureScreenshot` in `chrome-headless-shell`,
+and resizing the viewport to full content height instead produced a 1440x7446 image whose lower two
+thirds were never painted — the panel passed every DOM assertion and still did not appear in the pixels.
+
+Output goes to `docs/qa/<pass-name>/`, which is tracked. Alongside the images the harness writes
+`manifest.md` recording, per image: filename, SHA-256, byte size, viewport, what was framed, the state
+captured, the expected behavior, and `captured_against_sha`. That field is the commit the working tree
+sat on top of — the manifest says plainly that images were captured against that SHA **plus the
+uncommitted working tree**, not against their own commit, which did not exist yet when the shutter fired.
+Scratch, diagnostic, retry, and rejected captures are gitignored; only accepted images are tracked.
+
 ## Reader inference security (rate limits + spend ceiling)
 
 `POST /api/read` calls Anthropic Opus and is public. Durable abuse controls live in
