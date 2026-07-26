@@ -39,8 +39,10 @@ When changing Workbench logic or copy:
 2. Run `npm run build:workbench`
 3. Commit `workbench-app.jsx` and `workbench.bundle.js`
 4. Run `npm test` (or `npm run check:workbench`) to confirm the bundle is in sync
-5. Run `node qa-screenshots-case-structure-fix/final-check.mjs`
-6. Run `node qa-screenshots-case-structure-fix/metadata-check.mjs`
+5. Run `node scripts/qa/visual-acceptance.mjs --all --diff` to compare the rebuilt Workbench against the committed baselines
+6. If a diff is intended, run `node scripts/qa/visual-acceptance.mjs --update <scenario>` for each changed scenario and commit the updated baseline
+
+Step 5 writes nothing. Step 6 takes one scenario at a time and prints the full diff before it writes; there is no `--update-all`. See **Visual acceptance harness** below for the baselines, the flags, and the reason an image diff on a machine other than the capture machine is not a regression signal.
 
 First-time or after pulling changes that touch `package.json`:
 
