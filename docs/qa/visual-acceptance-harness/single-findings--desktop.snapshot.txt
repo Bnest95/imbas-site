@@ -7,12 +7,13 @@ color_scheme: light
 device_scale_factor: 2
 font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
 framed_on: .wb-measure__list li.wb-measure__finding
+image_diff: enabled
 locale: en-US
 mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 2430
+scroll_offset: 2508
 timezone: UTC
 url: /workbench.html
 viewport: 1440x900
