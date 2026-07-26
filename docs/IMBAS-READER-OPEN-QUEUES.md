@@ -171,3 +171,10 @@ eligibility, then returns the constant `TARGETED_PROMPT_TEXT`. The name says it 
 prompt from the measurement. It does not. That misleading name is forensic evidence of an
 undecided transition from a derived prompt to a constant one, not a defect to tidy. Record
 the decision trail before anyone renames the function or touches its argument.
+
+**6. An undeclared custom property is consumed 14 times.**
+workbench.css references --ink-dim 14 times. The custom property is declared nowhere in the
+repository, so each declaration using it becomes invalid at computed-value time and falls
+back through inheritance or the property's initial behavior. The exact visual consequence
+depends on the property consuming the unresolved variable and must be audited before
+choosing a replacement token.

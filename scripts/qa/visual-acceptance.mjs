@@ -24,7 +24,13 @@
 //   node scripts/qa/visual-acceptance.mjs --list
 //   node scripts/qa/visual-acceptance.mjs --scenario single-findings --out docs/qa/my-pass
 //   node scripts/qa/visual-acceptance.mjs --all --out docs/qa/my-pass
-//   node scripts/qa/visual-acceptance.mjs --scenario single-findings --viewport mobile-tall
+//   node scripts/qa/visual-acceptance.mjs --scenario single-findings --viewport mobile-tall --out docs/qa/my-pass
+//   node scripts/qa/visual-acceptance.mjs --all --diff              # compare, write nothing
+//   node scripts/qa/visual-acceptance.mjs --update single-findings  # accept ONE baseline
+//
+// Capture mode requires --out and refuses to aim it at the committed baseline
+// directory. Baselines move only under --update <scenario>. See the baseline write
+// boundary below for why.
 
 import { createServer } from "node:http";
 import { spawn, execSync } from "node:child_process";
@@ -56,6 +62,129 @@ const log = (...a) => console.log(...a);
 const fail = (msg) => {
   throw new Error(msg);
 };
+
+// ── The baseline write boundary ──────────────────────────────────────────────
+// docs/qa/visual-acceptance-harness/ holds the ACCEPTED baselines. It used to be
+// the default --out, so `--all` with no destination silently rewrote every one of
+// them. A --diff run immediately afterwards then compared a fresh capture against
+// a baseline that same run had just written and reported no regressions — a false
+// green that only survived being believed because a person happened to notice.
+//
+// The guarded interface around --update meant nothing while that default stood:
+// --update demands a named scenario and --update-all is a hard error, but bare
+// --all walked past both. So the check here is on the resolved PATH rather than
+// on a flag. A flag check only covers the code paths someone remembered to check;
+// a path check covers the ones they did not.
+const BASELINE_DIR = path.resolve(REPO_ROOT, "docs/qa/visual-acceptance-harness");
+
+const insideBaselineDir = (p) => {
+  const resolved = path.resolve(p);
+  return resolved === BASELINE_DIR || resolved.startsWith(BASELINE_DIR + path.sep);
+};
+
+// An authorization to write named files inside BASELINE_DIR. It is constructed in
+// exactly one place — update mode, from scenario names a person typed — and it
+// lists the files it permits up front. A capture that drifted onto some other
+// filename therefore cannot ride into the baseline directory on the back of
+// someone else's acceptance.
+export class BaselineGrant {
+  constructor(scenarioNames, viewports, scenarios = SCENARIOS) {
+    if (!Array.isArray(scenarioNames) || scenarioNames.length === 0) {
+      fail("A baseline grant requires at least one explicitly named scenario. There is no bulk accept.");
+    }
+    if (!Array.isArray(viewports) || viewports.length === 0) {
+      fail("A baseline grant requires the viewports being accepted.");
+    }
+    const files = new Set();
+    for (const name of scenarioNames) {
+      const scenario = scenarios[name];
+      if (!scenario) {
+        fail(
+          `Cannot accept a baseline for unknown scenario "${name}". ` +
+            `Known: ${Object.keys(scenarios).join(", ")}`
+        );
+      }
+      if (!scenario.drivable) {
+        fail(
+          `Cannot accept a baseline for fixture-only scenario "${name}": it has no drive steps, so no ` +
+            `capture of that state exists. Add drive steps in scripts/qa/scenarios.mjs first.`
+        );
+      }
+      for (const viewport of viewports) {
+        files.add(`${name}--${viewport}.png`);
+        files.add(`${name}--${viewport}.snapshot.txt`);
+      }
+    }
+    // The manifest attests a sha256 per image, so accepting an image change has to
+    // be able to correct it. runUpdate independently refuses to rewrite it when
+    // this run did not re-capture every image already on disk.
+    files.add("manifest.md");
+    this.scenarios = [...scenarioNames];
+    this.files = files;
+  }
+
+  allows(filename) {
+    return this.files.has(filename);
+  }
+
+  assertAllows(filename) {
+    if (!this.allows(filename)) {
+      fail(
+        `Refusing to write ${filename} into the committed baseline directory. This run accepted ` +
+          `${this.scenarios.map((s) => `"${s}"`).join(", ")}, and that file belongs to none of them. ` +
+          `Accept one scenario at a time with --update <scenario>.`
+      );
+    }
+  }
+}
+
+// THE single write function. Every artefact this harness puts on disk goes through
+// here, so no path into the baseline directory exists that does not first prove a
+// person named the scenario being replaced.
+export function writeArtifact(filePath, data, grant = null) {
+  const resolved = path.resolve(filePath);
+  if (insideBaselineDir(resolved)) {
+    if (!grant) {
+      fail(
+        `Refusing to write ${path.relative(REPO_ROOT, resolved)} — it is inside the committed baseline ` +
+          `directory and this run holds no acceptance. Baselines move only under --update <scenario>, ` +
+          `which prints the full diff before it writes.`
+      );
+    }
+    grant.assertAllows(path.basename(resolved));
+  }
+  fs.mkdirSync(path.dirname(resolved), { recursive: true });
+  fs.writeFileSync(resolved, data);
+  return resolved;
+}
+
+// Where this run is allowed to put its output, decided before anything expensive
+// runs so a misaimed command fails on the command line rather than after a browser
+// launch and a full capture.
+export function resolveDestination(args) {
+  const requested = args.outDir ? path.resolve(REPO_ROOT, args.outDir) : null;
+  const mode = args.diff ? "diff" : args.update.length ? "update" : "capture";
+
+  if (mode === "capture") {
+    if (!requested) {
+      fail(
+        "Capture mode needs an explicit destination: --out <dir>. It no longer defaults to the committed " +
+          "baseline directory, because that made a bare --all overwrite every accepted baseline without " +
+          "saying so, and a --diff run straight afterwards then compared against what it had just " +
+          "written. To check for regressions use --diff; to accept a change use --update <scenario>."
+      );
+    }
+    if (insideBaselineDir(requested)) {
+      fail(
+        `--out ${args.outDir} points inside the committed baseline directory. Capture mode may not write ` +
+          `there. Compare against the baselines with --diff, or accept a change one scenario at a time ` +
+          `with --update <scenario>.`
+      );
+    }
+    return { mode, outDir: requested };
+  }
+  return { mode, outDir: requested || BASELINE_DIR };
+}
 
 // ── Viewports ────────────────────────────────────────────────────────────────
 // mobile-tall exists because a 375x812 capture was reported to render blank at the
@@ -349,9 +478,11 @@ async function fetchThroughCache(url) {
   if (!res.ok) fail(`Asset fetch failed ${res.status} for ${url}`);
   const body = Buffer.from(await res.arrayBuffer());
   const meta = { status: res.status, contentType: res.headers.get("content-type") || "application/octet-stream" };
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(metaPath, JSON.stringify(meta));
-  fs.writeFileSync(bodyPath, body);
+  // Through the same door as everything else. The cache can never resolve inside
+  // the baseline directory, so this needs no grant — but routing it here keeps the
+  // rule "every write goes through writeArtifact" true without exception.
+  writeArtifact(metaPath, JSON.stringify(meta));
+  writeArtifact(bodyPath, body);
   return { ...meta, body, cached: false };
 }
 
@@ -774,6 +905,14 @@ async function main() {
     return;
   }
 
+  // Destination and mode first, before a browser is launched or a pixel captured.
+  // A run aimed at the wrong place must cost a command line, not a full capture.
+  const { mode, outDir } = resolveDestination(args);
+
+  // The ONE place a baseline grant is ever created. Nothing downstream can mint
+  // one, so every other mode reaches the write guard empty-handed.
+  const grant = mode === "update" ? new BaselineGrant(args.update, args.viewports) : null;
+
   // --all means every DRIVABLE scenario. Fixture-only scenarios are skipped here but
   // rejected loudly if named explicitly, so nobody gets a silently-missing capture.
   const names = args.all
@@ -798,8 +937,6 @@ async function main() {
     const skipped = Object.keys(SCENARIOS).filter((n) => !SCENARIOS[n].drivable);
     if (skipped.length) log(`  (fixture-only, not captured: ${skipped.join(", ")})`);
   }
-
-  const outDir = path.resolve(REPO_ROOT, args.outDir || "docs/qa/visual-acceptance-harness");
 
   // Fixture integrity and scenario shape before anything expensive.
   for (const n of names) {
@@ -936,9 +1073,12 @@ async function main() {
 
   // Every capture above SUCCEEDED — capture() throws on any failure and this line is
   // unreachable otherwise. Only now may anything touch a baseline.
-  if (args.diff) return runDiff(outDir, results);
-  if (args.update.length) return runUpdate(outDir, results, { blocked, binary, browserVersion });
+  if (mode === "diff") return runDiff(outDir, results);
+  if (mode === "update") return runUpdate(outDir, results, { blocked, binary, browserVersion, grant });
 
+  // Capture mode. outDir is guaranteed non-baseline by resolveDestination, and the
+  // null grant means the write guard would refuse it even if that ever stopped
+  // being true.
   commitResults(outDir, results);
   for (const r of results) r.path = path.join(outDir, r.filename);
   writeManifest(outDir, results, blocked, binary, browserVersion);
@@ -1029,6 +1169,8 @@ function runDiff(outDir, results) {
 // Named scenarios only, and the diff is PRINTED BEFORE anything is written, so an
 // accepted baseline change is always read first.
 function runUpdate(outDir, results, updateCtx) {
+  const { grant } = updateCtx;
+  if (!grant) fail("Update mode reached the write path with no baseline grant. Refusing to write.");
   log("\n══ baseline update ══");
   for (const r of results) {
     const snapPath = path.join(outDir, r.snapshotFilename);
@@ -1054,9 +1196,8 @@ function runUpdate(outDir, results, updateCtx) {
       log("  new baseline (nothing on disk yet)");
     }
 
-    fs.mkdirSync(outDir, { recursive: true });
-    fs.writeFileSync(snapPath, r.snapshotText);
-    fs.writeFileSync(imgPath, r.buf);
+    writeArtifact(snapPath, r.snapshotText, grant);
+    writeArtifact(imgPath, r.buf, grant);
     r.path = imgPath;
     log(`  ✓ written: ${path.relative(REPO_ROOT, snapPath)}`);
     log(`  ✓ written: ${path.relative(REPO_ROOT, imgPath)}`);
@@ -1076,13 +1217,13 @@ function runUpdate(outDir, results, updateCtx) {
         `until you run a full capture.`
     );
   } else {
-    writeManifest(outDir, results, updateCtx.blocked, updateCtx.binary, updateCtx.browserVersion);
+    writeManifest(outDir, results, updateCtx.blocked, updateCtx.binary, updateCtx.browserVersion, grant);
     log(`\n✓ manifest regenerated: ${path.relative(REPO_ROOT, path.join(outDir, "manifest.md"))}`);
   }
 }
 
 // ── Manifest ─────────────────────────────────────────────────────────────────
-function writeManifest(outDir, results, blocked, binary, browserVersion) {
+function writeManifest(outDir, results, blocked, binary, browserVersion, grant = null) {
   const baseSha = execSync("git rev-parse HEAD", { cwd: REPO_ROOT }).toString().trim();
   const dirty = execSync("git status --porcelain", { cwd: REPO_ROOT }).toString().trim();
 
@@ -1149,8 +1290,7 @@ function writeManifest(outDir, results, blocked, binary, browserVersion) {
     lines.push(`| captured_against_sha | \`${baseSha}\` + uncommitted working tree |`);
     lines.push("");
   }
-  fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(path.join(outDir, "manifest.md"), lines.join("\n"));
+  writeArtifact(path.join(outDir, "manifest.md"), lines.join("\n"), grant);
 }
 
 function safeHost(u) {
@@ -1175,15 +1315,13 @@ export async function captureAll(items, captureFn) {
   return results;
 }
 
-export function commitResults(outDir, results, writeFile = fs.writeFileSync) {
-  fs.mkdirSync(outDir, { recursive: true });
+// The injectable writer this used to take was itself a way around the baseline
+// guard, so it is gone: every byte lands through writeArtifact or not at all.
+export function commitResults(outDir, results, grant = null) {
   const written = [];
   for (const r of results) {
-    const img = path.join(outDir, r.filename);
-    const snap = path.join(outDir, r.snapshotFilename);
-    writeFile(img, r.buf);
-    writeFile(snap, r.snapshotText);
-    written.push(img, snap);
+    written.push(writeArtifact(path.join(outDir, r.filename), r.buf, grant));
+    written.push(writeArtifact(path.join(outDir, r.snapshotFilename), r.snapshotText, grant));
   }
   return written;
 }
