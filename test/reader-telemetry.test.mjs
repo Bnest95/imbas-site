@@ -69,8 +69,10 @@ test("every event name is covered by the exported list", () => {
   assert.equal(READER_EVENT_NAMES.length, 21);
   assert.ok(READER_EVENT_NAMES.includes("target_question_copied"));
   assert.ok(READER_EVENT_NAMES.includes("loop_completed"));
-  // Stage spine (reader-stage.js).
-  assert.ok(READER_EVENT_NAMES.includes("stage_changed"));
+  // Stage spine (reader-stage.js). stage_changed was renamed: it recorded only clicked
+  // forward advances, so the result and degraded stages never appeared in the funnel.
+  assert.ok(READER_EVENT_NAMES.includes("stage_entered"));
+  assert.ok(!READER_EVENT_NAMES.includes("stage_changed"));
   // User-chip lane events (design: item 3 telemetry, user-chip follow-up).
   assert.ok(READER_EVENT_NAMES.includes("chip_instruction_copied"));
   assert.ok(READER_EVENT_NAMES.includes("chip_pair_completed"));

@@ -47,14 +47,29 @@ export const ENTRY_PAIRED_ANSWER = "paired-answer";
 export const ENTRY_CHIP_ANSWER = "chip-answer";
 
 // ── Transition causes ──────────────────────────────────────────────────────────
-// Only ADVANCE is a person moving themselves forward through the product. Everything
-// else is the browser, the framework, or a restore putting them somewhere.
-export const CAUSE_ADVANCE = "advance";
-export const CAUSE_INIT = "init";
-export const CAUSE_POP = "pop";
-export const CAUSE_RESTORE = "restore";
-export const CAUSE_NORMALIZE = "normalize";
-export const CAUSE_REMOUNT = "remount";
+// WHY the stage moved, kept strictly separate from WHETHER the stage was entered. An
+// earlier cut fused the two and gated the emit on ADVANCE alone, which meant the two
+// stages a person never clicks their way into — the result that arrives when a fetch
+// settles, and the degraded body that replaces it — were never recorded at all. The
+// funnel could not see its own middle.
+export const CAUSE_ADVANCE = "advance"; // the stage's primary action, clicked
+export const CAUSE_ASYNC = "async"; // a run settled and moved the stage on its own
+export const CAUSE_DEGRADED = "degraded"; // a fallback body arrived instead of a read
+export const CAUSE_INIT = "init"; // first paint, including an arrival deep link
+export const CAUSE_POP = "pop"; // history navigation, or anything unattributed
+export const CAUSE_RESTORE = "restore"; // put back where they were
+export const CAUSE_NORMALIZE = "normalize"; // a stale stage hash resolved down
+export const CAUSE_REMOUNT = "remount"; // React rebuilt the tree
+
+// The causes that mean the person moved themselves deeper into the product. Only these
+// count toward forward conversion. Arrival, history navigation, restore, remount and
+// normalization all produce a real stage entry — the record has to exist — but none of
+// them is progress, so conversion analysis reads this list rather than guessing.
+export const PROGRESS_CAUSES = [CAUSE_ADVANCE, CAUSE_ASYNC, CAUSE_DEGRADED];
+
+export function countsAsProgress(cause) {
+  return PROGRESS_CAUSES.includes(cause);
+}
 
 /**
  * Which stage the person is in, derived from what actually exists.
@@ -218,18 +233,35 @@ export function isForwardStage(from, to) {
 /**
  * The single decision point for stage telemetry.
  *
- * STAGE_CHANGED means: an explicit in-product stage advance the person initiated
- * through the stage's primary action. Everything else moves the view without moving
- * the funnel. Back and browser Forward arrive as CAUSE_POP and emit nothing, which is
- * load-bearing because the hash drives stage and both fire hashchange.
+ * STAGE_ENTERED means: this stage was reached. Once per stage, per session. Every way
+ * of reaching it qualifies — clicking its primary action, a fetch settling, a degraded
+ * body arriving, landing on it from a deep link — because a funnel that only counts
+ * clicked stages cannot see whether anyone got a result.
+ *
+ * `seen` is the stages already recorded this session. Re-entering one records nothing:
+ * that is what makes "recorded once" true even when a person walks back and forth. It
+ * is passed in rather than held here so this module stays pure and the caller's ref
+ * remains the single copy.
+ *
+ * `progress` is the second, orthogonal answer: did the person move themselves forward.
+ * It is NOT on the wire — the wire carries `cause`, and conversion analysis reads
+ * countsAsProgress. Keeping it here means the product and the analysis cannot drift
+ * into two different definitions of the funnel.
  *
  * Skipping a stage is permitted (result → compare via the direct door, compose →
- * result when a fallback returns without an inspecting frame). One advance still emits
- * exactly one event, and from/to record the ACTUAL pair, never a synthesized path.
+ * result when a fallback returns without an inspecting frame). prior_stage records the
+ * ACTUAL pair, never a synthesized path.
  */
-export function stageTransition(from, to, cause) {
-  const emit = cause === CAUSE_ADVANCE && isForwardStage(from, to);
-  return { from, to, cause, emit, skipped: emit && skippedBetween(from, to) };
+export function stageEntry(to, { from = null, cause = CAUSE_POP, seen = [] } = {}) {
+  const emit = !seen.includes(to);
+  return {
+    stage: to,
+    prior_stage: from,
+    cause,
+    emit,
+    progress: emit && countsAsProgress(cause) && (from === null || isForwardStage(from, to)),
+    skipped: from !== null && skippedBetween(from, to),
+  };
 }
 
 function skippedBetween(from, to) {

@@ -189,10 +189,35 @@ test("the chip lane renders behind the view's own door, never unconditionally", 
   );
   const at = SRC.indexOf("<ChipLane />");
   assert.notEqual(at, -1, "the lane must still exist");
-  const before = SRC.slice(Math.max(0, at - 200), at);
+  const before = SRC.slice(Math.max(0, at - 400), at);
   assert.ok(
-    /\{view\.chipLane \? \(/.test(before),
-    "the lane must be gated on view.chipLane — unconditional rendering put two answer boxes on first load",
+    /\{chipMounted \? \(/.test(before),
+    "the lane must not mount until it is opened — mounting it on first load put two answer boxes on the page, and fired chip_row_rendered for visitors who never saw the row",
+  );
+  assert.ok(
+    /hidden=\{!view\.chipLane\}/.test(before),
+    "and its visibility must be the view's decision, so a live paired input is never joined by a second box",
+  );
+});
+
+test("closing the chip lane hides it instead of unmounting its answers", () => {
+  // Closing is a reversal. A reversal that eats a half-typed answer is the same one-way
+  // door the read-only fields would have been without an edit control.
+  assert.ok(
+    /const \[chipMounted, setChipMounted\] = useState\(\(\) => parseArrival\(window\.location\)\.lane === LANE_CHIPS\);/.test(
+      SRC,
+    ),
+    "a ?start=chips arrival lands with the lane already mounted",
+  );
+  assert.ok(/setChipMounted\(true\);/.test(SRC), "opening the lane latches it mounted");
+  assert.equal(
+    (SRC.match(/setChipMounted\(/g) || []).length,
+    1,
+    "nothing may unlatch it: unmounting is what loses the answer",
+  );
+  assert.ok(
+    /const closeChipLane = \(\) => setLane\(LANE_INSPECT\);/.test(SRC),
+    "closing moves the lane, never the mount",
   );
 });
 

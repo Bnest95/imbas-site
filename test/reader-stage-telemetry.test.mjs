@@ -1,14 +1,18 @@
-// STAGE_CHANGED semantics.
+// STAGE_ENTERED semantics.
 //
-// The event means one thing: an explicit in-product stage advance the person initiated
-// through the stage's primary action. It does NOT mean "the stage prop changed", which
-// is what a naive implementation would emit and what would make the funnel unreadable —
-// browser Back would look like progress, and a remount would look like a second visitor.
+// The event answers one question: was this stage reached. Once per stage, per session,
+// however it was reached. WHY it was reached is a second and separate question, carried
+// as `cause`, and it decides only whether the entry counts as forward conversion.
 //
-// So this file does not test stageTransition in isolation. It drives a fake component
-// whose transition effect is a line-for-line copy of the one in workbench-app.jsx, and
-// pushes it through the sequences a real browser produces: mount, advance, async settle,
-// Back, Forward, remount, retry. The count of emitted events is the assertion.
+// The predecessor fused the two. It gated the emit on a clicked advance, so the two
+// stages nobody clicks into — the result that appears when a fetch settles, and the
+// degraded body that arrives instead of a read — were never recorded. A funnel that
+// cannot see its own middle cannot tell "nobody finished" from "nobody was measured".
+//
+// So this file does not test stageEntry in isolation. It drives a fake component whose
+// entry effect is a line-for-line copy of the one in workbench-app.jsx, and pushes it
+// through the sequences a real browser produces: mount, advance, async settle, degraded
+// settle, Back, Forward, remount, retry. The emitted list is the assertion.
 // Run: node --test test/reader-stage-telemetry.test.mjs
 
 import { test } from "node:test";
@@ -23,35 +27,42 @@ import {
   STAGE_DELTA,
   STAGE_CHIPS,
   CAUSE_ADVANCE,
+  CAUSE_ASYNC,
+  CAUSE_DEGRADED,
   CAUSE_INIT,
   CAUSE_POP,
   CAUSE_RESTORE,
   CAUSE_REMOUNT,
-  stageTransition,
+  PROGRESS_CAUSES,
+  countsAsProgress,
+  stageEntry,
 } from "../reader-stage.js";
 import { READER_EVENTS, buildEvent } from "../reader-telemetry.js";
 
 /**
- * A stand-in for ReaderWorkbench's transition effect. `render(stage)` is one React
- * commit. The body between the markers is the same code as workbench-app.jsx — if the
+ * A stand-in for ReaderWorkbench's entry effect. `render(stage)` is one React commit.
+ * The body between the markers is the same code as workbench-app.jsx — if the
  * component's effect changes, this must change with it or these tests stop meaning
  * anything.
  *
- * `mount()` returns a fresh instance, which is what a remount is: refs start over.
+ * `mountWorkbench()` returns a fresh instance, which is what a remount is: refs start
+ * over, including the record of which stages were already entered.
  */
 function mountWorkbench(mode = "own") {
   const emitted = [];
   const prevStageRef = { current: null };
   const causeRef = { current: CAUSE_INIT };
+  const enteredRef = { current: [] };
 
   return {
     emitted,
+    // Every cause but the default is set by the code path that owns it, immediately
+    // before the setter that moves the stage.
+    cause(next) {
+      causeRef.current = next;
+    },
     advance() {
       causeRef.current = CAUSE_ADVANCE;
-    },
-    // Cause set by something that is not the person's primary action.
-    attribute(cause) {
-      causeRef.current = cause;
     },
     render(stage) {
       // ── mirrors workbench-app.jsx ──
@@ -59,195 +70,250 @@ function mountWorkbench(mode = "own") {
       const cause = causeRef.current;
       causeRef.current = CAUSE_POP;
       prevStageRef.current = stage;
-      if (from === null) return; // initial render and remount never emit
-      const t = stageTransition(from, stage, cause);
-      if (t.emit) {
-        emitted.push({ from: t.from, to: t.to, skipped: t.skipped, mode });
-      }
+      const entry = stageEntry(stage, { from, cause, seen: enteredRef.current });
+      if (!entry.emit) return;
+      enteredRef.current = enteredRef.current.concat(stage);
+      emitted.push({
+        stage: entry.stage,
+        prior_stage: entry.prior_stage,
+        cause: entry.cause,
+        mode,
+      });
       // ── end mirror ──
     },
   };
 }
 
-// ── The five cases the semantics have to survive ───────────────────────────────
+// What conversion analysis does downstream, written once so the tests and the product
+// cannot drift into two definitions.
+const progress = (emitted) => emitted.filter((e) => countsAsProgress(e.cause));
 
-test("an explicit advance emits exactly one event", () => {
+// ── The end-to-end proof ───────────────────────────────────────────────────────
+
+test("one complete run records every stage it reached, exactly once each", () => {
   const wb = mountWorkbench();
-  wb.render(STAGE_COMPOSE); // mount
+  wb.render(STAGE_COMPOSE); // arrival
   wb.advance();
-  wb.render(STAGE_INSPECTING);
-  assert.equal(wb.emitted.length, 1);
-  assert.deepEqual(wb.emitted[0], {
-    from: STAGE_COMPOSE,
-    to: STAGE_INSPECTING,
-    skipped: false,
-    mode: "own",
-  });
-});
-
-test("browser Back emits nothing", () => {
-  const wb = mountWorkbench();
-  wb.render(STAGE_COMPOSE);
+  wb.render(STAGE_INSPECTING); // "Run The Reader"
+  wb.cause(CAUSE_ASYNC);
+  wb.render(STAGE_FOLLOWUP); // the fetch settles with an eligible act 2
   wb.advance();
-  wb.render(STAGE_RESULT);
-  wb.emitted.length = 0;
-  // Back: the hash changes, React rerenders, nothing set a cause.
-  wb.render(STAGE_COMPOSE);
-  assert.equal(wb.emitted.length, 0);
-});
-
-test("browser Forward emits nothing", () => {
-  const wb = mountWorkbench();
-  wb.render(STAGE_COMPOSE);
+  wb.render(STAGE_COMPARE); // "Paste what came back"
   wb.advance();
-  wb.render(STAGE_RESULT);
-  wb.render(STAGE_COMPOSE); // Back
-  wb.emitted.length = 0;
-  wb.render(STAGE_RESULT); // Forward — a forward-ordered move with no advance behind it
-  assert.equal(wb.emitted.length, 0, "Forward re-enters a stage the person already counted");
-});
+  wb.render(STAGE_DELTA); // the paired answer lands
 
-test("a remount emits nothing, however deep the stage", () => {
-  for (const stage of [STAGE_COMPOSE, STAGE_RESULT, STAGE_DELTA, STAGE_CHIPS]) {
-    const wb = mountWorkbench();
-    wb.attribute(CAUSE_REMOUNT);
-    wb.render(stage);
-    assert.equal(wb.emitted.length, 0, `${stage}: a remount is not a person moving`);
+  assert.deepEqual(
+    wb.emitted.map((e) => e.stage),
+    [STAGE_COMPOSE, STAGE_INSPECTING, STAGE_FOLLOWUP, STAGE_COMPARE, STAGE_DELTA],
+    "every stage reached appears, in the order reached",
+  );
+  for (const stage of new Set(wb.emitted.map((e) => e.stage))) {
+    assert.equal(
+      wb.emitted.filter((e) => e.stage === stage).length,
+      1,
+      `${stage} must be recorded exactly once`,
+    );
   }
+  assert.deepEqual(
+    wb.emitted.map((e) => e.prior_stage),
+    [null, STAGE_COMPOSE, STAGE_INSPECTING, STAGE_FOLLOWUP, STAGE_COMPARE],
+    "prior_stage records the actual pair, and is absent on the first entry",
+  );
+  // The arrival is a real entry and is not progress. Everything after it is.
+  assert.equal(wb.emitted[0].cause, CAUSE_INIT);
+  assert.deepEqual(progress(wb.emitted).map((e) => e.stage), [
+    STAGE_INSPECTING,
+    STAGE_FOLLOWUP,
+    STAGE_COMPARE,
+    STAGE_DELTA,
+  ]);
 });
 
-test("a restore emits nothing", () => {
-  const wb = mountWorkbench();
-  wb.render(STAGE_COMPOSE);
-  wb.attribute(CAUSE_RESTORE);
-  wb.render(STAGE_RESULT);
-  assert.equal(wb.emitted.length, 0, "being put back where you were is not moving forward");
-});
-
-test("a second explicit advance emits exactly one new event", () => {
+test("Back, Forward and remount contribute nothing to forward conversion", () => {
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_INSPECTING);
+  wb.cause(CAUSE_ASYNC);
+  wb.render(STAGE_RESULT);
+  const forward = progress(wb.emitted).length;
+
+  wb.render(STAGE_COMPOSE); // Back
+  wb.render(STAGE_RESULT); // Forward
+  wb.render(STAGE_COMPOSE); // Back again
+  assert.equal(
+    progress(wb.emitted).length,
+    forward,
+    "walking the same stages again is not new progress",
+  );
+  assert.equal(wb.emitted.length, 3, "and adds no duplicate records either");
+
+  // A remount is a new instance. It records where it landed, attributed, and that entry
+  // is excluded from conversion.
+  const re = mountWorkbench();
+  re.cause(CAUSE_REMOUNT);
+  re.render(STAGE_RESULT);
+  assert.equal(re.emitted.length, 1, "the record that the stage was entered must exist");
+  assert.equal(re.emitted[0].cause, CAUSE_REMOUNT);
+  assert.equal(progress(re.emitted).length, 0);
+});
+
+// ── The hole the rename exists to close ────────────────────────────────────────
+
+test("the result stage is recorded even though nobody clicks into it", () => {
+  // The predecessor's failure, stated as a test. One click, two stage moves: the click
+  // reaches inspecting, the settle reaches the result. Gating on the click recorded the
+  // first and dropped the second.
+  const wb = mountWorkbench();
+  wb.render(STAGE_COMPOSE);
   wb.advance();
+  wb.render(STAGE_INSPECTING);
+  wb.cause(CAUSE_ASYNC);
+  wb.render(STAGE_RESULT);
+  assert.deepEqual(wb.emitted.map((e) => e.stage), [
+    STAGE_COMPOSE,
+    STAGE_INSPECTING,
+    STAGE_RESULT,
+  ]);
+  assert.equal(wb.emitted[2].cause, CAUSE_ASYNC);
+  assert.ok(countsAsProgress(CAUSE_ASYNC), "reaching a result is the middle of the funnel");
+});
+
+test("a degraded body is a stage entry with its own cause, not a missing one", () => {
+  const wb = mountWorkbench();
+  wb.render(STAGE_COMPOSE);
+  wb.advance();
+  wb.render(STAGE_INSPECTING);
+  wb.cause(CAUSE_DEGRADED);
+  wb.render(STAGE_RESULT); // a fallback body arrived instead of a read
+  assert.equal(wb.emitted[2].cause, CAUSE_DEGRADED);
+  assert.ok(
+    countsAsProgress(CAUSE_DEGRADED),
+    "the person still reached a result; segmenting it is the cause's job, not an omission",
+  );
+});
+
+test("a fallback arriving without an inspecting frame still records the result", () => {
+  const wb = mountWorkbench();
+  wb.render(STAGE_COMPOSE);
+  wb.cause(CAUSE_DEGRADED);
   wb.render(STAGE_RESULT);
   assert.equal(wb.emitted.length, 2);
-  assert.deepEqual(wb.emitted.map((e) => `${e.from}->${e.to}`), [
-    "compose->inspecting",
-    "inspecting->result",
+  assert.equal(wb.emitted[1].prior_stage, STAGE_COMPOSE, "the actual pair, not a synthesized path");
+  assert.ok(stageEntry(STAGE_RESULT, { from: STAGE_COMPOSE }).skipped);
+});
+
+// ── Arrival ────────────────────────────────────────────────────────────────────
+
+test("arriving on ?start=chips records the chip stage it landed on", () => {
+  // The known interpretation limit the predecessor carried: its first recorded event was
+  // an advance OUT of a stage the funnel never saw anyone enter. The arrival is now a
+  // real entry with cause init, which conversion analysis excludes.
+  const wb = mountWorkbench();
+  wb.render(STAGE_CHIPS);
+  assert.deepEqual(wb.emitted, [
+    { stage: STAGE_CHIPS, prior_stage: null, cause: CAUSE_INIT, mode: "own" },
   ]);
+  assert.equal(progress(wb.emitted).length, 0, "an arrival is not a move");
+});
+
+test("a restore records where the person was put back, and counts nothing", () => {
+  const wb = mountWorkbench();
+  wb.render(STAGE_COMPOSE);
+  wb.cause(CAUSE_RESTORE);
+  wb.render(STAGE_RESULT);
+  assert.equal(wb.emitted.length, 2);
+  assert.equal(wb.emitted[1].cause, CAUSE_RESTORE);
+  assert.equal(progress(wb.emitted).length, 0, "being put back where you were is not moving");
 });
 
 // ── The cause is consumed, not held ────────────────────────────────────────────
 
 test("one advance cannot pay for two moves", () => {
-  // The async settle after a run is a second render the person did not initiate. The
-  // cause resets on every commit, so the settle carries CAUSE_POP and emits nothing.
+  // The cause resets on every commit. An un-attributed settle carries CAUSE_POP, which
+  // still records the entry — it just does not count as progress.
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_INSPECTING); // the click
-  wb.render(STAGE_RESULT); // the fetch resolving
-  assert.equal(wb.emitted.length, 1, "the settle rode in on the click's cause");
-  assert.equal(wb.emitted[0].to, STAGE_INSPECTING);
+  wb.render(STAGE_RESULT); // an unattributed settle
+  assert.equal(wb.emitted.length, 3);
+  assert.equal(wb.emitted[2].cause, CAUSE_POP);
+  assert.deepEqual(progress(wb.emitted).map((e) => e.stage), [STAGE_INSPECTING]);
 });
 
-test("a retry that stays in the same stage emits nothing", () => {
+test("a retry that stays in the same stage records nothing", () => {
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_RESULT);
-  wb.emitted.length = 0;
+  const before = wb.emitted.length;
   wb.advance();
-  wb.render(STAGE_RESULT); // retry in place: same stage, real advance cause
-  assert.equal(wb.emitted.length, 0, "a stage that did not move is not a transition");
+  wb.render(STAGE_RESULT); // retry in place
+  assert.equal(wb.emitted.length, before, "a stage that did not move was not entered again");
 });
 
-test("a degraded rerender inside one stage emits nothing", () => {
+test("a degraded rerender inside one stage records nothing", () => {
   // Capacity degradation swaps the Act 2 body for approved copy. The stage is unchanged.
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_FOLLOWUP);
-  wb.emitted.length = 0;
+  const before = wb.emitted.length;
+  wb.cause(CAUSE_DEGRADED);
   wb.render(STAGE_FOLLOWUP);
   wb.render(STAGE_FOLLOWUP);
-  assert.equal(wb.emitted.length, 0);
+  assert.equal(wb.emitted.length, before);
 });
 
-test("a backward move under an advance cause still emits nothing", () => {
+test("a backward move under an advance cause records no progress", () => {
   // "Edit the answer" clears the result. It is the person's own action, but it is not
   // forward, and the funnel counts forward motion.
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_RESULT);
-  wb.emitted.length = 0;
+  const forward = progress(wb.emitted).length;
   wb.advance();
   wb.render(STAGE_COMPOSE);
-  assert.equal(wb.emitted.length, 0);
-});
-
-// ── Skipping ───────────────────────────────────────────────────────────────────
-//
-// Skipping is permitted. Two real paths produce it: the direct "Paste what came back"
-// door (result → compare), and a fallback result that returns before an inspecting
-// frame ever paints (compose → result). One advance still emits exactly one event, and
-// from/to record the ACTUAL pair — a synthesized path would invent stage entries that
-// no person passed through.
-
-test("a skipped stage emits one event carrying the real pair, not a synthesized path", () => {
-  const wb = mountWorkbench();
-  wb.render(STAGE_RESULT);
-  wb.advance();
-  wb.render(STAGE_COMPARE); // straight past followup via the direct door
-  assert.equal(wb.emitted.length, 1);
-  assert.equal(wb.emitted[0].from, STAGE_RESULT);
-  assert.equal(wb.emitted[0].to, STAGE_COMPARE);
-  assert.equal(wb.emitted[0].skipped, true);
-});
-
-test("a fallback result arriving without an inspecting frame is one event", () => {
-  const wb = mountWorkbench();
-  wb.render(STAGE_COMPOSE);
-  wb.advance();
-  wb.render(STAGE_RESULT);
-  assert.equal(wb.emitted.length, 1);
-  assert.equal(wb.emitted[0].skipped, true);
+  assert.equal(progress(wb.emitted).length, forward);
 });
 
 // ── The chip lane ──────────────────────────────────────────────────────────────
 
-test("entering the chip lane by choice is one event; leaving it is none", () => {
+test("entering the chip lane by choice is progress; leaving it is not", () => {
   const wb = mountWorkbench();
   wb.render(STAGE_COMPOSE);
   wb.advance();
   wb.render(STAGE_CHIPS);
-  assert.equal(wb.emitted.length, 1);
-  assert.equal(wb.emitted[0].to, STAGE_CHIPS);
+  assert.deepEqual(progress(wb.emitted).map((e) => e.stage), [STAGE_CHIPS]);
   wb.advance();
   wb.render(STAGE_COMPOSE);
-  assert.equal(wb.emitted.length, 1, "closing the lane is a return, not progress");
+  assert.deepEqual(
+    progress(wb.emitted).map((e) => e.stage),
+    [STAGE_CHIPS],
+    "closing the lane is a return, not progress",
+  );
 });
 
-test("arriving on ?start=chips emits nothing at all", () => {
-  // Known interpretation limit, stated rather than patched: this visitor's first
-  // recorded event will be an advance OUT of a stage the funnel never saw them enter.
-  // Correct under these semantics — an arrival is not a move. No arrival event is added
-  // in this pass.
-  const wb = mountWorkbench();
-  wb.render(STAGE_CHIPS); // initial render, lane read off the URL
-  assert.equal(wb.emitted.length, 0);
+// ── The predicate ──────────────────────────────────────────────────────────────
+
+test("only the person's own forward causes count as progress", () => {
+  assert.deepEqual(PROGRESS_CAUSES, [CAUSE_ADVANCE, CAUSE_ASYNC, CAUSE_DEGRADED]);
+  for (const cause of [CAUSE_INIT, CAUSE_POP, CAUSE_RESTORE, CAUSE_REMOUNT, "normalize"]) {
+    assert.equal(countsAsProgress(cause), false, `${cause} must not count`);
+  }
 });
 
 // ── The wire ───────────────────────────────────────────────────────────────────
 
-test("the event carries stage identifiers and mode, and no content survives", () => {
+test("the event carries stage identifiers, cause and mode, and no content survives", () => {
   const e = buildEvent(
-    READER_EVENTS.STAGE_CHANGED,
+    READER_EVENTS.STAGE_ENTERED,
     {
-      from_state: STAGE_RESULT,
-      to_state: STAGE_COMPARE,
+      stage: STAGE_COMPARE,
+      prior_stage: STAGE_RESULT,
+      cause: CAUSE_ADVANCE,
       mode: "own",
       // Anything a future caller might carelessly pass alongside.
       answer: "the pasted answer",
@@ -256,24 +322,36 @@ test("the event carries stage identifiers and mode, and no content survives", ()
     500,
   );
   assert.deepEqual(e, {
-    name: "stage_changed",
+    name: "stage_entered",
     ts: 500,
-    from_state: "result",
-    to_state: "compare",
+    stage: "compare",
+    prior_stage: "result",
+    cause: "advance",
     mode: "own",
   });
 });
 
-test("stage_changed introduces no identity and no content-bearing field", () => {
-  const e = buildEvent(READER_EVENTS.STAGE_CHANGED, {
-    from_state: STAGE_COMPOSE,
-    to_state: STAGE_INSPECTING,
+test("the first entry omits prior_stage rather than inventing one", () => {
+  const e = buildEvent(READER_EVENTS.STAGE_ENTERED, {
+    stage: STAGE_COMPOSE,
+    prior_stage: null,
+    cause: CAUSE_INIT,
+    mode: "guided",
+  });
+  assert.ok(!("prior_stage" in e));
+});
+
+test("stage_entered introduces no identity and no content-bearing field", () => {
+  const e = buildEvent(READER_EVENTS.STAGE_ENTERED, {
+    stage: STAGE_INSPECTING,
+    prior_stage: STAGE_COMPOSE,
+    cause: CAUSE_ADVANCE,
     mode: "guided",
     run: "r-1",
   });
   for (const key of Object.keys(e)) {
     assert.ok(
-      ["name", "ts", "from_state", "to_state", "mode", "run"].includes(key),
+      ["name", "ts", "stage", "prior_stage", "cause", "mode", "run"].includes(key),
       `unexpected key on the wire: ${key}`,
     );
   }

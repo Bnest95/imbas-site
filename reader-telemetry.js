@@ -40,15 +40,21 @@ export const READER_EVENTS = {
   CHIP_INSTRUCTION_COPIED: "chip_instruction_copied",
   CHIP_PAIR_INITIATED: "chip_pair_initiated",
   CHIP_PAIR_COMPLETED: "chip_pair_completed",
-  // Stage spine (reader-stage.js). STAGE_CHANGED means one thing only: an explicit
-  // in-product stage advance the person initiated through that stage's primary
-  // action. NOT emitted for initial render, restore, stale-hash normalization,
-  // browser Back, browser Forward, a bare hashchange, a React remount, a retry that
-  // stays in the same stage, or a degraded-state rerender. The stage lives in the
-  // hash, so Back and Forward both fire hashchange — stageTransition() gates the emit
-  // on cause, and navigation moves the view without moving the funnel. Carries
-  // from_state/to_state (already-allowlisted keys) holding stage ids, never content.
-  STAGE_CHANGED: "stage_changed",
+  // Stage spine (reader-stage.js). STAGE_ENTERED means one thing: this stage was
+  // reached. Once per stage, per session, however it was reached — the primary action,
+  // a fetch settling, a degraded body arriving, an arrival deep link. It replaced
+  // stage_changed, which emitted only on a clicked forward advance and so recorded
+  // neither the result stage nor the degraded stage: the two the person never clicks
+  // into, and the two the funnel most needs. The name had stopped describing the event.
+  //
+  // WHY the stage was entered rides along as `cause`, and stays a separate question
+  // from whether it was entered. Back, Forward, restore, remount and normalization all
+  // produce real entries with causes that reader-stage.countsAsProgress excludes, so
+  // conversion analysis drops them without the record disappearing.
+  //
+  // Carries stage / prior_stage / cause / mode — stage ids and enums, never content,
+  // never identity.
+  STAGE_ENTERED: "stage_entered",
   // Operational / resilience lane (Phase 0 §D). Content-free by construction like
   // the rest: they carry an opaque run id, an enum reason, and small operational
   // integers, never user text. Ceiling *trip* is a server-side runtime event
@@ -72,6 +78,9 @@ const ALLOWED_PROP_KEYS = [
   "state", // loop/chip state id (gap_revealed | still_missing | not_clear_yet | chip_change_visible | chip_change_not_visible | chip_change_unclear)
   "from_state", // state_corrected: machine-suggested state
   "to_state", // state_corrected: person-declared state
+  "stage", // stage_entered: the stage reached (reader-stage.js id)
+  "prior_stage", // stage_entered: the stage left, absent on the first entry
+  "cause", // stage_entered: advance | async | degraded | init | pop | restore | normalize | remount
   "check", // quick | cleaner
   "mode", // own | guided | demo
   "gap", // integer gap estimate 0-3

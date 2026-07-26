@@ -55,11 +55,13 @@ import {
   STAGE_COMPARE,
   STAGE_CHIPS,
   CAUSE_ADVANCE,
+  CAUSE_ASYNC,
+  CAUSE_DEGRADED,
   CAUSE_INIT,
   CAUSE_POP,
   deriveStage,
   stageView,
-  stageTransition,
+  stageEntry,
   parseArrival,
   normalizeArrivalStage,
   stageHash,
@@ -5480,6 +5482,7 @@ function ReaderWorkbench() {
   // is the permanent chip door (§D). `followUpOpen` and `hasDelta` are the two facts
   // the render tree cannot derive on its own; every other stage input is already here.
   const [lane, setLane] = useState(() => parseArrival(window.location).lane);
+  const [chipMounted, setChipMounted] = useState(() => parseArrival(window.location).lane === LANE_CHIPS);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [hasDelta, setHasDelta] = useState(false);
   const stageRef = useRef(null);
@@ -5493,8 +5496,11 @@ function ReaderWorkbench() {
   // Previous stage + why it moved. The cause defaults to CAUSE_POP so an unattributed
   // stage change can never be mistaken for a forward advance; only code paths that ARE
   // the person's primary action set CAUSE_ADVANCE, and the effect clears it each time.
+  // enteredRef is the stages already recorded this session, which is what keeps a stage
+  // entry to one record however many times the person walks back over it.
   const prevStageRef = useRef(null);
   const causeRef = useRef(CAUSE_INIT);
+  const enteredRef = useRef([]);
   const composeAnswerRef = useRef(null);
   const pairedAnswerRef = useRef(null);
   const resultHeadingRef = useRef(null);
@@ -5538,19 +5544,28 @@ function ReaderWorkbench() {
     causeRef.current = CAUSE_ADVANCE;
   };
 
-  // One place decides whether a stage change is a funnel event. Back and Forward
-  // cannot reach here as advances: no stage pushes a history entry (see the hash
-  // effect), and any unattributed change carries CAUSE_POP.
+  // One place records that a stage was reached. It fires on the first paint too: the
+  // stage a person lands on is a stage they entered, and leaving it unrecorded is what
+  // left ?start=chips visitors with a first event that advanced out of nowhere.
+  //
+  // The cause rides along and is never the gate. Back and Forward reach here as
+  // CAUSE_POP and record a real entry that countsAsProgress excludes; the settle after
+  // a run reaches here as CAUSE_ASYNC and counts, because reaching a result is the
+  // middle of the funnel whether or not anyone clicked for it.
   useEffect(() => {
     const from = prevStageRef.current;
     const cause = causeRef.current;
     causeRef.current = CAUSE_POP;
     prevStageRef.current = stage;
-    if (from === null) return; // initial render and remount never emit
-    const t = stageTransition(from, stage, cause);
-    if (t.emit) {
-      emitReaderEvent(READER_EVENTS.STAGE_CHANGED, { from_state: t.from, to_state: t.to, mode });
-    }
+    const entry = stageEntry(stage, { from, cause, seen: enteredRef.current });
+    if (!entry.emit) return;
+    enteredRef.current = enteredRef.current.concat(stage);
+    emitReaderEvent(READER_EVENTS.STAGE_ENTERED, {
+      stage: entry.stage,
+      prior_stage: entry.prior_stage,
+      cause: entry.cause,
+      mode,
+    });
   }, [stage]);
 
   // Arrival (§D/§E), read through the query-flag pattern the repo already uses for
@@ -5708,10 +5723,15 @@ function ReaderWorkbench() {
 
   // The permanent chip door (§D): the follow-up path is never more than one tap deep.
   // Opening it is the person's own forward move, so it advances the funnel; closing it
-  // returns to the inspect lane and does not.
+  // returns to the inspect lane and does not. Opening also latches chipMounted, which
+  // never returns to false: closing hides the lane instead of unmounting it, so a
+  // half-typed answer is still there when the person opens it again. Latching is what
+  // keeps chip_row_rendered honest — the lane is not mounted until it is opened, so the
+  // event still means "the follow-up choices were shown".
   const openChipLane = () => {
     if (lane === LANE_CHIPS) return;
     advance();
+    setChipMounted(true);
     setLane(LANE_CHIPS);
   };
   const closeChipLane = () => setLane(LANE_INSPECT);
@@ -5830,6 +5850,10 @@ function ReaderWorkbench() {
     });
     try {
       const data = await runReader(request);
+      // The settle moves the stage a second time, and nobody clicked for it. Attribute
+      // it here or the result stage is entered with no cause of its own and reads as
+      // history navigation — which is how the funnel lost its middle.
+      causeRef.current = data.source === "fallback" ? CAUSE_DEGRADED : CAUSE_ASYNC;
       setReaderResult(data);
       const run = readerRunId(data);
       emitReaderEvent(READER_EVENTS.RUN_COMPLETED, {
@@ -5861,6 +5885,7 @@ function ReaderWorkbench() {
       if (err && err.message === "too_long") {
         setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
       } else {
+        causeRef.current = CAUSE_DEGRADED;
         setReaderResult({
           source: "fallback",
           completeness: "thin",
@@ -6190,8 +6215,15 @@ function ReaderWorkbench() {
             </button>
           </div>
         ) : null}
-        {view.chipLane ? (
-          <div id="wb-chip-lane" className="wb-reader-v2__follow wb-reader-v2__follow--chips">
+        {/* Mounted on first open and never unmounted after: `hidden` takes the lane out of
+            the layout, the tab order and the accessibility tree, so the one-live-input
+            invariant holds while a half-typed answer survives a close and reopen. */}
+        {chipMounted ? (
+          <div
+            id="wb-chip-lane"
+            className="wb-reader-v2__follow wb-reader-v2__follow--chips"
+            hidden={!view.chipLane}
+          >
             <ChipLane />
           </div>
         ) : null}
