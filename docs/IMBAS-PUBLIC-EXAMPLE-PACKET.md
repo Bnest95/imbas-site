@@ -29,6 +29,14 @@ not.
 This supersedes the earlier second and third rankings. An unranked example is still a preserved
 record; it is not publishable as a ranked public example, and rule 2.1 is why.
 
+**Said plainly, because the number matters more than the reasoning around it: one of three
+examples survives ranking.** Two were demoted, and they were demoted by rule 2.1 — a rule this
+packet adopted, applied to this packet's own material. Not a reviewer's objection, not a rule
+imposed from outside. The factory produced three candidates and its own selection rule removed
+two of them. A publication pass should plan for one example, not three, and should treat the
+two-of-three removal rate as the honest yield of this material rather than as a setback. The
+disposition is recorded in the failure ledger, Section 1, entry R6.
+
 **Companion file.** The rejections, the null results, and the ruled scores live in
 [IMBAS-PUBLIC-EXAMPLE-FAILURE-LEDGER.md](IMBAS-PUBLIC-EXAMPLE-FAILURE-LEDGER.md). That file is a
 record, not a publication input, and its status is separate from this one. Read it before citing
