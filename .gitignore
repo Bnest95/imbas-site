@@ -11,3 +11,16 @@ build/
 .env*
 .founder-ops/
 qa-screenshots*/
+
+# Visual acceptance harness (scripts/qa/).
+# Accepted captures live in docs/qa/ and ARE tracked — that is the whole point of
+# the harness, so nothing here may ignore them. Everything below is scratch: it is
+# regenerable, machine-local, or was rejected, and none of it is evidence.
+# .qa-cache/ holds vendored React + webfont bytes, fetched once so runs go offline.
+.qa-cache/
+# .qa-scratch/ is the sink for exploratory and diagnostic runs.
+.qa-scratch/
+docs/qa/**/rejected/
+docs/qa/**/retry-*/
+docs/qa/**/diagnostic-*/
+docs/qa/**/*.rejected.png
