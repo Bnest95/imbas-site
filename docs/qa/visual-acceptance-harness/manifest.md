@@ -36,6 +36,55 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 | viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 2464` |
 | viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 2817` |
 
+## Why the Pass 2B-A baseline change was accepted
+
+Pass 2B-A regenerated both `single-findings` baselines once. The desktop image-diff against the
+previous baseline reported **22.63% of pixels differing with a maximum channel delta of 224**,
+which is far too large a number to wave through on "visually identical." It was analysed by
+region rather than accepted. The analysis is recorded here because the headline figure will look
+alarming to the next person who runs `git log` on these files.
+
+**Cause, in one chain.** The pass removed the single-answer score from `ReaderResultHero`, which
+made the hero **43.04 CSS px** shorter. The desktop frame is centred on
+`.wb-measure__list li.wb-measure__finding` by `scrollToDeterministic`, which computes
+`ideal = absTop + height/2 - innerHeight/2` and then **`Math.round`s** it
+(`scripts/qa/visual-acceptance.mjs:584`). The focus element's document position moved up 43.04 px;
+the rounded scroll target moved by exactly 44 (2508 → 2464). The 0.96 px difference is a residual
+that lands on every element in the scrolled document: each one sits **+0.96 CSS px = +1.93 device
+px** lower in the frame than before. A non-integer device offset re-rasterizes every antialiased
+glyph and background gradient in the frame. That is the whole diff.
+
+**What was measured, not assumed.**
+
+| evidence | result |
+| --- | --- |
+| delta magnitude histogram | 79.28% of differing pixels differ by exactly 1/255; 95.92% by ≤ 4 |
+| perceptible change (delta > 32) | 24,190 px = **0.4666% of the frame**, all on text glyph edges |
+| integer shift search, dy −4..+4 | no integer aligns the frames; dy=2 (nearest to 1.93) is best at 19.27%, and odd shifts cost ~55% because they break the 2× subpixel grid |
+| horizontal shift search, dx −4..+4 | dx=0 is best; the content did not move horizontally |
+| intensity-weighted centroids, 4 scrolled text regions | +1.877, +1.974, +1.577, +1.928 device px vertical; \|dx\| ≤ 0.22 device px; ink totals unchanged within 0.1% |
+| **control: fixed-position nav wordmark** | **+0.000 device px.** The fixed header does not scroll, so it did not move |
+| fixed header region (CSS y 0..56) | max delta **1**, zero pixels > 32 |
+| left margin (CSS x 0..300) | max delta **5**, zero pixels > 32 |
+| right margin (CSS x 1140..1440) | max delta **5**, zero pixels > 32 |
+| worst pixel, delta 224 | device (794,168) = CSS (397,84), inside the "Share this inspection" label: background umber `18,14,12` → type `242,232,220` |
+| `## render` text record | **byte-identical** before and after — same 30 elements, same text, boundary string unchanged |
+
+The maximum delta of 224 is not evidence of an additional change. It is one glyph-edge pixel
+crossing from background to type, and 224 is the arithmetic maximum any sub-pixel type shift can
+produce against this palette. Every perceptible pixel is confined to the content column; the fixed
+header and both margins contain nothing above delta 5.
+
+**Conclusion.** The diff is fully explained by the shortened hero and the rounded scroll target.
+No unrelated region changed and there is no unexplained remainder. The hero itself is *not* in the
+captured frame — it sits above it — which is why the text record is identical while every pixel in
+it moved.
+
+*One consequence worth knowing.* Because the residual comes from `Math.round`, any future layout
+change whose height delta is not an integer will reproduce this: a full-frame diff of ~20% at ±1
+per pixel, with no content change. Read the delta histogram before reading the percentage. A real
+regression puts mass in the high buckets; this signature puts 96% of it at ≤ 4.
+
 ## Images
 
 ### `single-findings--desktop.png`

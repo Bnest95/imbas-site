@@ -448,6 +448,29 @@ export function registerFindingShape(def) {
     }
     anchors[role] = req;
   }
+  // The SURFACING contract, registered beside the construction contract and
+  // separate from it. `anchors` governs what may be built; `quoted_to_surface`
+  // governs what may be counted or displayed. A finding is always recorded, and
+  // only these roles resolving verbatim let it into a surfaced quantity.
+  const quoted_to_surface = Array.isArray(def.quoted_to_surface) ? def.quoted_to_surface.slice() : [];
+  if (!quoted_to_surface.length) {
+    reject(`a finding shape must name at least one role that must be quoted to surface: ${id}`);
+  }
+  for (const role of quoted_to_surface) {
+    if (!ARTIFACT_ROLES.includes(role)) reject(`quoted_to_surface names an unenumerated role for ${id}: ${role}`);
+    if (anchors[role] === ANCHOR_REQUIREMENT.FORBIDDEN) {
+      reject(`quoted_to_surface names a forbidden role for ${id}: ${role}`);
+    }
+  }
+  // A REQUIRED anchor can still come back UNRESOLVED: the source supplied text and
+  // it did not occur verbatim. Such a finding is recorded, never surfaced, so every
+  // REQUIRED role has to be in the surfacing set or an unresolved required anchor
+  // could contribute to a visible count.
+  for (const role of ARTIFACT_ROLES) {
+    if (anchors[role] === ANCHOR_REQUIREMENT.REQUIRED && !quoted_to_surface.includes(role)) {
+      reject(`a REQUIRED anchor must also be required to surface for ${id}: ${role}`);
+    }
+  }
   // Every shape declares its standing relationship to the Check Register, so a
   // finding is never annotated with a reason inferred from its surface. Validated
   // here, at registration, through the same constructor the adapters use.
@@ -461,6 +484,7 @@ export function registerFindingShape(def) {
     id,
     surface,
     anchors,
+    quoted_to_surface,
     directional: !!def.directional,
     register_default,
     label: str(def.label) || id,
@@ -481,20 +505,33 @@ export const SHAPE_SINGLE_CANDIDATE = "single_candidate_item";
 export const SHAPE_PAIRED_OBSERVED_DIFFERENCE = "paired_observed_difference";
 export const SHAPE_PAIRED_COMPARATIVE_CONTRAST = "paired_comparative_contrast";
 
-// The two open-ended shapes permit an absent anchor and let the COUNT predicate
-// carry the "at least one exact quotation" requirement. That split is deliberate:
-// a shape that REJECTED an unanchored source finding would drop it at the
-// construction door, which is the defect this pass exists to close. So the finding
-// is always recorded, and only a quoted anchor lets it into a surfaced quantity.
+// THE TWO CONTRACTS, AND WHY THEY DIFFER.
+//
+// `anchors` is the construction contract. The two open-ended shapes permit an
+// absent anchor so that an unanchored source finding is never dropped at the
+// construction door, which is the defect this pass exists to close.
+//
+// `quoted_to_surface` is the surfacing contract. It names the roles that must
+// resolve verbatim before the finding may enter a surfaced subset or any visible
+// tally. recorded_findings preserves legacy and unresolved material; a finding
+// reaches a person only through surfaced_findings.
+//
+// The two are separate on purpose. Permissive construction plus strict surfacing
+// keeps the record complete without letting an unquotable finding inflate a count.
 registerFindingShape({
   id: SHAPE_SINGLE_CANDIDATE,
   surface: "single",
   label: "Candidate item in one answer",
   anchors: { [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED },
+  quoted_to_surface: [ARTIFACT_ORIGINAL],
   directional: false,
   register_default: { status: REGISTER_STATUS.ELIGIBLE },
 });
 
+// The omission shape. An omission has nothing to quote on the open side — that is
+// what makes it an omission — so ABSENT there is the truthful record and does not
+// block surfacing. The probe-side quotation is what the finding rests on, so it is
+// the one role that must resolve verbatim.
 registerFindingShape({
   id: SHAPE_PAIRED_OBSERVED_DIFFERENCE,
   surface: "paired",
@@ -503,6 +540,7 @@ registerFindingShape({
     [ARTIFACT_TARGETED]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED,
     [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED,
   },
+  quoted_to_surface: [ARTIFACT_TARGETED],
   directional: true,
   register_default: {
     status: REGISTER_STATUS.SUPPRESSED,
@@ -521,6 +559,7 @@ registerFindingShape({
     [ARTIFACT_TARGETED]: ANCHOR_REQUIREMENT.REQUIRED,
     [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.REQUIRED,
   },
+  quoted_to_surface: [ARTIFACT_TARGETED, ARTIFACT_ORIGINAL],
   directional: true,
   register_default: {
     status: REGISTER_STATUS.SUPPRESSED,
@@ -685,13 +724,24 @@ export function describeFinding(finding) {
 // ---------------------------------------------------------------------------
 
 export const COUNT_DEFS = deepFreeze({
+  // The display subset, and the only subset a person is shown. Shape-agnostic:
+  // membership is decided by each shape's own registered surfacing contract, so a
+  // newly registered shape joins it without editing this file.
+  surfaced_findings: {
+    id: "surfaced_findings",
+    unit_one: "finding",
+    unit_many: "findings",
+    predicate_id: "satisfies_registered_anchor_contract",
+    predicate_note:
+      "Findings whose shape's quoted_to_surface roles all resolve verbatim against their artifact. An unresolved required anchor is excluded.",
+  },
   surfaced_candidate_items: {
     id: "surfaced_candidate_items",
     unit_one: "candidate item",
     unit_many: "candidate items",
-    predicate_id: "single_shape_with_at_least_one_quoted_anchor",
+    predicate_id: "single_surface_satisfying_anchor_contract",
     predicate_note:
-      "Findings on the single-answer surface carrying at least one anchor that resolves verbatim against the pasted answer.",
+      "surfaced_findings restricted to the single-answer surface. Same membership rule, stated in the unit a single-answer result reports.",
   },
   // The quantity a paired result may state. Restricted to PROBE_ONLY by the
   // predicate, so a later pass that begins carrying OPEN_ONLY or BOTH_DIFFERENT
@@ -701,9 +751,9 @@ export const COUNT_DEFS = deepFreeze({
     id: "probe_surfaced_differences",
     unit_one: "difference",
     unit_many: "differences",
-    predicate_id: "paired_probe_only_with_quoted_probe_anchor",
+    predicate_id: "paired_probe_only_satisfying_anchor_contract",
     predicate_note:
-      "Paired findings whose comparison_direction is PROBE_ONLY and whose probe-side anchor resolves verbatim against the probe answer.",
+      "surfaced_findings restricted to paired findings whose comparison_direction is PROBE_ONLY. The probe-side quotation is what every paired shape requires to surface.",
   },
   recorded_findings: {
     id: "recorded_findings",
@@ -711,17 +761,29 @@ export const COUNT_DEFS = deepFreeze({
     unit_many: "findings",
     predicate_id: "every_canonical_finding",
     predicate_note:
-      "The whole canonical collection, including findings the Check Register suppressed. This is what the durable record carries.",
+      "The whole canonical collection, including findings the Check Register suppressed and findings whose supplied quotation did not resolve. This is what the durable record carries. It is not displayed.",
   },
 });
 
+// The surfacing rule, in one place. Every surfaced quantity delegates here, so the
+// hero, the panel, and any later surface cannot each decide "surfaced" their own way.
+// That divergence is what produced a hero count that disagreed with the rows beneath it.
+export function satisfiesAnchorContract(finding) {
+  const shape = getFindingShape(finding && finding.shape);
+  if (!shape) return false;
+  return shape.quoted_to_surface.every((role) => {
+    const anchor = finding.anchors.find((a) => a.role === role);
+    return !!anchor && anchor.status === ANCHOR_STATUS.QUOTED;
+  });
+}
+
 const PREDICATES = {
-  single_shape_with_at_least_one_quoted_anchor: (f) =>
-    f.surface === "single" && f.anchors.some((a) => a.status === ANCHOR_STATUS.QUOTED),
-  paired_probe_only_with_quoted_probe_anchor: (f) =>
+  satisfies_registered_anchor_contract: (f) => satisfiesAnchorContract(f),
+  single_surface_satisfying_anchor_contract: (f) => f.surface === "single" && satisfiesAnchorContract(f),
+  paired_probe_only_satisfying_anchor_contract: (f) =>
     f.surface === "paired" &&
     f.comparison_direction === COMPARISON_DIRECTION.PROBE_ONLY &&
-    f.anchors.some((a) => a.role === ARTIFACT_TARGETED && a.status === ANCHOR_STATUS.QUOTED),
+    satisfiesAnchorContract(f),
   every_canonical_finding: () => true,
 };
 

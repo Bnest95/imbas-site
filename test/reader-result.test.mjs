@@ -657,6 +657,7 @@ test("a fixture-only synthetic shape renders and counts with no change to any re
       [ARTIFACT_TARGETED]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED,
       [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED,
     },
+    quoted_to_surface: [ARTIFACT_TARGETED],
     directional: true,
   });
   assert.ok(listFindingShapeIds().includes(SYNTHETIC));
@@ -686,9 +687,12 @@ test("a fixture-only synthetic shape renders and counts with no change to any re
   assert.equal(d.anchors.length, 2);
   assert.equal(d.anchors.find((a) => a.role === ARTIFACT_TARGETED).status, ANCHOR_STATUS.QUOTED);
 
-  // And it flows through the named counts on the same terms as a shipped shape.
+  // And it flows through the named counts on the same terms as a shipped shape. The
+  // surfaced subset is decided by the contract the shape registered for itself, so a new
+  // shape joins the display subset without editing a count definition or a renderer.
   const result = buildCanonicalResult({ surface: "paired", findings: [f] });
   assert.equal(countOf(result, "recorded_findings"), 1);
+  assert.equal(countOf(result, "surfaced_findings"), 1);
   assert.equal(countOf(result, "probe_surfaced_differences"), 1);
 });
 

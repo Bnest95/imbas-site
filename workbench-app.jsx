@@ -3919,11 +3919,16 @@ function ReaderResultHero({ result }) {
   );
 }
 
-// The panel is the RECORD view, so it lists recorded_findings — every finding the
-// run recorded, including any the Check Register suppressed and any whose quotation
-// did not resolve. The hero above states surfaced_candidate_items, the subset that
-// carries a verbatim quotation. The two counts differ only when a supplied quotation
-// failed to resolve, and each names its own predicate in the payload.
+// The panel lists surfaced_findings: the findings that satisfy their shape's
+// registered surfacing contract. recorded_findings holds more — legacy material and
+// findings whose supplied quotation did not resolve — and is the durable record, not
+// a display subset. A finding that cannot be quoted must not be a row, because a row
+// is a claim that the Reader found something in this answer.
+//
+// The hero states surfaced_candidate_items, which is surfaced_findings restricted to
+// the single-answer surface. On a single-answer result every finding is single-surface
+// by construction, so the two select the identical set and the hero cannot disagree
+// with the rows beneath it. The unit differs, not the membership.
 //
 // Rows are rendered from describeFinding alone. Nothing here switches on shape or
 // re-maps a class, so a newly registered finding shape renders through this list
@@ -3933,8 +3938,8 @@ function MeasurementPanel({ result, context }) {
   if (!m) return null;
   const receipt = result?.receipt || null;
   const canonical = result.result;
-  const findings = selectSubset(canonical, "recorded_findings").map(describeFinding);
-  const counts = classBreakdown(canonical, "recorded_findings");
+  const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
+  const counts = classBreakdown(canonical, "surfaced_findings");
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
   const metaBits = [declaredModel ? `Model: ${declaredModel}` : "Model: (not declared)"];
@@ -6224,9 +6229,9 @@ function ReaderWorkbench() {
             {/* Render-only interpretation of the single inspection. Gated on measurement
                 (not on checks) so it renders for both S1 (no findings surfaced) and S2
                 (findings present); single mode → no pair_runs, so conditions are never
-                consulted. The count is recorded_findings — the same named subset
+                consulted. The count is surfaced_findings — the same named subset
                 MeasurementPanel lists, so the panel and this interpretation cannot
-                disagree about how many items exist. It replaces a max() over the
+                disagree about how many items surfaced. It replaces a max() over the
                 findings array and the Check Register cards, which was an unnamed count
                 computed in the renderer to approximate a union the canonical collection
                 now states outright. Perturbs no record. */}
@@ -6234,7 +6239,7 @@ function ReaderWorkbench() {
               <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
                 <InspectionMeaningPanel
                   pairRuns={[]}
-                  findings={countOf(readerResult.result, "recorded_findings")}
+                  findings={countOf(readerResult.result, "surfaced_findings")}
                 />
               </div>
             ) : null}

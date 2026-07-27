@@ -62,9 +62,16 @@ const DESCRIPTOR_KEYS = new Set(
 );
 
 test("the findings list is built from the named subset and the render descriptor", () => {
-  assert.match(PANEL, /selectSubset\(canonical, "recorded_findings"\)/, "list must come from a named subset");
+  assert.match(PANEL, /selectSubset\(canonical, "surfaced_findings"\)/, "list must come from the display subset");
   assert.match(PANEL, /\.map\(describeFinding\)/, "rows must be rendered from describeFinding");
-  assert.match(PANEL, /classBreakdown\(canonical, "recorded_findings"\)/, "counts must come from a named subset");
+  assert.match(PANEL, /classBreakdown\(canonical, "surfaced_findings"\)/, "counts must come from the display subset");
+  // recorded_findings is the durable record and holds unresolved material. A row or a
+  // tally drawn from it would put an unquotable finding in front of a person.
+  assert.equal(
+    PANEL.includes("recorded_findings"),
+    false,
+    "MeasurementPanel must not list or tally the record subset",
+  );
 });
 
 test("every finding field the rows read is a key the descriptor publishes", () => {

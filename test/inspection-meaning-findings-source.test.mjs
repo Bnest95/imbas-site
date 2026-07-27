@@ -10,11 +10,13 @@
 // max(measurement.findings.length, checks.cards.length) — an unnamed count computed in the
 // renderer to approximate the union of two sources. There is now one source: the canonical
 // findings collection (reader-result.js), and the mount reads the named subset
-// recorded_findings from it. So the union arithmetic is gone, and with it the hypothetical
-// it defended against — a card cannot exist without the finding it was derived from, because
-// api/read.js buildChecks filters measurement.findings and buildCheckRegister only drops and
-// dedups. Test 2 below now pins the stronger property: the count does not consult the Check
-// Register at all, so no number of cards, including zero, can move it.
+// surfaced_findings from it — the same subset MeasurementPanel lists. So the union arithmetic
+// is gone, and with it the hypothetical it defended against — a card cannot exist without the
+// finding it was derived from, because api/read.js buildChecks filters measurement.findings and
+// buildCheckRegister only drops and dedups. Test 2 below now pins the stronger property: the
+// count does not consult the Check Register at all, so no number of cards, including zero, can
+// move it. Test 6 pins the other side: a finding whose quotation does not resolve is recorded
+// and cannot raise this count, so the interpretation can never describe an item that has no row.
 //
 // workbench-app.jsx is JSX and cannot be imported by Node, and this wiring lives entirely in
 // the mount's `findings={...}` expression (selectInspectionMeaning is unchanged). So —
@@ -77,18 +79,24 @@ const evalSingleFindings = new Function("readerResult", "countOf", `return (${SI
 
 // Shape a synthetic single-mode reader result. The canonical block is built by the endpoint's
 // own adapter through the real construction door, so the number the mount reads is the number
-// production would produce. The answer text is empty: anchors then record themselves as ABSENT
-// (the shape allows it) and every finding still survives, which is the point.
-function singleResult({ findings = 0, cards = 0 }) {
-  const measurement = {
-    findings: Array.from({ length: findings }, (_, i) => ({
-      type: "candidate missing item",
-      anchor: `anchor ${i}`,
-      materiality: `why ${i}`,
-    })),
-  };
+// production would produce. Every anchor occurs verbatim in the answer text unless `unresolved`
+// asks for findings whose supplied quotation is absent from it — those are recorded and must not
+// be counted.
+function singleResult({ findings = 0, cards = 0, unresolved = 0 }) {
+  const resolved = Array.from({ length: findings }, (_, i) => ({
+    type: "candidate missing item",
+    anchor: `resolved anchor ${i}`,
+    materiality: `why ${i}`,
+  }));
+  const missing = Array.from({ length: unresolved }, (_, i) => ({
+    type: "candidate missing item",
+    anchor: `words the answer never contains ${i}`,
+    materiality: `why unresolved ${i}`,
+  }));
+  const measurement = { findings: [...resolved, ...missing] };
+  const answer = resolved.map((f) => f.anchor).join(". ") || "an answer with nothing quotable in it.";
   const checks = { cards: Array.from({ length: cards }, (_, i) => ({ id: `card-${i}` })) };
-  return { measurement, checks, result: buildCanonicalSingle(measurement, "", checks) };
+  return { measurement, checks, result: buildCanonicalSingle(measurement, answer, checks) };
 }
 
 // Run the extracted call-site expression, then the real selector — exactly as the mount does.
@@ -115,7 +123,7 @@ test("3) cards are a derived subset → S2 counts the findings, never the sum (n
   // 3 findings, 2 of which survived into cards. Distinct visible items = 3, not 5.
   const sel = selectFromWiring(singleResult({ findings: 3, cards: 2 }));
   assert.equal(sel.state_id, EXPLAIN_STATE_S2);
-  assert.ok(sel.copy.what.includes("3 item"), `recorded findings is 3; got: ${sel.copy.what}`);
+  assert.ok(sel.copy.what.includes("3 item"), `surfaced findings is 3; got: ${sel.copy.what}`);
   assert.ok(!sel.copy.what.includes("5 item"), "must not sum findings and their own derived cards");
 });
 
@@ -141,4 +149,18 @@ test("5) paired mount untouched: still forwards the delta items array, still sel
     selectInspectionMeaning({ pairRuns: [{}], findings: [], conditionsMatched: true }).state_id,
     EXPLAIN_STATE_S3,
   );
+});
+
+test("6) an unresolved quotation is recorded and cannot raise the count", () => {
+  const sel = selectFromWiring(singleResult({ findings: 2, cards: 0, unresolved: 1 }));
+  assert.equal(sel.state_id, EXPLAIN_STATE_S2);
+  assert.ok(sel.copy.what.includes("2 item"), `only the 2 quotable items may be counted; got: ${sel.copy.what}`);
+  assert.ok(!sel.copy.what.includes("3 item"), "a finding with no verbatim quotation must not be counted");
+  // And the record still holds all three, so nothing was dropped to achieve that.
+  assert.equal(countOf(singleResult({ findings: 2, unresolved: 1 }).result, "recorded_findings"), 3);
+});
+
+test("7) every finding unresolved → S1, because nothing can be shown", () => {
+  const sel = selectFromWiring(singleResult({ findings: 0, cards: 0, unresolved: 2 }));
+  assert.equal(sel.state_id, EXPLAIN_STATE_S1, "no quotable finding → the interpretation must not claim items");
 });
