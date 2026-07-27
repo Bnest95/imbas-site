@@ -1,24 +1,30 @@
 // Guardrail: the single-mode Inspection Meaning mount in workbench-app.jsx must count the
-// distinct items the reader can actually SEE. Those items are the candidate findings that
-// MeasurementPanel renders (measurement.findings); the Check Register cards (checks.cards)
-// are a DERIVED SUBSET of those same findings — api/read.js buildChecks filters
-// measurement.findings and reader-checks.js buildCheckRegister only drops/dedups, never
-// adds — so cards ⊆ findings and the count of distinct visible items is the union
-// cardinality = max(measurement.findings.length, checks.cards.length). The mount may select
-// S1 (the "didn't surface anything" null-result copy) ONLY when BOTH are empty; if either
-// carries entries it must select S2 with that max count.
+// distinct items the reader can actually SEE.
 //
 // The bug this guards (seen in production): the mount passed `checks.cards` ALONE. The
 // both-ends-quotable filter can legitimately drop every card, so a run with two measurement
 // findings but zero cards fed [] to the panel and rendered S1 — "the Reader didn't surface
 // anything" — directly below the two candidate findings the reader was already looking at.
 //
-// workbench-app.jsx is JSX and cannot be imported by Node, and this fix lives entirely in
+// Pass 2B-A changed WHERE the count comes from. It used to be
+// max(measurement.findings.length, checks.cards.length) — an unnamed count computed in the
+// renderer to approximate the union of two sources. There is now one source: the canonical
+// findings collection (reader-result.js), and the mount reads the named subset
+// surfaced_findings from it — the same subset MeasurementPanel lists. So the union arithmetic
+// is gone, and with it the hypothetical it defended against — a card cannot exist without the
+// finding it was derived from, because api/read.js buildChecks filters measurement.findings and
+// buildCheckRegister only drops and dedups. Test 2 below now pins the stronger property: the
+// count does not consult the Check Register at all, so no number of cards, including zero, can
+// move it. Test 6 pins the other side: a finding whose quotation does not resolve is recorded
+// and cannot raise this count, so the interpretation can never describe an item that has no row.
+//
+// workbench-app.jsx is JSX and cannot be imported by Node, and this wiring lives entirely in
 // the mount's `findings={...}` expression (selectInspectionMeaning is unchanged). So —
 // following test/daily-brief-wiring.test.mjs — this reads the source, extracts that exact
-// expression, evaluates it against synthetic reader results, and feeds the number to the
-// REAL selector, exactly as the mount does. Point WORKBENCH_APP_JSX at a pre-fix snapshot
-// (`git show <base>:workbench-app.jsx > /tmp/x.jsx`) to watch tests 1 and 3 fail loudly.
+// expression, evaluates it against synthetic reader results built by the REAL adapter and
+// construction door, and feeds the number to the REAL selector, exactly as the mount does.
+// Point WORKBENCH_APP_JSX at a pre-fix snapshot (`git show <base>:workbench-app.jsx >
+// /tmp/x.jsx`) to watch tests 1 and 3 fail loudly.
 // Run: node --test test/inspection-meaning-findings-source.test.mjs
 
 import { test } from "node:test";
@@ -34,6 +40,8 @@ import {
   EXPLAIN_STATE_S4,
   selectInspectionMeaning,
 } from "../reader-explain-panel.js";
+import { countOf } from "../reader-result.js";
+import { buildCanonicalSingle } from "../api/read.js";
 
 const SRC_PATH =
   process.env.WORKBENCH_APP_JSX ||
@@ -67,21 +75,33 @@ function extractFindingsExpr(src, pairRunsSignature) {
 
 const SINGLE_EXPR = extractFindingsExpr(SRC, "pairRuns={[]}");
 // eslint-disable-next-line no-new-func -- the guard's whole point is to run the real call-site expression.
-const evalSingleFindings = new Function("readerResult", `return (${SINGLE_EXPR});`);
+const evalSingleFindings = new Function("readerResult", "countOf", `return (${SINGLE_EXPR});`);
 
-// Shape a synthetic single-mode reader result. `measurement` is always present (the mount is
-// gated on it); element shape is irrelevant — only the array lengths drive the wiring.
-function singleResult({ findings = 0, cards = 0 }) {
-  const items = (n, tag) => Array.from({ length: n }, (_, i) => ({ [tag]: `${tag}-${i}` }));
-  return {
-    measurement: { findings: items(findings, "finding") },
-    checks: { cards: items(cards, "card") },
-  };
+// Shape a synthetic single-mode reader result. The canonical block is built by the endpoint's
+// own adapter through the real construction door, so the number the mount reads is the number
+// production would produce. Every anchor occurs verbatim in the answer text unless `unresolved`
+// asks for findings whose supplied quotation is absent from it — those are recorded and must not
+// be counted.
+function singleResult({ findings = 0, cards = 0, unresolved = 0 }) {
+  const resolved = Array.from({ length: findings }, (_, i) => ({
+    type: "candidate missing item",
+    anchor: `resolved anchor ${i}`,
+    materiality: `why ${i}`,
+  }));
+  const missing = Array.from({ length: unresolved }, (_, i) => ({
+    type: "candidate missing item",
+    anchor: `words the answer never contains ${i}`,
+    materiality: `why unresolved ${i}`,
+  }));
+  const measurement = { findings: [...resolved, ...missing] };
+  const answer = resolved.map((f) => f.anchor).join(". ") || "an answer with nothing quotable in it.";
+  const checks = { cards: Array.from({ length: cards }, (_, i) => ({ id: `card-${i}` })) };
+  return { measurement, checks, result: buildCanonicalSingle(measurement, answer, checks) };
 }
 
 // Run the extracted call-site expression, then the real selector — exactly as the mount does.
 function selectFromWiring(result) {
-  return selectInspectionMeaning({ pairRuns: [], findings: evalSingleFindings(result) });
+  return selectInspectionMeaning({ pairRuns: [], findings: evalSingleFindings(result, countOf) });
 }
 
 test("1) two measurement findings, zero Check Register cards → S2 count 2 (the production regression)", () => {
@@ -90,17 +110,20 @@ test("1) two measurement findings, zero Check Register cards → S2 count 2 (the
   assert.ok(sel.copy.what.includes("2 item"), `S2 count must equal the 2 findings the reader sees; got: ${sel.copy.what}`);
 });
 
-test("2) Check Register cards present, no measurement findings → S2 with the card count", () => {
-  const sel = selectFromWiring(singleResult({ findings: 0, cards: 2 }));
-  assert.equal(sel.state_id, EXPLAIN_STATE_S2, "either source non-empty → S2, never S1");
-  assert.ok(sel.copy.what.includes("2 item"), `got: ${sel.copy.what}`);
+test("2) the count never consults the Check Register: cards cannot move it", () => {
+  const none = selectFromWiring(singleResult({ findings: 3, cards: 0 }));
+  const some = selectFromWiring(singleResult({ findings: 3, cards: 3 }));
+  assert.equal(none.state_id, EXPLAIN_STATE_S2);
+  assert.equal(some.state_id, EXPLAIN_STATE_S2);
+  assert.equal(none.copy.what, some.copy.what, "register eligibility annotates findings; it never counts them");
+  assert.ok(none.copy.what.includes("3 item"), `got: ${none.copy.what}`);
 });
 
-test("3) both present (cards ⊆ findings) → S2 counts the union, never the sum (no double-count)", () => {
+test("3) cards are a derived subset → S2 counts the findings, never the sum (no double-count)", () => {
   // 3 findings, 2 of which survived into cards. Distinct visible items = 3, not 5.
   const sel = selectFromWiring(singleResult({ findings: 3, cards: 2 }));
   assert.equal(sel.state_id, EXPLAIN_STATE_S2);
-  assert.ok(sel.copy.what.includes("3 item"), `union cardinality is 3; got: ${sel.copy.what}`);
+  assert.ok(sel.copy.what.includes("3 item"), `surfaced findings is 3; got: ${sel.copy.what}`);
   assert.ok(!sel.copy.what.includes("5 item"), "must not sum findings and their own derived cards");
 });
 
@@ -126,4 +149,18 @@ test("5) paired mount untouched: still forwards the delta items array, still sel
     selectInspectionMeaning({ pairRuns: [{}], findings: [], conditionsMatched: true }).state_id,
     EXPLAIN_STATE_S3,
   );
+});
+
+test("6) an unresolved quotation is recorded and cannot raise the count", () => {
+  const sel = selectFromWiring(singleResult({ findings: 2, cards: 0, unresolved: 1 }));
+  assert.equal(sel.state_id, EXPLAIN_STATE_S2);
+  assert.ok(sel.copy.what.includes("2 item"), `only the 2 quotable items may be counted; got: ${sel.copy.what}`);
+  assert.ok(!sel.copy.what.includes("3 item"), "a finding with no verbatim quotation must not be counted");
+  // And the record still holds all three, so nothing was dropped to achieve that.
+  assert.equal(countOf(singleResult({ findings: 2, unresolved: 1 }).result, "recorded_findings"), 3);
+});
+
+test("7) every finding unresolved → S1, because nothing can be shown", () => {
+  const sel = selectFromWiring(singleResult({ findings: 0, cards: 0, unresolved: 2 }));
+  assert.equal(sel.state_id, EXPLAIN_STATE_S1, "no quotable finding → the interpretation must not claim items");
 });

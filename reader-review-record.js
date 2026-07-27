@@ -34,7 +34,12 @@ import { buildPairRun, PAIR_INITIATOR } from "./reader-paired.js";
 // below change, so a digest recorded under the old rules stays reproducible.
 export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.1";
 export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
-export const REVIEW_RECORD_VERSION = "review-record.v1";
+// v2 is additive over v1: contents.canonical_result carries the run's canonical
+// findings collection. Before it, the packet exported only the checks the Check
+// Register emitted, so an omission-shaped run — where the register emits nothing —
+// exported a record thinner than the result the person had just read. Findings now
+// survive in the record independently of register eligibility.
+export const REVIEW_RECORD_VERSION = "review-record.v2";
 export const REVIEW_RECORD_HASH_ALGORITHM = "sha256";
 
 export const RECORD_STATUSES = new Set(["open", "resolved", "dismissed"]);
@@ -270,6 +275,12 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair
     pair_runs: pairRuns, // populated for a paired run (schema PairRun); [] in single mode
     detector_events: detectorEvents,
     checks,
+    // The canonical findings collection (reader-result.js), record version v2.
+    // `checks` above lists only what the Check Register emitted; this lists every
+    // finding the run recorded, each carrying its own register disposition and the
+    // reasons a card was suppressed. The two are not redundant: a run can record
+    // findings and emit no checks at all, and the record has to say so.
+    canonical_result: (result && result.result) || openRun.canonical || null,
     resolution_evidence: [], // ResolutionEvidence is a later lane; present-but-empty here
     inspector: inspectorBlock,
     versions: {

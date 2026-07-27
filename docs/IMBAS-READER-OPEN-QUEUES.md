@@ -178,3 +178,93 @@ repository, so each declaration using it becomes invalid at computed-value time 
 back through inheritance or the property's initial behavior. The exact visual consequence
 depends on the property consuming the unresolved variable and must be audited before
 choosing a replacement token.
+
+---
+
+## CHECK REGISTER QUEUE
+
+Recorded 2026-07-27. Pass 2B-A found these three while deciding whether the Check Register
+could carry a probe-side anchor. It fixed none of them. Each was verified against
+`reader-checks.js` at the time of writing.
+
+**1. A span's `artifact_id` is stamped from a parameter, not derived from the text it
+resolved against.**
+`resolveSpan` (`reader-checks.js:142`) takes `artifactText` and `artifactId` as two
+independent arguments and writes `artifact_id: artifactId` into the span it returns
+(`157`). It never checks that the id names the text. `assembleComparativeCheck` (`186`)
+takes the same two as separate parameters, so a caller can pair one artifact's id with
+another artifact's text and the span records the wrong id as fact. The offsets are
+verified. The attribution is asserted.
+
+**2. `spanResolves` never reads `artifact_id`.**
+`spanResolves` (`reader-checks.js:384`) checks the offset arithmetic and re-slices
+`artifactText` to confirm the quote is verbatim. It does not consult `span.artifact_id`.
+The validator therefore establishes that the quote occurs in the text handed to it, not
+that the quote occurs in the artifact the span names. Taken with item 1, a span carrying
+the wrong artifact id passes validation and the check built on it enters the register.
+
+**3. What blocks a probe-side anchor is a prompt change, not a signature change.**
+`assembleComparativeCheck` resolves both ends against a single `artifactText`
+(`199-200`). Its signature already carries an `artifactId`, so widening the signature is
+not what stands in the way. The inspector is never asked which artifact a quoted span came
+from, so nothing in the check block distinguishes an open-answer quote from a
+probe-answer quote. Closing this needs the prompt and the check-block schema to carry
+per-quote attribution. Whoever takes it should know that one route was considered and
+rejected: resolving each quote against both answers and keeping whichever matched. That
+route invents the attribution it claims to discover, which the anchor contract forbids.
+
+*What Pass 2B-A did instead.* It recorded a suppression reason for the case where the
+register cannot consume a valid anchor shape: `PROBE_SIDE_ANCHOR_UNSUPPORTED`
+(`reader-result.js:342`). The string is deliberately specific. A generic label such as
+"below threshold" would merge two opposite conclusions — the findings are weak, and the
+register cannot read a valid anchor — and no later pass could separate them again.
+
+## PAIRED SURFACE QUEUE
+
+Recorded 2026-07-27, and verified live in the browser at both viewports before being written
+down. Pass 2B-A repointed every visible count on the SINGLE surface to the named
+`surfaced_findings` subset so that no displayed number can include a finding the reader
+cannot verify. It did not do that on the paired surface. This is the remaining half.
+
+**1. `PairedDeltaView` tallies and lists the pre-canonical wire fields.**
+The visible tally comes from `paired.signal_counts` and the rows from `paired.delta_items`
+(`workbench-app.jsx:4167`, `4170`). Both are pre-canonical, so neither consults the anchor
+contract. The named subset the canonical result already carries —
+`probe_surfaced_differences` — is built and available on this branch and is read by nothing
+on screen.
+
+The consequence is demonstrable, not hypothetical. A delta item whose supplied probe-side
+quotation does not occur in the probe answer is still counted and still rendered, with its
+unresolvable quotation shown in quotation marks as if it were verbatim. Driven live: the
+tally read `Omission: 2 · Framing Drift: 0 · Deflection: 0` while
+`probe_surfaced_differences` was 1, and the second row displayed a "Second answer" quotation
+that appears nowhere in the second answer. Same result at desktop and mobile. This is the
+same defect class Pass 2B-A removed from the single surface.
+
+It was deferred rather than fixed because repointing the rows means settling the paired class
+vocabulary (PASS 2B COPY AND OUTPUT QUEUE item 2 above), which is a different decision from
+the one this pass was scoped to make. Repointing only the tally would have been worse than
+leaving it: the number would then disagree with the rows printed beneath it, which is exactly
+the contradiction the single-surface work existed to remove.
+
+Two tests in `test/paired-claim-register-normalization.test.mjs` (5a, 5b) hold this in place:
+one asserts `PairedDeltaView` still reads the legacy fields, so it fails the moment someone
+repoints it and tells them which divergence demonstration to delete alongside it; the other
+pins the arithmetic of the divergence itself.
+
+**2. The server-side claim register reaches the paired surface and is rendered nowhere.**
+`claim_register`, `claim_basis`, and `conditions_status` travel intact from the construction
+door through the paired receipt into the browser. No paired surface displays any of them.
+Verified by driving six conditions bases live: an authorized MATCHED basis, a reported client
+declaration claiming MATCHED, an absent basis, an unrecognized basis, an unmatched
+derivation, and a basis stripped on reload. Five of the six produced byte-identical captures
+at both viewports; the harness's own checksum-collision guard caught it. Only the sixth
+differed, and it differed because of the *client-side* `deriveConditionsMatched` flag, not the
+register.
+
+This is currently safe and should not be treated as urgent. `PAIR_CAPTURE_UI` has an
+`unmatched_badge` and an `unmatched_warning` and no affirmative matched badge, so the surface
+cannot state that conditions were matched. Nothing renders a claim it is not entitled to. But
+the register is instrumentation that no reader can see, so whichever pass gives the paired
+surface its conditions copy should decide deliberately what, if anything, it shows — and
+should not discover the field by accident.

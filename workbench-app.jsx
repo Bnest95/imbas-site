@@ -1,12 +1,20 @@
 import {
   RECEIPT_BOUNDARY,
   RECEIPT_SCHEMA_VERSION,
-  gapEstimateLabel,
   formatReceiptText,
   formatPairedReceiptText,
   formatChipPairedReceiptText,
   canonicalizeForHash,
 } from "./reader-receipt.js";
+import {
+  classBreakdown,
+  countLabel,
+  countOf,
+  describeFinding,
+  selectSubset,
+  ANCHOR_STATUS,
+  ARTIFACT_ORIGINAL,
+} from "./reader-result.js";
 import {
   ACT2_OFFER_COPY,
   ACT2_CAPACITY_COPY,
@@ -3664,10 +3672,14 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
 // Everything here is candidate vocabulary — unvalidated inspection hypotheses,
 // never validated classifications, never evidence. The unvalidated label and the
 // boundary line are non-negotiable and never below the fold.
+// Keyed by the ONE class id (reader-result.js FINDING_CLASSES), not by the
+// inspector's candidate string. The single-answer surface says "Candidate missing
+// item" where the paired surface says "Omission"; the display label is the
+// surface's, the class is the record's.
 const MEASURE_FINDING_LABEL = {
-  "candidate missing item": "Candidate missing item",
-  "candidate framing issue": "Candidate framing issue",
-  "candidate deflection": "Candidate deflection",
+  omission: "Candidate missing item",
+  framing_drift: "Candidate framing issue",
+  deflection: "Candidate deflection",
 };
 
 // onExport is an OPTIONAL success hook (kind "json" | "receipt"). Inspection callers
@@ -3791,14 +3803,15 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
 }
 
 // Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
-// gap-estimate line. Candidate vocabulary only ("candidate missing items"), never
-// "left out / skipped / hid". Counts come straight from the measurement's finding
-// counts, so the prose can never diverge from the itemized panel below.
-function readerCandidateSummary(m) {
-  const c = (m && m.finding_counts) || {};
-  const missing = c["candidate missing item"] || 0;
-  const framing = c["candidate framing issue"] || 0;
-  const deflection = c["candidate deflection"] || 0;
+// count line. Candidate vocabulary only ("candidate missing items"), never
+// "left out / skipped / hid". The breakdown comes from the SAME named subset the
+// line above states (surfaced_candidate_items), so the two can never disagree
+// about how many items surfaced.
+function readerCandidateSummary(canonical) {
+  const c = classBreakdown(canonical, "surfaced_candidate_items");
+  const missing = c.omission || 0;
+  const framing = c.framing_drift || 0;
+  const deflection = c.deflection || 0;
   const parts = [];
   if (missing) parts.push(`${missing} candidate missing item${missing === 1 ? "" : "s"}`);
   if (framing) parts.push(`${framing} candidate framing issue${framing === 1 ? "" : "s"}`);
@@ -3879,31 +3892,54 @@ function PerceptionTap({ mode, receipt }) {
   );
 }
 
-// Reader v2 redesign edit 4 — the result hero. The candidate gap-estimate line is
-// the largest, first element of the result. The whole label renders as one run, so
-// "unvalidated" travels with the number at equal legibility and there is never a
-// bare giant "N/3". A plain candidate summary sits beneath, then the full read and
-// measurement panel below. Renders only when the run carries a measurement.
+// Reader v2 redesign edit 4 — the result hero. The count line is the largest, first
+// element of the result. A plain candidate summary sits beneath, then the full read
+// and measurement panel below. Renders only when the run carries a measurement.
+//
+// Pass 2B-A: the line states a named count — surfaced_candidate_items, the items
+// carrying at least one quotation that resolves verbatim against the pasted answer —
+// and no longer a 0-3 gap estimate. The single-answer surface stops scoring: there
+// is no completeness label, no gap score, and no judgment about how much the answer
+// left out. The estimate is still recorded in the wire payload and the receipt under
+// their own versions; it is no longer the thing the Reader tells a person it found.
 function ReaderResultHero({ result }) {
   const m = result?.measurement;
   if (!m) return null;
+  const canonical = result.result;
   const rationale = (m.estimate_rationale || "").trim();
   return (
     <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
       <p className="wb-result-hero__eyebrow">Inspection result</p>
-      <p id="wb-result-hero-estimate" className="wb-result-hero__estimate">{gapEstimateLabel(m.gap_estimate)}</p>
-      <p className="wb-result-hero__summary">{readerCandidateSummary(m)}</p>
+      <p id="wb-result-hero-estimate" className="wb-result-hero__estimate">
+        {`${countLabel(canonical, "surfaced_candidate_items")} surfaced`}
+      </p>
+      <p className="wb-result-hero__summary">{readerCandidateSummary(canonical)}</p>
       {rationale ? <p className="wb-result-hero__why">{rationale}</p> : null}
     </section>
   );
 }
 
+// The panel lists surfaced_findings: the findings that satisfy their shape's
+// registered surfacing contract. recorded_findings holds more — legacy material and
+// findings whose supplied quotation did not resolve — and is the durable record, not
+// a display subset. A finding that cannot be quoted must not be a row, because a row
+// is a claim that the Reader found something in this answer.
+//
+// The hero states surfaced_candidate_items, which is surfaced_findings restricted to
+// the single-answer surface. On a single-answer result every finding is single-surface
+// by construction, so the two select the identical set and the hero cannot disagree
+// with the rows beneath it. The unit differs, not the membership.
+//
+// Rows are rendered from describeFinding alone. Nothing here switches on shape or
+// re-maps a class, so a newly registered finding shape renders through this list
+// with no edit to this component.
 function MeasurementPanel({ result, context }) {
   const m = result?.measurement;
   if (!m) return null;
   const receipt = result?.receipt || null;
-  const findings = Array.isArray(m.findings) ? m.findings : [];
-  const counts = m.finding_counts || {};
+  const canonical = result.result;
+  const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
+  const counts = classBreakdown(canonical, "surfaced_findings");
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
   const metaBits = [declaredModel ? `Model: ${declaredModel}` : "Model: (not declared)"];
@@ -3919,21 +3955,30 @@ function MeasurementPanel({ result, context }) {
         <article className="wb-reader-result__section wb-measure__findings">
           <h3 className="wb-reader-result__section-title">Candidate findings</h3>
           <p className="wb-measure__counts">
-            {`Missing item: ${counts["candidate missing item"] || 0} · Framing issue: ${counts["candidate framing issue"] || 0} · Deflection: ${counts["candidate deflection"] || 0}`}
+            {`Missing item: ${counts.omission || 0} · Framing issue: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
           </p>
           {findings.length ? (
             <ul className="wb-measure__list">
-              {findings.map((f, i) => (
-                <li key={i} className="wb-measure__finding">
-                  <span className="wb-measure__finding-type">{MEASURE_FINDING_LABEL[f.type] || f.type}</span>
-                  {(f.materiality || "").trim() ? (
-                    <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
-                  ) : null}
-                  {(f.anchor || "").trim() ? (
-                    <blockquote className="wb-measure__anchor">{`"${f.anchor.trim()}"`}</blockquote>
-                  ) : null}
-                </li>
-              ))}
+              {findings.map((f) => {
+                // Only a QUOTED anchor goes inside quotation marks. Text the source
+                // supplied that does not occur in the answer is recorded as
+                // UNRESOLVED and shown as nothing, because a blockquote asserts the
+                // words are in the artifact.
+                const quoted = f.anchors.find(
+                  (a) => a.role === ARTIFACT_ORIGINAL && a.status === ANCHOR_STATUS.QUOTED,
+                );
+                return (
+                  <li key={f.id} className="wb-measure__finding">
+                    <span className="wb-measure__finding-type">{MEASURE_FINDING_LABEL[f.class_id] || f.class_display}</span>
+                    {(f.materiality || "").trim() ? (
+                      <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
+                    ) : null}
+                    {quoted ? (
+                      <blockquote className="wb-measure__anchor">{`"${quoted.quote}"`}</blockquote>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className="wb-reader-result__empty">No candidate findings — the answer read clean.</p>
@@ -6184,20 +6229,17 @@ function ReaderWorkbench() {
             {/* Render-only interpretation of the single inspection. Gated on measurement
                 (not on checks) so it renders for both S1 (no findings surfaced) and S2
                 (findings present); single mode → no pair_runs, so conditions are never
-                consulted. The items the reader sees are the candidate findings
-                (measurement.findings) MeasurementPanel renders; the Check Register cards
-                are a derived subset of those same findings (api/read.js buildChecks →
-                reader-checks.js buildCheckRegister), not independent items. So S1 fires
-                only when BOTH are empty, and the S2 count is the union cardinality =
-                max of the two lengths. Perturbs no record. */}
+                consulted. The count is surfaced_findings — the same named subset
+                MeasurementPanel lists, so the panel and this interpretation cannot
+                disagree about how many items surfaced. It replaces a max() over the
+                findings array and the Check Register cards, which was an unnamed count
+                computed in the renderer to approximate a union the canonical collection
+                now states outright. Perturbs no record. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
                 <InspectionMeaningPanel
                   pairRuns={[]}
-                  findings={Math.max(
-                    Array.isArray(readerResult.measurement.findings) ? readerResult.measurement.findings.length : 0,
-                    readerResult.checks && Array.isArray(readerResult.checks.cards) ? readerResult.checks.cards.length : 0,
-                  )}
+                  findings={countOf(readerResult.result, "surfaced_findings")}
                 />
               </div>
             ) : null}

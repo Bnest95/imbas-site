@@ -47,6 +47,13 @@ import {
   validateReviewRecord,
 } from "../reader-review-record.js";
 import { buildCheckRegister } from "../reader-checks.js";
+import {
+  ARTIFACT_ORIGINAL,
+  SHAPE_SINGLE_CANDIDATE,
+  buildCanonicalResult,
+  buildFinding,
+  classifyRegisterOutcome,
+} from "../reader-result.js";
 import { lintUserFacingStrings } from "../reader-check-vocab.js";
 import {
   buildSingleReceipt,
@@ -299,14 +306,22 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
 // pair_runs), so v0.3.1's PairRun additions leave their bytes unchanged; only the
 // versions.schema string (…v0.3.0 → …v0.3.1) moves, so the byte length holds and the
 // digest turns over deliberately. Each asserts versions.schema is v0.3.1 first.
+//
+// Turned over DELIBERATELY at record version v2, which adds contents.canonical_result.
+// Both fixtures supply no canonical result, so the added key serializes as
+// "canonical_result":null — exactly 24 bytes at every fixture (2575→2599, 2585→2609),
+// and versions.record moves v1→v2 at equal length. Verified by rebuilding the v1
+// body from the v2 canonical string: dropping the one key and restoring the version
+// string reproduces both v1 digests byte-for-byte, so review-record.c14n.v1 itself is
+// unchanged. The pin's job — catching drift nobody intended — is intact.
 const PINNED_V031 = {
   single_omission: {
-    bytes: 2575,
-    digest: "66ffc618883616f632e184765b6059a3a9c4f04700cc48c32e4a3ed4ec1e2aba",
+    bytes: 2599,
+    digest: "ac6e696253574b58167934a093916939634e771e485f1cca82117c2800350265",
   },
   deflection_finding: {
-    bytes: 2585,
-    digest: "fbdf12c1cb2cc16bdaa72d108703d134598f056ee4f9b816f1e5a5398904912c",
+    bytes: 2609,
+    digest: "73ddc9b8e6deadf6911955d45a75c5d46cdb8b569ad6505fd61780bcb00bdcc3",
   },
 };
 
@@ -660,6 +675,52 @@ test("scope-5: a paired inspection with no checks assembles a valid pair_runs re
   assert.deepEqual(record.contents.detector_events, []);
   assert.equal(record.contents.pair_runs.length, 1);
   assert.ok(validateReviewRecord(record).ok, "a checkless paired record is valid");
+});
+
+// ── The export consequence (record version v2) ──────────────────────────────────
+// Before v2 the packet exported only what the Check Register emitted, so an
+// omission-shaped run — the register's most common silence — exported a record
+// thinner than the result the person had just read on screen. The canonical
+// collection now survives independently of register eligibility.
+
+test("v2: the packet carries every finding even when the register emits no check at all", async () => {
+  // A finding with no check block: the register emits nothing, exactly as before.
+  const canonical = buildCanonicalResult({
+    surface: "single",
+    findings: [
+      buildFinding({
+        index: 0,
+        shape: SHAPE_SINGLE_CANDIDATE,
+        class_label: "omission",
+        statement: "No source is given for the projected figure.",
+        quotations: { [ARTIFACT_ORIGINAL]: "a projected figure of 4.2 million" },
+        artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
+        check_register: classifyRegisterOutcome({ check: null, artifactText: ANSWER, cards: [] }),
+      }),
+    ],
+  });
+  const base = buildResult({ findings: [] }).result;
+  const record = await buildReviewRecord({
+    result: { ...base, result: canonical },
+    createdAt: CREATED,
+  });
+
+  assert.deepEqual(record.contents.checks, [], "the register still emits nothing — unchanged");
+  const carried = record.contents.canonical_result;
+  assert.equal(carried.findings.length, 1, "the finding survives in the durable record");
+  assert.equal(carried.counts.recorded_findings.value, 1);
+  assert.equal(carried.findings[0].check_register.status, "SUPPRESSED");
+  assert.deepEqual(carried.findings[0].check_register.suppression_reasons, ["NO_CHECK_BLOCK"]);
+  assert.ok(validateReviewRecord(record).ok, "a findings-only record is valid");
+
+  // It sits inside the hashed body, so the export cannot disagree with its digest.
+  assert.match(serializeCanonical(record), /No source is given for the projected figure\./);
+});
+
+test("v2: a record built from a run that carries no canonical result stays valid", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
+  assert.equal(record.contents.canonical_result, null);
+  assert.ok(validateReviewRecord(record).ok, "the key is additive, not required");
 });
 
 test("validation: rejects paired records that break the schema PairRun shape", async () => {
