@@ -19,7 +19,14 @@
 
 // Envelope schema id. Bump on any change to the envelope shape (design §9); old
 // hashes stay reproducible because canonicalization_version is recorded too.
-export const RECEIPT_SCHEMA_VERSION = "reader-receipt-1.0";
+//
+// 1.1 is purely ADDITIVE over 1.0: open_run.canonical and
+// paired_analysis.canonical carry the canonical findings collection
+// (reader-result.js) alongside the legacy measurement and delta_items blocks,
+// which keep every field they had. A 1.0 envelope still verifies against its own
+// recorded version and is read without reinterpretation — no field is renamed,
+// re-derived, or removed.
+export const RECEIPT_SCHEMA_VERSION = "reader-receipt-1.1";
 // Canonicalization rules id. Bump only if the rules below change, so a hash
 // recorded under the old rules can still be reproduced.
 export const CANONICALIZATION_VERSION = "1.0";
@@ -35,6 +42,13 @@ export const RECEIPT_BOUNDARY =
 // fold (design §11). N is the 0-3 candidate gap estimate.
 export function gapEstimateLabel(n) {
   return `Candidate gap estimate: ${n} of 3 (unvalidated)`;
+}
+
+// True only for an estimate that actually parsed. A run whose legacy estimate was
+// malformed keeps all of its findings and carries no estimate, so every surface
+// that would print "N of 3" has to ask this first.
+export function hasGapEstimate(n) {
+  return Number.isFinite(n);
 }
 
 // The paired-mode estimate label (Reader v2 P2). Distinct wording from the single
@@ -123,6 +137,7 @@ export function buildSingleReceipt({
   answer,
   inspection,
   measurement,
+  canonical,
   provenance,
 }) {
   const insp = inspection || {};
@@ -135,7 +150,9 @@ export function buildSingleReceipt({
         })),
         finding_counts: measurement.finding_counts || {},
         gap_estimate: measurement.gap_estimate,
-        gap_estimate_label: gapEstimateLabel(measurement.gap_estimate),
+        gap_estimate_label: hasGapEstimate(measurement.gap_estimate)
+          ? gapEstimateLabel(measurement.gap_estimate)
+          : "",
         estimate_rationale: measurement.estimate_rationale || "",
         estimate_type: measurement.estimate_type,
         estimate_scale_version: measurement.estimate_scale_version,
@@ -161,6 +178,11 @@ export function buildSingleReceipt({
         inspection_note: insp.inspection_note || "",
       },
       measurement: measurementBlock,
+      // Schema 1.1, additive. The canonical findings collection travels whole:
+      // every finding the run recorded, including the ones the Check Register
+      // suppressed, each with its own disposition. The legacy measurement block
+      // above is unchanged and still authoritative for a 1.0 reader.
+      canonical: canonical || null,
       provenance: {
         reader_model_version: (provenance && provenance.reader_model_version) || "",
         inspector_prompt_version: (provenance && provenance.inspector_prompt_version) || "",
@@ -220,6 +242,7 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
       targeted_answer: pa.targeted_answer || "",
       targeted_answer_hash: pa.targeted_answer_hash || "",
       delta_items: deltaItems,
+      canonical: pa.canonical || null,
       gap_estimate: pa.gap_estimate,
       gap_estimate_label: pairedGapEstimateLabel(pa.gap_estimate),
       estimate_rationale: pa.estimate_rationale || "",
@@ -332,7 +355,7 @@ function openRunBodyLines(run) {
   L.push("");
   L.push("—— MEASUREMENT (candidate observations, unvalidated) ——");
   if (m) {
-    L.push(gapEstimateLabel(m.gap_estimate));
+    if (hasGapEstimate(m.gap_estimate)) L.push(gapEstimateLabel(m.gap_estimate));
     if ((m.estimate_rationale || "").trim()) L.push(`Rationale: ${m.estimate_rationale.trim()}`);
     const c = m.finding_counts || {};
     L.push(

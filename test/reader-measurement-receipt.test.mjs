@@ -471,13 +471,25 @@ test("findings of unknown type are dropped from the measurement", async () => {
   assert.equal(body.measurement.finding_counts["candidate missing item"], 1);
 });
 
-test("a non-finite gap estimate nulls the whole measurement, receipt still built", async () => {
+// The estimate is a derived score; the findings are the evidence. A malformed
+// legacy estimate degrades the estimate ALONE. It used to null the whole
+// measurement, which threw away every quoted finding the model had already
+// produced (Pass 2B-A, reader-result.js INVARIANTS item 1).
+test("a non-finite gap estimate degrades the estimate alone and never erases findings", async () => {
   const { body, fields } = await runHandler(sampleMeasurement({ gap_estimate: "not a number" }));
-  assert.equal(body.measurement, null); // panel-absent path
-  assert.ok(body.receipt, "receipt is still attached for the agent run");
-  // estimate-level fields are absent (graceful); run-level + receipt fields remain
+  assert.ok(body.measurement, "the measurement survives a malformed estimate");
+  assert.equal(body.measurement.gap_estimate, null);
+  assert.equal(body.measurement.findings.length, 3, "every finding the model produced survives");
+  // The canonical collection is the durable record of those findings.
+  assert.equal(body.result.counts.recorded_findings.value, 3);
+  // Nothing anywhere prints "null of 3".
+  assert.equal(body.receipt.open_run.measurement.gap_estimate, null);
+  assert.equal(body.receipt.open_run.measurement.gap_estimate_label, "");
+  assert.doesNotMatch(formatReceiptText(body.receipt), /Candidate gap estimate/);
+  // The score field is omitted rather than written null; the findings still capture.
   assert.equal(fields["Gap Estimate"], undefined);
-  assert.equal(fields["Estimate Type"], undefined);
+  assert.equal(fields["Estimate Type"], "candidate_gap");
+  assert.match(fields["Finding Types"], /candidate missing item: 1/);
   assert.equal(fields["Run Mode"], "single");
   assert.match(fields["Receipt Hash"], /^[0-9a-f]{64}$/);
 });

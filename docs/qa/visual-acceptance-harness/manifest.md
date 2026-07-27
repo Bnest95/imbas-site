@@ -1,13 +1,13 @@
 # Visual acceptance manifest
 
-captured_against_sha: `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4`
+captured_against_sha: `ea3e710e276cc5ba71296cba4974df995ca8a06c`
 
-**These images were captured against commit `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
+**These images were captured against commit `ea3e710e276cc5ba71296cba4974df995ca8a06c` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
 
 - working tree at capture time: **dirty**
 - browser: `/Users/brendan/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
 - browser version: `HeadlessChrome/148.0.7778.96`
-- captured: 2026-07-26T19:56:26.686Z
+- captured: 2026-07-27T03:22:15.318Z
 - fixtures: synthetic, from `scripts/qa/scenarios.mjs` — not captures, not evidence
 - network: deny-by-default; no model API call is reachable from this harness
 
@@ -33,7 +33,7 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 | screenshot_format | `png` |
 | timezone | `UTC` |
 | url | `/workbench.html` |
-| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 2508` |
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 2464` |
 | viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 2817` |
 
 ## Images
@@ -42,14 +42,14 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 
 | field | value |
 | --- | --- |
-| sha256 | `0851f21386c6ddb555186f8eaf92051718391836693cbfaf297047a6d9bd87cd` |
-| bytes | 704379 |
+| sha256 | `413132d2e0054da5c8a52bd26a4939a5afbda8e69e585973deee2e48baa42058` |
+| bytes | 706298 |
 | viewport | 1440x900@2x (desktop) |
 | snapshot | `single-findings--desktop.snapshot.txt` |
-| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2508 |
+| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2464 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` + uncommitted working tree |
+| captured_against_sha | `ea3e710e276cc5ba71296cba4974df995ca8a06c` + uncommitted working tree |
 
 ### `single-findings--mobile.png`
 
@@ -62,4 +62,4 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2817 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `f4f24b1bb8e7f2e063c25612fc2fbabe5046c1e4` + uncommitted working tree |
+| captured_against_sha | `ea3e710e276cc5ba71296cba4974df995ca8a06c` + uncommitted working tree |

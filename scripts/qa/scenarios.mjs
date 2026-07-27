@@ -8,11 +8,14 @@
 // derived part of a payload here is produced by the SAME product modules the
 // endpoints use — reader-receipt.js, reader-paired.js, reader-checks.js. Only the
 // parts a model authors (the read prose, the findings, the delta items) are canned,
-// because those are canned by definition.
+// because those are canned by definition. The canonical result goes one better: the
+// endpoint's own adapter is imported and called, so that part of the payload cannot
+// drift from the endpoint at all.
 //
 // Shape derived from, and only from:
 //   api/read.js        — parseMeasurement (:466), the payload literal (:1050),
-//                        buildAct2 (:524), buildChecks (:547)
+//                        buildAct2 (:524), buildChecks (:547),
+//                        buildCanonicalSingle (imported, not copied)
 //   api/read-paired.js — parsePairedMeasurement (:305), buildPairedPayload (:387)
 //   reader-paired.js   — deriveConditionsMatched (:210), PAIR_* enums
 //
@@ -31,6 +34,8 @@ import {
 } from "../../reader-receipt.js";
 import { buildTargetedPrompt, PAIRED_METHOD_VERSION, deriveConditionsMatched, PAIR_SAME_MODEL, PAIR_EDITS } from "../../reader-paired.js";
 import { buildCheckRegister } from "../../reader-checks.js";
+import { buildCanonicalSingle } from "../../api/read.js";
+import { buildCanonicalPaired } from "../../api/read-paired.js";
 
 const sha256Hex = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -140,6 +145,21 @@ function singleReadPayload() {
     measurement,
   };
 
+  // Check Register — real assembler, real span resolution against the answer.
+  const checks = buildCheckRegister({
+    artifactId: "original_answer",
+    artifactText: SYNTHETIC_ANSWER,
+    findings: measurement.findings
+      .filter((f) => f.check)
+      .map((f) => ({ type: CANDIDATE_TO_DETECTOR_FINDING[f.type], check: f.check })),
+    inspector: { model: MODEL, model_version: MODEL, prompt_version: READER_PROMPT_VERSION },
+  });
+
+  // Canonical result — the endpoint's OWN adapter, not a copy of it. This is what the
+  // interface renders from, so a fixture without it captures a state the endpoint
+  // cannot emit. Built before the receipt because the receipt carries it (schema 1.1).
+  const canonical = buildCanonicalSingle(measurement, SYNTHETIC_ANSWER, checks);
+
   // Receipt: built by the real builder, hashed by the real canonicalizer, so the
   // fixture carries a genuinely valid content_hash instead of an invented one.
   const receipt = buildSingleReceipt({
@@ -156,6 +176,7 @@ function singleReadPayload() {
       inspection_note: payload.inspection_note,
     },
     measurement,
+    canonical,
     provenance: {
       reader_model_version: MODEL,
       inspector_prompt_version: READER_PROMPT_VERSION,
@@ -180,15 +201,8 @@ function singleReadPayload() {
     paired_method_version: PAIRED_METHOD_VERSION,
   };
 
-  // Check Register — real assembler, real span resolution against the answer.
-  payload.checks = buildCheckRegister({
-    artifactId: "original_answer",
-    artifactText: SYNTHETIC_ANSWER,
-    findings: measurement.findings
-      .filter((f) => f.check)
-      .map((f) => ({ type: CANDIDATE_TO_DETECTOR_FINDING[f.type], check: f.check })),
-    inspector: { model: MODEL, model_version: MODEL, prompt_version: READER_PROMPT_VERSION },
-  });
+  payload.checks = checks;
+  payload.result = canonical;
 
   return payload;
 }
@@ -236,6 +250,9 @@ function pairedReadPayload() {
     rubric_version: RUBRIC_VERSION,
     paired_method_version: PAIRED_METHOD_VERSION,
   };
+  // The endpoint's own adapter again. It reads delta_items and the estimate fields
+  // off the analysis object, which is exactly what the endpoint hands it.
+  pairedAnalysis.canonical = buildCanonicalPaired(pairedAnalysis, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER);
 
   const receipt = buildPairedReceipt({
     generatedAt: FROZEN_TIMESTAMP,
@@ -249,6 +266,7 @@ function pairedReadPayload() {
     source: "agent",
     delta_items,
     signal_counts,
+    result: pairedAnalysis.canonical,
     gap_estimate: pairedAnalysis.gap_estimate,
     gap_estimate_label: pairedGapEstimateLabel(pairedAnalysis.gap_estimate),
     estimate_rationale: pairedAnalysis.estimate_rationale,
@@ -358,6 +376,14 @@ export function assertScenarioIntegrity(scenario) {
     }
     if (!read.receipt || !read.receipt.integrity || !read.receipt.integrity.content_hash) {
       problems.push("single payload receipt carries no content_hash");
+    }
+    // The construction door must not lose a finding on the way through. Every model
+    // finding is one recorded finding, whatever the Check Register did with it.
+    const recorded = read.result ? read.result.counts.recorded_findings.value : -1;
+    if (recorded !== read.measurement.findings.length) {
+      problems.push(
+        `canonical result records ${recorded} finding(s) for ${read.measurement.findings.length} measurement finding(s)`
+      );
     }
   }
 

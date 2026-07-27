@@ -84,10 +84,19 @@ import {
   RECEIPT_SCHEMA_VERSION,
   buildSingleReceipt,
   canonicalizeForHash,
+  hasGapEstimate,
 } from "../reader-receipt.js";
 import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
 import { extractJson } from "../reader-json.js";
 import { buildCheckRegister } from "../reader-checks.js";
+import {
+  ARTIFACT_ORIGINAL,
+  FINDING_CLASSES,
+  SHAPE_SINGLE_CANDIDATE,
+  buildCanonicalResult,
+  buildFinding,
+  classifyRegisterOutcome,
+} from "../reader-result.js";
 
 const MODEL = "claude-opus-4-8";
 // Version tag of the Reader prompt/protocol contract, recorded on every capture
@@ -459,15 +468,21 @@ function parseCheckBlock(raw) {
 }
 
 // Parse + validate the model's measurement object. Defensive by design: any
-// missing/malformed piece degrades to null (no panel, no receipt estimate) rather
-// than failing the read. Finding types are enforced to the three candidate strings;
-// gap_estimate is coerced to an integer clamped to 0-3. A non-numeric gap_estimate
-// nulls the whole object — the panel is meaningless without its estimate.
+// missing/malformed piece degrades rather than failing the read. Finding types are
+// enforced to the three candidate strings; gap_estimate is coerced to an integer
+// clamped to 0-3.
+//
+// A non-numeric gap_estimate nulls THE ESTIMATE ONLY. It used to null the whole
+// object, which threw away every quoted finding the model had already produced
+// because one legacy number was malformed. Findings are the evidence; the estimate
+// was a derived score. Evidence never depends on a score parsing (reader-result.js
+// INVARIANTS, item 1).
 function parseMeasurement(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const n = Number(raw.gap_estimate);
-  if (!Number.isFinite(n)) return null;
-  const gap_estimate = Math.max(GAP_ESTIMATE_MIN, Math.min(GAP_ESTIMATE_MAX, Math.round(n)));
+  const gap_estimate = Number.isFinite(n)
+    ? Math.max(GAP_ESTIMATE_MIN, Math.min(GAP_ESTIMATE_MAX, Math.round(n)))
+    : null;
   const findings = Array.isArray(raw.findings)
     ? raw.findings
         .filter((f) => f && typeof f === "object" && CANDIDATE_FINDING_SET.has(f.type))
@@ -557,6 +572,59 @@ function buildChecks(measurement, answer) {
       model: MODEL,
       model_version: MODEL,
       prompt_version: READER_PROMPT_VERSION,
+    },
+  });
+}
+
+// ── Canonical result (Pass 2B-A) ──────────────────────────────────────────────
+// SOURCE ADAPTER ONLY. This function collects what the model produced and hands it
+// to reader-result.js, which is the only place a canonical result is constructed.
+// Nothing here validates an anchor, normalizes a claim, decides subset eligibility,
+// computes a named count, or enforces a prohibited combination.
+//
+// The mapping is total by construction: parseMeasurement has already filtered
+// findings to the three candidate strings, so every class maps, and the statement
+// falls back through the finding's own text before the class label — so no finding
+// can fail the construction door and vanish. That is the point of the pass.
+//
+// The register annotates: a finding that produced no Check card is still a finding
+// here, carrying the reason the register did not emit it.
+//
+// Exported so the visual-acceptance harness builds this part of the payload with the
+// endpoint's own adapter instead of a copy of it. A fixture that reproduces the
+// mapping by hand drifts the moment the mapping changes.
+export function buildCanonicalSingle(measurement, answer, register) {
+  if (!measurement) return null;
+  const text = answer || "";
+  const cards = (register && register.cards) || [];
+  const findings = (measurement.findings || []).map((f, index) => {
+    const class_label = CANDIDATE_TO_DETECTOR_FINDING[f.type];
+    return buildFinding({
+      index,
+      shape: SHAPE_SINGLE_CANDIDATE,
+      class_label,
+      statement: f.materiality || f.anchor || FINDING_CLASSES[class_label],
+      materiality: f.materiality,
+      quotations: { [ARTIFACT_ORIGINAL]: f.anchor },
+      artifacts: { [ARTIFACT_ORIGINAL]: text },
+      check_register: classifyRegisterOutcome({ check: f.check, artifactText: text, cards }),
+    });
+  });
+  return buildCanonicalResult({
+    surface: "single",
+    findings,
+    inspection_method_version: READER_PROMPT_VERSION,
+    provider: "anthropic",
+    model: MODEL,
+    // The call requests a family alias and the resolved id in the response is not
+    // captured, so this run cannot be pinned to a build. Empty says that; it does
+    // not restate the alias as though it were a snapshot.
+    model_snapshot_or_build: "",
+    legacy: {
+      gap_estimate: measurement.gap_estimate,
+      estimate_type: measurement.estimate_type,
+      estimate_scale_version: measurement.estimate_scale_version,
+      candidate_method_version: measurement.candidate_method_version,
     },
   });
 }
@@ -658,7 +726,9 @@ export async function captureRun(input, payload, ctx, deps = {}) {
     if (payload.measurement) {
       const m = payload.measurement;
       fields["Estimate Type"] = m.estimate_type || ESTIMATE_TYPE_SINGLE;
-      fields["Gap Estimate"] = m.gap_estimate;
+      // Omitted rather than written null when the legacy estimate did not parse.
+      // The findings still capture; only the score is absent.
+      if (hasGapEstimate(m.gap_estimate)) fields["Gap Estimate"] = m.gap_estimate;
       fields["Finding Types"] = CANDIDATE_FINDING_TYPES
         .map((t) => `${t}: ${(m.finding_counts && m.finding_counts[t]) || 0}`)
         .join("\n");
@@ -1047,6 +1117,14 @@ export function createReadHandler(deps = {}) {
     // malformed it — the read still returns; no panel, no receipt estimate.
     const measurement = parseMeasurement(parsed.measurement);
 
+    // Check Register v1 (Reader v3 R3) and the canonical findings collection
+    // (Pass 2B-A). The register is built first because it only ANNOTATES the
+    // canonical result — a suppressed card still leaves a recorded finding — and
+    // neither one feeds readerOutputHash, which covers the four core fields and
+    // source only.
+    const checks = buildChecks(measurement, input.answer || "");
+    const canonical = buildCanonicalSingle(measurement, input.answer || "", checks);
+
     const payload = {
       completeness: parsed.completeness,
       the_read: parsed.the_read.trim(),
@@ -1055,6 +1133,7 @@ export function createReadHandler(deps = {}) {
       inspection_note: inspectionNote,
       source: "agent",
       measurement,
+      result: canonical,
     };
 
     // Self-contained receipt (Reader v2 P1, single mode). Built server-side so its
@@ -1076,6 +1155,7 @@ export function createReadHandler(deps = {}) {
         inspection_note: payload.inspection_note,
       },
       measurement,
+      canonical,
       provenance: {
         reader_model_version: MODEL,
         inspector_prompt_version: READER_PROMPT_VERSION,
@@ -1094,10 +1174,9 @@ export function createReadHandler(deps = {}) {
     // (measurement null -> act2 null -> no offer).
     payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter, spendCeilingUsd);
 
-    // Check Register v1 (Reader v3 R3). Additive and null-safe: attached only on
-    // the agent path where measurement exists; the fallback path leaves it unset.
-    // Placed after the receipt/output-hash block so it never perturbs those hashes.
-    payload.checks = buildChecks(measurement, input.answer || "");
+    // Additive and null-safe: attached only on the agent path where measurement
+    // exists; the fallback path leaves it unset.
+    payload.checks = checks;
 
     return sendRead(res, input, payload, ctx, deps);
   };

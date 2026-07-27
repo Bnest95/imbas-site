@@ -178,3 +178,43 @@ repository, so each declaration using it becomes invalid at computed-value time 
 back through inheritance or the property's initial behavior. The exact visual consequence
 depends on the property consuming the unresolved variable and must be audited before
 choosing a replacement token.
+
+---
+
+## CHECK REGISTER QUEUE
+
+Recorded 2026-07-27. Pass 2B-A found these three while deciding whether the Check Register
+could carry a probe-side anchor. It fixed none of them. Each was verified against
+`reader-checks.js` at the time of writing.
+
+**1. A span's `artifact_id` is stamped from a parameter, not derived from the text it
+resolved against.**
+`resolveSpan` (`reader-checks.js:142`) takes `artifactText` and `artifactId` as two
+independent arguments and writes `artifact_id: artifactId` into the span it returns
+(`157`). It never checks that the id names the text. `assembleComparativeCheck` (`186`)
+takes the same two as separate parameters, so a caller can pair one artifact's id with
+another artifact's text and the span records the wrong id as fact. The offsets are
+verified. The attribution is asserted.
+
+**2. `spanResolves` never reads `artifact_id`.**
+`spanResolves` (`reader-checks.js:384`) checks the offset arithmetic and re-slices
+`artifactText` to confirm the quote is verbatim. It does not consult `span.artifact_id`.
+The validator therefore establishes that the quote occurs in the text handed to it, not
+that the quote occurs in the artifact the span names. Taken with item 1, a span carrying
+the wrong artifact id passes validation and the check built on it enters the register.
+
+**3. What blocks a probe-side anchor is a prompt change, not a signature change.**
+`assembleComparativeCheck` resolves both ends against a single `artifactText`
+(`199-200`). Its signature already carries an `artifactId`, so widening the signature is
+not what stands in the way. The inspector is never asked which artifact a quoted span came
+from, so nothing in the check block distinguishes an open-answer quote from a
+probe-answer quote. Closing this needs the prompt and the check-block schema to carry
+per-quote attribution. Whoever takes it should know that one route was considered and
+rejected: resolving each quote against both answers and keeping whichever matched. That
+route invents the attribution it claims to discover, which the anchor contract forbids.
+
+*What Pass 2B-A did instead.* It recorded a suppression reason for the case where the
+register cannot consume a valid anchor shape: `PROBE_SIDE_ANCHOR_UNSUPPORTED`
+(`reader-result.js:342`). The string is deliberately specific. A generic label such as
+"below threshold" would merge two opposite conclusions — the findings are weak, and the
+register cannot read a valid anchor — and no later pass could separate them again.

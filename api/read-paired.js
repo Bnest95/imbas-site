@@ -69,6 +69,17 @@ import {
 } from "../reader-paired.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
+import {
+  ARTIFACT_ORIGINAL,
+  ARTIFACT_TARGETED,
+  COMPARISON_DIRECTION,
+  CONDITIONS_STATUS,
+  FINDING_CLASSES,
+  SHAPE_PAIRED_OBSERVED_DIFFERENCE,
+  buildCanonicalResult,
+  buildFinding,
+  normalizeClass,
+} from "../reader-result.js";
 
 const MODEL = "claude-opus-4-8";
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
@@ -314,6 +325,59 @@ export function parsePairedMeasurement(raw) {
   };
 }
 
+// ── Canonical result (Pass 2B-A) ──────────────────────────────────────────────
+// SOURCE ADAPTER ONLY, exactly like buildCanonicalSingle in api/read.js: it
+// collects the two answers and the model's delta items and hands them to
+// reader-result.js. It validates no anchor, normalizes no claim, and computes no
+// count of its own.
+//
+// Every item is PROBE_ONLY. The deployed detector looks for material the second
+// answer surfaced that the first did not, so that is the only direction it can
+// produce; OPEN_ONLY and BOTH_DIFFERENT exist in the enum for a later pass and are
+// not detected, displayed, or counted here.
+//
+// The conditions basis is genuinely unavailable on this surface: the paste-back
+// capture is client-side and this endpoint never receives it. So no finding can
+// carry a matched-conditions claim, and normalizeClaim records every one of them as
+// an observed difference. That is the honest result, not a degraded one.
+//
+// Exported for the visual-acceptance harness, for the same reason as
+// buildCanonicalSingle: a fixture that copies the mapping drifts from it.
+export function buildCanonicalPaired(pm, openAnswer, targetedAnswer) {
+  if (!pm) return null;
+  const artifacts = { [ARTIFACT_ORIGINAL]: openAnswer || "", [ARTIFACT_TARGETED]: targetedAnswer || "" };
+  const findings = (pm.delta_items || []).map((d, index) => {
+    const class_label = normalizeClass(d.signal_pattern);
+    return buildFinding({
+      index,
+      shape: SHAPE_PAIRED_OBSERVED_DIFFERENCE,
+      class_label,
+      statement: d.point || d.targeted_side || FINDING_CLASSES[class_label],
+      quotations: { [ARTIFACT_TARGETED]: d.targeted_side, [ARTIFACT_ORIGINAL]: d.open_side },
+      artifacts,
+      comparison_direction: COMPARISON_DIRECTION.PROBE_ONLY,
+      conditions_status: CONDITIONS_STATUS.UNAVAILABLE,
+    });
+  });
+  return buildCanonicalResult({
+    surface: "paired",
+    findings,
+    // The version carries the fact that the probe text is a property of this
+    // method version, not of the Reader in general.
+    inspection_method_version: PAIRED_METHOD_VERSION,
+    provider: "anthropic",
+    model: MODEL,
+    // The call requests a family alias and the resolved id in the response is not
+    // captured, so this run cannot be pinned to a build.
+    model_snapshot_or_build: "",
+    legacy: {
+      gap_estimate: pm.gap_estimate,
+      estimate_type: pm.estimate_type,
+      rubric_version: pm.rubric_version,
+    },
+  });
+}
+
 function countSignals(deltaItems) {
   const counts = {};
   for (const p of SIGNAL_PATTERNS) counts[p] = 0;
@@ -390,6 +454,7 @@ function buildPairedPayload(pairedAnalysis, receipt, opts = {}) {
     source: "agent",
     delta_items: pa.delta_items,
     signal_counts: countSignals(pa.delta_items),
+    result: pa.canonical || null,
     gap_estimate: pa.gap_estimate,
     gap_estimate_label: pairedGapEstimateLabel(pa.gap_estimate),
     estimate_rationale: pa.estimate_rationale || "",
@@ -1051,6 +1116,7 @@ export function createReadPairedHandler(deps = {}) {
         estimate_type: ESTIMATE_TYPE_PAIRED,
         rubric_version: RUBRIC_VERSION,
         paired_method_version: PAIRED_METHOD_VERSION,
+        canonical: buildCanonicalPaired(pm, openAnswer, targetedAnswer),
       };
       receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
