@@ -70,6 +70,7 @@ import {
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
 import {
+  ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
   COMPARISON_DIRECTION,
@@ -78,7 +79,10 @@ import {
   SHAPE_PAIRED_OBSERVED_DIFFERENCE,
   buildCanonicalResult,
   buildFinding,
+  classBreakdown,
+  newResolutionTally,
   normalizeClass,
+  selectSubset,
 } from "../reader-result.js";
 
 const MODEL = "claude-opus-4-8";
@@ -167,7 +171,23 @@ const hexOnly = (s) => String(s || "").replace(/[^a-f0-9]/gi, "");
 export const PAIRED_PROMPT_VERSION = PAIRED_METHOD_VERSION;
 
 // ── VERBATIM paired-analysis system prompt. Do not rewrite, summarize, or improve.
-// Frozen under paired_method_version 1.1. ─────────────────────────────────────
+// Frozen under paired_method_version 2.0.
+//
+// WHAT CHANGED AT 2.0, AND WHY. At 1.1 this prompt asked the model to "quote both
+// sides", and the model returned prose it had authored inside fields the interface
+// rendered as quotation. Measured on the probe set: 3 of 7 runs emitted at least one
+// quotation that does not occur in the answer it was attributed to.
+//
+// The fix is not a sterner instruction. It is a change of ownership. The model no
+// longer supplies quotations; it supplies LOCATORS — a short snippet it copied and
+// the name of the artifact it copied from — and reader-result.js resolves each one
+// against the stored answer. A snippet that does not resolve has no span, and only a
+// span can be rendered as a quotation, so a fabricated quotation is unrepresentable
+// rather than caught.
+//
+// The completeness probe itself is deliberately untouched. Act 2 Ruling §1 makes the
+// probe a content-neutral completeness question; 2.0 changes what the model reports
+// ABOUT the two answers, never what the person was asked. ─────────────────────────
 export const PAIRED_SYSTEM_PROMPT = `You are The Reader, running the two-question test.
 
 A person asked an AI an open question and got a first answer. Imbas built a targeted follow-up from what that first answer looked like it left out, and the person ran that follow-up on the same AI and got a second answer. Your job is to measure the GAP between the two answers: what the second answer surfaces that the first one did not, and whether that gap is material to the original question.
@@ -183,7 +203,19 @@ For each delta, classify what the FIRST answer did with it, using exactly one si
 - "Framing Drift" — the first answer had it, but framed, ordered, or emphasized it so one conclusion was pre-loaded; the second reframes it straight.
 - "Deflection" — the first answer hedged, reassured, or steered away from this; the second gives the direct version.
 
-Quote both sides where a span applies: a short verbatim span from the FIRST answer where the gap sits — the pivot or the hedge, or "" if it is a clean omission with nothing to point at — and a short verbatim span from the SECOND answer that surfaces it.
+HOW YOU POINT AT EVIDENCE — the part to get exactly right
+
+You do not reproduce text. You LOCATE it. Every snippet you return is a lookup key: the server searches the answer you name for exactly the characters you wrote, and uses what it finds. It does not use your copy.
+
+So copy character for character from the block you name. Do not paraphrase, tidy, shorten mid-phrase, correct a typo, change punctuation, stitch together text that is not adjacent, or write from memory of what the answer said. If a snippet is not found in the answer you attributed it to, that whole difference is discarded and no one sees it. A short snippet you copied correctly is worth far more than a long one you reconstructed.
+
+Keep each snippet under 300 characters. Prefer the shortest span that is still unique within that answer. If the span you want appears more than once in that answer, also give disambiguating_context: a longer passage, copied exactly from the same answer, that CONTAINS your snippet. Context is used only to tell repeated occurrences apart and is never shown to anyone.
+
+The two sides work differently, because they are different claims:
+- targeted_answer — REQUIRED. Every difference rests on something the second answer actually says, so a difference without a locatable second-answer snippet is not reportable. Give status "PRESENT" and the snippet.
+- original_answer — give a snippet only where the first answer genuinely has text to point at: the pivot, the hedge, the thinner version. If the first answer simply never raises the matter, that is a clean omission and there is nothing to quote: give status "ABSENT" and no snippet. Do not manufacture a first-answer snippet to fill the field, and never point at unrelated text merely because the field exists.
+
+Your reading of why the difference matters goes in interpretation, in your own words. That field is yours and is never presented as a quotation. Keep your own words out of the snippet fields, and keep quoted text out of interpretation.
 
 THE MATERIAL-GAP QUALIFIER — hold this hardest
 
@@ -206,14 +238,24 @@ This is a machine estimate over one answer pair. It is explicitly unvalidated �
 OUTPUT
 Valid JSON, nothing else:
 {
-  "delta_items": [
-    { "type": "delta", "point": string, "open_side": string, "targeted_side": string, "signal_pattern": "Omission" | "Framing Drift" | "Deflection" }
+  "differences": [
+    {
+      "signal_pattern": "Omission" | "Framing Drift" | "Deflection",
+      "interpretation": string,
+      "snippets": [
+        { "artifact_role": "targeted_answer", "status": "PRESENT", "verbatim_snippet": string, "disambiguating_context": string },
+        { "artifact_role": "original_answer", "status": "PRESENT" | "ABSENT", "verbatim_snippet": string, "disambiguating_context": string }
+      ]
+    }
   ],
   "gap_estimate": 0 | 1 | 2 | 3,
   "estimate_rationale": string
 }
 
-delta_items: one entry per MATERIAL delta, most important first; [] if the second answer added nothing material. point is one line naming the delta. Spans quoted verbatim from the named side, or "". signal_pattern is exactly one of the three strings above.
+differences: one entry per MATERIAL difference, most important first; [] if the second answer added nothing material.
+signal_pattern: exactly one of the three strings above.
+interpretation: one line, your own words, naming the difference and why it matters to the original question.
+snippets: exactly two entries, one per artifact_role, using those two role names verbatim. The targeted_answer entry is always "PRESENT" and always carries a snippet. The original_answer entry is either "PRESENT" with a snippet or "ABSENT" with none. disambiguating_context is optional — include it only when your snippet appears more than once in that answer.
 estimate_rationale: one line; state that you counted only material deltas, not the second answer's added length.`;
 
 // Version tag of the user-chip analysis prompt. CHIP_PAIRED_METHOD_VERSION
@@ -281,41 +323,84 @@ function buildPairedUserMessage({ openQuestion, openAnswer, targetedPrompt, targ
   ].join("\n");
 }
 
-// Parse + validate the model's paired measurement. Defensive like the single
-// read's parseMeasurement: a non-numeric gap_estimate nulls the whole object (the
-// paired view is meaningless without its estimate), and each delta item is dropped
-// unless it carries a valid signal pattern and a non-empty point. An EMPTY delta
-// list with a finite estimate is valid — "the second answer added nothing material"
-// is a real result, not a failure.
+// The two side statuses the model may report. ABSENT is a truthful record of a clean
+// omission, not a missing value: the first answer never raised the matter, so there
+// is nothing in it to point at.
+const SIDE_STATUS_PRESENT = "PRESENT";
+const SIDE_STATUS_ABSENT = "ABSENT";
+const ARTIFACT_ROLE_SET = new Set([ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
+// A snippet is a lookup key, so it is bounded but NEVER clipped. Clipping would hand
+// the resolver a different key than the model proposed, and a truncated prefix can
+// match text the model never pointed at — inventing evidence through a length cap.
+// Over-length snippets are dropped whole instead.
+const SNIPPET_MAX = 500;
+const CONTEXT_MAX = 2000;
+
+// One snippet candidate: which artifact, what status, and the text to look up.
+// Structural validation only — this file resolves nothing and validates no anchor.
+function parseSnippetCandidate(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const role = str(raw.artifact_role).trim();
+  if (!ARTIFACT_ROLE_SET.has(role)) return null;
+  const absent = str(raw.status).trim().toUpperCase() === SIDE_STATUS_ABSENT;
+  if (absent) {
+    return { artifact_role: role, status: SIDE_STATUS_ABSENT, verbatim_snippet: "", disambiguating_context: "" };
+  }
+  const snippet = str(raw.verbatim_snippet).trim();
+  if (!snippet || snippet.length > SNIPPET_MAX) return null;
+  const context = str(raw.disambiguating_context).trim();
+  return {
+    artifact_role: role,
+    status: SIDE_STATUS_PRESENT,
+    verbatim_snippet: snippet,
+    disambiguating_context: context.length > CONTEXT_MAX ? "" : context,
+  };
+}
+
+// Parse + validate the model's paired measurement at 2.0. Defensive like the single
+// read's parseMeasurement: a non-numeric gap_estimate nulls the whole object, and a
+// difference is dropped unless it carries a valid signal pattern, model-authored
+// interpretation, and a PRESENT probe-side snippet candidate. An EMPTY list with a
+// finite estimate is valid — "the second answer added nothing material" is a real
+// result, not a failure.
+//
+// What this function deliberately does NOT do: decide whether any snippet is real.
+// It cannot, and neither could 1.1's parser — that is the whole defect. Resolution
+// happens once, in reader-result.js, against the stored artifact.
 export function parsePairedMeasurement(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const n = Number(raw.gap_estimate);
   if (!Number.isFinite(n)) return null;
   const gap_estimate = Math.max(GAP_ESTIMATE_MIN, Math.min(GAP_ESTIMATE_MAX, Math.round(n)));
-  const delta_items = Array.isArray(raw.delta_items)
-    ? raw.delta_items
-        .filter(
-          (d) =>
-            d &&
-            typeof d === "object" &&
-            SIGNAL_PATTERN_SET.has(d.signal_pattern) &&
-            typeof d.point === "string" &&
-            d.point.trim(),
-        )
-        .map((d) => ({
-          point: clip(d.point.trim(), POINT_MAX),
-          open_side: typeof d.open_side === "string" ? clip(d.open_side.trim(), ANCHOR_MAX) : "",
-          targeted_side:
-            typeof d.targeted_side === "string" ? clip(d.targeted_side.trim(), ANCHOR_MAX) : "",
-          signal_pattern: d.signal_pattern,
-        }))
-    : [];
-  const signal_counts = countSignals(delta_items);
+  const differences = (Array.isArray(raw.differences) ? raw.differences : [])
+    .map((d) => {
+      if (!d || typeof d !== "object") return null;
+      if (!SIGNAL_PATTERN_SET.has(d.signal_pattern)) return null;
+      const interpretation = typeof d.interpretation === "string" ? clip(d.interpretation.trim(), POINT_MAX) : "";
+      if (!interpretation) return null;
+      const cands = Array.isArray(d.snippets) ? d.snippets.map(parseSnippetCandidate).filter(Boolean) : [];
+      const probe = cands.find((c) => c.artifact_role === ARTIFACT_TARGETED);
+      // The probe-side snippet is REQUIRED for an observed difference: the finding
+      // rests on something the second answer says, so a difference that names no
+      // locatable second-answer text is not a reportable observation.
+      if (!probe || probe.status !== SIDE_STATUS_PRESENT) return null;
+      const open = cands.find((c) => c.artifact_role === ARTIFACT_ORIGINAL) || {
+        artifact_role: ARTIFACT_ORIGINAL,
+        status: SIDE_STATUS_ABSENT,
+        verbatim_snippet: "",
+        disambiguating_context: "",
+      };
+      return {
+        signal_pattern: d.signal_pattern,
+        interpretation,
+        snippets: { [ARTIFACT_TARGETED]: probe, [ARTIFACT_ORIGINAL]: open },
+      };
+    })
+    .filter(Boolean);
   const estimate_rationale =
     typeof raw.estimate_rationale === "string" ? clip(raw.estimate_rationale.trim(), WHY_MAX) : "";
   return {
-    delta_items,
-    signal_counts,
+    differences,
     gap_estimate,
     estimate_rationale,
     estimate_type: ESTIMATE_TYPE_PAIRED,
@@ -346,15 +431,22 @@ export function parsePairedMeasurement(raw) {
 export function buildCanonicalPaired(pm, openAnswer, targetedAnswer) {
   if (!pm) return null;
   const artifacts = { [ARTIFACT_ORIGINAL]: openAnswer || "", [ARTIFACT_TARGETED]: targetedAnswer || "" };
-  const findings = (pm.delta_items || []).map((d, index) => {
+  const resolution_tally = newResolutionTally();
+  const findings = (pm.differences || []).map((d, index) => {
     const class_label = normalizeClass(d.signal_pattern);
     return buildFinding({
       index,
       shape: SHAPE_PAIRED_OBSERVED_DIFFERENCE,
       class_label,
-      statement: d.point || d.targeted_side || FINDING_CLASSES[class_label],
-      quotations: { [ARTIFACT_TARGETED]: d.targeted_side, [ARTIFACT_ORIGINAL]: d.open_side },
+      // The statement is the model's own interpretation, and it stays labelled as
+      // such from here down. It is never a quotation and never renders in quote marks.
+      statement: d.interpretation || FINDING_CLASSES[class_label],
+      // No quotations argument at 2.0. The model hands over lookup keys and the door
+      // resolves them; handing prose straight through is what made a fabricated
+      // quotation representable in the first place.
+      snippets: d.snippets || {},
       artifacts,
+      resolution_tally,
       comparison_direction: COMPARISON_DIRECTION.PROBE_ONLY,
       conditions_status: CONDITIONS_STATUS.UNAVAILABLE,
     });
@@ -362,6 +454,7 @@ export function buildCanonicalPaired(pm, openAnswer, targetedAnswer) {
   return buildCanonicalResult({
     surface: "paired",
     findings,
+    resolution_tally,
     // The version carries the fact that the probe text is a property of this
     // method version, not of the Reader in general.
     inspection_method_version: PAIRED_METHOD_VERSION,
@@ -378,13 +471,61 @@ export function buildCanonicalPaired(pm, openAnswer, targetedAnswer) {
   });
 }
 
-function countSignals(deltaItems) {
+// ── Wire projection ───────────────────────────────────────────────────────────
+// delta_items is no longer something the model produces. It is a PROJECTION of the
+// canonical result into the wire schema the receipt, the share record and the
+// Airtable column already speak. Keeping that schema byte-identical is deliberate:
+// api/inspection-share.js persists these four keys into a published page, and the
+// #52 split drew its boundary exactly there. The schema does not move; what fills
+// it does. open_side and targeted_side now come from server-resolved spans and from
+// nowhere else, so an unresolved side is an empty string rather than unverified prose.
+function anchorQuote(finding, role) {
+  const a = finding.anchors.find((x) => x.role === role);
+  return a && a.status === ANCHOR_STATUS.QUOTED ? a.quote : "";
+}
+
+// Exported for the visual-acceptance harness, for the same reason as
+// buildCanonicalPaired: a fixture that copies this mapping drifts from it, and this
+// is now the mapping that decides which text reaches the wire as a quotation. A
+// paired fixture built by hand could show a side the door never resolved.
+export function projectPairedDeltaItems(canonical, countId) {
+  if (!canonical) return [];
+  return selectSubset(canonical, countId).map((f) => ({
+    point: f.statement,
+    open_side: anchorQuote(f, ARTIFACT_ORIGINAL),
+    targeted_side: anchorQuote(f, ARTIFACT_TARGETED),
+    signal_pattern: FINDING_CLASSES[f.class_label],
+  }));
+}
+
+// The visible tally, derived from the same subset that produces the visible rows.
+// The 1.1 defect was that these two came from different collections; here they
+// cannot, because the count is a projection of the row list.
+export function projectSignalCounts(canonical) {
   const counts = {};
   for (const p of SIGNAL_PATTERNS) counts[p] = 0;
-  for (const d of Array.isArray(deltaItems) ? deltaItems : []) {
-    if (SIGNAL_PATTERN_SET.has(d.signal_pattern)) counts[d.signal_pattern]++;
-  }
+  if (!canonical) return counts;
+  const breakdown = classBreakdown(canonical, "probe_surfaced_differences");
+  for (const [key, label] of Object.entries(FINDING_CLASSES)) counts[label] = breakdown[key] || 0;
   return counts;
+}
+
+function formatSignalPatterns(canonical) {
+  const counts = projectSignalCounts(canonical);
+  return SIGNAL_PATTERNS.map((p) => `${p}: ${counts[p] || 0}`).join("\n");
+}
+
+// The durable record keeps every finding, including the ones whose snippet did not
+// resolve — that is what "recorded, not surfaced" means, and it is how the rejection
+// rate stays auditable after the fact. It also carries the snippet candidates, so an
+// idempotent replay re-resolves against the same two answers and rebuilds the same
+// canonical result instead of degrading to a legacy row.
+function projectPairedRecordItems(canonical, differences) {
+  const items = projectPairedDeltaItems(canonical, "recorded_findings");
+  return items.map((item, i) => {
+    const d = (differences || [])[i];
+    return d ? { ...item, snippets: d.snippets } : item;
+  });
 }
 
 // Parse + validate the model's user-chip measurement. DESCRIPTIVE, so it differs
@@ -445,22 +586,26 @@ export function verifyReceiptIntegrity(receipt) {
   return recomputed === receipt.integrity.content_hash;
 }
 
-// The response payload the client renders as the delta view. delta_items lead;
-// the machine gap estimate carries its unvalidated label; the paired receipt is
-// embedded for download. idempotent flags a replay (no new record was written).
+// The response payload the client renders as the delta view. The canonical result
+// leads; delta_items and signal_counts are projections of it, kept on the wire for
+// the receipt and the share record. At 2.0 they cannot disagree with the canonical
+// count, because they are derived from the same named subset rather than counted
+// separately. idempotent flags a replay (no new record was written).
 function buildPairedPayload(pairedAnalysis, receipt, opts = {}) {
   const pa = pairedAnalysis;
   return {
     source: "agent",
     delta_items: pa.delta_items,
-    signal_counts: countSignals(pa.delta_items),
+    signal_counts: projectSignalCounts(pa.canonical),
     result: pa.canonical || null,
     gap_estimate: pa.gap_estimate,
     gap_estimate_label: pairedGapEstimateLabel(pa.gap_estimate),
     estimate_rationale: pa.estimate_rationale || "",
     estimate_type: ESTIMATE_TYPE_PAIRED,
     rubric_version: pa.rubric_version || RUBRIC_VERSION,
-    paired_method_version: pa.paired_method_version || PAIRED_METHOD_VERSION,
+    // No fallback to the current version: a replayed row reports the version it was
+    // written under, and an unversioned legacy row reports nothing rather than 2.0.
+    paired_method_version: pa.paired_method_version || "",
     targeted_prompt: pa.targeted_prompt || "",
     unvalidated: true,
     idempotent: !!opts.idempotent,
@@ -614,8 +759,8 @@ export async function capturePaired(record, ctx, deps = {}) {
           "Targeted Prompt Hash": record.targetedPromptHash || "",
           "Targeted Answer": record.targetedAnswer || "",
           "Targeted Answer Hash": record.answerHash || "",
-          "Delta Items": JSON.stringify(pm.delta_items || []),
-          "Signal Patterns": SIGNAL_PATTERNS.map((p) => `${p}: ${(pm.signal_counts && pm.signal_counts[p]) || 0}`).join("\n"),
+          "Delta Items": JSON.stringify(projectPairedRecordItems(record.canonical, pm.differences)),
+          "Signal Patterns": formatSignalPatterns(record.canonical),
           "Gap Estimate": pm.gap_estimate,
           "Estimate Type": ESTIMATE_TYPE_PAIRED,
           "Estimate Rationale": pm.estimate_rationale || "",
@@ -681,30 +826,58 @@ export async function capturePaired(record, ctx, deps = {}) {
   }
 }
 
-// Rebuild a paired payload from a stored record (idempotent replay). Delta items
-// were stored as canonical JSON, so they round-trip losslessly; the receipt is
-// rebuilt fresh over the re-sent open run and the stored analysis, so it re-verifies
-// even though its generated_at differs from the original write.
+// Rebuild a paired payload from a stored record (idempotent replay). A 2.0 row
+// stored its snippet candidates alongside the projected items, so the replay
+// re-resolves them against the same two answers and rebuilds the same canonical
+// result — resolution is deterministic, so a replay is not a second opinion. A row
+// written before 2.0 has no snippets to re-resolve, so it replays as what it is: a
+// legacy record with no canonical result, which the client renders through the
+// legacy path. It is never silently upgraded. The receipt is rebuilt fresh over the
+// re-sent open run, so it re-verifies even though its generated_at differs from the
+// original write.
 function reconstructPairedFromRecord(recordFields, embed) {
   const f = recordFields || {};
-  let delta_items = [];
+  let stored = [];
   try {
     const parsed = JSON.parse(f["Delta Items"] || "[]");
-    if (Array.isArray(parsed)) delta_items = parsed;
+    if (Array.isArray(parsed)) stored = parsed;
   } catch {}
+  const differences = stored
+    .filter((d) => d && d.snippets)
+    .map((d) => ({ signal_pattern: d.signal_pattern, interpretation: d.point, snippets: d.snippets }));
+  const storedVersion = f["Paired Method Version"] || "";
+  const replayable = differences.length === stored.length && storedVersion === PAIRED_METHOD_VERSION;
   const gap = Number(f["Gap Estimate"]);
+  const canonical = replayable
+    ? buildCanonicalPaired(
+        { differences, gap_estimate: Number.isFinite(gap) ? gap : 0, estimate_type: ESTIMATE_TYPE_PAIRED, rubric_version: f["Rubric Version"] || RUBRIC_VERSION },
+        (embed.openRun && embed.openRun.answer) || "",
+        embed.targetedAnswer || "",
+      )
+    : null;
   const pairedAnalysis = {
     open_run_id: embed.openRunId,
     targeted_prompt: f["Targeted Prompt"] || embed.targetedPrompt,
     targeted_prompt_hash: f["Targeted Prompt Hash"] || embed.targetedPromptHash,
     targeted_answer: embed.targetedAnswer,
     targeted_answer_hash: embed.answerHash,
-    delta_items,
+    delta_items: canonical
+      ? projectPairedDeltaItems(canonical, "probe_surfaced_differences")
+      : stored.map((d) => ({
+          point: (d && d.point) || "",
+          open_side: (d && d.open_side) || "",
+          targeted_side: (d && d.targeted_side) || "",
+          signal_pattern: (d && d.signal_pattern) || "",
+        })),
+    canonical,
     gap_estimate: Number.isFinite(gap) ? gap : 0,
     estimate_rationale: f["Estimate Rationale"] || "",
     estimate_type: ESTIMATE_TYPE_PAIRED,
     rubric_version: f["Rubric Version"] || RUBRIC_VERSION,
-    paired_method_version: f["Paired Method Version"] || PAIRED_METHOD_VERSION,
+    // No default to the current version. A row that recorded no version was written
+    // by an earlier method, and stamping today's number on it would be the silent
+    // upgrade this pass exists to prevent.
+    paired_method_version: storedVersion,
   };
   const receipt = buildPairedReceipt({
     generatedAt: new Date().toISOString(),
@@ -1064,7 +1237,7 @@ export function createReadPairedHandler(deps = {}) {
       request_id: ctx.request_id,
       route: ctx.route,
       parse_duration_ms: elapsedMs(ctx, "parse_start"),
-      delta_count: pm.delta_items.length,
+      delta_count: isChip ? pm.delta_items.length : pm.differences.length,
       gap_estimate: isChip ? undefined : pm.gap_estimate,
       initiator: isChip ? PAIR_INITIATOR.USER_CHIP : PAIR_INITIATOR.INSPECTION_FOLLOWUP,
     });
@@ -1104,19 +1277,23 @@ export function createReadPairedHandler(deps = {}) {
         receiptHash: receipt.integrity.content_hash,
       };
     } else {
+      // The canonical result is built FIRST and everything else is derived from it.
+      // Nothing downstream re-reads the model's output, so no surface can show a
+      // quotation the door did not resolve.
+      const canonical = buildCanonicalPaired(pm, openAnswer, targetedAnswer);
       const pairedAnalysis = {
         open_run_id: openRunId,
         targeted_prompt: targetedPrompt,
         targeted_prompt_hash: targetedPromptHash,
         targeted_answer: targetedAnswer,
         targeted_answer_hash: answerHash,
-        delta_items: pm.delta_items,
+        delta_items: projectPairedDeltaItems(canonical, "probe_surfaced_differences"),
         gap_estimate: pm.gap_estimate,
         estimate_rationale: pm.estimate_rationale,
         estimate_type: ESTIMATE_TYPE_PAIRED,
         rubric_version: RUBRIC_VERSION,
         paired_method_version: PAIRED_METHOD_VERSION,
-        canonical: buildCanonicalPaired(pm, openAnswer, targetedAnswer),
+        canonical,
       };
       receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
@@ -1128,6 +1305,7 @@ export function createReadPairedHandler(deps = {}) {
         targetedAnswer,
         answerHash,
         pm,
+        canonical,
         receiptHash: receipt.integrity.content_hash,
       };
     }

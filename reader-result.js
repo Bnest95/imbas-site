@@ -120,6 +120,170 @@ export const ARTIFACT_TARGETED = "targeted_answer";
 export const ARTIFACT_ROLES = deepFreeze([ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
 
 // ---------------------------------------------------------------------------
+// COORDINATE CONVENTION — declared here because the repository never declared one.
+//
+// Every span offset in this module is a JavaScript UTF-16 CODE UNIT index into the
+// stored artifact string, half-open [start, end). This is not a new choice; it is
+// the convention the existing code already had by accident, through
+// String.prototype.indexOf and String.prototype.slice in reader-checks.js. Writing
+// it down makes "character offset" unambiguous and makes the reproduction rule
+// testable: for every resolved span, artifactText.slice(start, end) === quote,
+// exactly, with no normalization applied to either side.
+//
+// A non-BMP character occupies two code units and therefore two index positions.
+// That is consistent with slice(), which is what every consumer uses to re-derive
+// the quoted text, so no consumer needs to know about surrogate pairs.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// SNIPPET RESOLUTION — evidence ownership (paired_method_version 2.0).
+//
+// The defect this replaces: the model was asked to reproduce quotations, and at 1.1
+// it emitted delta prose presented as quotation that does not occur in the
+// attributed answer, on 3 of 7 probe runs. The interface rendered those inside
+// quotation marks.
+//
+// Models are unreliable reproducers and reliable locators. So ownership inverts:
+// the model proposes a short snippet and names the artifact, and the SERVER locates
+// it. A snippet that does not resolve never becomes a quotation, because no span
+// exists for it and only a span can be quoted.
+//
+// This guarantees the evidence shown is real. It does NOT claim the model's
+// interpretation of that evidence is correct. Those are different claims and the
+// render register keeps them apart.
+//
+// Deliberately NOT reusing resolveSpan (reader-checks.js): it returns the FIRST
+// indexOf hit and cannot report that a snippet occurred more than once, so it
+// selects an occurrence silently. The Check Register depends on its current
+// behavior, so it is left exactly as it is and this resolver is separate.
+// ---------------------------------------------------------------------------
+
+export const SNIPPET_REJECTION = deepFreeze({
+  // The snippet does not occur in the named artifact at all.
+  UNLOCATABLE_SNIPPET: "UNLOCATABLE_SNIPPET",
+  // The snippet occurs more than once and the supplied context did not narrow it to
+  // exactly one occurrence. Never resolved by picking one.
+  AMBIGUOUS_SNIPPET: "AMBIGUOUS_SNIPPET",
+});
+
+const SNIPPET_REJECTION_SET = new Set(Object.values(SNIPPET_REJECTION));
+
+// Quote-mark folding, applied symmetrically to artifact and snippet. A model that
+// re-types a curly apostrophe as a straight one has not fabricated anything, and
+// failing that match would discard true evidence. 1:1 by construction — every entry
+// maps one code unit to one code unit — so folding never shifts an index.
+const QUOTE_FOLD = new Map([
+  ["‘", "'"], ["’", "'"], ["‚", "'"], ["‛", "'"],
+  ["“", '"'], ["”", '"'], ["„", '"'], ["‟", '"'],
+  ["′", "'"], ["″", '"'], ["«", '"'], ["»", '"'],
+]);
+
+const MATCH_WHITESPACE = new Set([" ", "\t", "\n", "\r", "\f", "\v", " "]);
+
+// EXACTLY what is normalized, and nothing else:
+//   1. every run of whitespace collapses to one space;
+//   2. leading and trailing whitespace is dropped;
+//   3. the quote marks in QUOTE_FOLD fold to their ASCII form.
+// No case folding, no punctuation stripping, no fuzzy matching, no edit distance.
+//
+// Returns the normalized text AND the reversible mapping the contract requires:
+// map[i] is the index in the ORIGINAL string that normalized code unit i came from.
+// A whitespace run maps to the first index of that run. Because every canonical span
+// is reported through this map, spans are always original-artifact offsets and a
+// normalized offset is never stored.
+function normalizeForMatch(text) {
+  const chars = [];
+  const map = [];
+  let inSpace = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (MATCH_WHITESPACE.has(ch)) {
+      if (!inSpace) {
+        inSpace = true;
+        chars.push(" ");
+        map.push(i);
+      }
+      continue;
+    }
+    inSpace = false;
+    chars.push(QUOTE_FOLD.get(ch) || ch);
+    map.push(i);
+  }
+  let s = 0;
+  let e = chars.length;
+  while (s < e && chars[s] === " ") s++;
+  while (e > s && chars[e - 1] === " ") e--;
+  return { text: chars.slice(s, e).join(""), map: map.slice(s, e) };
+}
+
+// Every occurrence, including overlapping ones. The count is the point: knowing
+// there are three is what makes "never select one silently" enforceable.
+function findOccurrences(haystack, needle) {
+  const hits = [];
+  if (!needle) return hits;
+  for (let from = 0; ; ) {
+    const at = haystack.indexOf(needle, from);
+    if (at === -1) break;
+    hits.push(at);
+    from = at + 1;
+  }
+  return hits;
+}
+
+// Locate one model-proposed snippet in one named artifact.
+//
+// Ambiguity policy, enumerated and total:
+//   0 occurrences                    -> UNLOCATABLE_SNIPPET
+//   1 occurrence                     -> span created
+//   >1 and context identifies one    -> span created for that one
+//   >1 and context leaves none       -> UNLOCATABLE_SNIPPET
+//   >1 and context leaves several    -> AMBIGUOUS_SNIPPET
+//   >1 and no usable context         -> AMBIGUOUS_SNIPPET
+//
+// The context is resolution metadata only. It never appears in the displayed
+// quotation, and to be usable it must itself be verbatim from the same artifact,
+// occur exactly once, and contain the snippet — so it can only ever narrow a set of
+// real occurrences, never introduce one.
+export function resolvePairedSnippet({ artifactText, snippet, context = "" }) {
+  const source = str(artifactText);
+  const raw = str(snippet);
+  const miss = (reason, occurrences) => ({ ok: false, reason, occurrences });
+  if (!source || !raw.trim()) return miss(SNIPPET_REJECTION.UNLOCATABLE_SNIPPET, 0);
+
+  const A = normalizeForMatch(source);
+  const S = normalizeForMatch(raw);
+  if (!S.text) return miss(SNIPPET_REJECTION.UNLOCATABLE_SNIPPET, 0);
+
+  let hits = findOccurrences(A.text, S.text);
+  if (hits.length === 0) return miss(SNIPPET_REJECTION.UNLOCATABLE_SNIPPET, 0);
+
+  if (hits.length > 1) {
+    const C = normalizeForMatch(str(context));
+    let narrowed = null;
+    if (C.text && C.text.includes(S.text)) {
+      const ctxHits = findOccurrences(A.text, C.text);
+      if (ctxHits.length === 1) {
+        const cs = ctxHits[0];
+        const ce = cs + C.text.length;
+        const inside = hits.filter((h) => h >= cs && h + S.text.length <= ce);
+        if (inside.length === 0) return miss(SNIPPET_REJECTION.UNLOCATABLE_SNIPPET, hits.length);
+        if (inside.length === 1) narrowed = inside;
+      }
+    }
+    if (!narrowed) return miss(SNIPPET_REJECTION.AMBIGUOUS_SNIPPET, hits.length);
+    hits = narrowed;
+  }
+
+  const ns = hits[0];
+  const ne = ns + S.text.length;
+  const start = A.map[ns];
+  // The last normalized code unit is never a collapsed space (both ends are
+  // trimmed), so it stands for exactly one original code unit.
+  const end = A.map[ne - 1] + 1;
+  return { ok: true, span: { start, end }, quote: source.slice(start, end), occurrences: 1 };
+}
+
+// ---------------------------------------------------------------------------
 // Anchor contract (item 3). Three statuses, because "supplied but not verbatim"
 // and "not supplied" are different facts and collapsing them would either drop a
 // finding or overstate an anchor.
@@ -164,10 +328,20 @@ export function quotedAnchor({ role, quote, span }) {
 
 // The source supplied text for this side, but it does not occur verbatim in the
 // artifact. Recorded, not repaired, and not counted as an anchor anywhere.
-export function unresolvedAnchor({ role, supplied }) {
+//
+// quote is "" by construction. That is the whole mechanism: a surface can only
+// render a quotation from a resolved span, so text that failed to resolve has
+// nothing for a renderer to put inside quotation marks. rejection_reason names
+// WHICH failure occurred, because "does not occur" and "occurs several times" are
+// opposite facts about the model's behavior and a later calibration pass has to be
+// able to tell them apart.
+export function unresolvedAnchor({ role, supplied, rejection_reason = null }) {
   if (!ARTIFACT_ROLES.includes(role)) reject(`anchor role not enumerated: ${role}`);
   const s = str(supplied);
   if (!s.trim()) reject("an UNRESOLVED anchor requires the non-empty text that failed to resolve");
+  if (rejection_reason != null && !SNIPPET_REJECTION_SET.has(rejection_reason)) {
+    reject(`snippet rejection reason not enumerated: ${rejection_reason}`);
+  }
   return deepFreeze({
     role,
     status: ANCHOR_STATUS.UNRESOLVED,
@@ -175,6 +349,7 @@ export function unresolvedAnchor({ role, supplied }) {
     supplied_text: s,
     span: null,
     absent_reason: null,
+    rejection_reason,
   });
 }
 
@@ -195,9 +370,21 @@ export function absentAnchor({ role, reason }) {
 // Resolve one supplied side into the anchor that truthfully describes it. The
 // requirement comes from the finding's registered shape, so a shape that forbids a
 // side cannot acquire one and a shape that requires one cannot be built without it.
-function buildAnchor({ role, supplied, artifactText, requirement }) {
+//
+// Two resolution modes, one door. `snippet` is the 2.0 contract: the model located
+// evidence and the server resolves it, with occurrence counting and an enumerated
+// rejection. `supplied` is the 1.x contract, kept for single-answer findings and for
+// legacy paired records — it resolves through reader-checks.js resolveSpan, which
+// takes the first match. A 1.x record therefore never acquires a 2.0 guarantee it
+// did not earn; it just keeps behaving exactly as it did.
+//
+// tally is the per-run instrumentation sink. It counts what the model PROPOSED
+// against what survived, which is the only way to tell a prompt that stopped
+// fabricating from a prompt that fabricates just as often into a filter.
+function buildAnchor({ role, supplied, snippet, context, artifactText, requirement, tally }) {
   if (requirement === ANCHOR_REQUIREMENT.FORBIDDEN) return null;
-  const s = str(supplied).trim();
+  const useSnippet = snippet != null;
+  const s = str(useSnippet ? snippet : supplied).trim();
   if (!s) {
     if (requirement === ANCHOR_REQUIREMENT.REQUIRED) {
       reject(`shape requires a ${role} quotation and none was supplied`);
@@ -210,6 +397,21 @@ function buildAnchor({ role, supplied, artifactText, requirement }) {
     }
     return absentAnchor({ role, reason: ANCHOR_ABSENT_REASONS.ARTIFACT_NOT_AVAILABLE_TO_SURFACE });
   }
+
+  if (useSnippet) {
+    if (tally) tally.snippets_proposed++;
+    const outcome = resolvePairedSnippet({ artifactText, snippet: s, context });
+    if (outcome.ok) {
+      if (tally) tally.snippets_resolved_unique++;
+      return quotedAnchor({ role, quote: outcome.quote, span: outcome.span });
+    }
+    if (tally) {
+      if (outcome.reason === SNIPPET_REJECTION.AMBIGUOUS_SNIPPET) tally.snippets_rejected_ambiguous++;
+      else tally.snippets_rejected_unlocatable++;
+    }
+    return unresolvedAnchor({ role, supplied: s, rejection_reason: outcome.reason });
+  }
+
   const span = resolveSpan(artifactText, s, role);
   if (span) return quotedAnchor({ role, quote: span.quote, span });
   return unresolvedAnchor({ role, supplied: s });
@@ -599,7 +801,9 @@ export function buildFinding({
   statement,
   materiality = "",
   quotations = {},
+  snippets = {},
   artifacts = {},
+  resolution_tally = null,
   comparison_direction = null,
   conditions_source = "",
   conditions_status = CONDITIONS_STATUS.UNAVAILABLE,
@@ -619,11 +823,15 @@ export function buildFinding({
 
   const anchors = [];
   for (const role of ARTIFACT_ROLES) {
+    const proposed = snippets[role];
     const anchor = buildAnchor({
       role,
       supplied: quotations[role],
+      snippet: proposed ? proposed.verbatim_snippet : null,
+      context: proposed ? proposed.disambiguating_context : "",
       artifactText: artifacts[role],
       requirement: shape.anchors[role],
+      tally: resolution_tally,
     });
     if (anchor) anchors.push(anchor);
   }
@@ -869,6 +1077,34 @@ function buildLegacyBlock(legacy) {
 // The canonical result. This is the only function that produces one.
 // ---------------------------------------------------------------------------
 
+// Per-run snippet instrumentation. Recorded in the result metadata, never displayed.
+//
+// This exists to answer one question the next calibration session has to be able to
+// ask: did 2.0 reduce fabrication ATTEMPTS, or does the model fabricate at the same
+// rate and the server now discards it? The surfaced count alone cannot distinguish
+// those — both look like clean output. proposed-versus-resolved can.
+//
+// The 1.1 baseline to measure against: 3 of 7 probe runs emitted delta prose
+// presented as quotation that does not occur in the attributed answer.
+export function newResolutionTally() {
+  return {
+    snippets_proposed: 0,
+    snippets_resolved_unique: 0,
+    snippets_rejected_unlocatable: 0,
+    snippets_rejected_ambiguous: 0,
+  };
+}
+
+function buildResolutionBlock(tally) {
+  const t = tally || newResolutionTally();
+  return deepFreeze({
+    snippets_proposed: t.snippets_proposed || 0,
+    snippets_resolved_unique: t.snippets_resolved_unique || 0,
+    snippets_rejected_unlocatable: t.snippets_rejected_unlocatable || 0,
+    snippets_rejected_ambiguous: t.snippets_rejected_ambiguous || 0,
+  });
+}
+
 export function buildCanonicalResult({
   surface,
   findings = [],
@@ -876,6 +1112,7 @@ export function buildCanonicalResult({
   provider = "",
   model = "",
   model_snapshot_or_build = "",
+  resolution_tally = null,
   legacy = null,
 }) {
   if (surface !== "single" && surface !== "paired") reject(`surface must be single or paired: ${surface}`);
@@ -892,6 +1129,7 @@ export function buildCanonicalResult({
     // Item 11: the verification-task slot exists and stays empty. This pass does
     // not generate tasks, change any prompt to produce them, or render the field.
     verification_tasks: [],
+    snippet_resolution: buildResolutionBlock(resolution_tally),
     legacy: buildLegacyBlock(legacy),
   });
 }
