@@ -20,7 +20,16 @@
 // prompt (added in P2 Phase B). Either changing bumps this (design §9,
 // paired_method_version). Independent of the validated rubric_version and of the
 // Act 1 candidate_method_version.
-export const PAIRED_METHOD_VERSION = "1.1";
+//
+// 2.0 is a contract change, not a wording change, which is why it is a major bump.
+// Through 1.1 the model returned the quotation text itself and the server printed
+// it; across seven probe runs, three returned prose presented as quotation that
+// does not occur in the answer it was attributed to. At 2.0 the model returns a
+// short verbatim snippet as a LOOKUP KEY plus the artifact it came from, and the
+// server resolves that key to an exact span in the stored answer. Anything it
+// cannot resolve is recorded and never surfaced. The construction rule below is
+// unchanged; the probe text is unchanged.
+export const PAIRED_METHOD_VERSION = "2.0";
 
 // The one finding type that makes the offer eligible (design §1). Framing and
 // deflection candidates are not omissions, so they do not warrant a re-ask; only

@@ -40,7 +40,7 @@ import {
   countOf,
   selectSubset,
 } from "../reader-result.js";
-import { buildCanonicalPaired } from "../api/read-paired.js";
+import { buildCanonicalPaired, parsePairedMeasurement } from "../api/read-paired.js";
 import { buildPairedReceipt, canonicalizeForHash } from "../reader-receipt.js";
 
 const OPEN_ANSWER = "A landlord must return a security deposit within 30 days of the tenant moving out.";
@@ -48,21 +48,40 @@ const PROBE_ANSWER =
   "The deadline depends on the state. It runs from 14 days in some states to 60 days in others. " +
   "Several states also require the landlord to pay the tenant a penalty when the deadline is missed.";
 
-// A delta item in the exact shape api/read-paired.js receives from the model.
-function deltaItem({ point, open_side = "", targeted_side, signal_pattern = "Omission" }) {
-  return { type: "delta", point, open_side, targeted_side, signal_pattern };
+// One difference in the exact shape api/read-paired.js receives from the model at
+// paired_method_version 2.0: an interpretation the model authored, plus a verbatim
+// snippet per side that the server looks up rather than trusts.
+function difference({ interpretation, open = null, targeted, signal_pattern = "Omission" }) {
+  return {
+    signal_pattern,
+    interpretation,
+    snippets: [
+      { artifact_role: ARTIFACT_TARGETED, status: "PRESENT", verbatim_snippet: targeted },
+      open === null
+        ? { artifact_role: ARTIFACT_ORIGINAL, status: "ABSENT" }
+        : { artifact_role: ARTIFACT_ORIGINAL, status: "PRESENT", verbatim_snippet: open },
+    ],
+  };
 }
 
-const QUOTABLE_DELTA = deltaItem({
-  point: "The second answer names the deadline as state-set where the first gave one number.",
-  open_side: OPEN_ANSWER,
-  targeted_side: "The deadline depends on the state.",
+// Through the REAL parser and the REAL adapter, in that order. Hand-building the
+// parsed shape here would let the fixture drift from what the endpoint actually
+// hands the door — the exact failure this file was written to catch.
+function canonicalFrom(differences) {
+  const pm = parsePairedMeasurement({ differences, gap_estimate: 2, estimate_rationale: "r" });
+  assert.ok(pm, "the fixture must parse");
+  return buildCanonicalPaired(pm, OPEN_ANSWER, PROBE_ANSWER);
+}
+
+const QUOTABLE_DELTA = difference({
+  interpretation: "The second answer names the deadline as state-set where the first gave one number.",
+  open: OPEN_ANSWER,
+  targeted: "The deadline depends on the state.",
 });
 
-const OMISSION_DELTA = deltaItem({
-  point: "The second answer names a penalty; the first did not mention one.",
-  open_side: "",
-  targeted_side: "Several states also require the landlord to pay the tenant a penalty when the deadline is missed.",
+const OMISSION_DELTA = difference({
+  interpretation: "The second answer names a penalty; the first did not mention one.",
+  targeted: "Several states also require the landlord to pay the tenant a penalty when the deadline is missed.",
 });
 
 // Build a paired finding directly through the door, so a basis the live endpoint cannot
@@ -143,11 +162,7 @@ test("2) a REPORTED_CLIENT_DECLARATION saying MATCHED normalizes to OBSERVED_DIF
 test("3) an absent basis normalizes downward — and that is what the live endpoint produces", () => {
   // Not a synthetic basis: this is the real adapter on real delta items. The paste-back
   // capture never reaches this endpoint, so every paired finding in production lands here.
-  const canonical = buildCanonicalPaired(
-    { delta_items: [QUOTABLE_DELTA, OMISSION_DELTA], gap_estimate: 2, estimate_type: "paired_gap", rubric_version: "v" },
-    OPEN_ANSWER,
-    PROBE_ANSWER,
-  );
+  const canonical = canonicalFrom([QUOTABLE_DELTA, OMISSION_DELTA]);
   assert.equal(canonical.findings.length, 2);
   for (const f of canonical.findings) {
     assert.equal(f.claim_register, CLAIM_REGISTER.OBSERVED_DIFFERENCE, "the live paired path may never claim matched conditions");
@@ -174,12 +189,8 @@ test("4) an unrecognized basis normalizes downward and stays distinguishable fro
 });
 
 test("5) the paired tally the DATA layer offers is the named PROBE_ONLY subset, matched or unmatched", () => {
-  const canonical = buildCanonicalPaired(
-    { delta_items: [QUOTABLE_DELTA, OMISSION_DELTA] },
-    OPEN_ANSWER,
-    PROBE_ANSWER,
-  );
-  // Both delta items quote the probe side verbatim; the second's open side is legitimately
+  const canonical = canonicalFrom([QUOTABLE_DELTA, OMISSION_DELTA]);
+  // Both snippets resolve against the probe answer; the second's open side is legitimately
   // ABSENT, which is what an omission is. Both surface.
   assert.equal(countOf(canonical, "probe_surfaced_differences"), 2);
   assert.equal(countOf(canonical, "recorded_findings"), 2);
@@ -224,20 +235,15 @@ test("5) the paired tally the DATA layer offers is the named PROBE_ONLY subset, 
   assert.equal(countOf(unmatched, "probe_surfaced_differences"), 1, "an unmatched claim does not remove one");
 });
 
-// ── The gap check 5 exposes ──────────────────────────────────────────────────────
-// The named subset above is correct and available. PairedDeltaView does not read it: its
-// visible tally comes from the wire field signal_counts and its rows from delta_items.
-// Those are pre-canonical, so they count a delta item whose quotation does NOT occur in the
-// probe answer. That is the same class of defect Pass 2B-A removed from the single surface —
-// a headline number that includes an item the reader cannot verify — and it is deferred
-// here, not fixed, because repointing the rows means resolving the paired class vocabulary
-// (open-queues PASS 2B item 2), which is a different pass.
-//
-// The two tests below make the gap executable instead of prose. When a later pass repoints
-// PairedDeltaView, the source assertion fails and points at the divergence demonstration to
-// delete with it.
+// ── The gap check 5 exposed, now closed ──────────────────────────────────────────
+// Until Pass 2B-A2 the named subset above was correct and available, and PairedDeltaView
+// did not read it: its visible tally came from the wire field signal_counts and its rows
+// from delta_items. Those were pre-canonical, so they counted a delta item whose quotation
+// did NOT occur in the probe answer. Test 5b demonstrated that divergence and instructed
+// its own deletion once the view was repointed; it is gone, and 5a is now the guard on the
+// other side — the view reads the named subset and nothing else.
 
-test("5a) DEFERRED DEFECT: PairedDeltaView still tallies the pre-canonical wire fields", () => {
+test("5a) PairedDeltaView reads the named subset, not the pre-canonical wire fields", () => {
   const src = readFileSync(
     process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
     "utf8",
@@ -248,32 +254,29 @@ test("5a) DEFERRED DEFECT: PairedDeltaView still tallies the pre-canonical wire 
   const next = rest.indexOf("\nfunction ", 1);
   const view = next === -1 ? rest : rest.slice(0, next);
 
-  assert.match(view, /paired\.signal_counts/, "if this fails, PairedDeltaView was repointed — delete test 5b with it");
-  assert.match(view, /paired\.delta_items/, "if this fails, PairedDeltaView was repointed — delete test 5b with it");
-  assert.equal(
-    view.includes("probe_surfaced_differences"),
-    false,
-    "PairedDeltaView does not yet read the named subset; when it does, update this guard",
-  );
+  assert.match(view, /probe_surfaced_differences/, "the rows and the tally must come from the named subset");
+  assert.equal(view.includes("paired.signal_counts"), false, "the wire tally must not drive a visible count");
+  // paired.delta_items survives on exactly one line: the legacy binding, which renders a
+  // pre-2.0 record's readings and none of its excerpts. Anywhere else is a regression.
+  const wireLines = view.split("\n").filter((l) => l.includes("paired.delta_items"));
+  assert.equal(wireLines.length, 1, `the wire item array may only be read on the legacy branch: ${wireLines.join(" | ")}`);
+  assert.match(wireLines[0], /legacyItems = legacy && Array\.isArray\(paired\.delta_items\)/);
 });
 
-test("5b) DEFERRED DEFECT: a non-verbatim probe quotation counts in signal_counts but not in the named subset", () => {
-  const unquotable = deltaItem({
-    point: "A difference whose supplied probe quotation is not in the probe answer.",
-    open_side: "",
-    targeted_side: "words the probe answer does not contain anywhere",
+test("5b) a snippet that does not occur in the probe answer cannot become a row or a count", () => {
+  const fabricated = difference({
+    interpretation: "A difference whose supplied probe snippet is not in the probe answer.",
+    targeted: "words the probe answer does not contain anywhere",
   });
-  const items = [QUOTABLE_DELTA, unquotable];
+  const canonical = canonicalFrom([QUOTABLE_DELTA, fabricated]);
 
-  // What PairedDeltaView displays today (api/read-paired.js countSignals, same rule).
-  const signalCounts = items.filter((d) => d.signal_pattern === "Omission").length;
-  assert.equal(signalCounts, 2, "the wire tally counts the unquotable item");
-
-  // What the named subset offers instead.
-  const canonical = buildCanonicalPaired({ delta_items: items }, OPEN_ANSWER, PROBE_ANSWER);
   assert.equal(countOf(canonical, "probe_surfaced_differences"), 1, "the named subset excludes it");
   assert.equal(countOf(canonical, "recorded_findings"), 2, "and the record still keeps it");
-  assert.notEqual(signalCounts, countOf(canonical, "probe_surfaced_differences"));
+  // The rejection is enumerated on the anchor, so the record says WHY, not just that.
+  const rejected = canonical.findings[1].anchors.find((a) => a.role === ARTIFACT_TARGETED);
+  assert.equal(rejected.status, "UNRESOLVED");
+  assert.equal(rejected.rejection_reason, "UNLOCATABLE_SNIPPET");
+  assert.equal(rejected.quote, "", "an unresolved anchor carries no text a renderer could quote");
 });
 
 test("6) a surface reloaded without the basis cannot reconstruct the matched claim", () => {

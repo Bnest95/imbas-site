@@ -4603,6 +4603,23 @@
   color: rgba(185, 172, 195, 0.72);
 }
 
+/* The Reader's reading sits in the same mono label idiom as the two answer labels,
+   so a row reads as three labelled parts — but it carries no quote-mark styling and
+   no anchor rule, because it is not a quotation. */
+.wb-act2__reading-label {
+  display: block;
+  margin-bottom: 0.15rem;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(222, 111, 56, 0.72);
+}
+
+.wb-act2__reading {
+  font-style: normal;
+}
+
 .wb-act2__notice {
   margin: 0 0 0.95rem;
   padding: 0.55rem 0.8rem;

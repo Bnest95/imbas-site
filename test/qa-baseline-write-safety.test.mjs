@@ -27,6 +27,7 @@ import {
   resolveDestination,
   parseArgs,
 } from "../scripts/qa/visual-acceptance.mjs";
+import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 const HARNESS = path.join(REPO_ROOT, "scripts/qa/visual-acceptance.mjs");
@@ -113,9 +114,19 @@ test("an unknown or fixture-only scenario cannot mutate baselines through the CL
 
   // A fixture-only scenario has payloads but no drive steps, so no capture of that
   // state exists to accept. Writing one would file some other flow under its name.
-  const fixtureOnly = runHarness(["--update", "paired-matched"]);
-  assert.equal(fixtureOnly.code, 1);
-  assert.match(fixtureOnly.out, /fixture-only/);
+  //
+  // This half is conditional because it names no scenario of its own: it probes
+  // whichever scenario is currently undrivable. Pass 2B-A2 gave the paired scenarios
+  // drive steps, and paired-matched — which this test used to name outright — became
+  // drivable, so at present there is no subject. The guard's own logic is covered
+  // unconditionally below against an injected map; this asserts the CLI reaches it,
+  // and starts asserting again the moment a fixture-only scenario exists.
+  const undrivable = Object.keys(SCENARIOS).find((n) => !SCENARIOS[n].drivable);
+  if (undrivable) {
+    const fixtureOnly = runHarness(["--update", undrivable]);
+    assert.equal(fixtureOnly.code, 1);
+    assert.match(fixtureOnly.out, /fixture-only/);
+  }
 
   assert.deepEqual(baselineHashes(), before);
 });
@@ -144,7 +155,15 @@ test("an update grant authorizes only the named scenario's own files", () => {
 
 test("a grant cannot be minted for an unknown or fixture-only scenario, or for nothing", () => {
   assert.throws(() => new BaselineGrant(["nope-not-real"], ["desktop"]), /unknown scenario/);
-  assert.throws(() => new BaselineGrant(["paired-matched"], ["desktop"]), /fixture-only/);
+  // Injected rather than named from the real map: whether any shipped scenario is
+  // currently undrivable is a fact about the fixtures, and this is a fact about the
+  // guard. Naming a real scenario here is what tied this assertion to paired-matched
+  // and broke it the day that scenario got drive steps.
+  const undrivable = { "probe-no-drive-steps": { name: "probe-no-drive-steps", drivable: false } };
+  assert.throws(
+    () => new BaselineGrant(["probe-no-drive-steps"], ["desktop"], undrivable),
+    /fixture-only/
+  );
   assert.throws(() => new BaselineGrant([], ["desktop"]), /at least one explicitly named scenario/);
   assert.throws(() => new BaselineGrant(["single-findings"], []), /viewports/);
 });
@@ -184,8 +203,13 @@ test("an authorized write is permitted through the guard", () => {
   // the door without accepting anything.
   const before = baselineHashes();
   const grant = new BaselineGrant(["single-findings"], ["desktop", "mobile"]);
-  for (const name of Object.keys(before)) {
-    if (name === "manifest.md") continue;
+  // Only the granted scenario's own files. The loop used to run over every file in
+  // the directory, which held while single-findings was the only scenario with
+  // committed baselines and started failing the moment a second one had them —
+  // reporting a broken guard when the guard was doing exactly its job.
+  const granted = Object.keys(before).filter((n) => n.startsWith("single-findings--"));
+  assert.ok(granted.length >= 2, `expected committed single-findings baselines, found ${granted.length}`);
+  for (const name of granted) {
     const target = path.join(BASELINE_DIR, name);
     const current = fs.readFileSync(target);
     assert.doesNotThrow(() => writeArtifact(target, current, grant), `${name} is authorized`);

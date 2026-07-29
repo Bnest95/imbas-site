@@ -68,11 +68,11 @@ import {
 
 const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 
-// The frozen fingerprint of PAIRED_SYSTEM_PROMPT under paired_method_version 1.0.
+// The frozen fingerprint of PAIRED_SYSTEM_PROMPT under paired_method_version 2.0.
 // If the prompt is edited without deliberately bumping the method version, this
 // fails — the same guard reader-prompt-version.test.mjs puts on the single read.
-const PAIRED_PROMPT_FINGERPRINT_1_0 =
-  "aab000bbc21d08b028edae09ce7e31377d1ea9f7e81df69f234d36cf864d3f70";
+const PAIRED_PROMPT_FINGERPRINT_2_0 =
+  "72ff3f1ec8a8c7b497e5401a756879ef17053cb9f523933aefe8c69503fb344c";
 
 const PAIRED_TABLE_ID = "tblP1ekWWWscz6pBG"; // Reader Paired Analyses
 const SHARES_TABLE_ID = "tbliYeeM5n0TSVrxf"; // Inspection Shares — never touched by a paired write
@@ -151,23 +151,37 @@ function buildOpenReceipt({ eligible = true, requestId } = {}) {
   return receipt;
 }
 
-// A paired measurement as the model would emit it (pre-parse shape).
+// A paired measurement as the model would emit it at 2.0 (pre-parse shape). Every
+// snippet here occurs verbatim in the answer it names, so the whole fixture
+// resolves; the fabrication cases are built explicitly where they are tested.
 function sampleModelPaired(over = {}) {
   return {
-    delta_items: [
+    differences: [
       {
-        type: "delta",
-        point: "No failure modes named",
-        open_side: "reduces wait times",
-        targeted_side: "acute cases can be misrouted",
         signal_pattern: "Omission",
+        interpretation: "No failure modes named",
+        snippets: [
+          {
+            artifact_role: "targeted_answer",
+            status: "PRESENT",
+            verbatim_snippet: "acute cases can be misrouted",
+          },
+          { artifact_role: "original_answer", status: "PRESENT", verbatim_snippet: "reduces wait times" },
+        ],
       },
       {
-        type: "delta",
-        point: "Liability sidestepped",
-        open_side: "",
-        targeted_side: "the clinician still owns the call",
         signal_pattern: "Deflection",
+        interpretation: "Liability sidestepped",
+        snippets: [
+          {
+            artifact_role: "targeted_answer",
+            status: "PRESENT",
+            verbatim_snippet: "the clinician still carries the liability",
+          },
+          // A clean omission: the first answer never raised liability, so there is
+          // nothing in it to point at. ABSENT is the truthful record of that.
+          { artifact_role: "original_answer", status: "ABSENT" },
+        ],
       },
     ],
     gap_estimate: 2,
@@ -261,12 +275,23 @@ function buildSamplePairedReceipt() {
       targeted_prompt_hash: sha256Hex("p"),
       targeted_answer: "second answer",
       targeted_answer_hash: sha256Hex("second answer"),
-      delta_items: sampleModelPaired().delta_items.map((d) => ({
-        point: d.point,
-        open_side: d.open_side,
-        targeted_side: d.targeted_side,
-        signal_pattern: d.signal_pattern,
-      })),
+      // The wire schema the receipt speaks, stated directly. It is deliberately not
+      // derived from the model fixture: the receipt envelope is what these tests
+      // exercise, and it never sees the model's output shape.
+      delta_items: [
+        {
+          point: "No failure modes named",
+          open_side: "reduces wait times",
+          targeted_side: "acute cases can be misrouted",
+          signal_pattern: "Omission",
+        },
+        {
+          point: "Liability sidestepped",
+          open_side: "",
+          targeted_side: "the clinician still carries the liability",
+          signal_pattern: "Deflection",
+        },
+      ],
       gap_estimate: 2,
       estimate_rationale: "counted only material deltas",
       estimate_type: "paired_gap",
@@ -282,15 +307,15 @@ beforeEach(() => {
   _resetMemoryStateForTests();
 });
 
-// ── Fingerprint: the frozen paired prompt is pinned to method version 1.0 ──────
+// ── Fingerprint: the frozen paired prompt is pinned to method version 2.0 ──────
 
-test("PAIRED_SYSTEM_PROMPT fingerprint matches the pin for paired_method_version 1.0", () => {
-  assert.equal(sha256Hex(PAIRED_SYSTEM_PROMPT), PAIRED_PROMPT_FINGERPRINT_1_0);
+test("PAIRED_SYSTEM_PROMPT fingerprint matches the pin for paired_method_version 2.0", () => {
+  assert.equal(sha256Hex(PAIRED_SYSTEM_PROMPT), PAIRED_PROMPT_FINGERPRINT_2_0);
 });
 
 test("PAIRED_PROMPT_VERSION tracks paired_method_version (single source of truth)", () => {
   assert.equal(PAIRED_PROMPT_VERSION, PAIRED_METHOD_VERSION);
-  assert.equal(PAIRED_METHOD_VERSION, "1.1");
+  assert.equal(PAIRED_METHOD_VERSION, "2.0");
 });
 
 // ── 2. Deterministic prompt construction + hash ───────────────────────────────
@@ -367,38 +392,49 @@ test("buildCleanerBundle with no scenario is just the fixed probe", () => {
 
 // ── 3. Delta assembly (parsePairedMeasurement) ────────────────────────────────
 
-test("parsePairedMeasurement maps each delta to the four-field shape and counts signals", () => {
+test("parsePairedMeasurement carries snippet candidates, and resolves and counts nothing", () => {
   const pm = parsePairedMeasurement(sampleModelPaired());
-  assert.equal(pm.delta_items.length, 2);
-  assert.deepEqual(Object.keys(pm.delta_items[0]).sort(), ["open_side", "point", "signal_pattern", "targeted_side"]);
-  assert.equal(pm.delta_items[0].signal_pattern, "Omission");
-  assert.equal(pm.delta_items[1].open_side, ""); // clean omission -> empty span, not thrown away
-  assert.deepEqual(pm.signal_counts, { Omission: 1, "Framing Drift": 0, Deflection: 1 });
+  assert.equal(pm.differences.length, 2);
+  assert.deepEqual(Object.keys(pm.differences[0]).sort(), ["interpretation", "signal_pattern", "snippets"]);
+  assert.equal(pm.differences[0].signal_pattern, "Omission");
+  assert.equal(pm.differences[0].snippets.targeted_answer.verbatim_snippet, "acute cases can be misrouted");
+  assert.equal(pm.differences[1].snippets.original_answer.status, "ABSENT");
   assert.equal(pm.estimate_type, "paired_gap");
-  assert.equal(pm.paired_method_version, "1.1");
+  assert.equal(pm.paired_method_version, "2.0");
   assert.equal(pm.unvalidated, true);
+  // The parser is a source adapter. It holds no artifact text, so it cannot know
+  // whether a snippet is real, and it counts nothing that a person will be shown.
+  assert.equal("signal_counts" in pm, false);
+  assert.equal("delta_items" in pm, false);
 });
 
-test("parsePairedMeasurement drops items with an invalid signal pattern or an empty point", () => {
+test("parsePairedMeasurement drops a difference with a bad pattern, an empty interpretation, or no probe-side snippet", () => {
+  const probe = { artifact_role: "targeted_answer", status: "PRESENT", verbatim_snippet: "b" };
   const pm = parsePairedMeasurement({
-    delta_items: [
-      { point: "kept", open_side: "a", targeted_side: "b", signal_pattern: "Omission" },
-      { point: "bad pattern", open_side: "a", targeted_side: "b", signal_pattern: "Verdict" },
-      { point: "   ", open_side: "a", targeted_side: "b", signal_pattern: "Deflection" },
+    differences: [
+      { signal_pattern: "Omission", interpretation: "kept", snippets: [probe] },
+      { signal_pattern: "Verdict", interpretation: "bad pattern", snippets: [probe] },
+      { signal_pattern: "Deflection", interpretation: "   ", snippets: [probe] },
+      // A difference that names nothing in the second answer is not an observation.
+      { signal_pattern: "Deflection", interpretation: "no anchor", snippets: [] },
+      {
+        signal_pattern: "Deflection",
+        interpretation: "probe side declared absent",
+        snippets: [{ artifact_role: "targeted_answer", status: "ABSENT" }],
+      },
     ],
     gap_estimate: 1,
     estimate_rationale: "r",
   });
-  assert.equal(pm.delta_items.length, 1);
-  assert.equal(pm.delta_items[0].point, "kept");
+  assert.equal(pm.differences.length, 1);
+  assert.equal(pm.differences[0].interpretation, "kept");
 });
 
-test("an empty delta list with a finite estimate is a valid result, not a failure", () => {
-  const pm = parsePairedMeasurement({ delta_items: [], gap_estimate: 0, estimate_rationale: "nothing material" });
-  assert.ok(pm, "empty delta is a real measurement");
-  assert.deepEqual(pm.delta_items, []);
+test("an empty difference list with a finite estimate is a valid result, not a failure", () => {
+  const pm = parsePairedMeasurement({ differences: [], gap_estimate: 0, estimate_rationale: "nothing material" });
+  assert.ok(pm, "an empty list is a real measurement");
+  assert.deepEqual(pm.differences, []);
   assert.equal(pm.gap_estimate, 0);
-  assert.deepEqual(pm.signal_counts, { Omission: 0, "Framing Drift": 0, Deflection: 0 });
 });
 
 test("a non-object or array paired body parses to null", () => {
@@ -495,7 +531,7 @@ test("endpoint: a happy-path pair renders the delta, labels the estimate, and li
   }
   assert.equal(body.gap_estimate_label, pairedGapEstimateLabel(body.gap_estimate));
   assert.equal(body.estimate_type, "paired_gap");
-  assert.equal(body.paired_method_version, "1.1");
+  assert.equal(body.paired_method_version, "2.0");
   assert.equal(body.unvalidated, true);
   // receipt: paired, hash-valid, and carries the boundary
   assert.equal(body.receipt.receipt_type, "paired");
@@ -506,7 +542,7 @@ test("endpoint: a happy-path pair renders the delta, labels the estimate, and li
   assert.equal(body.receipt.paired_analysis.open_run_id, openRunId);
   const fields = stats.captureBodies[0].fields;
   assert.equal(fields["Open Run ID"], openRunId);
-  assert.equal(fields["Paired Method Version"], "1.1");
+  assert.equal(fields["Paired Method Version"], "2.0");
   assert.equal(fields["Estimate Type"], "paired_gap");
   assert.equal(fields["Schema Version"], RECEIPT_SCHEMA_VERSION);
   assert.equal(fields["Targeted Answer Hash"], sha256Hex(TARGETED_ANSWER));

@@ -133,12 +133,15 @@ test("4) both empty → S1 (the only state that may report nothing surfaced)", (
   assert.equal(sel.copy.what, EXPLAIN_PANEL_UI.states[EXPLAIN_STATE_S1].what);
 });
 
-test("5) paired mount untouched: still forwards the delta items array, still selects S3/S4", () => {
-  // The paired call site must remain `findings={items}` — guards against a collateral edit.
+test("5) paired mount forwards the visible rows, still selects S3/S4", () => {
+  // Pass 2B-A2 moved this from `items` (the pre-canonical wire array) to `rows` — the
+  // rows PairedDeltaView actually renders, built from the canonical subset. The guard
+  // stays: the interpretation must describe the collection the person is looking at,
+  // so this call site must forward that same collection and not a parallel one.
   assert.equal(
     extractFindingsExpr(SRC, "pairRuns={[pair]}"),
-    "items",
-    "paired mount must still forward the delta items array unchanged",
+    "rows",
+    "paired mount must forward the rendered rows, not a second collection",
   );
   // And the selector's paired behavior is unchanged: findings → S4, none → S3.
   assert.equal(

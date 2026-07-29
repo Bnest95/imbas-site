@@ -1,13 +1,13 @@
 # Visual acceptance manifest
 
-captured_against_sha: `ea3e710e276cc5ba71296cba4974df995ca8a06c`
+captured_against_sha: `69a48f54990df7c146a8c97ecda8a916dc0fddf8`
 
-**These images were captured against commit `ea3e710e276cc5ba71296cba4974df995ca8a06c` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
+**These images were captured against commit `69a48f54990df7c146a8c97ecda8a916dc0fddf8` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
 
 - working tree at capture time: **dirty**
 - browser: `/Users/brendan/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
 - browser version: `HeadlessChrome/148.0.7778.96`
-- captured: 2026-07-27T03:22:15.318Z
+- captured: 2026-07-28T18:12:31.887Z
 - fixtures: synthetic, from `scripts/qa/scenarios.mjs` — not captures, not evidence
 - network: deny-by-default; no model API call is reachable from this harness
 
@@ -35,55 +35,16 @@ Recorded so a future run can explain why a baseline is or is not comparable.
 | url | `/workbench.html` |
 | viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 2464` |
 | viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 2817` |
-
-## Why the Pass 2B-A baseline change was accepted
-
-Pass 2B-A regenerated both `single-findings` baselines once. The desktop image-diff against the
-previous baseline reported **22.63% of pixels differing with a maximum channel delta of 224**,
-which is far too large a number to wave through on "visually identical." It was analysed by
-region rather than accepted. The analysis is recorded here because the headline figure will look
-alarming to the next person who runs `git log` on these files.
-
-**Cause, in one chain.** The pass removed the single-answer score from `ReaderResultHero`, which
-made the hero **43.04 CSS px** shorter. The desktop frame is centred on
-`.wb-measure__list li.wb-measure__finding` by `scrollToDeterministic`, which computes
-`ideal = absTop + height/2 - innerHeight/2` and then **`Math.round`s** it
-(`scripts/qa/visual-acceptance.mjs:584`). The focus element's document position moved up 43.04 px;
-the rounded scroll target moved by exactly 44 (2508 → 2464). The 0.96 px difference is a residual
-that lands on every element in the scrolled document: each one sits **+0.96 CSS px = +1.93 device
-px** lower in the frame than before. A non-integer device offset re-rasterizes every antialiased
-glyph and background gradient in the frame. That is the whole diff.
-
-**What was measured, not assumed.**
-
-| evidence | result |
-| --- | --- |
-| delta magnitude histogram | 79.28% of differing pixels differ by exactly 1/255; 95.92% by ≤ 4 |
-| perceptible change (delta > 32) | 24,190 px = **0.4666% of the frame**, all on text glyph edges |
-| integer shift search, dy −4..+4 | no integer aligns the frames; dy=2 (nearest to 1.93) is best at 19.27%, and odd shifts cost ~55% because they break the 2× subpixel grid |
-| horizontal shift search, dx −4..+4 | dx=0 is best; the content did not move horizontally |
-| intensity-weighted centroids, 4 scrolled text regions | +1.877, +1.974, +1.577, +1.928 device px vertical; \|dx\| ≤ 0.22 device px; ink totals unchanged within 0.1% |
-| **control: fixed-position nav wordmark** | **+0.000 device px.** The fixed header does not scroll, so it did not move |
-| fixed header region (CSS y 0..56) | max delta **1**, zero pixels > 32 |
-| left margin (CSS x 0..300) | max delta **5**, zero pixels > 32 |
-| right margin (CSS x 1140..1440) | max delta **5**, zero pixels > 32 |
-| worst pixel, delta 224 | device (794,168) = CSS (397,84), inside the "Share this inspection" label: background umber `18,14,12` → type `242,232,220` |
-| `## render` text record | **byte-identical** before and after — same 30 elements, same text, boundary string unchanged |
-
-The maximum delta of 224 is not evidence of an additional change. It is one glyph-edge pixel
-crossing from background to type, and 224 is the arithmetic maximum any sub-pixel type shift can
-produce against this palette. Every perceptible pixel is confined to the content column; the fixed
-header and both margins contain nothing above delta 5.
-
-**Conclusion.** The diff is fully explained by the shortened hero and the rounded scroll target.
-No unrelated region changed and there is no unexplained remainder. The hero itself is *not* in the
-captured frame — it sits above it — which is why the text record is identical while every pixel in
-it moved.
-
-*One consequence worth knowing.* Because the residual comes from `Math.round`, any future layout
-change whose height delta is not an integer will reproduce this: a full-frame diff of ~20% at ±1
-per pixel, with no content change. Read the delta histogram before reading the percentage. A real
-regression puts mass in the high buckets; this signature puts 96% of it at ≤ 4.
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 5494` |
+| viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 7498` |
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 5573` |
+| viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 7644` |
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 5407` |
+| viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 7377` |
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 4751` |
+| viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 6259` |
+| viewport `desktop` | `1440x900 @ dsf 2, mobile=false, scroll offset 5342` |
+| viewport `mobile` | `375x812 @ dsf 3, mobile=true, scroll offset 7207` |
 
 ## Images
 
@@ -98,7 +59,7 @@ regression puts mass in the high buckets; this signature puts 96% of it at ≤ 4
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2464 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `ea3e710e276cc5ba71296cba4974df995ca8a06c` + uncommitted working tree |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
 
 ### `single-findings--mobile.png`
 
@@ -111,4 +72,134 @@ regression puts mass in the high buckets; this signature puts 96% of it at ≤ 4
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 2817 |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors. |
-| captured_against_sha | `ea3e710e276cc5ba71296cba4974df995ca8a06c` + uncommitted working tree |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-matched--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `d55808034b8d0b81955a40fcee0bad03d27ed7a59b79341f70c6b31fdff52458` |
+| bytes | 575333 |
+| viewport | 1440x900@2x (desktop) |
+| snapshot | `paired-matched--desktop.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5494 |
+| state captured | Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED |
+| expected behaviour | The delta lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-matched--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `875c87c8de50a2e6ec9f2fda1c008600930e77b6698ce6aaab0be4645972c137` |
+| bytes | 530340 |
+| viewport | 375x812@3x (mobile) |
+| snapshot | `paired-matched--mobile.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7498 |
+| state captured | Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED |
+| expected behaviour | The delta lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-unmatched--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `207229a86021a80f8cf45896c7ece18f8000e715dbd8df8bda7d2f5ca40e8ed4` |
+| bytes | 641820 |
+| viewport | 1440x900@2x (desktop) |
+| snapshot | `paired-unmatched--desktop.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5573 |
+| state captured | Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED |
+| expected behaviour | The delta lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-unmatched--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `ac9733f325f49243f171f2c681415647897163c074458fe7f6b27559ddd5461b` |
+| bytes | 536532 |
+| viewport | 375x812@3x (mobile) |
+| snapshot | `paired-unmatched--mobile.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7644 |
+| state captured | Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED |
+| expected behaviour | The delta lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-rejected-snippet--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `af36de12a114f46e7e3cf13e8c1e5bdc17751572eb16f64821f0eb8756b1f646` |
+| bytes | 662754 |
+| viewport | 1440x900@2x (desktop) |
+| snapshot | `paired-rejected-snippet--desktop.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5407 |
+| state captured | Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced |
+| expected behaviour | The delta lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-rejected-snippet--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `f52039035696398112548a8c991fbb084e2fe1c65581b39dbdc2968b9bc3c093` |
+| bytes | 594959 |
+| viewport | 375x812@3x (mobile) |
+| snapshot | `paired-rejected-snippet--mobile.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7377 |
+| state captured | Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced |
+| expected behaviour | The delta lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-legacy--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `20667424446709f356c96b45b9887a640d1aef1aac45e40738197f70691126f9` |
+| bytes | 1068467 |
+| viewport | 1440x900@2x (desktop) |
+| snapshot | `paired-legacy--desktop.snapshot.txt` |
+| framed on | `.wb-act2__notice--legacy` at scroll offset 4751 |
+| state captured | Paired record at method 1.1 — the version notice and the suppressed panels |
+| expected behaviour | A version-labelled notice names method 1.1 and says the excerpts are withheld. The headline follows it directly, with NO side-by-side answer panels between them — the surface that would normally carry the two quoted spans is simply absent. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-legacy--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `ff808feb19ab8a789ae2d0ff744e3aba7c1bd0c30e722b4cd6be5a708986e16d` |
+| bytes | 753918 |
+| viewport | 375x812@3x (mobile) |
+| snapshot | `paired-legacy--mobile.snapshot.txt` |
+| framed on | `.wb-act2__notice--legacy` at scroll offset 6259 |
+| state captured | Paired record at method 1.1 — the version notice and the suppressed panels |
+| expected behaviour | A version-labelled notice names method 1.1 and says the excerpts are withheld. The headline follows it directly, with NO side-by-side answer panels between them — the surface that would normally carry the two quoted spans is simply absent. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-legacy-rows--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `c279cdc865d40a48e5ba98145aa0687ef620957ade9de1dbd120e61c50736478` |
+| bytes | 769615 |
+| viewport | 1440x900@2x (desktop) |
+| snapshot | `paired-legacy-rows--desktop.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5342 |
+| state captured | Paired record at method 1.1 — the readings, rendered without excerpts |
+| expected behaviour | Both readings render, each labelled as the Reader's reading. NO quotation marks and no blockquotes appear beside them, and neither the gap x-ray nor the signal-count line is drawn. The card and share actions are not offered. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |
+
+### `paired-legacy-rows--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `54a40649b91d67b4b74b91208549764b71058224fc0bdbb07f31ce6718e1474b` |
+| bytes | 577312 |
+| viewport | 375x812@3x (mobile) |
+| snapshot | `paired-legacy-rows--mobile.snapshot.txt` |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7207 |
+| state captured | Paired record at method 1.1 — the readings, rendered without excerpts |
+| expected behaviour | Both readings render, each labelled as the Reader's reading. NO quotation marks and no blockquotes appear beside them, and neither the gap x-ray nor the signal-count line is drawn. The card and share actions are not offered. |
+| captured_against_sha | `69a48f54990df7c146a8c97ecda8a916dc0fddf8` + uncommitted working tree |

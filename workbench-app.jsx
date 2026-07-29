@@ -14,6 +14,8 @@ import {
   selectSubset,
   ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
+  ARTIFACT_TARGETED,
+  FINDING_CLASSES,
 } from "./reader-result.js";
 import {
   ACT2_OFFER_COPY,
@@ -4025,6 +4027,35 @@ function GapXray({ counts }) {
   );
 }
 
+// The three labels on a delta row. Two name an answer and sit above a quotation the
+// server resolved; this one names the Reader and sits above a sentence the Reader
+// wrote. Labelling it is how a person can tell the evidence from the reading of it.
+const PAIRED_READING_LABEL = "The Reader's reading";
+
+// The paired tally, in the display vocabulary, over the named PROBE_ONLY subset.
+// Derived from the same subset that produces the rows, so the number above the list
+// and the list itself are one collection rather than two counts that can disagree.
+function pairedSignalCounts(canonical) {
+  const c = classBreakdown(canonical, "probe_surfaced_differences");
+  const out = {};
+  for (const [id, label] of Object.entries(FINDING_CLASSES)) out[label] = c[id] || 0;
+  return out;
+}
+
+function quotedAnchorText(finding, role) {
+  const a = finding.anchors.find((x) => x.role === role && x.status === ANCHOR_STATUS.QUOTED);
+  return a ? a.quote : "";
+}
+
+// What a person sees when an older record replays. It names the limit plainly and
+// does not dress it up: the readings are still worth showing, the excerpts are not
+// verifiable, and this build will not print them as if they were.
+function legacyPairedNotice(version) {
+  const v = (version || "").trim();
+  const which = v ? `an earlier method (${v})` : "an earlier method";
+  return `The Reader measured this pair under ${which} that did not check quotations against the answers. Its readings are below. Its excerpts are withheld.`;
+}
+
 // Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
 // /api/read-paired: the machine gap estimate with its unvalidated label, the
 // itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
@@ -4033,9 +4064,38 @@ function GapXray({ counts }) {
 // instrument. The formal signal patterns and the "Machine gap estimate" label appear
 // HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
 // note when the response carries them.
+//
+// At paired_method_version 2.0 every row, every quotation and the tally come from the
+// canonical result's probe_surfaced_differences subset, and a quotation is text the
+// server resolved to an exact span in the answer it names. A record written under an
+// earlier method has no canonical result, so it renders through the legacy branch:
+// its readings show, its excerpts do not, and it contributes no tally. It is neither
+// upgraded nor trusted.
 function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTryCleaner }) {
-  const items = Array.isArray(paired.delta_items) ? paired.delta_items : [];
-  const counts = paired.signal_counts || {};
+  const canonical = paired.result || null;
+  const legacy = !canonical;
+  const legacyItems = legacy && Array.isArray(paired.delta_items) ? paired.delta_items : [];
+
+  // One row shape, two producers. Only the canonical producer can yield a quotation;
+  // the legacy producer yields none, by construction rather than by discipline.
+  const rows = canonical
+    ? selectSubset(canonical, "probe_surfaced_differences")
+        .map(describeFinding)
+        .map((f) => ({
+          key: f.id,
+          signal: f.class_display,
+          reading: f.statement,
+          openQuote: quotedAnchorText(f, ARTIFACT_ORIGINAL),
+          probeQuote: quotedAnchorText(f, ARTIFACT_TARGETED),
+        }))
+    : legacyItems.map((d, i) => ({
+        key: `legacy.${i}`,
+        signal: (d.signal_pattern || "").trim(),
+        reading: (d.point || "").trim(),
+        openQuote: "",
+        probeQuote: "",
+      }));
+  const counts = canonical ? pairedSignalCounts(canonical) : null;
 
   // Run-the-pair v1: when the capture didn't come through as matched conditions
   // (a different model, a disclosed edit, or a setup the person wasn't sure about),
@@ -4047,7 +4107,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
 
   // The machine SUGGESTS a state from the paired measurement; the person can correct
   // it with one tap, and the correction is what gets recorded (reader-paired.js law).
-  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts });
+  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts || {} });
   const [userState, setUserState] = useState(suggested);
 
   // loop_completed is the north-star event: the second answer came back and was
@@ -4077,12 +4137,15 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
   // headlines are replaced with the descriptive one and no tag renders — the notice
   // no longer sits between a headline and a tag that assert what it retracts.
   const copy = loopRevealCopy(userState, unmatched);
-  const primary = items[0] || {};
+  const primary = rows[0] || {};
   // The two panels are the evidence (the two answers' relevant spans); the state is
   // the reading. A missing span on either side reads as "Didn't come up." — which is
   // exactly the STILL MISSING case (no delta -> both sides empty -> both panels blank).
-  const firstText = (primary.open_side || "").trim() || LOOP_DIDNT_COME_UP;
-  const secondText = (primary.targeted_side || "").trim() || LOOP_DIDNT_COME_UP;
+  // A legacy record has no resolved span at all, so it renders the notice instead:
+  // "didn't come up" would be a claim about the answers this build cannot support.
+  const firstText = (primary.openQuote || "").trim() || LOOP_DIDNT_COME_UP;
+  const secondText = (primary.probeQuote || "").trim() || LOOP_DIDNT_COME_UP;
+  const legacyNotice = legacyPairedNotice(paired.paired_method_version);
   const firstPanel = (
     <div className="wb-loop__panel wb-loop__panel--first" key="first">
       <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
@@ -4111,10 +4174,19 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         <p className="wb-act2__notice" role="status">The analysis is below. The Reader couldn't confirm it saved its own copy, so download this receipt to keep a full copy.</p>
       ) : null}
 
+      {/* The --legacy modifier carries no styling of its own and is not meant to: it
+          names which notice this is, so the acceptance harness can point a camera at
+          it. Three notices can stack here and they are otherwise indistinguishable in
+          the DOM, and a legacy capture that frames the wrong one silently proves
+          nothing. */}
+      {legacy ? (
+        <p className="wb-act2__notice wb-act2__notice--legacy" role="status">{legacyNotice}</p>
+      ) : null}
+
       {/* The reveal — the hero. Machine suggests; the person corrects with one tap. */}
       <div className="wb-loop__reveal">
         <h3 className="wb-loop__headline">{copy.headline}</h3>
-        <div className="wb-loop__panels">{panels}</div>
+        {legacy ? null : <div className="wb-loop__panels">{panels}</div>}
         {unmatched ? (
           <div className="wb-loop__unmatched" role="note">
             <span className="wb-loop__unmatched-badge">{PAIR_CAPTURE_UI.unmatched_badge}</span>
@@ -4163,26 +4235,31 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section">
           <h3 className="wb-reader-result__section-title">The delta</h3>
-          <GapXray counts={counts} />
-          <p className="wb-measure__counts">
-            {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
-          </p>
-          {items.length ? (
+          {counts ? <GapXray counts={counts} /> : null}
+          {counts ? (
+            <p className="wb-measure__counts">
+              {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
+            </p>
+          ) : null}
+          {rows.length ? (
             <ol className="wb-measure__list">
-              {items.map((d, i) => (
-                <li key={i} className="wb-measure__finding">
-                  <span className="wb-measure__finding-type">{d.signal_pattern}</span>
-                  <p className="wb-measure__finding-why">{d.point}</p>
-                  {(d.open_side || "").trim() ? (
+              {rows.map((r) => (
+                <li key={r.key} className="wb-measure__finding">
+                  <span className="wb-measure__finding-type">{r.signal}</span>
+                  {/* The Reader's reading, labelled as such. It is the one line here
+                      the model wrote, so it never sits inside quotation marks. */}
+                  <span className="wb-act2__reading-label">{PAIRED_READING_LABEL}</span>
+                  <p className="wb-measure__finding-why wb-act2__reading">{r.reading}</p>
+                  {r.openQuote ? (
                     <blockquote className="wb-measure__anchor wb-act2__side">
                       <span className="wb-act2__side-label">First answer</span>
-                      {`"${d.open_side.trim()}"`}
+                      {`"${r.openQuote}"`}
                     </blockquote>
                   ) : null}
-                  {(d.targeted_side || "").trim() ? (
+                  {r.probeQuote ? (
                     <blockquote className="wb-measure__anchor wb-act2__side wb-act2__side--targeted">
                       <span className="wb-act2__side-label">Second answer</span>
-                      {`"${d.targeted_side.trim()}"`}
+                      {`"${r.probeQuote}"`}
                     </blockquote>
                   ) : null}
                 </li>
@@ -4201,7 +4278,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           beside that callout, never a second copy of it). Perturbs no record. */}
       <InspectionMeaningPanel
         pairRuns={[pair]}
-        findings={items}
+        findings={rows}
         conditionsMatched={capture ? capture.conditions_matched : undefined}
       />
 
@@ -4210,15 +4287,20 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
-      <InspectionCardAction
-        state={userState}
-        copy={copy}
-        firstText={firstText}
-        secondText={secondText}
-        smallPrint={smallPrint}
-        run={openRunId}
-        check={check}
-      />
+      {/* Both of these put the two answers' text in front of someone else — the card
+          as an image, the share as a public page. Neither is offered for a legacy
+          record, because this build cannot say the excerpts it holds are real. */}
+      {legacy ? null : (
+        <InspectionCardAction
+          state={userState}
+          copy={copy}
+          firstText={firstText}
+          secondText={secondText}
+          smallPrint={smallPrint}
+          run={openRunId}
+          check={check}
+        />
+      )}
 
       <ReaderReceiptActions receipt={paired.receipt} formatter={formatPairedReceiptText} filePrefix="imbas-reader-paired-receipt" />
 
@@ -4229,7 +4311,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           findings are v1.1). The single-mode export lives on the Check Register panel. */}
       <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} />
 
-      <ReaderShareAction mode="paired" receipt={paired.receipt} />
+      {legacy ? null : <ReaderShareAction mode="paired" receipt={paired.receipt} />}
 
       <PerceptionTap mode="paired" receipt={paired.receipt} />
 

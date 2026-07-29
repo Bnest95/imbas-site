@@ -32,10 +32,22 @@ import {
   canonicalizeForHash,
   pairedGapEstimateLabel,
 } from "../../reader-receipt.js";
-import { buildTargetedPrompt, PAIRED_METHOD_VERSION, deriveConditionsMatched, PAIR_SAME_MODEL, PAIR_EDITS } from "../../reader-paired.js";
+import {
+  buildTargetedPrompt,
+  PAIRED_METHOD_VERSION,
+  deriveConditionsMatched,
+  PAIR_CAPTURE_UI,
+  PAIR_SAME_MODEL,
+  PAIR_EDITS,
+} from "../../reader-paired.js";
 import { buildCheckRegister } from "../../reader-checks.js";
 import { buildCanonicalSingle } from "../../api/read.js";
-import { buildCanonicalPaired } from "../../api/read-paired.js";
+import {
+  buildCanonicalPaired,
+  parsePairedMeasurement,
+  projectPairedDeltaItems,
+  projectSignalCounts,
+} from "../../api/read-paired.js";
 
 const sha256Hex = (s) => createHash("sha256").update(s).digest("hex");
 
@@ -50,6 +62,10 @@ const ESTIMATE_SCALE_VERSION = "1.0";
 const ESTIMATE_TYPE_SINGLE = "candidate_gap";
 const ESTIMATE_TYPE_PAIRED = "paired_gap";
 const RUBRIC_VERSION = "1.0";
+// The last version that let the model's own prose reach the wire as a quotation.
+// Frozen here as a literal, not imported: it is a version this build no longer
+// produces, and the legacy fixture's whole purpose is to be a record from before.
+const LEGACY_PAIRED_METHOD_VERSION = "1.1";
 const CANDIDATE_FINDING_TYPES = ["candidate missing item", "candidate framing issue", "candidate deflection"];
 const CANDIDATE_TO_DETECTOR_FINDING = {
   "candidate missing item": "omission",
@@ -209,32 +225,99 @@ function singleReadPayload() {
 
 // ── Paired mode ──────────────────────────────────────────────────────────────
 // Matched vs unmatched is NOT a server field. reader-paired.js:210 derives it
-// client-side from the paste-back form, so both paired scenarios share one payload
-// and differ only in the capture answers the drive steps give. Encoding that here
-// keeps the harness honest about where the condition actually comes from.
-function pairedReadPayload() {
-  const delta_items = [
+// client-side from the paste-back form, so both share one payload and differ only in
+// the capture answers the drive steps give. Encoding that here keeps the harness
+// honest about where the condition actually comes from.
+//
+// At paired_method_version 2.0 the canned part is the MODEL'S RAW OUTPUT, and nothing
+// downstream of it is written by hand. Under 1.1 this fixture canned the delta items
+// themselves — including their open_side and targeted_side prose — which is precisely
+// the shape that let a fabricated quotation exist: the fixture could show a side no
+// server ever resolved, and the baseline would have blessed it. Now the raw output
+// goes through the endpoint's own parser, the construction door resolves each snippet
+// against these two answers, and the wire fields are projected from the result. A
+// snippet edited to something the answer does not contain therefore empties that side
+// of the fixture, and assertScenarioIntegrity below fails on it.
+//
+// The snippets are lookup keys, so they must occur VERBATIM in the answer their role
+// names. SYNTHETIC_ANSWER for original_answer, SYNTHETIC_SECOND_ANSWER for
+// targeted_answer.
+const PAIRED_MODEL_OUTPUT = {
+  differences: [
     {
-      type: "delta",
-      point: "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
-      open_side: "A landlord must return a security deposit within 30 days of the tenant moving out.",
-      targeted_side: "The deadline depends on the state. It runs from 14 days in some states to 60 days in others, so the 30-day figure is not a national rule.",
       signal_pattern: "Omission",
+      interpretation:
+        "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
+      snippets: [
+        {
+          artifact_role: "targeted_answer",
+          verbatim_snippet: "It runs from 14 days in some states to 60 days in others",
+        },
+        {
+          artifact_role: "original_answer",
+          verbatim_snippet: "within 30 days of the tenant moving out",
+        },
+      ],
     },
     {
-      type: "delta",
-      point: "The second answer names a penalty for a missed deadline; the first did not mention one.",
-      open_side: "",
-      targeted_side: "Several states also require the landlord to pay the tenant a penalty — often two or three times the deposit — when the deadline is missed.",
+      // The first answer says nothing about a penalty, so there is no truthful
+      // contextual quotation to show on the open side. ABSENT is the honest answer
+      // and the reason the open-side blockquote is withheld in the render.
       signal_pattern: "Omission",
+      interpretation: "The second answer names a penalty for a missed deadline; the first did not mention one.",
+      snippets: [
+        {
+          artifact_role: "targeted_answer",
+          verbatim_snippet: "require the landlord to pay the tenant a penalty",
+        },
+        { artifact_role: "original_answer", status: "ABSENT" },
+      ],
     },
-  ];
+  ],
+  gap_estimate: 2,
+  estimate_rationale: "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
+};
 
-  const signal_counts = { Omission: 0, "Framing Drift": 0, Deflection: 0 };
-  for (const d of delta_items) if (d.signal_pattern in signal_counts) signal_counts[d.signal_pattern]++;
+// The measured failure mode: a difference whose probe-side snippet is not in the
+// second answer. Three of seven probe runs at 1.1 emitted one of these and it printed
+// in quotation marks.
+//
+// This output keeps difference 1 and REPLACES difference 2 with the fabricated one,
+// rather than appending it. Appending produced a capture byte-identical to
+// paired-matched — correct behaviour, and a useless screenshot: two files showing the
+// same picture prove nothing to whoever opens them, and the harness rejects the pair
+// outright as a checksum collision. Held against paired-matched, this way the
+// rejection IS the difference between the two images: one row instead of two, and
+// Omission: 1 instead of 2.
+const PAIRED_MODEL_OUTPUT_WITH_REJECTION = {
+  ...PAIRED_MODEL_OUTPUT,
+  differences: [
+    PAIRED_MODEL_OUTPUT.differences[0],
+    {
+      signal_pattern: "Omission",
+      interpretation: "The second answer warns that a tenant who waits loses the penalty entirely.",
+      snippets: [
+        {
+          artifact_role: "targeted_answer",
+          // Plausible, on topic, and nowhere in SYNTHETIC_SECOND_ANSWER.
+          verbatim_snippet: "a tenant who waits too long forfeits the penalty entirely",
+        },
+        { artifact_role: "original_answer", status: "ABSENT" },
+      ],
+    },
+  ],
+};
 
+function pairedReadPayload(modelOutput = PAIRED_MODEL_OUTPUT) {
   const openPayload = singleReadPayload();
   const targetedPrompt = openPayload.act2.targeted_prompt;
+
+  // The endpoint's own parser, then the endpoint's own adapter. The canonical result
+  // is built FIRST and the wire fields are derived from it, in that order, exactly as
+  // the handler does — so this fixture cannot carry a delta item the door rejected.
+  const pm = parsePairedMeasurement(modelOutput);
+  const canonical = buildCanonicalPaired(pm, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER);
+  const delta_items = projectPairedDeltaItems(canonical, "probe_surfaced_differences");
 
   const pairedAnalysis = {
     open_run_id: FROZEN_REQUEST_ID,
@@ -243,16 +326,13 @@ function pairedReadPayload() {
     targeted_answer: SYNTHETIC_SECOND_ANSWER,
     targeted_answer_hash: sha256Hex(SYNTHETIC_SECOND_ANSWER),
     delta_items,
-    gap_estimate: 2,
-    estimate_rationale:
-      "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
+    gap_estimate: pm.gap_estimate,
+    estimate_rationale: pm.estimate_rationale,
     estimate_type: ESTIMATE_TYPE_PAIRED,
     rubric_version: RUBRIC_VERSION,
     paired_method_version: PAIRED_METHOD_VERSION,
+    canonical,
   };
-  // The endpoint's own adapter again. It reads delta_items and the estimate fields
-  // off the analysis object, which is exactly what the endpoint hands it.
-  pairedAnalysis.canonical = buildCanonicalPaired(pairedAnalysis, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER);
 
   const receipt = buildPairedReceipt({
     generatedAt: FROZEN_TIMESTAMP,
@@ -261,12 +341,12 @@ function pairedReadPayload() {
   });
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
 
-  // Exactly buildPairedPayload (api/read-paired.js:387).
+  // Exactly buildPairedPayload (api/read-paired.js:590).
   return {
     source: "agent",
     delta_items,
-    signal_counts,
-    result: pairedAnalysis.canonical,
+    signal_counts: projectSignalCounts(canonical),
+    result: canonical,
     gap_estimate: pairedAnalysis.gap_estimate,
     gap_estimate_label: pairedGapEstimateLabel(pairedAnalysis.gap_estimate),
     estimate_rationale: pairedAnalysis.estimate_rationale,
@@ -276,6 +356,73 @@ function pairedReadPayload() {
     targeted_prompt: targetedPrompt,
     unvalidated: true,
     idempotent: false,
+    receipt,
+  };
+}
+
+const pairedRejectedPayload = () => pairedReadPayload(PAIRED_MODEL_OUTPUT_WITH_REJECTION);
+
+// A record written under the OLD method, replayed by today's build. This is what
+// reconstructPairedFromRecord returns for a stored row with no snippet candidates:
+// no canonical result, the four stored wire keys, and the version the row was
+// written under. It is built by hand ON PURPOSE — no product module can produce it
+// any more, and that is the point. The sides below are the 1.1 defect verbatim:
+// prose presented as quotation that does not occur in the answer it names.
+function pairedLegacyPayload() {
+  const openPayload = singleReadPayload();
+  const targetedPrompt = openPayload.act2.targeted_prompt;
+
+  const delta_items = [
+    {
+      point: "The second answer treats the deadline as state-set where the first gave one national figure.",
+      open_side: "A landlord has 30 days from move-out to return the deposit in full.",
+      targeted_side: "Deposit deadlines are set state by state and range from two weeks to two months.",
+      signal_pattern: "Omission",
+    },
+    {
+      point: "The second answer names a penalty the first left out.",
+      open_side: "",
+      targeted_side: "Many states impose a penalty of two to three times the deposit on a late landlord.",
+      signal_pattern: "Omission",
+    },
+  ];
+
+  const pairedAnalysis = {
+    open_run_id: FROZEN_REQUEST_ID,
+    targeted_prompt: targetedPrompt,
+    targeted_prompt_hash: sha256Hex(targetedPrompt),
+    targeted_answer: SYNTHETIC_SECOND_ANSWER,
+    targeted_answer_hash: sha256Hex(SYNTHETIC_SECOND_ANSWER),
+    delta_items,
+    gap_estimate: 2,
+    estimate_rationale: "Counted only decision-relevant deltas. Unvalidated.",
+    estimate_type: ESTIMATE_TYPE_PAIRED,
+    rubric_version: RUBRIC_VERSION,
+    paired_method_version: LEGACY_PAIRED_METHOD_VERSION,
+    canonical: null,
+  };
+
+  const receipt = buildPairedReceipt({
+    generatedAt: FROZEN_TIMESTAMP,
+    openRun: openPayload.receipt.open_run,
+    pairedAnalysis,
+  });
+  receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
+
+  return {
+    source: "agent",
+    delta_items,
+    signal_counts: projectSignalCounts(null),
+    result: null,
+    gap_estimate: pairedAnalysis.gap_estimate,
+    gap_estimate_label: pairedGapEstimateLabel(pairedAnalysis.gap_estimate),
+    estimate_rationale: pairedAnalysis.estimate_rationale,
+    estimate_type: ESTIMATE_TYPE_PAIRED,
+    rubric_version: RUBRIC_VERSION,
+    paired_method_version: LEGACY_PAIRED_METHOD_VERSION,
+    targeted_prompt: targetedPrompt,
+    unvalidated: true,
+    idempotent: true,
     receipt,
   };
 }
@@ -296,6 +443,32 @@ const DRIVE_SINGLE = [
   { waitFor: ".wb-measure__list li.wb-measure__finding" },
 ];
 
+// The Act 2 paste-back flow, appended to the single-mode read that produces the
+// receipt it needs. Written now because Pass 2B-A2 changed what the paired surface
+// renders from, and a change to a surface nobody can photograph is a change nobody
+// can check.
+//
+// Two details that are not obvious:
+//   - The compare stage opens through the "Paste what came back" ghost button, NOT
+//     "Ask your AI →". That one copies to the clipboard first and only opens the box
+//     on success; headless Chrome has no clipboard permission, so it lands in the
+//     catch and the box never opens.
+//   - Conditions are disclosed by clicking the option BUTTONS by their label text.
+//     The two groups share a class, but no label string is a substring of another,
+//     so clickText hits exactly one.
+const drivePaired = ({ edits }) => [
+  ...DRIVE_SINGLE,
+  { waitFor: ".wb-act2__actions" },
+  { clickText: ".wb-act2__actions button", text: "Paste what came back" },
+  { waitFor: ".wb-act2__test textarea" },
+  { fill: ".wb-act2__test textarea", text: SYNTHETIC_SECOND_ANSWER },
+  { clickText: ".wb-act2__capture-opt", text: PAIR_CAPTURE_UI.same_model.options[PAIR_SAME_MODEL.YES] },
+  { clickText: ".wb-act2__capture-opt", text: PAIR_CAPTURE_UI.edits.options[edits] },
+  { waitFor: ".wb-act2__test-cta button:not([disabled])" },
+  { click: ".wb-act2__test-cta button" },
+  { waitFor: ".wb-act2__delta" },
+];
+
 export const SCENARIOS = {
   "single-findings": {
     name: "single-findings",
@@ -314,35 +487,121 @@ export const SCENARIOS = {
     assertSelector: ".wb-measure__list li.wb-measure__finding",
   },
 
-  // The two paired scenarios are FIXTURE-ONLY. Their payloads are complete and
-  // integrity-checked, but no drive steps exist yet for the Act 2 paste-back form,
-  // so the harness refuses to capture them rather than driving the single-mode flow
-  // and filing the resulting image under a paired name. A screenshot labelled with a
-  // state it does not show is the exact failure this harness exists to prevent.
-  //
-  // To make these drivable, a later pass adds steps for the Act 2 panel:
-  // the second-answer textarea inside .wb-act2__test, the two .wb-act2__capture-opt
-  // button groups (same_model, then edits), and the .wb-act2__test-cta submit.
+  // The paired scenarios were fixture-only until Pass 2B-A2: their payloads were
+  // checked but no drive steps existed, so the harness refused to capture them
+  // rather than drive the single-mode flow and file the image under a paired name.
+  // This pass changed what the paired surface renders from, so it owes the steps.
   "paired-matched": {
     name: "paired-matched",
-    state: "Paired comparison, conditions derived as MATCHED",
+    drivable: true,
+    state: "Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED",
     expected:
-      "Side-by-side comparison renders with no unmatched-conditions warning. conditions_matched === true, derived client-side from same model + no edits.",
+      "The delta lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
-    drivable: false,
+    steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "The delta",
+      "Omission: 2 · Framing Drift: 0 · Deflection: 0",
+      "The Reader's reading",
+      "It runs from 14 days in some states to 60 days in others",
+    ],
+    assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
+    focus: ".wb-act2__delta .wb-measure__list",
   },
 
+  // Row 2's open side is ABSENT: the first answer says nothing about a penalty, so
+  // there is no truthful contextual quotation and the blockquote is withheld rather
+  // than filled. Same payload as paired-matched — the state is a row, not a run.
   "paired-unmatched": {
     name: "paired-unmatched",
-    state: "Paired comparison, conditions derived as UNMATCHED",
+    drivable: true,
+    state: "Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED",
     expected:
-      "Side-by-side comparison renders WITH the unmatched-conditions warning. conditions_matched === false, derived client-side from a disclosed edit.",
+      "The delta lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
-    drivable: false,
+    steps: drivePaired({ edits: PAIR_EDITS.EDITED }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "The delta",
+      "Omission: 2 · Framing Drift: 0 · Deflection: 0",
+      "require the landlord to pay the tenant a penalty",
+    ],
+    assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
+    focus: ".wb-act2__delta .wb-measure__list",
+  },
+
+  // The measured failure mode, made visible by its absence. The model proposed two
+  // differences; the second named second-answer text that is not in the second
+  // answer. It is recorded in the canonical result and it is not here. Read this
+  // against paired-matched, which proposed two and resolved both: same flow, same
+  // answers, one row fewer and one count lower.
+  "paired-rejected-snippet": {
+    name: "paired-rejected-snippet",
+    drivable: true,
+    state: "Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced",
+    expected:
+      "The delta lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedRejectedPayload },
+    steps: drivePaired({ edits: PAIR_EDITS.NONE }),
+    capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["The delta", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
+    assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
+    focus: ".wb-act2__delta .wb-measure__list",
+  },
+
+  // A record written under 1.1, replayed by this build. The legacy path renders its
+  // readings and withholds its excerpts, because this build cannot say they are real.
+  //
+  // This state is captured TWICE, and the reason is worth stating because it looks
+  // like duplication. assertText reads whole-page innerText, so it passes whether or
+  // not a string sits inside the captured rectangle; only the FOCUS target is
+  // guaranteed to be in frame. The legacy delta block is taller than a 1440x900
+  // viewport, so no single frame holds both the version notice at its top and the
+  // rows near its bottom — and each carries half the quarantine claim. Framed on the
+  // rows alone, the image is indistinguishable from a current run that found nothing
+  // quotable; framed on the notice alone, nothing shows that the readings render
+  // without excerpts. Two frames, one per claim, is the honest way to photograph it.
+  "paired-legacy": {
+    name: "paired-legacy",
+    drivable: true,
+    state: "Paired record at method 1.1 — the version notice and the suppressed panels",
+    expected:
+      "A version-labelled notice names method 1.1 and says the excerpts are withheld. The headline follows it directly, with NO side-by-side answer panels between them — the surface that would normally carry the two quoted spans is simply absent.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedLegacyPayload },
+    steps: drivePaired({ edits: PAIR_EDITS.NONE }),
+    capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "an earlier method (1.1)",
+      "Its excerpts are withheld.",
+      "The second answer names a penalty the first left out.",
+    ],
+    assertSelector: ".wb-act2__notice--legacy",
+    focus: ".wb-act2__notice--legacy",
+  },
+
+  // The same record, framed on the rows: the other half of the claim.
+  "paired-legacy-rows": {
+    name: "paired-legacy-rows",
+    drivable: true,
+    state: "Paired record at method 1.1 — the readings, rendered without excerpts",
+    expected:
+      "Both readings render, each labelled as the Reader's reading. NO quotation marks and no blockquotes appear beside them, and neither the gap x-ray nor the signal-count line is drawn. The card and share actions are not offered.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedLegacyPayload },
+    steps: drivePaired({ edits: PAIR_EDITS.NONE }),
+    capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "an earlier method (1.1)",
+      "The second answer treats the deadline as state-set where the first gave one national figure.",
+      "The second answer names a penalty the first left out.",
+    ],
+    assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
+    focus: ".wb-act2__delta .wb-measure__list",
   },
 };
 
@@ -387,14 +646,85 @@ export function assertScenarioIntegrity(scenario) {
     }
   }
 
+  // Only the two scenarios whose NAME makes a conditions claim are held to it. The
+  // others carry a capture because the flow needs one, and assert nothing about it.
+  // "-unmatched" is tested first: it does not end in "-matched", but reading that off
+  // the string twice is cheaper than trusting anyone to notice.
   if (scenario.capture) {
     const derived = deriveConditionsMatched(scenario.capture);
-    const wantsMatched = scenario.name.endsWith("-matched");
-    if (wantsMatched && derived !== true) {
+    const wants = scenario.name.endsWith("-unmatched") ? false : scenario.name.endsWith("-matched") ? true : null;
+    if (wants === true && derived !== true) {
       problems.push(`scenario claims matched conditions but deriveConditionsMatched returned ${JSON.stringify(derived)}`);
     }
-    if (!wantsMatched && derived === true) {
+    if (wants === false && derived === true) {
       problems.push("scenario claims unmatched conditions but deriveConditionsMatched returned true");
+    }
+  }
+
+  // Paired, at 2.0. The failure this guards is the one the pass exists to close: a
+  // fixture showing an excerpt no server resolved. Under 1.1 that was possible by
+  // construction, because the fixture wrote the sides itself.
+  const paired = payloads["/api/read-paired"];
+  if (paired) {
+    const legacy = paired.result === null;
+    if (legacy) {
+      // The legacy fixture must stay legacy. If a later pass makes it resolvable, it
+      // stops testing the path it was built for and nothing says so.
+      if (paired.paired_method_version === PAIRED_METHOD_VERSION) {
+        problems.push(
+          `legacy paired fixture reports the CURRENT method version ${PAIRED_METHOD_VERSION} — it no longer exercises the legacy render path`
+        );
+      }
+      const total = Object.values(paired.signal_counts || {}).reduce((a, b) => a + b, 0);
+      if (total !== 0) {
+        problems.push(`legacy paired fixture carries a visible tally (${total}); a 1.x record must drive no counts`);
+      }
+    } else {
+      if (paired.paired_method_version !== PAIRED_METHOD_VERSION) {
+        problems.push(
+          `paired fixture reports method ${paired.paired_method_version || "(none)"} but carries a canonical result built at ${PAIRED_METHOD_VERSION}`
+        );
+      }
+      // Every side on the wire must reproduce verbatim in the answer it names. The
+      // door already guarantees this; asserting it here catches a fixture that
+      // bypassed the door, which is exactly how the last one went wrong.
+      const artifacts = {
+        open_side: SYNTHETIC_ANSWER,
+        targeted_side: SYNTHETIC_SECOND_ANSWER,
+      };
+      for (const [i, d] of (paired.delta_items || []).entries()) {
+        for (const [key, text] of Object.entries(artifacts)) {
+          const side = d[key] || "";
+          if (side && !text.includes(side)) {
+            problems.push(`paired delta item ${i} ${key} is not verbatim in the answer it names: ${JSON.stringify(side)}`);
+          }
+        }
+      }
+      // The visible tally and the visible rows are one collection.
+      const surfaced = paired.result.counts.probe_surfaced_differences.value;
+      if ((paired.delta_items || []).length !== surfaced) {
+        problems.push(
+          `paired fixture wire carries ${(paired.delta_items || []).length} delta item(s) for ${surfaced} surfaced finding(s)`
+        );
+      }
+      const tally = Object.values(paired.signal_counts || {}).reduce((a, b) => a + b, 0);
+      if (tally !== surfaced) {
+        problems.push(`paired signal counts total ${tally} for ${surfaced} surfaced finding(s)`);
+      }
+      // The rejection scenario must actually reject something, or it captures the
+      // ordinary state under a name that promises otherwise.
+      const recorded = paired.result.counts.recorded_findings.value;
+      const wantsRejection = scenario.name.includes("rejected");
+      if (wantsRejection && recorded <= surfaced) {
+        problems.push(
+          `scenario promises a rejected snippet but the door surfaced all ${recorded} recorded finding(s) — nothing was rejected`
+        );
+      }
+      if (!wantsRejection && recorded !== surfaced) {
+        problems.push(
+          `paired fixture records ${recorded} finding(s) but surfaces ${surfaced}; this scenario does not declare a rejection`
+        );
+      }
     }
   }
 
