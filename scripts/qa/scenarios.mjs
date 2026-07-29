@@ -475,14 +475,14 @@ export const SCENARIOS = {
     drivable: true,
     state: "Single mode, Reader result with measurement findings",
     expected:
-      "MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors.",
+      "MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Omission: 1 · Framing Drift: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors.",
     routes: { "/api/read": singleReadPayload },
     steps: DRIVE_SINGLE,
     // Proof the captured pixels show the state, not just that a file was written.
     assertText: [
       "MEASUREMENT",
       "Candidate findings",
-      "Missing item: 1 · Framing issue: 1 · Deflection: 0",
+      "Omission: 1 · Framing Drift: 1 · Deflection: 0",
     ],
     assertSelector: ".wb-measure__list li.wb-measure__finding",
   },

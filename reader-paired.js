@@ -1,8 +1,9 @@
 // reader-paired.js — shared, pure-JS Act 2 (paired flow) construction rules.
 //
 // Reader v2 P2 turns the single-mode inspection into a two-question test: after
-// Act 1 renders, the Reader offers a fixed, non-leading follow-up prompt whenever
-// its own measurement flags a candidate missing item (design §1). This module owns
+// Act 1 renders, the Reader offers the fixed completeness probe at the recorded
+// inspection_method_version whenever its own measurement flags an Omission
+// (design §1). This module owns
 // the ONE deterministic rule that gates and emits that prompt, plus the offer
 // sentence, so the server (api/read.js) and the client (workbench-app.jsx, bundled)
 // agree byte-for-byte and the rule is unit-testable in isolation.
@@ -31,9 +32,13 @@
 // unchanged; the probe text is unchanged.
 export const PAIRED_METHOD_VERSION = "2.0";
 
-// The one finding type that makes the offer eligible (design §1). Framing and
-// deflection candidates are not omissions, so they do not warrant a re-ask; only
-// a candidate missing item opens the two-question test.
+// The one signal class that makes the offer eligible (design §1). Framing Drift and
+// Deflection candidates are not omissions, so they do not warrant a re-ask; only an
+// Omission opens the two-question test.
+//
+// The string below is the WIRE enum the model emits under the api/read.js prompt
+// contract, pinned by READER_PROMPT_VERSION. It is not a display label and must not
+// be renamed here; the rendered label for this class is "Omission".
 export const TARGETED_PROMPT_SOURCE_TYPE = "candidate missing item";
 
 // The Act 2 offer sentence, verbatim from design §1. One sentence, defined once,
@@ -72,22 +77,28 @@ function normalizeLineEndings(s) {
   return String(s).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
-// ── The non-leading probe (paired_method_version 1.1) ─────────────────────────
-// The targeted prompt is a fixed, standalone question. It names none of the
-// measured findings on purpose: a probe that listed the omissions would hand the
-// model the answer, and the second read would prove nothing. The whole test is
-// whether a plain, un-tipped re-ask surfaces what the first pass left out. Because
-// any question shapes an answer, the one shape is fixed and disclosed rather than
-// tuned per run — deterministic by definition, with no model call, no randomness,
-// and no time or environment input.
+// ── The fixed completeness probe (paired_method_version 1.1) ──────────────────
+// The targeted prompt is the fixed completeness probe at the recorded
+// inspection_method_version. Its text is a property of that version, not of the
+// Reader in general: it asks for notices, deadlines, safeguards, and exceptions, so
+// it is a completeness probe over a specific shape of answer, not a neutral,
+// domain-general, or content-independent question. An earlier revision of this
+// comment called it "non-leading"; a calibration finding retracted that framing and
+// it must not return.
 //
-// P1's candidate missing items are no longer folded into the text; they only gate
+// It names none of the measured findings on purpose: a probe that listed the
+// Omissions would hand the model the answer, and the second read would prove
+// nothing. Because any question shapes an answer, the one shape is fixed and
+// disclosed rather than tuned per run — deterministic by definition, with no model
+// call, no randomness, and no time or environment input.
+//
+// P1's Omission findings are no longer folded into the text; they only gate
 // whether the offer renders at all (see the eligibility check below).
 export const TARGETED_PROMPT_TEXT =
   "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.";
 
 // Returns { eligible, targeted_prompt }:
-//   eligible === false  -> the open answer surfaced no candidate missing item, so
+//   eligible === false  -> the open answer surfaced no Omission, so
 //                          there is nothing to probe; targeted_prompt is "" and the
 //                          offer never renders. Absence never degrades Act 1.
 //   eligible === true   -> targeted_prompt is the line-ending-normalized, trimmed
@@ -117,6 +128,11 @@ export const LOOP_STATE_STILL_MISSING = "still_missing";
 export const LOOP_STATE_NOT_CLEAR = "not_clear_yet";
 export const LOOP_STATES = [LOOP_STATE_GAP_REVEALED, LOOP_STATE_STILL_MISSING, LOOP_STATE_NOT_CLEAR];
 
+// LEGACY, SCORE-DERIVED. Kept byte-identical for records written before the canonical
+// output model, and for tests that pin its behavior. It reads gap_estimate, which is a
+// score, so no current-run surface may call it. Current surfaces call
+// suggestLoopStateFromCanonical below.
+//
 // Deterministic suggestion from the paired measurement:
 //   gap_estimate 0             -> STILL MISSING: the direct ask surfaced nothing new.
 //   gap_estimate >=1, the change is a clean surfacing (Omission/Deflection at least
@@ -130,6 +146,31 @@ export function suggestLoopState({ gap_estimate, signal_counts } = {}) {
   const c = signal_counts || {};
   const surfaced = (Number(c.Omission) || 0) + (Number(c.Deflection) || 0);
   const reframed = Number(c["Framing Drift"]) || 0;
+  return reframed > surfaced ? LOOP_STATE_NOT_CLEAR : LOOP_STATE_GAP_REVEALED;
+}
+
+// The current-run suggestion. Same three states, same shape of judgment, but the
+// input is the canonical probe_surfaced_differences count rather than a score:
+//   value 0                    -> STILL MISSING: the probe surfaced no difference the
+//                                 Reader could resolve to a span in the second answer.
+//   value >=1, Omission + Deflection at least as common as Framing Drift
+//                              -> GAP REVEALED.
+//   value >=1, Framing Drift dominates
+//                              -> NOT CLEAR YET: the answers moved, but not into a
+//                                 clean gap.
+// It reads the count block the canonical result already computed (value +
+// class_breakdown), so the suggestion and the rendered count can never disagree about
+// how many differences survived the surfaced predicate. A missing or malformed count
+// block reads as zero surfaced differences, which is the safest of the three states:
+// it claims nothing was surfaced rather than claiming a gap. The person's own
+// correction still overrides it; the suggestion only sets the default.
+export function suggestLoopStateFromCanonical(canonical) {
+  const c = canonical && canonical.counts && canonical.counts.probe_surfaced_differences;
+  const value = c && Number.isFinite(Number(c.value)) ? Number(c.value) : 0;
+  if (value <= 0) return LOOP_STATE_STILL_MISSING;
+  const b = (c && c.class_breakdown) || {};
+  const surfaced = (Number(b.omission) || 0) + (Number(b.deflection) || 0);
+  const reframed = Number(b.framing_drift) || 0;
   return reframed > surfaced ? LOOP_STATE_NOT_CLEAR : LOOP_STATE_GAP_REVEALED;
 }
 
@@ -177,7 +218,7 @@ export const LOOP_UNMATCHED_HEADLINE = "The targeted answer included information
 // gap that unmatched conditions cannot establish.
 //
 // STILL_MISSING is deliberately absent, and NOT because it is exempt from the rule.
-// It fires only at gap_estimate 0, where the analysis returns no delta items: it
+// It fires only when no difference survived the surfaced predicate: it
 // asserts no gap and names no construct, so there is nothing to retract. The
 // replacement headline claims a difference that run did not find, and substituting
 // it would print "the targeted answer included information the open answer did not"
@@ -311,8 +352,8 @@ export function normalizeInitiator(initiator) {
 }
 
 // Build the schema PairRun (mode = paired; the object's mere presence IS the paired
-// mode marker per schema §1). The targeted prompt is the v1.1-style non-leading
-// probe; the two artifact ids point at the stored-verbatim answers; the capture
+// mode marker per schema §1). The targeted prompt is the fixed completeness probe at
+// the recorded inspection_method_version; the two artifact ids point at the stored-verbatim answers; the capture
 // block carries the conservative conditions_matched flag. v0.3.1 adds run
 // provenance: initiator (always present, normalized) and targeted_prompt_hash (the
 // lowercase-hex sha256 of the verbatim targeted_prompt, threaded from the receipt

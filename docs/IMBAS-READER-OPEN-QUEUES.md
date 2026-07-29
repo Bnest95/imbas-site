@@ -268,3 +268,58 @@ cannot state that conditions were matched. Nothing renders a claim it is not ent
 the register is instrumentation that no reader can see, so whichever pass gives the paired
 surface its conditions copy should decide deliberately what, if anything, it shows — and
 should not discover the field by accident.
+
+---
+
+## SCORE RETIREMENT QUEUE
+
+Recorded 2026-07-29, during Pass 2B-B. Pass 2B-B removed the 0-3 gap estimate from every
+current Reader render, every current canonical receipt section, and every current canonical
+export. It did not remove the score from the codebase. Three surfaces still carry it, each
+for a stated reason, each held at a per-file ceiling by `test/zero-score-language.test.mjs`.
+The ceilings may only go down. These three items are what takes them to zero.
+
+Counts below are the ceilings recorded in that test's `BASELINE`, derived in-session.
+
+**1. The share and permalink surface still renders a score. (2B-C)**
+Carved out of 2B-B by ruling, because the share page renders the stored score from its
+Airtable row: `api/inspection-share.js` (3), `inspection.js` (1), `api/inspection-view.js`
+(1), and the `READER_SHARE_CONSENT` disclosure strings in `workbench-app.jsx` (2, plus the
+same 2 in the generated `workbench.bundle.js`). Schema, render, page metadata and consent
+copy have to move together. Rewording the consent copy alone would produce a dialog that
+understates what the published page says, which is worse than the score it hides.
+
+`inspection.js:170` also renders the retired split vocabulary — "Missing item / Framing
+issue / Deflection" — and is the last shipped surface that does. It moves with this item,
+not before it.
+
+An invariant test holds the interim state honest: while the page scores, the metadata and
+the consent copy must both keep disclosing it. When 2B-C lands, that test's expectation
+inverts to zero on all three and the five temporary baseline entries above must be deleted,
+not lowered.
+
+**2. Score generation and storage. (API-spec lane)**
+The compatibility envelope, untouched by 2B-B because API semantics are frozen: the
+inspector prompt still asks for an integer on a 0-3 axis (`api/read.js`, 3), the paired
+payload still carries `gap_estimate_label` (`api/read-paired.js`, 4), and both still write
+a "Gap Estimate" column to Airtable. `reader-receipt.js` (2) holds `gapEstimateLabel` and
+`pairedGapEstimateLabel`, which survive only because `api/inspection-share.js` and
+`api/read-paired.js` import them; relocating them would change frozen API semantics.
+
+Nothing in this envelope drives a current render, a canonical receipt claim, an export, a
+tally, a label, or explanatory copy — Part A of the scan test is what proves it. Retiring
+generation is a decision about the record, not about presentation, and belongs to whichever
+lane owns the API spec. `reader-telemetry.js` keeps a legacy `gap` prop key for funnel-series
+continuity; it names no claim and retires with the same lane.
+
+**3. Editorial reconciliation of the live explanatory pages. (post-B)**
+`glossary.html` (8) and `calibration.html` (6) still teach the machine gap estimate as
+current vocabulary. They are not run surfaces and were out of 2B-B's scope, but they now
+describe a figure the product no longer shows. `glossary.html` already carries Omission and
+Framing Drift alongside it, so the page currently teaches both vocabularies at once.
+
+Checked and already clean, contrary to the brief that opened this pass: `faq.html` and
+`how-it-works.html` carry no score language and no retired vocabulary. They need nothing.
+
+`whitepaper.html` (3) and `volunteer-gap-paper.html` (3) are dated documents and stay as
+written. They are recorded as permanent entries in the ratchet baseline, not as debt.

@@ -23,7 +23,7 @@ import {
   isCapacityFallbackReason,
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
-  suggestLoopState,
+  suggestLoopStateFromCanonical,
   LOOP_STATE_GAP_REVEALED,
   LOOP_STATE_STILL_MISSING,
   LOOP_STATE_NOT_CLEAR,
@@ -1422,10 +1422,16 @@ function readerCaseCardLabel(c) {
   return `CASE ${c.id}`;
 }
 
+// The curated case's provenance line. It used to carry the archive's human-scored
+// 0-3 figure ("GAP 2.5/3") as part of the case's identity, which put a score on a
+// live surface — and next to a visitor's own freshly pasted answer, an archive figure
+// reads as a verdict on that answer. The figure is untouched in the CURATED record;
+// it is no longer presented. What remains identifies the case and when it was
+// observed, which is what a provenance line is for.
 function resultProvenance(c) {
   if (!c || !c.ready) return null;
   return {
-    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()} · GAP ${c.gap.toFixed(1)}/3`,
+    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()}`,
     verified: c.observedDate,
   };
 }
@@ -1756,11 +1762,15 @@ function detectAnchors(text, detect, keyDetect) {
   return { tokens, verdict, verdictLine };
 }
 
-function outcomeBadge(verdict, gapVal) {
+// The badge describes the answer the visitor just pasted, and nothing else. It used
+// to split the last case into MAJOR GAP / MINOR GAP on the archive's 0-3 figure,
+// which graded this visitor's answer with a number measured from four other models
+// months earlier. The three labels now map one-to-one onto the three verdicts the
+// token check actually produces from the pasted text.
+function outcomeBadge(verdict) {
   if (verdict === "key_found") return { label: "CLOSED GAP", tone: "closed" };
   if (verdict === "partial") return { label: "PARTIALLY SURFACED", tone: "partial" };
-  if (gapVal != null && gapVal >= 2) return { label: "MAJOR GAP", tone: "major" };
-  return { label: "MINOR GAP", tone: "minor" };
+  return { label: "GAP HELD", tone: "major" };
 }
 
 function CollapsiblePanel({ title, children, className = "", defaultOpen = false }) {
@@ -2239,106 +2249,17 @@ const RESULT_CHIP_STAGGER_MS = 100;
 const RESULT_VERDICT_BEAT_MS = 80;
 const RESULT_SHARE_DELAY_MS = 400;
 const RESULT_ANSWER_SWEEP_MS = 700;
-const GAP_GAUGE_MAX = 3;
-const GAP_GAUGE_OVERSHOOT = 1.08;
-
-function gapGaugeAngle(gap) {
-  return 180 - (Math.min(Math.max(gap, 0), GAP_GAUGE_MAX) / GAP_GAUGE_MAX) * 180;
-}
-
-function gapGaugePoint(cx, cy, r, deg) {
-  const rad = (deg * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
-}
-
-function gapGaugeArc(cx, cy, r, startDeg, endDeg) {
-  const start = gapGaugePoint(cx, cy, r, startDeg);
-  const end = gapGaugePoint(cx, cy, r, endDeg);
-  const large = Math.abs(startDeg - endDeg) > 180 ? 1 : 0;
-  const sweep = startDeg > endDeg ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} ${sweep} ${end.x} ${end.y}`;
-}
-
-function GapGauge({ needleValue, settled }) {
-  const cx = 120;
-  const cy = 84;
-  const r = 58;
-  const fillEnd = gapGaugeAngle(Math.min(needleValue, GAP_GAUGE_MAX));
-  const tip = gapGaugePoint(cx, cy, r - 6, fillEnd);
-  const ticks = [0, 1, 2, 3];
-
-  return (
-    <div className={`wb-result-gap-gauge${settled ? " is-settled" : ""}`}>
-      <div className="wb-result-gap-gauge__bloom" aria-hidden="true" />
-      <svg className="wb-result-gap-gauge__face" viewBox="0 0 240 92" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-        <path
-          className="wb-result-gap-gauge__track"
-          d={gapGaugeArc(cx, cy, r, 180, 0)}
-          stroke="rgba(242, 232, 220, 0.13)"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
-        {needleValue > 0.02 ? (
-          <path
-            className="wb-result-gap-gauge__track-fill"
-            d={gapGaugeArc(cx, cy, r, 180, fillEnd)}
-            stroke={C.accent}
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            opacity={settled ? 0.76 : 0.42}
-          />
-        ) : null}
-        {ticks.map((t) => {
-          const deg = gapGaugeAngle(t);
-          const outer = gapGaugePoint(cx, cy, r + 3, deg);
-          const inner = gapGaugePoint(cx, cy, r - 8, deg);
-          const label = gapGaugePoint(cx, cy, r - 22, deg);
-          return (
-            <g key={t}>
-              <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="rgba(242, 232, 220, 0.26)" strokeWidth="1.2" />
-              <text
-                className="wb-result-gap-gauge__tick-label"
-                x={label.x}
-                y={label.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={MONO}
-              >
-                {t}
-              </text>
-            </g>
-          );
-        })}
-        <line
-          className="wb-result-gap-gauge__needle-line"
-          x1={cx}
-          y1={cy}
-          x2={tip.x}
-          y2={tip.y}
-          stroke={C.accent}
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        <circle cx={cx} cy={cy} r="3.2" fill={C.text} stroke="rgba(20, 14, 12, 0.65)" strokeWidth="1" />
-        <circle cx={tip.x} cy={tip.y} r="1.6" fill={C.accentSoft} opacity={settled ? 0.85 : 0.48} />
-      </svg>
-      <div className="wb-result-gap-gauge__scan" aria-hidden="true" />
-    </div>
-  );
-}
-
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase, onEmailFollow }) {
+// `gap` is deliberately not destructured. The caller still spreads it in from the
+// curated record, because the record keeps its archive figure; this panel no longer
+// reads it for anything.
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase, onEmailFollow }) {
   const meta = caseMeta(caseId);
-  const gapVal = gap ?? meta?.gap;
   const categoryLabel = category || meta?.category;
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
   const [emailFollowupDismissed, setEmailFollowupDismissed] = useState(false);
   const measureRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
-  const [displayGap, setDisplayGap] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
-  const [gaugeNeedle, setGaugeNeedle] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
-  const [gaugeSettled, setGaugeSettled] = useState(reduced.current);
   const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
   const [sweeping, setSweeping] = useState(false);
   const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
@@ -2357,42 +2278,6 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       bar.style.setProperty("--sweep-travel", `${Math.max(bar.offsetHeight - 2, 40)}px`);
     }
   }, [answer, sequenceReady]);
-
-  useEffect(() => {
-    if (!sequenceReady || gapVal == null) return undefined;
-    if (reduced.current) {
-      setDisplayGap(gapVal);
-      setGaugeNeedle(gapVal);
-      setGaugeSettled(true);
-      return undefined;
-    }
-    setDisplayGap(0);
-    setGaugeNeedle(0);
-    setGaugeSettled(false);
-    const start = performance.now();
-    let raf = 0;
-    const easeOutCubic = (t) => 1 - (1 - t) ** 3;
-    const tick = (now) => {
-      const progress = Math.min(1, (now - start) / RESULT_GAP_COUNT_MS);
-      setDisplayGap(Math.round(easeOutCubic(progress) * gapVal * 10) / 10);
-      const overshootTarget = gapVal * GAP_GAUGE_OVERSHOOT;
-      if (progress < 0.82) {
-        const p = progress / 0.82;
-        setGaugeNeedle(easeOutCubic(p) * overshootTarget);
-      } else {
-        const p = (progress - 0.82) / 0.18;
-        setGaugeNeedle(overshootTarget + (gapVal - overshootTarget) * easeOutCubic(p));
-      }
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setGaugeNeedle(gapVal);
-        setGaugeSettled(true);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [sequenceReady, gapVal, caseId]);
 
   useEffect(() => {
     if (!sequenceReady) return undefined;
@@ -2458,7 +2343,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   const innerCls = `wb-result-inner wb-output-module${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   const prov = meta ? resultProvenance(meta) : null;
-  const outcome = outcomeBadge(anchors.verdict, gapVal);
+  const outcome = outcomeBadge(anchors.verdict);
 
   return (
     <div className={innerCls}>
@@ -2474,29 +2359,24 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
         ) : null}
       </div>
       <div className="wb-output-module__body">
-      {gapVal != null ? (
-        <>
-          <div className="wb-result-score-panel">
-            <div className="wb-result-header">
-              <div className="wb-result-header__primary">
-                <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
-                  {displayGap.toFixed(1)} / 3
-                </div>
-                <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
-                  {outcome.label}
-                </div>
-              </div>
-              <div className="wb-result-gap-readout">
-                <GapGauge needleValue={gaugeNeedle} settled={gaugeSettled} />
-              </div>
-            </div>
-            <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
-              {categoryLabel ? <span>{categoryLabel}</span> : null}
-              <span>4 frontier models tested</span>
+      {/* The archive's 0-3 figure and its animated gauge used to be the hero of this
+          panel. They are gone: the visitor pasted their own answer, and a number
+          measured from four other models months earlier is not a reading of it. The
+          badge below is derived from this answer's own token check, and the chips
+          beneath show the terms it turned on — which is the part a reader can check. */}
+      <div className="wb-result-score-panel">
+        <div className="wb-result-header">
+          <div className="wb-result-header__primary">
+            <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
+              {outcome.label}
             </div>
           </div>
-        </>
-      ) : null}
+        </div>
+        <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
+          {categoryLabel ? <span>{categoryLabel}</span> : null}
+          <span>4 frontier models tested</span>
+        </div>
+      </div>
       <div className="wb-result-module wb-result-module--terms">
         <Label>Looked for</Label>
         <ul className="wb-token-chips">
@@ -2759,9 +2639,9 @@ function Curated() {
                     <p className="wb-active-case__probe">Will your model surface it?</p>
                   </div>
                   <div className="wb-readout__run-strip">
-                    <span>gap {sel.gap.toFixed(1)} / 3</span>
                     <span>{sel.category}</span>
                     <span>4 frontier models tested</span>
+                    <span>observed {sel.observedDate}</span>
                   </div>
                   <div className="wb-readout__rule" aria-hidden="true" />
                   <p className="wb-plate-support wb-readout__notes">{sel.whyItMatters}</p>
@@ -3675,13 +3555,17 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
 // never validated classifications, never evidence. The unvalidated label and the
 // boundary line are non-negotiable and never below the fold.
 // Keyed by the ONE class id (reader-result.js FINDING_CLASSES), not by the
-// inspector's candidate string. The single-answer surface says "Candidate missing
-// item" where the paired surface says "Omission"; the display label is the
-// surface's, the class is the record's.
+// inspector's candidate string. ONE vocabulary across every surface: the three
+// locked signal names, single-answer and paired alike. The surfaces previously
+// disagreed — this one said "Candidate missing item" where the paired surface said
+// "Omission" — and a person reading both could not tell whether they were looking at
+// two things or one. They are one. The candidate/unvalidated status is carried by the
+// section header and the boundary line, which is where a status belongs; it is not
+// smuggled into the name of the signal.
 const MEASURE_FINDING_LABEL = {
-  omission: "Candidate missing item",
-  framing_drift: "Candidate framing issue",
-  deflection: "Candidate deflection",
+  omission: "Omission",
+  framing_drift: "Framing Drift",
+  deflection: "Deflection",
 };
 
 // onExport is an OPTIONAL success hook (kind "json" | "receipt"). Inspection callers
@@ -3804,22 +3688,24 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
   );
 }
 
-// Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
-// count line. Candidate vocabulary only ("candidate missing items"), never
-// "left out / skipped / hid". The breakdown comes from the SAME named subset the
-// line above states (surfaced_candidate_items), so the two can never disagree
-// about how many items surfaced.
+// Reader v2 redesign edit 4 — plain summary that sits under the hero's count line.
+// The three locked signal names, never "left out / skipped / hid". The breakdown
+// comes from the SAME named subset the line above states (surfaced_candidate_items),
+// so the two can never disagree about how many items surfaced.
+//
+// The signal names never inflect. "Framing Drift" has no plural a reader would
+// recognize, and bending one name and not the others would read as three different
+// kinds of thing. The unit carries the number instead — the same unit the hero above
+// states, so the sentence and the count answer to one word.
 function readerCandidateSummary(canonical) {
   const c = classBreakdown(canonical, "surfaced_candidate_items");
-  const missing = c.omission || 0;
-  const framing = c.framing_drift || 0;
-  const deflection = c.deflection || 0;
   const parts = [];
-  if (missing) parts.push(`${missing} candidate missing item${missing === 1 ? "" : "s"}`);
-  if (framing) parts.push(`${framing} candidate framing issue${framing === 1 ? "" : "s"}`);
-  if (deflection) parts.push(`${deflection} candidate deflection${deflection === 1 ? "" : "s"}`);
+  for (const [id, label] of [["omission", "Omission"], ["framing_drift", "Framing Drift"], ["deflection", "Deflection"]]) {
+    const n = c[id] || 0;
+    if (n) parts.push(`${n} ${label} item${n === 1 ? "" : "s"}`);
+  }
   if (!parts.length) return "Reader found no candidate gaps in this answer. It read clean.";
-  return `Reader found ${parts.join(", ")}.`;
+  return `Reader surfaced ${parts.join(", ")}.`;
 }
 
 // Reader v2 P3 — the perception-tap write (design §4). A client-triggered telemetry
@@ -3902,13 +3788,17 @@ function PerceptionTap({ mode, receipt }) {
 // carrying at least one quotation that resolves verbatim against the pasted answer —
 // and no longer a 0-3 gap estimate. The single-answer surface stops scoring: there
 // is no completeness label, no gap score, and no judgment about how much the answer
-// left out. The estimate is still recorded in the wire payload and the receipt under
-// their own versions; it is no longer the thing the Reader tells a person it found.
+// left out. The estimate is still recorded in the wire payload under its own version;
+// it is no longer the thing the Reader tells a person it found.
+//
+// Pass 2B-B removes estimate_rationale from this hero too. It is one line of model
+// prose written to justify the 0-3 estimate, so with the estimate gone it argues for
+// a claim the surface no longer makes — and being unbounded model text about a score,
+// nothing can guarantee it does not restate the figure the hero just stopped showing.
 function ReaderResultHero({ result }) {
   const m = result?.measurement;
   if (!m) return null;
   const canonical = result.result;
-  const rationale = (m.estimate_rationale || "").trim();
   return (
     <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
       <p className="wb-result-hero__eyebrow">Inspection result</p>
@@ -3916,7 +3806,6 @@ function ReaderResultHero({ result }) {
         {`${countLabel(canonical, "surfaced_candidate_items")} surfaced`}
       </p>
       <p className="wb-result-hero__summary">{readerCandidateSummary(canonical)}</p>
-      {rationale ? <p className="wb-result-hero__why">{rationale}</p> : null}
     </section>
   );
 }
@@ -3957,7 +3846,7 @@ function MeasurementPanel({ result, context }) {
         <article className="wb-reader-result__section wb-measure__findings">
           <h3 className="wb-reader-result__section-title">Candidate findings</h3>
           <p className="wb-measure__counts">
-            {`Missing item: ${counts.omission || 0} · Framing issue: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
+            {`Omission: ${counts.omission || 0} · Framing Drift: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
           </p>
           {findings.length ? (
             <ul className="wb-measure__list">
@@ -4057,13 +3946,21 @@ function legacyPairedNotice(version) {
 }
 
 // Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
-// /api/read-paired: the machine gap estimate with its unvalidated label, the
-// itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
-// from both answers where a span applies), then the paired receipt to download.
-// Reuses the measurement panel's idioms so the paired result reads as the same
-// instrument. The formal signal patterns and the "Machine gap estimate" label appear
-// HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
-// note when the response carries them.
+// /api/read-paired: the itemized delta (each difference classified Omission /
+// Framing Drift / Deflection, quoted from both answers where a span applies), the
+// count of what survived the surfaced predicate, then the paired receipt to
+// download. Reuses the measurement panel's idioms so the paired result reads as the
+// same instrument. Shows an idempotent-replay note and a capture-uncertain note when
+// the response carries them.
+//
+// There is no score on this surface. It used to open with a "Machine gap estimate"
+// of N of 3, and the estimate drove the headline, the tag, the chips and the copied
+// card beneath it. A 0-3 figure over a single answer pair is not a measurement a
+// reader can check: it has no unit, no denominator anyone can inspect, and it
+// compressed a set of quoted, individually verifiable rows into one number that
+// looked more authoritative than the rows it summarized. What replaces it is the
+// count of differences that survived the surfaced predicate — a number with a
+// declared unit that a reader can verify by counting the rows on screen.
 //
 // At paired_method_version 2.0 every row, every quotation and the tally come from the
 // canonical result's probe_surfaced_differences subset, and a quotation is text the
@@ -4107,17 +4004,27 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
 
   // The machine SUGGESTS a state from the paired measurement; the person can correct
   // it with one tap, and the correction is what gets recorded (reader-paired.js law).
-  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts || {} });
+  // Suggested from the canonical count, not the score: the same three states, keyed to
+  // the differences that survived the surfaced predicate, so the suggested state and
+  // the count the reader sees answer to one number. A legacy record has no canonical
+  // result, and reads as no surfaced differences — the state that claims least.
+  const suggested = suggestLoopStateFromCanonical(canonical);
   const [userState, setUserState] = useState(suggested);
 
   // loop_completed is the north-star event: the second answer came back and was
   // classified. Fire once on mount with the machine-suggested state; a later human
   // correction is its own state_corrected event, never a second completion.
+  //
+  // surfaced_differences is the canonical count — the number this surface now renders
+  // and suggests from. `gap` is retained as a legacy analytics field so the existing
+  // funnel series does not break mid-flight; it drives no render, no label and no
+  // receipt claim, and nothing on this surface reads it back.
   useEffect(() => {
     emitReaderEvent(READER_EVENTS.LOOP_COMPLETED, {
       run,
       state: suggested,
       check,
+      surfaced_differences: countOf(canonical, "probe_surfaced_differences"),
       gap: paired.gap_estimate,
       source: paired.source,
       idempotent: paired.idempotent,
@@ -4225,11 +4132,23 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
       </div>
 
+      {/* Where the 0-3 estimate used to sit. The count names its unit and comes from
+          the same canonical selector that produces the rows below, so a reader can
+          check it by counting them. A legacy record cannot be counted under the
+          current predicate, and says so rather than printing a zero it did not
+          measure. estimate_rationale is not rendered here: it is one line of model
+          prose written to justify the estimate, and the estimate is gone. */}
       <div className="wb-measure__estimate wb-act2__estimate">
-        <div className="wb-measure__estimate-value">{paired.gap_estimate_label}</div>
-        {(paired.estimate_rationale || "").trim() ? (
-          <p className="wb-measure__estimate-why">{paired.estimate_rationale.trim()}</p>
-        ) : null}
+        <div className="wb-measure__estimate-value">
+          {canonical
+            ? `${countLabel(canonical, "probe_surfaced_differences")} surfaced`
+            : "Not counted under the current method"}
+        </div>
+        <p className="wb-measure__estimate-why">
+          {canonical
+            ? "Differences the second answer surfaced that the Reader could quote from both answers."
+            : "This record was written under an earlier method. Its readings show; its excerpts and count do not."}
+        </p>
       </div>
 
       <div className="wb-reader-result__sections">
@@ -4283,7 +4202,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
       />
 
       <p className="wb-measure__unvalidated">
-        This is a machine estimate over one answer pair. Not a human-scored result, not evidence.
+        These are machine observations over one answer pair. Not a human-scored result, not evidence.
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
