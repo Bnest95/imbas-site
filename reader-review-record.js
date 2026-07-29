@@ -61,11 +61,55 @@ export const METHOD_NOTE =
 // User-facing strings the export affordance adds to the Workbench. Linted by the
 // AT-5 vocab test exactly like reader-checks.js's CHECK_UI: pointer register only.
 export const REVIEW_RECORD_UI = {
-  action_label: "Download review record",
-  downloaded_label: "Downloaded",
-  action_hint: "A record of what was examined and resolved, as JSON.",
-  download_error: "Could not download the review record",
+  action_label: "Export Review Record",
+  downloaded_label: "Exported",
+  download_error: "Could not export the review record",
 };
+
+// The support line under the export control: what this particular file will hold,
+// listed from the fields assembleReviewRecord actually emits for THIS run. It is
+// generated, never fixed copy, because a fixed line would advertise a paired capture
+// on a single-answer record and checks on a record that carries none.
+//
+// Three rules it exists to keep:
+//   - The capture block is named only when a pair rides along, and it is named as
+//     conditions the person reported. The record holds no authoritative
+//     matched-conditions determination and must not read as though it does.
+//   - The findings sentence states that every finding is unreviewed rather than
+//     offering a verification status. A live record carries UNREVIEWED findings and
+//     nothing else, so "status" would promise a distinction that is not in the file.
+//   - Nothing is listed that the assembler does not write. The clause set below and
+//     the contents object are checked against each other by test.
+function listSentence(parts) {
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
+}
+
+export function describeReviewRecordContents({ result, pair = null } = {}) {
+  const receipt = (result && result.receipt) || {};
+  const openRun = receipt.open_run || {};
+  const register = (result && result.checks) || {};
+  const canonical = (result && result.result) || openRun.canonical || null;
+  const paired = !!(pair && typeof pair === "object" && typeof pair.targeted_answer === "string");
+  const checkCount = Array.isArray(register.checks) ? register.checks.length : 0;
+  const recorded = canonical && canonical.counts && canonical.counts.recorded_findings;
+  const findingCount = recorded ? recorded.value : 0;
+  // The count names its own unit from the canonical block, so this line cannot
+  // re-pluralize its way out of step with the collection it describes.
+  const findingUnit = recorded ? (findingCount === 1 ? recorded.unit_one : recorded.unit_many) : "";
+
+  const parts = [paired ? "both answers as pasted" : "the answer as pasted"];
+  if (findingCount) parts.push(`${findingCount} recorded ${findingUnit}`);
+  if (checkCount) parts.push(`${checkCount} ${checkCount === 1 ? "check" : "checks"} with the marks you set`);
+  if (paired) parts.push("the capture conditions you reported");
+  parts.push("the run's provenance");
+
+  const sentences = [`A JSON file holding ${listSentence(parts)}.`];
+  if (findingCount) sentences.push(`Every ${recorded.unit_one} in it is unreviewed.`);
+  return sentences.join(" ");
+}
 
 // ── review-record.c14n.v1 canonicalization ────────────────────────────────────
 // The schema's timestamp-typed fields. c14n.v1 normalizes a string value to RFC

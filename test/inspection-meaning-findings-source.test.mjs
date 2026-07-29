@@ -1,5 +1,6 @@
 // Guardrail: the single-mode Inspection Meaning mount in workbench-app.jsx must count the
-// distinct items the reader can actually SEE.
+// distinct items the reader can actually SEE — and, since Pass 2B-B, must name only the
+// next steps that actually rendered.
 //
 // The bug this guards (seen in production): the mount passed `checks.cards` ALONE. The
 // both-ends-quotable filter can legitimately drop every card, so a run with two measurement
@@ -33,6 +34,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import {
+  EXPLAIN_AFFORDANCE_KEYS,
   EXPLAIN_PANEL_UI,
   EXPLAIN_STATE_S1,
   EXPLAIN_STATE_S2,
@@ -48,18 +50,18 @@ const SRC_PATH =
   fileURLToPath(new URL("../workbench-app.jsx", import.meta.url));
 const SRC = readFileSync(SRC_PATH, "utf8");
 
-// Extract the JS expression from the `findings={...}` attribute on the InspectionMeaningPanel
-// mount identified by its pairRuns signature (single mode → `pairRuns={[]}`, paired mode →
-// `pairRuns={[pair]}`; both are unique in the source). Brace-matches from the first `{` after
-// `findings=` to its partner so a multi-line expression is captured whole. Assumes no `{`/`}`
-// inside string literals in the attribute — true for both mounts.
-function extractFindingsExpr(src, pairRunsSignature) {
+// Extract the JS expression from a named attribute on the InspectionMeaningPanel mount
+// identified by its pairRuns signature (single mode → `pairRuns={[]}`, paired mode →
+// `pairRuns={[pair]}`; both are unique in the source). Brace-matches from the first `{`
+// after the attribute name to its partner so a multi-line expression is captured whole.
+// Assumes no `{`/`}` inside string literals in the attribute — true for both mounts.
+function extractAttrExpr(src, pairRunsSignature, attrName) {
   const anchor = src.indexOf(pairRunsSignature);
   assert.notEqual(anchor, -1, `mount with ${pairRunsSignature} must exist`);
-  const attr = src.indexOf("findings=", anchor);
-  assert.notEqual(attr, -1, "mount must have a findings= attribute after pairRuns");
+  const attr = src.indexOf(attrName, anchor);
+  assert.notEqual(attr, -1, `mount must have a ${attrName} attribute after pairRuns`);
   const open = src.indexOf("{", attr);
-  assert.notEqual(open, -1, "findings= must be a JSX expression container");
+  assert.notEqual(open, -1, `${attrName} must be a JSX expression container`);
   let depth = 0;
   let end = -1;
   for (let i = open; i < src.length; i++) {
@@ -69,9 +71,12 @@ function extractFindingsExpr(src, pairRunsSignature) {
       break;
     }
   }
-  assert.notEqual(end, -1, "findings= expression container must be brace-balanced");
+  assert.notEqual(end, -1, `${attrName} expression container must be brace-balanced`);
   return src.slice(open + 1, end).trim();
 }
+
+const extractFindingsExpr = (src, pairRunsSignature) =>
+  extractAttrExpr(src, pairRunsSignature, "findings=");
 
 const SINGLE_EXPR = extractFindingsExpr(SRC, "pairRuns={[]}");
 // eslint-disable-next-line no-new-func -- the guard's whole point is to run the real call-site expression.
@@ -166,4 +171,52 @@ test("6) an unresolved quotation is recorded and cannot raise the count", () => 
 test("7) every finding unresolved → S1, because nothing can be shown", () => {
   const sel = selectFromWiring(singleResult({ findings: 0, cards: 0, unresolved: 2 }));
   assert.equal(sel.state_id, EXPLAIN_STATE_S1, "no quotable finding → the interpretation must not claim items");
+});
+
+// ── The affordance flags (Pass 2B-B item 4) ──────────────────────────────────────
+// The panel's What-you-can-do-next line is gated on flags the mount supplies, so the
+// flags are only as honest as the expressions behind them. The panel test proves the
+// gate works; these prove the mount wires it to the real render conditions. Extract the
+// same way: read the attribute out of the source rather than re-describing it here.
+
+const SINGLE_AVAILABLE = extractAttrExpr(SRC, "pairRuns={[]}", "available=");
+const PAIRED_AVAILABLE = extractAttrExpr(SRC, "pairRuns={[pair]}", "available=");
+
+test("8) the single mount gates the Check Register clauses on the same expression that mounts the panel", () => {
+  // One named const decides whether CheckRegisterPanel renders. The register carries the
+  // cards, the copy-the-question control AND the Review Record export, so both flags must
+  // read that one const — not a re-derived copy that could drift out of step with it.
+  assert.match(
+    SINGLE_AVAILABLE,
+    /checks:\s*checkRegisterVisible/,
+    "checks must be gated on checkRegisterVisible",
+  );
+  assert.match(
+    SINGLE_AVAILABLE,
+    /reviewRecord:\s*checkRegisterVisible/,
+    "the Review Record export lives inside the register, so it shares the register's gate",
+  );
+  // And that same identifier — not a duplicated expression — mounts the panel itself.
+  assert.match(
+    SRC,
+    /\{checkRegisterVisible \? \(\s*<div className="wb-reader-v2__follow wb-reader-v2__follow--checks">/,
+    "CheckRegisterPanel must mount on checkRegisterVisible",
+  );
+  assert.equal(
+    (SRC.match(/const checkRegisterVisible = /g) || []).length,
+    1,
+    "checkRegisterVisible must be defined exactly once",
+  );
+});
+
+test("9) the single mount declares every affordance key, so none defaults to silence by accident", () => {
+  for (const key of EXPLAIN_AFFORDANCE_KEYS) {
+    assert.match(SINGLE_AVAILABLE, new RegExp(`\\b${key}\\s*:`), `single mount must declare ${key}`);
+    assert.match(PAIRED_AVAILABLE, new RegExp(`\\b${key}\\s*:`), `paired mount must declare ${key}`);
+  }
+});
+
+test("10) the paired mount claims no checks and no follow-up, because a pair renders neither", () => {
+  assert.match(PAIRED_AVAILABLE, /checks:\s*false/, "a paired inspection produces a delta, never checks");
+  assert.match(PAIRED_AVAILABLE, /followUp:\s*false/, "the two-question test offer is upstream of the pair");
 });

@@ -182,6 +182,20 @@ export const LOOP_PANEL_SECOND_LABEL = "What it told you when you asked";
 export const LOOP_DIDNT_COME_UP = "Didn't come up.";
 export const LOOP_CONDITIONS_LINE = "Your session, your conditions — not the lab's.";
 
+// The one line that closes a paired result, rendered ONLY when at least one paired
+// finding survived the surfacing contract. It says what the pair established and
+// stops there.
+//
+// The second sentence is the whole point of the line. A person who has just watched
+// a direct question pull material out of an answer will reach for "so now I have it
+// all", and the pair cannot support that: it measured one probe against one answer,
+// so it can say material was absent and nothing at all about what is still absent.
+// "fuller picture, not a full one" refuses the completeness read in the same breath
+// that it names the value, which is the only order that works — a claim followed by
+// a caveat somewhere below reads as a claim.
+export const PAIRED_VALUE_CLOSE =
+  "The second answer surfaced material the first did not. You now have a fuller picture, not a full one.";
+
 // chip is the one-tap correction label: the short, behavioral name the person taps
 // to declare a different reading than the machine suggested (never an auto-disposition).
 export const LOOP_STATE_COPY = {

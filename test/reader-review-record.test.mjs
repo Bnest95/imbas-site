@@ -13,7 +13,11 @@
 //   - node/browser digest parity: node:crypto over the same canonical string
 //     agrees byte-for-byte with the module's WebCrypto path.
 //   - AT-5 vocab lint over every user-facing string THIS lane adds (METHOD_NOTE,
-//     REVIEW_RECORD_UI) — pointer register only.
+//     REVIEW_RECORD_UI, the generated support line) — pointer register only.
+//   - The export support line against the record it describes: every clause names a
+//     field the assembler wrote for THAT run, the capture block is named only when a
+//     pair rides along and only as reported conditions, and a counted finding is
+//     stated as unreviewed instead of carrying a verification status.
 //   - Additivity: building a record perturbs neither its inputs nor an existing
 //     reader-receipt content_hash minted from the same open run.
 //   - No new server-side write path: no api/** file assembles or persists the
@@ -37,6 +41,7 @@ import {
   REVIEW_RECORD_HASH_ALGORITHM,
   METHOD_NOTE,
   REVIEW_RECORD_UI,
+  describeReviewRecordContents,
   canonicalTimestamp,
   serializeCanonical,
   sha256Hex,
@@ -49,6 +54,7 @@ import {
 import { buildCheckRegister } from "../reader-checks.js";
 import {
   ARTIFACT_ORIGINAL,
+  DISPOSITION,
   SHAPE_SINGLE_CANDIDATE,
   buildCanonicalResult,
   buildFinding,
@@ -721,6 +727,150 @@ test("v2: a record built from a run that carries no canonical result stays valid
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
   assert.equal(record.contents.canonical_result, null);
   assert.ok(validateReviewRecord(record).ok, "the key is additive, not required");
+});
+
+// ── The export support line ──────────────────────────────────────────────────────
+// describeReviewRecordContents writes the one sentence under the Export Review Record
+// control. Fixed copy could not do this job: it would advertise a paired capture on a
+// single-answer record and checks on a record that emitted none. So the line is
+// generated, and every test below checks it against the record it describes rather
+// than against a copy fixture — the two move together or the suite fails.
+
+// A canonical single-surface result carrying `n` findings, built through the real
+// door so counts and units come from reader-result.js rather than from this file.
+function canonicalWithFindings(n) {
+  const findings = [];
+  for (let i = 0; i < n; i++) {
+    findings.push(
+      buildFinding({
+        index: i,
+        shape: SHAPE_SINGLE_CANDIDATE,
+        class_label: "omission",
+        statement: `No source is given for the projected figure (${i}).`,
+        quotations: { [ARTIFACT_ORIGINAL]: "a projected figure of 4.2 million" },
+        artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
+        check_register: classifyRegisterOutcome({ check: null, artifactText: ANSWER, cards: [] }),
+      }),
+    );
+  }
+  return buildCanonicalResult({ surface: "single", findings });
+}
+
+test("support line: a single-answer record names one answer, never a capture block", async () => {
+  const base = buildResult().result;
+  const result = { ...base, result: canonicalWithFindings(1) };
+  const line = describeReviewRecordContents({ result });
+  const record = await buildReviewRecord({ result, createdAt: CREATED });
+
+  assert.equal(record.contents.pair_runs.length, 0, "no pair rode along");
+  assert.equal(record.contents.artifacts.length, 1);
+  assert.match(line, /the answer as pasted/);
+  assert.doesNotMatch(line, /both answers/, "one artifact, so the line must not claim two");
+  assert.doesNotMatch(line, /capture conditions/i, "an empty pair_runs array holds no capture block to name");
+});
+
+test("support line: a paired record names both answers and the capture block, as reported", async () => {
+  const base = buildResult().result;
+  const result = { ...base, result: canonicalWithFindings(1) };
+  const pair = buildPair();
+  const line = describeReviewRecordContents({ result, pair });
+  const record = await buildReviewRecord({ result, createdAt: CREATED, pair });
+
+  assert.equal(record.contents.pair_runs.length, 1);
+  assert.equal(record.contents.artifacts.length, 2);
+  assert.match(line, /both answers as pasted/);
+  assert.match(line, /the capture conditions you reported/);
+
+  // The capture block is the person's own three answers (reader-paired.js
+  // buildPairCapture, driven by PAIR_CAPTURE_UI). "you reported" is the whole claim.
+  // The record holds no authoritative matched-conditions determination, so the line
+  // must not read as one — even on this fixture, where the person's own declaration
+  // did produce conditions_matched: true.
+  assert.equal(record.contents.pair_runs[0].capture.conditions_matched, true);
+  assert.doesNotMatch(line, /matched/i, "a client declaration is not a matched-conditions determination");
+  assert.doesNotMatch(line, /verified|confirmed|observed/i);
+});
+
+test("support line: the checks clause appears exactly when the record carries checks, with its count", async () => {
+  const withChecks = { ...buildResult().result, result: canonicalWithFindings(1) };
+  const withNone = { ...buildResult({ findings: [] }).result, result: canonicalWithFindings(1) };
+
+  const recWith = await buildReviewRecord({ result: withChecks, createdAt: CREATED });
+  const recNone = await buildReviewRecord({ result: withNone, createdAt: CREATED });
+  assert.equal(recWith.contents.checks.length, 1);
+  assert.equal(recNone.contents.checks.length, 0);
+
+  assert.match(describeReviewRecordContents({ result: withChecks }), /1 check with the marks you set/);
+  assert.doesNotMatch(describeReviewRecordContents({ result: withNone }), /check/, "no checks written, none named");
+});
+
+test("support line: the findings clause equals the record's own recorded_findings count and unit", async () => {
+  for (const n of [0, 1, 3]) {
+    const result = { ...buildResult({ findings: [] }).result, result: canonicalWithFindings(n) };
+    const record = await buildReviewRecord({ result, createdAt: CREATED });
+    const recorded = record.contents.canonical_result.counts.recorded_findings;
+    const line = describeReviewRecordContents({ result });
+
+    assert.equal(recorded.value, n, `fixture built ${n}`);
+    if (n === 0) {
+      assert.doesNotMatch(line, /recorded finding/, "nothing recorded, nothing claimed");
+    } else {
+      const unit = n === 1 ? recorded.unit_one : recorded.unit_many;
+      assert.match(line, new RegExp(`${n} recorded ${unit}\\b`), `n=${n}`);
+    }
+  }
+});
+
+test("support line: a counted finding is stated as unreviewed, never as a verification status", async () => {
+  const result = { ...buildResult().result, result: canonicalWithFindings(2) };
+  const record = await buildReviewRecord({ result, createdAt: CREATED });
+  const line = describeReviewRecordContents({ result });
+
+  // What the file actually holds: every live finding is UNREVIEWED. No api path sets
+  // a disposition, so a record exported from the Reader carries this and nothing else.
+  assert.ok(
+    record.contents.canonical_result.findings.every((f) => f.disposition === DISPOSITION.UNREVIEWED),
+    "the fixture matches the live shape — nothing in a Reader export is reviewed",
+  );
+  assert.match(line, /Every finding in it is unreviewed\./);
+  assert.doesNotMatch(line, /verification status|review status|verified/i);
+});
+
+test("support line: an empty run still says what the file holds", () => {
+  const line = describeReviewRecordContents({ result: buildResult({ findings: [] }).result });
+  assert.match(line, /^A JSON file holding the answer as pasted and the run's provenance\.$/);
+});
+
+test("support line: every clause names a field the assembler wrote for that run", async () => {
+  // The clause set and the contents object, checked against each other. A clause with
+  // no field behind it is the failure this exists to catch.
+  const clauseFields = [
+    { clause: "the answer as pasted", present: (c) => c.artifacts.some((a) => a.role === "original_answer") },
+    { clause: "both answers as pasted", present: (c) => c.artifacts.some((a) => a.role === "targeted_answer") },
+    { clause: "recorded finding", present: (c) => !!(c.canonical_result && c.canonical_result.findings.length) },
+    { clause: "with the marks you set", present: (c) => c.checks.length > 0 },
+    { clause: "the capture conditions you reported", present: (c) => c.pair_runs.length > 0 },
+    { clause: "the run's provenance", present: (c) => !!c.inspector && !!c.timestamps },
+  ];
+
+  const shapes = [
+    { label: "single, no findings, no checks", result: buildResult({ findings: [] }).result, pair: null },
+    { label: "single, findings + checks", result: { ...buildResult().result, result: canonicalWithFindings(1) }, pair: null },
+    { label: "paired, findings + checks", result: { ...buildResult().result, result: canonicalWithFindings(2) }, pair: buildPair() },
+    { label: "paired, no findings, no checks", result: buildResult({ findings: [] }).result, pair: buildPair() },
+  ];
+
+  for (const shape of shapes) {
+    const line = describeReviewRecordContents({ result: shape.result, pair: shape.pair });
+    const record = await buildReviewRecord({ result: shape.result, createdAt: CREATED, pair: shape.pair });
+    for (const { clause, present } of clauseFields) {
+      if (line.includes(clause)) {
+        assert.ok(present(record.contents), `${shape.label}: the line claims "${clause}" and the record has no such field`);
+      }
+    }
+    assert.match(line, /the run's provenance/, `${shape.label}: provenance rides on every record`);
+    assert.deepEqual(lintUserFacingStrings(line), [], `${shape.label}: AT-5`);
+  }
 });
 
 test("validation: rejects paired records that break the schema PairRun shape", async () => {

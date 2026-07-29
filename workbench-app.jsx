@@ -44,6 +44,7 @@ import {
   PAIR_SAME_MODEL,
   PAIR_EDITS,
   PAIR_CAPTURE_UI,
+  PAIRED_VALUE_CLOSE,
   PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
   CHIP_UI,
@@ -56,8 +57,14 @@ import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 import { CHECK_UI } from "./reader-checks.js";
-import { buildReviewRecord, reviewRecordFilename, REVIEW_RECORD_UI } from "./reader-review-record.js";
+import {
+  buildReviewRecord,
+  reviewRecordFilename,
+  describeReviewRecordContents,
+  REVIEW_RECORD_UI,
+} from "./reader-review-record.js";
 import { selectInspectionMeaning } from "./reader-explain-panel.js";
+import { describeProvenance, describeClaimState, PROVENANCE_UI } from "./reader-provenance.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -3512,12 +3519,16 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
                   {leftOut.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               ) : (
-                <p className="wb-reader-result__empty">No major gaps flagged in this answer.</p>
+                // The prior line leaned on an unstated threshold for what counts as
+                // major and read as a clean bill. Naming the condition is the whole fix.
+                <p className="wb-reader-result__empty">The Reader flagged nothing missing under the tested conditions.</p>
               )}
             </article>
             <article className="wb-reader-result__section wb-reader-result__section--shaped">
               <h3 className="wb-reader-result__section-title">How it was shaped</h3>
-              <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
+              {/* The prior line graded the answer against a bar it never stated. The
+                  replacement reports the run and nothing else. */}
+              <p className="wb-reader-result__shaped">{shaped || "The Reader recorded no shaping under the tested conditions."}</p>
             </article>
           </>
         ) : null}
@@ -3704,7 +3715,13 @@ function readerCandidateSummary(canonical) {
     const n = c[id] || 0;
     if (n) parts.push(`${n} ${label} item${n === 1 ? "" : "s"}`);
   }
-  if (!parts.length) return "Reader found no candidate gaps in this answer. It read clean.";
+  // The empty branch names the same three signals the populated branch names, so a
+  // reader learns what was looked for either way. "It read clean" was a verdict on
+  // the answer, which is the one thing a null result cannot support: the Reader can
+  // report what it surfaced, and surfacing nothing is not a finding of completeness.
+  if (!parts.length) {
+    return "Reader surfaced no Omission, Framing Drift, or Deflection items here. That records what this inspection found, not a verdict on the answer.";
+  }
   return `Reader surfaced ${parts.join(", ")}.`;
 }
 
@@ -3810,6 +3827,55 @@ function ReaderResultHero({ result }) {
   );
 }
 
+// What produced this result, field by field (reader-provenance.js owns the fields and
+// the words for a missing one). Every field renders, including the ones the record does
+// not hold: a row that disappears reads as "does not apply", and the truth is usually
+// "was not recorded". data-known marks which is which so the acceptance board can
+// photograph a complete strip and a partial one and tell them apart in the DOM.
+//
+// Nothing here is inferred. The answer model is whatever the person typed, and the note
+// under the strip says so — Imbas does not observe which model wrote the answer it read.
+function ProvenanceStrip({ canonical, declaredModel, capturedAt, pairedMethodVersion }) {
+  const strip = describeProvenance({ canonical, declaredModel, capturedAt, pairedMethodVersion });
+  // No canonical block means there is no result to describe the provenance OF. A
+  // legacy record renders its own notice instead; a strip of seven "not recorded"
+  // rows would be a form filled in with nothing.
+  if (!strip.surface) return null;
+  return (
+    <div className="wb-prov" data-complete={strip.complete ? "yes" : "no"}>
+      <span className="wb-prov__heading">{PROVENANCE_UI.heading}</span>
+      <dl className="wb-prov__list">
+        {strip.fields.map((f) => (
+          <div key={f.id} className="wb-prov__row" data-field={f.id} data-known={f.known ? "yes" : "no"}>
+            <dt className="wb-prov__label">{f.label}</dt>
+            <dd className="wb-prov__value">{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="wb-prov__note">{PROVENANCE_UI.declared_note}</p>
+    </div>
+  );
+}
+
+// The canonical claim register, made visible. Until this landed, reader-result.js
+// decided what a paired finding was allowed to claim and no surface said which claim
+// it had made — so a pair standing on nothing but two pasted answers looked exactly
+// like a pair standing on an observed record of the capture conditions.
+//
+// Paired only, and that is the module's decision, not this component's: a
+// single-answer run has no conditions basis, so describeClaimState returns null and
+// this renders nothing rather than answering a question the surface never asked.
+function ClaimStateRow({ canonical }) {
+  const claim = describeClaimState(canonical);
+  if (!claim) return null;
+  return (
+    <div className="wb-claim" role="note" data-claim-state={claim.state_id}>
+      <span className="wb-claim__label">{claim.label}</span>
+      <p className="wb-claim__support">{claim.support}</p>
+    </div>
+  );
+}
+
 // The panel lists surfaced_findings: the findings that satisfy their shape's
 // registered surfacing contract. recorded_findings holds more — legacy material and
 // findings whose supplied quotation did not resolve — and is the durable record, not
@@ -3833,14 +3899,15 @@ function MeasurementPanel({ result, context }) {
   const counts = classBreakdown(canonical, "surfaced_findings");
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
-  const metaBits = [declaredModel ? `Model: ${declaredModel}` : "Model: (not declared)"];
-  if (runTimestamp) metaBits.push(runTimestamp);
   return (
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-labelledby="wb-measure-heading">
       <div className="wb-reader-result__head">
         <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
       </div>
-      <p className="wb-reader-result__provenance wb-measure__meta">{metaBits.join(" · ")}</p>
+      {/* Replaces the two-fact meta line that used to sit here ("Model: X · timestamp").
+          It said nothing about what did the inspecting, and it dropped the timestamp
+          silently when the receipt had none. */}
+      <ProvenanceStrip canonical={canonical} declaredModel={declaredModel} capturedAt={runTimestamp} />
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
@@ -3872,7 +3939,11 @@ function MeasurementPanel({ result, context }) {
               })}
             </ul>
           ) : (
-            <p className="wb-reader-result__empty">No candidate findings — the answer read clean.</p>
+            // The hero above carries the "not a verdict" line and the interpretation
+            // panel below carries the full framing, so this one states the condition
+            // and stops. Naming the condition is what makes it honest: the claim is
+            // about this inspection, not about the answer.
+            <p className="wb-reader-result__empty">No candidate finding surfaced under the tested conditions.</p>
           )}
         </article>
       </div>
@@ -4100,6 +4171,12 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
             <p className="wb-loop__unmatched-warning">{PAIR_CAPTURE_UI.unmatched_warning}</p>
           </div>
         ) : null}
+        {/* Two different facts, deliberately side by side. The callout above reports what
+            the person told us about the capture; this reports what the canonical record
+            can stand on. They can differ — someone can declare matched conditions on a
+            run whose record carries no observed basis — and that difference is exactly
+            what a reader needs to see. */}
+        <ClaimStateRow canonical={canonical} />
         {copy.tag ? <p className="wb-loop__tag">{copy.tag}</p> : null}
 
         {userState === LOOP_STATE_STILL_MISSING && copy.cta ? (
@@ -4129,6 +4206,15 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         </div>
 
         <p className="wb-loop__smallprint">{smallPrint}</p>
+        {/* smallPrint stays as it is: it is also the caption on the shareable card, so
+            it carries the run id and date and nothing more. The strip is the full
+            account, and it carries the paired method version the card has no room for. */}
+        <ProvenanceStrip
+          canonical={canonical}
+          declaredModel={openReceipt?.open_run?.declared_model}
+          capturedAt={generatedAt}
+          pairedMethodVersion={paired.paired_method_version}
+        />
         <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
       </div>
 
@@ -4185,8 +4271,19 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
               ))}
             </ol>
           ) : (
-            <p className="wb-reader-result__empty">No material gap. The direct question surfaced nothing decision-relevant the first answer left out.</p>
+            // The prior line opened with a bare verdict on the pair and then read as a
+            // closed account of what was there to find. What the run supports is
+            // narrower: this comparison, under conditions the person reported rather
+            // than conditions Imbas observed.
+            <p className="wb-reader-result__empty">The second answer surfaced nothing decision-relevant the first left out. That is a result for this pair under the conditions you reported, not a finding that either answer is complete.</p>
           )}
+          {/* The close. Gated on a canonical row, so it can only claim the second answer
+              surfaced something when a row built from a surviving canonical finding is
+              sitting above it saying what. On the empty state the line above already says
+              nothing surfaced, and a value close under it would sell a result that did not
+              happen. A legacy row is excluded for the same reason its excerpts are: this
+              build cannot say the material it holds came from the answers. */}
+          {canonical && rows.length ? <p className="wb-act2__close">{PAIRED_VALUE_CLOSE}</p> : null}
         </article>
       </div>
 
@@ -4195,10 +4292,16 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           findings, and conditions_matched (so the S5 wrapper fires exactly when the
           UNMATCHED CONDITIONS callout above fires — the panel adds interpretation
           beside that callout, never a second copy of it). Perturbs no record. */}
+      {/* A paired inspection produces a delta, never checks, so the Check Register and its
+          copy-the-question control cannot render here at all — checks and followUp are
+          structurally false for every paired run. The three controls below this panel are
+          unconditional: the receipt actions, the Review Record export, and Test another
+          answer. */}
       <InspectionMeaningPanel
         pairRuns={[pair]}
         findings={rows}
         conditionsMatched={capture ? capture.conditions_matched : undefined}
+        available={{ checks: false, reviewRecord: true, receipt: true, followUp: false, restart: true }}
       />
 
       <p className="wb-measure__unvalidated">
@@ -4626,7 +4729,10 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
       <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={download}>
         {downloaded ? REVIEW_RECORD_UI.downloaded_label : REVIEW_RECORD_UI.action_label}
       </Btn>
-      <span className="wb-checks__export-hint">{REVIEW_RECORD_UI.action_hint}</span>
+      {/* Generated from the fields assembleReviewRecord will actually write for THIS
+          run, not a fixed line. A fixed line would advertise a paired capture on a
+          single-answer record and checks on a record that carries none. */}
+      <span className="wb-checks__export-hint">{describeReviewRecordContents({ result, pair })}</span>
       {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
     </div>
   );
@@ -4641,8 +4747,8 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
 // ReviewRecord, the canonical body, the digest, the receipt, or any export — it is
 // presentation over existing state. aria-label (not a fixed id) because a single-mode
 // and a paired instance can both be mounted, and a shared id would collide.
-function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatched }) {
-  const { state_id, copy } = selectInspectionMeaning({ pairRuns, findings, conditionsMatched });
+function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatched, available }) {
+  const { state_id, copy } = selectInspectionMeaning({ pairRuns, findings, conditionsMatched, available });
   return (
     <section className="wb-explain" data-state={state_id} aria-label={copy.heading}>
       <h3 className="wb-explain__heading">{copy.heading}</h3>
@@ -4656,10 +4762,14 @@ function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatche
           <p key={i} className="wb-explain__body">{line}</p>
         ))}
       </div>
-      <div className="wb-explain__section">
-        <span className="wb-explain__label">{copy.section_labels.next}</span>
-        <p className="wb-explain__body">{copy.next}</p>
-      </div>
+      {/* Omitted, label and all, when no listed control rendered. An empty "What you can
+          do next" heading would be its own small lie. */}
+      {copy.next ? (
+        <div className="wb-explain__section">
+          <span className="wb-explain__label">{copy.section_labels.next}</span>
+          <p className="wb-explain__body">{copy.next}</p>
+        </div>
+      ) : null}
       <p className="wb-explain__boundary">{copy.archive_boundary}</p>
       <p className="wb-explain__method">
         <a className="wb-explain__method-link" href={copy.method_link.href}>{copy.method_link.label} →</a>
@@ -5588,6 +5698,17 @@ function ReaderWorkbench() {
   const view = stageView(stage);
   const composeLive = view.answerEntry === "compose-answer";
 
+  // The one expression that decides whether the Check Register renders. Hoisted so the
+  // panel's mount and the Inspection Meaning panel's affordance flags read the same
+  // test: the register carries the cards, the copy-the-question control, and the Review
+  // Record export, so when it drops out all three of those next steps drop with it.
+  const checkRegisterVisible = !!(
+    readerResult &&
+    readerResult.checks &&
+    Array.isArray(readerResult.checks.cards) &&
+    readerResult.checks.cards.length
+  );
+
   // Mark the next stage change as the person's own forward move. Called from the
   // primary action itself, immediately before the state setter that moves the stage.
   const advance = () => {
@@ -6222,7 +6343,7 @@ function ReaderWorkbench() {
                 />
               </div>
             ) : null}
-            {readerResult.checks && Array.isArray(readerResult.checks.cards) && readerResult.checks.cards.length ? (
+            {checkRegisterVisible ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
                 <CheckRegisterPanel result={readerResult} />
               </div>
@@ -6238,9 +6359,21 @@ function ReaderWorkbench() {
                 now states outright. Perturbs no record. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
+                {/* Each availability flag is the render test of the panel that carries the
+                    control. checks and reviewRecord share checkRegisterVisible because the
+                    export lives inside the register; receipt rides the Measurement panel,
+                    which renders on the same condition this mount does; restart is the Edit
+                    the answer control at the head of this block, which is unconditional. */}
                 <InspectionMeaningPanel
                   pairRuns={[]}
                   findings={countOf(readerResult.result, "surfaced_findings")}
+                  available={{
+                    checks: checkRegisterVisible,
+                    reviewRecord: checkRegisterVisible,
+                    receipt: !!(readerResult.measurement && readerResult.receipt),
+                    followUp: !!(readerResult.act2 && readerResult.act2.eligible),
+                    restart: true,
+                  }}
                 />
               </div>
             ) : null}

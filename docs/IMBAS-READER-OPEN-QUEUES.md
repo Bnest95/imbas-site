@@ -11,6 +11,11 @@ Adopted rulings live in `docs/IMBAS-READER-OUTPUT-DESIGN.md` and
 `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md`. If an item here is ever ruled on, the ruling
 goes there and the item leaves this file.
 
+Items closed by a shipped pass are marked **CLOSED** in place rather than deleted, and they
+name the code and the tests that closed them. Deleting them would renumber the items still
+open, and items in this file cross-reference each other by number. A CLOSED item is a
+record of work already done; it is not an input and it is still not an authority.
+
 This file exists because these observations were produced in working sessions and had no
 durable home. Three times, work in this project has been lost with the session that made
 it. Writing an item down here preserves it. It does not promote it.
@@ -21,24 +26,41 @@ Recorded 2026-07-26.
 
 ## PASS 2B COPY AND OUTPUT QUEUE
 
-Inputs to the Pass 2B copy and output work. Unresolved.
+Inputs to the Pass 2B copy and output work. Item numbering is fixed — a closed item stays
+in place with its resolution recorded, because items below cross-reference these numbers.
 
-**1. S2's next-step copy points at a panel that may not have rendered.**
-`reader-explain-panel.js:80` gives the S2 state the next-step line "Open the checks, copy a
-verification question into your own AI, or export the review record." "Open the checks"
-directs the reader to a Check Register panel. Nothing establishes that the panel rendered
-on that run. The copy assumes a surface it does not check for.
+**1. S2's next-step copy points at a panel that may not have rendered.** — **CLOSED, Pass 2B-B.**
+The S2 state carried the fixed next-step line "Open the checks, copy a verification question
+into your own AI, or export the review record." All three controls live inside the Check
+Register, which renders nothing when the both-ends-quotable filter drops every card. S4
+carried the same fault permanently: a paired inspection produces a delta, never checks.
 
-**2. Two vocabularies name the same three classes on the same page.**
-Single mode renders "Missing item / Framing issue / Deflection"
-(`workbench-app.jsx:3923`). Paired mode renders "Omission / Framing Drift / Deflection"
-(`workbench-app.jsx:4124`). One reader, one page, two names per class. Which vocabulary
-wins, and whether the loser survives anywhere, is undecided.
+Resolved by `EXPLAIN_AFFORDANCE_KEYS` and `buildNext` in `reader-explain-panel.js`
+(`EXPLAIN_PANEL_VERSION` bumped to `explain-panel.v3`). Each state now declares an ordered
+`next_options` list, every clause gated on one affordance key, and the caller passes those
+flags from the same expressions that gate the panel mounts. When nothing rendered the
+section is omitted rather than filled. Held by `test/reader-explain-panel.test.mjs` and
+`test/inspection-meaning-findings-source.test.mjs`.
 
-**3. Two different measures collide as adjacent numerals.**
-"Candidate gap estimate: 2 of 3" renders near "Omission: 3". One is an ordinal estimate on
-a 0-3 axis. The other is a count of findings. They share no scale and no method. The
-interface states no relationship between them, so the reader supplies one.
+**2. Two vocabularies name the same three classes on the same page.** — **CLOSED, Pass 2B-B.**
+Single mode rendered "Missing item / Framing issue / Deflection" and paired mode rendered
+"Omission / Framing Drift / Deflection". One reader, one page, two names per class.
+
+Resolved in favor of Omission / Framing Drift / Deflection on every current-run render.
+Candidate status moved to the section header and the boundary line, where a status belongs,
+instead of riding inside the name of the signal. One surface still carries the retired
+split vocabulary — `inspection.js`, the share page — and it is carved out by the same ruling
+that carves the score; it moves with SCORE RETIREMENT QUEUE item 1, not before it.
+
+**3. Two different measures collide as adjacent numerals.** — **CLOSED, Pass 2B-B.**
+"Candidate gap estimate: 2 of 3" rendered near "Omission: 3". One was an ordinal estimate on
+a 0-3 axis, the other a count of findings; they shared no scale and no method, and the
+interface stated no relationship between them.
+
+Resolved by removing the estimate from every current render rather than by explaining the
+relationship. One number remains, it names its own unit and predicate, and a reader can
+check it by counting the rows beneath it. `test/zero-score-language.test.mjs` holds it at
+zero.
 
 **4. Live copy carries a confirmation implication the Act 2 ruling withdraws.**
 The paired headline "It answers when asked. It just didn't volunteer." reads as Act 2
@@ -252,7 +274,7 @@ one asserts `PairedDeltaView` still reads the legacy fields, so it fails the mom
 repoints it and tells them which divergence demonstration to delete alongside it; the other
 pins the arithmetic of the divergence itself.
 
-**2. The server-side claim register reaches the paired surface and is rendered nowhere.**
+**2. The server-side claim register reaches the paired surface and is rendered nowhere.** — **CLOSED, Pass 2B-B.**
 `claim_register`, `claim_basis`, and `conditions_status` travel intact from the construction
 door through the paired receipt into the browser. No paired surface displays any of them.
 Verified by driving six conditions bases live: an authorized MATCHED basis, a reported client
@@ -268,6 +290,25 @@ cannot state that conditions were matched. Nothing renders a claim it is not ent
 the register is instrumentation that no reader can see, so whichever pass gives the paired
 surface its conditions copy should decide deliberately what, if anything, it shows — and
 should not discover the field by accident.
+
+Decided deliberately in Pass 2B-B, item 7A. `reader-provenance.js` derives a `CLAIM_STATE`
+from `claim_register` and `claim_basis` and gives each state one visible label, rendered by
+`ClaimStateRow` on the paired surface. The six states separate a matched-conditions basis
+from an observed difference on an authorized-but-unmatched basis, on a reported client
+declaration, on no recorded basis, on a basis this build does not recognize, and from a pair
+carrying no recorded finding at all. Two facts that can legitimately disagree stay separate
+on screen: the client-declared `unmatched` callout is what the person reported, and the claim
+state is what the record supports.
+
+The register's totality is asserted rather than assumed — `test/reader-provenance-strip.test.mjs`
+walks every reachable `(register, basis)` pair through the real construction door, requires a
+distinct label for each, and fails if `CLAIM_STATE` and `CLAIM_STATE_UI` orphan an entry in
+either direction. Only the matched state may use the word "matched". Today every live paired
+run lands on `OBSERVED_DIFFERENCE_NO_BASIS`: `api/read-paired.js` supplies
+`conditions_status: UNAVAILABLE` and no `conditions_source`, so the matched state is
+unreachable in production and its acceptance-board scenario is built from a synthetic fixture.
+
+Item 1 above stays open.
 
 ---
 

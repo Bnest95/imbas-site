@@ -226,12 +226,12 @@ test("5) every construct-asserting state is gated, not only GAP_REVEALED", () =>
   assert.equal(matched.headline, LOOP_STATE_COPY[LOOP_STATE_NOT_CLEAR].headline);
 });
 
-test("6) unmatched STILL_MISSING keeps its own headline and never contradicts the \"No material gap\" body", () => {
-  // STILL_MISSING fires only at gap_estimate 0, where the paired analysis returns no delta
-  // items and the panel body reads "No material gap. The direct question surfaced nothing
-  // decision-relevant the first answer left out." Substituting the approved headline here
-  // would assert a difference that run did not find — the same headline-contra-body defect
-  // this gate removes. It is excluded because it asserts no gap, NOT because it is exempt.
+test("6) unmatched STILL_MISSING keeps its own headline and never contradicts the zero-delta body", () => {
+  // STILL_MISSING fires only on a run where the paired analysis returns no delta items,
+  // and the panel body then states that the second answer surfaced nothing the first
+  // left out. Substituting the approved headline here would assert a difference that run
+  // did not find — the same headline-contra-body defect this gate removes. It is excluded
+  // because it asserts no difference, NOT because it is exempt.
   const r = render({ capture: CAPTURE_UNVERIFIED, ...STILL_MISSING_RUN });
   assert.equal(r.userState, LOOP_STATE_STILL_MISSING);
   assert.equal(r.unmatched, true);
@@ -242,9 +242,14 @@ test("6) unmatched STILL_MISSING keeps its own headline and never contradicts th
     !r.headline.includes("Volunteer Gap") && !/included information/.test(r.headline),
     "the zero-delta headline neither names the construct nor asserts an addition",
   );
-  // The body line this headline sits above, verbatim from the component.
-  const BODY = "No material gap. The direct question surfaced nothing decision-relevant the first answer left out.";
+  // The body line this headline sits above, verbatim from the component. Pass 2B-B
+  // item 9 rewrote it: the old line opened "No material gap." as a bare verdict, and
+  // the replacement states the result, the conditions it holds under, and what it does
+  // not establish. The gate is unchanged — the headline still must not contradict it.
+  const BODY =
+    "The second answer surfaced nothing decision-relevant the first left out. That is a result for this pair under the conditions you reported, not a finding that either answer is complete.";
   assert.ok(SRC.includes(BODY), "the zero-delta body line must still exist in the component");
+  assert.ok(!/No material gap\./.test(SRC), "the bare-verdict opener must not come back");
   assert.ok(!SRC.includes(`{LOOP_UNMATCHED_HEADLINE}`), "the replacement headline is applied through loopRevealCopy, never inlined");
 });
 

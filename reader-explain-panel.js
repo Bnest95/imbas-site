@@ -7,6 +7,11 @@
 // archive-boundary block. The copy is DETERMINISTIC, selected from existing
 // inspection state; the panel invents no fact.
 //
+// What you can do next names only controls that rendered. Its clauses are gated on the
+// caller's `available` flags (EXPLAIN_AFFORDANCE_KEYS), and the section drops entirely
+// when nothing is reachable — the panel would rather say nothing than send someone to
+// a panel that is not on the page.
+//
 // HARD LAW (mission): the panel summarizes only what the record shows. It never
 // converts the construct's inference into a product-level fact, never grades, never
 // exonerates, and never explains why the model behaved as it did. Absence of
@@ -34,7 +39,7 @@ import { pairConditionsUnmatched } from "./reader-paired.js";
 // Versioned so a copy result is traceable to the copy that produced it. Bump when the
 // copy table or the selection rule changes (never edit a shipped state's meaning in
 // place without a bump).
-export const EXPLAIN_PANEL_VERSION = "explain-panel.v2";
+export const EXPLAIN_PANEL_VERSION = "explain-panel.v3";
 
 // The five deterministic states, keyed off existing state:
 //   mode       — paired iff the schema pair_runs array is populated (schema §1);
@@ -52,9 +57,46 @@ export const EXPLAIN_STATE_S4 = "S4";
 export const EXPLAIN_STATE_S5_S3 = "S5∘S3";
 export const EXPLAIN_STATE_S5_S4 = "S5∘S4";
 
+// ── Affordance keys (the What-you-can-do-next gate) ──────────────────────────────
+// Every next-step clause names a control the person can actually reach, and each one
+// is gated on the render state of the panel that carries that control. The caller
+// passes `available` — one boolean per key, derived from the SAME expression that
+// gates the panel's mount, so the sentence cannot name a panel that did not render.
+//
+// The defect this closes (PASS 2B COPY AND OUTPUT QUEUE item 1): S2's next line read
+// "Open the checks, copy a verification question into your own AI, or export the
+// review record." All three of those controls live inside the Check Register, which
+// renders nothing when the both-ends-quotable filter drops every card — a state
+// test/inspection-meaning-findings-source.test.mjs pins as reachable in production
+// (two surfaced findings, zero cards). S4 carried the same fault permanently: a
+// paired inspection produces a delta, never checks, so "Review the checks" pointed at
+// a panel that renders in no paired run at all.
+//
+//   checks       — the Check Register rendered (its cards and their copy control)
+//   reviewRecord — the Review Record export control rendered
+//   receipt      — the receipt copy/download controls rendered
+//   followUp     — the two-question test offer rendered
+//   restart      — a run-it-again control rendered
+export const EXPLAIN_AFFORDANCE_KEYS = Object.freeze([
+  "checks",
+  "reviewRecord",
+  "receipt",
+  "followUp",
+  "restart",
+]);
+
+// One sentence holds at most three clauses. The per-state lists below are ordered by
+// what is worth doing first, and the selector takes the first three that rendered.
+const NEXT_MAX_CLAUSES = 3;
+
 // ── The copy table (AT-5 linted; loose voice, pointer register throughout) ────────
 // {N} in S2.what is the surfaced-item count; renderCount resolves both the number and
 // the plural ("1 item" / "3 items"). Every other template is a fixed string.
+//
+// next_options replaces the fixed `next` string each state carried through v2. Each
+// entry is { requires, clause }: `requires` is one EXPLAIN_AFFORDANCE_KEYS key and
+// `clause` is a bare imperative phrase, uncapitalized and unpunctuated, that the
+// selector joins into the finished sentence.
 export const EXPLAIN_PANEL_UI = {
   heading: "Why this inspection matters",
   section_labels: {
@@ -68,30 +110,50 @@ export const EXPLAIN_PANEL_UI = {
         "The Reader inspected this answer and didn't surface anything that met its bar for a check under the tested conditions.",
       why:
         "That's a record of what was inspected, not a verdict on the answer. An inspection that surfaces nothing is not a clean bill of health.",
-      next:
-        "Run the same inspection on a fresh question, or copy the record of this inspection.",
+      // A null single read is exactly where the second answer earns its keep, so the
+      // two-question test leads. The Check Register cannot render here — S1 means no
+      // finding surfaced, and a card is derived from a finding — so it is not listed.
+      next_options: [
+        { requires: "followUp", clause: "run the two-question test below" },
+        { requires: "receipt", clause: "copy the record of this inspection" },
+        { requires: "restart", clause: "edit the answer and run it again" },
+      ],
     },
     [EXPLAIN_STATE_S2]: {
       what:
         "The inspection surfaced {N} item(s) worth checking before this answer gets used.",
       why:
         "The checks point to what the answer rests on or where its construction needs verification, with the relevant lines quoted. They point at what to verify; they don't settle the question.",
-      next:
-        "Open the checks, copy a verification question into your own AI, or export the review record.",
+      // Four options, three slots: when the Check Register drops out, the two clauses
+      // that depend on it fall away and the follow-up and the receipt take their place,
+      // so the line stays true and never empties.
+      next_options: [
+        { requires: "checks", clause: "copy a question worth asking into your own AI" },
+        { requires: "reviewRecord", clause: "export the review record" },
+        { requires: "followUp", clause: "run the two-question test below" },
+        { requires: "receipt", clause: "copy the record of this inspection" },
+      ],
     },
     [EXPLAIN_STATE_S3]: {
       what:
         "The open and targeted answers were materially similar. This inspection did not surface a meaningful difference under the tested conditions.",
       why:
         "That's a comparison recorded under these conditions. It does not establish that nothing was left out.",
-      next:
-        "Try a different targeted question, run the pair with another model, or export the record.",
+      next_options: [
+        { requires: "restart", clause: "test another answer with a different question or another model" },
+        { requires: "reviewRecord", clause: "export the review record" },
+        { requires: "receipt", clause: "copy the record of this inspection" },
+      ],
     },
     [EXPLAIN_STATE_S4]: {
       what: "The targeted answer contained material the open answer did not.",
       why:
         "The inspection records a difference in what was volunteered under the tested conditions. It does not determine why the difference occurred.",
-      next: "Review the checks, run the pair again, or export the review record.",
+      next_options: [
+        { requires: "reviewRecord", clause: "export the review record" },
+        { requires: "receipt", clause: "copy the record of this inspection" },
+        { requires: "restart", clause: "test another answer with a different question or another model" },
+      ],
     },
   },
   // S5 adds exactly this one line to the Why section (it never replaces the base copy).
@@ -121,10 +183,40 @@ function renderCount(template, n) {
   return String(template).replace("{N} item(s)", phrase).replace("{N}", String(k));
 }
 
+// Join the surviving clauses into one sentence: "A." / "A or B." / "A, B, or C."
+// Capitalizes the first clause and closes with a period; the clauses themselves are
+// stored bare so the table never has to spell out every combination.
+function joinClauses(clauses) {
+  if (clauses.length === 0) return null;
+  const body =
+    clauses.length === 1
+      ? clauses[0]
+      : clauses.length === 2
+        ? `${clauses[0]} or ${clauses[1]}`
+        : `${clauses.slice(0, -1).join(", ")}, or ${clauses[clauses.length - 1]}`;
+  return `${body.charAt(0).toUpperCase()}${body.slice(1)}.`;
+}
+
+// Build the What-you-can-do-next sentence from the state's ordered options, keeping
+// only the clauses whose affordance rendered, capped at NEXT_MAX_CLAUSES. Returns
+// null when nothing rendered — the panel then omits the section rather than naming a
+// step that leads nowhere. `available` defaults to nothing available, so a caller that
+// forgets to declare its affordances loses the section instead of inventing one.
+function buildNext(stateId, available) {
+  const flags = available && typeof available === "object" ? available : {};
+  const clauses = [];
+  for (const opt of EXPLAIN_PANEL_UI.states[stateId].next_options) {
+    if (clauses.length >= NEXT_MAX_CLAUSES) break;
+    if (flags[opt.requires] === true) clauses.push(opt.clause);
+  }
+  return joinClauses(clauses);
+}
+
 // Assemble the render-ready copy for one base state. why is an ARRAY of paragraph
 // lines: one for a base state, two when the S5 wrapper appends its condition line
-// (the panel renders each line as its own paragraph). Nothing here mutates the table.
-function buildCopy(stateId, { n, s5 } = {}) {
+// (the panel renders each line as its own paragraph). next is a sentence or null.
+// Nothing here mutates the table.
+function buildCopy(stateId, { n, s5, available } = {}) {
   const s = EXPLAIN_PANEL_UI.states[stateId];
   const why = s5 ? [s.why, EXPLAIN_PANEL_UI.s5_condition_line] : [s.why];
   return {
@@ -132,7 +224,7 @@ function buildCopy(stateId, { n, s5 } = {}) {
     section_labels: EXPLAIN_PANEL_UI.section_labels,
     what: renderCount(s.what, n),
     why,
-    next: s.next,
+    next: buildNext(stateId, available),
     archive_boundary: EXPLAIN_PANEL_UI.archive_boundary,
     method_link: EXPLAIN_PANEL_UI.method_link,
   };
@@ -148,9 +240,12 @@ function buildCopy(stateId, { n, s5 } = {}) {
 //                      consulted ONLY in paired mode. The S5 wrapper applies iff
 //                      pairConditionsUnmatched keys it (conditions_matched != true),
 //                      so it fires exactly when the existing callout fires.
+//   available        — one boolean per EXPLAIN_AFFORDANCE_KEYS key, each derived from
+//                      the same expression that gates the panel carrying that control.
+//                      Only strict true counts. Omitted → no next section at all.
 // Deterministic: no time, no randomness, no I/O — identical state in, identical copy
 // out. Never throws on missing fields; unknown shapes fall back to the safest state.
-export function selectInspectionMeaning({ pairRuns, findings, conditionsMatched } = {}) {
+export function selectInspectionMeaning({ pairRuns, findings, conditionsMatched, available } = {}) {
   const paired = Array.isArray(pairRuns) && pairRuns.length > 0;
   const count = Array.isArray(findings)
     ? findings.length
@@ -161,15 +256,15 @@ export function selectInspectionMeaning({ pairRuns, findings, conditionsMatched 
 
   if (!paired) {
     // Single mode — conditions_matched is not consulted (there is no pair).
-    if (!hasFindings) return { state_id: EXPLAIN_STATE_S1, copy: buildCopy(EXPLAIN_STATE_S1) };
-    return { state_id: EXPLAIN_STATE_S2, copy: buildCopy(EXPLAIN_STATE_S2, { n: count }) };
+    const single = hasFindings ? EXPLAIN_STATE_S2 : EXPLAIN_STATE_S1;
+    return { state_id: single, copy: buildCopy(single, { n: count, available }) };
   }
 
   // Paired mode — S3 (no surfaced difference) or S4 (findings present), wrapped by S5
   // when the conditions did not come through as matched.
   const base = hasFindings ? EXPLAIN_STATE_S4 : EXPLAIN_STATE_S3;
   const s5 = pairConditionsUnmatched({ conditions_matched: conditionsMatched });
-  if (!s5) return { state_id: base, copy: buildCopy(base, { n: count }) };
+  if (!s5) return { state_id: base, copy: buildCopy(base, { n: count, available }) };
   const composed = base === EXPLAIN_STATE_S4 ? EXPLAIN_STATE_S5_S4 : EXPLAIN_STATE_S5_S3;
-  return { state_id: composed, copy: buildCopy(base, { n: count, s5: true }) };
+  return { state_id: composed, copy: buildCopy(base, { n: count, s5: true, available }) };
 }
