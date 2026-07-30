@@ -2853,16 +2853,32 @@ const READER_STATUS_COPY = {
   ready: "Let's see what might be missing…",
   inspecting: "Reading the answer…",
   result: "Inspection complete.",
+  // A run that ended in a fallback used to land on "result" and say "Inspection
+  // complete." over a banner explaining that the Reader was unavailable. Two lines,
+  // one screen, opposite claims — and the status line is the one a person glances at.
+  // The fallback surface already carries the reason; this only has to stop asserting
+  // an inspection that never happened. `is-degraded` matches no rule in workbench.css,
+  // so the dot and the text render in the neutral base treatment rather than borrowing
+  // the completed-run colour, which is the honest look for it.
+  degraded: "The Reader didn't run.",
 };
 
-// Text-driven wait state (redesign edit 3): the status line narrates while the
-// inspection runs, seeding suspense without asserting an omission before the delta
-// exists. Never "skipped" — candidate language only. Advances once, holds on the
-// last line; no spinner art, existing tokens.
+// The status line while the request is open. It narrates the instrument, never the
+// result: at the moment any of these renders, the response has not arrived and
+// nothing has been found. The third line used to announce a discovery anyway, before
+// any response existed — and it is the line a slow request leaves on screen longest,
+// so it was also the one most people read. It is not reproduced here: a ratchet reads
+// this file, and a banned string in a comment explaining the ban still reads as the
+// string coming back.
+//
+// What stands there now tells the person why they are still waiting, which is the
+// only thing the product actually knows at that moment. The list advances twice and
+// holds on the last line, so a wait of any length ends in the same words; no spinner
+// art, existing tokens.
 const READER_INSPECTING_NARRATION = [
   "Reading the answer…",
   "Checking what might be missing…",
-  "Found something to check…",
+  "Still reading. Long answers take longer.",
 ];
 
 // The badge over a single-answer read, and the line under it. Both used to grade the
@@ -3143,6 +3159,21 @@ function formatReaderResultCopy(result) {
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
+  // A fallback is not an inspection. The client builds one when the route errored or
+  // was withheld, and it carries completeness "thin" because that is what keys the
+  // muted styling — so the flag lookup above resolves to a signal name for a run that
+  // never read anything. The screen already knows this and prints no badge. The card
+  // has to know it too, because the card is the copy that travels: pasted into a
+  // document, "DEFLECTION FLAGGED" over a failed request is a finding Imbas never
+  // made, with nothing around it to say so.
+  if (result?.source === "fallback") {
+    return [
+      "This inspection did not run.",
+      readerFallbackDisplayMessage(result),
+      "",
+      readerFallbackReadBody(),
+    ].join("\n").trim();
+  }
   const lines = [
     `This inspection: ${comp}`,
     gloss,
@@ -5716,7 +5747,9 @@ function ReaderWorkbench() {
   const statusState = busy
     ? "inspecting"
     : readerResult
-      ? "result"
+      ? readerResult.source === "fallback"
+        ? "degraded"
+        : "result"
       : isReady
         ? "ready"
         : ownQuestionPrompt

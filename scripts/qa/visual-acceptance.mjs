@@ -39,7 +39,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { SCENARIOS, resolvePayloads, assertScenarioIntegrity } from "./scenarios.mjs";
+import { SCENARIOS, resolvePayloads, assertScenarioIntegrity, INJECT_HTTP, INJECT_HANG } from "./scenarios.mjs";
 import {
   EXTRACTOR_SOURCE,
   normalizeEntries,
@@ -218,11 +218,23 @@ const UNPHOTOGRAPHED = [
       "Share scenarios arrive with 2B-C under 2B-C's own coverage.",
   },
   {
-    state: "Failure states — a route that errors, times out, or returns an unparseable body",
+    state: "A route that returns an unparseable body",
     why:
-      "The harness stubs successful responses. Photographing a failure means a fixture layer " +
-      "that can return one, which is a harness capability this pass did not build. The failure " +
-      "copy is held by unit tests instead, which is weaker for layout and equal for wording.",
+      "The harness can now inject failures — `httpFailure` and `neverResolves` in " +
+      "`scripts/qa/scenarios.mjs` — and `read-error`, `read-capacity` and `read-in-flight` " +
+      "photograph the three states that matter. A malformed body is the one failure left " +
+      "unphotographed: the client maps it to `bad_json`, which renders the same banner as the " +
+      "`no_key` and `disabled` configuration states already covered in wording by " +
+      "`read-error`'s frame. Injecting it is one line whenever a reviewer wants the image.",
+  },
+  {
+    state: "The paired surface with an ABSENT original-answer side",
+    why:
+      "Photographed, and recorded here because a reviewer looking for it by name will not " +
+      "find a scenario called that. `paired-unmatched` is the frame: its second row renders " +
+      "only the Second answer excerpt, because the open side resolved to nothing and the " +
+      "surface leaves it out rather than standing a placeholder in its place. The scenario's " +
+      "`expected` states it, and `test/qa-board-coverage.test.mjs` holds the fixture to it.",
   },
   {
     state: "The curated case result panel, after a visitor pastes",
@@ -578,8 +590,21 @@ function buildStubScript(payloads) {
     const url = typeof input === "string" ? input : (input && input.url) || "";
     const p = (() => { try { return new URL(url, location.href).pathname; } catch { return url; } })();
     if (Object.prototype.hasOwnProperty.call(PAYLOADS, p)) {
+      const v = PAYLOADS[p];
+      // Recorded BEFORE the branch, so an injected failure still counts as a served
+      // route. The capture routine's "the app never called a stubbed route" check
+      // would otherwise read a photographed error state as a scenario that never ran.
       window.__qaCalls.push(p);
-      return new Response(JSON.stringify(PAYLOADS[p]), {
+      // Never settles. The app stays mid-request; nothing here times it out, because
+      // the point of the state is that it has not finished.
+      if (v && v["${INJECT_HANG}"] === true) return new Promise(() => {});
+      if (v && v["${INJECT_HTTP}"] === true) {
+        return new Response(v.body === null ? "" : JSON.stringify(v.body), {
+          status: v.status,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify(v), {
         status: 200,
         headers: { "content-type": "application/json" },
       });

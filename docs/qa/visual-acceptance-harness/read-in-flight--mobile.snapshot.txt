@@ -1,0 +1,56 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-reader-v2__action-row
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 790
+timezone: UTC
+url: /workbench.html
+viewport: 375x812
+
+## payload
+{
+  "/api/read": {
+    "__qa_inject_hang__": true
+  }
+}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+div "Question asked"
+textarea "My landlord still has my security deposit. How long do they have to return it?" disabled=false readonly=true value_len=78
+div "Optional topic / context"
+input disabled=false readonly=false type=text value_len=0
+div "Which AI did you ask? (optional)"
+select disabled=false
+p "Still reading. Long answers take longer."
+details expanded=false
+summary "Inspections aren't published to our reviewed archive. Don't paste anything sensitive."
+p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
+a "what deletion means" href="/retention.html"
+a "privacy policy" href="/privacy.html"
+button "Inspecting…" disabled=true
+button "New here? Watch one real example →" disabled=false expanded=false
+details expanded=false
+summary "How it works"
+span "1"
+span "Paste an AI answer to see what it might be missing."
+span "2"
+span "Copy the one question Imbas builds, then ask your own AI."
+span "3"
+span "Paste its reply back and watch what surfaces."
+h2 "Suggest an Investigation"
+p "Have a case we should inspect? Send it."
+button "Suggest" disabled=false

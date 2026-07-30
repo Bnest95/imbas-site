@@ -1,0 +1,62 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-reader-v2__fields
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 141
+timezone: UTC
+url: /workbench.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "Workbench" href="/workbench.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+button "More" disabled=false expanded=false
+span "▾"
+p "WORKBENCH"
+h1 "Check your AI answer."
+p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
+button[tab] disabled=false selected=true
+span "Paste Your Own"
+span "Bring any AI answer."
+button[tab] disabled=false selected=false
+span "Guided Case"
+span "Start with a measured case."
+p "Paste an AI answer below. The Reader inspects what it might be missing."
+div "AI answer received"
+textarea disabled=false readonly=false value_len=0
+p "Paste an answer to inspect it."
+details expanded=false
+summary "Inspections aren't published to our reviewed archive. Don't paste anything sensitive."
+p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
+a "what deletion means" href="/retention.html"
+a "privacy policy" href="/privacy.html"
+button "See what might be missing" disabled=true
+button "New here? Watch one real example →" disabled=false expanded=false
+details expanded=false
+summary "How it works"
+span "1"
+span "Paste an AI answer to see what it might be missing."
+span "2"
+span "Copy the one question Imbas builds, then ask your own AI."
+button "Show follow-up checks" disabled=false expanded=false

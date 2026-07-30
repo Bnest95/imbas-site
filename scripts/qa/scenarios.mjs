@@ -35,7 +35,9 @@ import {
 import {
   buildTargetedPrompt,
   PAIRED_METHOD_VERSION,
+  ACT2_CAPACITY_COPY,
   deriveConditionsMatched,
+  isCapacityFallbackReason,
   PAIR_CAPTURE_UI,
   PAIR_SAME_MODEL,
   PAIR_EDITS,
@@ -606,6 +608,51 @@ function pairedLegacyPayload() {
   };
 }
 
+// ── Failure injection ────────────────────────────────────────────────────────
+//
+// Every route above resolves to a body the endpoint could have returned on a good
+// day. Three of the product's states are not good days: the request errors, the
+// metered lane is withheld, or the request is simply still open. Until this pass the
+// board could not photograph any of them, and the manifest said so.
+//
+// A route may now resolve to a RESPONSE instead of a body. Two shapes, both tagged
+// with a key no product payload carries, so the stub can tell them apart from a
+// fixture without guessing:
+//
+//   httpFailure({ status, body })  the fetch resolves with that status. The CLIENT
+//                                  then decides what the screen says — runReader
+//                                  throws `read_<status>`, the catch branch builds
+//                                  the fallback result, and readerFallbackDisplay-
+//                                  Message picks the line. No fixture writes the
+//                                  degraded surface, which is the same rule the rest
+//                                  of this file follows: the harness supplies the
+//                                  condition, the product supplies the state.
+//
+//   neverResolves()                the fetch returns a promise that never settles, so
+//                                  the app stays mid-request for as long as the
+//                                  harness looks at it. This is the only honest way
+//                                  to photograph an in-flight state: a slow-but-real
+//                                  response would race the shutter.
+//
+// The tag rides into the snapshot's payload block, so a baseline records that the
+// scenario injected a 503 rather than merely showing a screen that looks like one.
+export const INJECT_HTTP = "__qa_inject_http__";
+export const INJECT_HANG = "__qa_inject_hang__";
+
+export function httpFailure({ status, body = null }) {
+  if (!Number.isInteger(status) || status < 400 || status > 599) {
+    throw new Error(`httpFailure needs a 4xx or 5xx status, got ${JSON.stringify(status)}`);
+  }
+  return { [INJECT_HTTP]: true, status, body };
+}
+
+export function neverResolves() {
+  return { [INJECT_HANG]: true };
+}
+
+export const isInjectedResponse = (v) =>
+  !!v && typeof v === "object" && (v[INJECT_HTTP] === true || v[INJECT_HANG] === true);
+
 // ── Drive steps ──────────────────────────────────────────────────────────────
 // A step is one of:
 //   { fill: selector, text }        set a React-controlled input (native setter + input event)
@@ -686,6 +733,28 @@ const DRIVE_PUBLIC_EXAMPLE = [
 // is read from the URL. Its first screen needs no click and no API — CURATED[0] is
 // selected on mount and step 0 is the readout — so the door opens on load.
 const DRIVE_CURATED = [{ waitFor: ".wb-readout__run-strip" }];
+
+// ── Failure and in-flight drive steps ────────────────────────────────────────
+//
+// The front door with nothing done to it. One wait, because the state IS the load:
+// any step past this is a different scenario.
+const DRIVE_FIRST_LOAD = [{ waitFor: ".wb-reader-v2__field--answer textarea" }];
+
+// Mid-request. The submit steps are the ordinary ones; what makes this capturable is
+// the last line of READER_INSPECTING_NARRATION.
+//
+// That line advances on a 1100ms interval and CLAMPS on the last entry, so it is a
+// terminal state, not a moment. Waiting for those words is therefore a wait for
+// something that cannot change again, which is the difference between a deterministic
+// capture and one that happens to have been taken late enough. Waiting on the status
+// selector instead would have photographed step 0, 1 or 2 depending on how fast the
+// machine got there, and all three baselines would have looked correct.
+const IN_FLIGHT_TERMINAL_LINE = "Still reading. Long answers take longer.";
+const DRIVE_IN_FLIGHT = [...DRIVE_SINGLE_SUBMIT, { waitForText: IN_FLIGHT_TERMINAL_LINE }];
+
+// A request that came back refused. The fallback banner is what proves the client took
+// the failure branch rather than rendering an empty result.
+const DRIVE_FAILED_READ = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-reader-result__fallback" }];
 
 const PUBLIC_EXAMPLE_ASSERTIONS = [
   PUBLIC_EXAMPLE.question,
@@ -1136,6 +1205,93 @@ export const SCENARIOS = {
     assertSelector: ".wb-flow-case-prov__case",
     focus: ".wb-readout",
   },
+
+  // ── The states that are not a result ───────────────────────────────────────
+  //
+  // A board of finished results photographs the product on its best day. Three of
+  // these four are the days it does not finish, and the fourth is the screen every
+  // visitor sees before anything happens at all. They went unphotographed until this
+  // pass because the harness could only stub a success; `httpFailure` and
+  // `neverResolves` above are what changed.
+  //
+  // None of them is fixture-authored. The harness supplies a status or an open
+  // request and the client decides what the screen says, so these images record the
+  // product's real degraded copy rather than a fixture's idea of it.
+
+  // Nothing has happened yet, and the page must not imply otherwise. This is the only
+  // state on the board every visitor is guaranteed to see.
+  "first-load": {
+    name: "first-load",
+    drivable: true,
+    canned: true,
+    routes: {},
+    state: "The workbench on arrival — the paste box, before anything is pasted",
+    expected:
+      "The paste box leads. The intro says what the Reader does and does not promise a verdict: paste an AI answer, the Reader inspects what it might be missing. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind.",
+    steps: DRIVE_FIRST_LOAD,
+    assertText: [
+      "Paste an AI answer below. The Reader inspects what it might be missing.",
+      "Paste an answer to inspect it.",
+      "See what might be missing",
+    ],
+    assertSelector: ".wb-reader-v2__field--answer textarea",
+    focus: ".wb-reader-v2__fields",
+  },
+
+  // The request is open and has not come back. Photographed from a response that never
+  // arrives, so the frame is the state rather than a moment inside it.
+  "read-in-flight": {
+    name: "read-in-flight",
+    drivable: true,
+    failure: "in_flight",
+    state: "Mid-inspection — the request is open and the status line has reached its last words",
+    expected:
+      "The run button reads 'Inspecting…' and is disabled. The status line has clamped on its terminal narration, which reports the instrument and the wait — still reading, long answers take longer — and claims nothing about what was found. The line it replaced said 'Found something to check…', which announced a finding before any response existed and is the line a slow request left on screen longest. No result panel and no count is rendered, because none has been returned.",
+    routes: { "/api/read": () => neverResolves() },
+    steps: DRIVE_IN_FLIGHT,
+    assertText: [IN_FLIGHT_TERMINAL_LINE, "Inspecting…"],
+    assertSelector: ".wb-reader-v2__status.is-inspecting",
+    focus: ".wb-reader-v2__action-row",
+  },
+
+  // A hard failure that is NOT the capacity family. 503 is chosen because the client
+  // maps it to the generic line; the integrity check holds it to that, so this state
+  // and the capacity state below cannot quietly converge on one sentence.
+  "read-error": {
+    name: "read-error",
+    drivable: true,
+    failure: "error",
+    state: "The read route refused the request — the fallback surface, generic family",
+    expected:
+      "The result surface renders the fallback banner: the Reader is unavailable and a fallback check is what is showing. The read body says the full Reader is unavailable, that the question and answer are preserved, and that this is not a full inspection. No badge, no signal name, no count and no score: nothing inspected the answer, so nothing about the answer is claimed. The copyable card takes the same position — 'This inspection did not run.' rather than a flag lookup over completeness 'thin', which is what the client sets for styling and which used to reach the card as a signal name.",
+    routes: { "/api/read": () => httpFailure({ status: 503, body: { error: "unavailable" } }) },
+    steps: DRIVE_FAILED_READ,
+    assertText: [
+      "Reader unavailable — showing fallback check.",
+      "The full Reader is unavailable.",
+      "this is not a full inspection",
+      // The status line, which used to read "Inspection complete." here.
+      "The Reader didn't run.",
+    ],
+    assertSelector: ".wb-reader-result__fallback",
+    focus: ".wb-reader-result",
+  },
+
+  // The metered lane withheld. 429 is in CAPACITY_FALLBACK_REASONS, so the client
+  // shows the one founder-approved capacity sentence instead of the generic line.
+  "read-capacity": {
+    name: "read-capacity",
+    drivable: true,
+    failure: "capacity",
+    state: "The read route is at capacity — the fallback surface, capacity family",
+    expected:
+      "The banner is the single capacity sentence, verbatim and identical to the server's: the Reader is at capacity today, a follow-up can still be generated and run in the person's own AI, and automated comparison may stay unavailable until capacity resets. It withholds the automated lane without withholding the instruction. The distinction from `read-error` is the whole reason both are on the board — one says the service failed, this one says the service is rationed and tells you what you can still do.",
+    routes: { "/api/read": () => httpFailure({ status: 429, body: { error: "capacity" } }) },
+    steps: DRIVE_FAILED_READ,
+    assertText: [ACT2_CAPACITY_COPY, "this is not a full inspection", "The Reader didn't run."],
+    assertSelector: ".wb-reader-result__fallback",
+    focus: ".wb-reader-result",
+  },
 };
 
 // Resolve a scenario's route table to concrete payloads.
@@ -1154,7 +1310,43 @@ export function assertScenarioIntegrity(scenario) {
   const problems = [];
   const payloads = resolvePayloads(scenario);
 
-  const read = payloads["/api/read"];
+  // An injected response is not a fixture and has no findings, receipt or counts to
+  // check. What it does have is a shape, and a wrong one fails silently: a status the
+  // client maps to a different family photographs the wrong state under the right
+  // name. So the fixture rules below are skipped for these routes and replaced by
+  // rules of their own.
+  for (const [route, v] of Object.entries(payloads)) {
+    if (!isInjectedResponse(v)) continue;
+    if (v[INJECT_HTTP]) {
+      if (!Number.isInteger(v.status) || v.status < 400 || v.status > 599) {
+        problems.push(`${route} injects status ${JSON.stringify(v.status)}, which is not a failure status`);
+      }
+      // The client derives the displayed line from the status, so a scenario that
+      // names a family in its name is held to the family the client would pick.
+      const code = String(v.status);
+      const capacity = isCapacityFallbackReason(code);
+      if (scenario.failure === "capacity" && !capacity) {
+        problems.push(
+          `scenario declares the capacity family but status ${code} is not in CAPACITY_FALLBACK_REASONS, ` +
+            `so the client would show the generic unavailable line instead`
+        );
+      }
+      if (scenario.failure === "error" && capacity) {
+        problems.push(
+          `scenario declares a generic failure but status ${code} is in CAPACITY_FALLBACK_REASONS, ` +
+            `so the client would show the capacity sentence and the two states would photograph the same`
+        );
+      }
+    }
+    if (v[INJECT_HANG] && scenario.failure !== "in_flight") {
+      problems.push(`${route} never resolves but the scenario does not declare failure: "in_flight"`);
+    }
+  }
+  if (scenario.failure && !Object.values(payloads).some(isInjectedResponse)) {
+    problems.push(`scenario declares failure ${JSON.stringify(scenario.failure)} but injects no failing route`);
+  }
+
+  const read = isInjectedResponse(payloads["/api/read"]) ? null : payloads["/api/read"];
   if (read) {
     // A scenario either carries findings or declares that it does not. Both halves
     // are checked, so `empty` cannot be a way of switching a guard off: an empty
@@ -1216,7 +1408,7 @@ export function assertScenarioIntegrity(scenario) {
   // Paired, at 2.0. The failure this guards is the one the pass exists to close: a
   // fixture showing an excerpt no server resolved. Under 1.1 that was possible by
   // construction, because the fixture wrote the sides itself.
-  const paired = payloads["/api/read-paired"];
+  const paired = isInjectedResponse(payloads["/api/read-paired"]) ? null : payloads["/api/read-paired"];
   if (paired) {
     // The two responses must describe ONE run. The paired receipt embeds the open run
     // wholesale, and the interface reads the provenance strip's declared answer model

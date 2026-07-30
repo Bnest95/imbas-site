@@ -201,6 +201,25 @@ the honest surface and any badge above it is a compression that invites the read
 copy just stopped making. Register lane.
 
 
+**13. Two degraded surfaces were saying the run had finished.**
+Recorded 2026-07-30 by the Pass 2B-B correction, found by photographing the states
+rather than by reading the code — which is the argument for photographing them. When
+`/api/read` fails, the client builds a fallback result and the screen showed a banner
+explaining the Reader was unavailable directly under a status line reading "Inspection
+complete." Separately, the copyable card looked a signal name up from the fallback's
+completeness key — a key the client sets to drive the muted styling, not because
+anything was observed — so a failed request pasted into a document arrived carrying a
+finding Imbas never made. Both are fixed here as strings: the status line has a
+`degraded` state of its own, and the card leads with the fact that the inspection did
+not run.
+
+What is NOT resolved is why a fallback carries a completeness value at all. It is a
+presentation key wearing the name of a measurement field, and the next thing that reads
+it by name will make the same mistake in a new place. Renaming it touches the client's
+result shape, so it is not a strings-only change and it did not belong to this
+correction. `test/reader-degraded-states.test.mjs` holds the two surfaces meanwhile.
+
+
 ---
 
 ## CALIBRATION QUEUE
