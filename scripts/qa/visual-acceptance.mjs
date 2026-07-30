@@ -229,15 +229,6 @@ const UNPHOTOGRAPHED = [
       "`read-error`'s frame. Injecting it is one line whenever a reviewer wants the image.",
   },
   {
-    state: "The paired surface with an ABSENT original-answer side",
-    why:
-      "Photographed, and recorded here because a reviewer looking for it by name will not " +
-      "find a scenario called that. `paired-unmatched` is the frame: its second row renders " +
-      "only the Second answer excerpt, because the open side resolved to nothing and the " +
-      "surface leaves it out rather than standing a placeholder in its place. The scenario's " +
-      "`expected` states it, and `test/qa-board-coverage.test.mjs` holds the fixture to it.",
-  },
-  {
     state: "The curated case result panel, after a visitor pastes",
     why:
       "The board photographs the curated console at its first screen (`curated-readout`), which " +
@@ -265,6 +256,24 @@ const UNPHOTOGRAPHED = [
       "Declared in VIEWPORTS and not part of the default board. It exists to re-test a " +
       "reported blank-compositor claim at 375x812, not to double every baseline; running it " +
       "by default would triple the image set to re-photograph the same states.",
+  },
+];
+
+// ── Photographed, but not under the name a reviewer will search for ──────────
+// These states ARE on the board. They are listed separately because no scenario is
+// named after them, so someone looking for one by name finds nothing and concludes
+// it is missing. Anything here is covered; nothing here is a gap. Keeping it out of
+// UNPHOTOGRAPHED matters — a covered state filed under "does not photograph" tells a
+// reviewer the opposite of the truth.
+const COVERED_UNDER_ANOTHER_NAME = [
+  {
+    state: "The paired surface with an ABSENT original-answer side",
+    photographedBy: "`paired-unmatched`",
+    why:
+      "Its second row renders only the Second answer excerpt, because the open side resolved " +
+      "to nothing and the surface leaves it out rather than standing a placeholder in its " +
+      "place. The scenario's `expected` states it, and `test/qa-board-coverage.test.mjs` holds " +
+      "the fixture to it.",
   },
 ];
 
@@ -1397,8 +1406,14 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   lines.push("");
   lines.push(`captured_against_sha: \`${baseSha}\``);
   lines.push("");
+  // Two different claims, and the manifest is only allowed to make the true one. A
+  // dirty tree means the images answer to no commit at all, and saying so is the whole
+  // point of the line. A clean tree means they answer to exactly this one, and carrying
+  // the dirty wording anyway would understate what the run actually proved.
   lines.push(
-    `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
+    dirty
+      ? `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
+      : `**These images were captured against commit \`${baseSha}\` exactly.** The working tree was clean when the shutter fired: no uncommitted change stood between that commit and these bytes, so \`captured_against_sha\` names the tree that produced them and not merely the base it sat on. Re-checking out \`${baseSha}\` reproduces the state photographed here.`
   );
   lines.push("");
   lines.push(`- working tree at capture time: **${dirty ? "dirty" : "clean"}**`);
@@ -1442,6 +1457,18 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
     );
   }
   lines.push("");
+  lines.push(`## Photographed, under another name`);
+  lines.push("");
+  lines.push(
+    `These states are covered. They are listed on their own because no scenario is named ` +
+      `after them, so a reviewer searching by name finds nothing and concludes there is a gap. ` +
+      `Nothing in this section is a gap.`
+  );
+  lines.push("");
+  for (const item of COVERED_UNDER_ANOTHER_NAME) {
+    lines.push(`- **${item.state}** — photographed by ${item.photographedBy}. ${item.why}`);
+  }
+  lines.push("");
   lines.push(`## What the board does not photograph`);
   lines.push("");
   lines.push(
@@ -1469,7 +1496,9 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
     lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
     lines.push(`| state captured | ${r.state} |`);
     lines.push(`| expected behaviour | ${r.expected} |`);
-    lines.push(`| captured_against_sha | \`${baseSha}\` + uncommitted working tree |`);
+    lines.push(
+      `| captured_against_sha | \`${baseSha}\`${dirty ? " + uncommitted working tree" : " (clean tree)"} |`
+    );
     lines.push("");
   }
   writeArtifact(path.join(outDir, "manifest.md"), lines.join("\n"), grant);

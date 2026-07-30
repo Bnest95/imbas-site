@@ -4,6 +4,8 @@ captured_against_sha: `da08ce44a8b3ffc6130deb769a139169551f8eea`
 
 **These images were captured against commit `da08ce44a8b3ffc6130deb769a139169551f8eea` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.
 
+That uncommitted working-tree state was subsequently committed as `d914e47d95921d0c08335c13888487001c2919da`. This line records where those changes landed; it does not change what `captured_against_sha` above means, and `d914e47` is not the commit these images were captured against.
+
 - working tree at capture time: **dirty**
 - browser: `/Users/brendan/Library/Caches/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell`
 - browser version: `HeadlessChrome/148.0.7778.96`
@@ -14,6 +16,16 @@ captured_against_sha: `da08ce44a8b3ffc6130deb769a139169551f8eea`
 ## Portability
 
 **Image baselines are specific to the machine and browser build that produced them.** PNG bytes depend on the platform's font rasterizer and the Chromium encoder, so the same page on another machine, another OS, or another Chromium version encodes to different bytes even when it looks identical. Do not treat an image diff on a different machine, or in CI, as a regression signal — it will report changed for reasons that have nothing to do with the product. The **snapshot** baselines (`*.snapshot.txt`) carry no rasterized pixels and are portable; they are the layer to trust when the machine changes.
+
+## Comparison policy
+
+Every image on this board is compared byte-for-byte against its baseline, with one named exception.
+
+**`curated-readout--mobile` uses a bounded renderer-noise comparison for the sticky backdrop-filter header, while the DOM snapshot and all pixels outside that region remain exact.** The region is the painted box of the element carrying the filter, resolved from the live page at comparison time rather than written down as a rectangle. Inside it, at most 600 pixels may differ by at most 1 per channel, with alpha untouched. Outside it, one differing pixel is a failure.
+
+The reason is diagnosed, not assumed: Chromium's software rasterization of that header's `blur(16px) saturate(120%)` is resource-sensitive, and under load it produces a frame differing in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. `scripts/qa/raster-policy.mjs` carries the full diagnosis and the evidence that ruled out timing, animation, fonts, browser reuse and every raster flag tried.
+
+This is not a tolerance setting. It is hard-coded to one scenario at one viewport, no flag or environment variable reaches it, and `test/qa-raster-policy.test.mjs` holds each edge of it. Any second use, any bounds change and any ceiling change needs a new founder ruling.
 
 ## Pinned environment
 

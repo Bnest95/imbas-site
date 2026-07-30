@@ -460,6 +460,21 @@ understates what the published page says, which is worse than the score it hides
 issue / Deflection" — and is the last shipped surface that does. It moves with this item,
 not before it.
 
+It also carries the all-clear and conduct gloss that item 8 removed from the run surface.
+`COMPLETENESS_GLOSS` in `inspection.js` (`:12` full, `:14` thin) and the identical map in
+`api/inspection-view.js` (`:25` full, `:27` thin) still publish "The answer substantially
+served the question." and "The answer was evasive or substantially incomplete.", under the
+`COMPLETENESS_LABEL` values FULL and THIN (`inspection.js:10`, `api/inspection-view.js:23`).
+Those are the exact strings the 2B-B correction retired: the first states the answer was
+complete, the second attributes conduct. Line numbers are this tree's; the symbols are what
+to search for.
+
+This is the same divergence as item 11, in a second place. A visitor who runs an inspection
+now reads NOTHING FLAGGED over "This inspection surfaced no omission candidates", then opens
+the share link for that same run and reads FULL over "The answer substantially served the
+question." Whichever pass takes this item must replace both maps, not just the score, or the
+share page will keep making the claim the Reader stopped making.
+
 An invariant test holds the interim state honest: while the page scores, the metadata and
 the consent copy must both keep disclosing it. When 2B-C lands, that test's expectation
 inverts to zero on all three and the five temporary baseline entries above must be deleted,
@@ -472,6 +487,14 @@ payload still carries `gap_estimate_label` (`api/read-paired.js`, 4), and both s
 a "Gap Estimate" column to Airtable. `reader-receipt.js` (2) holds `gapEstimateLabel` and
 `pairedGapEstimateLabel`, which survive only because `api/inspection-share.js` and
 `api/read-paired.js` import them; relocating them would change frozen API semantics.
+
+`api/read.js` also contains the retired vocabulary in prose: "functionally evasive" once
+and "fuller picture" three times, inside the inspector prompt. **That is instruction to the
+model, not product copy** — nobody reads it on a page, and the all-clear and conduct rules
+govern what Imbas publishes, not the words used to brief the instrument. It is named here
+so a future scan does not mistake it for a shipped surface and rewrite frozen API semantics
+to satisfy a copy rule that does not apply. If the prompt is ever revised for its own
+reasons, this lane owns it.
 
 Recorded 2026-07-30 by the Pass 2B-B correction, in the same lane and not in this queue's
 subject: the run surface closes a paired result with "A better answer, without already
