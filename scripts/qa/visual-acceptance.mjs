@@ -52,6 +52,7 @@ import {
   assertScenarioCapturable,
   formatDiff,
 } from "./snapshot.mjs";
+import { resolvePolicy, toDeviceBounds, comparePolicy, formatPolicyReport } from "./raster-policy.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -925,6 +926,27 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     );
   }
 
+  // If this scenario/viewport is under a raster policy, measure the exempt element
+  // from the live page in the same frame that is about to be photographed. The region
+  // is never a constant: a hard-coded rectangle would keep claiming to describe the
+  // header long after the header stopped being that shape.
+  const policy = resolvePolicy(scenario.name, viewportName);
+  let rasterRegion = null;
+  if (policy) {
+    const measured = await evaluate(
+      cdp,
+      `(() => {
+        const el = document.querySelector(${JSON.stringify(policy.selector)});
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { dpr: window.devicePixelRatio, css: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } };
+      })()`
+    );
+    // A null region is carried forward as null, not repaired. The comparator is the
+    // one place that decides what an unresolvable region means, and it fails on it.
+    if (measured) rasterRegion = toDeviceBounds(measured.css, measured.dpr);
+  }
+
   const shot = await cdp.send("Page.captureScreenshot", { format: "png" });
   const buf = Buffer.from(shot.data, "base64");
 
@@ -967,6 +989,8 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     env,
     state: scenario.state,
     expected: scenario.expected,
+    policy,
+    rasterRegion,
   };
 }
 
@@ -1255,6 +1279,31 @@ function runDiff(outDir, results) {
     }
 
     const baselineImg = fs.existsSync(imgPath) ? fs.readFileSync(imgPath) : null;
+
+    // ── The one policied comparison ──────────────────────────────────────────
+    // For the single scenario/viewport under a raster policy, the byte comparison is
+    // replaced by the bounded one — and it runs on EVERY diff, including runs where
+    // the bytes happen to match. A policy that only spoke up on failure would give a
+    // reader no way to tell a run where the region was checked and clean from a run
+    // where the check silently did not happen.
+    if (r.policy) {
+      if (!baselineImg) {
+        log(`  ✗ image: no baseline on disk`);
+        missing++;
+        continue;
+      }
+      const report = comparePolicy(r.policy, baselineImg, r.buf, r.rasterRegion);
+      const bytesMatch = baselineImg.length === r.buf.length && baselineImg.equals(r.buf);
+      log(
+        report.result === "pass"
+          ? `  ✓ image: within raster policy (${bytesMatch ? "byte-identical" : `${report.different_pixels_inside} px inside region, max delta ${report.max_rgb_delta}`})`
+          : `  ✗ image: raster policy FAILED`
+      );
+      log(formatPolicyReport(report));
+      if (report.result !== "pass") changed++;
+      continue;
+    }
+
     const img = diffImageBuffers(baselineImg, r.buf);
     if (img.status === "identical") log(`  ✓ image: byte-identical (${img.baselineBytes} bytes)`);
     else if (img.status === "missing-baseline") {
