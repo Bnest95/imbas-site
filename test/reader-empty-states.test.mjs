@@ -24,7 +24,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { CHIP_UI } from "../reader-paired.js";
+import { CHIP_UI, PAIRED_EMPTY_CLOSE } from "../reader-paired.js";
 import { lintUserFacingStrings } from "../reader-check-vocab.js";
 
 const SRC = readFileSync(fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)), "utf8");
@@ -38,6 +38,10 @@ const HONESTY_MARKERS = [
   /not a verdict/,
   /isn't an all-clear/,
   /not a finding that/,
+  // "That doesn't mean either answer is complete." The refusal stated as a refusal,
+  // which is the shortest honest form of the same property: it names the reading the
+  // run does not support instead of naming the conditions it holds under.
+  /does(?:n't| not) mean/,
 ];
 
 // kind "null_result" — the run completed and surfaced nothing. Subject to the marker
@@ -59,7 +63,8 @@ const EMPTY_STATES = [
   {
     site: "PairedDeltaView — the zero-delta side-by-side",
     kind: "null_result",
-    text: "The second answer surfaced nothing decision-relevant the first left out. That is a result for this pair under the conditions you reported, not a finding that either answer is complete.",
+    text: PAIRED_EMPTY_CLOSE,
+    expression: "{PAIRED_EMPTY_CLOSE}",
   },
   {
     site: "ReaderResultBlock — What may be missing",
@@ -93,6 +98,9 @@ const RETIRED = [
   "No material gap.",
   "No major gaps flagged",
   "No meaningful shaping detected",
+  // Retired by the 2B-B correction: it put the absence on the two answers, and one
+  // probe returning nothing is a fact about the probe. PAIRED_EMPTY_CLOSE replaced it.
+  "surfaced nothing decision-relevant the first left out",
 ];
 
 // Grading the answer is the failure; refusing to grade it is the point. "either
@@ -101,7 +109,10 @@ const RETIRED = [
 // negator governs it. Any negator in the preceding clause counts, which over-forgives
 // a contrived sentence and never over-accuses an honest one.
 const GRADE = /\b(?:the |this |either |both )?answers? (?:is|are|was|were) (?:fine|accurate|complete|correct|sound)\b|\bnothing (?:is|was) missing\b/gi;
-const NEGATOR = /\b(?:not|never|no|isn't|aren't|wasn't|weren't|without)\b[^.;:]*$/i;
+// Contracted auxiliaries carry no `not` for `\b` to find — "doesn't mean either answer
+// is complete" reads as a verdict to a word-boundary match and is the opposite of one.
+const NEGATOR =
+  /\b(?:not|never|no|isn't|aren't|wasn't|weren't|without|doesn't|don't|didn't|can't|cannot|won't)\b[^.;:]*$/i;
 
 function affirmativeGrades(text) {
   const hits = [];
@@ -116,8 +127,10 @@ test("the grading detector reads negation (guarding the guard)", () => {
   assert.deepEqual(affirmativeGrades("The answer is complete."), ["The answer is complete"]);
   assert.deepEqual(affirmativeGrades("Nothing is missing."), ["Nothing is missing"]);
   assert.deepEqual(affirmativeGrades("That is not a finding that either answer is complete."), []);
+  assert.deepEqual(affirmativeGrades("That doesn't mean either answer is complete."), []);
   // A negator in an EARLIER sentence must not launder a verdict in a later one.
   assert.deepEqual(affirmativeGrades("This is not a verdict. The answer is complete."), ["The answer is complete"]);
+  assert.deepEqual(affirmativeGrades("It doesn't matter. The answer is complete."), ["The answer is complete"]);
 });
 
 test("every declared empty state renders verbatim from the component", () => {

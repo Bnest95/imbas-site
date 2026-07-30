@@ -121,30 +121,45 @@ export const CLAIM_STATE = Object.freeze({
   NO_CLAIM: "NO_CLAIM",
 });
 
+// The visible labels. They were written in the register the record uses — "Observed
+// difference · conditions basis unrecognized", "Basis unavailable" — and a person who
+// has not read the method has no way in. "Basis" is an Imbas word. "Observed
+// difference" repeated at the head of four labels made the four look like one thing
+// with footnotes, when the differences between them are the entire reason the register
+// exists.
+//
+// Each label now answers one ordinary question — what do we know about how these two
+// answers were captured — and each is still uniquely reversible to one state, which a
+// test enforces. The `support` line under each carries the precision the label spends;
+// it is one sentence, so the surface never asks anyone to hold two.
+//
+// The record keys are untouched. CLAIM_STATE, CLAIM_REGISTER, CLAIM_BASIS and
+// CONDITIONS_STATUS ride the receipt and the export exactly as before: the record is
+// written for auditors, and this is the interface.
 export const CLAIM_STATE_UI = Object.freeze({
   [CLAIM_STATE.MATCHED_CONDITIONS]: Object.freeze({
-    label: "Matched conditions",
+    label: "Conditions matched",
     support: "An authorized record of the capture conditions places these two answers at like for like.",
   }),
   [CLAIM_STATE.OBSERVED_DIFFERENCE_UNMATCHED]: Object.freeze({
-    label: "Observed difference · conditions not matched",
-    support: "An authorized record of the capture conditions exists and does not place these two answers at like for like.",
+    label: "Conditions differ",
+    support: "An authorized record of the capture conditions exists, and it does not place these two answers at like for like.",
   }),
   [CLAIM_STATE.OBSERVED_DIFFERENCE_REPORTED]: Object.freeze({
-    label: "Observed difference · conditions as reported",
-    support: "The capture conditions here are the ones you reported. Imbas did not observe them.",
+    label: "Conditions as you reported them",
+    support: "The capture conditions here are the ones you told us, not ones Imbas watched.",
   }),
   [CLAIM_STATE.OBSERVED_DIFFERENCE_NO_BASIS]: Object.freeze({
-    label: "Observed difference · conditions not recorded",
-    support: "Imbas holds no observed record of the capture conditions, so this difference stands on the two answers alone.",
+    label: "Conditions not recorded",
+    support: "Nobody recorded how these two answers were captured, so the difference stands on the two answers alone.",
   }),
   [CLAIM_STATE.OBSERVED_DIFFERENCE_UNRECOGNIZED]: Object.freeze({
-    label: "Observed difference · conditions basis unrecognized",
-    support: "This run names a conditions source this build does not recognize, so Imbas reads it as no basis at all.",
+    label: "Conditions source not recognized",
+    support: "This run names a source for the capture conditions that this build does not know, so Imbas treats it as nothing recorded.",
   }),
   [CLAIM_STATE.NO_CLAIM]: Object.freeze({
-    label: "Basis unavailable",
-    support: "This pair carries no recorded finding, so there is no conditions basis to read.",
+    label: "Not enough recorded to say",
+    support: "This pair carries no recorded finding, so there is nothing here to read the capture conditions off.",
   }),
 });
 
@@ -174,8 +189,8 @@ export function claimStateId({ claim_register, claim_basis } = {}) {
 //
 // Returns null for a single-answer result. The claim register is a paired
 // construction — buildFinding leaves the triple null off the paired surface — so a
-// single-answer run has no basis to report, and printing "Basis unavailable" under
-// every single answer would invent a question the surface never asked.
+// single-answer run has no basis to report, and printing "Not enough recorded to say"
+// under every single answer would invent a question the surface never asked.
 export function describeClaimState(canonical) {
   const c = canonical && typeof canonical === "object" ? canonical : null;
   if (!c || c.surface !== "paired") return null;

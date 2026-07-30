@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5935
+scroll_offset: 5923
 timezone: UTC
 url: /workbench.html
 viewport: 1440x900
@@ -1059,15 +1059,17 @@ a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
+dt "Paired method"
+dd "2.0"
 dt "Captured"
 dd "<TIMESTAMP>"
 p "The answer model is the one you declared. Imbas records it, and does not observe it."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
 div "0 differences surfaced"
 p "Differences the second answer surfaced that the Reader could quote from both answers."
-h3 "The delta"
+h3 "What the second answer added"
 p "Omission: 0 · Framing Drift: 0 · Deflection: 0"
-p "The second answer surfaced nothing decision-relevant the first left out. That is a result for this pair under the conditions you reported, not a finding that either answer is complete."
+p "This probe surfaced nothing new. That doesn't mean either answer is complete."
 h3 "Why this inspection matters"
 span "What happened"
 p "The open and targeted answers were materially similar. This inspection did not surface a meaningful difference under the tested conditions."

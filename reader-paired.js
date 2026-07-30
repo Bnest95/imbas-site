@@ -183,18 +183,26 @@ export const LOOP_DIDNT_COME_UP = "Didn't come up.";
 export const LOOP_CONDITIONS_LINE = "Your session, your conditions — not the lab's.";
 
 // The one line that closes a paired result, rendered ONLY when at least one paired
-// finding survived the surfacing contract. It says what the pair established and
-// stops there.
+// finding survived the surfacing contract. It names what the person got, and the
+// delta on screen is its receipt.
 //
-// The second sentence is the whole point of the line. A person who has just watched
-// a direct question pull material out of an answer will reach for "so now I have it
-// all", and the pair cannot support that: it measured one probe against one answer,
-// so it can say material was absent and nothing at all about what is still absent.
-// "fuller picture, not a full one" refuses the completeness read in the same breath
-// that it names the value, which is the only order that works — a claim followed by
-// a caveat somewhere below reads as a claim.
-export const PAIRED_VALUE_CLOSE =
-  "The second answer surfaced material the first did not. You now have a fuller picture, not a full one.";
+// Both halves are earned by something visible. "A better answer" is the rows above:
+// material the second answer carried and the first did not, each quoted from both
+// sides. "Without already knowing what to ask" is the probe: the person did not write
+// the second question, the product did, from the first answer's own gaps. Neither
+// half claims completeness, so neither needs a caveat trailing it.
+export const PAIRED_VALUE_CLOSE = "A better answer, without already knowing what to ask.";
+
+// The line that closes a paired result that surfaced nothing. The subject is the
+// probe, never the answers: an inspection that surfaced nothing has established a
+// fact about the inspection, and saying "the second answer surfaced nothing" puts
+// the finding on the answer instead, where the run cannot support it.
+//
+// The second sentence is not optional. A person who just watched a direct question
+// come back empty will read that as a clean bill, and one probe against one answer
+// cannot say what is still absent — only that this probe surfaced nothing.
+export const PAIRED_EMPTY_CLOSE =
+  "This probe surfaced nothing new. That doesn't mean either answer is complete.";
 
 // chip is the one-tap correction label: the short, behavioral name the person taps
 // to declare a different reading than the machine suggested (never an auto-disposition).

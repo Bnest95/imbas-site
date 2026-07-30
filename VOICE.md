@@ -29,6 +29,18 @@ Truth-seeker for the individual, skeptical of the crowd and of concentrated powe
 ## Banned (CLAUDE.md + corpus-confirmed)
 delve, landscape, tapestry, robust, seamless, journey. Agentless passive. Hedge-stacking ("it may appear that way to some observers under certain framings"). "It's important to note." Over-chopped fragment spam. Motive verbs about models (want/try/hide) — models surface or don't surface. Never "AI is biased"; state frequency under condition.
 
+## CLAIM-TO-MECHANISM FIT
+Every visible product claim must identify, or remain within, the evidentiary strength of the mechanism that produced it.
+A surface may state: what text was found; what text was not found by a declared method; what candidate signal surfaced; what comparison relation was observed; what remains unverified.
+A surface may not convert: term matching into semantic completeness; one probe into answer sufficiency; behavioral output into intent; absence of a surfaced finding into absence of a real-world omission; a model-generated interpretation into a verified verdict.
+Vivid copy is permitted. Unsupported certainty is not. Hedge-mush that buries an earned claim is also a violation.
+
+## PLAIN-LANGUAGE SURFACE
+Write the record for auditors. Write the interface for people.
+The user should not need to understand Imbas's constructs before understanding their result. Prefer concrete nouns, ordinary verbs, and explicit consequences over category shorthand.
+Internal vocabulary may organize the system. It does not earn space on the surface merely because it is technically precise.
+Plain language must not weaken the claim. Jargon must not impersonate precision.
+
 ## Imbas framing (non-negotiable, from CLAUDE.md)
 Behavior not intent. Measurement not expose/reveal/unmask. Signal not verdict. Sample size before any finding ("across N models on N cases"). Cochrane/UL for the independence analogy, never Moody's (issuer-pays is Imbas's own Case 002).
 

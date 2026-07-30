@@ -225,6 +225,20 @@ const UNPHOTOGRAPHED = [
       "copy is held by unit tests instead, which is weaker for layout and equal for wording.",
   },
   {
+    state: "The curated case result panel, after a visitor pastes",
+    why:
+      "The board photographs the curated console at its first screen (`curated-readout`), which " +
+      "is one step before this. The panel is where the retired score gauge and the retired " +
+      "CLOSED GAP / PARTIALLY SURFACED / GAP HELD badge both sat, so it is the frame a reviewer " +
+      "most wants. It is not photographed because `runDate` is built from `new Date()` at run " +
+      "time and reaches the share text inside the panel, which would make the baseline change " +
+      "every day and turn a real regression into noise nobody reads. Pinning the clock is a " +
+      "harness capability, and the removal is held meanwhile by " +
+      "`test/reader-no-allclear-vocabulary.test.mjs`, which asserts at source level that no " +
+      "badge builder, verdict label table or tone class survives, and that the one sentence " +
+      "standing there is read off the stored case rather than computed from the paste.",
+  },
+  {
     state: "The correction chips after a person has corrected the reading",
     why:
       "Every board state captures the default reading. The two corrected states change a " +

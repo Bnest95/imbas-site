@@ -727,13 +727,13 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED",
     expected:
-      "The delta lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
+      "The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
-      "The delta",
+      "What the second answer added",
       "Omission: 2 · Framing Drift: 0 · Deflection: 0",
       "The Reader's reading",
       "It runs from 14 days in some states to 60 days in others",
@@ -750,13 +750,13 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED",
     expected:
-      "The delta lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit.",
+      "The 'What the second answer added' section lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
     steps: drivePaired({ edits: PAIR_EDITS.EDITED }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
-      "The delta",
+      "What the second answer added",
       "Omission: 2 · Framing Drift: 0 · Deflection: 0",
       "require the landlord to pay the tenant a penalty",
     ],
@@ -774,12 +774,12 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced",
     expected:
-      "The delta lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
+      "The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedRejectedPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["The delta", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
+    assertText: ["What the second answer added", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
     focus: ".wb-act2__delta .wb-measure__list",
   },
@@ -916,10 +916,11 @@ export const SCENARIOS = {
   },
 
   // A paired run that surfaced nothing. Three things have to be true in one frame:
-  // the empty line names the pair and the reported conditions rather than declaring
-  // either answer complete, the claim row reads Basis unavailable because a result
-  // with no recorded finding has no conditions basis to read, and the value close is
-  // ABSENT — there is no surfaced material for it to be about.
+  // the empty line puts the absence on the probe and refuses the completeness reading
+  // rather than declaring either answer complete, the claim row reads 'Not enough
+  // recorded to say' because a result with no recorded finding has nothing to read the
+  // capture conditions off, and the value close is ABSENT — there is no surfaced
+  // material for it to be about.
   "paired-empty": {
     name: "paired-empty",
     drivable: true,
@@ -927,21 +928,21 @@ export const SCENARIOS = {
     claimState: CLAIM_STATE.NO_CLAIM,
     state: "Paired comparison at method 2.0 that surfaced nothing — the empty state, NO_CLAIM, and no value close",
     expected:
-      "The count reads '0 differences surfaced'. The delta renders one line: the second answer surfaced nothing decision-relevant, stated as a result for this pair under reported conditions rather than a finding that either answer is complete. No value close appears anywhere on the page.",
+      "The count reads '0 differences surfaced'. Under 'What the second answer added' one line renders: this probe surfaced nothing new, and that does not mean either answer is complete. The absence is reported about the probe, not about the two answers. No value close appears anywhere on the page.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedEmptyPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: MATCHED_CAPTURE,
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
-      "The delta",
+      "What the second answer added",
       "0 differences surfaced",
-      "not a finding that either answer is complete",
+      "That doesn't mean either answer is complete.",
       // The claim row sits above the delta, outside this scenario's frame, so the
       // pixels do not carry it and the text assertion has to. NO_CLAIM is reached the
       // only way it can be reached: no recorded finding carries a claim triple, so
       // there is no basis to read rather than a basis that came back negative.
-      "Basis unavailable",
-      "no recorded finding, so there is no conditions basis to read",
+      "Not enough recorded to say",
+      "no recorded finding, so there is nothing here to read the capture conditions off",
     ],
     assertSelector: ".wb-act2__delta .wb-reader-result__empty",
     focus: ".wb-act2__delta",
@@ -960,12 +961,12 @@ export const SCENARIOS = {
     claimState: CLAIM_STATE.MATCHED_CONDITIONS,
     state: "Paired result whose findings carry an authorized conditions record reading MATCHED",
     expected:
-      "The claim row reads 'Matched conditions' and says an authorized record of the capture conditions places the two answers at like for like. This is the only state in which the surface asserts a matched-condition basis, and it is unreachable from any live endpoint today.",
+      "The claim row reads 'Conditions matched' and says an authorized record of the capture conditions places the two answers at like for like. This is the only state in which the surface asserts a matched-condition basis, and it is unreachable from any live endpoint today.",
     routes: claimBasisRoutes("authorized-match"),
     steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
     capture: MATCHED_CAPTURE,
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["Matched conditions", "places these two answers at like for like"],
+    assertText: ["Conditions matched", "places these two answers at like for like"],
     assertSelector: ".wb-claim[data-claim-state='MATCHED_CONDITIONS']",
     focus: ".wb-claim",
   },
@@ -976,12 +977,12 @@ export const SCENARIOS = {
     claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_UNMATCHED,
     state: "Paired result whose authorized conditions record reads UNMATCHED, against a person who declared a match",
     expected:
-      "The claim row reads 'Observed difference · conditions not matched' and says an authorized record exists and does NOT place the two answers at like for like. The person declared same model and no edits, so no client-derived unmatched callout is drawn — the record's basis and the declaration disagree, and only the claim row carries that.",
+      "The claim row reads 'Conditions differ' and says an authorized record exists and does NOT place the two answers at like for like. The person declared same model and no edits, so no client-derived unmatched callout is drawn — the record and the declaration disagree, and only the claim row carries that.",
     routes: claimBasisRoutes("authorized-mismatch"),
     steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
     capture: MATCHED_CAPTURE,
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["Observed difference · conditions not matched", "does not place these two answers at like for like"],
+    assertText: ["Conditions differ", "does not place these two answers at like for like"],
     assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_UNMATCHED']",
     focus: ".wb-claim",
   },
@@ -992,12 +993,12 @@ export const SCENARIOS = {
     claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_REPORTED,
     state: "Paired result whose conditions basis is the person's own declaration, carried through to the record",
     expected:
-      "The claim row reads 'Observed difference · conditions as reported' and says the conditions are the ones you reported and Imbas did not observe them. The distinction from the state below is the one the register exists to hold: reported is not the same as unrecorded.",
+      "The claim row reads 'Conditions as you reported them' and says the conditions are the ones you told us and not ones Imbas watched. The distinction from the state below is the one the register exists to hold: reported is not the same as unrecorded.",
     routes: claimBasisRoutes("client-declaration"),
     steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
     capture: MATCHED_CAPTURE,
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["Observed difference · conditions as reported", "Imbas did not observe them."],
+    assertText: ["Conditions as you reported them", "not ones Imbas watched"],
     assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_REPORTED']",
     focus: ".wb-claim",
   },
@@ -1011,12 +1012,12 @@ export const SCENARIOS = {
     claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_UNRECOGNIZED,
     state: "Paired result naming a conditions source this build does not recognize, with status MATCHED",
     expected:
-      "The claim row reads 'Observed difference · conditions basis unrecognized' and says this build reads the named source as no basis at all. The stored status is MATCHED and the surface still refuses the matched-conditions claim, because the source is not in the authorized set.",
+      "The claim row reads 'Conditions source not recognized' and says this build does not know the named source, so it treats it as nothing recorded. The stored status is MATCHED and the surface still refuses the matched-conditions claim, because the source is not in the authorized set.",
     routes: claimBasisRoutes("unrecognized-source"),
     steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
     capture: MATCHED_CAPTURE,
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["Observed difference · conditions basis unrecognized", "reads it as no basis at all"],
+    assertText: ["Conditions source not recognized", "so Imbas treats it as nothing recorded."],
     assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_UNRECOGNIZED']",
     focus: ".wb-claim",
   },
@@ -1045,7 +1046,7 @@ export const SCENARIOS = {
       // renders MATCHED_CONDITIONS too. Asserting the label keeps the borrowing honest:
       // if the fixture's claim triple ever shifts, this fails here rather than silently
       // repainting the claim row in an image whose subject is the strip below it.
-      "Matched conditions",
+      "Conditions matched",
     ],
     assertSelector: ".wb-loop__reveal .wb-prov[data-complete='yes']",
     focus: ".wb-loop__reveal .wb-prov",
@@ -1129,7 +1130,7 @@ export const SCENARIOS = {
     query: "reader=0",
     state: "The curated case console, first screen — provenance and run strip with no score",
     expected:
-      "The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. No gauge and no scored figure of any kind appears on the surface — the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself.",
+      "The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. This is the screen BEFORE a person pastes, so neither retired hero was ever in this frame: the scored gauge and the live verdict badge both sat on the result panel one step later, which the board does not photograph (see the manifest). No gauge and no scored figure of any kind appears here; the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself.",
     steps: DRIVE_CURATED,
     assertText: ["CASE 005 · OMISSION", "4 frontier models tested", "observed May 2026"],
     assertSelector: ".wb-flow-case-prov__case",

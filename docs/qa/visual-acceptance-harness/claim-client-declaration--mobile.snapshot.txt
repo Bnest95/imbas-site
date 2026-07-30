@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 6777
+scroll_offset: 6796
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -1262,8 +1262,8 @@ span "What it told you"
 p "within 30 days of the tenant moving out"
 span "What it told you when you asked"
 p "It runs from 14 days in some states to 60 days in others"
-span "Observed difference · conditions as reported"
-p "The capture conditions here are the ones you reported. Imbas did not observe them."
+span "Conditions as you reported them"
+p "The capture conditions here are the ones you told us, not ones Imbas watched."
 p "That's the Volunteer Gap — you just watched it happen in your own chat."
 span "Read it differently?"
 button "It didn't volunteer" disabled=false

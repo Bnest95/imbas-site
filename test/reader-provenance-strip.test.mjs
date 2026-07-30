@@ -206,7 +206,7 @@ test("8) today's live paired run: no authorized source, so the surface says the 
   assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_NO_BASIS);
   assert.equal(claim.claim_register, CLAIM_REGISTER.OBSERVED_DIFFERENCE);
   assert.equal(claim.claim_basis, CLAIM_BASIS.NO_AUTHORIZED_BASIS);
-  assert.equal(claim.label, "Observed difference · conditions not recorded");
+  assert.equal(claim.label, "Conditions not recorded");
   assert.ok(!/matched/i.test(claim.label), "no live run may show a matched-conditions label");
 });
 
@@ -266,12 +266,19 @@ test("9) the table is total over the claim register: every reachable pair has it
 test("10) only the matched state may say matched, and no state is orphaned", () => {
   for (const [stateId, ui] of Object.entries(CLAIM_STATE_UI)) {
     if (stateId === CLAIM_STATE.MATCHED_CONDITIONS) {
-      assert.match(ui.label, /^Matched conditions$/);
+      assert.equal(ui.label, "Conditions matched");
       continue;
     }
+    // The plain-language rewrite moved the word rather than removing it — "Observed
+    // difference · conditions not matched" became "Conditions differ" — so the check
+    // is on the word itself, not the phrase it used to sit inside. Any label carrying
+    // "match" outside the matched state is exactly the failure this test exists for,
+    // and a negated one ("not matched") counts: a person skimming a row reads the
+    // noun, not the negation in front of it.
+    assert.ok(!/\bmatch/i.test(ui.label), `${stateId} label must not carry a match claim: ${ui.label}`);
     assert.ok(
-      !/\bmatched conditions\b/i.test(ui.label) && !/\bmatched conditions\b/i.test(ui.support),
-      `${stateId} must not read as a matched-conditions determination`,
+      !/\bmatched conditions\b/i.test(ui.support),
+      `${stateId} support must not read as a matched-conditions determination`,
     );
   }
   assert.equal(
@@ -287,7 +294,7 @@ test("11) a paired run with no recorded finding has no basis to report", () => {
   const empty = buildCanonicalResult({ surface: "paired", findings: [], inspection_method_version: "2.0" });
   const claim = describeClaimState(empty);
   assert.equal(claim.state_id, CLAIM_STATE.NO_CLAIM);
-  assert.equal(claim.label, "Basis unavailable");
+  assert.equal(claim.label, "Not enough recorded to say");
   assert.equal(claim.claim_basis, null, "there is nothing to read a basis from, so none is reported");
 });
 
@@ -309,5 +316,44 @@ test("13) a single-answer result reports no claim state at all", () => {
   assert.equal(describeClaimState(singleResult()), null, "the claim register is a paired construction");
   for (const input of [null, undefined, {}, { surface: "single" }]) {
     assert.equal(describeClaimState(input), null);
+  }
+});
+
+// The 2B-B correction rewrote all six labels out of the record's own register and into
+// ordinary English. The rewrite has one way to fail that a reader would never notice and
+// an auditor would: plain language that reads well by collapsing two states into words
+// that mean the same thing. The register exists to hold those distinctions, so this
+// checks the property directly over all six — not over the five test 9 can reach.
+test("14) plain language did not collapse the register: six labels, six states, reversible", () => {
+  const entries = Object.entries(CLAIM_STATE_UI);
+  assert.equal(entries.length, 6);
+
+  // Bijection, both directions. A duplicate label is two states a person cannot tell
+  // apart; a duplicate support line is the same failure one line lower.
+  const labels = entries.map(([, ui]) => ui.label);
+  const supports = entries.map(([, ui]) => ui.support);
+  assert.equal(new Set(labels).size, 6, `two states share a label: ${labels.join(" | ")}`);
+  assert.equal(new Set(supports).size, 6, "two states share a support line");
+
+  // Reversibility, mechanically: reading a label back yields exactly one state.
+  for (const [stateId, ui] of entries) {
+    const matches = entries.filter(([, other]) => other.label === ui.label).map(([id]) => id);
+    assert.deepEqual(matches, [stateId], `${ui.label} is not uniquely reversible`);
+  }
+
+  // Stranger legibility (founder ruling 4a): a person who has never read the method must
+  // be able to read every label. These are the construct words the old labels leaned on.
+  // "Conditions" survives because it is an ordinary English noun the support line then
+  // spells out; "basis", "register" and "observed difference" do not.
+  const CONSTRUCT_WORDS = [/\bbasis\b/i, /\bregister\b/i, /\bobserved difference\b/i, /\bcanonical\b/i, /\bpredicate\b/i, /\bartifact\b/i];
+  for (const [stateId, ui] of entries) {
+    for (const re of CONSTRUCT_WORDS) {
+      assert.doesNotMatch(ui.label, re, `${stateId}: the label needs Imbas vocabulary to read: ${ui.label}`);
+    }
+    // Each label answers "what do we know about how these two answers were captured",
+    // which is the one ordinary question this row exists to answer.
+    assert.match(ui.label, /condition|recorded|say/i, `${stateId}: the label answers no ordinary question: ${ui.label}`);
+    // One sentence of support, so the surface never asks anyone to hold two.
+    assert.equal(ui.support.trim().split(/(?<=\.)\s+/).length, 1, `${stateId}: support must be one sentence`);
   }
 });

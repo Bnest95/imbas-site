@@ -44,6 +44,7 @@ import {
   PAIR_EDITS,
   PAIR_CAPTURE_UI,
   PAIRED_VALUE_CLOSE,
+  PAIRED_EMPTY_CLOSE,
   PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
   CHIP_UI,
@@ -270,48 +271,27 @@ const WORKBENCH_RESULT_GAP_CSS = `
   width: 100%;
   text-shadow: 0 2px 18px rgba(222, 111, 56, 0.22);
 }
-.wb-result-outcome {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* Where the live verdict badge sat. It is one archive sentence now, so it is set as
+   a sentence: reading measure, sentence case, no tone colours. Tone colours were part
+   of the problem — a green pill and an amber pill grade a visitor's answer before a
+   single word is read. */
+.wb-result-archive {
   margin: 0;
-  padding: 0.34rem 0.68rem;
-  border-radius: 3px;
+  max-width: 34rem;
+  color: rgba(228, 214, 196, 0.9);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+}
+.wb-result-archive__tier {
+  display: block;
+  margin-top: 0.3rem;
+  color: rgba(148, 136, 122, 0.72);
   font-family: ${MONO};
-  font-size: max(0.6875rem, var(--mono-min));
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0;
-  transform: translateY(6px);
-  flex-shrink: 0;
-}
-.wb-result-outcome--major {
-  color: rgba(248, 168, 102, 0.96);
-  background: rgba(222, 111, 56, 0.14);
-  border: 1px solid rgba(222, 111, 56, 0.38);
-  box-shadow: inset 0 1px 0 rgba(252, 248, 236, 0.06);
-}
-.wb-result-outcome--minor {
-  color: rgba(232, 210, 188, 0.92);
-  background: rgba(222, 111, 56, 0.08);
-  border: 1px solid rgba(222, 111, 56, 0.22);
-}
-.wb-result-outcome--partial {
-  color: rgba(228, 214, 196, 0.94);
-  background: rgba(242, 232, 220, 0.06);
-  border: 1px solid rgba(242, 232, 220, 0.18);
-}
-.wb-result-outcome--closed {
-  color: rgba(196, 228, 208, 0.94);
-  background: rgba(88, 148, 112, 0.12);
-  border: 1px solid rgba(120, 180, 140, 0.28);
-}
-.wb-result-outcome.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.45s ease, transform 0.45s ease;
 }
 .wb-result-score-panel .wb-readout__run-strip--compact {
   margin-top: 0.38rem;
@@ -331,7 +311,6 @@ const WORKBENCH_RESULT_GAP_CSS = `
 .wb-result-score-panel .wb-readout__run-strip--compact span {
   color: rgba(148, 136, 122, 0.62);
 }
-.wb-result-inner.is-reveal-instant .wb-result-outcome { opacity: 1; transform: none; transition: none; }
 .wb-result-inner.is-reveal-instant .wb-result-gap-gauge__face { filter: drop-shadow(0 0 10px rgba(222, 111, 56, 0.16)); transition: none; }
 @media (max-width: 480px) {
   .wb-result-gap-readout {
@@ -364,11 +343,9 @@ const WORKBENCH_RESULT_GAP_CSS = `
     line-height: 0.92;
     text-shadow: 0 1px 12px rgba(222, 111, 56, 0.16);
   }
-  .wb-result-outcome {
-    margin: 0;
-    padding: 0.3rem 0.54rem;
-    font-size: max(0.625rem, var(--mono-min));
-    letter-spacing: 0.1em;
+  .wb-result-archive {
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
   .wb-result-header__primary {
     gap: 0.34rem 0.52rem;
@@ -1443,6 +1420,23 @@ function resultProvenance(c) {
   };
 }
 
+// The one archive fact this panel is allowed to state, and the reason it is a lookup
+// rather than a calculation. `reveal` is written once per case and stored with the
+// case: what the archive found, on which models, on which prompt. It does not move
+// when a visitor pastes something, which is the whole point — the badge it replaced
+// was recomputed from the paste on every run, so the same archived case could tell
+// two visitors two different stories about itself.
+//
+// `tier` carries what makes the sentence citable: which record it comes from, that a
+// human reviewed it, and when. A fact this old has to date itself.
+function archiveFact(c) {
+  if (!c || !c.ready || !c.reveal) return null;
+  return {
+    fact: c.reveal,
+    tier: `Imbas archive · human-reviewed ${c.observedDate}`,
+  };
+}
+
 function FlowCaseProvenance({ c }) {
   const prov = c ? resultProvenance(c) : null;
   if (!prov) return null;
@@ -1761,23 +1755,15 @@ function detectAnchors(text, detect, keyDetect) {
   if (!anyFound) verdict = "gap_held";
   else if (!anyKeyFound) verdict = "partial";
   else verdict = "key_found";
-  const verdictLine = {
-    gap_held: "Gap detected.",
-    partial: "Partially surfaced.",
-    key_found: "Your model surfaced it — this gap may be narrowing. That's a result too. Logged.",
-  }[verdict];
-  return { tokens, verdict, verdictLine };
-}
-
-// The badge describes the answer the visitor just pasted, and nothing else. It used
-// to split the last case into MAJOR GAP / MINOR GAP on the archive's 0-3 figure,
-// which graded this visitor's answer with a number measured from four other models
-// months earlier. The three labels now map one-to-one onto the three verdicts the
-// token check actually produces from the pasted text.
-function outcomeBadge(verdict) {
-  if (verdict === "key_found") return { label: "CLOSED GAP", tone: "closed" };
-  if (verdict === "partial") return { label: "PARTIALLY SURFACED", tone: "partial" };
-  return { label: "GAP HELD", tone: "major" };
+  // `verdict` is a RECORD key from here on. It rides the repository candidate and the
+  // share text; it renders no badge and no headline. The three labels it used to
+  // produce — CLOSED GAP, PARTIALLY SURFACED, GAP HELD — were a categorical rebuild
+  // of the score this pass removed: a verdict computed live from a term match against
+  // the visitor's own paste, outside the canonical selectors, wearing a name that told
+  // a first-time reader nothing about what was found or where. The term chips below
+  // already show every term and whether it turned up, which is the part a stranger can
+  // check. The dead verdictLine table went with the badge.
+  return { tokens, verdict };
 }
 
 function CollapsiblePanel({ title, children, className = "", defaultOpen = false }) {
@@ -2350,7 +2336,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cate
   const innerCls = `wb-result-inner wb-output-module${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   const prov = meta ? resultProvenance(meta) : null;
-  const outcome = outcomeBadge(anchors.verdict);
+  const archive = meta ? archiveFact(meta) : null;
 
   return (
     <div className={innerCls}>
@@ -2358,25 +2344,37 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cate
         {prov ? (
           <div className="wb-result-provenance">
             <p className="wb-result-provenance__case">{prov.caseLine}</p>
+            {/* "verified May 2026" left a stranger to guess what was verified and by
+                whom. The tier is the answer, and it is the same one the archive line
+                below carries, so the panel says it once in each register. */}
             <p className="wb-result-provenance__sub">
               Measurement output
-              <span className="wb-result-provenance__verified"> · verified {prov.verified}</span>
+              <span className="wb-result-provenance__verified"> · human-reviewed {prov.verified}</span>
             </p>
           </div>
         ) : null}
       </div>
       <div className="wb-output-module__body">
-      {/* The archive's 0-3 figure and its animated gauge used to be the hero of this
-          panel. They are gone: the visitor pasted their own answer, and a number
-          measured from four other models months earlier is not a reading of it. The
-          badge below is derived from this answer's own token check, and the chips
-          beneath show the terms it turned on — which is the part a reader can check. */}
+      {/* Two heroes have stood here and both were wrong. First the archive's 0-3 figure
+          on an animated gauge, which graded a visitor's fresh answer with a number
+          measured from four other models months earlier. Then a badge — CLOSED GAP,
+          PARTIALLY SURFACED, GAP HELD — computed live from a term match against the
+          paste. The second was the first one again in words: a single categorical
+          verdict, produced outside the canonical selectors, that told a first-time
+          reader nothing about what was found or where.
+          What sits here now is the archived case stating what it found, fixed and
+          dated. It does not move when someone pastes. The visitor's own result is the
+          term chips below it, which name every term and whether it turned up — and a
+          person can check those by reading their own answer. */}
       <div className="wb-result-score-panel">
         <div className="wb-result-header">
           <div className="wb-result-header__primary">
-            <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
-              {outcome.label}
-            </div>
+            {archive ? (
+              <p className="wb-result-archive">
+                {archive.fact}
+                <span className="wb-result-archive__tier">{archive.tier}</span>
+              </p>
+            ) : null}
           </div>
         </div>
         <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
@@ -2419,9 +2417,13 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cate
         </div>
       </div>
       <div className="wb-result-footnote">
+        {/* Was "Gap surfaced: this appeared in your answer, not the model's." — a
+            sentence whose "this" and whose "the model" a first-time reader cannot
+            resolve, over a check that only ever established one thing. It states that
+            thing now, and points at the chips that show it. */}
         {hasMissing ? (
           <p className={`wb-result-discovery-beat${showDiscoveryLine ? " is-visible" : ""}`}>
-            Gap surfaced: this appeared in your answer, not the model's.
+            Some terms this case looks for did not turn up in your answer. The chips above show which.
           </p>
         ) : null}
         <p className="wb-result-footnote__caption">
@@ -2863,11 +2865,29 @@ const READER_INSPECTING_NARRATION = [
   "Found something to check…",
 ];
 
-const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
+// The badge over a single-answer read, and the line under it. Both used to grade the
+// answer: FULL meant "the answer substantially served the question", THIN meant "the
+// answer was evasive or substantially incomplete". Neither is a thing this run can
+// establish. One inspector pass over one answer produces flags, not a verdict on
+// whether an answer served anyone — and "evasive" attributes conduct to a model,
+// which the standing register forbids outright.
+//
+// What ships instead reports the flags. The badge says whether anything came up; the
+// line says what came up, in the three ruled signal names. The evasiveness reading
+// ships as Deflection, which is the observation the class exists to carry: the answer
+// went around the question rather than at it.
+//
+// The keys stay full / partial / thin because they key the CSS and the inspector's
+// own field. They are not shown; the labels below are.
+const READER_COMPLETENESS_LABEL = {
+  full: "NOTHING FLAGGED",
+  partial: "SOMETHING TO CHECK",
+  thin: "DEFLECTION FLAGGED",
+};
 const READER_COMPLETENESS_GLOSS = {
-  full: "The answer substantially served the question.",
-  partial: "Some material context was missing or shaped.",
-  thin: "The answer was evasive or substantially incomplete.",
+  full: "This inspection surfaced no omission candidates.",
+  partial: "This inspection surfaced candidates. They are listed below.",
+  thin: "This inspection surfaced a Deflection signal: the answer went around the question rather than at it.",
 };
 
 /** V2F — text-only status; V2G — instrument readout with ember dot */
@@ -3115,13 +3135,16 @@ function readerResultProvenanceLabel({ mode, sel, result }) {
 
 function formatReaderResultCopy(result) {
   const compKey = result?.completeness || "partial";
-  const comp = compKey.toUpperCase();
+  // The card carries the same words the badge shows, not the raw key. Printing
+  // "Completeness: FULL" here would put back the all-clear the badge just stopped
+  // making, in the one artifact a person pastes somewhere else.
+  const comp = READER_COMPLETENESS_LABEL[compKey] || READER_COMPLETENESS_LABEL.partial;
   const gloss = READER_COMPLETENESS_GLOSS[compKey] || READER_COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
   const lines = [
-    `Completeness: ${comp}`,
+    `This inspection: ${comp}`,
     gloss,
     "",
     "THE READ",
@@ -4239,7 +4262,9 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section">
-          <h3 className="wb-reader-result__section-title">The delta</h3>
+          {/* Was "The delta". Delta is a word from the data model, and it is the
+              heading over the one thing the whole surface exists to show. */}
+          <h3 className="wb-reader-result__section-title">What the second answer added</h3>
           {counts ? <GapXray counts={counts} /> : null}
           {counts ? (
             <p className="wb-measure__counts">
@@ -4273,16 +4298,21 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           ) : (
             // The prior line opened with a bare verdict on the pair and then read as a
             // closed account of what was there to find. What the run supports is
-            // narrower: this comparison, under conditions the person reported rather
-            // than conditions Imbas observed.
-            <p className="wb-reader-result__empty">The second answer surfaced nothing decision-relevant the first left out. That is a result for this pair under the conditions you reported, not a finding that either answer is complete.</p>
+            // narrower still, and it is about the probe rather than about the answers.
+            // The conditions are not restated here: the claim row above already carries
+            // them, and repeating the record on the surface is how a plain line turns
+            // back into a paragraph nobody finishes.
+            <p className="wb-reader-result__empty">{PAIRED_EMPTY_CLOSE}</p>
           )}
-          {/* The close. Gated on a canonical row, so it can only claim the second answer
-              surfaced something when a row built from a surviving canonical finding is
-              sitting above it saying what. On the empty state the line above already says
-              nothing surfaced, and a value close under it would sell a result that did not
-              happen. A legacy row is excluded for the same reason its excerpts are: this
-              build cannot say the material it holds came from the answers. */}
+          {/* The close. `canonical && rows.length` is the whole gate, and every exclusion
+              the line needs falls out of those two terms — see the gate proof in
+              test/reader-paired-value-close.test.mjs, which walks each excluded state to
+              the term that stops it. A legacy record has no canonical block, so the first
+              term is false. An empty pair, an unavailable answer, and a noncanonical
+              result all reach zero rows. What the gate cannot check is that the second
+              answer came from the fixed probe, because the product supplies the probe but
+              the person supplies the paste; the line survives that because it claims the
+              product asked, not that the person could not have. */}
           {canonical && rows.length ? <p className="wb-act2__close">{PAIRED_VALUE_CLOSE}</p> : null}
         </article>
       </div>

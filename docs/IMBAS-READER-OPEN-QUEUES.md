@@ -106,7 +106,7 @@ architecture claim holds: `FAMILIES` (`reader-checks.js:37`) already covers `com
 independently; `buildCheckRegister` (`339`) assembles and ranks. A detector can be added
 without changing the construct.
 
-**8. The completeness badge states a verdict on the answer, on every read.**
+**8. The completeness badge states a verdict on the answer, on every read.** — **CLOSED, Pass 2B-B correction.**
 Found while building the honest empty states in Pass 2B-B, and deliberately not fixed there.
 `READER_COMPLETENESS_GLOSS` in `workbench-app.jsx` prints one line under the read badge:
 full glosses as "The answer substantially served the question", partial as "Some material
@@ -125,9 +125,81 @@ The board photographs exactly that, in `single-empty-read`.
 
 It was left alone because the gloss renders on every read, so rewording it changes the
 populated result too — a copy decision for the register lane, not a repair to an empty
-state. Whichever pass takes it should replace the verdict with a statement of what the
-pass observed, and should decide whether a three-way completeness badge is a claim the
-Reader is entitled to make at all.
+state.
+
+Resolved by the 2B-B correction under the standing register, as strings only. The badge
+reports whether anything came up and the line reports what came up, in the three ruled
+signal names: NOTHING FLAGGED over "This inspection surfaced no omission candidates",
+SOMETHING TO CHECK over "This inspection surfaced candidates. They are listed below",
+DEFLECTION FLAGGED over "This inspection surfaced a Deflection signal: the answer went
+around the question rather than at it." The evasiveness reading was not dropped; it ships
+as Deflection, which is the class that carries it without attributing conduct. The keys
+stay full / partial / thin because they key the CSS and the inspector's own field, and
+they are not shown. `formatReaderResultCopy` prints the same words the badge shows rather
+than the raw key, so the pasted card cannot restate the all-clear the badge stopped making.
+Held by `test/reader-no-allclear-vocabulary.test.mjs`, which lists the prohibited all-clear
+and conduct vocabulary and scans both the shipped constants and the committed board
+baselines for it. The `single-empty-read` baselines are re-photographed at both viewports.
+
+The second question the item raised — whether a three-way badge is a claim the Reader is
+entitled to make at all — is NOT answered here. What ships is a three-way flag summary, not
+a three-way grade. Whether the summary earns its place is a register-lane question and it
+stays open as item 12.
+
+**9. The curated case surface computed a three-way verdict from the visitor's paste.**
+Recorded 2026-07-30 by the Pass 2B-B correction, which removed the render and preserved the
+idea. `detectAnchors` in `workbench-app.jsx` token-matched the visitor's pasted answer
+against the stored anchors of a published case and printed CLOSED GAP, PARTIALLY SURFACED
+or GAP HELD over it. That is a live computed verdict, derived outside the canonical
+selectors, on the strength of a term match — a categorical rebuild of the figure the same
+pass removed. It is gone from the current surface, and what stands there now is a fixed
+archive-tier fact read off the published case, labelled with the human-review tier and the
+observed date, never recalculated from the paste.
+
+The detector itself is worth keeping and is not ruled on. If it returns it returns as a
+flag, not a verdict: it states its own basis in the sentence a person reads, and it is
+legible to someone who has never read the methodology. "The archived case's one-year filing
+deadline was not found in your answer by this term check" is the register. "GAP HELD" is
+not, and neither is any label that needs an Imbas word to parse. A term match over a stored
+anchor list is weak evidence, and a flag that says so is honest where a badge that hides it
+is not. Register lane, or C.
+
+**10. The share card still writes verdict prose from the same detection.**
+Recorded 2026-07-30, alongside item 9, and deliberately not taken by that correction.
+`buildShareResultText` in `workbench-app.jsx` assembles the copyable card for a curated run
+and still speaks in the removed vocabulary — "gap held — the answer did not name…". It is
+closer to the acceptable register than the badge was, because it states the basis in the
+same breath rather than compressing it into two words, and it renders inside a collapsed
+panel rather than as the headline. It was left because the correction was scoped to the
+result surface and to strings, and rewriting the card is a copy decision about a different
+surface.
+
+It should be read against item 9's ruling when that ruling lands, so the card and the
+detector move together rather than one being fixed twice.
+
+**11. Two shipped surfaces now say different things about the same absence.**
+Recorded 2026-07-30. The correction replaced the zero-delta copy on the run surface with
+"This probe surfaced nothing new. That doesn't mean either answer is complete." The share
+page (`inspection.js`) still renders the retired pair — the heading "The delta" and the body
+"No material gap. The direct question surfaced nothing decision-relevant the first answer
+left out." — because `inspection.js` is a carved surface and the standing ruling forbids
+touching it in B.
+
+The consistency invariant is what this item exists to satisfy: a visitor who runs an
+inspection and then opens its share link currently reads two different accounts of the same
+result, one of which puts the absence on the answers. It moves with SCORE RETIREMENT QUEUE
+item 1, which already carries `inspection.js` for the score and the retired split
+vocabulary. Adding a third string to that same move costs nothing; moving it early would
+break the carve.
+
+**12. Whether a three-way flag summary is a claim the Reader may make at all.**
+Recorded 2026-07-30, split off from item 8 when that item closed. Item 8 removed the
+verdict from the completeness badge and left the shape: three states, one shown per read.
+What ships is a summary of whether anything came up, not a grade on the answer. Nobody has
+ruled on whether the Reader should summarize at all, or whether the finding list alone is
+the honest surface and any badge above it is a compression that invites the reading the
+copy just stopped making. Register lane.
+
 
 ---
 
@@ -381,6 +453,16 @@ payload still carries `gap_estimate_label` (`api/read-paired.js`, 4), and both s
 a "Gap Estimate" column to Airtable. `reader-receipt.js` (2) holds `gapEstimateLabel` and
 `pairedGapEstimateLabel`, which survive only because `api/inspection-share.js` and
 `api/read-paired.js` import them; relocating them would change frozen API semantics.
+
+Recorded 2026-07-30 by the Pass 2B-B correction, in the same lane and not in this queue's
+subject: the run surface closes a paired result with "A better answer, without already
+knowing what to ask.", gated on a canonical result with at least one surfaced difference.
+The gate cannot check that the second answer came from the probe Imbas supplied, because
+nothing in the payload records which question was actually asked. The line survives that
+gap — it claims the product asked the question, which is true of every run that reaches the
+gate — but if the API ever wants to enforce probe equality rather than report it, this is
+the lane that owns it. `test/reader-paired-value-close.test.mjs` names the condition as
+client-reported and says why.
 
 Nothing in this envelope drives a current render, a canonical receipt claim, an export, a
 tally, a label, or explanatory copy — Part A of the scan test is what proves it. Retiring
