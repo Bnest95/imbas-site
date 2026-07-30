@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 7207
+scroll_offset: 7491
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -501,7 +501,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -524,7 +523,7 @@ viewport: 375x812
       },
       "paired_analysis": null,
       "receipt_type": "single",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -876,7 +875,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -916,7 +914,6 @@ viewport: 375x812
         "estimate_rationale": "Counted only decision-relevant deltas. Unvalidated.",
         "estimate_type": "paired_gap",
         "gap_estimate": 2,
-        "gap_estimate_label": "Machine gap estimate: 2 of 3 (unvalidated)",
         "open_run_id": "<ID>",
         "paired_method_version": "1.1",
         "rubric_version": "1.0",
@@ -927,7 +924,7 @@ viewport: 375x812
         "unvalidated": true
       },
       "receipt_type": "paired",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": null,
     "rubric_version": "1.0",
@@ -947,8 +944,8 @@ a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
-div "Machine gap estimate: 2 of 3 (unvalidated)"
-p "Counted only decision-relevant deltas. Unvalidated."
+div "Not counted under the current method"
+p "This record was written under an earlier method. Its readings show; its excerpts and count do not."
 h3 "The delta"
 span "Omission"
 span "The Reader's reading"

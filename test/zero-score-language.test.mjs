@@ -16,7 +16,7 @@
 // is a count with a declared unit, produced by a named canonical selector, which a
 // reader can check by counting the rows on screen.
 //
-// TWO HALVES, DIFFERENT JOBS:
+// THREE PARTS, DIFFERENT JOBS:
 //
 //   PART A — OUTPUT SCAN. Builds real receipts and a real Review Record export and
 //   asserts the prohibited patterns appear ZERO times. This is the actual guarantee.
@@ -27,6 +27,14 @@
 //   NOT in the baseline fails. An increase in a baselined file fails. A decrease
 //   passes, and tightening the recorded number afterwards is the intended workflow.
 //   Every baseline entry is annotated with the lane that retires it.
+//
+//   PART C — BOARD SCAN. Reads the committed acceptance-board baselines and asserts
+//   that no RENDER section on the board carries a prohibited string, at either
+//   viewport, in any state. Parts A and B check what the code emits and what the
+//   source says; this checks what a camera pointed at the running product recorded.
+//   The payload block of the same file is a stubbed API response and is ratcheted
+//   separately, because the wire field is the compatibility envelope Part A already
+//   proves cannot become a claim.
 //
 // SCOPE OF THE SOURCE SCAN. Comments are stripped before scanning. A comment cannot
 // present a claim to a reader, and the prose explaining why the score is gone would
@@ -46,6 +54,8 @@
 //   · one more prohibited string inside a baselined file ................... ceiling
 //   · a prohibited string appended to workbench.bundle.js only ....... bundle/source
 //   · the consent copy drops its disclosure while the page still scores .. invariant
+//   · a baseline re-accepted with the score gauge back on screen ......... board scan
+//   · a board scenario deleted so its states stop being photographed ... board census
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -64,6 +74,7 @@ import {
 import { buildReviewRecord, REVIEW_RECORD_UI, METHOD_NOTE } from "../reader-review-record.js";
 import { buildCheckRegister } from "../reader-checks.js";
 import { buildPairCapture, PAIR_SAME_MODEL, PAIR_EDITS, PAIRED_METHOD_VERSION } from "../reader-paired.js";
+import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const sha256Hex = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -549,4 +560,125 @@ test("consistency invariant: the share page, its metadata, and the consent copy 
       "removing all three together and emptying the temporary share entries from the " +
       "ratchet baseline — not leaving a disclosure that no longer matches the page.",
   );
+});
+
+// ── PART C: the acceptance board ──────────────────────────────────────────────
+// Parts A and B reason about code. This part reads what a camera recorded off the
+// running product. A baseline is a text file in three sections: `## environment`, the
+// stubbed `## payload`, and `## render` — the elements that were actually visible
+// inside the captured rectangle. Only the render section is copy a person saw, and it
+// is the section the hard criterion governs.
+//
+// The payload section is a stubbed API response carrying gap_estimate_label, the
+// frozen wire field named in the compatibility envelope. It is counted and ratcheted
+// rather than banned, because banning it would mean editing the fixtures to hide a
+// field the endpoint really does return — the scan would then be measuring the
+// fixtures instead of the product. Part A is what proves the field cannot become a
+// claim; this is what proves it never reached the screen.
+
+const BOARD_DIR = join(ROOT, "docs", "qa", "visual-acceptance-harness");
+const BOARD_VIEWPORTS = ["desktop", "mobile"];
+
+function boardSections(text) {
+  const iRender = text.indexOf("\n## render\n");
+  const iPayload = text.indexOf("\n## payload\n");
+  return {
+    environment: text.slice(0, iPayload < 0 ? text.length : iPayload),
+    payload: iPayload < 0 ? "" : text.slice(iPayload, iRender < 0 ? text.length : iRender),
+    render: iRender < 0 ? "" : text.slice(iRender),
+  };
+}
+
+function boardBaselines() {
+  return readdirSync(BOARD_DIR)
+    .filter((f) => f.endsWith(".snapshot.txt"))
+    .sort()
+    .map((f) => ({ file: f, sections: boardSections(readFileSync(join(BOARD_DIR, f), "utf8")) }));
+}
+
+test("board scan: no state on the acceptance board renders score language", () => {
+  const offenders = [];
+  for (const { file, sections } of boardBaselines()) {
+    assert.ok(sections.render.length, `${file} has no render section, so it proves nothing about what was on screen`);
+    for (const h of occurrences(sections.render)) offenders.push(`${file} — ${h.label}: ${JSON.stringify(h.match)}`);
+  }
+  assert.deepEqual(
+    offenders,
+    [],
+    "A committed baseline photographed score language on screen. Either the surface " +
+      "regressed, or a baseline was re-accepted from a tree where it had not been " +
+      "removed yet. Do not re-accept to make this green: fix the render, then capture.",
+  );
+});
+
+test("board scan: every board scenario is photographed at both viewports", () => {
+  // The render scan above passes trivially against an empty board. This is what makes
+  // it mean something: every scenario the module declares has a committed baseline at
+  // each viewport, so deleting a scenario or skipping a capture fails here rather than
+  // quietly shrinking what the scan covers.
+  const have = new Set(readdirSync(BOARD_DIR).filter((f) => f.endsWith(".snapshot.txt")));
+  const missing = [];
+  for (const name of Object.keys(SCENARIOS)) {
+    for (const vp of BOARD_VIEWPORTS) {
+      const f = `${name}--${vp}.snapshot.txt`;
+      if (!have.has(f)) missing.push(f);
+    }
+  }
+  assert.deepEqual(missing, [], `board states with no committed baseline: ${missing.join(", ")}`);
+
+  const expected = new Set(
+    Object.keys(SCENARIOS).flatMap((n) => BOARD_VIEWPORTS.map((vp) => `${n}--${vp}.snapshot.txt`)),
+  );
+  const orphans = [...have].filter((f) => !expected.has(f));
+  assert.deepEqual(orphans, [], `baselines for scenarios that no longer exist: ${orphans.join(", ")}`);
+});
+
+// The exact expected count, derived rather than allowed. A scenario stubbing
+// /api/read-paired carries gap_estimate_label once, and that one field trips two
+// patterns — the phrase and the figure inside it. Everything else carries none, which
+// includes every single-answer state: the receipt stopped carrying the label in this
+// pass, so a single route now scans clean.
+//
+// Asserted as equality, not a ceiling, because the number is fully determined by which
+// routes a scenario stubs. A ceiling would quietly absorb a second field appearing.
+//
+// RETIRED BY: the API-spec lane, which removes gap_estimate_label from the paired
+// payload. When it lands, PAIRED_WIRE_FIELD goes to 0 and this test becomes the plain
+// statement that no baseline carries score language anywhere — at which point it is
+// merged into the render scan above rather than lowered.
+const PAIRED_WIRE_FIELD = 2;
+
+test("board scan: the wire field stays in the payload block and stays at its derived count", () => {
+  const wrong = [];
+  for (const { file, sections } of boardBaselines()) {
+    const name = file.replace(/--(desktop|mobile)\.snapshot\.txt$/, "");
+    const s = SCENARIOS[name];
+    assert.ok(s, `${file} has no scenario named ${name}`);
+    const expected = s.routes && s.routes["/api/read-paired"] ? PAIRED_WIRE_FIELD : 0;
+    const n = occurrences(sections.payload).length;
+    if (n !== expected) wrong.push(`${file}: ${n}, expected ${expected}`);
+    // Whatever the payload carries, the environment block never mentions a score.
+    assert.deepEqual(occurrences(sections.environment), [], `${file} records score language in its environment block`);
+  }
+  assert.deepEqual(
+    wrong,
+    [],
+    "A board payload carries a different amount of score language than its stubbed routes " +
+      `account for: ${wrong.join("; ")}. The paired route carries gap_estimate_label and nothing ` +
+      "else does; a new occurrence means a second compatibility field appeared, which needs its " +
+      "own decision rather than a bigger number here.",
+  );
+});
+
+test("board scan: no scenario's own assertions or prose carry score language", () => {
+  // A scenario's assertText drives a hasText check at capture time, so a prohibited
+  // string there would be an instruction to confirm the score is present. The state
+  // and expected prose are read by a person reviewing the board, and a description
+  // that still talks in scores describes a product that no longer exists.
+  const offenders = [];
+  for (const [name, s] of Object.entries(SCENARIOS)) {
+    const prose = [s.state, s.expected, ...(s.assertText || []), s.assertSelector || "", s.focus || ""].join("\n");
+    for (const h of occurrences(prose)) offenders.push(`${name} — ${h.label}: ${JSON.stringify(h.match)}`);
+  }
+  assert.deepEqual(offenders, [], `board scenarios describing a score: ${offenders.join("; ")}`);
 });

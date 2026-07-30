@@ -4331,7 +4331,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           carrying the capture block (mode = paired). No checks ride along — the paired
           inspection produces a delta, not comparative checks (schema Checks from paired
           findings are v1.1). The single-mode export lives on the Check Register panel. */}
-      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} />
+      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} variant="paired" />
 
       {legacy ? null : <ReaderShareAction mode="paired" receipt={paired.receipt} />}
 
@@ -4679,7 +4679,7 @@ function CheckRegisterPanel({ result }) {
           {showAll ? CHECK_UI.collapse_label : `${CHECK_UI.expand_label} (${reg.cards.length})`}
         </button>
       ) : null}
-      <ReviewRecordExport result={result} statuses={statuses} />
+      <ReviewRecordExport result={result} statuses={statuses} variant="single" />
       <p className="wb-reader-result__trust wb-checks__boundary">{RECEIPT_BOUNDARY}</p>
     </section>
   );
@@ -4691,7 +4691,12 @@ function CheckRegisterPanel({ result }) {
 // unkeyed SHA-256 integrity digest over the record's canonical form. Built and
 // hashed entirely in the tab and handed to the browser as a JSON file — no server
 // round-trip, no persistence of the pasted answer anywhere. JSON only in v1.
-function ReviewRecordExport({ result, statuses, pair = null }) {
+// `variant` exists for one reason: a paired screen renders two of these, the
+// single-mode control on the Check Register panel and the paired one below the delta.
+// They are the same component and they say different things, and a harness aiming at
+// ".wb-checks__export" gets whichever is first in the document. The modifier lets a
+// camera name which one it means, the same way wb-act2__notice--legacy does.
+function ReviewRecordExport({ result, statuses, pair = null, variant = "" }) {
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
   const busyRef = useRef(false);
@@ -4725,7 +4730,7 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
     }
   };
   return (
-    <div className="wb-checks__export">
+    <div className={`wb-checks__export${variant ? ` wb-checks__export--${variant}` : ""}`}>
       <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={download}>
         {downloaded ? REVIEW_RECORD_UI.downloaded_label : REVIEW_RECORD_UI.action_label}
       </Btn>

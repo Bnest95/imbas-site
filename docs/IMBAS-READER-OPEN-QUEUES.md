@@ -67,11 +67,23 @@ The paired headline "It answers when asked. It just didn't volunteer." reads as 
 confirming what Act 1 flagged. The adopted Act 2 ruling removes that implication: the two
 acts are independent passes and Act 2 does not exist to confirm Act 1. This string is live.
 
-**5. The only zero-work entry point fails the legibility bar.**
-The Chevron and Loper Bright demo is currently the one place a visitor with nothing to
-paste can see the product work. Its subject matter does not clear Section P's standard: a
-normal person understands the catch in roughly ten seconds. It stands as a placeholder
-until a factory-produced example replaces it.
+**5. The only zero-work entry point fails the legibility bar.** — **CLOSED, Pass 2B-B.**
+The Chevron and Loper Bright demo was the one place a visitor with nothing to paste could
+see the product work. Its subject matter did not clear Section P's standard: a normal
+person understands the catch in roughly ten seconds. It stood as a placeholder until a
+factory-produced example replaced it.
+
+Replaced by the Montana capture from the public example packet, in `reader-public-example.js`.
+The catch is a repayment obligation a renter can act on, and it is legible without knowing
+what an agency is. Four facts stay separate on the surface, because merging any two states
+something the stored bytes do not carry: what the person declared about the capture, what
+the page displayed, what the hashes fix, and the absence of any matched-conditions
+determination to read. `test/reader-public-example.test.mjs` checks the rendered facts
+against the packet file, so drift fails in CI rather than at publication.
+
+What 2B-B did not own, and what is therefore still open: the acquisition choreography
+around the door, expanded explanatory copy, hierarchy polish beyond the minimum truthful
+entry, and first-visit conversion behavior. The superseded 7-day row stays excluded.
 
 **6. Each figure needs its own claim register and provenance label.**
 Single-mode live output should report a count of candidate items, not a gap score. Paired
@@ -93,6 +105,29 @@ architecture claim holds: `FAMILIES` (`reader-checks.js:37`) already covers `com
 `local_integrity`, and `profile`; `validateDetectorEvent` (`390`) validates each family
 independently; `buildCheckRegister` (`339`) assembles and ranks. A detector can be added
 without changing the construct.
+
+**8. The completeness badge states a verdict on the answer, on every read.**
+Found while building the honest empty states in Pass 2B-B, and deliberately not fixed there.
+`READER_COMPLETENESS_GLOSS` in `workbench-app.jsx` prints one line under the read badge:
+full glosses as "The answer substantially served the question", partial as "Some material
+context was missing or shaped", thin as "The answer was evasive or substantially
+incomplete". Two problems, and only the second is an empty-state problem.
+
+First, these are verdicts about the answer, not statements about what this inspection
+observed. "Substantially served the question" is the kind of claim the framing rules exist
+to keep off the surface: it is a judgment, stated without a sample size, on a single pass
+over a single answer. "Evasive" additionally attributes conduct, which is a motive verb
+about a model in everything but grammar.
+
+Second, the full gloss is what renders above a read that surfaced nothing, so the one place
+the surface most needs to say "this pass found nothing" instead says the answer was good.
+The board photographs exactly that, in `single-empty-read`.
+
+It was left alone because the gloss renders on every read, so rewording it changes the
+populated result too — a copy decision for the register lane, not a repair to an empty
+state. Whichever pass takes it should replace the verdict with a statement of what the
+pass observed, and should decide whether a three-way completeness badge is a claim the
+Reader is entitled to make at all.
 
 ---
 

@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 7377
+scroll_offset: 8420
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -501,7 +501,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -524,7 +523,7 @@ viewport: 375x812
       },
       "paired_analysis": null,
       "receipt_type": "single",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -870,7 +869,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -1059,7 +1057,6 @@ viewport: 375x812
         "estimate_rationale": "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
         "estimate_type": "paired_gap",
         "gap_estimate": 2,
-        "gap_estimate_label": "Machine gap estimate: 2 of 3 (unvalidated)",
         "open_run_id": "<ID>",
         "paired_method_version": "2.0",
         "rubric_version": "1.0",
@@ -1070,7 +1067,7 @@ viewport: 375x812
         "unvalidated": true
       },
       "receipt_type": "paired",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -1244,8 +1241,8 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-div "Machine gap estimate: 2 of 3 (unvalidated)"
-p "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated."
+div "1 difference surfaced"
+p "Differences the second answer surfaced that the Reader could quote from both answers."
 h3 "The delta"
 p "Omission: 1 · Framing Drift: 0 · Deflection: 0"
 span "Omission"
@@ -1255,8 +1252,7 @@ blockquote "\"within 30 days of the tenant moving out\""
 span "First answer"
 blockquote "\"It runs from 14 days in some states to 60 days in others\""
 span "Second answer"
+p "The second answer surfaced material the first did not. You now have a fuller picture, not a full one."
 h3 "Why this inspection matters"
 span "What happened"
 p "The targeted answer contained material the open answer did not."
-span "Why this matters"
-p "The inspection records a difference in what was volunteered under the tested conditions. It does not determine why the difference occurred."

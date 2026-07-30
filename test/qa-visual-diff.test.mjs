@@ -23,9 +23,10 @@ import {
   imageComparability,
   detectErrorPage,
   assertScenarioCapturable,
+  IMAGE_ENV_KEYS,
   SNAPSHOT_FORMAT,
 } from "../scripts/qa/snapshot.mjs";
-import { captureAll, commitResults, parseArgs } from "../scripts/qa/visual-acceptance.mjs";
+import { captureAll, commitResults, parseArgs, resolveNavigation } from "../scripts/qa/visual-acceptance.mjs";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
 
 const snap = (lines, payload = {}, env = {}) =>
@@ -299,6 +300,69 @@ test("a canned scenario may declare no routes, and nothing else", () => {
 test("every committed scenario passes its own shape check", () => {
   for (const [name, scenario] of Object.entries(SCENARIOS)) {
     assert.deepEqual(assertScenarioCapturable(name, scenario), [], `scenario ${name} is well formed`);
+  }
+});
+
+// ── Per-scenario query string ────────────────────────────────────────────────
+//
+// The curated console renders only when the Reader flag is off, and that flag is read
+// from the URL, so one scenario has to be driven to a query. Two derived values have
+// to agree: the URL the browser is sent to, and the string written into the baseline's
+// env block. resolveNavigation returns both from one input so they cannot drift apart.
+
+test("a scenario without a query is navigated to the bare pinned page", () => {
+  const nav = resolveNavigation({ name: "x" });
+  assert.equal(nav.path, "/workbench.html");
+  assert.equal(nav.query_parameters, "(none)");
+  // Same for the empty and absent cases: neither invents a dangling "?".
+  assert.equal(resolveNavigation({ name: "x", query: "" }).path, "/workbench.html");
+  assert.equal(resolveNavigation({}).path, "/workbench.html");
+});
+
+test("a scenario's query reaches the URL and the recorded environment together", () => {
+  const nav = resolveNavigation({ name: "curated-readout", query: "reader=0" });
+  assert.equal(nav.path, "/workbench.html?reader=0");
+  assert.equal(nav.query_parameters, "?reader=0");
+
+  // A leading "?" is tolerated and never doubled, because writing it either way in a
+  // scenario is a reasonable thing to do and getting "??reader=0" is not.
+  assert.equal(resolveNavigation({ query: "?reader=0" }).path, "/workbench.html?reader=0");
+  assert.equal(resolveNavigation({ query: "??reader=0" }).path, "/workbench.html?reader=0");
+});
+
+test("the committed curated scenario is the one that carries a query, and it is recorded", () => {
+  // Named rather than discovered: the query exists to reach a specific surface, and if
+  // some other scenario starts needing one, that is a decision to make on purpose.
+  const withQuery = Object.entries(SCENARIOS).filter(([, s]) => s.query);
+  assert.deepEqual(withQuery.map(([n]) => n), ["curated-readout"]);
+  assert.equal(resolveNavigation(SCENARIOS["curated-readout"]).query_parameters, "?reader=0");
+});
+
+test("a query difference is a real difference, not an incomparability", () => {
+  // query_parameters is deliberately absent from IMAGE_ENV_KEYS. A capture under
+  // ?reader=0 and a capture of the bare page are two different pages, so the image
+  // layer must compare them and report the change rather than skip the comparison the
+  // way it skips a Chromium upgrade.
+  assert.ok(!IMAGE_ENV_KEYS.includes("query_parameters"));
+  const base = {
+    image_diff: "enabled",
+    browser_version: "HeadlessChrome/148.0.7778.96",
+    viewport: "1440x900",
+    device_scale_factor: "2",
+    mobile_emulation: "false",
+    query_parameters: "?reader=0",
+  };
+  assert.equal(imageComparability(base, { ...base, query_parameters: "(none)" }).comparable, true);
+});
+
+test("a query is validated like a route, not waved through as decoration", () => {
+  const base = { name: "x", routes: { "/api/read": {} }, drivable: true, steps: [{ click: ".go" }], assertSelector: ".x" };
+  assert.deepEqual(assertScenarioCapturable("x", { ...base, query: "reader=0" }), []);
+  for (const bad of [{}, [], 0, "", "reader=0#top", "reader=0 &x=1"]) {
+    assert.ok(
+      assertScenarioCapturable("x", { ...base, query: bad }).length,
+      `a query of ${JSON.stringify(bad)} should be rejected`
+    );
   }
 });
 

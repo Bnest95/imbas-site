@@ -196,6 +196,51 @@ const VIEWPORTS = {
   "mobile-tall": { width: 375, height: 1600, dsf: 3, mobile: true },
 };
 
+// ── What the board does not cover ────────────────────────────────────────────
+// Written into the manifest, because a board that lists only what it photographs
+// reads as complete. Each entry is a state that exists in the product with no image
+// on the board, and the reason it has none. Reasons are scope decisions or fences,
+// never "we did not get to it" without saying so.
+const UNPHOTOGRAPHED = [
+  {
+    state: "The chip lane's empty comparison",
+    why:
+      "`CHIP_UI.reveal.empty_delta` in `reader-paired.js` renders its own empty state in the " +
+      "chip reveal, separate from the Reader's. The chip lane is fenced at chip.1.0 and this " +
+      "pass was instructed not to touch its logic, so photographing it would have meant " +
+      "driving a lane it could not fix if the capture found something wrong.",
+  },
+  {
+    state: "The share and permalink page, in every state",
+    why:
+      "Carved out of this pass by ruling. The share surface still renders a score from its " +
+      "stored row, and schema, render, page metadata and consent copy move together in 2B-C. " +
+      "Share scenarios arrive with 2B-C under 2B-C's own coverage.",
+  },
+  {
+    state: "Failure states — a route that errors, times out, or returns an unparseable body",
+    why:
+      "The harness stubs successful responses. Photographing a failure means a fixture layer " +
+      "that can return one, which is a harness capability this pass did not build. The failure " +
+      "copy is held by unit tests instead, which is weaker for layout and equal for wording.",
+  },
+  {
+    state: "The correction chips after a person has corrected the reading",
+    why:
+      "Every board state captures the default reading. The two corrected states change a " +
+      "headline and add a call to action (`LOOP_STATE_STILL_MISSING`, `LOOP_STATE_NOT_CLEAR` " +
+      "in `workbench-app.jsx`). They are reachable by one more drive step and are the most " +
+      "obvious next scenarios to add.",
+  },
+  {
+    state: "The mobile-tall viewport",
+    why:
+      "Declared in VIEWPORTS and not part of the default board. It exists to re-test a " +
+      "reported blank-compositor claim at 375x812, not to double every baseline; running it " +
+      "by default would triple the image set to re-photograph the same states.",
+  },
+];
+
 // ── Pinned environment ───────────────────────────────────────────────────────
 // Recorded into the manifest and into every snapshot so a future run can explain
 // why a baseline is or is not comparable. Locale and timezone are pinned because
@@ -217,6 +262,25 @@ const PINNED = {
   query_parameters: "(none)",
   font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
 };
+
+// ── Per-scenario query string ────────────────────────────────────────────────
+// One surface needs a query: the curated console renders only when the Reader flag is
+// off, and the flag is read from the URL. Two things follow from that, and they are
+// derived together here so they cannot disagree — the URL the browser is sent to, and
+// the string recorded into the baseline's env block.
+//
+// The recorded value matters as much as the URL. query_parameters is deliberately NOT
+// in IMAGE_ENV_KEYS: a different query is a different page, so it is a real difference
+// to report, not an incomparability to skip. Recording it means a baseline captured
+// under ?reader=0 can be read back as such instead of being mistaken for a capture of
+// the bare page that happens to look nothing like it.
+export function resolveNavigation(scenario, pinned = PINNED) {
+  const query = String((scenario && scenario.query) || "").replace(/^\?+/, "");
+  return {
+    path: `${pinned.url}${query ? `?${query}` : ""}`,
+    query_parameters: query ? `?${query}` : pinned.query_parameters,
+  };
+}
 
 // ── Browser resolution ───────────────────────────────────────────────────────
 // Priority order: purpose-built headless shells first (fastest, no profile), then
@@ -687,7 +751,8 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     ],
   }).catch(() => {});
 
-  await cdp.send("Page.navigate", { url: `${serverState.origin}/workbench.html` });
+  const nav = resolveNavigation(scenario);
+  await cdp.send("Page.navigate", { url: `${serverState.origin}${nav.path}` });
   await waitUntil(cdp, "document.readyState === 'complete'", { label: "document ready" });
 
   if (!(await evaluate(cdp, "__qa.reactLoaded()"))) {
@@ -835,6 +900,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   const env = {
     ...PINNED,
+    query_parameters: nav.query_parameters,
     browser_version: browserVersion,
     viewport: `${vp.width}x${vp.height}`,
     device_scale_factor: String(vp.dsf),
@@ -1275,13 +1341,29 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   lines.push("");
   lines.push(`| pinned value | setting |`);
   lines.push(`| --- | --- |`);
+  // query_parameters is per-scenario, not pinned. One surface needs a query, so listing
+  // a single value here would state a setting the board does not share. It is dropped
+  // from the pinned table and printed against each image instead.
   const shared = { ...PINNED, browser_version: browserVersion, browser_executable: binary };
+  delete shared.query_parameters;
   for (const k of Object.keys(shared).sort()) lines.push(`| ${k} | \`${shared[k]}\` |`);
   for (const r of results) {
     lines.push(
       `| viewport \`${r.viewport_name}\` | \`${r.env.viewport} @ dsf ${r.env.device_scale_factor}, ` +
         `mobile=${r.env.mobile_emulation}, scroll offset ${r.env.scroll_offset}\` |`
     );
+  }
+  lines.push("");
+  lines.push(`## What the board does not photograph`);
+  lines.push("");
+  lines.push(
+    `A board that lists only what it covers reads as complete. These are the result states ` +
+      `that exist in the product and have no image here, each with the reason. Anyone adding a ` +
+      `scenario should check this list first — it is where the next one comes from.`
+  );
+  lines.push("");
+  for (const gap of UNPHOTOGRAPHED) {
+    lines.push(`- **${gap.state}** — ${gap.why}`);
   }
   lines.push("");
   lines.push(`## Images`);
@@ -1294,6 +1376,7 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
     lines.push(`| sha256 | \`${r.sha256}\` |`);
     lines.push(`| bytes | ${r.bytes} |`);
     lines.push(`| viewport | ${r.viewport} (${r.viewport_name}) |`);
+    lines.push(`| url | \`${PINNED.url}\`, query \`${r.env.query_parameters}\` |`);
     lines.push(`| snapshot | \`${r.snapshotFilename}\` |`);
     lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
     lines.push(`| state captured | ${r.state} |`);

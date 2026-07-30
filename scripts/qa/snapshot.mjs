@@ -363,6 +363,19 @@ export function assertScenarioCapturable(name, scenario) {
       );
     }
   }
+  // A query string changes which page renders, so it is checked like a route and not
+  // waved through as decoration. An object or array here would stringify to something
+  // the browser accepts and nobody intended, and the baseline would record it.
+  if (scenario.query !== undefined) {
+    if (typeof scenario.query !== "string" || !scenario.query.length) {
+      problems.push("scenario declares a query that is not a non-empty string");
+    } else if (/[#\s]/.test(scenario.query)) {
+      problems.push(
+        "scenario query contains a fragment or whitespace: only a query string belongs here, " +
+          "and the harness pins the path itself"
+      );
+    }
+  }
   return problems;
 }
 

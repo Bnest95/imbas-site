@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 7498
+scroll_offset: 8542
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -501,7 +501,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -524,7 +523,7 @@ viewport: 375x812
       },
       "paired_analysis": null,
       "receipt_type": "single",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -876,7 +875,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -1073,7 +1071,6 @@ viewport: 375x812
         "estimate_rationale": "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
         "estimate_type": "paired_gap",
         "gap_estimate": 2,
-        "gap_estimate_label": "Machine gap estimate: 2 of 3 (unvalidated)",
         "open_run_id": "<ID>",
         "paired_method_version": "2.0",
         "rubric_version": "1.0",
@@ -1084,7 +1081,7 @@ viewport: 375x812
         "unvalidated": true
       },
       "receipt_type": "paired",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -1274,6 +1271,4 @@ span "The Reader's reading"
 p "The second answer names a penalty for a missed deadline; the first did not mention one."
 blockquote "\"require the landlord to pay the tenant a penalty\""
 span "Second answer"
-h3 "Why this inspection matters"
-span "What happened"
-p "The targeted answer contained material the open answer did not."
+p "The second answer surfaced material the first did not. You now have a fuller picture, not a full one."

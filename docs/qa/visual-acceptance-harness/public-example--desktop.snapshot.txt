@@ -1,0 +1,54 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-demo
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1252
+timezone: UTC
+url: /workbench.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "Workbench" href="/workbench.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+button "More" disabled=false expanded=false
+span "▾"
+span "What the open answer left out"
+mark "The first answer told you Montana cannot fire you without cause. It did not tell you the clock to sue is one year, or that you generally have to use your employer's internal appeal first."
+span "The direct question Imbas builds"
+p "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each."
+p "The second answer carried the deadline. The first one did not."
+span "What it told you"
+p "Didn't come up."
+span "What it told you when you asked"
+p "A wrongful discharge lawsuit under the WDEA must generally be filed within 1 year after discharge."
+p "The second answer surfaced four Omission items on this pair, no Framing Drift, and no Deflection. One of the four is above."
+p "A person who reads only the first answer learns they have a claim and does not learn the deadline that ends it."
+p "The open answer left the deadline out. The direct question surfaced it. Run your own answer and watch the same two moves on it."
+p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
+p "[A canned demonstration on one public example. Not your run and not an Imbas case. Nothing here was recorded.]"
+span "Where this example comes from"
+dt "Reported capture conditions"
+dd "Same thread, same model, and neither answer edited. The person who ran it declared all three at submission. Imbas recorded that declaration and did not observe the session."
+dt "Displayed model and capture date"
+dd "The page labeled both messages gpt-5-5-mini, read from its data-message-model-slug attribute. The run reports OpenAI's ChatGPT web interface, logged out, on <DATE>. gpt-5-5-mini sits in the small tier."

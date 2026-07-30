@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 2817
+scroll_offset: 3034
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -501,7 +501,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -524,7 +523,7 @@ viewport: 375x812
       },
       "paired_analysis": null,
       "receipt_type": "single",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -678,15 +677,21 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-button "Run again" disabled=false
-h2 "MEASUREMENT"
-p "Model: (not declared) · <TIMESTAMP>"
+dt "Inspection model"
+dd "claude-opus-4-8"
+dt "Inspection model build"
+dd "not pinned"
+dt "Inspection method"
+dd "reader.v3"
+dt "Captured"
+dd "<TIMESTAMP>"
+p "The answer model is the one you declared. Imbas records it, and does not observe it."
 h3 "Candidate findings"
-p "Missing item: 1 · Framing issue: 1 · Deflection: 0"
-span "Candidate missing item"
+p "Omission: 1 · Framing Drift: 1 · Deflection: 0"
+span "Omission"
 span "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to."
 blockquote "\"A landlord must return a security deposit within 30 days of the tenant moving out.\""
-span "Candidate framing issue"
+span "Framing Drift"
 span "The closing line lowers the stakes of a question the person asked because the deadline had already passed."
 blockquote "\"Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.\""
 p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
