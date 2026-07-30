@@ -716,10 +716,21 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   // The stub must have actually served the route. If the app never called it, the
   // state on screen is not the state we think we captured.
+  //
+  // A canned scenario inverts the expectation: its surface is built from committed
+  // copy, so a call would mean the app went somewhere this scenario does not describe.
+  // Both directions are checked, and neither is skipped — the unstubbed check and the
+  // server leak check below apply to every scenario either way.
   const calls = await evaluate(cdp, "__qa.calls()");
   const unstubbed = calls.filter((c) => c.startsWith("UNSTUBBED:"));
   if (unstubbed.length) fail(`App requested unstubbed API routes: ${unstubbed.join(", ")}`);
-  if (!calls.length) fail("The app never called a stubbed /api route — the captured state is not a Reader result.");
+  if (scenario.canned) {
+    if (calls.length) {
+      fail(`Canned scenario called /api: ${calls.join(", ")} — the state on screen is not the canned one.`);
+    }
+  } else if (!calls.length) {
+    fail("The app never called a stubbed /api route — the captured state is not a Reader result.");
+  }
   if (serverState.state.apiLeaks.length) {
     fail(`/api/* reached the static server: ${serverState.state.apiLeaks.join(", ")} — stub did not install.`);
   }

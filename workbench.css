@@ -5580,6 +5580,47 @@
   font-style: italic;
 }
 
+.wb-demo__counts,
+.wb-demo__why {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: rgba(242, 232, 220, 0.82);
+}
+
+/* The four provenance facts. They stack rather than sharing the live strip's
+   two-column grid: these labels are phrases, not field names, and the bodies are
+   sentences, so a nowrap label column would leave the value column unreadable. */
+.wb-prov.wb-demo__prov {
+  margin: 1rem 0 0;
+}
+
+.wb-demo__prov .wb-prov__list {
+  display: block;
+}
+
+.wb-demo__prov .wb-prov__row {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.wb-demo__prov .wb-prov__row:last-child {
+  margin-bottom: 0;
+}
+
+.wb-demo__prov .wb-prov__label {
+  display: block;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: normal;
+}
+
+.wb-demo__prov .wb-prov__value {
+  font-size: 0.8rem;
+}
+
 .wb-demo__smallprint {
   margin: 0.55rem 0 0;
   font-family: var(--font-mono);

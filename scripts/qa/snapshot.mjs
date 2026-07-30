@@ -335,8 +335,20 @@ export function assertScenarioCapturable(name, scenario) {
   if (scenario.name && scenario.name !== name) {
     problems.push(`scenario key "${name}" disagrees with scenario.name "${scenario.name}"`);
   }
+  // The routes rule exists so a scenario cannot photograph whatever happened to be on
+  // screen and file it under a name it never reached. A canned surface reaches its
+  // state without a server, so the rule has nothing to protect there — but only if the
+  // scenario says so outright and still proves the state in the DOM. `canned` buys the
+  // empty route table and nothing else: the drivable branch below still demands steps
+  // and an assertion, and the harness's no-metered-call layers are untouched by it.
   if (!scenario.routes || !Object.keys(scenario.routes).length) {
-    problems.push("scenario declares no routes, so no state can be stubbed");
+    if (!scenario.canned) {
+      problems.push("scenario declares no routes, so no state can be stubbed");
+    } else if (!scenario.drivable) {
+      problems.push("a canned scenario must be drivable — nothing else would put it on screen");
+    }
+  } else if (scenario.canned) {
+    problems.push("scenario is marked canned but declares routes; one of the two is wrong");
   }
   if (scenario.drivable) {
     if (!Array.isArray(scenario.steps) || !scenario.steps.length) {

@@ -24,7 +24,6 @@ import {
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
   suggestLoopStateFromCanonical,
-  LOOP_STATE_GAP_REVEALED,
   LOOP_STATE_STILL_MISSING,
   LOOP_STATE_NOT_CLEAR,
   LOOP_STATES,
@@ -65,6 +64,7 @@ import {
 } from "./reader-review-record.js";
 import { selectInspectionMeaning } from "./reader-explain-panel.js";
 import { describeProvenance, describeClaimState, PROVENANCE_UI } from "./reader-provenance.js";
+import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "./reader-public-example.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -5534,61 +5534,48 @@ function ReaderFunnelPanel() {
   );
 }
 
-// The instant demo (Reader v2, item 4). A first-timer can watch the whole
-// Confirmation Loop without pasting anything, on ONE public example drawn from the
-// Supersession exploration pack (exploration-pack.html §1, Chevron → Loper Bright).
-// Everything here is canned and deterministic — no /api/read call, no model, no
-// spend. It is explicitly NOT the visitor's own run and NOT an Imbas case: the copy
-// never says "your chat," the boundary sentence and small print say so outright.
-const DEMO_EXAMPLE = {
-  context: "Public example · U.S. administrative law",
-  question:
-    "When a court reviews a federal agency's reading of an ambiguous statute, how much weight does the agency's interpretation get?",
-  openAnswer:
-    "Courts apply Chevron deference. If the statute is ambiguous, the court defers to the agency's interpretation as long as it's reasonable — the two-step framework from Chevron v. NRDC (1984).",
-  leftOut:
-    "Chevron was overruled. In Loper Bright Enterprises v. Raimondo (June 2024), the Supreme Court ended Chevron deference — courts now interpret ambiguous statutes themselves, de novo, without deferring to the agency.",
-  targetedPrompt: TARGETED_PROMPT_TEXT,
-  surfaced:
-    "Chevron no longer governs. Loper Bright v. Raimondo (2024) overruled it; courts now decide a statute's meaning de novo under the Administrative Procedure Act. Governing source: Loper Bright Enterprises v. Raimondo, 603 U.S. 369 (2024).",
-  // A demo-honest reveal tag. The live reveal says "you just watched it happen in
-  // your own chat"; that would be false here, so the demo states plainly what this is.
-  tag: "That's the Volunteer Gap — the open answer left it out; the direct question surfaced it. Run your own answer to watch it live.",
-};
-
+// The instant demo (Reader v2, item 4). A first-timer watches the whole loop without
+// pasting anything, on ONE public example. Everything is canned and deterministic:
+// no /api/read call, no model, no spend. It is NOT the visitor's own run and NOT an
+// Imbas case, and the small print says so.
+//
+// The example itself, and every provenance sentence under it, lives in
+// reader-public-example.js and traces to docs/IMBAS-PUBLIC-EXAMPLE-PACKET.md
+// Section 5. Read that module's header before editing any string here: it records
+// which packet bar each line is holding.
 function ReaderDemo({ onTryOwn, onClose }) {
-  const d = DEMO_EXAMPLE;
-  const headline = (LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED] || {}).headline || "";
+  const d = PUBLIC_EXAMPLE;
+  const ui = PUBLIC_EXAMPLE_UI;
   return (
-    <section className="wb-demo" aria-labelledby="wb-demo-heading">
+    <section className="wb-demo" aria-labelledby="wb-demo-heading" data-example={d.version}>
       <div className="wb-demo__head">
-        <span className="wb-demo__eyebrow">WORKED EXAMPLE</span>
-        <h3 id="wb-demo-heading" className="wb-demo__title">Watch the loop on one public example.</h3>
+        <span className="wb-demo__eyebrow">{ui.eyebrow}</span>
+        <h3 id="wb-demo-heading" className="wb-demo__title">{ui.title}</h3>
         <p className="wb-demo__context">{d.context}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">The question</span>
+        <span className="wb-demo__label">{ui.question_label}</span>
         <p className="wb-demo__q">{d.question}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">What the AI said</span>
-        <p className="wb-demo__answer">{d.openAnswer}</p>
+        <span className="wb-demo__label">{ui.open_answer_label}</span>
+        <p className="wb-demo__answer">{d.open_answer}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">What the open answer left out</span>
-        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.leftOut}</mark></p>
+        <span className="wb-demo__label">{ui.left_out_label}</span>
+        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.left_out}</mark></p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">The direct question Imbas builds</span>
-        <p className="wb-act2__prompt wb-demo__prompt">{d.targetedPrompt}</p>
+        <span className="wb-demo__label">{ui.prompt_label}</span>
+        <p className="wb-act2__prompt wb-demo__prompt">{d.targeted_prompt}</p>
       </div>
 
       <div className="wb-loop__reveal wb-demo__reveal">
-        <p className="wb-loop__headline">{headline}</p>
+        <p className="wb-loop__headline">{d.headline}</p>
         <div className="wb-loop__panels">
           <div className="wb-loop__panel">
             <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
@@ -5599,14 +5586,31 @@ function ReaderDemo({ onTryOwn, onClose }) {
             <p className="wb-loop__panel-body">{d.surfaced}</p>
           </div>
         </div>
+        <p className="wb-demo__counts">{d.counts_line}</p>
+        <p className="wb-demo__why">{d.why_it_mattered}</p>
         <p className="wb-loop__tag">{d.tag}</p>
         <p className="wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
-        <p className="wb-demo__smallprint">[A canned demonstration on a public example. Not your run, not an Imbas case — nothing here was recorded.]</p>
+        <p className="wb-demo__smallprint">{ui.smallprint}</p>
+      </div>
+
+      {/* Four facts about this capture, kept apart. Merging any two of them states
+          something the stored artifacts cannot carry (packet 4.2). */}
+      <div className="wb-prov wb-demo__prov" data-complete="yes">
+        <span className="wb-prov__heading">{ui.provenance_heading}</span>
+        <dl className="wb-prov__list">
+          {d.provenance.map((row) => (
+            <div key={row.id} className="wb-prov__row" data-field={row.id} data-known="yes">
+              <dt className="wb-prov__label">{row.label}</dt>
+              <dd className="wb-prov__value">{row.body}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="wb-prov__note">{d.source_line}</p>
       </div>
 
       <div className="wb-demo__cta-row">
-        <Btn kind="primary" small onClick={onTryOwn}>Now try your own →</Btn>
-        <button type="button" className="wb-demo__close" onClick={onClose}>Hide example</button>
+        <Btn kind="primary" small onClick={onTryOwn}>{ui.try_own_label}</Btn>
+        <button type="button" className="wb-demo__close" onClick={onClose}>{ui.close_label}</button>
       </div>
     </section>
   );
@@ -6284,7 +6288,7 @@ function ReaderWorkbench() {
             onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
             aria-expanded={demoOpen}
           >
-            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
+            {demoOpen ? PUBLIC_EXAMPLE_UI.close_label : PUBLIC_EXAMPLE_UI.trigger_label}
           </button>
         </div>
         {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}

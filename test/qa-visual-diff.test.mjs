@@ -261,6 +261,41 @@ test("a drivable scenario with no DOM assertion is rejected", () => {
   assert.ok(problems.some((p) => /no DOM assertion/.test(p)));
 });
 
+// A canned scenario photographs a surface built from committed copy, so it has no
+// state to stub and the routes rule has nothing to protect. The escape hatch buys the
+// empty route table only: it cannot smuggle past the drivable checks, and declaring
+// it alongside routes is a contradiction rather than a preference.
+test("a canned scenario may declare no routes, and nothing else", () => {
+  const canned = {
+    name: "x",
+    canned: true,
+    routes: {},
+    drivable: true,
+    steps: [{ click: ".go" }],
+    assertSelector: ".x",
+  };
+  assert.deepEqual(assertScenarioCapturable("x", canned), [], "a well-formed canned scenario passes");
+
+  assert.ok(
+    assertScenarioCapturable("x", { ...canned, drivable: false, steps: undefined }).some((p) =>
+      /canned scenario must be drivable/.test(p)
+    ),
+    "a canned scenario that drives nothing would photograph the page it landed on"
+  );
+  assert.ok(
+    assertScenarioCapturable("x", { ...canned, routes: { "/api/read": {} } }).some((p) =>
+      /marked canned but declares routes/.test(p)
+    ),
+    "canned and routes together is a contradiction"
+  );
+  assert.ok(
+    assertScenarioCapturable("x", { ...canned, assertSelector: undefined }).some((p) =>
+      /no DOM assertion/.test(p)
+    ),
+    "canned does not excuse a scenario from proving its state"
+  );
+});
+
 test("every committed scenario passes its own shape check", () => {
   for (const [name, scenario] of Object.entries(SCENARIOS)) {
     assert.deepEqual(assertScenarioCapturable(name, scenario), [], `scenario ${name} is well formed`);

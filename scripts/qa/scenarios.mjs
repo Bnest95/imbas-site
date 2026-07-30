@@ -41,6 +41,7 @@ import {
   PAIR_EDITS,
 } from "../../reader-paired.js";
 import { buildCheckRegister } from "../../reader-checks.js";
+import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "../../reader-public-example.js";
 import { buildCanonicalSingle } from "../../api/read.js";
 import {
   buildCanonicalPaired,
@@ -469,6 +470,32 @@ const drivePaired = ({ edits }) => [
   { waitFor: ".wb-act2__delta" },
 ];
 
+// Opening the door is one click on the entry action, by its own label. The two
+// public-example frames share the steps and the assertions so a copy change cannot
+// leave one frame checking the door and the other checking whatever replaced it.
+const DRIVE_PUBLIC_EXAMPLE = [
+  { waitFor: ".wb-demo-trigger" },
+  { clickText: ".wb-demo-trigger", text: PUBLIC_EXAMPLE_UI.trigger_label },
+  { waitFor: ".wb-demo__prov" },
+];
+
+// Read against docs/IMBAS-PUBLIC-EXAMPLE-PACKET.md Section 5. The four row labels are
+// the distinctions of packet 4.2; the two sentences after them are the limits that
+// stop a hash from becoming a model claim (4.3) and a missing field from becoming a
+// determination (4.1).
+const PUBLIC_EXAMPLE_ASSERTIONS = [
+  PUBLIC_EXAMPLE.question,
+  PUBLIC_EXAMPLE.headline,
+  PUBLIC_EXAMPLE.counts_line,
+  "Reported capture conditions",
+  "Displayed model and capture date",
+  "Hash-supported artifact identity",
+  "Matched-conditions determination",
+  "It does not establish which model produced them",
+  "There is no such determination to read.",
+  "MCA § 39-2-911",
+];
+
 export const SCENARIOS = {
   "single-findings": {
     name: "single-findings",
@@ -602,6 +629,45 @@ export const SCENARIOS = {
     ],
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
     focus: ".wb-act2__delta .wb-measure__list",
+  },
+
+  // The zero-work door, in two frames. These are the only scenarios with an empty
+  // route table: the example is canned, so nothing it renders comes from an API and
+  // the harness has nothing to stub. `canned: true` buys that, and inverts the
+  // called-a-route check — a canned scenario that reaches /api is not showing the
+  // canned state.
+  //
+  // Both frames drive the same door and assert the same DOM. They differ only in what
+  // the shutter is aimed at, because the door is taller than a viewport and the two
+  // halves are separate claims: the loop, and the provenance under it.
+  "public-example": {
+    name: "public-example",
+    drivable: true,
+    state: "The public example door, opened from the paste box — the loop",
+    expected:
+      "The Montana example runs the loop end to end. The open side reads 'Didn't come up.' because delta 1's open side is empty. The count line names four Omission items and says one is shown, so a single quoted line cannot read as the whole difference. No score and no construct name.",
+    routes: {},
+    canned: true,
+    steps: DRIVE_PUBLIC_EXAMPLE,
+    assertText: PUBLIC_EXAMPLE_ASSERTIONS,
+    assertSelector: ".wb-demo__prov .wb-prov__row",
+    focus: ".wb-demo",
+  },
+
+  // The half item 6 exists for. Four rows, four separate facts, none of them able to
+  // be read as another.
+  "public-example-provenance": {
+    name: "public-example-provenance",
+    drivable: true,
+    state: "The public example door — the four provenance facts, kept apart",
+    expected:
+      "Four labelled rows state four separate facts: what the person declared, what the page displayed plus the tier, what the hashes fix and what they do not, and the matched-conditions field that does not exist end to end. The statute line under them carries its retrieval date rather than a present tense.",
+    routes: {},
+    canned: true,
+    steps: DRIVE_PUBLIC_EXAMPLE,
+    assertText: PUBLIC_EXAMPLE_ASSERTIONS,
+    assertSelector: ".wb-demo__prov .wb-prov__row",
+    focus: ".wb-demo__prov",
   },
 };
 
