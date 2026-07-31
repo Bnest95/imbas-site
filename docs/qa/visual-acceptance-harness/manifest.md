@@ -21,11 +21,11 @@ That uncommitted working-tree state was subsequently committed as `d914e47d95921
 
 Every image on this board is compared byte-for-byte against its baseline, with one named exception.
 
-**`curated-readout--mobile` uses a bounded renderer-noise comparison for the sticky backdrop-filter header, while the DOM snapshot and all pixels outside that region remain exact.** The region is the painted box of the element carrying the filter, resolved from the live page at comparison time rather than written down as a rectangle. Inside it, at most 600 pixels may differ by at most 1 per channel, with alpha untouched. Outside it, one differing pixel is a failure.
+**`curated-readout--mobile` uses a bounded renderer-noise comparison for the sticky backdrop-filter header, while the DOM snapshot and all pixels outside that region remain exact.** The region is the painted box of the element carrying the filter (`.site-header`), resolved from the live page at comparison time rather than written down as a rectangle. Inside it, at most 600 pixels may differ by at most 1 per channel, with alpha untouched. Outside it, one differing pixel is a failure.
 
-The reason is diagnosed, not assumed: Chromium's software rasterization of that header's `blur(16px) saturate(120%)` is resource-sensitive, and under load it produces a frame differing in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. `scripts/qa/raster-policy.mjs` carries the full diagnosis and the evidence that ruled out timing, animation, fonts, browser reuse and every raster flag tried.
+The reason is diagnosed, not assumed: Resource-sensitive Chromium software rasterization of blur(16px) saturate(120%) under the header's translucent gradient. Under load it produces a frame differing in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. `scripts/qa/raster-policy.mjs` carries the full diagnosis and the evidence that ruled out timing, animation, fonts, browser reuse and every raster flag tried.
 
-This is not a tolerance setting. It is hard-coded to one scenario at one viewport, no flag or environment variable reaches it, and `test/qa-raster-policy.test.mjs` holds each edge of it. Any second use, any bounds change and any ceiling change needs a new founder ruling.
+This is not a tolerance setting. Policy `curated-readout-mobile-header-raster-v1` is hard-coded to one scenario at one viewport, no flag or environment variable reaches it, and `test/qa-raster-policy.test.mjs` holds each edge of it. Any second use, any bounds change and any ceiling change needs a new founder ruling.
 
 ## Pinned environment
 
