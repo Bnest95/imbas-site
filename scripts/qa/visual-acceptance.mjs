@@ -52,7 +52,13 @@ import {
   assertScenarioCapturable,
   formatDiff,
 } from "./snapshot.mjs";
-import { resolvePolicy, toDeviceBounds, comparePolicy, formatPolicyReport } from "./raster-policy.mjs";
+import {
+  RASTER_POLICIES,
+  resolvePolicy,
+  toDeviceBounds,
+  comparePolicy,
+  formatPolicyReport,
+} from "./raster-policy.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -1397,6 +1403,63 @@ function runUpdate(outDir, results, updateCtx) {
 }
 
 // ── Manifest ─────────────────────────────────────────────────────────────────
+// The manifest has to state how images are compared, because "compared against the
+// baseline" means two different things on this board and a reader cannot tell which
+// applies to which image by looking at the pictures. Generated from the registry rather
+// than typed alongside it: a hand-written copy would keep asserting a ceiling or a
+// scenario name that the comparator had already stopped using, and the record would go
+// quietly wrong in the direction nobody checks. The numbers and names below come from
+// the registry; the diagnostic figures are observations recorded once and do not live
+// there.
+export function renderComparisonPolicySection(policies) {
+  const lines = [`## Comparison policy`, ""];
+
+  if (!policies.length) {
+    lines.push(
+      `Every image on this board is compared byte-for-byte against its baseline. There is no ` +
+        `exception: no scenario carries a bounded-comparison policy, so any difference of any ` +
+        `size in any pixel fails the run.`
+    );
+    return lines;
+  }
+
+  lines.push(
+    `Every image on this board is compared byte-for-byte against its baseline, with ` +
+      `${policies.length === 1 ? "one named exception" : `${policies.length} named exceptions`}.`
+  );
+  for (const p of policies) {
+    lines.push("");
+    lines.push(
+      `**\`${p.scenario}--${p.viewport}\` uses a bounded renderer-noise comparison for the sticky ` +
+        `backdrop-filter header, while the DOM snapshot and all pixels outside that region remain ` +
+        `exact.** The region is the painted box of the element carrying the filter (\`${p.selector}\`), ` +
+        `resolved from the live page at comparison time rather than written down as a rectangle. ` +
+        `Inside it, at most ${p.maxDifferingPixels} pixels may differ by at most ${p.maxRgbDelta} ` +
+        `per channel, with alpha untouched. Outside it, one differing pixel is a failure.`
+    );
+    lines.push("");
+    // The cause is registry state and is interpolated, so editing it there cannot leave
+    // this paragraph asserting a diagnosis nobody holds any more. The measured figures
+    // that follow are a one-time observation of this board on this machine, they are not
+    // in the registry, and they are kept because a reader needs the size of the thing to
+    // judge whether the ceiling above is generous or tight.
+    lines.push(
+      `The reason is diagnosed, not assumed: ${p.cause} Under load it produces a frame differing ` +
+        `in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. ` +
+        `\`scripts/qa/raster-policy.mjs\` carries the full diagnosis and the evidence that ruled ` +
+        `out timing, animation, fonts, browser reuse and every raster flag tried.`
+    );
+    lines.push("");
+    lines.push(
+      `This is not a tolerance setting. Policy \`${p.id}\` is hard-coded to one scenario at one ` +
+        `viewport, no flag or environment variable reaches it, and \`test/qa-raster-policy.test.mjs\` ` +
+        `holds each edge of it. Any second use, any bounds change and any ceiling change needs a ` +
+        `new founder ruling.`
+    );
+  }
+  return lines;
+}
+
 function writeManifest(outDir, results, blocked, binary, browserVersion, grant = null) {
   const baseSha = execSync("git rev-parse HEAD", { cwd: REPO_ROOT }).toString().trim();
   const dirty = execSync("git status --porcelain", { cwd: REPO_ROOT }).toString().trim();
@@ -1410,6 +1473,14 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   // dirty tree means the images answer to no commit at all, and saying so is the whole
   // point of the line. A clean tree means they answer to exactly this one, and carrying
   // the dirty wording anyway would understate what the run actually proved.
+  //
+  // This header block is rewritten wholesale on every generation. Anything hand-added to
+  // it belongs to ONE capture set and does not survive the next one — including the
+  // current addendum naming `d914e47d95921d0c08335c13888487001c2919da` as where the
+  // capture-time working tree was committed. That is correct, not a bug to fix here: a
+  // new capture set answers to a different tree, so re-emitting the old note would make
+  // the manifest assert provenance for images it no longer describes. Whoever recaptures
+  // re-adds the note that fits the new set, or leaves it off.
   lines.push(
     dirty
       ? `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
@@ -1437,6 +1508,8 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
       `product. The **snapshot** baselines (\`*.snapshot.txt\`) carry no rasterized pixels and are ` +
       `portable; they are the layer to trust when the machine changes.`
   );
+  lines.push("");
+  lines.push(...renderComparisonPolicySection(RASTER_POLICIES));
   lines.push("");
   lines.push(`## Pinned environment`);
   lines.push("");

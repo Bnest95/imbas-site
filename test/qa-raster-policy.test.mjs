@@ -27,6 +27,7 @@ import {
   comparePolicy,
   formatPolicyReport,
 } from "../scripts/qa/raster-policy.mjs";
+import { renderComparisonPolicySection } from "../scripts/qa/visual-acceptance.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..");
@@ -471,4 +472,33 @@ test("the report carries every named field, and the formatted output spells each
     // the named field finds nothing.
     assert.match(formatPolicyReport(report), new RegExp(`^\\s*${field}\\s*:`, "m"));
   }
+});
+
+// The manifest is the record a reviewer reads instead of the code. If the registry and
+// that record can disagree, the record is the one that goes wrong, and it goes wrong
+// silently — the board still passes, and the document quietly describes a comparison
+// nobody is running. Asserting both directions is the point: naming a policy that does
+// not exist is the same defect as omitting one that does.
+test("the generated manifest names a raster policy exactly when the registry holds one", () => {
+  const withPolicy = renderComparisonPolicySection(RASTER_POLICIES).join("\n");
+  for (const p of RASTER_POLICIES) {
+    assert.ok(
+      withPolicy.includes(p.id),
+      `manifest text omits policy id ${p.id}, which the registry contains`
+    );
+    assert.ok(withPolicy.includes(`${p.scenario}--${p.viewport}`));
+    assert.ok(withPolicy.includes(String(p.maxDifferingPixels)));
+  }
+
+  const withoutPolicy = renderComparisonPolicySection([]).join("\n");
+  for (const p of RASTER_POLICIES) {
+    assert.ok(
+      !withoutPolicy.includes(p.id),
+      `manifest text names policy id ${p.id} with an empty registry`
+    );
+  }
+  // An empty registry has to say so rather than fall silent, or a manifest generated
+  // after the exemption was removed reads identically to one generated before it existed.
+  assert.match(withoutPolicy, /byte-for-byte/);
+  assert.match(withoutPolicy, /no exception/i);
 });
