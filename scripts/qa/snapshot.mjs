@@ -335,8 +335,20 @@ export function assertScenarioCapturable(name, scenario) {
   if (scenario.name && scenario.name !== name) {
     problems.push(`scenario key "${name}" disagrees with scenario.name "${scenario.name}"`);
   }
+  // The routes rule exists so a scenario cannot photograph whatever happened to be on
+  // screen and file it under a name it never reached. A canned surface reaches its
+  // state without a server, so the rule has nothing to protect there — but only if the
+  // scenario says so outright and still proves the state in the DOM. `canned` buys the
+  // empty route table and nothing else: the drivable branch below still demands steps
+  // and an assertion, and the harness's no-metered-call layers are untouched by it.
   if (!scenario.routes || !Object.keys(scenario.routes).length) {
-    problems.push("scenario declares no routes, so no state can be stubbed");
+    if (!scenario.canned) {
+      problems.push("scenario declares no routes, so no state can be stubbed");
+    } else if (!scenario.drivable) {
+      problems.push("a canned scenario must be drivable — nothing else would put it on screen");
+    }
+  } else if (scenario.canned) {
+    problems.push("scenario is marked canned but declares routes; one of the two is wrong");
   }
   if (scenario.drivable) {
     if (!Array.isArray(scenario.steps) || !scenario.steps.length) {
@@ -348,6 +360,19 @@ export function assertScenarioCapturable(name, scenario) {
       problems.push(
         "scenario has no DOM assertion (assertSelector or assertText): the harness would capture " +
           "whatever was on screen and file it under this name"
+      );
+    }
+  }
+  // A query string changes which page renders, so it is checked like a route and not
+  // waved through as decoration. An object or array here would stringify to something
+  // the browser accepts and nobody intended, and the baseline would record it.
+  if (scenario.query !== undefined) {
+    if (typeof scenario.query !== "string" || !scenario.query.length) {
+      problems.push("scenario declares a query that is not a non-empty string");
+    } else if (/[#\s]/.test(scenario.query)) {
+      problems.push(
+        "scenario query contains a fragment or whitespace: only a query string belongs here, " +
+          "and the harness pins the path itself"
       );
     }
   }

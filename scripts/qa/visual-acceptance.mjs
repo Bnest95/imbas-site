@@ -39,7 +39,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { SCENARIOS, resolvePayloads, assertScenarioIntegrity } from "./scenarios.mjs";
+import { SCENARIOS, resolvePayloads, assertScenarioIntegrity, INJECT_HTTP, INJECT_HANG } from "./scenarios.mjs";
 import {
   EXTRACTOR_SOURCE,
   normalizeEntries,
@@ -52,6 +52,13 @@ import {
   assertScenarioCapturable,
   formatDiff,
 } from "./snapshot.mjs";
+import {
+  RASTER_POLICIES,
+  resolvePolicy,
+  toDeviceBounds,
+  comparePolicy,
+  formatPolicyReport,
+} from "./raster-policy.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "../..");
@@ -196,6 +203,86 @@ const VIEWPORTS = {
   "mobile-tall": { width: 375, height: 1600, dsf: 3, mobile: true },
 };
 
+// ── What the board does not cover ────────────────────────────────────────────
+// Written into the manifest, because a board that lists only what it photographs
+// reads as complete. Each entry is a state that exists in the product with no image
+// on the board, and the reason it has none. Reasons are scope decisions or fences,
+// never "we did not get to it" without saying so.
+const UNPHOTOGRAPHED = [
+  {
+    state: "The chip lane's empty comparison",
+    why:
+      "`CHIP_UI.reveal.empty_delta` in `reader-paired.js` renders its own empty state in the " +
+      "chip reveal, separate from the Reader's. The chip lane is fenced at chip.1.0 and this " +
+      "pass was instructed not to touch its logic, so photographing it would have meant " +
+      "driving a lane it could not fix if the capture found something wrong.",
+  },
+  {
+    state: "The share and permalink page, in every state",
+    why:
+      "Carved out of this pass by ruling. The share surface still renders a score from its " +
+      "stored row, and schema, render, page metadata and consent copy move together in 2B-C. " +
+      "Share scenarios arrive with 2B-C under 2B-C's own coverage.",
+  },
+  {
+    state: "A route that returns an unparseable body",
+    why:
+      "The harness can now inject failures — `httpFailure` and `neverResolves` in " +
+      "`scripts/qa/scenarios.mjs` — and `read-error`, `read-capacity` and `read-in-flight` " +
+      "photograph the three states that matter. A malformed body is the one failure left " +
+      "unphotographed: the client maps it to `bad_json`, which renders the same banner as the " +
+      "`no_key` and `disabled` configuration states already covered in wording by " +
+      "`read-error`'s frame. Injecting it is one line whenever a reviewer wants the image.",
+  },
+  {
+    state: "The curated case result panel, after a visitor pastes",
+    why:
+      "The board photographs the curated console at its first screen (`curated-readout`), which " +
+      "is one step before this. The panel is where the retired score gauge and the retired " +
+      "CLOSED GAP / PARTIALLY SURFACED / GAP HELD badge both sat, so it is the frame a reviewer " +
+      "most wants. It is not photographed because `runDate` is built from `new Date()` at run " +
+      "time and reaches the share text inside the panel, which would make the baseline change " +
+      "every day and turn a real regression into noise nobody reads. Pinning the clock is a " +
+      "harness capability, and the removal is held meanwhile by " +
+      "`test/reader-no-allclear-vocabulary.test.mjs`, which asserts at source level that no " +
+      "badge builder, verdict label table or tone class survives, and that the one sentence " +
+      "standing there is read off the stored case rather than computed from the paste.",
+  },
+  {
+    state: "The correction chips after a person has corrected the reading",
+    why:
+      "Every board state captures the default reading. The two corrected states change a " +
+      "headline and add a call to action (`LOOP_STATE_STILL_MISSING`, `LOOP_STATE_NOT_CLEAR` " +
+      "in `workbench-app.jsx`). They are reachable by one more drive step and are the most " +
+      "obvious next scenarios to add.",
+  },
+  {
+    state: "The mobile-tall viewport",
+    why:
+      "Declared in VIEWPORTS and not part of the default board. It exists to re-test a " +
+      "reported blank-compositor claim at 375x812, not to double every baseline; running it " +
+      "by default would triple the image set to re-photograph the same states.",
+  },
+];
+
+// ── Photographed, but not under the name a reviewer will search for ──────────
+// These states ARE on the board. They are listed separately because no scenario is
+// named after them, so someone looking for one by name finds nothing and concludes
+// it is missing. Anything here is covered; nothing here is a gap. Keeping it out of
+// UNPHOTOGRAPHED matters — a covered state filed under "does not photograph" tells a
+// reviewer the opposite of the truth.
+const COVERED_UNDER_ANOTHER_NAME = [
+  {
+    state: "The paired surface with an ABSENT original-answer side",
+    photographedBy: "`paired-unmatched`",
+    why:
+      "Its second row renders only the Second answer excerpt, because the open side resolved " +
+      "to nothing and the surface leaves it out rather than standing a placeholder in its " +
+      "place. The scenario's `expected` states it, and `test/qa-board-coverage.test.mjs` holds " +
+      "the fixture to it.",
+  },
+];
+
 // ── Pinned environment ───────────────────────────────────────────────────────
 // Recorded into the manifest and into every snapshot so a future run can explain
 // why a baseline is or is not comparable. Locale and timezone are pinned because
@@ -217,6 +304,25 @@ const PINNED = {
   query_parameters: "(none)",
   font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
 };
+
+// ── Per-scenario query string ────────────────────────────────────────────────
+// One surface needs a query: the curated console renders only when the Reader flag is
+// off, and the flag is read from the URL. Two things follow from that, and they are
+// derived together here so they cannot disagree — the URL the browser is sent to, and
+// the string recorded into the baseline's env block.
+//
+// The recorded value matters as much as the URL. query_parameters is deliberately NOT
+// in IMAGE_ENV_KEYS: a different query is a different page, so it is a real difference
+// to report, not an incomparability to skip. Recording it means a baseline captured
+// under ?reader=0 can be read back as such instead of being mistaken for a capture of
+// the bare page that happens to look nothing like it.
+export function resolveNavigation(scenario, pinned = PINNED) {
+  const query = String((scenario && scenario.query) || "").replace(/^\?+/, "");
+  return {
+    path: `${pinned.url}${query ? `?${query}` : ""}`,
+    query_parameters: query ? `?${query}` : pinned.query_parameters,
+  };
+}
 
 // ── Browser resolution ───────────────────────────────────────────────────────
 // Priority order: purpose-built headless shells first (fastest, no profile), then
@@ -500,8 +606,21 @@ function buildStubScript(payloads) {
     const url = typeof input === "string" ? input : (input && input.url) || "";
     const p = (() => { try { return new URL(url, location.href).pathname; } catch { return url; } })();
     if (Object.prototype.hasOwnProperty.call(PAYLOADS, p)) {
+      const v = PAYLOADS[p];
+      // Recorded BEFORE the branch, so an injected failure still counts as a served
+      // route. The capture routine's "the app never called a stubbed route" check
+      // would otherwise read a photographed error state as a scenario that never ran.
       window.__qaCalls.push(p);
-      return new Response(JSON.stringify(PAYLOADS[p]), {
+      // Never settles. The app stays mid-request; nothing here times it out, because
+      // the point of the state is that it has not finished.
+      if (v && v["${INJECT_HANG}"] === true) return new Promise(() => {});
+      if (v && v["${INJECT_HTTP}"] === true) {
+        return new Response(v.body === null ? "" : JSON.stringify(v.body), {
+          status: v.status,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify(v), {
         status: 200,
         headers: { "content-type": "application/json" },
       });
@@ -687,7 +806,8 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     ],
   }).catch(() => {});
 
-  await cdp.send("Page.navigate", { url: `${serverState.origin}/workbench.html` });
+  const nav = resolveNavigation(scenario);
+  await cdp.send("Page.navigate", { url: `${serverState.origin}${nav.path}` });
   await waitUntil(cdp, "document.readyState === 'complete'", { label: "document ready" });
 
   if (!(await evaluate(cdp, "__qa.reactLoaded()"))) {
@@ -716,10 +836,21 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   // The stub must have actually served the route. If the app never called it, the
   // state on screen is not the state we think we captured.
+  //
+  // A canned scenario inverts the expectation: its surface is built from committed
+  // copy, so a call would mean the app went somewhere this scenario does not describe.
+  // Both directions are checked, and neither is skipped — the unstubbed check and the
+  // server leak check below apply to every scenario either way.
   const calls = await evaluate(cdp, "__qa.calls()");
   const unstubbed = calls.filter((c) => c.startsWith("UNSTUBBED:"));
   if (unstubbed.length) fail(`App requested unstubbed API routes: ${unstubbed.join(", ")}`);
-  if (!calls.length) fail("The app never called a stubbed /api route — the captured state is not a Reader result.");
+  if (scenario.canned) {
+    if (calls.length) {
+      fail(`Canned scenario called /api: ${calls.join(", ")} — the state on screen is not the canned one.`);
+    }
+  } else if (!calls.length) {
+    fail("The app never called a stubbed /api route — the captured state is not a Reader result.");
+  }
   if (serverState.state.apiLeaks.length) {
     fail(`/api/* reached the static server: ${serverState.state.apiLeaks.join(", ")} — stub did not install.`);
   }
@@ -810,6 +941,27 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     );
   }
 
+  // If this scenario/viewport is under a raster policy, measure the exempt element
+  // from the live page in the same frame that is about to be photographed. The region
+  // is never a constant: a hard-coded rectangle would keep claiming to describe the
+  // header long after the header stopped being that shape.
+  const policy = resolvePolicy(scenario.name, viewportName);
+  let rasterRegion = null;
+  if (policy) {
+    const measured = await evaluate(
+      cdp,
+      `(() => {
+        const el = document.querySelector(${JSON.stringify(policy.selector)});
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { dpr: window.devicePixelRatio, css: { left: r.left, top: r.top, right: r.right, bottom: r.bottom } };
+      })()`
+    );
+    // A null region is carried forward as null, not repaired. The comparator is the
+    // one place that decides what an unresolvable region means, and it fails on it.
+    if (measured) rasterRegion = toDeviceBounds(measured.css, measured.dpr);
+  }
+
   const shot = await cdp.send("Page.captureScreenshot", { format: "png" });
   const buf = Buffer.from(shot.data, "base64");
 
@@ -824,6 +976,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   const env = {
     ...PINNED,
+    query_parameters: nav.query_parameters,
     browser_version: browserVersion,
     viewport: `${vp.width}x${vp.height}`,
     device_scale_factor: String(vp.dsf),
@@ -851,6 +1004,8 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     env,
     state: scenario.state,
     expected: scenario.expected,
+    policy,
+    rasterRegion,
   };
 }
 
@@ -1139,6 +1294,31 @@ function runDiff(outDir, results) {
     }
 
     const baselineImg = fs.existsSync(imgPath) ? fs.readFileSync(imgPath) : null;
+
+    // ── The one policied comparison ──────────────────────────────────────────
+    // For the single scenario/viewport under a raster policy, the byte comparison is
+    // replaced by the bounded one — and it runs on EVERY diff, including runs where
+    // the bytes happen to match. A policy that only spoke up on failure would give a
+    // reader no way to tell a run where the region was checked and clean from a run
+    // where the check silently did not happen.
+    if (r.policy) {
+      if (!baselineImg) {
+        log(`  ✗ image: no baseline on disk`);
+        missing++;
+        continue;
+      }
+      const report = comparePolicy(r.policy, baselineImg, r.buf, r.rasterRegion);
+      const bytesMatch = baselineImg.length === r.buf.length && baselineImg.equals(r.buf);
+      log(
+        report.result === "pass"
+          ? `  ✓ image: within raster policy (${bytesMatch ? "byte-identical" : `${report.different_pixels_inside} px inside region, max delta ${report.max_rgb_delta}`})`
+          : `  ✗ image: raster policy FAILED`
+      );
+      log(formatPolicyReport(report));
+      if (report.result !== "pass") changed++;
+      continue;
+    }
+
     const img = diffImageBuffers(baselineImg, r.buf);
     if (img.status === "identical") log(`  ✓ image: byte-identical (${img.baselineBytes} bytes)`);
     else if (img.status === "missing-baseline") {
@@ -1223,6 +1403,63 @@ function runUpdate(outDir, results, updateCtx) {
 }
 
 // ── Manifest ─────────────────────────────────────────────────────────────────
+// The manifest has to state how images are compared, because "compared against the
+// baseline" means two different things on this board and a reader cannot tell which
+// applies to which image by looking at the pictures. Generated from the registry rather
+// than typed alongside it: a hand-written copy would keep asserting a ceiling or a
+// scenario name that the comparator had already stopped using, and the record would go
+// quietly wrong in the direction nobody checks. The numbers and names below come from
+// the registry; the diagnostic figures are observations recorded once and do not live
+// there.
+export function renderComparisonPolicySection(policies) {
+  const lines = [`## Comparison policy`, ""];
+
+  if (!policies.length) {
+    lines.push(
+      `Every image on this board is compared byte-for-byte against its baseline. There is no ` +
+        `exception: no scenario carries a bounded-comparison policy, so any difference of any ` +
+        `size in any pixel fails the run.`
+    );
+    return lines;
+  }
+
+  lines.push(
+    `Every image on this board is compared byte-for-byte against its baseline, with ` +
+      `${policies.length === 1 ? "one named exception" : `${policies.length} named exceptions`}.`
+  );
+  for (const p of policies) {
+    lines.push("");
+    lines.push(
+      `**\`${p.scenario}--${p.viewport}\` uses a bounded renderer-noise comparison for the sticky ` +
+        `backdrop-filter header, while the DOM snapshot and all pixels outside that region remain ` +
+        `exact.** The region is the painted box of the element carrying the filter (\`${p.selector}\`), ` +
+        `resolved from the live page at comparison time rather than written down as a rectangle. ` +
+        `Inside it, at most ${p.maxDifferingPixels} pixels may differ by at most ${p.maxRgbDelta} ` +
+        `per channel, with alpha untouched. Outside it, one differing pixel is a failure.`
+    );
+    lines.push("");
+    // The cause is registry state and is interpolated, so editing it there cannot leave
+    // this paragraph asserting a diagnosis nobody holds any more. The measured figures
+    // that follow are a one-time observation of this board on this machine, they are not
+    // in the registry, and they are kept because a reader needs the size of the thing to
+    // judge whether the ceiling above is generous or tight.
+    lines.push(
+      `The reason is diagnosed, not assumed: ${p.cause} Under load it produces a frame differing ` +
+        `in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. ` +
+        `\`scripts/qa/raster-policy.mjs\` carries the full diagnosis and the evidence that ruled ` +
+        `out timing, animation, fonts, browser reuse and every raster flag tried.`
+    );
+    lines.push("");
+    lines.push(
+      `This is not a tolerance setting. Policy \`${p.id}\` is hard-coded to one scenario at one ` +
+        `viewport, no flag or environment variable reaches it, and \`test/qa-raster-policy.test.mjs\` ` +
+        `holds each edge of it. Any second use, any bounds change and any ceiling change needs a ` +
+        `new founder ruling.`
+    );
+  }
+  return lines;
+}
+
 function writeManifest(outDir, results, blocked, binary, browserVersion, grant = null) {
   const baseSha = execSync("git rev-parse HEAD", { cwd: REPO_ROOT }).toString().trim();
   const dirty = execSync("git status --porcelain", { cwd: REPO_ROOT }).toString().trim();
@@ -1232,8 +1469,22 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   lines.push("");
   lines.push(`captured_against_sha: \`${baseSha}\``);
   lines.push("");
+  // Two different claims, and the manifest is only allowed to make the true one. A
+  // dirty tree means the images answer to no commit at all, and saying so is the whole
+  // point of the line. A clean tree means they answer to exactly this one, and carrying
+  // the dirty wording anyway would understate what the run actually proved.
+  //
+  // This header block is rewritten wholesale on every generation. Anything hand-added to
+  // it belongs to ONE capture set and does not survive the next one — including the
+  // current addendum naming `d914e47d95921d0c08335c13888487001c2919da` as where the
+  // capture-time working tree was committed. That is correct, not a bug to fix here: a
+  // new capture set answers to a different tree, so re-emitting the old note would make
+  // the manifest assert provenance for images it no longer describes. Whoever recaptures
+  // re-adds the note that fits the new set, or leaves it off.
   lines.push(
-    `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
+    dirty
+      ? `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
+      : `**These images were captured against commit \`${baseSha}\` exactly.** The working tree was clean when the shutter fired: no uncommitted change stood between that commit and these bytes, so \`captured_against_sha\` names the tree that produced them and not merely the base it sat on. Re-checking out \`${baseSha}\` reproduces the state photographed here.`
   );
   lines.push("");
   lines.push(`- working tree at capture time: **${dirty ? "dirty" : "clean"}**`);
@@ -1258,19 +1509,49 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
       `portable; they are the layer to trust when the machine changes.`
   );
   lines.push("");
+  lines.push(...renderComparisonPolicySection(RASTER_POLICIES));
+  lines.push("");
   lines.push(`## Pinned environment`);
   lines.push("");
   lines.push(`Recorded so a future run can explain why a baseline is or is not comparable.`);
   lines.push("");
   lines.push(`| pinned value | setting |`);
   lines.push(`| --- | --- |`);
+  // query_parameters is per-scenario, not pinned. One surface needs a query, so listing
+  // a single value here would state a setting the board does not share. It is dropped
+  // from the pinned table and printed against each image instead.
   const shared = { ...PINNED, browser_version: browserVersion, browser_executable: binary };
+  delete shared.query_parameters;
   for (const k of Object.keys(shared).sort()) lines.push(`| ${k} | \`${shared[k]}\` |`);
   for (const r of results) {
     lines.push(
       `| viewport \`${r.viewport_name}\` | \`${r.env.viewport} @ dsf ${r.env.device_scale_factor}, ` +
         `mobile=${r.env.mobile_emulation}, scroll offset ${r.env.scroll_offset}\` |`
     );
+  }
+  lines.push("");
+  lines.push(`## Photographed, under another name`);
+  lines.push("");
+  lines.push(
+    `These states are covered. They are listed on their own because no scenario is named ` +
+      `after them, so a reviewer searching by name finds nothing and concludes there is a gap. ` +
+      `Nothing in this section is a gap.`
+  );
+  lines.push("");
+  for (const item of COVERED_UNDER_ANOTHER_NAME) {
+    lines.push(`- **${item.state}** — photographed by ${item.photographedBy}. ${item.why}`);
+  }
+  lines.push("");
+  lines.push(`## What the board does not photograph`);
+  lines.push("");
+  lines.push(
+    `A board that lists only what it covers reads as complete. These are the result states ` +
+      `that exist in the product and have no image here, each with the reason. Anyone adding a ` +
+      `scenario should check this list first — it is where the next one comes from.`
+  );
+  lines.push("");
+  for (const gap of UNPHOTOGRAPHED) {
+    lines.push(`- **${gap.state}** — ${gap.why}`);
   }
   lines.push("");
   lines.push(`## Images`);
@@ -1283,11 +1564,14 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
     lines.push(`| sha256 | \`${r.sha256}\` |`);
     lines.push(`| bytes | ${r.bytes} |`);
     lines.push(`| viewport | ${r.viewport} (${r.viewport_name}) |`);
+    lines.push(`| url | \`${PINNED.url}\`, query \`${r.env.query_parameters}\` |`);
     lines.push(`| snapshot | \`${r.snapshotFilename}\` |`);
     lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
     lines.push(`| state captured | ${r.state} |`);
     lines.push(`| expected behaviour | ${r.expected} |`);
-    lines.push(`| captured_against_sha | \`${baseSha}\` + uncommitted working tree |`);
+    lines.push(
+      `| captured_against_sha | \`${baseSha}\`${dirty ? " + uncommitted working tree" : " (clean tree)"} |`
+    );
     lines.push("");
   }
   writeArtifact(path.join(outDir, "manifest.md"), lines.join("\n"), grant);

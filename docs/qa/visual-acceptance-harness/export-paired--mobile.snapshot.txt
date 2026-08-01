@@ -1,0 +1,1275 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-checks__export--paired
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 10006
+timezone: UTC
+url: /workbench.html
+viewport: 375x812
+
+## payload
+{
+  "/api/read": {
+    "act2": {
+      "available": true,
+      "degraded_reason": null,
+      "eligible": true,
+      "paired_method_version": "2.0",
+      "targeted_prompt": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+      "targeted_prompt_hash": "<HASH64>"
+    },
+    "checks": {
+      "cards": [
+        {
+          "dependency_statement": "The itemization duty is stated as following from the 30-day deadline, so it inherits whatever jurisdiction that deadline came from.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 179,
+                "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+                "start": 83
+              }
+            ],
+            "text": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions."
+          },
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 82,
+              "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 179,
+              "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+              "start": 83
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Omission",
+          "finding_type": "omission",
+          "id": "chk_omission_0_83",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 82,
+                "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+                "start": 0
+              }
+            ],
+            "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer, not a verdict",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "Which state's statute sets this deadline, and what does that statute require?"
+        }
+      ],
+      "checks": [
+        {
+          "demonstration": {
+            "dependency_statement": "The itemization duty is stated as following from the 30-day deadline, so it inherits whatever jurisdiction that deadline came from.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "omission",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 179,
+                "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+                "start": 83
+              }
+            ],
+            "text": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions."
+          },
+          "detector_event_id": "de_omission_0_83",
+          "id": "chk_omission_0_83",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 82,
+                "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+                "start": 0
+              }
+            ],
+            "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "Which state's statute sets this deadline, and what does that statute require?",
+            "resolver": "authority"
+          }
+        }
+      ],
+      "default_top_n": 3,
+      "detector_events": [
+        {
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 82,
+              "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 179,
+              "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+              "start": 83
+            }
+          ],
+          "family": "comparative",
+          "id": "de_omission_0_83"
+        }
+      ],
+      "inspector": {
+        "model": "claude-opus-4-8",
+        "model_version": "claude-opus-4-8",
+        "prompt_version": "reader.v3"
+      },
+      "mode": "single",
+      "status": "provisional",
+      "top": [
+        {
+          "dependency_statement": "The itemization duty is stated as following from the 30-day deadline, so it inherits whatever jurisdiction that deadline came from.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 179,
+                "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+                "start": 83
+              }
+            ],
+            "text": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions."
+          },
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 82,
+              "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 179,
+              "quote": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+              "start": 83
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Omission",
+          "finding_type": "omission",
+          "id": "chk_omission_0_83",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 82,
+                "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+                "start": 0
+              }
+            ],
+            "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer, not a verdict",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "Which state's statute sets this deadline, and what does that statute require?"
+        }
+      ],
+      "ui": {
+        "collapse_label": "Show fewer",
+        "copied_affordance": "Copied",
+        "copy_affordance": "Copy the question",
+        "expand_label": "Show the full register",
+        "finding_labels": {
+          "deflection": "Deflection",
+          "framing_drift": "Framing Drift",
+          "omission": "Omission"
+        },
+        "labels": {
+          "dependency": "How they connect",
+          "dependent": "Which carries",
+          "evidence": "Quoted from the answer",
+          "proposition": "Rests on",
+          "resolver": "Where to check",
+          "status": "Status",
+          "trigger": "Trigger",
+          "verification": "Worth asking"
+        },
+        "provisional_label": "Provisional — a pointer, not a verdict",
+        "register_heading": "Questions worth asking",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers, not verdicts — copy a question and check it against a source.",
+        "resolver_labels": {
+          "authority": "Check against an authority",
+          "calculation": "Re-run the calculation",
+          "direct_question": "Ask the question directly",
+          "document": "Check against the document"
+        },
+        "status_labels": {
+          "dismissed": "Set aside",
+          "open": "Open",
+          "resolved": "Resolved"
+        },
+        "top_label": "Worth asking first"
+      },
+      "version": "check-register.v1"
+    },
+    "completeness": "partial",
+    "how_it_was_shaped": "It closes by reassuring, which softens a question the person asked because something had already gone wrong.",
+    "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+    "measurement": {
+      "candidate_method_version": "1.0",
+      "estimate_rationale": "Two candidate observations, one of them a jurisdiction the answer never named. Unvalidated.",
+      "estimate_scale_version": "1.0",
+      "estimate_type": "candidate_gap",
+      "finding_counts": {
+        "candidate deflection": 0,
+        "candidate framing issue": 1,
+        "candidate missing item": 1
+      },
+      "findings": [
+        {
+          "anchor": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+          "check": {
+            "dependency_statement": "The itemization duty is stated as following from the 30-day deadline, so it inherits whatever jurisdiction that deadline came from.",
+            "dependent_output": "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions.",
+            "resolver": "authority",
+            "supporting_proposition": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+            "verification_question": "Which state's statute sets this deadline, and what does that statute require?"
+          },
+          "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+          "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+          "type": "candidate framing issue"
+        }
+      ],
+      "gap_estimate": 2,
+      "unvalidated": true
+    },
+    "receipt": {
+      "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
+      "generated_at": "<TIMESTAMP>",
+      "integrity": {
+        "algorithm": "sha256",
+        "canonicalization_version": "1.0",
+        "content_hash": "<HASH64>"
+      },
+      "open_run": {
+        "answer": "A landlord must return a security deposit within 30 days of the tenant moving out. If the landlord keeps any part of the deposit, they have to send an itemized list of deductions. Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+        "canonical": {
+          "counts": {
+            "probe_surfaced_differences": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 0
+              },
+              "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+              "unit_many": "differences",
+              "unit_one": "difference",
+              "value": 0
+            },
+            "recorded_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "every_canonical_finding",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            },
+            "surfaced_candidate_items": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "single_surface_satisfying_anchor_contract",
+              "unit_many": "candidate items",
+              "unit_one": "candidate item",
+              "value": 2
+            },
+            "surfaced_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "satisfies_registered_anchor_contract",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            }
+          },
+          "findings": [
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 82,
+                    "start": 0
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_omission_0_83",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.0",
+              "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 282,
+                    "start": 180
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.1",
+              "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "surface": "single"
+            }
+          ],
+          "inspection_method_version": "reader.v3",
+          "legacy": {
+            "candidate_method_version": "1.0",
+            "estimate_scale_version": "1.0",
+            "estimate_type": "candidate_gap",
+            "gap_estimate": 2,
+            "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+          },
+          "model": "claude-opus-4-8",
+          "model_snapshot_or_build": "",
+          "provider": "anthropic",
+          "result_schema_version": "reader-result.v1",
+          "snippet_resolution": {
+            "snippets_proposed": 0,
+            "snippets_rejected_ambiguous": 0,
+            "snippets_rejected_unlocatable": 0,
+            "snippets_resolved_unique": 0
+          },
+          "surface": "single",
+          "verification_tasks": []
+        },
+        "declared_model": "",
+        "inspection": {
+          "completeness": "partial",
+          "how_it_was_shaped": "It closes by reassuring, which softens a question the person asked because something had already gone wrong.",
+          "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+          "the_read": "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked.",
+          "what_was_left_out": [
+            "Which jurisdiction the 30-day deadline comes from.",
+            "That the deadline varies by state, from roughly two weeks to two months.",
+            "That several states add a penalty when a landlord misses the deadline."
+          ]
+        },
+        "measurement": {
+          "candidate_method_version": "1.0",
+          "estimate_rationale": "Two candidate observations, one of them a jurisdiction the answer never named. Unvalidated.",
+          "estimate_scale_version": "1.0",
+          "estimate_type": "candidate_gap",
+          "finding_counts": {
+            "candidate deflection": 0,
+            "candidate framing issue": 1,
+            "candidate missing item": 1
+          },
+          "findings": [
+            {
+              "anchor": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+              "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "type": "candidate framing issue"
+            }
+          ],
+          "gap_estimate": 2,
+          "unvalidated": true
+        },
+        "provenance": {
+          "condition_fingerprint": "cfp.1|model=claude-opus-4-8|prompt=reader.v3|max_tokens=8192|temperature=default|thinking=adaptive",
+          "fingerprint_version": "cfp.1",
+          "inspector_prompt_version": "reader.v3",
+          "inspector_run_conditions": {
+            "max_tokens": 8192,
+            "temperature": "default",
+            "thinking": "adaptive"
+          },
+          "reader_model_version": "claude-opus-4-8",
+          "reader_output_hash": "<HASH64>",
+          "request_id": "<ID>",
+          "run_timestamp": "<TIMESTAMP>",
+          "source_content_hash": "<HASH64>"
+        },
+        "question": "My landlord still has my security deposit. How long do they have to return it?",
+        "topic": ""
+      },
+      "paired_analysis": null,
+      "receipt_type": "single",
+      "schema_version": "reader-receipt-1.2"
+    },
+    "result": {
+      "counts": {
+        "probe_surfaced_differences": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 0
+          },
+          "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+          "unit_many": "differences",
+          "unit_one": "difference",
+          "value": 0
+        },
+        "recorded_findings": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 1,
+            "omission": 1
+          },
+          "predicate_id": "every_canonical_finding",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 2
+        },
+        "surfaced_candidate_items": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 1,
+            "omission": 1
+          },
+          "predicate_id": "single_surface_satisfying_anchor_contract",
+          "unit_many": "candidate items",
+          "unit_one": "candidate item",
+          "value": 2
+        },
+        "surfaced_findings": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 1,
+            "omission": 1
+          },
+          "predicate_id": "satisfies_registered_anchor_contract",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 2
+        }
+      },
+      "findings": [
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 82,
+                "start": 0
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_omission_0_83",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.0",
+          "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 282,
+                "start": 180
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.1",
+          "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+          "surface": "single"
+        }
+      ],
+      "inspection_method_version": "reader.v3",
+      "legacy": {
+        "candidate_method_version": "1.0",
+        "estimate_scale_version": "1.0",
+        "estimate_type": "candidate_gap",
+        "gap_estimate": 2,
+        "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+      },
+      "model": "claude-opus-4-8",
+      "model_snapshot_or_build": "",
+      "provider": "anthropic",
+      "result_schema_version": "reader-result.v1",
+      "snippet_resolution": {
+        "snippets_proposed": 0,
+        "snippets_rejected_ambiguous": 0,
+        "snippets_rejected_unlocatable": 0,
+        "snippets_resolved_unique": 0
+      },
+      "surface": "single",
+      "verification_tasks": []
+    },
+    "source": "agent",
+    "the_read": "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked.",
+    "what_was_left_out": [
+      "Which jurisdiction the 30-day deadline comes from.",
+      "That the deadline varies by state, from roughly two weeks to two months.",
+      "That several states add a penalty when a landlord misses the deadline."
+    ]
+  },
+  "/api/read-paired": {
+    "delta_items": [
+      {
+        "open_side": "within 30 days of the tenant moving out",
+        "point": "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
+        "signal_pattern": "Omission",
+        "targeted_side": "It runs from 14 days in some states to 60 days in others"
+      },
+      {
+        "open_side": "",
+        "point": "The second answer names a penalty for a missed deadline; the first did not mention one.",
+        "signal_pattern": "Omission",
+        "targeted_side": "require the landlord to pay the tenant a penalty"
+      }
+    ],
+    "estimate_rationale": "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
+    "estimate_type": "paired_gap",
+    "gap_estimate": 2,
+    "gap_estimate_label": "Machine gap estimate: 2 of 3 (unvalidated)",
+    "idempotent": false,
+    "paired_method_version": "2.0",
+    "receipt": {
+      "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
+      "generated_at": "<TIMESTAMP>",
+      "integrity": {
+        "algorithm": "sha256",
+        "canonicalization_version": "1.0",
+        "content_hash": "<HASH64>"
+      },
+      "open_run": {
+        "answer": "A landlord must return a security deposit within 30 days of the tenant moving out. If the landlord keeps any part of the deposit, they have to send an itemized list of deductions. Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+        "canonical": {
+          "counts": {
+            "probe_surfaced_differences": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 0
+              },
+              "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+              "unit_many": "differences",
+              "unit_one": "difference",
+              "value": 0
+            },
+            "recorded_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "every_canonical_finding",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            },
+            "surfaced_candidate_items": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "single_surface_satisfying_anchor_contract",
+              "unit_many": "candidate items",
+              "unit_one": "candidate item",
+              "value": 2
+            },
+            "surfaced_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 1,
+                "omission": 1
+              },
+              "predicate_id": "satisfies_registered_anchor_contract",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            }
+          },
+          "findings": [
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 82,
+                    "start": 0
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_omission_0_83",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.0",
+              "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 282,
+                    "start": 180
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.1",
+              "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "surface": "single"
+            }
+          ],
+          "inspection_method_version": "reader.v3",
+          "legacy": {
+            "candidate_method_version": "1.0",
+            "estimate_scale_version": "1.0",
+            "estimate_type": "candidate_gap",
+            "gap_estimate": 2,
+            "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+          },
+          "model": "claude-opus-4-8",
+          "model_snapshot_or_build": "",
+          "provider": "anthropic",
+          "result_schema_version": "reader-result.v1",
+          "snippet_resolution": {
+            "snippets_proposed": 0,
+            "snippets_rejected_ambiguous": 0,
+            "snippets_rejected_unlocatable": 0,
+            "snippets_resolved_unique": 0
+          },
+          "surface": "single",
+          "verification_tasks": []
+        },
+        "declared_model": "",
+        "inspection": {
+          "completeness": "partial",
+          "how_it_was_shaped": "It closes by reassuring, which softens a question the person asked because something had already gone wrong.",
+          "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+          "the_read": "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked.",
+          "what_was_left_out": [
+            "Which jurisdiction the 30-day deadline comes from.",
+            "That the deadline varies by state, from roughly two weeks to two months.",
+            "That several states add a penalty when a landlord misses the deadline."
+          ]
+        },
+        "measurement": {
+          "candidate_method_version": "1.0",
+          "estimate_rationale": "Two candidate observations, one of them a jurisdiction the answer never named. Unvalidated.",
+          "estimate_scale_version": "1.0",
+          "estimate_type": "candidate_gap",
+          "finding_counts": {
+            "candidate deflection": 0,
+            "candidate framing issue": 1,
+            "candidate missing item": 1
+          },
+          "findings": [
+            {
+              "anchor": "A landlord must return a security deposit within 30 days of the tenant moving out.",
+              "materiality": "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.",
+              "materiality": "The closing line lowers the stakes of a question the person asked because the deadline had already passed.",
+              "type": "candidate framing issue"
+            }
+          ],
+          "gap_estimate": 2,
+          "unvalidated": true
+        },
+        "provenance": {
+          "condition_fingerprint": "cfp.1|model=claude-opus-4-8|prompt=reader.v3|max_tokens=8192|temperature=default|thinking=adaptive",
+          "fingerprint_version": "cfp.1",
+          "inspector_prompt_version": "reader.v3",
+          "inspector_run_conditions": {
+            "max_tokens": 8192,
+            "temperature": "default",
+            "thinking": "adaptive"
+          },
+          "reader_model_version": "claude-opus-4-8",
+          "reader_output_hash": "<HASH64>",
+          "request_id": "<ID>",
+          "run_timestamp": "<TIMESTAMP>",
+          "source_content_hash": "<HASH64>"
+        },
+        "question": "My landlord still has my security deposit. How long do they have to return it?",
+        "topic": ""
+      },
+      "paired_analysis": {
+        "canonical": {
+          "counts": {
+            "probe_surfaced_differences": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 2
+              },
+              "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+              "unit_many": "differences",
+              "unit_one": "difference",
+              "value": 2
+            },
+            "recorded_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 2
+              },
+              "predicate_id": "every_canonical_finding",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            },
+            "surfaced_candidate_items": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 0
+              },
+              "predicate_id": "single_surface_satisfying_anchor_contract",
+              "unit_many": "candidate items",
+              "unit_one": "candidate item",
+              "value": 0
+            },
+            "surfaced_findings": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 2
+              },
+              "predicate_id": "satisfies_registered_anchor_contract",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 2
+            }
+          },
+          "findings": [
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "within 30 days of the tenant moving out",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 81,
+                    "start": 42
+                  },
+                  "status": "QUOTED"
+                },
+                {
+                  "absent_reason": null,
+                  "quote": "It runs from 14 days in some states to 60 days in others",
+                  "role": "targeted_answer",
+                  "span": {
+                    "artifact_id": "targeted_answer",
+                    "end": 91,
+                    "start": 35
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "PROBE_SIDE_ANCHOR_UNSUPPORTED"
+                ]
+              },
+              "claim_basis": "NO_AUTHORIZED_BASIS",
+              "claim_register": "OBSERVED_DIFFERENCE",
+              "class_label": "omission",
+              "comparison_direction": "PROBE_ONLY",
+              "conditions_status": "UNAVAILABLE",
+              "disposition": "UNREVIEWED",
+              "id": "paired_observed_difference.0",
+              "materiality": "",
+              "origin": "live_reader",
+              "reader_state": "OBSERVED",
+              "shape": "paired_observed_difference",
+              "statement": "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
+              "surface": "paired"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+                  "quote": "",
+                  "role": "original_answer",
+                  "span": null,
+                  "status": "ABSENT"
+                },
+                {
+                  "absent_reason": null,
+                  "quote": "require the landlord to pay the tenant a penalty",
+                  "role": "targeted_answer",
+                  "span": {
+                    "artifact_id": "targeted_answer",
+                    "end": 206,
+                    "start": 158
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "PROBE_SIDE_ANCHOR_UNSUPPORTED",
+                  "OPEN_SIDE_ANCHOR_ABSENT"
+                ]
+              },
+              "claim_basis": "NO_AUTHORIZED_BASIS",
+              "claim_register": "OBSERVED_DIFFERENCE",
+              "class_label": "omission",
+              "comparison_direction": "PROBE_ONLY",
+              "conditions_status": "UNAVAILABLE",
+              "disposition": "UNREVIEWED",
+              "id": "paired_observed_difference.1",
+              "materiality": "",
+              "origin": "live_reader",
+              "reader_state": "OBSERVED",
+              "shape": "paired_observed_difference",
+              "statement": "The second answer names a penalty for a missed deadline; the first did not mention one.",
+              "surface": "paired"
+            }
+          ],
+          "inspection_method_version": "2.0",
+          "legacy": {
+            "estimate_type": "paired_gap",
+            "gap_estimate": 2,
+            "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields.",
+            "rubric_version": "1.0"
+          },
+          "model": "claude-opus-4-8",
+          "model_snapshot_or_build": "",
+          "provider": "anthropic",
+          "result_schema_version": "reader-result.v1",
+          "snippet_resolution": {
+            "snippets_proposed": 3,
+            "snippets_rejected_ambiguous": 0,
+            "snippets_rejected_unlocatable": 0,
+            "snippets_resolved_unique": 3
+          },
+          "surface": "paired",
+          "verification_tasks": []
+        },
+        "delta_items": [
+          {
+            "open_side": "within 30 days of the tenant moving out",
+            "point": "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
+            "signal_pattern": "Omission",
+            "targeted_side": "It runs from 14 days in some states to 60 days in others"
+          },
+          {
+            "open_side": "",
+            "point": "The second answer names a penalty for a missed deadline; the first did not mention one.",
+            "signal_pattern": "Omission",
+            "targeted_side": "require the landlord to pay the tenant a penalty"
+          }
+        ],
+        "estimate_rationale": "Counted only decision-relevant deltas, not the second answer's added length. Unvalidated.",
+        "estimate_type": "paired_gap",
+        "gap_estimate": 2,
+        "open_run_id": "<ID>",
+        "paired_method_version": "2.0",
+        "rubric_version": "1.0",
+        "targeted_answer": "The deadline depends on the state. It runs from 14 days in some states to 60 days in others, so the 30-day figure is not a national rule. Several states also require the landlord to pay the tenant a penalty — often two or three times the deposit — when the deadline is missed. You should check your own state's statute before relying on any single number.",
+        "targeted_answer_hash": "<HASH64>",
+        "targeted_prompt": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+        "targeted_prompt_hash": "<HASH64>",
+        "unvalidated": true
+      },
+      "receipt_type": "paired",
+      "schema_version": "reader-receipt-1.2"
+    },
+    "result": {
+      "counts": {
+        "probe_surfaced_differences": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 2
+          },
+          "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+          "unit_many": "differences",
+          "unit_one": "difference",
+          "value": 2
+        },
+        "recorded_findings": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 2
+          },
+          "predicate_id": "every_canonical_finding",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 2
+        },
+        "surfaced_candidate_items": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 0
+          },
+          "predicate_id": "single_surface_satisfying_anchor_contract",
+          "unit_many": "candidate items",
+          "unit_one": "candidate item",
+          "value": 0
+        },
+        "surfaced_findings": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 2
+          },
+          "predicate_id": "satisfies_registered_anchor_contract",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 2
+        }
+      },
+      "findings": [
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "within 30 days of the tenant moving out",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 81,
+                "start": 42
+              },
+              "status": "QUOTED"
+            },
+            {
+              "absent_reason": null,
+              "quote": "It runs from 14 days in some states to 60 days in others",
+              "role": "targeted_answer",
+              "span": {
+                "artifact_id": "targeted_answer",
+                "end": 91,
+                "start": 35
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "PROBE_SIDE_ANCHOR_UNSUPPORTED"
+            ]
+          },
+          "claim_basis": "NO_AUTHORIZED_BASIS",
+          "claim_register": "OBSERVED_DIFFERENCE",
+          "class_label": "omission",
+          "comparison_direction": "PROBE_ONLY",
+          "conditions_status": "UNAVAILABLE",
+          "disposition": "UNREVIEWED",
+          "id": "paired_observed_difference.0",
+          "materiality": "",
+          "origin": "live_reader",
+          "reader_state": "OBSERVED",
+          "shape": "paired_observed_difference",
+          "statement": "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number.",
+          "surface": "paired"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+              "quote": "",
+              "role": "original_answer",
+              "span": null,
+              "status": "ABSENT"
+            },
+            {
+              "absent_reason": null,
+              "quote": "require the landlord to pay the tenant a penalty",
+              "role": "targeted_answer",
+              "span": {
+                "artifact_id": "targeted_answer",
+                "end": 206,
+                "start": 158
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "PROBE_SIDE_ANCHOR_UNSUPPORTED",
+              "OPEN_SIDE_ANCHOR_ABSENT"
+            ]
+          },
+          "claim_basis": "NO_AUTHORIZED_BASIS",
+          "claim_register": "OBSERVED_DIFFERENCE",
+          "class_label": "omission",
+          "comparison_direction": "PROBE_ONLY",
+          "conditions_status": "UNAVAILABLE",
+          "disposition": "UNREVIEWED",
+          "id": "paired_observed_difference.1",
+          "materiality": "",
+          "origin": "live_reader",
+          "reader_state": "OBSERVED",
+          "shape": "paired_observed_difference",
+          "statement": "The second answer names a penalty for a missed deadline; the first did not mention one.",
+          "surface": "paired"
+        }
+      ],
+      "inspection_method_version": "2.0",
+      "legacy": {
+        "estimate_type": "paired_gap",
+        "gap_estimate": 2,
+        "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields.",
+        "rubric_version": "1.0"
+      },
+      "model": "claude-opus-4-8",
+      "model_snapshot_or_build": "",
+      "provider": "anthropic",
+      "result_schema_version": "reader-result.v1",
+      "snippet_resolution": {
+        "snippets_proposed": 3,
+        "snippets_rejected_ambiguous": 0,
+        "snippets_rejected_unlocatable": 0,
+        "snippets_resolved_unique": 3
+      },
+      "surface": "paired",
+      "verification_tasks": []
+    },
+    "rubric_version": "1.0",
+    "signal_counts": {
+      "Deflection": 0,
+      "Framing Drift": 0,
+      "Omission": 2
+    },
+    "source": "agent",
+    "targeted_prompt": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+    "unvalidated": true
+  }
+}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
+span "Share what you saw"
+button "Copy card" disabled=false
+button "Download card" disabled=false
+button "Copy JSON" disabled=false
+button "Download receipt" disabled=false
+button "Export Review Record" disabled=false
+span "A JSON file holding both answers as pasted, 2 recorded findings, the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed."
+button "Share this two-question test" disabled=false
+p "How big did the difference feel?"
+button "Small" disabled=false
+button "Noticeable" disabled=false
+button "Large" disabled=false
+button "Test another answer" disabled=false
+h2 "TEST ANOTHER QUESTION"
+p "Run the same check on another answer."

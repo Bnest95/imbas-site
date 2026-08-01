@@ -26,7 +26,20 @@
 // which keep every field they had. A 1.0 envelope still verifies against its own
 // recorded version and is read without reinterpretation — no field is renamed,
 // re-derived, or removed.
-export const RECEIPT_SCHEMA_VERSION = "reader-receipt-1.1";
+// 1.2 drops gap_estimate_label from both envelopes. The raw gap_estimate number
+// stays where it is, because api/inspection-share.js reads it off the envelope and
+// that surface is not this pass's to move. The LABEL is a rendered sentence rather
+// than a datum, no non-test consumer read it, and a canonical export may not carry
+// a score claim. Receipts written under 1.1 keep their stored hash and are read as
+// they were written; nothing here reinterprets them.
+//
+// 1.2 also stops PRINTING estimate_rationale in the .txt receipts. The field itself
+// is untouched in the envelopes and in the stored record. It is one line of model
+// prose written to justify the 0-3 estimate, and with the estimate gone it is a
+// rationale for a claim the receipt no longer makes. It is also unbounded model text
+// about a score, so nothing can guarantee it does not restate the figure — and the
+// zero-score rule has to be enforceable, not merely intended.
+export const RECEIPT_SCHEMA_VERSION = "reader-receipt-1.2";
 // Canonicalization rules id. Bump only if the rules below change, so a hash
 // recorded under the old rules can still be reproduced.
 export const CANONICALIZATION_VERSION = "1.0";
@@ -38,8 +51,11 @@ export const RECEIPT_HASH_ALGORITHM = "sha256";
 export const RECEIPT_BOUNDARY =
   "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.";
 
-// The unvalidated estimate label. Never softened, abbreviated, or moved below the
-// fold (design §11). N is the 0-3 candidate gap estimate.
+// LEGACY, SHARE-SURFACE ONLY. The 0-3 estimate is no longer something the Reader
+// tells a person it found: no current render, receipt, or export builds a claim
+// from it. This function survives because api/inspection-share.js still composes
+// the label for stored share rows, and that surface is out of this pass's scope.
+// Do not call it from a current-run surface.
 export function gapEstimateLabel(n) {
   return `Candidate gap estimate: ${n} of 3 (unvalidated)`;
 }
@@ -51,11 +67,10 @@ export function hasGapEstimate(n) {
   return Number.isFinite(n);
 }
 
-// The paired-mode estimate label (Reader v2 P2). Distinct wording from the single
-// label because the paired estimate is a measured open-to-targeted delta, not a
-// candidate potential — but it is STILL unvalidated (a machine estimate over one
-// answer pair, never a human-scored result). "Machine gap estimate" appears here
-// and only here, exactly as the single label appears only in single mode.
+// LEGACY, SHARE-SURFACE ONLY — the paired counterpart of gapEstimateLabel, kept on
+// the same terms and under the same prohibition. The paired result now states what
+// the probe surfaced as a count of findings a reader can check against the two
+// answers, which is a different kind of claim from a magnitude on a 0-3 axis.
 export function pairedGapEstimateLabel(n) {
   return `Machine gap estimate: ${n} of 3 (unvalidated)`;
 }
@@ -150,9 +165,6 @@ export function buildSingleReceipt({
         })),
         finding_counts: measurement.finding_counts || {},
         gap_estimate: measurement.gap_estimate,
-        gap_estimate_label: hasGapEstimate(measurement.gap_estimate)
-          ? gapEstimateLabel(measurement.gap_estimate)
-          : "",
         estimate_rationale: measurement.estimate_rationale || "",
         estimate_type: measurement.estimate_type,
         estimate_scale_version: measurement.estimate_scale_version,
@@ -217,9 +229,10 @@ export function buildSingleReceipt({
 // delta_items is the structured itemized delta: each entry names one thing the
 // targeted answer surfaced that the open one did not, quotes both sides where a
 // span applies, and carries the machine's signal-pattern classification for that
-// delta (Omission / Framing Drift / Deflection). The paired gap_estimate (0-3,
-// estimate_type "paired_gap") is a machine estimate over this one pair — labelled
-// unvalidated, never a human-scored result.
+// delta (Omission / Framing Drift / Deflection). gap_estimate (0-3, estimate_type
+// "paired_gap") is retained as a legacy datum because api/inspection-share.js reads
+// it off this envelope. Nothing current renders it, labels it, or derives a claim
+// from it; the paired surface states a count of surfaced findings instead.
 export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
   const pa = pairedAnalysis || {};
   const deltaItems = Array.isArray(pa.delta_items)
@@ -244,7 +257,6 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
       delta_items: deltaItems,
       canonical: pa.canonical || null,
       gap_estimate: pa.gap_estimate,
-      gap_estimate_label: pairedGapEstimateLabel(pa.gap_estimate),
       estimate_rationale: pa.estimate_rationale || "",
       estimate_type: pa.estimate_type || "paired_gap",
       rubric_version: pa.rubric_version || "",
@@ -319,8 +331,33 @@ export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis }) {
 
 // ── Human-readable receipt (.txt) ─────────────────────────────────────────────
 // Plain text so it is universally readable and self-contained. Carries the
-// boundary line AND the unvalidated label inside the artifact, not just the UI.
+// boundary line inside the artifact, not just the UI.
 const COMPLETENESS_UPPER = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
+
+// The display vocabulary, in the fixed order every surface states it. One
+// vocabulary: what the paired panel calls an Omission the single panel calls an
+// Omission, and the receipt agrees with both.
+const CLASS_DISPLAY_ORDER = [
+  ["omission", "Omission"],
+  ["framing_drift", "Framing Drift"],
+  ["deflection", "Deflection"],
+];
+
+// Restate a named count off the canonical block instead of recounting it. The
+// canonical counts carry their own value, unit and per-class split precisely so a
+// serialized surface can print them without owning a second predicate. A record
+// with no canonical block (legacy 1.x) yields null and the caller prints nothing —
+// a receipt never invents a tally it cannot trace to the collection.
+function canonicalCountLines(canonical, countId) {
+  const c = canonical && canonical.counts && canonical.counts[countId];
+  if (!c) return null;
+  const n = c.value || 0;
+  const b = c.class_breakdown || {};
+  return [
+    `${n} ${n === 1 ? c.unit_one : c.unit_many}`,
+    "By signal: " + CLASS_DISPLAY_ORDER.map(([id, label]) => `${label}: ${b[id] || 0}`).join(" · "),
+  ];
+}
 
 // The open-run body: the answer inspected, the read, the candidate measurement,
 // and the run provenance. Shared by BOTH text receipts so the embedded open run
@@ -355,15 +392,8 @@ function openRunBodyLines(run) {
   L.push("");
   L.push("—— MEASUREMENT (candidate observations, unvalidated) ——");
   if (m) {
-    if (hasGapEstimate(m.gap_estimate)) L.push(gapEstimateLabel(m.gap_estimate));
-    if ((m.estimate_rationale || "").trim()) L.push(`Rationale: ${m.estimate_rationale.trim()}`);
-    const c = m.finding_counts || {};
-    L.push(
-      "Findings by type: " +
-        `candidate missing item: ${c["candidate missing item"] || 0} · ` +
-        `candidate framing issue: ${c["candidate framing issue"] || 0} · ` +
-        `candidate deflection: ${c["candidate deflection"] || 0}`,
-    );
+    const counted = canonicalCountLines(r.canonical, "surfaced_candidate_items");
+    if (counted) for (const line of counted) L.push(line);
     const findings = Array.isArray(m.findings) ? m.findings : [];
     if (findings.length) {
       L.push("");
@@ -425,8 +455,8 @@ export function formatReceiptText(envelope) {
 // Human-readable paired receipt (.txt). Same header/boundary/integrity frame as
 // the single receipt; the embedded open run renders via the shared body helper so
 // the first-answer record reads identically, and the paired delta section is added
-// beneath it. The estimate carries the "Machine gap estimate: N of 3 (unvalidated)"
-// label — the paired label, which appears only in paired mode.
+// beneath it. The section states what the probe surfaced as a count of findings
+// restated from the canonical block, never as a magnitude on a 0-3 axis.
 export function formatPairedReceiptText(envelope) {
   const e = envelope || {};
   const run = e.open_run || {};
@@ -442,12 +472,12 @@ export function formatPairedReceiptText(envelope) {
   L.push("");
   for (const line of openRunBodyLines(run)) L.push(line);
   L.push("");
-  L.push("—— THE TWO-QUESTION TEST (paired, machine estimate) ——");
+  L.push("—— THE TWO-QUESTION TEST (paired, unvalidated) ——");
   if (pa.open_run_id) L.push(`Open run ID: ${pa.open_run_id}`);
-  L.push(pairedGapEstimateLabel(pa.gap_estimate));
-  if ((pa.estimate_rationale || "").trim()) L.push(`Rationale: ${pa.estimate_rationale.trim()}`);
+  const surfaced = canonicalCountLines(pa.canonical, "probe_surfaced_differences");
+  if (surfaced) for (const line of surfaced) L.push(line);
   L.push("");
-  L.push("Targeted prompt (deterministic, from the open answer's candidate gaps):");
+  L.push("Targeted prompt (the fixed completeness probe at the recorded method version):");
   L.push((pa.targeted_prompt || "").trim());
   L.push("");
   L.push("Delta — what the second answer surfaced that the first did not:");
@@ -464,7 +494,7 @@ export function formatPairedReceiptText(envelope) {
   }
   L.push("");
   L.push(
-    "These are machine estimates over a single answer pair, not validated classifications or evidence.",
+    "These are machine observations over a single answer pair, not validated classifications or evidence.",
   );
   L.push("");
   for (const line of integrityLines(e.integrity)) L.push(line);

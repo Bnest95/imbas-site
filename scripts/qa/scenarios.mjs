@@ -35,12 +35,30 @@ import {
 import {
   buildTargetedPrompt,
   PAIRED_METHOD_VERSION,
+  ACT2_CAPACITY_COPY,
   deriveConditionsMatched,
+  isCapacityFallbackReason,
   PAIR_CAPTURE_UI,
   PAIR_SAME_MODEL,
   PAIR_EDITS,
 } from "../../reader-paired.js";
 import { buildCheckRegister } from "../../reader-checks.js";
+import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "../../reader-public-example.js";
+import {
+  ARTIFACT_ORIGINAL,
+  ARTIFACT_TARGETED,
+  AUTHORIZED_CONDITIONS_SOURCES,
+  CLIENT_DECLARATION_SOURCES,
+  COMPARISON_DIRECTION,
+  CONDITIONS_STATUS,
+  FINDING_CLASSES,
+  SHAPE_PAIRED_OBSERVED_DIFFERENCE,
+  buildCanonicalResult,
+  buildFinding,
+  newResolutionTally,
+  normalizeClass,
+} from "../../reader-result.js";
+import { CLAIM_STATE, describeClaimState, describeProvenance } from "../../reader-provenance.js";
 import { buildCanonicalSingle } from "../../api/read.js";
 import {
   buildCanonicalPaired,
@@ -141,22 +159,68 @@ function singleMeasurement() {
   };
 }
 
-function singleReadPayload() {
-  const measurement = singleMeasurement();
+// ── Single mode, nothing surfaced ────────────────────────────────────────────
+// The other real outcome of a single read: the model returned a read and no
+// findings. That is a result, not a failure, and the surface has to say so without
+// sliding into "the answer was complete" — which is a claim about the answer that no
+// inspection of one answer can support.
+function singleEmptyMeasurement() {
+  const finding_counts = {};
+  for (const t of CANDIDATE_FINDING_TYPES) finding_counts[t] = 0;
+  return {
+    findings: [],
+    finding_counts,
+    gap_estimate: 0,
+    estimate_rationale: "Nothing in the answer met the bar for a candidate observation. Unvalidated.",
+    estimate_type: ESTIMATE_TYPE_SINGLE,
+    estimate_scale_version: ESTIMATE_SCALE_VERSION,
+    candidate_method_version: CANDIDATE_METHOD_VERSION,
+    unvalidated: true,
+  };
+}
 
+// The read prose, hoisted so the empty payload can carry its own. A fixture that
+// reused this prose over an empty finding list would photograph a read describing
+// three omissions above a panel reporting none, and the picture would be of a
+// contradiction the product does not produce.
+const SINGLE_READ = {
+  completeness: "partial",
+  the_read:
+    "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked.",
+  what_was_left_out: [
+    "Which jurisdiction the 30-day deadline comes from.",
+    "That the deadline varies by state, from roughly two weeks to two months.",
+    "That several states add a penalty when a landlord misses the deadline.",
+  ],
+  how_it_was_shaped:
+    "It closes by reassuring, which softens a question the person asked because something had already gone wrong.",
+  inspection_note:
+    "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+};
+
+const SINGLE_EMPTY_READ = {
+  // "full", not "partial". The badge gloss for partial reads "Some material context
+  // was missing or shaped", and printing that above three panels reporting nothing
+  // missing and no shaping is a contradiction no run produces — the fixture would be
+  // photographing itself rather than the product. What the full gloss then says about
+  // the answer is a separate problem, logged rather than rewritten here: the badge
+  // gloss renders on every read, so it is copy for the register lane, not an empty
+  // state this pass owns.
+  completeness: "full",
+  the_read:
+    "The answer names one deadline, says what happens when a landlord keeps part of the deposit, and stops there. Nothing in it rose to a candidate observation on this pass.",
+  what_was_left_out: [],
+  how_it_was_shaped: "",
+  inspection_note: SINGLE_READ.inspection_note,
+};
+
+function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_READ, declaredModel = "" } = {}) {
   const payload = {
-    completeness: "partial",
-    the_read:
-      "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked.",
-    what_was_left_out: [
-      "Which jurisdiction the 30-day deadline comes from.",
-      "That the deadline varies by state, from roughly two weeks to two months.",
-      "That several states add a penalty when a landlord misses the deadline.",
-    ],
-    how_it_was_shaped:
-      "It closes by reassuring, which softens a question the person asked because something had already gone wrong.",
-    inspection_note:
-      "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+    completeness: read.completeness,
+    the_read: read.the_read,
+    what_was_left_out: read.what_was_left_out,
+    how_it_was_shaped: read.how_it_was_shaped,
+    inspection_note: read.inspection_note,
     source: "agent",
     measurement,
   };
@@ -182,7 +246,7 @@ function singleReadPayload() {
     generatedAt: FROZEN_TIMESTAMP,
     question: SYNTHETIC_QUESTION,
     topic: "",
-    declaredModel: "",
+    declaredModel,
     answer: SYNTHETIC_ANSWER,
     inspection: {
       completeness: payload.completeness,
@@ -242,7 +306,7 @@ function singleReadPayload() {
 // The snippets are lookup keys, so they must occur VERBATIM in the answer their role
 // names. SYNTHETIC_ANSWER for original_answer, SYNTHETIC_SECOND_ANSWER for
 // targeted_answer.
-const PAIRED_MODEL_OUTPUT = {
+export const PAIRED_MODEL_OUTPUT = {
   differences: [
     {
       signal_pattern: "Omission",
@@ -308,15 +372,19 @@ const PAIRED_MODEL_OUTPUT_WITH_REJECTION = {
   ],
 };
 
-function pairedReadPayload(modelOutput = PAIRED_MODEL_OUTPUT) {
-  const openPayload = singleReadPayload();
-  const targetedPrompt = openPayload.act2.targeted_prompt;
-
+export function pairedReadPayload(modelOutput = PAIRED_MODEL_OUTPUT) {
   // The endpoint's own parser, then the endpoint's own adapter. The canonical result
   // is built FIRST and the wire fields are derived from it, in that order, exactly as
   // the handler does — so this fixture cannot carry a delta item the door rejected.
   const pm = parsePairedMeasurement(modelOutput);
-  const canonical = buildCanonicalPaired(pm, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER);
+  return pairedWirePayload({ pm, canonical: buildCanonicalPaired(pm, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER) });
+}
+
+// The wire half, shared. Every paired fixture assembles its payload here so the
+// receipt, the delta items and the tally come from one place and from the endpoint's
+// own projectors. What differs between fixtures is the canonical result handed in.
+function pairedWirePayload({ pm, canonical, openPayload = singleReadPayload() }) {
+  const targetedPrompt = openPayload.act2.targeted_prompt;
   const delta_items = projectPairedDeltaItems(canonical, "probe_surfaced_differences");
 
   const pairedAnalysis = {
@@ -361,6 +429,119 @@ function pairedReadPayload(modelOutput = PAIRED_MODEL_OUTPUT) {
 }
 
 const pairedRejectedPayload = () => pairedReadPayload(PAIRED_MODEL_OUTPUT_WITH_REJECTION);
+
+// A paired run in which the model proposed nothing. parsePairedMeasurement accepts an
+// empty differences list — that is a clean result, not a parse failure — so this goes
+// through the endpoint's own parser and adapter like every other paired fixture.
+const pairedEmptyPayload = () =>
+  pairedReadPayload({ differences: [], gap_estimate: 0, estimate_rationale: "No decision-relevant difference. Unvalidated." });
+
+// ── Claim basis, constructed against the register ─────────────────────────────
+//
+// THE ONE PLACE A FIXTURE BYPASSES THE ENDPOINT ADAPTER, so the reason is in writing.
+//
+// buildCanonicalPaired stamps every finding conditions_status UNAVAILABLE and supplies
+// no conditions_source, because the paste-back capture is client-side and the endpoint
+// never receives it. Four of the six claim states reader-provenance.js can display are
+// therefore unreachable through any endpoint in this build. A board that photographed
+// only what the endpoints emit would ship four labels no one has ever seen rendered,
+// and the first person to see them would be the first person whose run reached one.
+//
+// What stops this drifting away from the adapter: test/qa-board-coverage.test.mjs
+// asserts this builder and buildCanonicalPaired produce the same result except for the
+// claim triple. An adapter change this builder does not follow fails there, in CI,
+// rather than silently blessing a fixture the endpoint could no longer produce.
+//
+// modelBuild is the one provenance field no live run records, so it is also the field
+// that decides whether the strip renders complete or partial. Supplying it here is
+// what makes the complete rendering photographable at all.
+export function claimBasisCanonical({
+  conditions_source = "",
+  conditions_status = CONDITIONS_STATUS.UNAVAILABLE,
+  modelBuild = "",
+} = {}) {
+  const pm = parsePairedMeasurement(PAIRED_MODEL_OUTPUT);
+  const artifacts = { [ARTIFACT_ORIGINAL]: SYNTHETIC_ANSWER, [ARTIFACT_TARGETED]: SYNTHETIC_SECOND_ANSWER };
+  const resolution_tally = newResolutionTally();
+  const findings = pm.differences.map((d, index) => {
+    const class_label = normalizeClass(d.signal_pattern);
+    return buildFinding({
+      index,
+      shape: SHAPE_PAIRED_OBSERVED_DIFFERENCE,
+      class_label,
+      statement: d.interpretation || FINDING_CLASSES[class_label],
+      snippets: d.snippets || {},
+      artifacts,
+      resolution_tally,
+      comparison_direction: COMPARISON_DIRECTION.PROBE_ONLY,
+      conditions_source,
+      conditions_status,
+    });
+  });
+  return buildCanonicalResult({
+    surface: "paired",
+    findings,
+    resolution_tally,
+    inspection_method_version: PAIRED_METHOD_VERSION,
+    provider: "anthropic",
+    model: MODEL,
+    model_snapshot_or_build: modelBuild,
+    legacy: { gap_estimate: pm.gap_estimate, estimate_type: pm.estimate_type, rubric_version: pm.rubric_version },
+  });
+}
+
+// The four conditions inputs, named by what they represent rather than by the label
+// they produce, so a copy change to a label cannot leave a fixture named after a
+// state it no longer reaches. claimState on each scenario is what pins the mapping.
+export const CLAIM_BASIS_INPUTS = {
+  "authorized-match": {
+    conditions_source: AUTHORIZED_CONDITIONS_SOURCES[0],
+    conditions_status: CONDITIONS_STATUS.MATCHED,
+    // The only fixture that pins a build. An authorized conditions record and a pinned
+    // inspection build are the same future: a run whose provenance was fully written
+    // down. Photographing them together is the honest pairing.
+    modelBuild: "claude-opus-4-8-20260615",
+  },
+  "authorized-mismatch": {
+    conditions_source: AUTHORIZED_CONDITIONS_SOURCES[0],
+    conditions_status: CONDITIONS_STATUS.UNMATCHED,
+  },
+  "client-declaration": {
+    conditions_source: CLIENT_DECLARATION_SOURCES[0],
+    conditions_status: CONDITIONS_STATUS.UNVERIFIED,
+  },
+  "unrecognized-source": {
+    conditions_source: "some_future_conditions_oracle",
+    conditions_status: CONDITIONS_STATUS.MATCHED,
+  },
+};
+
+// A declared answer model rides along with every claim fixture. Own-mode drive steps
+// never fill the model field, so a live own-mode strip reads "none given" on that row;
+// guided mode does ask, and the server writes the answer onto the open run. This is
+// what lets one board state show every provenance row recorded and another show two
+// rows absent, both from states an endpoint can produce.
+const DECLARED_ANSWER_MODEL = "GPT-5";
+
+// BOTH routes of a claim scenario are built here, from one open payload, because the
+// paired receipt embeds the open run and the /api/read receipt IS that open run. Built
+// separately with different arguments, the two responses would disagree about what the
+// person declared, and the paired receipt's hash would cover a run the first response
+// never returned. assertScenarioIntegrity holds the two to each other.
+function claimBasisRoutes(key) {
+  const input = CLAIM_BASIS_INPUTS[key];
+  if (!input) throw new Error(`unknown claim basis fixture: ${key}`);
+  const openPayload = () => singleReadPayload({ declaredModel: DECLARED_ANSWER_MODEL });
+  return {
+    "/api/read": openPayload,
+    "/api/read-paired": () =>
+      pairedWirePayload({
+        pm: parsePairedMeasurement(PAIRED_MODEL_OUTPUT),
+        canonical: claimBasisCanonical(input),
+        openPayload: openPayload(),
+      }),
+  };
+}
 
 // A record written under the OLD method, replayed by today's build. This is what
 // reconstructPairedFromRecord returns for a stored row with no snippet candidates:
@@ -427,6 +608,51 @@ function pairedLegacyPayload() {
   };
 }
 
+// ── Failure injection ────────────────────────────────────────────────────────
+//
+// Every route above resolves to a body the endpoint could have returned on a good
+// day. Three of the product's states are not good days: the request errors, the
+// metered lane is withheld, or the request is simply still open. Until this pass the
+// board could not photograph any of them, and the manifest said so.
+//
+// A route may now resolve to a RESPONSE instead of a body. Two shapes, both tagged
+// with a key no product payload carries, so the stub can tell them apart from a
+// fixture without guessing:
+//
+//   httpFailure({ status, body })  the fetch resolves with that status. The CLIENT
+//                                  then decides what the screen says — runReader
+//                                  throws `read_<status>`, the catch branch builds
+//                                  the fallback result, and readerFallbackDisplay-
+//                                  Message picks the line. No fixture writes the
+//                                  degraded surface, which is the same rule the rest
+//                                  of this file follows: the harness supplies the
+//                                  condition, the product supplies the state.
+//
+//   neverResolves()                the fetch returns a promise that never settles, so
+//                                  the app stays mid-request for as long as the
+//                                  harness looks at it. This is the only honest way
+//                                  to photograph an in-flight state: a slow-but-real
+//                                  response would race the shutter.
+//
+// The tag rides into the snapshot's payload block, so a baseline records that the
+// scenario injected a 503 rather than merely showing a screen that looks like one.
+export const INJECT_HTTP = "__qa_inject_http__";
+export const INJECT_HANG = "__qa_inject_hang__";
+
+export function httpFailure({ status, body = null }) {
+  if (!Number.isInteger(status) || status < 400 || status > 599) {
+    throw new Error(`httpFailure needs a 4xx or 5xx status, got ${JSON.stringify(status)}`);
+  }
+  return { [INJECT_HTTP]: true, status, body };
+}
+
+export function neverResolves() {
+  return { [INJECT_HANG]: true };
+}
+
+export const isInjectedResponse = (v) =>
+  !!v && typeof v === "object" && (v[INJECT_HTTP] === true || v[INJECT_HANG] === true);
+
 // ── Drive steps ──────────────────────────────────────────────────────────────
 // A step is one of:
 //   { fill: selector, text }        set a React-controlled input (native setter + input event)
@@ -434,14 +660,25 @@ function pairedLegacyPayload() {
 //   { clickText: selector, text }   click the first match whose textContent contains text
 //   { waitFor: selector }           wait until the selector matches and has a non-zero box
 //   { waitForText: text }           wait until body text contains this string
-const DRIVE_SINGLE = [
+const DRIVE_SINGLE_SUBMIT = [
   { fill: ".wb-reader-v2__field--answer textarea", text: SYNTHETIC_ANSWER },
   { waitFor: ".wb-reader-v2__reveal textarea" },
   { fill: ".wb-reader-v2__reveal textarea", text: SYNTHETIC_QUESTION },
   { waitFor: "button.wb-reader-cta:not([disabled])" },
   { click: "button.wb-reader-cta" },
-  { waitFor: ".wb-measure__list li.wb-measure__finding" },
 ];
+
+const DRIVE_SINGLE = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-measure__list li.wb-measure__finding" }];
+
+// The empty read cannot wait on a finding row, because the whole point is that no row
+// exists. It waits on the panel's empty line instead. Waiting on the finding list
+// would hang until the timeout and report a harness fault for a state the product
+// renders correctly.
+const DRIVE_SINGLE_EMPTY = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-measure__findings .wb-reader-result__empty" }];
+
+// The export control renders inside the Check Register panel, which renders only when
+// a check resolved. Waiting on the control itself is what proves the panel is there.
+const DRIVE_SINGLE_EXPORT = [...DRIVE_SINGLE, { waitFor: ".wb-checks__export--single" }];
 
 // The Act 2 paste-back flow, appended to the single-mode read that produces the
 // receipt it needs. Written now because Pass 2B-A2 changed what the paired surface
@@ -456,7 +693,7 @@ const DRIVE_SINGLE = [
 //   - Conditions are disclosed by clicking the option BUTTONS by their label text.
 //     The two groups share a class, but no label string is a substring of another,
 //     so clickText hits exactly one.
-const drivePaired = ({ edits }) => [
+const drivePaired = ({ edits, then = [] }) => [
   ...DRIVE_SINGLE,
   { waitFor: ".wb-act2__actions" },
   { clickText: ".wb-act2__actions button", text: "Paste what came back" },
@@ -467,6 +704,69 @@ const drivePaired = ({ edits }) => [
   { waitFor: ".wb-act2__test-cta button:not([disabled])" },
   { click: ".wb-act2__test-cta button" },
   { waitFor: ".wb-act2__delta" },
+  ...then,
+];
+
+// Every claim-basis and provenance scenario drives the same flow and differs only in
+// the payload. The capture answers are held constant on purpose: matched by
+// declaration, every time. What varies is what the RECORD can stand on, and holding
+// the declaration still is what makes that variation the only thing in the picture.
+const drivePairedClaim = (then) => drivePaired({ edits: PAIR_EDITS.NONE, then });
+
+const MATCHED_CAPTURE = { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE };
+
+// Opening the door is one click on the entry action, by its own label. The two
+// public-example frames share the steps and the assertions so a copy change cannot
+// leave one frame checking the door and the other checking whatever replaced it.
+const DRIVE_PUBLIC_EXAMPLE = [
+  { waitFor: ".wb-demo-trigger" },
+  { clickText: ".wb-demo-trigger", text: PUBLIC_EXAMPLE_UI.trigger_label },
+  { waitFor: ".wb-demo__prov" },
+];
+
+// Read against docs/IMBAS-PUBLIC-EXAMPLE-PACKET.md Section 5. The four row labels are
+// the distinctions of packet 4.2; the two sentences after them are the limits that
+// stop a hash from becoming a model claim (4.3) and a missing field from becoming a
+// determination (4.1).
+// The curated console is the only board state that is not a Reader run, and the only
+// one that needs a query string: it renders when the Reader flag is off, and the flag
+// is read from the URL. Its first screen needs no click and no API — CURATED[0] is
+// selected on mount and step 0 is the readout — so the door opens on load.
+const DRIVE_CURATED = [{ waitFor: ".wb-readout__run-strip" }];
+
+// ── Failure and in-flight drive steps ────────────────────────────────────────
+//
+// The front door with nothing done to it. One wait, because the state IS the load:
+// any step past this is a different scenario.
+const DRIVE_FIRST_LOAD = [{ waitFor: ".wb-reader-v2__field--answer textarea" }];
+
+// Mid-request. The submit steps are the ordinary ones; what makes this capturable is
+// the last line of READER_INSPECTING_NARRATION.
+//
+// That line advances on a 1100ms interval and CLAMPS on the last entry, so it is a
+// terminal state, not a moment. Waiting for those words is therefore a wait for
+// something that cannot change again, which is the difference between a deterministic
+// capture and one that happens to have been taken late enough. Waiting on the status
+// selector instead would have photographed step 0, 1 or 2 depending on how fast the
+// machine got there, and all three baselines would have looked correct.
+const IN_FLIGHT_TERMINAL_LINE = "Still reading. Long answers take longer.";
+const DRIVE_IN_FLIGHT = [...DRIVE_SINGLE_SUBMIT, { waitForText: IN_FLIGHT_TERMINAL_LINE }];
+
+// A request that came back refused. The fallback banner is what proves the client took
+// the failure branch rather than rendering an empty result.
+const DRIVE_FAILED_READ = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-reader-result__fallback" }];
+
+const PUBLIC_EXAMPLE_ASSERTIONS = [
+  PUBLIC_EXAMPLE.question,
+  PUBLIC_EXAMPLE.headline,
+  PUBLIC_EXAMPLE.counts_line,
+  "Reported capture conditions",
+  "Displayed model and capture date",
+  "Hash-supported artifact identity",
+  "Matched-conditions determination",
+  "It does not establish which model produced them",
+  "There is no such determination to read.",
+  "MCA § 39-2-911",
 ];
 
 export const SCENARIOS = {
@@ -475,14 +775,14 @@ export const SCENARIOS = {
     drivable: true,
     state: "Single mode, Reader result with measurement findings",
     expected:
-      "MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Missing item: 1 · Framing issue: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors.",
+      "MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Omission: 1 · Framing Drift: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors.",
     routes: { "/api/read": singleReadPayload },
     steps: DRIVE_SINGLE,
     // Proof the captured pixels show the state, not just that a file was written.
     assertText: [
       "MEASUREMENT",
       "Candidate findings",
-      "Missing item: 1 · Framing issue: 1 · Deflection: 0",
+      "Omission: 1 · Framing Drift: 1 · Deflection: 0",
     ],
     assertSelector: ".wb-measure__list li.wb-measure__finding",
   },
@@ -496,13 +796,13 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED",
     expected:
-      "The delta lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
+      "The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
-      "The delta",
+      "What the second answer added",
       "Omission: 2 · Framing Drift: 0 · Deflection: 0",
       "The Reader's reading",
       "It runs from 14 days in some states to 60 days in others",
@@ -519,13 +819,13 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED",
     expected:
-      "The delta lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit.",
+      "The 'What the second answer added' section lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
     steps: drivePaired({ edits: PAIR_EDITS.EDITED }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.EDITED },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
-      "The delta",
+      "What the second answer added",
       "Omission: 2 · Framing Drift: 0 · Deflection: 0",
       "require the landlord to pay the tenant a penalty",
     ],
@@ -543,12 +843,12 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced",
     expected:
-      "The delta lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
+      "The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedRejectedPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["The delta", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
+    assertText: ["What the second answer added", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
     focus: ".wb-act2__delta .wb-measure__list",
   },
@@ -603,6 +903,395 @@ export const SCENARIOS = {
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
     focus: ".wb-act2__delta .wb-measure__list",
   },
+
+  // The zero-work door, in two frames. These are the only scenarios with an empty
+  // route table: the example is canned, so nothing it renders comes from an API and
+  // the harness has nothing to stub. `canned: true` buys that, and inverts the
+  // called-a-route check — a canned scenario that reaches /api is not showing the
+  // canned state.
+  //
+  // Both frames drive the same door and assert the same DOM. They differ only in what
+  // the shutter is aimed at, because the door is taller than a viewport and the two
+  // halves are separate claims: the loop, and the provenance under it.
+  "public-example": {
+    name: "public-example",
+    drivable: true,
+    state: "The public example door, opened from the paste box — the loop",
+    expected:
+      "The Montana example runs the loop end to end. The open side reads 'Didn't come up.' because delta 1's open side is empty. The count line names four Omission items and says one is shown, so a single quoted line cannot read as the whole difference. No score and no construct name.",
+    routes: {},
+    canned: true,
+    steps: DRIVE_PUBLIC_EXAMPLE,
+    assertText: PUBLIC_EXAMPLE_ASSERTIONS,
+    assertSelector: ".wb-demo__prov .wb-prov__row",
+    focus: ".wb-demo",
+  },
+
+  // The half item 6 exists for. Four rows, four separate facts, none of them able to
+  // be read as another.
+  "public-example-provenance": {
+    name: "public-example-provenance",
+    drivable: true,
+    state: "The public example door — the four provenance facts, kept apart",
+    expected:
+      "Four labelled rows state four separate facts: what the person declared, what the page displayed plus the tier, what the hashes fix and what they do not, and the matched-conditions field that does not exist end to end. The statute line under them carries its retrieval date rather than a present tense.",
+    routes: {},
+    canned: true,
+    steps: DRIVE_PUBLIC_EXAMPLE,
+    assertText: PUBLIC_EXAMPLE_ASSERTIONS,
+    assertSelector: ".wb-demo__prov .wb-prov__row",
+    focus: ".wb-demo__prov",
+  },
+
+  // ── Empty states ───────────────────────────────────────────────────────────
+  // The outcome nobody designs for and everybody eventually gets. Two frames,
+  // because the two panels that go empty are a screen apart and each says a
+  // different thing: the read panel reports what the Reader did not flag, the
+  // MEASUREMENT panel reports what did not surface. Neither may say the answer was
+  // complete, because no inspection of one answer can establish that.
+  "single-empty": {
+    name: "single-empty",
+    drivable: true,
+    empty: "single",
+    state: "Single mode, a read with no candidate finding — the MEASUREMENT panel's empty state",
+    expected:
+      "The counts line reads all zeros and the finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer.",
+    routes: { "/api/read": () => singleReadPayload({ measurement: singleEmptyMeasurement(), read: SINGLE_EMPTY_READ }) },
+    steps: DRIVE_SINGLE_EMPTY,
+    assertText: [
+      "MEASUREMENT",
+      "Omission: 0 · Framing Drift: 0 · Deflection: 0",
+      "No candidate finding surfaced under the tested conditions.",
+    ],
+    assertSelector: ".wb-measure__findings .wb-reader-result__empty",
+    focus: ".wb-measure__findings",
+  },
+
+  "single-empty-read": {
+    name: "single-empty-read",
+    drivable: true,
+    empty: "single",
+    state: "Single mode, a read with nothing left out and no shaping — the read panel's two empty states",
+    expected:
+      "'What may be missing' and 'How it was shaped' each render one line naming the run rather than grading the answer: the Reader flagged nothing missing, and recorded no shaping, under the tested conditions. Neither line says the answer was complete or clean.",
+    routes: { "/api/read": () => singleReadPayload({ measurement: singleEmptyMeasurement(), read: SINGLE_EMPTY_READ }) },
+    steps: DRIVE_SINGLE_EMPTY,
+    assertText: [
+      "The Reader flagged nothing missing under the tested conditions.",
+      "The Reader recorded no shaping under the tested conditions.",
+    ],
+    assertSelector: ".wb-reader-result__section--left-out .wb-reader-result__empty",
+    focus: ".wb-reader-result__section--left-out",
+  },
+
+  // A paired run that surfaced nothing. Three things have to be true in one frame:
+  // the empty line puts the absence on the probe and refuses the completeness reading
+  // rather than declaring either answer complete, the claim row reads 'Not enough
+  // recorded to say' because a result with no recorded finding has nothing to read the
+  // capture conditions off, and the value close is ABSENT — there is no surfaced
+  // material for it to be about.
+  "paired-empty": {
+    name: "paired-empty",
+    drivable: true,
+    empty: "paired",
+    claimState: CLAIM_STATE.NO_CLAIM,
+    state: "Paired comparison at method 2.0 that surfaced nothing — the empty state, NO_CLAIM, and no value close",
+    expected:
+      "The count reads '0 differences surfaced'. Under 'What the second answer added' one line renders: this probe surfaced nothing new, and that does not mean either answer is complete. The absence is reported about the probe, not about the two answers. No value close appears anywhere on the page.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedEmptyPayload },
+    steps: drivePaired({ edits: PAIR_EDITS.NONE }),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "What the second answer added",
+      "0 differences surfaced",
+      "That doesn't mean either answer is complete.",
+      // The claim row sits above the delta, outside this scenario's frame, so the
+      // pixels do not carry it and the text assertion has to. NO_CLAIM is reached the
+      // only way it can be reached: no recorded finding carries a claim triple, so
+      // there is no basis to read rather than a basis that came back negative.
+      "Not enough recorded to say",
+      "no recorded finding, so there is nothing here to read the capture conditions off",
+    ],
+    assertSelector: ".wb-act2__delta .wb-reader-result__empty",
+    focus: ".wb-act2__delta",
+  },
+
+  // ── Claim-state legibility (item 7A) ───────────────────────────────────────
+  // Four states no endpoint in this build can reach, photographed so the labels are
+  // seen before a person's run is the first thing that renders them. Every one of
+  // these declares MATCHED conditions in the capture form, so the client-derived
+  // "unmatched conditions" callout never fires and the only thing changing between
+  // the four images is what the RECORD says it stands on. That disagreement is the
+  // reason the claim row exists.
+  "claim-authorized-match": {
+    name: "claim-authorized-match",
+    drivable: true,
+    claimState: CLAIM_STATE.MATCHED_CONDITIONS,
+    state: "Paired result whose findings carry an authorized conditions record reading MATCHED",
+    expected:
+      "The claim row reads 'Conditions matched' and says an authorized record of the capture conditions places the two answers at like for like. This is the only state in which the surface asserts a matched-condition basis, and it is unreachable from any live endpoint today.",
+    routes: claimBasisRoutes("authorized-match"),
+    steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["Conditions matched", "places these two answers at like for like"],
+    assertSelector: ".wb-claim[data-claim-state='MATCHED_CONDITIONS']",
+    focus: ".wb-claim",
+  },
+
+  "claim-authorized-mismatch": {
+    name: "claim-authorized-mismatch",
+    drivable: true,
+    claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_UNMATCHED,
+    state: "Paired result whose authorized conditions record reads UNMATCHED, against a person who declared a match",
+    expected:
+      "The claim row reads 'Conditions differ' and says an authorized record exists and does NOT place the two answers at like for like. The person declared same model and no edits, so no client-derived unmatched callout is drawn — the record and the declaration disagree, and only the claim row carries that.",
+    routes: claimBasisRoutes("authorized-mismatch"),
+    steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["Conditions differ", "does not place these two answers at like for like"],
+    assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_UNMATCHED']",
+    focus: ".wb-claim",
+  },
+
+  "claim-client-declaration": {
+    name: "claim-client-declaration",
+    drivable: true,
+    claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_REPORTED,
+    state: "Paired result whose conditions basis is the person's own declaration, carried through to the record",
+    expected:
+      "The claim row reads 'Conditions as you reported them' and says the conditions are the ones you told us and not ones Imbas watched. The distinction from the state below is the one the register exists to hold: reported is not the same as unrecorded.",
+    routes: claimBasisRoutes("client-declaration"),
+    steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["Conditions as you reported them", "not ones Imbas watched"],
+    assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_REPORTED']",
+    focus: ".wb-claim",
+  },
+
+  // A record naming a conditions source this build does not know. The conservative
+  // direction is the only safe one: an unrecognized source reads as no basis at all,
+  // and the row says which of the two it is doing rather than quietly downgrading.
+  "claim-unrecognized-source": {
+    name: "claim-unrecognized-source",
+    drivable: true,
+    claimState: CLAIM_STATE.OBSERVED_DIFFERENCE_UNRECOGNIZED,
+    state: "Paired result naming a conditions source this build does not recognize, with status MATCHED",
+    expected:
+      "The claim row reads 'Conditions source not recognized' and says this build does not know the named source, so it treats it as nothing recorded. The stored status is MATCHED and the surface still refuses the matched-conditions claim, because the source is not in the authorized set.",
+    routes: claimBasisRoutes("unrecognized-source"),
+    steps: drivePairedClaim([{ waitFor: ".wb-claim" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["Conditions source not recognized", "so Imbas treats it as nothing recorded."],
+    assertSelector: ".wb-claim[data-claim-state='OBSERVED_DIFFERENCE_UNRECOGNIZED']",
+    focus: ".wb-claim",
+  },
+
+  // ── Provenance strip (item 7), complete and partial ────────────────────────
+  // Both frames aim inside .wb-loop__reveal. A paired screen carries two strips —
+  // the single read's above and the paired one below — and a bare ".wb-prov" gets
+  // whichever is first in the document, which is the wrong one and looks right.
+  "provenance-complete": {
+    name: "provenance-complete",
+    drivable: true,
+    claimState: CLAIM_STATE.MATCHED_CONDITIONS,
+    state: "The provenance strip with every field recorded — seven rows, none unknown",
+    expected:
+      "Seven labelled rows, every one carrying a recorded value: declared answer model, inspection provider, inspection model, pinned inspection build, inspection method, paired method, and capture time. The strip reports data-complete=yes. The note under it still says the answer model is declared and not observed.",
+    routes: claimBasisRoutes("authorized-match"),
+    steps: drivePairedClaim([{ waitFor: ".wb-loop__reveal .wb-prov" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "What produced this",
+      "Answer model (as declared)",
+      "Paired method",
+      "Imbas records it, and does not observe it.",
+      // This scenario borrows the authorized-match fixture to get a pinned build, so it
+      // renders MATCHED_CONDITIONS too. Asserting the label keeps the borrowing honest:
+      // if the fixture's claim triple ever shifts, this fails here rather than silently
+      // repainting the claim row in an image whose subject is the strip below it.
+      "Conditions matched",
+    ],
+    assertSelector: ".wb-loop__reveal .wb-prov[data-complete='yes']",
+    focus: ".wb-loop__reveal .wb-prov",
+  },
+
+  // What a live run actually renders. Two rows are unknown and both say so in words
+  // chosen for the field: an undeclared answer model is "none given", an unpinned
+  // build is "not pinned". Neither row is dropped, because a missing row reads as
+  // "does not apply" when the truth is "was not recorded".
+  "provenance-partial": {
+    name: "provenance-partial",
+    drivable: true,
+    state: "The provenance strip on a live-shaped run — two fields unrecorded, both stated",
+    expected:
+      "Seven rows again, with 'none given' against the declared answer model and 'not pinned' against the inspection build. The strip reports data-complete=no. No row is hidden and no value is borrowed from a neighbouring field.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
+    steps: drivePairedClaim([{ waitFor: ".wb-loop__reveal .wb-prov" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: ["What produced this", "none given", "not pinned"],
+    assertSelector: ".wb-loop__reveal .wb-prov[data-complete='no']",
+    focus: ".wb-loop__reveal .wb-prov",
+  },
+
+  // ── The export control (item 5) ────────────────────────────────────────────
+  // Two frames because a paired screen renders two of these controls and they say
+  // different things. The support line is generated from the fields the record will
+  // actually carry, so the single frame must not advertise a paired capture and the
+  // paired frame must not advertise checks.
+  "export-single": {
+    name: "export-single",
+    drivable: true,
+    state: "The Review Record export on a single-answer run — the control and its support line",
+    expected:
+      "The control reads 'Export Review Record'. The line beside it names the answer as pasted, the recorded findings, the checks with the marks set, and the run's provenance, then states that every finding in it is unreviewed. It does not mention a paired capture, and it makes no verification claim.",
+    routes: { "/api/read": singleReadPayload },
+    steps: DRIVE_SINGLE_EXPORT,
+    assertText: [
+      "Export Review Record",
+      "A JSON file holding the answer as pasted",
+      "Every finding in it is unreviewed.",
+    ],
+    assertSelector: ".wb-checks__export--single",
+    focus: ".wb-checks__export--single",
+  },
+
+  "export-paired": {
+    name: "export-paired",
+    drivable: true,
+    state: "The Review Record export on a paired run — the control and its support line",
+    expected:
+      "Same control label. The line names both answers as pasted, the recorded findings, the capture conditions YOU REPORTED, and the run's provenance. It names no checks, because a paired inspection produces none, and it calls the conditions reported rather than matched.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
+    steps: drivePairedClaim([{ waitFor: ".wb-checks__export--paired" }]),
+    capture: MATCHED_CAPTURE,
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      "Export Review Record",
+      "A JSON file holding both answers as pasted",
+      "the capture conditions you reported",
+      "Every finding in it is unreviewed.",
+    ],
+    assertSelector: ".wb-checks__export--paired",
+    focus: ".wb-checks__export--paired",
+  },
+
+  // ── The curated console ────────────────────────────────────────────────────
+  // Not a Reader run, and on the board for one reason: this is where the archive's
+  // human-scored figure used to be printed as a gauge next to a visitor's own pasted
+  // answer, where an archive figure reads as a verdict on that answer. The figure is
+  // untouched in the CURATED record. It is no longer presented, and this photographs
+  // the surface without it.
+  //
+  // The only scenario with a query string. The curated console renders when the
+  // Reader flag is off, and the flag is read from the URL.
+  "curated-readout": {
+    name: "curated-readout",
+    drivable: true,
+    canned: true,
+    routes: {},
+    query: "reader=0",
+    state: "The curated case console, first screen — provenance and run strip with no score",
+    expected:
+      "The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. This is the screen BEFORE a person pastes, so neither retired hero was ever in this frame: the scored gauge and the live verdict badge both sat on the result panel one step later, which the board does not photograph (see the manifest). No gauge and no scored figure of any kind appears here; the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself.",
+    steps: DRIVE_CURATED,
+    assertText: ["CASE 005 · OMISSION", "4 frontier models tested", "observed May 2026"],
+    assertSelector: ".wb-flow-case-prov__case",
+    focus: ".wb-readout",
+  },
+
+  // ── The states that are not a result ───────────────────────────────────────
+  //
+  // A board of finished results photographs the product on its best day. Three of
+  // these four are the days it does not finish, and the fourth is the screen every
+  // visitor sees before anything happens at all. They went unphotographed until this
+  // pass because the harness could only stub a success; `httpFailure` and
+  // `neverResolves` above are what changed.
+  //
+  // None of them is fixture-authored. The harness supplies a status or an open
+  // request and the client decides what the screen says, so these images record the
+  // product's real degraded copy rather than a fixture's idea of it.
+
+  // Nothing has happened yet, and the page must not imply otherwise. This is the only
+  // state on the board every visitor is guaranteed to see.
+  "first-load": {
+    name: "first-load",
+    drivable: true,
+    canned: true,
+    routes: {},
+    state: "The workbench on arrival — the paste box, before anything is pasted",
+    expected:
+      "The paste box leads. The intro says what the Reader does and does not promise a verdict: paste an AI answer, the Reader inspects what it might be missing. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind.",
+    steps: DRIVE_FIRST_LOAD,
+    assertText: [
+      "Paste an AI answer below. The Reader inspects what it might be missing.",
+      "Paste an answer to inspect it.",
+      "See what might be missing",
+    ],
+    assertSelector: ".wb-reader-v2__field--answer textarea",
+    focus: ".wb-reader-v2__fields",
+  },
+
+  // The request is open and has not come back. Photographed from a response that never
+  // arrives, so the frame is the state rather than a moment inside it.
+  "read-in-flight": {
+    name: "read-in-flight",
+    drivable: true,
+    failure: "in_flight",
+    state: "Mid-inspection — the request is open and the status line has reached its last words",
+    expected:
+      "The run button reads 'Inspecting…' and is disabled. The status line has clamped on its terminal narration, which reports the instrument and the wait — still reading, long answers take longer — and claims nothing about what was found. The line it replaced said 'Found something to check…', which announced a finding before any response existed and is the line a slow request left on screen longest. No result panel and no count is rendered, because none has been returned.",
+    routes: { "/api/read": () => neverResolves() },
+    steps: DRIVE_IN_FLIGHT,
+    assertText: [IN_FLIGHT_TERMINAL_LINE, "Inspecting…"],
+    assertSelector: ".wb-reader-v2__status.is-inspecting",
+    focus: ".wb-reader-v2__action-row",
+  },
+
+  // A hard failure that is NOT the capacity family. 503 is chosen because the client
+  // maps it to the generic line; the integrity check holds it to that, so this state
+  // and the capacity state below cannot quietly converge on one sentence.
+  "read-error": {
+    name: "read-error",
+    drivable: true,
+    failure: "error",
+    state: "The read route refused the request — the fallback surface, generic family",
+    expected:
+      "The result surface renders the fallback banner: the Reader is unavailable and a fallback check is what is showing. The read body says the full Reader is unavailable, that the question and answer are preserved, and that this is not a full inspection. No badge, no signal name, no count and no score: nothing inspected the answer, so nothing about the answer is claimed. The copyable card takes the same position — 'This inspection did not run.' rather than a flag lookup over completeness 'thin', which is what the client sets for styling and which used to reach the card as a signal name.",
+    routes: { "/api/read": () => httpFailure({ status: 503, body: { error: "unavailable" } }) },
+    steps: DRIVE_FAILED_READ,
+    assertText: [
+      "Reader unavailable — showing fallback check.",
+      "The full Reader is unavailable.",
+      "this is not a full inspection",
+      // The status line, which used to read "Inspection complete." here.
+      "The Reader didn't run.",
+    ],
+    assertSelector: ".wb-reader-result__fallback",
+    focus: ".wb-reader-result",
+  },
+
+  // The metered lane withheld. 429 is in CAPACITY_FALLBACK_REASONS, so the client
+  // shows the one founder-approved capacity sentence instead of the generic line.
+  "read-capacity": {
+    name: "read-capacity",
+    drivable: true,
+    failure: "capacity",
+    state: "The read route is at capacity — the fallback surface, capacity family",
+    expected:
+      "The banner is the single capacity sentence, verbatim and identical to the server's: the Reader is at capacity today, a follow-up can still be generated and run in the person's own AI, and automated comparison may stay unavailable until capacity resets. It withholds the automated lane without withholding the instruction. The distinction from `read-error` is the whole reason both are on the board — one says the service failed, this one says the service is rationed and tells you what you can still do.",
+    routes: { "/api/read": () => httpFailure({ status: 429, body: { error: "capacity" } }) },
+    steps: DRIVE_FAILED_READ,
+    assertText: [ACT2_CAPACITY_COPY, "this is not a full inspection", "The Reader didn't run."],
+    assertSelector: ".wb-reader-result__fallback",
+    focus: ".wb-reader-result",
+  },
 };
 
 // Resolve a scenario's route table to concrete payloads.
@@ -621,9 +1310,64 @@ export function assertScenarioIntegrity(scenario) {
   const problems = [];
   const payloads = resolvePayloads(scenario);
 
-  const read = payloads["/api/read"];
+  // An injected response is not a fixture and has no findings, receipt or counts to
+  // check. What it does have is a shape, and a wrong one fails silently: a status the
+  // client maps to a different family photographs the wrong state under the right
+  // name. So the fixture rules below are skipped for these routes and replaced by
+  // rules of their own.
+  for (const [route, v] of Object.entries(payloads)) {
+    if (!isInjectedResponse(v)) continue;
+    if (v[INJECT_HTTP]) {
+      if (!Number.isInteger(v.status) || v.status < 400 || v.status > 599) {
+        problems.push(`${route} injects status ${JSON.stringify(v.status)}, which is not a failure status`);
+      }
+      // The client derives the displayed line from the status, so a scenario that
+      // names a family in its name is held to the family the client would pick.
+      const code = String(v.status);
+      const capacity = isCapacityFallbackReason(code);
+      if (scenario.failure === "capacity" && !capacity) {
+        problems.push(
+          `scenario declares the capacity family but status ${code} is not in CAPACITY_FALLBACK_REASONS, ` +
+            `so the client would show the generic unavailable line instead`
+        );
+      }
+      if (scenario.failure === "error" && capacity) {
+        problems.push(
+          `scenario declares a generic failure but status ${code} is in CAPACITY_FALLBACK_REASONS, ` +
+            `so the client would show the capacity sentence and the two states would photograph the same`
+        );
+      }
+    }
+    if (v[INJECT_HANG] && scenario.failure !== "in_flight") {
+      problems.push(`${route} never resolves but the scenario does not declare failure: "in_flight"`);
+    }
+  }
+  if (scenario.failure && !Object.values(payloads).some(isInjectedResponse)) {
+    problems.push(`scenario declares failure ${JSON.stringify(scenario.failure)} but injects no failing route`);
+  }
+
+  const read = isInjectedResponse(payloads["/api/read"]) ? null : payloads["/api/read"];
   if (read) {
-    if (!read.measurement || !read.measurement.findings.length) {
+    // A scenario either carries findings or declares that it does not. Both halves
+    // are checked, so `empty` cannot be a way of switching a guard off: an empty
+    // scenario whose fixture grew findings fails just as loudly as an ordinary one
+    // whose fixture lost them.
+    //
+    // `empty` names WHICH surface goes empty, because a paired empty state needs a
+    // full single read underneath it — the Act 2 offer is what opens the paste box,
+    // and it only opens when the first read found something to probe.
+    const singleFindings = read.measurement ? read.measurement.findings.length : -1;
+    if (scenario.empty === "single") {
+      if (singleFindings !== 0) {
+        problems.push(`scenario declares an empty state but the single payload carries ${singleFindings} measurement finding(s)`);
+      }
+      // The read prose has to be empty too. Three named omissions above a panel
+      // reporting none is a contradiction the product cannot produce, and a fixture
+      // is the only place it could come from.
+      if ((read.what_was_left_out || []).length) {
+        problems.push("empty scenario's read still lists what was left out; the panels would contradict each other");
+      }
+    } else if (singleFindings <= 0) {
       problems.push("single payload carries no measurement findings");
     }
     const cards = read.checks && Array.isArray(read.checks.cards) ? read.checks.cards.length : 0;
@@ -664,8 +1408,22 @@ export function assertScenarioIntegrity(scenario) {
   // Paired, at 2.0. The failure this guards is the one the pass exists to close: a
   // fixture showing an excerpt no server resolved. Under 1.1 that was possible by
   // construction, because the fixture wrote the sides itself.
-  const paired = payloads["/api/read-paired"];
+  const paired = isInjectedResponse(payloads["/api/read-paired"]) ? null : payloads["/api/read-paired"];
   if (paired) {
+    // The two responses must describe ONE run. The paired receipt embeds the open run
+    // wholesale, and the interface reads the provenance strip's declared answer model
+    // off it — so a fixture whose two routes were built from different open payloads
+    // renders a strip describing a run the first response never returned, and the
+    // paired receipt's hash covers that run rather than the one on screen. This is how
+    // the declared-model row was wrong the first time it was built.
+    if (read && read.receipt && paired.receipt && paired.receipt.open_run) {
+      if (JSON.stringify(read.receipt.open_run) !== JSON.stringify(paired.receipt.open_run)) {
+        problems.push(
+          "the open run inside the paired receipt differs from the /api/read receipt — the two routes were built from different open payloads"
+        );
+      }
+    }
+
     const legacy = paired.result === null;
     if (legacy) {
       // The legacy fixture must stay legacy. If a later pass makes it resolvable, it
@@ -725,10 +1483,57 @@ export function assertScenarioIntegrity(scenario) {
           `paired fixture records ${recorded} finding(s) but surfaces ${surfaced}; this scenario does not declare a rejection`
         );
       }
+      // Both directions again, on the surface the paired scenarios actually name.
+      if (scenario.empty === "paired" && (recorded !== 0 || surfaced !== 0)) {
+        problems.push(
+          `scenario declares an empty delta but the paired result records ${recorded} and surfaces ${surfaced}`
+        );
+      }
+      if (scenario.empty !== "paired" && surfaced === 0) {
+        problems.push("paired fixture surfaces nothing but the scenario does not declare an empty delta");
+      }
     }
+
+    // The second axis. The conditions check above reads the CAPTURE FORM — what the
+    // person declared — and this reads the CANONICAL RECORD — what the result can
+    // stand on. They are different facts and they are allowed to disagree; the whole
+    // point of the claim row is that a reader can see when they do. So a scenario
+    // that names a claim state is held to the register's own answer, not to its name
+    // and not to the capture it drove.
+    if (scenario.claimState) {
+      const claim = describeClaimState(paired.result);
+      const got = claim ? claim.state_id : "(null — not a paired result)";
+      if (got !== scenario.claimState) {
+        problems.push(
+          `scenario declares claim state ${scenario.claimState} but describeClaimState returned ${got}`
+        );
+      }
+      if (claim && !CLAIM_STATE[claim.state_id]) {
+        problems.push(`claim state ${claim.state_id} is not in the CLAIM_STATE register`);
+      }
+    }
+  } else if (scenario.claimState) {
+    problems.push("scenario declares a claim state but stubs no paired route; nothing would produce one");
   }
 
   return problems;
+}
+
+// The provenance strip a scenario's paired payload will render, for the tests that
+// assert the complete and partial cases. Derived from the same call the component
+// makes, with the same three neighbouring values, so a test cannot assert a strip the
+// interface would not draw.
+export function scenarioPairedProvenance(scenario) {
+  const payloads = resolvePayloads(scenario);
+  const paired = payloads["/api/read-paired"];
+  const open = payloads["/api/read"];
+  if (!paired || !paired.result) return null;
+  return describeProvenance({
+    canonical: paired.result,
+    declaredModel: open && open.receipt ? open.receipt.open_run.declared_model : "",
+    capturedAt: paired.receipt ? paired.receipt.generated_at : "",
+    pairedMethodVersion: paired.paired_method_version,
+  });
 }
 
 export const SYNTHETIC = { SYNTHETIC_QUESTION, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER };

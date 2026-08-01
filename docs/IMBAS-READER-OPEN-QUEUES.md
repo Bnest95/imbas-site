@@ -11,6 +11,11 @@ Adopted rulings live in `docs/IMBAS-READER-OUTPUT-DESIGN.md` and
 `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md`. If an item here is ever ruled on, the ruling
 goes there and the item leaves this file.
 
+Items closed by a shipped pass are marked **CLOSED** in place rather than deleted, and they
+name the code and the tests that closed them. Deleting them would renumber the items still
+open, and items in this file cross-reference each other by number. A CLOSED item is a
+record of work already done; it is not an input and it is still not an authority.
+
 This file exists because these observations were produced in working sessions and had no
 durable home. Three times, work in this project has been lost with the session that made
 it. Writing an item down here preserves it. It does not promote it.
@@ -21,35 +26,64 @@ Recorded 2026-07-26.
 
 ## PASS 2B COPY AND OUTPUT QUEUE
 
-Inputs to the Pass 2B copy and output work. Unresolved.
+Inputs to the Pass 2B copy and output work. Item numbering is fixed — a closed item stays
+in place with its resolution recorded, because items below cross-reference these numbers.
 
-**1. S2's next-step copy points at a panel that may not have rendered.**
-`reader-explain-panel.js:80` gives the S2 state the next-step line "Open the checks, copy a
-verification question into your own AI, or export the review record." "Open the checks"
-directs the reader to a Check Register panel. Nothing establishes that the panel rendered
-on that run. The copy assumes a surface it does not check for.
+**1. S2's next-step copy points at a panel that may not have rendered.** — **CLOSED, Pass 2B-B.**
+The S2 state carried the fixed next-step line "Open the checks, copy a verification question
+into your own AI, or export the review record." All three controls live inside the Check
+Register, which renders nothing when the both-ends-quotable filter drops every card. S4
+carried the same fault permanently: a paired inspection produces a delta, never checks.
 
-**2. Two vocabularies name the same three classes on the same page.**
-Single mode renders "Missing item / Framing issue / Deflection"
-(`workbench-app.jsx:3923`). Paired mode renders "Omission / Framing Drift / Deflection"
-(`workbench-app.jsx:4124`). One reader, one page, two names per class. Which vocabulary
-wins, and whether the loser survives anywhere, is undecided.
+Resolved by `EXPLAIN_AFFORDANCE_KEYS` and `buildNext` in `reader-explain-panel.js`
+(`EXPLAIN_PANEL_VERSION` bumped to `explain-panel.v3`). Each state now declares an ordered
+`next_options` list, every clause gated on one affordance key, and the caller passes those
+flags from the same expressions that gate the panel mounts. When nothing rendered the
+section is omitted rather than filled. Held by `test/reader-explain-panel.test.mjs` and
+`test/inspection-meaning-findings-source.test.mjs`.
 
-**3. Two different measures collide as adjacent numerals.**
-"Candidate gap estimate: 2 of 3" renders near "Omission: 3". One is an ordinal estimate on
-a 0-3 axis. The other is a count of findings. They share no scale and no method. The
-interface states no relationship between them, so the reader supplies one.
+**2. Two vocabularies name the same three classes on the same page.** — **CLOSED, Pass 2B-B.**
+Single mode rendered "Missing item / Framing issue / Deflection" and paired mode rendered
+"Omission / Framing Drift / Deflection". One reader, one page, two names per class.
+
+Resolved in favor of Omission / Framing Drift / Deflection on every current-run render.
+Candidate status moved to the section header and the boundary line, where a status belongs,
+instead of riding inside the name of the signal. One surface still carries the retired
+split vocabulary — `inspection.js`, the share page — and it is carved out by the same ruling
+that carves the score; it moves with SCORE RETIREMENT QUEUE item 1, not before it.
+
+**3. Two different measures collide as adjacent numerals.** — **CLOSED, Pass 2B-B.**
+"Candidate gap estimate: 2 of 3" rendered near "Omission: 3". One was an ordinal estimate on
+a 0-3 axis, the other a count of findings; they shared no scale and no method, and the
+interface stated no relationship between them.
+
+Resolved by removing the estimate from every current render rather than by explaining the
+relationship. One number remains, it names its own unit and predicate, and a reader can
+check it by counting the rows beneath it. `test/zero-score-language.test.mjs` holds it at
+zero.
 
 **4. Live copy carries a confirmation implication the Act 2 ruling withdraws.**
 The paired headline "It answers when asked. It just didn't volunteer." reads as Act 2
 confirming what Act 1 flagged. The adopted Act 2 ruling removes that implication: the two
 acts are independent passes and Act 2 does not exist to confirm Act 1. This string is live.
 
-**5. The only zero-work entry point fails the legibility bar.**
-The Chevron and Loper Bright demo is currently the one place a visitor with nothing to
-paste can see the product work. Its subject matter does not clear Section P's standard: a
-normal person understands the catch in roughly ten seconds. It stands as a placeholder
-until a factory-produced example replaces it.
+**5. The only zero-work entry point fails the legibility bar.** — **CLOSED, Pass 2B-B.**
+The Chevron and Loper Bright demo was the one place a visitor with nothing to paste could
+see the product work. Its subject matter did not clear Section P's standard: a normal
+person understands the catch in roughly ten seconds. It stood as a placeholder until a
+factory-produced example replaced it.
+
+Replaced by the Montana capture from the public example packet, in `reader-public-example.js`.
+The catch is a repayment obligation a renter can act on, and it is legible without knowing
+what an agency is. Four facts stay separate on the surface, because merging any two states
+something the stored bytes do not carry: what the person declared about the capture, what
+the page displayed, what the hashes fix, and the absence of any matched-conditions
+determination to read. `test/reader-public-example.test.mjs` checks the rendered facts
+against the packet file, so drift fails in CI rather than at publication.
+
+What 2B-B did not own, and what is therefore still open: the acquisition choreography
+around the door, expanded explanatory copy, hierarchy polish beyond the minimum truthful
+entry, and first-visit conversion behavior. The superseded 7-day row stays excluded.
 
 **6. Each figure needs its own claim register and provenance label.**
 Single-mode live output should report a count of candidate items, not a gap score. Paired
@@ -71,6 +105,120 @@ architecture claim holds: `FAMILIES` (`reader-checks.js:37`) already covers `com
 `local_integrity`, and `profile`; `validateDetectorEvent` (`390`) validates each family
 independently; `buildCheckRegister` (`339`) assembles and ranks. A detector can be added
 without changing the construct.
+
+**8. The completeness badge states a verdict on the answer, on every read.** — **CLOSED, Pass 2B-B correction.**
+Found while building the honest empty states in Pass 2B-B, and deliberately not fixed there.
+`READER_COMPLETENESS_GLOSS` in `workbench-app.jsx` prints one line under the read badge:
+full glosses as "The answer substantially served the question", partial as "Some material
+context was missing or shaped", thin as "The answer was evasive or substantially
+incomplete". Two problems, and only the second is an empty-state problem.
+
+First, these are verdicts about the answer, not statements about what this inspection
+observed. "Substantially served the question" is the kind of claim the framing rules exist
+to keep off the surface: it is a judgment, stated without a sample size, on a single pass
+over a single answer. "Evasive" additionally attributes conduct, which is a motive verb
+about a model in everything but grammar.
+
+Second, the full gloss is what renders above a read that surfaced nothing, so the one place
+the surface most needs to say "this pass found nothing" instead says the answer was good.
+The board photographs exactly that, in `single-empty-read`.
+
+It was left alone because the gloss renders on every read, so rewording it changes the
+populated result too — a copy decision for the register lane, not a repair to an empty
+state.
+
+Resolved by the 2B-B correction under the standing register, as strings only. The badge
+reports whether anything came up and the line reports what came up, in the three ruled
+signal names: NOTHING FLAGGED over "This inspection surfaced no omission candidates",
+SOMETHING TO CHECK over "This inspection surfaced candidates. They are listed below",
+DEFLECTION FLAGGED over "This inspection surfaced a Deflection signal: the answer went
+around the question rather than at it." The evasiveness reading was not dropped; it ships
+as Deflection, which is the class that carries it without attributing conduct. The keys
+stay full / partial / thin because they key the CSS and the inspector's own field, and
+they are not shown. `formatReaderResultCopy` prints the same words the badge shows rather
+than the raw key, so the pasted card cannot restate the all-clear the badge stopped making.
+Held by `test/reader-no-allclear-vocabulary.test.mjs`, which lists the prohibited all-clear
+and conduct vocabulary and scans both the shipped constants and the committed board
+baselines for it. The `single-empty-read` baselines are re-photographed at both viewports.
+
+The second question the item raised — whether a three-way badge is a claim the Reader is
+entitled to make at all — is NOT answered here. What ships is a three-way flag summary, not
+a three-way grade. Whether the summary earns its place is a register-lane question and it
+stays open as item 12.
+
+**9. The curated case surface computed a three-way verdict from the visitor's paste.**
+Recorded 2026-07-30 by the Pass 2B-B correction, which removed the render and preserved the
+idea. `detectAnchors` in `workbench-app.jsx` token-matched the visitor's pasted answer
+against the stored anchors of a published case and printed CLOSED GAP, PARTIALLY SURFACED
+or GAP HELD over it. That is a live computed verdict, derived outside the canonical
+selectors, on the strength of a term match — a categorical rebuild of the figure the same
+pass removed. It is gone from the current surface, and what stands there now is a fixed
+archive-tier fact read off the published case, labelled with the human-review tier and the
+observed date, never recalculated from the paste.
+
+The detector itself is worth keeping and is not ruled on. If it returns it returns as a
+flag, not a verdict: it states its own basis in the sentence a person reads, and it is
+legible to someone who has never read the methodology. "The archived case's one-year filing
+deadline was not found in your answer by this term check" is the register. "GAP HELD" is
+not, and neither is any label that needs an Imbas word to parse. A term match over a stored
+anchor list is weak evidence, and a flag that says so is honest where a badge that hides it
+is not. Register lane, or C.
+
+**10. The share card still writes verdict prose from the same detection.**
+Recorded 2026-07-30, alongside item 9, and deliberately not taken by that correction.
+`buildShareResultText` in `workbench-app.jsx` assembles the copyable card for a curated run
+and still speaks in the removed vocabulary — "gap held — the answer did not name…". It is
+closer to the acceptable register than the badge was, because it states the basis in the
+same breath rather than compressing it into two words, and it renders inside a collapsed
+panel rather than as the headline. It was left because the correction was scoped to the
+result surface and to strings, and rewriting the card is a copy decision about a different
+surface.
+
+It should be read against item 9's ruling when that ruling lands, so the card and the
+detector move together rather than one being fixed twice.
+
+**11. Two shipped surfaces now say different things about the same absence.**
+Recorded 2026-07-30. The correction replaced the zero-delta copy on the run surface with
+"This probe surfaced nothing new. That doesn't mean either answer is complete." The share
+page (`inspection.js`) still renders the retired pair — the heading "The delta" and the body
+"No material gap. The direct question surfaced nothing decision-relevant the first answer
+left out." — because `inspection.js` is a carved surface and the standing ruling forbids
+touching it in B.
+
+The consistency invariant is what this item exists to satisfy: a visitor who runs an
+inspection and then opens its share link currently reads two different accounts of the same
+result, one of which puts the absence on the answers. It moves with SCORE RETIREMENT QUEUE
+item 1, which already carries `inspection.js` for the score and the retired split
+vocabulary. Adding a third string to that same move costs nothing; moving it early would
+break the carve.
+
+**12. Whether a three-way flag summary is a claim the Reader may make at all.**
+Recorded 2026-07-30, split off from item 8 when that item closed. Item 8 removed the
+verdict from the completeness badge and left the shape: three states, one shown per read.
+What ships is a summary of whether anything came up, not a grade on the answer. Nobody has
+ruled on whether the Reader should summarize at all, or whether the finding list alone is
+the honest surface and any badge above it is a compression that invites the reading the
+copy just stopped making. Register lane.
+
+
+**13. Two degraded surfaces were saying the run had finished.**
+Recorded 2026-07-30 by the Pass 2B-B correction, found by photographing the states
+rather than by reading the code — which is the argument for photographing them. When
+`/api/read` fails, the client builds a fallback result and the screen showed a banner
+explaining the Reader was unavailable directly under a status line reading "Inspection
+complete." Separately, the copyable card looked a signal name up from the fallback's
+completeness key — a key the client sets to drive the muted styling, not because
+anything was observed — so a failed request pasted into a document arrived carrying a
+finding Imbas never made. Both are fixed here as strings: the status line has a
+`degraded` state of its own, and the card leads with the fact that the inspection did
+not run.
+
+What is NOT resolved is why a fallback carries a completeness value at all. It is a
+presentation key wearing the name of a measurement field, and the next thing that reads
+it by name will make the same mistake in a new place. Renaming it touches the client's
+result shape, so it is not a strings-only change and it did not belong to this
+correction. `test/reader-degraded-states.test.mjs` holds the two surfaces meanwhile.
+
 
 ---
 
@@ -252,7 +400,7 @@ one asserts `PairedDeltaView` still reads the legacy fields, so it fails the mom
 repoints it and tells them which divergence demonstration to delete alongside it; the other
 pins the arithmetic of the divergence itself.
 
-**2. The server-side claim register reaches the paired surface and is rendered nowhere.**
+**2. The server-side claim register reaches the paired surface and is rendered nowhere.** — **CLOSED, Pass 2B-B.**
 `claim_register`, `claim_basis`, and `conditions_status` travel intact from the construction
 door through the paired receipt into the browser. No paired surface displays any of them.
 Verified by driving six conditions bases live: an authorized MATCHED basis, a reported client
@@ -268,3 +416,110 @@ cannot state that conditions were matched. Nothing renders a claim it is not ent
 the register is instrumentation that no reader can see, so whichever pass gives the paired
 surface its conditions copy should decide deliberately what, if anything, it shows — and
 should not discover the field by accident.
+
+Decided deliberately in Pass 2B-B, item 7A. `reader-provenance.js` derives a `CLAIM_STATE`
+from `claim_register` and `claim_basis` and gives each state one visible label, rendered by
+`ClaimStateRow` on the paired surface. The six states separate a matched-conditions basis
+from an observed difference on an authorized-but-unmatched basis, on a reported client
+declaration, on no recorded basis, on a basis this build does not recognize, and from a pair
+carrying no recorded finding at all. Two facts that can legitimately disagree stay separate
+on screen: the client-declared `unmatched` callout is what the person reported, and the claim
+state is what the record supports.
+
+The register's totality is asserted rather than assumed — `test/reader-provenance-strip.test.mjs`
+walks every reachable `(register, basis)` pair through the real construction door, requires a
+distinct label for each, and fails if `CLAIM_STATE` and `CLAIM_STATE_UI` orphan an entry in
+either direction. Only the matched state may use the word "matched". Today every live paired
+run lands on `OBSERVED_DIFFERENCE_NO_BASIS`: `api/read-paired.js` supplies
+`conditions_status: UNAVAILABLE` and no `conditions_source`, so the matched state is
+unreachable in production and its acceptance-board scenario is built from a synthetic fixture.
+
+Item 1 above stays open.
+
+---
+
+## SCORE RETIREMENT QUEUE
+
+Recorded 2026-07-29, during Pass 2B-B. Pass 2B-B removed the 0-3 gap estimate from every
+current Reader render, every current canonical receipt section, and every current canonical
+export. It did not remove the score from the codebase. Three surfaces still carry it, each
+for a stated reason, each held at a per-file ceiling by `test/zero-score-language.test.mjs`.
+The ceilings may only go down. These three items are what takes them to zero.
+
+Counts below are the ceilings recorded in that test's `BASELINE`, derived in-session.
+
+**1. The share and permalink surface still renders a score. (2B-C)**
+Carved out of 2B-B by ruling, because the share page renders the stored score from its
+Airtable row: `api/inspection-share.js` (3), `inspection.js` (1), `api/inspection-view.js`
+(1), and the `READER_SHARE_CONSENT` disclosure strings in `workbench-app.jsx` (2, plus the
+same 2 in the generated `workbench.bundle.js`). Schema, render, page metadata and consent
+copy have to move together. Rewording the consent copy alone would produce a dialog that
+understates what the published page says, which is worse than the score it hides.
+
+`inspection.js:170` also renders the retired split vocabulary — "Missing item / Framing
+issue / Deflection" — and is the last shipped surface that does. It moves with this item,
+not before it.
+
+It also carries the all-clear and conduct gloss that item 8 removed from the run surface.
+`COMPLETENESS_GLOSS` in `inspection.js` (`:12` full, `:14` thin) and the identical map in
+`api/inspection-view.js` (`:25` full, `:27` thin) still publish "The answer substantially
+served the question." and "The answer was evasive or substantially incomplete.", under the
+`COMPLETENESS_LABEL` values FULL and THIN (`inspection.js:10`, `api/inspection-view.js:23`).
+Those are the exact strings the 2B-B correction retired: the first states the answer was
+complete, the second attributes conduct. Line numbers are this tree's; the symbols are what
+to search for.
+
+This is the same divergence as item 11, in a second place. A visitor who runs an inspection
+now reads NOTHING FLAGGED over "This inspection surfaced no omission candidates", then opens
+the share link for that same run and reads FULL over "The answer substantially served the
+question." Whichever pass takes this item must replace both maps, not just the score, or the
+share page will keep making the claim the Reader stopped making.
+
+An invariant test holds the interim state honest: while the page scores, the metadata and
+the consent copy must both keep disclosing it. When 2B-C lands, that test's expectation
+inverts to zero on all three and the five temporary baseline entries above must be deleted,
+not lowered.
+
+**2. Score generation and storage. (API-spec lane)**
+The compatibility envelope, untouched by 2B-B because API semantics are frozen: the
+inspector prompt still asks for an integer on a 0-3 axis (`api/read.js`, 3), the paired
+payload still carries `gap_estimate_label` (`api/read-paired.js`, 4), and both still write
+a "Gap Estimate" column to Airtable. `reader-receipt.js` (2) holds `gapEstimateLabel` and
+`pairedGapEstimateLabel`, which survive only because `api/inspection-share.js` and
+`api/read-paired.js` import them; relocating them would change frozen API semantics.
+
+`api/read.js` also contains the retired vocabulary in prose: "functionally evasive" once
+and "fuller picture" three times, inside the inspector prompt. **That is instruction to the
+model, not product copy** — nobody reads it on a page, and the all-clear and conduct rules
+govern what Imbas publishes, not the words used to brief the instrument. It is named here
+so a future scan does not mistake it for a shipped surface and rewrite frozen API semantics
+to satisfy a copy rule that does not apply. If the prompt is ever revised for its own
+reasons, this lane owns it.
+
+Recorded 2026-07-30 by the Pass 2B-B correction, in the same lane and not in this queue's
+subject: the run surface closes a paired result with "A better answer, without already
+knowing what to ask.", gated on a canonical result with at least one surfaced difference.
+The gate cannot check that the second answer came from the probe Imbas supplied, because
+nothing in the payload records which question was actually asked. The line survives that
+gap — it claims the product asked the question, which is true of every run that reaches the
+gate — but if the API ever wants to enforce probe equality rather than report it, this is
+the lane that owns it. `test/reader-paired-value-close.test.mjs` names the condition as
+client-reported and says why.
+
+Nothing in this envelope drives a current render, a canonical receipt claim, an export, a
+tally, a label, or explanatory copy — Part A of the scan test is what proves it. Retiring
+generation is a decision about the record, not about presentation, and belongs to whichever
+lane owns the API spec. `reader-telemetry.js` keeps a legacy `gap` prop key for funnel-series
+continuity; it names no claim and retires with the same lane.
+
+**3. Editorial reconciliation of the live explanatory pages. (post-B)**
+`glossary.html` (8) and `calibration.html` (6) still teach the machine gap estimate as
+current vocabulary. They are not run surfaces and were out of 2B-B's scope, but they now
+describe a figure the product no longer shows. `glossary.html` already carries Omission and
+Framing Drift alongside it, so the page currently teaches both vocabularies at once.
+
+Checked and already clean, contrary to the brief that opened this pass: `faq.html` and
+`how-it-works.html` carry no score language and no retired vocabulary. They need nothing.
+
+`whitepaper.html` (3) and `volunteer-gap-paper.html` (3) are dated documents and stay as
+written. They are recorded as permanent entries in the ratchet baseline, not as debt.

@@ -137,7 +137,11 @@ test("buildSingleReceipt produces the single-mode envelope shape", () => {
   assert.equal(e.integrity.content_hash, null); // caller assigns it, never pre-filled
   assert.equal(e.open_run.declared_model, "GPT-5");
   assert.equal(e.open_run.measurement.unvalidated, true);
-  assert.equal(e.open_run.measurement.gap_estimate_label, gapEstimateLabel(2));
+  // Schema 1.2: the raw datum rides the envelope (api/inspection-share.js reads it);
+  // the rendered label does not, because a canonical export may not carry a score
+  // claim. See the RECEIPT_SCHEMA_VERSION note in reader-receipt.js.
+  assert.equal(e.open_run.measurement.gap_estimate, 2);
+  assert.ok(!("gap_estimate_label" in e.open_run.measurement));
 });
 
 test("buildSingleReceipt leaves measurement null when none is supplied (old-row path)", () => {
@@ -193,9 +197,40 @@ test("formatReceiptText carries the boundary and the unvalidated label in-artifa
   e.integrity.content_hash = sha256Hex(canonicalizeForHash(e));
   const txt = formatReceiptText(e);
   assert.ok(txt.includes(RECEIPT_BOUNDARY));
-  assert.ok(txt.includes(gapEstimateLabel(2)));
+  // The unvalidated label is now the section header. It used to be the score line
+  // beneath it; the receipt states the status and stops scoring.
+  assert.ok(txt.includes("—— MEASUREMENT (candidate observations, unvalidated) ——"));
+  assert.ok(!txt.includes(gapEstimateLabel(2)));
   assert.ok(txt.includes('anchor: "smoother workflows"'));
   assert.ok(txt.includes(e.integrity.content_hash));
+});
+
+// The receipt restates the canonical count block rather than recounting findings, so
+// the exported text and the on-screen hero can never disagree about how many items
+// surfaced. A receipt built without a canonical block prints no count at all — it
+// does not fall back to zero, because zero is a measurement it did not make.
+test("formatReceiptText restates the canonical count and its per-class split", () => {
+  const e = buildSample();
+  e.open_run.canonical = {
+    counts: {
+      surfaced_candidate_items: {
+        value: 2,
+        unit_one: "item",
+        unit_many: "items",
+        predicate_id: "single_surface_satisfying_anchor_contract",
+        class_breakdown: { omission: 1, framing_drift: 1, deflection: 0 },
+      },
+    },
+  };
+  const txt = formatReceiptText(e);
+  assert.ok(txt.includes("2 items"));
+  assert.ok(txt.includes("By signal: Omission: 1 · Framing Drift: 1 · Deflection: 0"));
+});
+
+test("formatReceiptText prints no count when the receipt carries no canonical block", () => {
+  const txt = formatReceiptText(buildSample());
+  assert.ok(!/By signal:/.test(txt), "no per-class line without a canonical block");
+  assert.ok(!/\b0 items\b/.test(txt), "absence of a count is never rendered as zero");
 });
 
 test("formatReceiptText degrades gracefully when no measurement is present", () => {
@@ -482,9 +517,11 @@ test("a non-finite gap estimate degrades the estimate alone and never erases fin
   assert.equal(body.measurement.findings.length, 3, "every finding the model produced survives");
   // The canonical collection is the durable record of those findings.
   assert.equal(body.result.counts.recorded_findings.value, 3);
-  // Nothing anywhere prints "null of 3".
+  // Nothing anywhere prints "null of 3". At schema 1.2 the envelope carries no label
+  // field at all, so there is no string to degrade — the raw datum is the only thing
+  // that survives, and it survives as null.
   assert.equal(body.receipt.open_run.measurement.gap_estimate, null);
-  assert.equal(body.receipt.open_run.measurement.gap_estimate_label, "");
+  assert.ok(!("gap_estimate_label" in body.receipt.open_run.measurement));
   assert.doesNotMatch(formatReceiptText(body.receipt), /Candidate gap estimate/);
   // The score field is omitted rather than written null; the findings still capture.
   assert.equal(fields["Gap Estimate"], undefined);

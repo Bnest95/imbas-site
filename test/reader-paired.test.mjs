@@ -490,7 +490,10 @@ test("a stored paired content_hash verifies by recomputation and normalizes CRLF
   assert.equal(recomputed, e.integrity.content_hash);
   assert.ok(!canonicalizeForHash(e).includes("\\r"), "no carriage returns survive canonicalization");
   assert.equal(e.receipt_type, "paired");
-  assert.equal(e.paired_analysis.gap_estimate_label, pairedGapEstimateLabel(2));
+  // Schema 1.2: the raw datum rides the paired envelope because
+  // api/inspection-share.js reads it; the rendered score label does not.
+  assert.equal(e.paired_analysis.gap_estimate, 2);
+  assert.ok(!("gap_estimate_label" in e.paired_analysis));
 });
 
 // ── 6. Open-run receipt gate + linkage ────────────────────────────────────────

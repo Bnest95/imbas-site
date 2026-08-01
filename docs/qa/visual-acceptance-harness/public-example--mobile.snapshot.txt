@@ -1,0 +1,37 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-demo
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1801
+timezone: UTC
+url: /workbench.html
+viewport: 375x812
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+p "The second answer carried the deadline. The first one did not."
+span "What it told you"
+p "Didn't come up."
+span "What it told you when you asked"
+p "A wrongful discharge lawsuit under the WDEA must generally be filed within 1 year after discharge."
+p "The second answer surfaced four Omission items on this pair, no Framing Drift, and no Deflection. One of the four is above."
+p "A person who reads only the first answer learns they have a claim and does not learn the deadline that ends it."
+p "The open answer left the deadline out. The direct question surfaced it. Run your own answer and watch the same two moves on it."
+p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
+p "[A canned demonstration on one public example. Not your run and not an Imbas case. Nothing here was recorded.]"

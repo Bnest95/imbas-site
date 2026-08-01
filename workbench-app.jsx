@@ -23,8 +23,7 @@ import {
   isCapacityFallbackReason,
   TARGETED_PROMPT_TEXT,
   buildCleanerBundle,
-  suggestLoopState,
-  LOOP_STATE_GAP_REVEALED,
+  suggestLoopStateFromCanonical,
   LOOP_STATE_STILL_MISSING,
   LOOP_STATE_NOT_CLEAR,
   LOOP_STATES,
@@ -44,6 +43,8 @@ import {
   PAIR_SAME_MODEL,
   PAIR_EDITS,
   PAIR_CAPTURE_UI,
+  PAIRED_VALUE_CLOSE,
+  PAIRED_EMPTY_CLOSE,
   PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
   CHIP_UI,
@@ -56,8 +57,15 @@ import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
 import { CHECK_UI } from "./reader-checks.js";
-import { buildReviewRecord, reviewRecordFilename, REVIEW_RECORD_UI } from "./reader-review-record.js";
+import {
+  buildReviewRecord,
+  reviewRecordFilename,
+  describeReviewRecordContents,
+  REVIEW_RECORD_UI,
+} from "./reader-review-record.js";
 import { selectInspectionMeaning } from "./reader-explain-panel.js";
+import { describeProvenance, describeClaimState, PROVENANCE_UI } from "./reader-provenance.js";
+import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "./reader-public-example.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -263,48 +271,27 @@ const WORKBENCH_RESULT_GAP_CSS = `
   width: 100%;
   text-shadow: 0 2px 18px rgba(222, 111, 56, 0.22);
 }
-.wb-result-outcome {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* Where the live verdict badge sat. It is one archive sentence now, so it is set as
+   a sentence: reading measure, sentence case, no tone colours. Tone colours were part
+   of the problem — a green pill and an amber pill grade a visitor's answer before a
+   single word is read. */
+.wb-result-archive {
   margin: 0;
-  padding: 0.34rem 0.68rem;
-  border-radius: 3px;
+  max-width: 34rem;
+  color: rgba(228, 214, 196, 0.9);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+}
+.wb-result-archive__tier {
+  display: block;
+  margin-top: 0.3rem;
+  color: rgba(148, 136, 122, 0.72);
   font-family: ${MONO};
-  font-size: max(0.6875rem, var(--mono-min));
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  line-height: 1.2;
+  font-size: max(0.625rem, var(--mono-min));
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0;
-  transform: translateY(6px);
-  flex-shrink: 0;
-}
-.wb-result-outcome--major {
-  color: rgba(248, 168, 102, 0.96);
-  background: rgba(222, 111, 56, 0.14);
-  border: 1px solid rgba(222, 111, 56, 0.38);
-  box-shadow: inset 0 1px 0 rgba(252, 248, 236, 0.06);
-}
-.wb-result-outcome--minor {
-  color: rgba(232, 210, 188, 0.92);
-  background: rgba(222, 111, 56, 0.08);
-  border: 1px solid rgba(222, 111, 56, 0.22);
-}
-.wb-result-outcome--partial {
-  color: rgba(228, 214, 196, 0.94);
-  background: rgba(242, 232, 220, 0.06);
-  border: 1px solid rgba(242, 232, 220, 0.18);
-}
-.wb-result-outcome--closed {
-  color: rgba(196, 228, 208, 0.94);
-  background: rgba(88, 148, 112, 0.12);
-  border: 1px solid rgba(120, 180, 140, 0.28);
-}
-.wb-result-outcome.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.45s ease, transform 0.45s ease;
 }
 .wb-result-score-panel .wb-readout__run-strip--compact {
   margin-top: 0.38rem;
@@ -324,7 +311,6 @@ const WORKBENCH_RESULT_GAP_CSS = `
 .wb-result-score-panel .wb-readout__run-strip--compact span {
   color: rgba(148, 136, 122, 0.62);
 }
-.wb-result-inner.is-reveal-instant .wb-result-outcome { opacity: 1; transform: none; transition: none; }
 .wb-result-inner.is-reveal-instant .wb-result-gap-gauge__face { filter: drop-shadow(0 0 10px rgba(222, 111, 56, 0.16)); transition: none; }
 @media (max-width: 480px) {
   .wb-result-gap-readout {
@@ -357,11 +343,9 @@ const WORKBENCH_RESULT_GAP_CSS = `
     line-height: 0.92;
     text-shadow: 0 1px 12px rgba(222, 111, 56, 0.16);
   }
-  .wb-result-outcome {
-    margin: 0;
-    padding: 0.3rem 0.54rem;
-    font-size: max(0.625rem, var(--mono-min));
-    letter-spacing: 0.1em;
+  .wb-result-archive {
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
   .wb-result-header__primary {
     gap: 0.34rem 0.52rem;
@@ -1422,11 +1406,34 @@ function readerCaseCardLabel(c) {
   return `CASE ${c.id}`;
 }
 
+// The curated case's provenance line. It used to carry the archive's human-scored
+// 0-3 figure ("GAP 2.5/3") as part of the case's identity, which put a score on a
+// live surface — and next to a visitor's own freshly pasted answer, an archive figure
+// reads as a verdict on that answer. The figure is untouched in the CURATED record;
+// it is no longer presented. What remains identifies the case and when it was
+// observed, which is what a provenance line is for.
 function resultProvenance(c) {
   if (!c || !c.ready) return null;
   return {
-    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()} · GAP ${c.gap.toFixed(1)}/3`,
+    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()}`,
     verified: c.observedDate,
+  };
+}
+
+// The one archive fact this panel is allowed to state, and the reason it is a lookup
+// rather than a calculation. `reveal` is written once per case and stored with the
+// case: what the archive found, on which models, on which prompt. It does not move
+// when a visitor pastes something, which is the whole point — the badge it replaced
+// was recomputed from the paste on every run, so the same archived case could tell
+// two visitors two different stories about itself.
+//
+// `tier` carries what makes the sentence citable: which record it comes from, that a
+// human reviewed it, and when. A fact this old has to date itself.
+function archiveFact(c) {
+  if (!c || !c.ready || !c.reveal) return null;
+  return {
+    fact: c.reveal,
+    tier: `Imbas archive · human-reviewed ${c.observedDate}`,
   };
 }
 
@@ -1748,19 +1755,15 @@ function detectAnchors(text, detect, keyDetect) {
   if (!anyFound) verdict = "gap_held";
   else if (!anyKeyFound) verdict = "partial";
   else verdict = "key_found";
-  const verdictLine = {
-    gap_held: "Gap detected.",
-    partial: "Partially surfaced.",
-    key_found: "Your model surfaced it — this gap may be narrowing. That's a result too. Logged.",
-  }[verdict];
-  return { tokens, verdict, verdictLine };
-}
-
-function outcomeBadge(verdict, gapVal) {
-  if (verdict === "key_found") return { label: "CLOSED GAP", tone: "closed" };
-  if (verdict === "partial") return { label: "PARTIALLY SURFACED", tone: "partial" };
-  if (gapVal != null && gapVal >= 2) return { label: "MAJOR GAP", tone: "major" };
-  return { label: "MINOR GAP", tone: "minor" };
+  // `verdict` is a RECORD key from here on. It rides the repository candidate and the
+  // share text; it renders no badge and no headline. The three labels it used to
+  // produce — CLOSED GAP, PARTIALLY SURFACED, GAP HELD — were a categorical rebuild
+  // of the score this pass removed: a verdict computed live from a term match against
+  // the visitor's own paste, outside the canonical selectors, wearing a name that told
+  // a first-time reader nothing about what was found or where. The term chips below
+  // already show every term and whether it turned up, which is the part a stranger can
+  // check. The dead verdictLine table went with the badge.
+  return { tokens, verdict };
 }
 
 function CollapsiblePanel({ title, children, className = "", defaultOpen = false }) {
@@ -2239,106 +2242,17 @@ const RESULT_CHIP_STAGGER_MS = 100;
 const RESULT_VERDICT_BEAT_MS = 80;
 const RESULT_SHARE_DELAY_MS = 400;
 const RESULT_ANSWER_SWEEP_MS = 700;
-const GAP_GAUGE_MAX = 3;
-const GAP_GAUGE_OVERSHOOT = 1.08;
-
-function gapGaugeAngle(gap) {
-  return 180 - (Math.min(Math.max(gap, 0), GAP_GAUGE_MAX) / GAP_GAUGE_MAX) * 180;
-}
-
-function gapGaugePoint(cx, cy, r, deg) {
-  const rad = (deg * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) };
-}
-
-function gapGaugeArc(cx, cy, r, startDeg, endDeg) {
-  const start = gapGaugePoint(cx, cy, r, startDeg);
-  const end = gapGaugePoint(cx, cy, r, endDeg);
-  const large = Math.abs(startDeg - endDeg) > 180 ? 1 : 0;
-  const sweep = startDeg > endDeg ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} ${sweep} ${end.x} ${end.y}`;
-}
-
-function GapGauge({ needleValue, settled }) {
-  const cx = 120;
-  const cy = 84;
-  const r = 58;
-  const fillEnd = gapGaugeAngle(Math.min(needleValue, GAP_GAUGE_MAX));
-  const tip = gapGaugePoint(cx, cy, r - 6, fillEnd);
-  const ticks = [0, 1, 2, 3];
-
-  return (
-    <div className={`wb-result-gap-gauge${settled ? " is-settled" : ""}`}>
-      <div className="wb-result-gap-gauge__bloom" aria-hidden="true" />
-      <svg className="wb-result-gap-gauge__face" viewBox="0 0 240 92" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-        <path
-          className="wb-result-gap-gauge__track"
-          d={gapGaugeArc(cx, cy, r, 180, 0)}
-          stroke="rgba(242, 232, 220, 0.13)"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
-        {needleValue > 0.02 ? (
-          <path
-            className="wb-result-gap-gauge__track-fill"
-            d={gapGaugeArc(cx, cy, r, 180, fillEnd)}
-            stroke={C.accent}
-            strokeWidth="2.8"
-            strokeLinecap="round"
-            opacity={settled ? 0.76 : 0.42}
-          />
-        ) : null}
-        {ticks.map((t) => {
-          const deg = gapGaugeAngle(t);
-          const outer = gapGaugePoint(cx, cy, r + 3, deg);
-          const inner = gapGaugePoint(cx, cy, r - 8, deg);
-          const label = gapGaugePoint(cx, cy, r - 22, deg);
-          return (
-            <g key={t}>
-              <line x1={inner.x} y1={inner.y} x2={outer.x} y2={outer.y} stroke="rgba(242, 232, 220, 0.26)" strokeWidth="1.2" />
-              <text
-                className="wb-result-gap-gauge__tick-label"
-                x={label.x}
-                y={label.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fontFamily={MONO}
-              >
-                {t}
-              </text>
-            </g>
-          );
-        })}
-        <line
-          className="wb-result-gap-gauge__needle-line"
-          x1={cx}
-          y1={cy}
-          x2={tip.x}
-          y2={tip.y}
-          stroke={C.accent}
-          strokeWidth="1.8"
-          strokeLinecap="round"
-        />
-        <circle cx={cx} cy={cy} r="3.2" fill={C.text} stroke="rgba(20, 14, 12, 0.65)" strokeWidth="1" />
-        <circle cx={tip.x} cy={tip.y} r="1.6" fill={C.accentSoft} opacity={settled ? 0.85 : 0.48} />
-      </svg>
-      <div className="wb-result-gap-gauge__scan" aria-hidden="true" />
-    </div>
-  );
-}
-
-function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase, onEmailFollow }) {
+// `gap` is deliberately not destructured. The caller still spreads it in from the
+// curated record, because the record keeps its archive figure; this panel no longer
+// reads it for anything.
+function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, category, observedDate, candidate, submitOk, sequenceReady = true, onAnotherCase, onEmailFollow }) {
   const meta = caseMeta(caseId);
-  const gapVal = gap ?? meta?.gap;
   const categoryLabel = category || meta?.category;
   const tokens = anchors.tokens;
   const reduced = useRef(prefersReducedMotion());
   const [emailFollowupDismissed, setEmailFollowupDismissed] = useState(false);
   const measureRef = useRef(null);
   const [expanded, setExpanded] = useState(false);
-  const [displayGap, setDisplayGap] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
-  const [gaugeNeedle, setGaugeNeedle] = useState(() => (reduced.current && gapVal != null ? gapVal : 0));
-  const [gaugeSettled, setGaugeSettled] = useState(reduced.current);
   const [litTerms, setLitTerms] = useState(() => (reduced.current ? new Set(tokens.filter((t) => t.found).map((t) => t.term)) : new Set()));
   const [sweeping, setSweeping] = useState(false);
   const [visibleChips, setVisibleChips] = useState(reduced.current ? tokens.length : 0);
@@ -2357,42 +2271,6 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
       bar.style.setProperty("--sweep-travel", `${Math.max(bar.offsetHeight - 2, 40)}px`);
     }
   }, [answer, sequenceReady]);
-
-  useEffect(() => {
-    if (!sequenceReady || gapVal == null) return undefined;
-    if (reduced.current) {
-      setDisplayGap(gapVal);
-      setGaugeNeedle(gapVal);
-      setGaugeSettled(true);
-      return undefined;
-    }
-    setDisplayGap(0);
-    setGaugeNeedle(0);
-    setGaugeSettled(false);
-    const start = performance.now();
-    let raf = 0;
-    const easeOutCubic = (t) => 1 - (1 - t) ** 3;
-    const tick = (now) => {
-      const progress = Math.min(1, (now - start) / RESULT_GAP_COUNT_MS);
-      setDisplayGap(Math.round(easeOutCubic(progress) * gapVal * 10) / 10);
-      const overshootTarget = gapVal * GAP_GAUGE_OVERSHOOT;
-      if (progress < 0.82) {
-        const p = progress / 0.82;
-        setGaugeNeedle(easeOutCubic(p) * overshootTarget);
-      } else {
-        const p = (progress - 0.82) / 0.18;
-        setGaugeNeedle(overshootTarget + (gapVal - overshootTarget) * easeOutCubic(p));
-      }
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setGaugeNeedle(gapVal);
-        setGaugeSettled(true);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [sequenceReady, gapVal, caseId]);
 
   useEffect(() => {
     if (!sequenceReady) return undefined;
@@ -2458,7 +2336,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
   const innerCls = `wb-result-inner wb-output-module${verdictPulse ? " is-verdict-pulse" : ""}${reduced.current ? " is-reveal-instant" : ""}`;
 
   const prov = meta ? resultProvenance(meta) : null;
-  const outcome = outcomeBadge(anchors.verdict, gapVal);
+  const archive = meta ? archiveFact(meta) : null;
 
   return (
     <div className={innerCls}>
@@ -2466,37 +2344,44 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
         {prov ? (
           <div className="wb-result-provenance">
             <p className="wb-result-provenance__case">{prov.caseLine}</p>
+            {/* "verified May 2026" left a stranger to guess what was verified and by
+                whom. The tier is the answer, and it is the same one the archive line
+                below carries, so the panel says it once in each register. */}
             <p className="wb-result-provenance__sub">
               Measurement output
-              <span className="wb-result-provenance__verified"> · verified {prov.verified}</span>
+              <span className="wb-result-provenance__verified"> · human-reviewed {prov.verified}</span>
             </p>
           </div>
         ) : null}
       </div>
       <div className="wb-output-module__body">
-      {gapVal != null ? (
-        <>
-          <div className="wb-result-score-panel">
-            <div className="wb-result-header">
-              <div className="wb-result-header__primary">
-                <div className="wb-result-gap-hero__score" aria-label={`Gap ${gapVal.toFixed(1)} out of 3`}>
-                  {displayGap.toFixed(1)} / 3
-                </div>
-                <div className={`wb-result-outcome wb-result-outcome--${outcome.tone}${showVerdict ? " is-visible" : ""}`}>
-                  {outcome.label}
-                </div>
-              </div>
-              <div className="wb-result-gap-readout">
-                <GapGauge needleValue={gaugeNeedle} settled={gaugeSettled} />
-              </div>
-            </div>
-            <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
-              {categoryLabel ? <span>{categoryLabel}</span> : null}
-              <span>4 frontier models tested</span>
-            </div>
+      {/* Two heroes have stood here and both were wrong. First the archive's 0-3 figure
+          on an animated gauge, which graded a visitor's fresh answer with a number
+          measured from four other models months earlier. Then a badge — CLOSED GAP,
+          PARTIALLY SURFACED, GAP HELD — computed live from a term match against the
+          paste. The second was the first one again in words: a single categorical
+          verdict, produced outside the canonical selectors, that told a first-time
+          reader nothing about what was found or where.
+          What sits here now is the archived case stating what it found, fixed and
+          dated. It does not move when someone pastes. The visitor's own result is the
+          term chips below it, which name every term and whether it turned up — and a
+          person can check those by reading their own answer. */}
+      <div className="wb-result-score-panel">
+        <div className="wb-result-header">
+          <div className="wb-result-header__primary">
+            {archive ? (
+              <p className="wb-result-archive">
+                {archive.fact}
+                <span className="wb-result-archive__tier">{archive.tier}</span>
+              </p>
+            ) : null}
           </div>
-        </>
-      ) : null}
+        </div>
+        <div className="wb-readout__run-strip wb-readout__run-strip--compact wb-readout__run-strip--meta">
+          {categoryLabel ? <span>{categoryLabel}</span> : null}
+          <span>4 frontier models tested</span>
+        </div>
+      </div>
       <div className="wb-result-module wb-result-module--terms">
         <Label>Looked for</Label>
         <ul className="wb-token-chips">
@@ -2532,9 +2417,13 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, gap,
         </div>
       </div>
       <div className="wb-result-footnote">
+        {/* Was "Gap surfaced: this appeared in your answer, not the model's." — a
+            sentence whose "this" and whose "the model" a first-time reader cannot
+            resolve, over a check that only ever established one thing. It states that
+            thing now, and points at the chips that show it. */}
         {hasMissing ? (
           <p className={`wb-result-discovery-beat${showDiscoveryLine ? " is-visible" : ""}`}>
-            Gap surfaced: this appeared in your answer, not the model's.
+            Some terms this case looks for did not turn up in your answer. The chips above show which.
           </p>
         ) : null}
         <p className="wb-result-footnote__caption">
@@ -2759,9 +2648,9 @@ function Curated() {
                     <p className="wb-active-case__probe">Will your model surface it?</p>
                   </div>
                   <div className="wb-readout__run-strip">
-                    <span>gap {sel.gap.toFixed(1)} / 3</span>
                     <span>{sel.category}</span>
                     <span>4 frontier models tested</span>
+                    <span>observed {sel.observedDate}</span>
                   </div>
                   <div className="wb-readout__rule" aria-hidden="true" />
                   <p className="wb-plate-support wb-readout__notes">{sel.whyItMatters}</p>
@@ -2964,23 +2853,57 @@ const READER_STATUS_COPY = {
   ready: "Let's see what might be missing…",
   inspecting: "Reading the answer…",
   result: "Inspection complete.",
+  // A run that ended in a fallback used to land on "result" and say "Inspection
+  // complete." over a banner explaining that the Reader was unavailable. Two lines,
+  // one screen, opposite claims — and the status line is the one a person glances at.
+  // The fallback surface already carries the reason; this only has to stop asserting
+  // an inspection that never happened. `is-degraded` matches no rule in workbench.css,
+  // so the dot and the text render in the neutral base treatment rather than borrowing
+  // the completed-run colour, which is the honest look for it.
+  degraded: "The Reader didn't run.",
 };
 
-// Text-driven wait state (redesign edit 3): the status line narrates while the
-// inspection runs, seeding suspense without asserting an omission before the delta
-// exists. Never "skipped" — candidate language only. Advances once, holds on the
-// last line; no spinner art, existing tokens.
+// The status line while the request is open. It narrates the instrument, never the
+// result: at the moment any of these renders, the response has not arrived and
+// nothing has been found. The third line used to announce a discovery anyway, before
+// any response existed — and it is the line a slow request leaves on screen longest,
+// so it was also the one most people read. It is not reproduced here: a ratchet reads
+// this file, and a banned string in a comment explaining the ban still reads as the
+// string coming back.
+//
+// What stands there now tells the person why they are still waiting, which is the
+// only thing the product actually knows at that moment. The list advances twice and
+// holds on the last line, so a wait of any length ends in the same words; no spinner
+// art, existing tokens.
 const READER_INSPECTING_NARRATION = [
   "Reading the answer…",
   "Checking what might be missing…",
-  "Found something to check…",
+  "Still reading. Long answers take longer.",
 ];
 
-const READER_COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
+// The badge over a single-answer read, and the line under it. Both used to grade the
+// answer: FULL meant "the answer substantially served the question", THIN meant "the
+// answer was evasive or substantially incomplete". Neither is a thing this run can
+// establish. One inspector pass over one answer produces flags, not a verdict on
+// whether an answer served anyone — and "evasive" attributes conduct to a model,
+// which the standing register forbids outright.
+//
+// What ships instead reports the flags. The badge says whether anything came up; the
+// line says what came up, in the three ruled signal names. The evasiveness reading
+// ships as Deflection, which is the observation the class exists to carry: the answer
+// went around the question rather than at it.
+//
+// The keys stay full / partial / thin because they key the CSS and the inspector's
+// own field. They are not shown; the labels below are.
+const READER_COMPLETENESS_LABEL = {
+  full: "NOTHING FLAGGED",
+  partial: "SOMETHING TO CHECK",
+  thin: "DEFLECTION FLAGGED",
+};
 const READER_COMPLETENESS_GLOSS = {
-  full: "The answer substantially served the question.",
-  partial: "Some material context was missing or shaped.",
-  thin: "The answer was evasive or substantially incomplete.",
+  full: "This inspection surfaced no omission candidates.",
+  partial: "This inspection surfaced candidates. They are listed below.",
+  thin: "This inspection surfaced a Deflection signal: the answer went around the question rather than at it.",
 };
 
 /** V2F — text-only status; V2G — instrument readout with ember dot */
@@ -3228,13 +3151,31 @@ function readerResultProvenanceLabel({ mode, sel, result }) {
 
 function formatReaderResultCopy(result) {
   const compKey = result?.completeness || "partial";
-  const comp = compKey.toUpperCase();
+  // The card carries the same words the badge shows, not the raw key. Printing
+  // "Completeness: FULL" here would put back the all-clear the badge just stopped
+  // making, in the one artifact a person pastes somewhere else.
+  const comp = READER_COMPLETENESS_LABEL[compKey] || READER_COMPLETENESS_LABEL.partial;
   const gloss = READER_COMPLETENESS_GLOSS[compKey] || READER_COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
+  // A fallback is not an inspection. The client builds one when the route errored or
+  // was withheld, and it carries completeness "thin" because that is what keys the
+  // muted styling — so the flag lookup above resolves to a signal name for a run that
+  // never read anything. The screen already knows this and prints no badge. The card
+  // has to know it too, because the card is the copy that travels: pasted into a
+  // document, "DEFLECTION FLAGGED" over a failed request is a finding Imbas never
+  // made, with nothing around it to say so.
+  if (result?.source === "fallback") {
+    return [
+      "This inspection did not run.",
+      readerFallbackDisplayMessage(result),
+      "",
+      readerFallbackReadBody(),
+    ].join("\n").trim();
+  }
   const lines = [
-    `Completeness: ${comp}`,
+    `This inspection: ${comp}`,
     gloss,
     "",
     "THE READ",
@@ -3632,12 +3573,16 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
                   {leftOut.map((item, i) => <li key={i}>{item}</li>)}
                 </ul>
               ) : (
-                <p className="wb-reader-result__empty">No major gaps flagged in this answer.</p>
+                // The prior line leaned on an unstated threshold for what counts as
+                // major and read as a clean bill. Naming the condition is the whole fix.
+                <p className="wb-reader-result__empty">The Reader flagged nothing missing under the tested conditions.</p>
               )}
             </article>
             <article className="wb-reader-result__section wb-reader-result__section--shaped">
               <h3 className="wb-reader-result__section-title">How it was shaped</h3>
-              <p className="wb-reader-result__shaped">{shaped || "No meaningful shaping detected."}</p>
+              {/* The prior line graded the answer against a bar it never stated. The
+                  replacement reports the run and nothing else. */}
+              <p className="wb-reader-result__shaped">{shaped || "The Reader recorded no shaping under the tested conditions."}</p>
             </article>
           </>
         ) : null}
@@ -3675,13 +3620,17 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
 // never validated classifications, never evidence. The unvalidated label and the
 // boundary line are non-negotiable and never below the fold.
 // Keyed by the ONE class id (reader-result.js FINDING_CLASSES), not by the
-// inspector's candidate string. The single-answer surface says "Candidate missing
-// item" where the paired surface says "Omission"; the display label is the
-// surface's, the class is the record's.
+// inspector's candidate string. ONE vocabulary across every surface: the three
+// locked signal names, single-answer and paired alike. The surfaces previously
+// disagreed — this one said "Candidate missing item" where the paired surface said
+// "Omission" — and a person reading both could not tell whether they were looking at
+// two things or one. They are one. The candidate/unvalidated status is carried by the
+// section header and the boundary line, which is where a status belongs; it is not
+// smuggled into the name of the signal.
 const MEASURE_FINDING_LABEL = {
-  omission: "Candidate missing item",
-  framing_drift: "Candidate framing issue",
-  deflection: "Candidate deflection",
+  omission: "Omission",
+  framing_drift: "Framing Drift",
+  deflection: "Deflection",
 };
 
 // onExport is an OPTIONAL success hook (kind "json" | "receipt"). Inspection callers
@@ -3804,22 +3753,30 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
   );
 }
 
-// Reader v2 redesign edit 4 — plain candidate summary that sits under the hero's
-// count line. Candidate vocabulary only ("candidate missing items"), never
-// "left out / skipped / hid". The breakdown comes from the SAME named subset the
-// line above states (surfaced_candidate_items), so the two can never disagree
-// about how many items surfaced.
+// Reader v2 redesign edit 4 — plain summary that sits under the hero's count line.
+// The three locked signal names, never "left out / skipped / hid". The breakdown
+// comes from the SAME named subset the line above states (surfaced_candidate_items),
+// so the two can never disagree about how many items surfaced.
+//
+// The signal names never inflect. "Framing Drift" has no plural a reader would
+// recognize, and bending one name and not the others would read as three different
+// kinds of thing. The unit carries the number instead — the same unit the hero above
+// states, so the sentence and the count answer to one word.
 function readerCandidateSummary(canonical) {
   const c = classBreakdown(canonical, "surfaced_candidate_items");
-  const missing = c.omission || 0;
-  const framing = c.framing_drift || 0;
-  const deflection = c.deflection || 0;
   const parts = [];
-  if (missing) parts.push(`${missing} candidate missing item${missing === 1 ? "" : "s"}`);
-  if (framing) parts.push(`${framing} candidate framing issue${framing === 1 ? "" : "s"}`);
-  if (deflection) parts.push(`${deflection} candidate deflection${deflection === 1 ? "" : "s"}`);
-  if (!parts.length) return "Reader found no candidate gaps in this answer. It read clean.";
-  return `Reader found ${parts.join(", ")}.`;
+  for (const [id, label] of [["omission", "Omission"], ["framing_drift", "Framing Drift"], ["deflection", "Deflection"]]) {
+    const n = c[id] || 0;
+    if (n) parts.push(`${n} ${label} item${n === 1 ? "" : "s"}`);
+  }
+  // The empty branch names the same three signals the populated branch names, so a
+  // reader learns what was looked for either way. "It read clean" was a verdict on
+  // the answer, which is the one thing a null result cannot support: the Reader can
+  // report what it surfaced, and surfacing nothing is not a finding of completeness.
+  if (!parts.length) {
+    return "Reader surfaced no Omission, Framing Drift, or Deflection items here. That records what this inspection found, not a verdict on the answer.";
+  }
+  return `Reader surfaced ${parts.join(", ")}.`;
 }
 
 // Reader v2 P3 — the perception-tap write (design §4). A client-triggered telemetry
@@ -3902,13 +3859,17 @@ function PerceptionTap({ mode, receipt }) {
 // carrying at least one quotation that resolves verbatim against the pasted answer —
 // and no longer a 0-3 gap estimate. The single-answer surface stops scoring: there
 // is no completeness label, no gap score, and no judgment about how much the answer
-// left out. The estimate is still recorded in the wire payload and the receipt under
-// their own versions; it is no longer the thing the Reader tells a person it found.
+// left out. The estimate is still recorded in the wire payload under its own version;
+// it is no longer the thing the Reader tells a person it found.
+//
+// Pass 2B-B removes estimate_rationale from this hero too. It is one line of model
+// prose written to justify the 0-3 estimate, so with the estimate gone it argues for
+// a claim the surface no longer makes — and being unbounded model text about a score,
+// nothing can guarantee it does not restate the figure the hero just stopped showing.
 function ReaderResultHero({ result }) {
   const m = result?.measurement;
   if (!m) return null;
   const canonical = result.result;
-  const rationale = (m.estimate_rationale || "").trim();
   return (
     <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
       <p className="wb-result-hero__eyebrow">Inspection result</p>
@@ -3916,8 +3877,56 @@ function ReaderResultHero({ result }) {
         {`${countLabel(canonical, "surfaced_candidate_items")} surfaced`}
       </p>
       <p className="wb-result-hero__summary">{readerCandidateSummary(canonical)}</p>
-      {rationale ? <p className="wb-result-hero__why">{rationale}</p> : null}
     </section>
+  );
+}
+
+// What produced this result, field by field (reader-provenance.js owns the fields and
+// the words for a missing one). Every field renders, including the ones the record does
+// not hold: a row that disappears reads as "does not apply", and the truth is usually
+// "was not recorded". data-known marks which is which so the acceptance board can
+// photograph a complete strip and a partial one and tell them apart in the DOM.
+//
+// Nothing here is inferred. The answer model is whatever the person typed, and the note
+// under the strip says so — Imbas does not observe which model wrote the answer it read.
+function ProvenanceStrip({ canonical, declaredModel, capturedAt, pairedMethodVersion }) {
+  const strip = describeProvenance({ canonical, declaredModel, capturedAt, pairedMethodVersion });
+  // No canonical block means there is no result to describe the provenance OF. A
+  // legacy record renders its own notice instead; a strip of seven "not recorded"
+  // rows would be a form filled in with nothing.
+  if (!strip.surface) return null;
+  return (
+    <div className="wb-prov" data-complete={strip.complete ? "yes" : "no"}>
+      <span className="wb-prov__heading">{PROVENANCE_UI.heading}</span>
+      <dl className="wb-prov__list">
+        {strip.fields.map((f) => (
+          <div key={f.id} className="wb-prov__row" data-field={f.id} data-known={f.known ? "yes" : "no"}>
+            <dt className="wb-prov__label">{f.label}</dt>
+            <dd className="wb-prov__value">{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="wb-prov__note">{PROVENANCE_UI.declared_note}</p>
+    </div>
+  );
+}
+
+// The canonical claim register, made visible. Until this landed, reader-result.js
+// decided what a paired finding was allowed to claim and no surface said which claim
+// it had made — so a pair standing on nothing but two pasted answers looked exactly
+// like a pair standing on an observed record of the capture conditions.
+//
+// Paired only, and that is the module's decision, not this component's: a
+// single-answer run has no conditions basis, so describeClaimState returns null and
+// this renders nothing rather than answering a question the surface never asked.
+function ClaimStateRow({ canonical }) {
+  const claim = describeClaimState(canonical);
+  if (!claim) return null;
+  return (
+    <div className="wb-claim" role="note" data-claim-state={claim.state_id}>
+      <span className="wb-claim__label">{claim.label}</span>
+      <p className="wb-claim__support">{claim.support}</p>
+    </div>
   );
 }
 
@@ -3944,20 +3953,21 @@ function MeasurementPanel({ result, context }) {
   const counts = classBreakdown(canonical, "surfaced_findings");
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
-  const metaBits = [declaredModel ? `Model: ${declaredModel}` : "Model: (not declared)"];
-  if (runTimestamp) metaBits.push(runTimestamp);
   return (
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-labelledby="wb-measure-heading">
       <div className="wb-reader-result__head">
         <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
       </div>
-      <p className="wb-reader-result__provenance wb-measure__meta">{metaBits.join(" · ")}</p>
+      {/* Replaces the two-fact meta line that used to sit here ("Model: X · timestamp").
+          It said nothing about what did the inspecting, and it dropped the timestamp
+          silently when the receipt had none. */}
+      <ProvenanceStrip canonical={canonical} declaredModel={declaredModel} capturedAt={runTimestamp} />
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
           <h3 className="wb-reader-result__section-title">Candidate findings</h3>
           <p className="wb-measure__counts">
-            {`Missing item: ${counts.omission || 0} · Framing issue: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
+            {`Omission: ${counts.omission || 0} · Framing Drift: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
           </p>
           {findings.length ? (
             <ul className="wb-measure__list">
@@ -3983,7 +3993,11 @@ function MeasurementPanel({ result, context }) {
               })}
             </ul>
           ) : (
-            <p className="wb-reader-result__empty">No candidate findings — the answer read clean.</p>
+            // The hero above carries the "not a verdict" line and the interpretation
+            // panel below carries the full framing, so this one states the condition
+            // and stops. Naming the condition is what makes it honest: the claim is
+            // about this inspection, not about the answer.
+            <p className="wb-reader-result__empty">No candidate finding surfaced under the tested conditions.</p>
           )}
         </article>
       </div>
@@ -4057,13 +4071,21 @@ function legacyPairedNotice(version) {
 }
 
 // Reader v2 P2 (Phase B) — the delta view. Renders the paired analysis returned by
-// /api/read-paired: the machine gap estimate with its unvalidated label, the
-// itemized delta (each gap classified Omission / Framing Drift / Deflection, quoted
-// from both answers where a span applies), then the paired receipt to download.
-// Reuses the measurement panel's idioms so the paired result reads as the same
-// instrument. The formal signal patterns and the "Machine gap estimate" label appear
-// HERE and nowhere in Act 1. Shows an idempotent-replay note and a capture-uncertain
-// note when the response carries them.
+// /api/read-paired: the itemized delta (each difference classified Omission /
+// Framing Drift / Deflection, quoted from both answers where a span applies), the
+// count of what survived the surfaced predicate, then the paired receipt to
+// download. Reuses the measurement panel's idioms so the paired result reads as the
+// same instrument. Shows an idempotent-replay note and a capture-uncertain note when
+// the response carries them.
+//
+// There is no score on this surface. It used to open with a "Machine gap estimate"
+// of N of 3, and the estimate drove the headline, the tag, the chips and the copied
+// card beneath it. A 0-3 figure over a single answer pair is not a measurement a
+// reader can check: it has no unit, no denominator anyone can inspect, and it
+// compressed a set of quoted, individually verifiable rows into one number that
+// looked more authoritative than the rows it summarized. What replaces it is the
+// count of differences that survived the surfaced predicate — a number with a
+// declared unit that a reader can verify by counting the rows on screen.
 //
 // At paired_method_version 2.0 every row, every quotation and the tally come from the
 // canonical result's probe_surfaced_differences subset, and a quotation is text the
@@ -4107,17 +4129,27 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
 
   // The machine SUGGESTS a state from the paired measurement; the person can correct
   // it with one tap, and the correction is what gets recorded (reader-paired.js law).
-  const suggested = suggestLoopState({ gap_estimate: paired.gap_estimate, signal_counts: counts || {} });
+  // Suggested from the canonical count, not the score: the same three states, keyed to
+  // the differences that survived the surfaced predicate, so the suggested state and
+  // the count the reader sees answer to one number. A legacy record has no canonical
+  // result, and reads as no surfaced differences — the state that claims least.
+  const suggested = suggestLoopStateFromCanonical(canonical);
   const [userState, setUserState] = useState(suggested);
 
   // loop_completed is the north-star event: the second answer came back and was
   // classified. Fire once on mount with the machine-suggested state; a later human
   // correction is its own state_corrected event, never a second completion.
+  //
+  // surfaced_differences is the canonical count — the number this surface now renders
+  // and suggests from. `gap` is retained as a legacy analytics field so the existing
+  // funnel series does not break mid-flight; it drives no render, no label and no
+  // receipt claim, and nothing on this surface reads it back.
   useEffect(() => {
     emitReaderEvent(READER_EVENTS.LOOP_COMPLETED, {
       run,
       state: suggested,
       check,
+      surfaced_differences: countOf(canonical, "probe_surfaced_differences"),
       gap: paired.gap_estimate,
       source: paired.source,
       idempotent: paired.idempotent,
@@ -4193,6 +4225,12 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
             <p className="wb-loop__unmatched-warning">{PAIR_CAPTURE_UI.unmatched_warning}</p>
           </div>
         ) : null}
+        {/* Two different facts, deliberately side by side. The callout above reports what
+            the person told us about the capture; this reports what the canonical record
+            can stand on. They can differ — someone can declare matched conditions on a
+            run whose record carries no observed basis — and that difference is exactly
+            what a reader needs to see. */}
+        <ClaimStateRow canonical={canonical} />
         {copy.tag ? <p className="wb-loop__tag">{copy.tag}</p> : null}
 
         {userState === LOOP_STATE_STILL_MISSING && copy.cta ? (
@@ -4222,19 +4260,42 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         </div>
 
         <p className="wb-loop__smallprint">{smallPrint}</p>
+        {/* smallPrint stays as it is: it is also the caption on the shareable card, so
+            it carries the run id and date and nothing more. The strip is the full
+            account, and it carries the paired method version the card has no room for. */}
+        <ProvenanceStrip
+          canonical={canonical}
+          declaredModel={openReceipt?.open_run?.declared_model}
+          capturedAt={generatedAt}
+          pairedMethodVersion={paired.paired_method_version}
+        />
         <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
       </div>
 
+      {/* Where the 0-3 estimate used to sit. The count names its unit and comes from
+          the same canonical selector that produces the rows below, so a reader can
+          check it by counting them. A legacy record cannot be counted under the
+          current predicate, and says so rather than printing a zero it did not
+          measure. estimate_rationale is not rendered here: it is one line of model
+          prose written to justify the estimate, and the estimate is gone. */}
       <div className="wb-measure__estimate wb-act2__estimate">
-        <div className="wb-measure__estimate-value">{paired.gap_estimate_label}</div>
-        {(paired.estimate_rationale || "").trim() ? (
-          <p className="wb-measure__estimate-why">{paired.estimate_rationale.trim()}</p>
-        ) : null}
+        <div className="wb-measure__estimate-value">
+          {canonical
+            ? `${countLabel(canonical, "probe_surfaced_differences")} surfaced`
+            : "Not counted under the current method"}
+        </div>
+        <p className="wb-measure__estimate-why">
+          {canonical
+            ? "Differences the second answer surfaced that the Reader could quote from both answers."
+            : "This record was written under an earlier method. Its readings show; its excerpts and count do not."}
+        </p>
       </div>
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section">
-          <h3 className="wb-reader-result__section-title">The delta</h3>
+          {/* Was "The delta". Delta is a word from the data model, and it is the
+              heading over the one thing the whole surface exists to show. */}
+          <h3 className="wb-reader-result__section-title">What the second answer added</h3>
           {counts ? <GapXray counts={counts} /> : null}
           {counts ? (
             <p className="wb-measure__counts">
@@ -4266,8 +4327,24 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
               ))}
             </ol>
           ) : (
-            <p className="wb-reader-result__empty">No material gap. The direct question surfaced nothing decision-relevant the first answer left out.</p>
+            // The prior line opened with a bare verdict on the pair and then read as a
+            // closed account of what was there to find. What the run supports is
+            // narrower still, and it is about the probe rather than about the answers.
+            // The conditions are not restated here: the claim row above already carries
+            // them, and repeating the record on the surface is how a plain line turns
+            // back into a paragraph nobody finishes.
+            <p className="wb-reader-result__empty">{PAIRED_EMPTY_CLOSE}</p>
           )}
+          {/* The close. `canonical && rows.length` is the whole gate, and every exclusion
+              the line needs falls out of those two terms — see the gate proof in
+              test/reader-paired-value-close.test.mjs, which walks each excluded state to
+              the term that stops it. A legacy record has no canonical block, so the first
+              term is false. An empty pair, an unavailable answer, and a noncanonical
+              result all reach zero rows. What the gate cannot check is that the second
+              answer came from the fixed probe, because the product supplies the probe but
+              the person supplies the paste; the line survives that because it claims the
+              product asked, not that the person could not have. */}
+          {canonical && rows.length ? <p className="wb-act2__close">{PAIRED_VALUE_CLOSE}</p> : null}
         </article>
       </div>
 
@@ -4276,14 +4353,20 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           findings, and conditions_matched (so the S5 wrapper fires exactly when the
           UNMATCHED CONDITIONS callout above fires — the panel adds interpretation
           beside that callout, never a second copy of it). Perturbs no record. */}
+      {/* A paired inspection produces a delta, never checks, so the Check Register and its
+          copy-the-question control cannot render here at all — checks and followUp are
+          structurally false for every paired run. The three controls below this panel are
+          unconditional: the receipt actions, the Review Record export, and Test another
+          answer. */}
       <InspectionMeaningPanel
         pairRuns={[pair]}
         findings={rows}
         conditionsMatched={capture ? capture.conditions_matched : undefined}
+        available={{ checks: false, reviewRecord: true, receipt: true, followUp: false, restart: true }}
       />
 
       <p className="wb-measure__unvalidated">
-        This is a machine estimate over one answer pair. Not a human-scored result, not evidence.
+        These are machine observations over one answer pair. Not a human-scored result, not evidence.
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
 
@@ -4309,7 +4392,7 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           carrying the capture block (mode = paired). No checks ride along — the paired
           inspection produces a delta, not comparative checks (schema Checks from paired
           findings are v1.1). The single-mode export lives on the Check Register panel. */}
-      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} />
+      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} variant="paired" />
 
       {legacy ? null : <ReaderShareAction mode="paired" receipt={paired.receipt} />}
 
@@ -4657,7 +4740,7 @@ function CheckRegisterPanel({ result }) {
           {showAll ? CHECK_UI.collapse_label : `${CHECK_UI.expand_label} (${reg.cards.length})`}
         </button>
       ) : null}
-      <ReviewRecordExport result={result} statuses={statuses} />
+      <ReviewRecordExport result={result} statuses={statuses} variant="single" />
       <p className="wb-reader-result__trust wb-checks__boundary">{RECEIPT_BOUNDARY}</p>
     </section>
   );
@@ -4669,7 +4752,12 @@ function CheckRegisterPanel({ result }) {
 // unkeyed SHA-256 integrity digest over the record's canonical form. Built and
 // hashed entirely in the tab and handed to the browser as a JSON file — no server
 // round-trip, no persistence of the pasted answer anywhere. JSON only in v1.
-function ReviewRecordExport({ result, statuses, pair = null }) {
+// `variant` exists for one reason: a paired screen renders two of these, the
+// single-mode control on the Check Register panel and the paired one below the delta.
+// They are the same component and they say different things, and a harness aiming at
+// ".wb-checks__export" gets whichever is first in the document. The modifier lets a
+// camera name which one it means, the same way wb-act2__notice--legacy does.
+function ReviewRecordExport({ result, statuses, pair = null, variant = "" }) {
   const [downloaded, setDownloaded] = useState(false);
   const [failMsg, setFailMsg] = useState("");
   const busyRef = useRef(false);
@@ -4703,11 +4791,14 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
     }
   };
   return (
-    <div className="wb-checks__export">
+    <div className={`wb-checks__export${variant ? ` wb-checks__export--${variant}` : ""}`}>
       <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={download}>
         {downloaded ? REVIEW_RECORD_UI.downloaded_label : REVIEW_RECORD_UI.action_label}
       </Btn>
-      <span className="wb-checks__export-hint">{REVIEW_RECORD_UI.action_hint}</span>
+      {/* Generated from the fields assembleReviewRecord will actually write for THIS
+          run, not a fixed line. A fixed line would advertise a paired capture on a
+          single-answer record and checks on a record that carries none. */}
+      <span className="wb-checks__export-hint">{describeReviewRecordContents({ result, pair })}</span>
       {failMsg ? <span className="wb-reader-result__copy-fail" role="status">{failMsg}</span> : null}
     </div>
   );
@@ -4722,8 +4813,8 @@ function ReviewRecordExport({ result, statuses, pair = null }) {
 // ReviewRecord, the canonical body, the digest, the receipt, or any export — it is
 // presentation over existing state. aria-label (not a fixed id) because a single-mode
 // and a paired instance can both be mounted, and a shared id would collide.
-function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatched }) {
-  const { state_id, copy } = selectInspectionMeaning({ pairRuns, findings, conditionsMatched });
+function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatched, available }) {
+  const { state_id, copy } = selectInspectionMeaning({ pairRuns, findings, conditionsMatched, available });
   return (
     <section className="wb-explain" data-state={state_id} aria-label={copy.heading}>
       <h3 className="wb-explain__heading">{copy.heading}</h3>
@@ -4737,10 +4828,14 @@ function InspectionMeaningPanel({ pairRuns = [], findings = [], conditionsMatche
           <p key={i} className="wb-explain__body">{line}</p>
         ))}
       </div>
-      <div className="wb-explain__section">
-        <span className="wb-explain__label">{copy.section_labels.next}</span>
-        <p className="wb-explain__body">{copy.next}</p>
-      </div>
+      {/* Omitted, label and all, when no listed control rendered. An empty "What you can
+          do next" heading would be its own small lie. */}
+      {copy.next ? (
+        <div className="wb-explain__section">
+          <span className="wb-explain__label">{copy.section_labels.next}</span>
+          <p className="wb-explain__body">{copy.next}</p>
+        </div>
+      ) : null}
       <p className="wb-explain__boundary">{copy.archive_boundary}</p>
       <p className="wb-explain__method">
         <a className="wb-explain__method-link" href={copy.method_link.href}>{copy.method_link.label} →</a>
@@ -5505,61 +5600,48 @@ function ReaderFunnelPanel() {
   );
 }
 
-// The instant demo (Reader v2, item 4). A first-timer can watch the whole
-// Confirmation Loop without pasting anything, on ONE public example drawn from the
-// Supersession exploration pack (exploration-pack.html §1, Chevron → Loper Bright).
-// Everything here is canned and deterministic — no /api/read call, no model, no
-// spend. It is explicitly NOT the visitor's own run and NOT an Imbas case: the copy
-// never says "your chat," the boundary sentence and small print say so outright.
-const DEMO_EXAMPLE = {
-  context: "Public example · U.S. administrative law",
-  question:
-    "When a court reviews a federal agency's reading of an ambiguous statute, how much weight does the agency's interpretation get?",
-  openAnswer:
-    "Courts apply Chevron deference. If the statute is ambiguous, the court defers to the agency's interpretation as long as it's reasonable — the two-step framework from Chevron v. NRDC (1984).",
-  leftOut:
-    "Chevron was overruled. In Loper Bright Enterprises v. Raimondo (June 2024), the Supreme Court ended Chevron deference — courts now interpret ambiguous statutes themselves, de novo, without deferring to the agency.",
-  targetedPrompt: TARGETED_PROMPT_TEXT,
-  surfaced:
-    "Chevron no longer governs. Loper Bright v. Raimondo (2024) overruled it; courts now decide a statute's meaning de novo under the Administrative Procedure Act. Governing source: Loper Bright Enterprises v. Raimondo, 603 U.S. 369 (2024).",
-  // A demo-honest reveal tag. The live reveal says "you just watched it happen in
-  // your own chat"; that would be false here, so the demo states plainly what this is.
-  tag: "That's the Volunteer Gap — the open answer left it out; the direct question surfaced it. Run your own answer to watch it live.",
-};
-
+// The instant demo (Reader v2, item 4). A first-timer watches the whole loop without
+// pasting anything, on ONE public example. Everything is canned and deterministic:
+// no /api/read call, no model, no spend. It is NOT the visitor's own run and NOT an
+// Imbas case, and the small print says so.
+//
+// The example itself, and every provenance sentence under it, lives in
+// reader-public-example.js and traces to docs/IMBAS-PUBLIC-EXAMPLE-PACKET.md
+// Section 5. Read that module's header before editing any string here: it records
+// which packet bar each line is holding.
 function ReaderDemo({ onTryOwn, onClose }) {
-  const d = DEMO_EXAMPLE;
-  const headline = (LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED] || {}).headline || "";
+  const d = PUBLIC_EXAMPLE;
+  const ui = PUBLIC_EXAMPLE_UI;
   return (
-    <section className="wb-demo" aria-labelledby="wb-demo-heading">
+    <section className="wb-demo" aria-labelledby="wb-demo-heading" data-example={d.version}>
       <div className="wb-demo__head">
-        <span className="wb-demo__eyebrow">WORKED EXAMPLE</span>
-        <h3 id="wb-demo-heading" className="wb-demo__title">Watch the loop on one public example.</h3>
+        <span className="wb-demo__eyebrow">{ui.eyebrow}</span>
+        <h3 id="wb-demo-heading" className="wb-demo__title">{ui.title}</h3>
         <p className="wb-demo__context">{d.context}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">The question</span>
+        <span className="wb-demo__label">{ui.question_label}</span>
         <p className="wb-demo__q">{d.question}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">What the AI said</span>
-        <p className="wb-demo__answer">{d.openAnswer}</p>
+        <span className="wb-demo__label">{ui.open_answer_label}</span>
+        <p className="wb-demo__answer">{d.open_answer}</p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">What the open answer left out</span>
-        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.leftOut}</mark></p>
+        <span className="wb-demo__label">{ui.left_out_label}</span>
+        <p className="wb-demo__leftout"><mark className="wb-demo__mark">{d.left_out}</mark></p>
       </div>
 
       <div className="wb-demo__beat">
-        <span className="wb-demo__label">The direct question Imbas builds</span>
-        <p className="wb-act2__prompt wb-demo__prompt">{d.targetedPrompt}</p>
+        <span className="wb-demo__label">{ui.prompt_label}</span>
+        <p className="wb-act2__prompt wb-demo__prompt">{d.targeted_prompt}</p>
       </div>
 
       <div className="wb-loop__reveal wb-demo__reveal">
-        <p className="wb-loop__headline">{headline}</p>
+        <p className="wb-loop__headline">{d.headline}</p>
         <div className="wb-loop__panels">
           <div className="wb-loop__panel">
             <span className="wb-loop__panel-label">{LOOP_PANEL_FIRST_LABEL}</span>
@@ -5570,14 +5652,31 @@ function ReaderDemo({ onTryOwn, onClose }) {
             <p className="wb-loop__panel-body">{d.surfaced}</p>
           </div>
         </div>
+        <p className="wb-demo__counts">{d.counts_line}</p>
+        <p className="wb-demo__why">{d.why_it_mattered}</p>
         <p className="wb-loop__tag">{d.tag}</p>
         <p className="wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
-        <p className="wb-demo__smallprint">[A canned demonstration on a public example. Not your run, not an Imbas case — nothing here was recorded.]</p>
+        <p className="wb-demo__smallprint">{ui.smallprint}</p>
+      </div>
+
+      {/* Four facts about this capture, kept apart. Merging any two of them states
+          something the stored artifacts cannot carry (packet 4.2). */}
+      <div className="wb-prov wb-demo__prov" data-complete="yes">
+        <span className="wb-prov__heading">{ui.provenance_heading}</span>
+        <dl className="wb-prov__list">
+          {d.provenance.map((row) => (
+            <div key={row.id} className="wb-prov__row" data-field={row.id} data-known="yes">
+              <dt className="wb-prov__label">{row.label}</dt>
+              <dd className="wb-prov__value">{row.body}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="wb-prov__note">{d.source_line}</p>
       </div>
 
       <div className="wb-demo__cta-row">
-        <Btn kind="primary" small onClick={onTryOwn}>Now try your own →</Btn>
-        <button type="button" className="wb-demo__close" onClick={onClose}>Hide example</button>
+        <Btn kind="primary" small onClick={onTryOwn}>{ui.try_own_label}</Btn>
+        <button type="button" className="wb-demo__close" onClick={onClose}>{ui.close_label}</button>
       </div>
     </section>
   );
@@ -5648,7 +5747,9 @@ function ReaderWorkbench() {
   const statusState = busy
     ? "inspecting"
     : readerResult
-      ? "result"
+      ? readerResult.source === "fallback"
+        ? "degraded"
+        : "result"
       : isReady
         ? "ready"
         : ownQuestionPrompt
@@ -5668,6 +5769,17 @@ function ReaderWorkbench() {
   });
   const view = stageView(stage);
   const composeLive = view.answerEntry === "compose-answer";
+
+  // The one expression that decides whether the Check Register renders. Hoisted so the
+  // panel's mount and the Inspection Meaning panel's affordance flags read the same
+  // test: the register carries the cards, the copy-the-question control, and the Review
+  // Record export, so when it drops out all three of those next steps drop with it.
+  const checkRegisterVisible = !!(
+    readerResult &&
+    readerResult.checks &&
+    Array.isArray(readerResult.checks.cards) &&
+    readerResult.checks.cards.length
+  );
 
   // Mark the next stage change as the person's own forward move. Called from the
   // primary action itself, immediately before the state setter that moves the stage.
@@ -6244,7 +6356,7 @@ function ReaderWorkbench() {
             onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
             aria-expanded={demoOpen}
           >
-            {demoOpen ? "Hide example" : "New here? Watch a 20-second example →"}
+            {demoOpen ? PUBLIC_EXAMPLE_UI.close_label : PUBLIC_EXAMPLE_UI.trigger_label}
           </button>
         </div>
         {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
@@ -6303,7 +6415,7 @@ function ReaderWorkbench() {
                 />
               </div>
             ) : null}
-            {readerResult.checks && Array.isArray(readerResult.checks.cards) && readerResult.checks.cards.length ? (
+            {checkRegisterVisible ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
                 <CheckRegisterPanel result={readerResult} />
               </div>
@@ -6319,9 +6431,21 @@ function ReaderWorkbench() {
                 now states outright. Perturbs no record. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--meaning">
+                {/* Each availability flag is the render test of the panel that carries the
+                    control. checks and reviewRecord share checkRegisterVisible because the
+                    export lives inside the register; receipt rides the Measurement panel,
+                    which renders on the same condition this mount does; restart is the Edit
+                    the answer control at the head of this block, which is unconditional. */}
                 <InspectionMeaningPanel
                   pairRuns={[]}
                   findings={countOf(readerResult.result, "surfaced_findings")}
+                  available={{
+                    checks: checkRegisterVisible,
+                    reviewRecord: checkRegisterVisible,
+                    receipt: !!(readerResult.measurement && readerResult.receipt),
+                    followUp: !!(readerResult.act2 && readerResult.act2.eligible),
+                    restart: true,
+                  }}
                 />
               </div>
             ) : null}

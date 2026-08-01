@@ -4078,8 +4078,114 @@
   margin-top: 0.35rem;
 }
 
-.wb-measure__meta {
-  margin: -0.2rem 0 0.9rem;
+/* The provenance strip (item 7). Reference material, so it reads quiet: mono labels,
+   sans values, no accent border competing with the estimate block below it. A row
+   whose fact the record does not hold dims its value rather than hiding the row —
+   [data-known="no"] is the whole treatment, and it is also what the acceptance board
+   photographs to tell a complete strip from a partial one. */
+.wb-prov {
+  margin: -0.2rem 0 1.1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(242, 232, 220, 0.08);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.3);
+}
+
+.wb-prov__heading {
+  display: block;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(220, 208, 192, 0.62);
+}
+
+.wb-prov__list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.22rem 0.7rem;
+  margin: 0;
+}
+
+.wb-prov__row {
+  display: contents;
+}
+
+.wb-prov__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.04em;
+  color: rgba(220, 208, 192, 0.55);
+  white-space: nowrap;
+}
+
+.wb-prov__value {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(242, 232, 220, 0.88);
+  overflow-wrap: anywhere;
+}
+
+.wb-prov__row[data-known="no"] .wb-prov__value {
+  font-style: italic;
+  color: rgba(220, 208, 192, 0.5);
+}
+
+.wb-prov__note {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: rgba(220, 208, 192, 0.62);
+}
+
+/* The claim-state row (item 7A). Deliberately the same visual family as the unmatched
+   callout it sits beside — both answer "how should I read this comparison?" — but
+   without the ember left border, because the claim state is not a warning. It is the
+   basis, stated, in every state including the good one. */
+.wb-claim {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid rgba(242, 232, 220, 0.1);
+  border-radius: 6px;
+  background: rgba(26, 20, 16, 0.36);
+}
+
+.wb-claim__label {
+  display: inline-block;
+  margin: 0 0 0.3rem;
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(220, 208, 192, 0.72);
+}
+
+.wb-claim[data-claim-state="MATCHED_CONDITIONS"] .wb-claim__label {
+  color: rgba(160, 196, 160, 0.9);
+}
+
+.wb-claim__support {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(220, 208, 192, 0.85);
+}
+
+/* The value close (item 3): one line under the delta rows. */
+.wb-act2__close {
+  margin: 0.95rem 0 0;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: rgba(242, 232, 220, 0.9);
 }
 
 .wb-measure__estimate {
@@ -5472,6 +5578,47 @@
 .wb-loop__panel-body--muted {
   color: var(--ink-dim);
   font-style: italic;
+}
+
+.wb-demo__counts,
+.wb-demo__why {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: rgba(242, 232, 220, 0.82);
+}
+
+/* The four provenance facts. They stack rather than sharing the live strip's
+   two-column grid: these labels are phrases, not field names, and the bodies are
+   sentences, so a nowrap label column would leave the value column unreadable. */
+.wb-prov.wb-demo__prov {
+  margin: 1rem 0 0;
+}
+
+.wb-demo__prov .wb-prov__list {
+  display: block;
+}
+
+.wb-demo__prov .wb-prov__row {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.wb-demo__prov .wb-prov__row:last-child {
+  margin-bottom: 0;
+}
+
+.wb-demo__prov .wb-prov__label {
+  display: block;
+  margin-bottom: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: normal;
+}
+
+.wb-demo__prov .wb-prov__value {
+  font-size: 0.8rem;
 }
 
 .wb-demo__smallprint {

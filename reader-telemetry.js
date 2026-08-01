@@ -97,7 +97,10 @@ const ALLOWED_PROP_KEYS = [
   "occurrence", // stage_entered: which run within this page life — 1, 2, 3…
   "check", // quick | cleaner
   "mode", // own | guided | demo
-  "gap", // integer gap estimate 0-3
+  "surfaced_differences", // integer: canonical probe_surfaced_differences count
+  "gap", // LEGACY analytics continuity only — the retired 0-3 estimate. No surface
+  // renders it and nothing derives a claim from it; it rides along so the existing
+  // funnel series does not break at the cut. surfaced_differences supersedes it.
   "eligible", // boolean: did the run earn an Act 2 offer
   "source", // agent | fallback | demo
   "idempotent", // boolean: replayed paired result

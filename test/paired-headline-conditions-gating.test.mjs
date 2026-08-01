@@ -47,6 +47,7 @@ import {
   LOOP_PANEL_SECOND_LABEL,
   LOOP_DIDNT_COME_UP,
   PAIR_CAPTURE_UI,
+  PAIRED_EMPTY_CLOSE,
 } from "../reader-paired.js";
 import { RECEIPT_BOUNDARY } from "../reader-receipt.js";
 
@@ -226,12 +227,12 @@ test("5) every construct-asserting state is gated, not only GAP_REVEALED", () =>
   assert.equal(matched.headline, LOOP_STATE_COPY[LOOP_STATE_NOT_CLEAR].headline);
 });
 
-test("6) unmatched STILL_MISSING keeps its own headline and never contradicts the \"No material gap\" body", () => {
-  // STILL_MISSING fires only at gap_estimate 0, where the paired analysis returns no delta
-  // items and the panel body reads "No material gap. The direct question surfaced nothing
-  // decision-relevant the first answer left out." Substituting the approved headline here
-  // would assert a difference that run did not find — the same headline-contra-body defect
-  // this gate removes. It is excluded because it asserts no gap, NOT because it is exempt.
+test("6) unmatched STILL_MISSING keeps its own headline and never contradicts the zero-delta body", () => {
+  // STILL_MISSING fires only on a run where the paired analysis returns no delta items,
+  // and the panel body then states that the second answer surfaced nothing the first
+  // left out. Substituting the approved headline here would assert a difference that run
+  // did not find — the same headline-contra-body defect this gate removes. It is excluded
+  // because it asserts no difference, NOT because it is exempt.
   const r = render({ capture: CAPTURE_UNVERIFIED, ...STILL_MISSING_RUN });
   assert.equal(r.userState, LOOP_STATE_STILL_MISSING);
   assert.equal(r.unmatched, true);
@@ -242,9 +243,32 @@ test("6) unmatched STILL_MISSING keeps its own headline and never contradicts th
     !r.headline.includes("Volunteer Gap") && !/included information/.test(r.headline),
     "the zero-delta headline neither names the construct nor asserts an addition",
   );
-  // The body line this headline sits above, verbatim from the component.
-  const BODY = "No material gap. The direct question surfaced nothing decision-relevant the first answer left out.";
-  assert.ok(SRC.includes(BODY), "the zero-delta body line must still exist in the component");
+  // The body line this headline sits above. It has been rewritten twice. It opened as
+  // "No material gap." — a bare verdict. Pass 2B-B item 9 replaced that with a line
+  // that put the absence on the answers ("The second answer surfaced nothing
+  // decision-relevant the first left out"), which is a claim about the two answers
+  // that one probe cannot make. It now lives in reader-paired.js as PAIRED_EMPTY_CLOSE
+  // and the component renders the constant, so this asserts the reference and then the
+  // two things the constant has to keep. The gate is unchanged — the headline still
+  // must not contradict the body.
+  assert.ok(
+    SRC.includes("{PAIRED_EMPTY_CLOSE}"),
+    "the zero-delta body must render from the shared constant, not an inlined string",
+  );
+  const [first, ...rest] = PAIRED_EMPTY_CLOSE.split(". ");
+  assert.ok(
+    /probe|inspection/i.test(first) && !/\banswers?\b/i.test(first),
+    `the absence must be reported about the inspection, not the answers: ${first}`,
+  );
+  assert.ok(
+    rest.join(". ").length > 0 && /complete/i.test(rest.join(". ")),
+    "the second sentence must refuse the completeness reading",
+  );
+  assert.ok(!/No material gap\./.test(SRC), "the bare-verdict opener must not come back");
+  assert.ok(
+    !SRC.includes("surfaced nothing decision-relevant the first left out"),
+    "the answers-as-subject phrasing must not come back",
+  );
   assert.ok(!SRC.includes(`{LOOP_UNMATCHED_HEADLINE}`), "the replacement headline is applied through loopRevealCopy, never inlined");
 });
 

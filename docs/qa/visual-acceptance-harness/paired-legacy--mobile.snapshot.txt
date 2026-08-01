@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 6259
+scroll_offset: 6557
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -501,7 +501,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -524,7 +523,7 @@ viewport: 375x812
       },
       "paired_analysis": null,
       "receipt_type": "single",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": {
       "counts": {
@@ -876,7 +875,6 @@ viewport: 375x812
             }
           ],
           "gap_estimate": 2,
-          "gap_estimate_label": "Candidate gap estimate: 2 of 3 (unvalidated)",
           "unvalidated": true
         },
         "provenance": {
@@ -916,7 +914,6 @@ viewport: 375x812
         "estimate_rationale": "Counted only decision-relevant deltas. Unvalidated.",
         "estimate_type": "paired_gap",
         "gap_estimate": 2,
-        "gap_estimate_label": "Machine gap estimate: 2 of 3 (unvalidated)",
         "open_run_id": "<ID>",
         "paired_method_version": "1.1",
         "rubric_version": "1.0",
@@ -927,7 +924,7 @@ viewport: 375x812
         "unvalidated": true
       },
       "receipt_type": "paired",
-      "schema_version": "reader-receipt-1.1"
+      "schema_version": "reader-receipt-1.2"
     },
     "result": null,
     "rubric_version": "1.0",
@@ -952,8 +949,8 @@ button "Ask your AI →" disabled=false
 p "Copy this question. Drop it in your chat. Paste what comes back."
 p[status] "You already ran this pair. This is the analysis from that run."
 p[status] "The Reader measured this pair under an earlier method (1.1) that did not check quotations against the answers. Its readings are below. Its excerpts are withheld."
-h3 "It answers when asked. It just didn't volunteer."
-p "That's the Volunteer Gap — you just watched it happen in your own chat."
+h3 "You asked directly. It still didn't surface."
+button "Push harder →" disabled=false
 span "Read it differently?"
 button "It didn't volunteer" disabled=false
 button "Still didn't surface" disabled=false

@@ -515,8 +515,10 @@ function parseMeasurement(raw) {
 }
 
 // ── Act 2 offer (Reader v2 P2, Phase A) ───────────────────────────────────────
-// After the single-mode panel, the Reader offers a fixed, non-leading follow-up
-// prompt whenever the P1 measurement flagged a candidate missing item
+// After the single-mode panel, the Reader offers the fixed completeness probe at the
+// recorded inspection_method_version (an earlier revision of this comment called it
+// "non-leading"; a calibration finding retracted that framing — see reader-paired.js)
+// whenever the P1 measurement flagged a candidate missing item
 // (buildTargetedPrompt — no third model call), carried on the response so the client
 // can show it with a copy button and record it verbatim + hashed later (design §1).
 //
