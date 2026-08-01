@@ -59,7 +59,7 @@ import {
   PAIRED_VALUE_CLOSE,
   TARGETED_PROMPT_SOURCE_TYPE,
   TARGETED_PROMPT_TEXT,
-  buildTargetedPrompt,
+  targetedPromptOffer,
 } from "../reader-paired.js";
 
 const SRC = readFileSync(fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)), "utf8");
@@ -233,7 +233,7 @@ test("6) NOT MECHANICALLY EXCLUDED — the probe path is a reported condition, a
   // sentence on two different eligible runs, so the question a person is handed does not
   // vary with what their answer happened to contain.
   const eligible = (item) =>
-    buildTargetedPrompt({ measurement: { findings: [{ type: TARGETED_PROMPT_SOURCE_TYPE, item }] } });
+    targetedPromptOffer({ measurement: { findings: [{ type: TARGETED_PROMPT_SOURCE_TYPE, item }] } });
   const a = eligible("the statutory deadline");
   const b = eligible("the penalty provision");
   assert.equal(a.eligible, true, "the fixture must reach the eligible branch, or this checks nothing");

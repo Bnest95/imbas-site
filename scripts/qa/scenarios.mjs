@@ -33,7 +33,7 @@ import {
   pairedGapEstimateLabel,
 } from "../../reader-receipt.js";
 import {
-  buildTargetedPrompt,
+  targetedPromptOffer,
   PAIRED_METHOD_VERSION,
   ACT2_CAPACITY_COPY,
   deriveConditionsMatched,
@@ -270,8 +270,8 @@ function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_RE
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
   payload.receipt = receipt;
 
-  // Act 2 offer — real construction rule, real version tag.
-  const { eligible, targeted_prompt } = buildTargetedPrompt({ measurement });
+  // Act 2 offer — real eligibility rule, real version tag.
+  const { eligible, targeted_prompt } = targetedPromptOffer({ measurement });
   payload.act2 = {
     eligible,
     available: true,

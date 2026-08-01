@@ -31,7 +31,7 @@ import {
 import { createRuntimeContext } from "../reader-runtime.js";
 import {
   PAIRED_METHOD_VERSION,
-  buildTargetedPrompt,
+  targetedPromptOffer,
   TARGETED_PROMPT_TEXT,
   suggestLoopState,
   buildCleanerBundle,
@@ -90,7 +90,7 @@ const hexId = (seed) => sha256Hex(`openrun:${seed}`).slice(0, 16);
 // A parsed P1 measurement as it sits embedded on the open receipt. With eligible
 // true it carries a candidate missing item (with materiality), the one finding
 // type that makes the offer eligible; with eligible false it carries only a framing
-// issue, so buildTargetedPrompt returns eligible:false and no offer exists.
+// issue, so targetedPromptOffer returns eligible:false and no offer exists.
 function openMeasurement(eligible = true) {
   const findings = eligible
     ? [
@@ -318,21 +318,23 @@ test("PAIRED_PROMPT_VERSION tracks paired_method_version (single source of truth
   assert.equal(PAIRED_METHOD_VERSION, "2.0");
 });
 
-// ── 2. Deterministic prompt construction + hash ───────────────────────────────
+// ── 2. Deterministic prompt selection + hash ──────────────────────────────────
 
-test("buildTargetedPrompt is deterministic: same measurement in, same prompt + hash out", () => {
+test("targetedPromptOffer is deterministic: same measurement in, same prompt + hash out", () => {
   const measurement = openMeasurement(true);
-  const question = "What are the risks of relying on AI for triage?";
-  const a = buildTargetedPrompt({ question, measurement });
-  const b = buildTargetedPrompt({ question, measurement });
+  const a = targetedPromptOffer({ measurement });
+  const b = targetedPromptOffer({ measurement });
   assert.equal(a.eligible, true);
   assert.equal(a.targeted_prompt, b.targeted_prompt);
   assert.equal(sha256Hex(a.targeted_prompt), sha256Hex(b.targeted_prompt));
 });
 
-test("the targeted prompt is the fixed non-leading probe, naming none of the findings", () => {
+// Titled "non-leading probe" until 2B-C. That framing was retracted by a calibration
+// finding (reader-paired.js) and must not return, so the title says what the probe is:
+// fixed.
+test("the targeted prompt is the fixed probe, naming none of the findings", () => {
   const question = "What are the risks of relying on AI for triage?";
-  const { targeted_prompt } = buildTargetedPrompt({ question, measurement: openMeasurement(true) });
+  const { targeted_prompt } = targetedPromptOffer({ measurement: openMeasurement(true) });
   // The fixed probe (paired_method_version 1.1): an eligible run yields exactly the
   // constant, and it must not echo the question or name any measured finding — a
   // probe that listed the omissions would hand the second read its answer.
@@ -346,7 +348,7 @@ test("the targeted prompt is the fixed non-leading probe, naming none of the fin
 });
 
 test("no candidate missing item means no offer: eligible is false and the prompt is empty", () => {
-  const r = buildTargetedPrompt({ question: "q", measurement: openMeasurement(false) });
+  const r = targetedPromptOffer({ measurement: openMeasurement(false) });
   assert.equal(r.eligible, false);
   assert.equal(r.targeted_prompt, "");
 });
@@ -549,8 +551,7 @@ test("endpoint: a happy-path pair renders the delta, labels the estimate, and li
   assert.equal(fields["Estimate Type"], "paired_gap");
   assert.equal(fields["Schema Version"], RECEIPT_SCHEMA_VERSION);
   assert.equal(fields["Targeted Answer Hash"], sha256Hex(TARGETED_ANSWER));
-  const expectedPrompt = buildTargetedPrompt({
-    question: receipt.open_run.question,
+  const expectedPrompt = targetedPromptOffer({
     measurement: receipt.open_run.measurement,
   }).targeted_prompt;
   assert.equal(fields["Targeted Prompt Hash"], sha256Hex(expectedPrompt));

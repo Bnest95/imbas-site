@@ -313,12 +313,32 @@ They are different structures. They disagreed on three of four observed runs. Th
 between them is undocumented. The typed counts are what the interface shows the user.
 Reported observation.
 
-**5. The 1.0-to-1.1 prompt transition has no recorded decision trail.**
-`buildTargetedPrompt` (`reader-paired.js`) reads its `measurement` argument only to decide
-eligibility, then returns the constant `TARGETED_PROMPT_TEXT`. The name says it builds a
-prompt from the measurement. It does not. That misleading name is forensic evidence of an
-undecided transition from a derived prompt to a constant one, not a defect to tidy. Record
-the decision trail before anyone renames the function or touches its argument.
+**5. The 1.0-to-1.1 prompt transition has no recorded decision trail.** — **CLOSED, Pass 2B-C.**
+`buildTargetedPrompt` (`reader-paired.js`) read its `measurement` argument only to decide
+eligibility, then returned the constant `TARGETED_PROMPT_TEXT`. The name said it builds a
+prompt from the measurement. It did not. That misleading name was forensic evidence of an
+undecided transition from a derived prompt to a constant one, not a defect to tidy. This
+item required the decision trail to be recorded before anyone renamed the function or
+touched its argument.
+
+The trail was recorded by the Act 2 ruling in `docs/IMBAS-READER-OUTPUT-DESIGN.md` Part 4,
+adopted 2026-07-26: §1 states that the second question is a fixed completeness probe that
+does not exist to confirm the first inspection, and gives the reason a derived prompt was
+rejected — a derived prompt supplies the answer inside the question. §5 states where
+derived prompts went instead: an explicit verify-this action and instrument-grade protocol
+capture. The transition is decided, dated, and on the record in the file this one names as
+where adopted rulings live.
+
+With that precondition met, Pass 2B-C renamed the function to `targetedPromptOffer` and
+dropped the `question` its callers passed and it never read (`reader-paired.js`,
+`api/read.js`, `api/read-paired.js`, `scripts/qa/scenarios.mjs`). Behavior is unchanged.
+Held by `test/reader-paired.test.mjs` and `test/reader-paired-value-close.test.mjs`.
+
+One conflict is left open rather than resolved here: Act 2 Ruling §1 calls the probe
+"content-neutral" and "non-leading", and the comment at `reader-paired.js` records that a
+calibration finding retracted both framings and that they must not return. The rename uses
+neither word. Which of the two governs the vocabulary is a register-lane question, not a
+naming one.
 
 **6. An undeclared custom property is consumed 14 times.**
 workbench.css references --ink-dim 14 times. The custom property is declared nowhere in the

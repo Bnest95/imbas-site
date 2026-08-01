@@ -97,13 +97,20 @@ function normalizeLineEndings(s) {
 export const TARGETED_PROMPT_TEXT =
   "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.";
 
+// Was `buildTargetedPrompt`, which claimed a construction that never happened: the
+// measurement is read only to decide eligibility, and the text returned is the constant
+// above. The transition from a derived prompt to a fixed one is now on the record —
+// docs/IMBAS-READER-OUTPUT-DESIGN.md Part 4, Act 2 Ruling §1 and §5, adopted
+// 2026-07-26 — which is the precondition the calibration queue set before anyone
+// renamed this. The `question` the callers used to pass was never read, so it is gone.
+//
 // Returns { eligible, targeted_prompt }:
 //   eligible === false  -> the open answer surfaced no Omission, so
 //                          there is nothing to probe; targeted_prompt is "" and the
 //                          offer never renders. Absence never degrades Act 1.
 //   eligible === true   -> targeted_prompt is the line-ending-normalized, trimmed
 //                          probe, ready to display, copy, record verbatim, and hash.
-export function buildTargetedPrompt({ measurement } = {}) {
+export function targetedPromptOffer({ measurement } = {}) {
   const empty = { eligible: false, targeted_prompt: "" };
   if (!measurement || typeof measurement !== "object") return empty;
   const findings = Array.isArray(measurement.findings) ? measurement.findings : [];
@@ -278,7 +285,7 @@ export const CHECK_CLEANER_COPY = { label: "Cleaner check", hint: "Fresh chat. C
 
 // The cleaner-check bundle for a FRESH chat: the original scenario (the open
 // question) followed by the same fixed probe. Deterministic and line-ending
-// normalized, exactly like buildTargetedPrompt, so it can be recorded verbatim.
+// normalized, exactly like targetedPromptOffer, so it can be recorded verbatim.
 export function buildCleanerBundle({ question } = {}) {
   const q = typeof question === "string" ? question.trim() : "";
   const lines = [];
