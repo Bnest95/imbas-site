@@ -6,8 +6,8 @@
 //
 // The bug this guards (seen in production): suggestLoopState picks the loop state from
 // {gap_estimate, signal_counts} alone and never reads conditions_matched, so the headline
-// "It answers when asked. It just didn't volunteer." and the tag "That's the Volunteer Gap
-// — you just watched it happen in your own chat." rendered on runs whose conditions were
+// (then "It answers when asked. It just didn't volunteer.", retired by 2B-C) and the tag
+// "That's the Volunteer Gap — you just watched it happen in your own chat." rendered on runs whose conditions were
 // never confirmed. Only the badge and warning BETWEEN them were gated, so the notice sat
 // sandwiched between an assertion above it and the construct name below it. Meanwhile
 // suggestChipState in the same file DID consult the flag: two lanes, opposite behavior.
@@ -203,13 +203,23 @@ test("3) a missing or absent capture is treated as unmatched (the conservative d
   assert.equal(CAPTURE_EDITED.conditions_matched, false);
 });
 
-test("4) a matched run renders the existing headline and tag, unchanged", () => {
+test("4) a matched run renders the state headline and tag, unchanged", () => {
   const r = render({ capture: CAPTURE_MATCHED, ...GAP_REVEALED_RUN });
   assert.equal(r.unmatched, false);
-  assert.equal(r.headline, "It answers when asked. It just didn't volunteer.");
+  assert.equal(r.headline, "You asked directly. The second answer carried material the first one didn't.");
   assert.equal(r.headline, LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED].headline);
   assert.equal(r.tag, CONSTRUCT_TAG);
   assert.equal(r.tag, "That's the Volunteer Gap — you just watched it happen in your own chat.");
+});
+
+// 2B-C retired the confirmation implication in the matched headline: it no longer tells
+// the person the model had the material all along, which read as Act 2 confirming Act 1.
+// The tag is what names the construct, and it is still the thing the conditions gate.
+test("4b) the matched headline reports the observed difference and confirms no earlier flag", () => {
+  const headline = LOOP_STATE_COPY[LOOP_STATE_GAP_REVEALED].headline;
+  assert.ok(!/volunteer/i.test(headline), "the headline asserts no volunteering behavior");
+  assert.ok(!/\bjust\b/i.test(headline), "the headline does not minimize into a confirmation");
+  assert.ok(/second answer/i.test(headline), "the headline names what it observed");
 });
 
 test("5) every construct-asserting state is gated, not only GAP_REVEALED", () => {

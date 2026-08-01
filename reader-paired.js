@@ -213,9 +213,19 @@ export const PAIRED_EMPTY_CLOSE =
 
 // chip is the one-tap correction label: the short, behavioral name the person taps
 // to declare a different reading than the machine suggested (never an auto-disposition).
+// The chip keeps its volunteering wording on purpose: it is the person's own reading of
+// their own run, not something the Reader asserts.
+//
+// GAP_REVEALED's headline was "It answers when asked. It just didn't volunteer." until
+// 2B-C. It read as Act 2 confirming what Act 1 flagged — the model had it all along, so
+// the flag was right. The adopted Act 2 ruling withdraws that: the two acts are
+// independent passes, and Act 2 surfacing different material than Act 1 flagged is the
+// tool working. The headline now reports only what this pass observed between the two
+// answers, and the tag below it still names the construct, still only under matched
+// conditions.
 export const LOOP_STATE_COPY = {
   [LOOP_STATE_GAP_REVEALED]: {
-    headline: "It answers when asked. It just didn't volunteer.",
+    headline: "You asked directly. The second answer carried material the first one didn't.",
     tag: "That's the Volunteer Gap — you just watched it happen in your own chat.",
     chip: "It didn't volunteer",
   },
@@ -241,10 +251,11 @@ export const LOOP_STATE_COPY = {
 // reveal asserted above and below precisely what the notice was trying to retract.
 export const LOOP_UNMATCHED_HEADLINE = "The targeted answer included information the open answer did not.";
 
-// The states whose headline asserts the construct, so the headline is replaced when
-// the conditions aren't matched. GAP_REVEALED says the model didn't volunteer and
-// names the Volunteer Gap outright. NOT_CLEAR's "the gap isn't clean" presupposes a
-// gap that unmatched conditions cannot establish.
+// The states whose headline claims more than unmatched conditions can carry, so the
+// headline is replaced when the conditions aren't matched. GAP_REVEALED's headline tells
+// the person their own direct ask produced the difference, which presumes the two answers
+// were run the same way. NOT_CLEAR's "the gap isn't clean" presupposes a gap that
+// unmatched conditions cannot establish.
 //
 // STILL_MISSING is deliberately absent, and NOT because it is exempt from the rule.
 // It fires only when no difference survived the surfaced predicate: it

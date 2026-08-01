@@ -3229,8 +3229,8 @@ const readerCreditLine = (shareUrl) =>
 // Confirmation Loop run, STATE-AWARE: the headline and the panel order follow the state
 // the person landed on (or corrected to), mirroring the on-screen reveal (not_clear_yet
 // swaps the two panels). This is a shareable paste artifact, not the audit receipt —
-// behavioral verbs only (the state copy already says "didn't volunteer / didn't
-// surface", never measured/proven), the boundary sentence verbatim, and the run's truth
+// behavioral verbs only (the state copy already says "carried / didn't surface", never
+// measured/proven), the boundary sentence verbatim, and the run's truth
 // small-print in [brackets]. Pure string builder, mirroring formatReaderResultCopy.
 //
 // It takes the ALREADY-RESOLVED copy object, never a bare state: this artifact leaves

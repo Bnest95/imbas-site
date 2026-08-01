@@ -62,10 +62,20 @@ relationship. One number remains, it names its own unit and predicate, and a rea
 check it by counting the rows beneath it. `test/zero-score-language.test.mjs` holds it at
 zero.
 
-**4. Live copy carries a confirmation implication the Act 2 ruling withdraws.**
-The paired headline "It answers when asked. It just didn't volunteer." reads as Act 2
+**4. Live copy carries a confirmation implication the Act 2 ruling withdraws.** — **CLOSED, Pass 2B-C.**
+The paired headline "It answers when asked. It just didn't volunteer." read as Act 2
 confirming what Act 1 flagged. The adopted Act 2 ruling removes that implication: the two
-acts are independent passes and Act 2 does not exist to confirm Act 1. This string is live.
+acts are independent passes and Act 2 does not exist to confirm Act 1.
+
+Replaced in `LOOP_STATE_COPY` (`reader-paired.js`) with "You asked directly. The second
+answer carried material the first one didn't." The headline now reports only what this
+pass observed between the two answers and points at no earlier flag. The tag is what names
+the construct, and the conditions gate on it is unchanged.
+
+Two strings were deliberately left alone. The tag was not in scope for this item. The
+correction chip "It didn't volunteer" stays, because it is the label a person taps to
+declare their own reading of their own run, not a claim the Reader makes. Held by
+`test/paired-headline-conditions-gating.test.mjs`.
 
 **5. The only zero-work entry point fails the legibility bar.** — **CLOSED, Pass 2B-B.**
 The Chevron and Loper Bright demo was the one place a visitor with nothing to paste could
