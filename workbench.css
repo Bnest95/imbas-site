@@ -3876,6 +3876,10 @@
   color: rgba(155, 142, 128, 0.82);
 }
 
+/* `is-muted` is the fallback's own presentation key, rendered where a measured result
+   renders is-full / is-partial / is-thin. It names the treatment; is-fallback names
+   the state. Both land on the same element and both resolve here. */
+.wb-reader-result.is-muted,
 .wb-reader-result.is-fallback {
   border-color: rgba(160, 145, 130, 0.12);
   background: linear-gradient(180deg, rgba(18, 15, 13, 0.94) 0%, rgba(14, 12, 10, 0.96) 100%);
@@ -4210,47 +4214,6 @@
   font-size: 0.9rem;
   line-height: 1.55;
   color: rgba(196, 182, 205, 0.86);
-}
-
-.wb-measure__counts {
-  margin: 0 0 0.85rem;
-  font-family: var(--font-mono);
-  font-size: max(0.68rem, var(--mono-min));
-  letter-spacing: 0.04em;
-  color: rgba(185, 172, 195, 0.78);
-}
-
-/* Reader v2 R1 (item 9) — Gap X-ray. A thin proportional bar rendering the delta's
-   signal composition as a single-glance shape directly above the precise counts
-   line. Segment widths come from flex-grow (set inline from each count); ember-ramp
-   shades only, no second hue. Decorative (aria-hidden); the counts line is the
-   accessible source of truth. A 3px floor keeps a tiny count from vanishing. */
-.wb-xray {
-  display: flex;
-  align-items: stretch;
-  gap: 2px;
-  height: 7px;
-  margin: 0 0 0.5rem;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.wb-xray__seg {
-  flex-basis: 0;
-  min-width: 3px;
-  border-radius: 2px;
-}
-
-.wb-xray__seg.is-omission {
-  background: rgba(222, 111, 56, 0.92);
-}
-
-.wb-xray__seg.is-framing {
-  background: rgba(200, 88, 48, 0.82);
-}
-
-.wb-xray__seg.is-deflection {
-  background: rgba(240, 143, 88, 0.92);
 }
 
 /* Reader v2 R1 (item 10) — Inspection Card export row. Reuses the receipt copy-row

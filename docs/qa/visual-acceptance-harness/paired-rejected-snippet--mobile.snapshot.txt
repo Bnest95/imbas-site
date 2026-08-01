@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 8445
+scroll_offset: 8346
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -1244,7 +1244,6 @@ button "Menu" disabled=false expanded=false
 div "1 difference surfaced"
 p "Differences the second answer surfaced that the Reader could quote from both answers."
 h3 "What the second answer added"
-p "Omission: 1 · Framing Drift: 0 · Deflection: 0"
 span "Omission"
 span "The Reader's reading"
 p "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number."

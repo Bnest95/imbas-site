@@ -202,7 +202,7 @@ item 1, which already carries `inspection.js` for the score and the retired spli
 vocabulary. Adding a third string to that same move costs nothing; moving it early would
 break the carve.
 
-**12. Whether a three-way flag summary is a claim the Reader may make at all.**
+**12. Whether a three-way flag summary is a claim the Reader may make at all.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30, split off from item 8 when that item closed. Item 8 removed the
 verdict from the completeness badge and left the shape: three states, one shown per read.
 What ships is a summary of whether anything came up, not a grade on the answer. Nobody has
@@ -210,8 +210,43 @@ ruled on whether the Reader should summarize at all, or whether the finding list
 the honest surface and any badge above it is a compression that invites the reading the
 copy just stopped making. Register lane.
 
+Ruled: an aggregate across the class vocabulary is not a claim the Reader makes, on any
+user-facing surface. A count a person cannot verify by looking at the screen is the wrong
+thing to show whichever subset produced it. Findings render individually, each carrying its
+own label and the words it was anchored to; the rows are the account.
 
-**13. Two degraded surfaces were saying the run had finished.**
+Two surfaces carried the aggregate and both are gone. `MeasurementPanel` printed a per-class
+tally over the single-answer findings list, and `readerCandidateSummary` enumerated the run
+by class under the hero count; the summary now states the predicate the count counts, in
+plain words. On the paired surface the "Gap X-ray" — a proportional bar with one segment per
+class — and the tally beside it are removed with `GAP_XRAY_SEGMENTS`, `GapXray` and
+`pairedSignalCounts`. The bar drew the delta as a ratio between three names, which is a claim
+about proportions no run measured. `MEASURE_FINDING_LABEL`, a three-entry map in the
+component holding the same strings `describeFinding` already publishes, went with them; the
+row reads `class_display` off the descriptor, so a finding type registered later prints its
+own label with no edit here.
+
+What survives is the count above each list, because it is the number of rows directly
+beneath it and a reader checks it by counting them, and the inspection-state badge, because
+it reports whether anything came up rather than grading what did. Held by
+`test/measurement-panel-generic-rendering.test.mjs` (no `classBreakdown`, no class name, no
+shape id, and every field the rows read is one the descriptor publishes) and by
+`test/surfaced-findings-visible-count.test.mjs` (the hero's number equals the rows on the
+screen). Board baselines re-photographed at both viewports for `single-findings`,
+`single-empty`, `single-empty-read`, `paired-matched`, `paired-unmatched`,
+`paired-rejected-snippet`, `paired-empty`, `provenance-complete` and `provenance-partial`.
+
+One vocabulary collision, recorded because it cost a reading. Item 8's closing uses "three-way
+flag summary" for the BADGE — "What ships is a three-way flag summary, not a three-way grade"
+— and the 2B-C brief uses the same phrase for the per-class TALLY. The tally is what this
+ruling removes. The badge stands, and it has to: the same brief's item 10 permits "the
+neutral inspection-state heading already governed by the queue file" and requires an empty
+share to use "the same NOTHING FLAGGED language as the run surface", which has no referent if
+the badge is gone. Whether the badge itself earns its place is still not ruled on, and is
+still a register-lane question.
+
+
+**13. Two degraded surfaces were saying the run had finished.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30 by the Pass 2B-B correction, found by photographing the states
 rather than by reading the code — which is the argument for photographing them. When
 `/api/read` fails, the client builds a fallback result and the screen showed a banner
@@ -228,6 +263,15 @@ presentation key wearing the name of a measurement field, and the next thing tha
 it by name will make the same mistake in a new place. Renaming it touches the client's
 result shape, so it is not a strings-only change and it did not belong to this
 correction. `test/reader-degraded-states.test.mjs` holds the two surfaces meanwhile.
+
+The remainder is closed in 2B-C, riding the result-shape work. `completeness: "thin"` on the
+fallback is now `display_treatment: "muted"`, and nothing reads it as a measurement:
+`ReaderResultBlock` resolves one `tone` — the presentation key for a fallback, the
+measurement's for a run, never both — and `formatReaderResultCopy` returns the fallback card
+before any lookup can reach the value. `.wb-reader-result.is-muted` joins `.is-fallback` on
+the rule that already carried that treatment, so the class has a home and the pixels do not
+move. `test/reader-degraded-states.test.mjs` still passes unchanged, which is the point: the
+two surfaces it holds were fixed as strings in 2B-B and the rename does not disturb them.
 
 
 ---

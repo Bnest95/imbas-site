@@ -13,9 +13,12 @@
 // FLAGGED on the run cannot land here and read a claim about how complete the answer
 // was, because no surface makes that claim any more.
 
-// Finding class id → display label. Mirrors MEASURE_FINDING_LABEL in the Workbench so
-// a share reads as the same instrument that produced it. Stored share rows carry the
-// older candidate strings, so both spellings resolve to the one shipped name.
+// Stored class string → display label, for the spellings that reach this page. A share
+// row is a wire projection and carries no render descriptor, so the mapping happens
+// here; rows written before the shipped vocabulary carry the older candidate strings,
+// and both spellings resolve to the one name. A string this map does not know prints
+// itself rather than vanishing, which is what keeps the page open to a finding type
+// that did not exist when it was written.
 const MEASURE_FINDING_LABEL = {
   omission: "Omission",
   framing_drift: "Framing Drift",

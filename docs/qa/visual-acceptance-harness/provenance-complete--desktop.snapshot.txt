@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5435
+scroll_offset: 5427
 timezone: UTC
 url: /workbench.html
 viewport: 1440x900
@@ -1297,4 +1297,5 @@ p "Reader inspections are discovery, not evidence. Nothing enters the Imbas reco
 div "2 differences surfaced"
 p "Differences the second answer surfaced that the Reader could quote from both answers."
 h3 "What the second answer added"
-p "Omission: 2 · Framing Drift: 0 · Deflection: 0"
+span "Omission"
+span "The Reader's reading"

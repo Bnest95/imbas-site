@@ -775,14 +775,22 @@ export const SCENARIOS = {
     drivable: true,
     state: "Single mode, Reader result with measurement findings",
     expected:
-      "MEASUREMENT panel renders with the Candidate findings list non-empty: counts read 'Omission: 1 · Framing Drift: 1 · Deflection: 0' and two finding rows are listed with their verbatim anchors.",
+      "MEASUREMENT panel renders with the Candidate findings list non-empty: two finding rows, each with its own signal name and its verbatim anchor, and no tally above them.",
     routes: { "/api/read": singleReadPayload },
     steps: DRIVE_SINGLE,
     // Proof the captured pixels show the state, not just that a file was written.
+    // The per-class tally that used to be asserted here was removed in 2B-C, so what
+    // is asserted is what replaced it: each row's own label, and the sentence only
+    // that row carries. Anchors are deliberately NOT asserted — they are spans of the
+    // pasted answer, which sits on the same page, so a passing anchor assertion would
+    // prove the textarea rendered rather than the row.
     assertText: [
       "MEASUREMENT",
       "Candidate findings",
-      "Omission: 1 · Framing Drift: 1 · Deflection: 0",
+      "Omission",
+      "The deadline is set by state law and varies.",
+      "Framing Drift",
+      "The closing line lowers the stakes of a question the person asked",
     ],
     assertSelector: ".wb-measure__list li.wb-measure__finding",
   },
@@ -796,14 +804,14 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED",
     expected:
-      "The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. Counts read 'Omission: 2 · Framing Drift: 0 · Deflection: 0' — the same collection as the rows. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
+      "The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. The count above the section reads '2 differences surfaced' — a number a person checks by counting the rows, and the tally that used to break it down by class is gone. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
       "What the second answer added",
-      "Omission: 2 · Framing Drift: 0 · Deflection: 0",
+      "2 differences surfaced",
       "The Reader's reading",
       "It runs from 14 days in some states to 60 days in others",
     ],
@@ -826,7 +834,7 @@ export const SCENARIOS = {
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
     assertText: [
       "What the second answer added",
-      "Omission: 2 · Framing Drift: 0 · Deflection: 0",
+      "2 differences surfaced",
       "require the landlord to pay the tenant a penalty",
     ],
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
@@ -843,12 +851,12 @@ export const SCENARIOS = {
     drivable: true,
     state: "Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced",
     expected:
-      "The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The counts read 'Omission: 1 · Framing Drift: 0 · Deflection: 0' against paired-matched's 'Omission: 2'.",
+      "The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The count reads '1 difference surfaced' against paired-matched's '2 differences surfaced'.",
     routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedRejectedPayload },
     steps: drivePaired({ edits: PAIR_EDITS.NONE }),
     capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
     secondAnswer: SYNTHETIC_SECOND_ANSWER,
-    assertText: ["What the second answer added", "Omission: 1 · Framing Drift: 0 · Deflection: 0"],
+    assertText: ["What the second answer added", "1 difference surfaced"],
     assertSelector: ".wb-act2__delta .wb-measure__list li.wb-measure__finding",
     focus: ".wb-act2__delta .wb-measure__list",
   },
@@ -955,12 +963,11 @@ export const SCENARIOS = {
     empty: "single",
     state: "Single mode, a read with no candidate finding — the MEASUREMENT panel's empty state",
     expected:
-      "The counts line reads all zeros and the finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer.",
+      "The finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer, and no zeroed tally standing in for the rows that are not there.",
     routes: { "/api/read": () => singleReadPayload({ measurement: singleEmptyMeasurement(), read: SINGLE_EMPTY_READ }) },
     steps: DRIVE_SINGLE_EMPTY,
     assertText: [
       "MEASUREMENT",
-      "Omission: 0 · Framing Drift: 0 · Deflection: 0",
       "No candidate finding surfaced under the tested conditions.",
     ],
     assertSelector: ".wb-measure__findings .wb-reader-result__empty",

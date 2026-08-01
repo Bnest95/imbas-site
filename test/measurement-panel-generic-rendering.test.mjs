@@ -18,14 +18,21 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { transform } from "esbuild";
 
 import {
+  ANCHOR_REQUIREMENT,
+  ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
+  FINDING_CLASSES,
   SHAPE_PAIRED_COMPARATIVE_CONTRAST,
   SHAPE_PAIRED_OBSERVED_DIFFERENCE,
   SHAPE_SINGLE_CANDIDATE,
+  buildCanonicalResult,
   buildFinding,
   describeFinding,
+  registerFindingShape,
+  selectSubset,
 } from "../reader-result.js";
 
 const SRC = readFileSync(
@@ -64,14 +71,32 @@ const DESCRIPTOR_KEYS = new Set(
 test("the findings list is built from the named subset and the render descriptor", () => {
   assert.match(PANEL, /selectSubset\(canonical, "surfaced_findings"\)/, "list must come from the display subset");
   assert.match(PANEL, /\.map\(describeFinding\)/, "rows must be rendered from describeFinding");
-  assert.match(PANEL, /classBreakdown\(canonical, "surfaced_findings"\)/, "counts must come from the display subset");
-  // recorded_findings is the durable record and holds unresolved material. A row or a
-  // tally drawn from it would put an unquotable finding in front of a person.
+  // recorded_findings is the durable record and holds unresolved material. A row
+  // drawn from it would put an unquotable finding in front of a person.
   assert.equal(
     PANEL.includes("recorded_findings"),
     false,
-    "MeasurementPanel must not list or tally the record subset",
+    "MeasurementPanel must not list the record subset",
   );
+});
+
+// Inverted in 2B-C. This assertion used to REQUIRE a class breakdown here, on the
+// argument that a visible tally must come from the same subset as the rows. The
+// founder ruling (queue item 12) withdraws the tally itself: an aggregate across the
+// class vocabulary is not a claim the Reader makes, on any user-facing surface, and a
+// count a person cannot verify by looking at the screen is the wrong thing to show
+// whichever subset it came from. The rows are the account; each carries its own label
+// and the words it was anchored to.
+test("the panel renders no aggregate across the class vocabulary", () => {
+  assert.equal(PANEL.includes("classBreakdown"), false, "MeasurementPanel must not break findings down by class");
+  for (const label of Object.values(FINDING_CLASSES)) {
+    assert.equal(PANEL.includes(label), false, `MeasurementPanel must not name the class ${label}`);
+  }
+  // The row label came from a three-entry map in the component, keyed by class id, that
+  // held the same strings describeFinding already publishes. A second copy of the
+  // vocabulary is a second place to edit for every new finding type.
+  assert.equal(PANEL.includes("f.class_id"), false, "the row must not key its label off the class id");
+  assert.match(PANEL, /f\.class_display/, "the row label must be the descriptor's own");
 });
 
 test("every finding field the rows read is a key the descriptor publishes", () => {
@@ -91,6 +116,143 @@ test("the rows branch on no shape id, so a newly registered shape needs no edit 
     assert.equal(PANEL.includes(id), false, `MeasurementPanel must not name the shape ${id}`);
   }
   assert.equal(PANEL.includes("f.shape"), false, "MeasurementPanel must not switch on a finding's shape");
+});
+
+// ── The extensibility proof (2B-C §2) ────────────────────────────────────────
+//
+// The three tests above read the component's source and argue from what it does not
+// contain. This one runs it. The panel is compiled out of workbench-app.jsx with the
+// same JSX settings the shipped bundle uses, handed a finding of a kind that did not
+// exist when the panel was written, and its output is read back. Nothing in
+// workbench-app.jsx is touched to make it pass — that is the whole claim.
+//
+// Two axes, and they are not the same axis:
+//
+//   SHAPE — open by design. registerFindingShape is the extension point, and a shape
+//   registered here goes through buildFinding, describeFinding, and the named subsets
+//   untouched by any list of shipped shapes.
+//
+//   CLASS — closed at the construction door. reader-result.js rejects a class outside
+//   Omission / Framing Drift / Deflection, because the vocabulary is a product ruling
+//   and not an architecture affordance. So the class leg is proven where it applies:
+//   at the render layer, by handing the panel a descriptor whose class_display is a
+//   string the vocabulary does not contain and watching it render. That is what "do
+//   not hardcode three classes" means for a view — it reads the label the descriptor
+//   gives it and asks no further questions.
+//
+// This shape and this label are test fixtures. They add no production detector, no
+// public class, no taxonomy term, and no shipped copy.
+const SYNTHETIC_SHAPE = "synthetic_fixture_single_signal";
+const SYNTHETIC_CLASS_DISPLAY = "Fixture Signal";
+
+registerFindingShape({
+  id: SYNTHETIC_SHAPE,
+  surface: "single",
+  label: "A finding type that did not exist when the panel was written",
+  anchors: { [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.REQUIRED },
+  quoted_to_surface: [ARTIFACT_ORIGINAL],
+});
+
+const ANSWER = "The filing window closes ninety days after the notice is served.";
+const QUOTE = "ninety days after the notice is served";
+
+// The panel compiled and evaluated. `h` records the tree instead of building DOM; a
+// stub stands in for each child component, since this is a test of THIS component's
+// rows. The free identifiers are supplied explicitly, so a new one added to the panel
+// makes this fail loudly rather than silently reading undefined.
+async function renderPanel(findings) {
+  const { code } = await transform(`${PANEL}\nreturn MeasurementPanel;`, {
+    loader: "jsx",
+    jsxFactory: "h",
+    jsxFragment: "Frag",
+  });
+  const h = (type, props, ...children) => ({ type, props: props || {}, children });
+  const stub = () => null;
+  const make = new Function(
+    "h",
+    "Frag",
+    "selectSubset",
+    "describeFinding",
+    "ARTIFACT_ORIGINAL",
+    "ANCHOR_STATUS",
+    "RECEIPT_BOUNDARY",
+    "ProvenanceStrip",
+    "ReaderReceiptActions",
+    code,
+  );
+  const Panel = make(
+    h,
+    "Frag",
+    () => findings,
+    (f) => f,
+    ARTIFACT_ORIGINAL,
+    ANCHOR_STATUS,
+    "boundary",
+    stub,
+    stub,
+  );
+  return Panel({ result: { measurement: {}, result: {} }, context: {} });
+}
+
+function textOf(node, out = []) {
+  if (node == null || node === false) return out;
+  if (Array.isArray(node)) {
+    for (const n of node) textOf(n, out);
+    return out;
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    out.push(String(node));
+    return out;
+  }
+  if (node.children) textOf(node.children, out);
+  return out;
+}
+
+test("a finding of a kind the panel has never seen renders through it unedited", async () => {
+  const finding = buildFinding({
+    index: 0,
+    shape: SYNTHETIC_SHAPE,
+    class_label: "omission",
+    statement: "The answer does not state the filing window.",
+    materiality: "A reader who misses this misses the deadline.",
+    quotations: { [ARTIFACT_ORIGINAL]: QUOTE },
+    artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
+  });
+  const canonical = buildCanonicalResult({ surface: "single", findings: [finding] });
+
+  // The synthetic shape reaches the display subset on its own registered contract,
+  // with no entry for it anywhere in reader-result.js's shipped list.
+  assert.equal(selectSubset(canonical, "surfaced_findings").length, 1);
+
+  const described = describeFinding(finding);
+  const text = textOf(await renderPanel([described])).join(" ");
+  assert.match(text, /A reader who misses this misses the deadline\./, "the row must carry the finding");
+  assert.match(text, new RegExp(`"${QUOTE}"`), "the row must quote the anchored text");
+  assert.doesNotMatch(text, /No candidate finding surfaced/, "the panel must not report an empty list");
+});
+
+test("the row prints whatever label the descriptor gives it, inside the vocabulary or outside it", async () => {
+  const inside = describeFinding(
+    buildFinding({
+      index: 0,
+      shape: SYNTHETIC_SHAPE,
+      class_label: "omission",
+      statement: "A statement.",
+      quotations: { [ARTIFACT_ORIGINAL]: QUOTE },
+      artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
+    }),
+  );
+  assert.match(textOf(await renderPanel([inside])).join(" "), /Omission/);
+
+  // Same descriptor, one field changed. The construction door will not mint a class
+  // outside the vocabulary, so the substitution happens here — which is precisely the
+  // layer the claim is about. A view that branched on the three names would drop this
+  // row or print the wrong word; this one prints what it was handed.
+  const outside = { ...inside, class_id: "fixture_signal", class_display: SYNTHETIC_CLASS_DISPLAY };
+  assert.equal(Object.values(FINDING_CLASSES).includes(SYNTHETIC_CLASS_DISPLAY), false);
+  const text = textOf(await renderPanel([outside])).join(" ");
+  assert.match(text, new RegExp(SYNTHETIC_CLASS_DISPLAY), "the row must print the label it was given");
+  assert.match(text, new RegExp(`"${QUOTE}"`), "the row must still quote the anchored text");
 });
 
 test("the legacy measurement fields are gone from the rows", () => {
