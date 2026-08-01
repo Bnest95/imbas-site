@@ -131,18 +131,25 @@ function mastHtml(mode) {
 //
 // A section with nothing in it prints why it has nothing. Rendering it as an empty list
 // would say Imbas looked and found none, and for sources that is not what happened.
+//
+// Quotation marks are reserved for the answer's own words. A line Imbas wrote — the
+// limits under "What Imbas could not observe" — is set as a statement, because the same
+// treatment for both would put our sentences in the system's mouth on the one page whose
+// promise is that a reader can tell them apart.
+function receiptItemHtml(item) {
+  const label = item.label ? `<span class="insp-receipt__item-label">${escapeHtml(item.label)}</span>` : "";
+  const body =
+    item.kind === "QUOTED"
+      ? `<blockquote class="insp-receipt__quote">"${escapeHtml(item.text)}"</blockquote>`
+      : `<p class="insp-receipt__statement">${escapeHtml(item.text)}</p>`;
+  return `<li class="insp-receipt__item">${label}${body}</li>`;
+}
+
 function receiptSectionHtml(section) {
   const items = Array.isArray(section.items) ? section.items : [];
   const note = (section.note || "").trim();
   const body = items.length
-    ? `<ul class="insp-receipt__items">${items
-        .map(
-          (i) => `<li class="insp-receipt__item">
-            ${i.label ? `<span class="insp-receipt__item-label">${escapeHtml(i.label)}</span>` : ""}
-            <blockquote class="insp-receipt__quote">"${escapeHtml(i.text)}"</blockquote>
-          </li>`,
-        )
-        .join("")}</ul>`
+    ? `<ul class="insp-receipt__items">${items.map(receiptItemHtml).join("")}</ul>`
     : "";
   return `
     <article class="insp-receipt__section" data-state="${escapeHtml(section.state || "")}">

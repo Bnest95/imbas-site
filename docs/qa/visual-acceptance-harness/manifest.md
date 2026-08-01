@@ -1,5 +1,11 @@
 # Visual acceptance manifest
 
+> **STALE — do not read the checksums below as current.** 62 images sit in this directory. This manifest describes 48 of them, and only 14 of those 48 checksums still match the file next to it. The 14 share scenarios are absent from it entirely.
+>
+> Nothing here is wrong by accident. `--update <scenario>` refuses to rewrite the manifest when the run did not re-capture every image, because rewriting it from a partial run would silently drop the images that run did not touch. Two passes have now accepted baselines one scenario at a time under a scope rule that forbids a broad update, so the manifest has fallen behind twice by design.
+>
+> It is refreshed by one full capture of the whole board, which rewrites every baseline. That is a decision about baselines, not about documentation, so it is not taken here. Until then, the images and their `*.snapshot.txt` files are the record; this document is accurate on policy, environment and coverage, and out of date on checksums and byte counts.
+
 captured_against_sha: `da08ce44a8b3ffc6130deb769a139169551f8eea`
 
 **These images were captured against commit `da08ce44a8b3ffc6130deb769a139169551f8eea` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.

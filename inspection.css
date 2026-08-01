@@ -232,6 +232,8 @@
   color: rgba(185, 172, 195, 0.72);
 }
 
+/* The answer's words. Quoted, italic, serif, rule down the left: the whole treatment
+   says "someone else said this". Nothing Imbas writes may borrow it. */
 .insp-receipt__quote {
   margin: 0;
   padding: 0.35rem 0 0.35rem 0.75rem;
@@ -241,6 +243,16 @@
   font-size: 0.92rem;
   line-height: 1.55;
   color: rgba(205, 192, 176, 0.88);
+}
+
+/* Imbas's own line — a limit, not a quotation. Set in the page's reading face with no
+   quote marks and no rule, so a reader never has to work out who is speaking. */
+.insp-receipt__statement {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: max(0.875rem, 14px);
+  line-height: 1.55;
+  color: rgba(200, 186, 170, 0.88);
 }
 
 /* The section that states no observations at all carries no list, so its note is the

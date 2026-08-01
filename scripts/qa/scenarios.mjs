@@ -31,6 +31,7 @@ import {
   buildPairedReceipt,
   canonicalizeForHash,
   pairedGapEstimateLabel,
+  RECEIPT_BOUNDARY,
 } from "../../reader-receipt.js";
 import {
   targetedPromptOffer,
@@ -60,6 +61,7 @@ import {
 } from "../../reader-result.js";
 import { CLAIM_STATE, describeClaimState, describeProvenance } from "../../reader-provenance.js";
 import { buildCanonicalSingle } from "../../api/read.js";
+import { recordToPublic } from "../../api/inspection-share.js";
 import {
   buildCanonicalPaired,
   parsePairedMeasurement,
@@ -653,6 +655,110 @@ export function neverResolves() {
 export const isInjectedResponse = (v) =>
   !!v && typeof v === "object" && (v[INJECT_HTTP] === true || v[INJECT_HANG] === true);
 
+// ── The published share, as the server would publish it ──────────────────────
+//
+// A share page is not the Workbench. It renders from a stored Airtable row projected
+// by recordToPublic, and the projection is where the interesting decisions live: what
+// a P4 share carries, what it deliberately does not, and what the dated receipt says
+// about each. So the fixture here is the ROW, and the projection is the real one —
+// imported and called, not transcribed. A hand-written projection would be able to
+// show the page a field the server withholds, which is the one failure a share board
+// exists to catch.
+//
+// The dates are fixed strings, not `new Date()`. The receipt renders the capture date
+// into a sentence on screen, so a clock-derived fixture would rewrite every share
+// baseline daily and bury a real regression in the noise.
+const SHARE_ID = "Ab3xQ7zK9mNpR2sTuV4w";
+const SHARE_CAPTURED_AT = "2026-07-09T14:20:00.000Z";
+const SHARE_CREATED_AT = "2026-07-09T14:31:00.000Z";
+const SHARE_MODEL = "ChatGPT";
+
+// The excerpts a P4 share publishes are spans of the person's answer, and this is the
+// answer the rest of the board pastes. Every anchor below is verbatim in it, and
+// assertScenarioIntegrity holds them to that — the share page publishes the excerpt
+// WITHOUT the answer it came from, so a reader has nothing on the page to check it
+// against, and a drifted quote would be invisible in the pixels.
+const SHARE_FINDINGS = [
+  {
+    type: "Omission",
+    materiality: "The deadline is set by state law and varies.",
+    anchor: "A landlord must return a security deposit within 30 days of the tenant moving out.",
+  },
+  {
+    type: "Framing Drift",
+    materiality: "The closing line lowers the stakes of a question the person asked.",
+    anchor: "so there is usually nothing to worry about",
+  },
+];
+
+const SHARE_DELTA_ITEMS = [
+  {
+    signal_pattern: "Omission",
+    point: "The second answer named the penalty the first left out.",
+    open_side: "A landlord must return a security deposit within 30 days of the tenant moving out.",
+    targeted_side: "Several states also require the landlord to pay the tenant a penalty",
+  },
+];
+
+export function shareRow(overrides = {}) {
+  return {
+    "Share ID": SHARE_ID,
+    Mode: "single",
+    Question: SYNTHETIC_QUESTION,
+    "Findings JSON": JSON.stringify(SHARE_FINDINGS),
+    "Captured At": SHARE_CAPTURED_AT,
+    "AI Model": SHARE_MODEL,
+    "Created At": SHARE_CREATED_AT,
+    Visibility: "unlisted",
+    "Reviewed Status": "Unreviewed",
+    ...overrides,
+  };
+}
+
+// What GET /api/inspection/<id> answers with. The endpoint's own projection, so this
+// cannot show a field the endpoint withholds.
+export const sharePayload = (overrides = {}) => ({
+  ok: true,
+  record: recordToPublic(shareRow(overrides), SHARE_ID),
+});
+
+// The route the page fetches. The stub matches by exact pathname, so the id in the
+// route and the id in the URL have to be the same string.
+export const SHARE_ROUTE = `/api/inspection/${SHARE_ID}`;
+export const SHARE_PAGE = "/inspection.html";
+export const SHARE_QUERY = `share=${SHARE_ID}`;
+
+// The boundary line, asserted on every share scenario that renders a record. It comes
+// from the one place the product builds it, so a board that says it is present cannot
+// be asserting a string the product stopped emitting.
+const SHARE_BOUNDARY_SENTENCE = RECEIPT_BOUNDARY;
+
+// A paired share leaves `AI Model` empty: Reader Paired Analyses has no model field, so
+// there is no declared system to copy at mint. This is the receipt's degraded anchor —
+// the date is known and the system is not — and it is on the board because the failure
+// it guards against is a dangling sentence, which only a picture shows.
+const PAIRED_SHARE_ROW = {
+  Mode: "paired",
+  "Findings JSON": JSON.stringify(SHARE_DELTA_ITEMS),
+  "AI Model": "",
+};
+
+// A pre-P4 row: no Mode, a stored full answer, and the retired Completeness rating the
+// projection still carries and the page no longer renders. The published record keeps
+// saying what it said; the page stops repeating the retired part.
+const LEGACY_SHARE_ROW = {
+  Mode: "",
+  Question: SYNTHETIC_QUESTION,
+  Answer: SYNTHETIC_ANSWER,
+  Completeness: "thin",
+  "The Read": "The answer gives the general rule and stops before the part that decides the outcome.",
+  "What Was Left Out": "The statutory deadline\nThe penalty for missing it\nWhere to file",
+  "How It Was Shaped": "It closes by describing the delay as ordinary.",
+  "Findings JSON": "",
+  "Captured At": "",
+  "AI Model": "",
+};
+
 // ── Drive steps ──────────────────────────────────────────────────────────────
 // A step is one of:
 //   { fill: selector, text }        set a React-controlled input (native setter + input event)
@@ -755,6 +861,25 @@ const DRIVE_IN_FLIGHT = [...DRIVE_SINGLE_SUBMIT, { waitForText: IN_FLIGHT_TERMIN
 // A request that came back refused. The fallback banner is what proves the client took
 // the failure branch rather than rendering an empty result.
 const DRIVE_FAILED_READ = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-reader-result__fallback" }];
+
+// The consent dialog. It is the last screen before anything is published, and it is
+// the only place a person is told by name what the page will carry — so it is on the
+// board for the same reason the share page is: the disclosure and the published page
+// have to agree, and two images side by side is how a reviewer checks that.
+const DRIVE_SHARE_CONSENT = [
+  ...DRIVE_SINGLE,
+  { click: ".wb-reader-share__btn" },
+  { waitFor: ".wb-share-consent__panel" },
+];
+
+// ── Share page drive steps ───────────────────────────────────────────────────
+//
+// The share page is a classic script, not the React app: it reads the id off the URL,
+// fetches once, and replaces a loading line with the record. There is nothing to click.
+// Each wait names the element that proves the record rendered rather than the spinner.
+const DRIVE_SHARE_RECORD = [{ waitFor: ".insp-record__mast" }];
+const DRIVE_SHARE_RECEIPT = [{ waitFor: ".insp-receipt__closing" }];
+const DRIVE_SHARE_ERROR = [{ waitFor: ".insp-error" }];
 
 const PUBLIC_EXAMPLE_ASSERTIONS = [
   PUBLIC_EXAMPLE.question,
@@ -1299,6 +1424,182 @@ export const SCENARIOS = {
     assertSelector: ".wb-reader-result__fallback",
     focus: ".wb-reader-result",
   },
+
+  // ── The published record ───────────────────────────────────────────────────
+  //
+  // Everything above is a screen someone is looking at while they work. These are the
+  // page that outlives the session: a permanent, dated, publicly linkable record of one
+  // capture. It is the only Imbas surface a stranger can arrive at cold, with no idea
+  // what the Reader is, and it is the surface whose promise is hardest to keep — the
+  // record does not change — so it is the one that most needs a picture on file.
+  //
+  // These are the first board scenarios that are not the Workbench. The page is named
+  // per scenario and the readiness rule is the page's, not React's; see PAGE_READINESS
+  // in visual-acceptance.mjs.
+
+  // The ordinary published share, top of page: masthead, the dated anchor line, the
+  // question, and the findings each with the excerpt it points to.
+  "share-single": {
+    name: "share-single",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    state: "A published single-mode share, at the top of the record",
+    expected:
+      "The anchor line names the capture date and the declared system and then says the record does not change. Below it the question, then the findings, each with its own signal name and the short excerpt it points to. No score, no rating and no tally appears anywhere — the retired figure is gone from the page, not merely from new rows.",
+    routes: { [SHARE_ROUTE]: () => sharePayload() },
+    steps: DRIVE_SHARE_RECORD,
+    assertText: [
+      "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't.",
+      "Workbench inspection",
+      "Unlisted · Unreviewed",
+      "Candidate findings",
+      "Omission",
+      "Framing Drift",
+      SHARE_BOUNDARY_SENTENCE,
+    ],
+    assertSelector: ".insp-record__anchor",
+    focus: ".insp-record__anchor",
+  },
+
+  // The same page, framed on the receipt. This is the part of the record that states
+  // what was observed and what was not, so it is photographed on its own rather than
+  // caught at the bottom of a frame aimed at something else. "What sources appeared"
+  // stands here as NOT_CAPTURED with a sentence saying so — the thing this section
+  // exists to prevent is a blank that reads as "we looked and there were none".
+  "share-receipt": {
+    name: "share-receipt",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    state: "The dated capture receipt on a published share — three sections and the closing block",
+    expected:
+      "Three sections in fixed order: what the system said, what sources appeared, what Imbas could not observe. The sources section is stated as uncaptured in words rather than left blank, because a blank cannot tell a reader whether Imbas looked. The closing block is last and is the same block on every receipt: what this record does not establish — no cause, no intent, no completeness.",
+    routes: { [SHARE_ROUTE]: () => sharePayload() },
+    steps: DRIVE_SHARE_RECEIPT,
+    assertText: [
+      "What the AI system said",
+      "What sources appeared",
+      "Imbas did not capture the sources behind this answer.",
+      "What Imbas could not observe",
+      "What this record does not establish",
+    ],
+    assertSelector: ".insp-receipt__closing",
+    focus: ".insp-receipt",
+  },
+
+  // Nothing surfaced, and the record still has to say so in words. The findings panel
+  // carries the run surface's own empty line, and the receipt's first section turns
+  // NOT_CAPTURED — an inspection that flagged nothing preserved no excerpt, and the
+  // section says that rather than rendering an empty list.
+  "share-single-empty": {
+    name: "share-single-empty",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    empty: "share",
+    state: "A published share where nothing surfaced",
+    expected:
+      "The findings panel carries the same empty sentence the run surface used, word for word, so a visitor who read it on the run does not meet a differently-confident version of it here. In the receipt, the section that would hold preserved excerpts states that none were preserved instead of standing empty.",
+    routes: { [SHARE_ROUTE]: () => sharePayload({ "Findings JSON": "[]" }) },
+    steps: DRIVE_SHARE_RECORD,
+    assertText: [
+      "No candidate finding surfaced under the tested conditions.",
+      "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't.",
+      SHARE_BOUNDARY_SENTENCE,
+    ],
+    assertSelector: ".wb-measure__findings .wb-reader-result__empty",
+    focus: ".wb-measure__findings",
+  },
+
+  // The degraded anchor. A paired share has no declared system to copy at mint, so the
+  // date is known and the system is not. The sentence has to stay a sentence — this is
+  // the image that would show a dangling fragment if the degraded form ever broke.
+  "share-paired-no-model": {
+    name: "share-paired-no-model",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    state: "A published two-question share whose answering system was never recorded",
+    expected:
+      "The anchor reads as a whole sentence with the system stated as unrecorded, not as a fragment with an empty slot where a model name would go. Imbas does not fill it in and does not infer it. Below, the delta rows quote both sides.",
+    routes: { [SHARE_ROUTE]: () => sharePayload(PAIRED_SHARE_ROW) },
+    steps: DRIVE_SHARE_RECORD,
+    assertText: [
+      "Captured 9 July 2026. The answering system was not recorded. Answers change; this record doesn't.",
+      "Workbench two-question test",
+      "What the second answer added",
+      SHARE_BOUNDARY_SENTENCE,
+    ],
+    assertSelector: ".insp-record__anchor",
+    focus: ".insp-record__anchor",
+  },
+
+  // A record published before the format changed. The stored rating survives in the row
+  // and the page stops repeating it, which is a different act from deleting it: the
+  // record keeps saying what it said, and the notice above says why part of it is gone.
+  "share-legacy": {
+    name: "share-legacy",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    state: "A share published under the earlier format, with the retired rating withheld",
+    expected:
+      "An archival notice stands where the completeness badge used to, saying in words that the earlier format rated how complete an answer was, that the rating is retired and not shown, and that everything else is preserved as published. No rating word appears anywhere on the page. This is the one mode that still renders the stored full answer, because that is what those records were published with.",
+    routes: { [SHARE_ROUTE]: () => sharePayload(LEGACY_SHARE_ROW) },
+    steps: DRIVE_SHARE_RECORD,
+    assertText: [
+      "This inspection was published under an earlier Reader format that rated how complete an answer was.",
+      "That rating is retired and is not shown.",
+      "THE READER",
+      "What was left out",
+      SHARE_BOUNDARY_SENTENCE,
+    ],
+    assertSelector: ".wb-reader-result__archival-notice",
+    focus: ".wb-reader-result__archival-notice",
+  },
+
+  // The link that does not resolve. A permanent link people paste into places Imbas
+  // never sees will eventually be followed after the record is gone, and the page owes
+  // that visitor a plain answer and a way onward rather than a blank or a stack trace.
+  "share-not-found": {
+    name: "share-not-found",
+    drivable: true,
+    page: SHARE_PAGE,
+    query: SHARE_QUERY,
+    failure: "error",
+    state: "A share link that resolves to nothing — the degraded share surface",
+    expected:
+      "One plain heading, one sentence allowing both readings — wrong link, or removed share — and two ways onward. The page claims nothing about which of the two happened, because it does not know.",
+    routes: { [SHARE_ROUTE]: () => httpFailure({ status: 404, body: { ok: false, error: "not_found" } }) },
+    steps: DRIVE_SHARE_ERROR,
+    assertText: ["Inspection not found.", "This link may be incorrect, or the share was removed."],
+    assertSelector: ".insp-error",
+    focus: ".insp-error",
+  },
+
+  // The screen before anything is published, and the only place a person is told by
+  // name what the page will carry. It is on the board so the disclosure and the
+  // published page can be checked against each other as two images rather than two
+  // readings of the same file.
+  "share-consent": {
+    name: "share-consent",
+    drivable: true,
+    state: "The pre-publish consent dialog, single mode",
+    expected:
+      "The dialog names what the page will show, item by item: the question, the capture date and the declared system, each candidate gap with its excerpt, and the boundary line. It states in its own sentence that the full answer is not published. Nothing has been created at this point — the create button is still unpressed, and both Cancel and the backdrop dismiss without publishing.",
+    routes: { "/api/read": singleReadPayload },
+    steps: DRIVE_SHARE_CONSENT,
+    assertText: [
+      "Share this inspection",
+      "This creates an unlisted public page containing the question and the evidence shown below.",
+      "the date this answer was captured and the AI system you named",
+      "It will not show your full answer — only the short excerpts above.",
+      "Create share link",
+    ],
+    assertSelector: ".wb-share-consent__panel",
+    focus: ".wb-share-consent__panel",
+  },
 };
 
 // Resolve a scenario's route table to concrete payloads.
@@ -1521,6 +1822,51 @@ export function assertScenarioIntegrity(scenario) {
     }
   } else if (scenario.claimState) {
     problems.push("scenario declares a claim state but stubs no paired route; nothing would produce one");
+  }
+
+  // The published share. Three failures are possible here that no other fixture can
+  // have, and none of them would be visible in the pixels.
+  //
+  // The first is a published excerpt that is not verbatim in the answer it was taken
+  // from. Everywhere else on the board the answer sits on the same page, so a drifted
+  // quote is at least checkable by eye; a share deliberately withholds the answer, so
+  // the only place that check can live is here.
+  //
+  // The second is the retired score coming back. It would ride in on the row, and the
+  // whole point of the projection is that it does not reach the page — a fixture whose
+  // projection carried it would photograph a compliant page while the endpoint was not.
+  //
+  // The third is an empty declaration that means nothing, so `empty: "share"` is held
+  // in both directions like the others.
+  const share = isInjectedResponse(payloads[SHARE_ROUTE]) ? null : payloads[SHARE_ROUTE];
+  if (share) {
+    const rec = share.record || {};
+    for (const key of ["gap_estimate", "gap_estimate_label"]) {
+      if (key in rec) problems.push(`share projection carries ${key}; the retired score reached the page`);
+    }
+    const anchors = [
+      ...(rec.findings || []).map((f) => ["finding anchor", f.anchor]),
+      ...(rec.delta_items || []).flatMap((d) => [
+        ["delta open side", d.open_side],
+        ["delta targeted side", d.targeted_side],
+      ]),
+    ];
+    const artifacts = `${SYNTHETIC_ANSWER}\n${SYNTHETIC_SECOND_ANSWER}`;
+    for (const [label, text] of anchors) {
+      if (text && !artifacts.includes(text)) {
+        problems.push(`share ${label} is not verbatim in the synthetic answers: ${JSON.stringify(text)}`);
+      }
+    }
+    if (!rec.boundary) problems.push("share projection carries no boundary sentence");
+    const published = (rec.findings || []).length + (rec.delta_items || []).length;
+    if (scenario.empty === "share" && published !== 0) {
+      problems.push(`scenario declares an empty share but the projection publishes ${published} item(s)`);
+    }
+    if (scenario.empty !== "share" && rec.mode !== "legacy" && published === 0) {
+      problems.push("share projection publishes nothing but the scenario does not declare an empty share");
+    }
+  } else if (scenario.empty === "share") {
+    problems.push("scenario declares an empty share but stubs no share route");
   }
 
   return problems;

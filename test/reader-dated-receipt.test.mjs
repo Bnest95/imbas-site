@@ -18,11 +18,13 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   describeReceipt,
   describeAnchor,
   formatCaptureDate,
+  ITEM,
   OBSERVATION,
   RECEIPT_ANCHOR_TAIL,
   RECEIPT_CLOSING,
@@ -193,7 +195,9 @@ test("a preserved source artifact renders without the section being rewritten", 
   );
   const sources = section(withSource, "sources");
   assert.equal(sources.state, OBSERVATION.OBSERVED);
-  assert.deepEqual(sources.items, [{ label: "Cited", text: "state landlord-tenant statute" }]);
+  assert.deepEqual(sources.items, [
+    { kind: ITEM.QUOTED, label: "Cited", text: "state landlord-tenant statute" },
+  ]);
 });
 
 test("what the system said is the preserved spans, and says so rather than passing for the answer", () => {
@@ -206,9 +210,48 @@ test("what the system said is the preserved spans, and says so rather than passi
   // permanent record is two claims a stranger cannot tell apart.
   const pairedSaid = section(describeReceipt(pairedRecord()), "said");
   assert.deepEqual(pairedSaid.items, [
-    { label: "First answer", text: "open span" },
-    { label: "Second answer", text: "targeted span" },
+    { kind: ITEM.QUOTED, label: "First answer", text: "open span" },
+    { kind: ITEM.QUOTED, label: "Second answer", text: "targeted span" },
   ]);
+});
+
+// Found in the pixels, not in the source: the acceptance board's first capture of this
+// page showed the four limits set in quotation marks and italic serif, identical to the
+// preserved spans two sections above. On a page whose entire promise is that a reader
+// can tell the answer's words from ours, that put our sentences in the system's mouth.
+test("the answer's words are quoted and Imbas's own words are not", () => {
+  const receipt = describeReceipt(singleRecord({ sources: [{ label: "Cited", text: "a statute" }] }));
+  const kinds = (id) => section(receipt, id).items.map((i) => i.kind);
+  assert.deepEqual(kinds("said"), [ITEM.QUOTED, ITEM.QUOTED], "preserved spans are the answer's words");
+  assert.deepEqual(kinds("sources"), [ITEM.QUOTED], "a preserved source artifact is the answer's words too");
+  assert.ok(
+    kinds("not_observed").every((k) => k === ITEM.STATED),
+    "every limit is Imbas speaking and must not be dressed as a quotation",
+  );
+});
+
+test("an item that claims nothing is treated as ours, not as the answer's", () => {
+  // Quotation marks are opt-in, so a section added later cannot acquire them by
+  // omission. The failure this closes is silent: the wrong default renders correctly
+  // and misattributes.
+  const receipt = describeReceipt({
+    ...singleRecord({ findings: [] }),
+    sources: [{ text: "no kind declared" }],
+  });
+  assert.deepEqual(section(receipt, "sources").items.map((i) => i.kind), [ITEM.QUOTED]);
+  const forged = describeReceipt({ ...singleRecord({ findings: [] }), sources: [] });
+  assert.ok(section(forged, "not_observed").items.every((i) => i.kind === ITEM.STATED));
+});
+
+test("the render quotes only what the receipt marked as quoted", () => {
+  const js = readFileSync(new URL("../inspection.js", import.meta.url), "utf8");
+  const fn = /function receiptItemHtml\(item\)\s*\{([\s\S]*?)\n\}/.exec(js);
+  assert.ok(fn, "inspection.js must decide an item's treatment in one named place");
+  assert.match(fn[1], /QUOTED/, "the quoted treatment is gated on the item's own kind");
+  assert.match(fn[1], /insp-receipt__quote/);
+  assert.match(fn[1], /insp-receipt__statement/);
+  const css = readFileSync(new URL("../inspection.css", import.meta.url), "utf8");
+  assert.match(css, /\.insp-receipt__statement\s*\{/, "the statement treatment is a real rule, not a fallback");
 });
 
 test("a paired receipt names no answering system, because the capture records none", () => {
@@ -252,7 +295,7 @@ test("the closing block refuses causation, intent, completeness, and authorship"
   const joined = RECEIPT_CLOSING.items.join(" ");
   assert.match(joined, /not what produced it/, "no causation");
   assert.match(joined, /behavior does not carry motive/, "no intent");
-  assert.match(joined, /Whether the answer was complete/, "no completeness");
+  assert.match(joined, /How much the answer left out/, "no completeness");
   assert.match(joined, /the person running the inspection reported/, "attribution per its source");
 });
 

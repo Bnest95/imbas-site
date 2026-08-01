@@ -36,6 +36,15 @@ export const OBSERVATION = Object.freeze({
   NOT_CAPTURED: "NOT_CAPTURED",
 });
 
+// Whether a line is the answer's words or ours. The receipt sets preserved spans in
+// quotation marks, and without this the limits in "What Imbas could not observe" get
+// the same treatment — Imbas's own sentences rendered as though the system had said
+// them, on the one page whose entire promise is that a reader can tell the difference.
+export const ITEM = Object.freeze({
+  QUOTED: "QUOTED",
+  STATED: "STATED",
+});
+
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 const list = (v) => (Array.isArray(v) ? v : []);
 
@@ -88,8 +97,8 @@ export function describeAnchor(record) {
 // ── The sections ─────────────────────────────────────────────────────────────
 //
 // Each entry reads the record and returns { state, items, note }. `items` is a list of
-// { label, text } — label names which side a quoted span came from and is omitted when
-// there is only one side to name.
+// { kind, label, text } — label names which side a quoted span came from and is omitted
+// when there is only one side to name; kind says whose words these are.
 
 // What the record preserved of the answer itself: the quoted spans the findings point
 // at, and never the whole answer. That is not a shortcoming to apologise for, it is the
@@ -99,13 +108,13 @@ function readWhatWasSaid(record) {
   const spans = [];
   for (const f of list(record.findings)) {
     const t = str(f && f.anchor);
-    if (t) spans.push({ label: "", text: t });
+    if (t) spans.push({ kind: ITEM.QUOTED, label: "", text: t });
   }
   for (const d of list(record.delta_items)) {
     const open = str(d && d.open_side);
     const targeted = str(d && d.targeted_side);
-    if (open) spans.push({ label: "First answer", text: open });
-    if (targeted) spans.push({ label: "Second answer", text: targeted });
+    if (open) spans.push({ kind: ITEM.QUOTED, label: "First answer", text: open });
+    if (targeted) spans.push({ kind: ITEM.QUOTED, label: "Second answer", text: targeted });
   }
   if (!spans.length) {
     return {
@@ -129,7 +138,7 @@ function readSources(record) {
   const sources = [];
   for (const s of list(record.sources)) {
     const text = str(typeof s === "string" ? s : s && s.text);
-    if (text) sources.push({ label: str(s && s.label), text });
+    if (text) sources.push({ kind: ITEM.QUOTED, label: str(s && s.label), text });
   }
   if (!sources.length) {
     return {
@@ -148,27 +157,36 @@ function readSources(record) {
 // The limits, stated as limits. Every line here is something a reader might otherwise
 // assume the page covered. The first is the standing one: a person typed the model
 // name, and a name someone typed is a report, not an observation.
+//
+// These are Imbas speaking, not the answer, and they are marked as such — a limit set
+// in quotation marks beside a preserved span reads as something the system said about
+// itself.
 function readNotObserved(record) {
   const items = [
     {
+      kind: ITEM.STATED,
       label: "",
       text: "Which system produced this answer. The name on this record is the one the person running the inspection gave; Imbas records it and does not watch it.",
     },
     {
+      kind: ITEM.STATED,
       label: "",
       text: "What the same question returns now. This record fixes one answer on one day and does not follow it.",
     },
     {
+      kind: ITEM.STATED,
       label: "",
       text: "What was asked before or after. Imbas saw the question on this page and no other part of the conversation.",
     },
     {
+      kind: ITEM.STATED,
       label: "",
       text: "What the system was working from. No sources, settings, or retrieved documents were captured.",
     },
   ];
   if (!formatCaptureDate(record.captured_at)) {
     items.push({
+      kind: ITEM.STATED,
       label: "",
       text: "When the answer was captured. This record carries no capture date, so the day it was said is not established here.",
     });
@@ -193,7 +211,7 @@ export const RECEIPT_CLOSING = Object.freeze({
   items: Object.freeze([
     "Why the system answered this way. The record holds what was said, not what produced it.",
     "What anyone intended. Imbas measures behavior, and behavior does not carry motive.",
-    "Whether the answer was complete. Nothing here counts what a fuller answer would have held.",
+    "How much the answer left out. Nothing here counts what a fuller answer would have held.",
     "Who wrote the answer. The system named here is the one the person running the inspection reported.",
   ]),
 });
@@ -211,7 +229,16 @@ export function describeReceipt(record) {
       heading: def.heading,
       state: read.state === OBSERVATION.OBSERVED ? OBSERVATION.OBSERVED : OBSERVATION.NOT_CAPTURED,
       items: Object.freeze(
-        list(read.items).map((i) => Object.freeze({ label: str(i && i.label), text: str(i && i.text) })),
+        list(read.items).map((i) =>
+          Object.freeze({
+            // Quotation marks are opt-in. An item that does not say it is quoted is
+            // rendered as our own sentence, so a section added later cannot acquire
+            // quotation marks by forgetting to say anything.
+            kind: i && i.kind === ITEM.QUOTED ? ITEM.QUOTED : ITEM.STATED,
+            label: str(i && i.label),
+            text: str(i && i.text),
+          }),
+        ),
       ),
       note: str(read.note),
     });
