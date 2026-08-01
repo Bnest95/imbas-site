@@ -3255,12 +3255,17 @@ function formatInspectionCard({ copy, firstText, secondText, smallPrint }) {
 // used to publish a figure, both lines named that figure, and after 2B-C neither the
 // page nor these lines carries one. What each line promises is now the findings
 // themselves and the excerpt each one points to.
+//
+// The share page became a dated record in 2B-C, so these lines name the two facts that
+// dates it. The single line names the AI system and the paired line does not, and that
+// asymmetry is real rather than an oversight: a paired capture records no system name,
+// so promising one here would disclose something the page cannot show.
 const READER_SHARE_CONSENT = {
   single: {
     title: "Share this inspection",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · the date this answer was captured and the AI system you named · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show your full answer — only the short excerpts above.",
     ],
   },
@@ -3268,7 +3273,7 @@ const READER_SHARE_CONSENT = {
     title: "Share this two-question test",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · what the second answer surfaced that the first did not, each with the short quoted excerpts from both answers · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · the date this test was captured · what the second answer surfaced that the first did not, each with the short quoted excerpts from both answers · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show either full answer — only the short excerpts above.",
     ],
   },

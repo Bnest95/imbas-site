@@ -4,7 +4,7 @@
 // A share is a PUBLISH action authorized ONLY by possession of an integrity-checkable
 // receipt whose hash sits on a REAL minted run row — never by a client-nominated id.
 // These tests hold that boundary, the allowlist-only write (raw answer never stored),
-// idempotency, the mode-aware public projection (G1: no model/topic; G3: legacy render),
+// idempotency, the mode-aware public projection (no raw answer/topic; G3: legacy render),
 // and the flag-only report (structurally one field, never a takedown).
 //
 // api/inspection-share.js freezes BASE/TABLE from env at module load, so env is set
@@ -161,9 +161,13 @@ test("recordToPublic single: p4 shape, no score, no answer/model/topic keys", ()
   assert.deepEqual(pub.delta_items, []);
   assert.equal(pub.reviewed_status, "Unreviewed");
   assert.equal(pub.visibility, "unlisted");
-  // G1: a P4 projection never carries the declared model, topic, or the raw answer.
+  // The raw answer never reaches a P4 projection, and neither does the topic. The
+  // declared model USED to be listed here under the same breath, and it is not the same
+  // rule: the answer is withheld because publishing it is the thing the mint path exists
+  // not to do, while the model was merely never carried. 2B-C made the share a dated
+  // record, which needs the system name and the capture date, and the consent dialog now
+  // discloses both by name before anything is minted.
   assert.ok(!("answer" in pub), "no raw answer on a P4 projection");
-  assert.ok(!("ai_model" in pub), "no declared model on a P4 projection");
   assert.ok(!("topic" in pub), "no topic on a P4 projection");
 });
 

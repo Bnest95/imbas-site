@@ -48,6 +48,7 @@ import {
   recordShareCreation,
 } from "../reader-security.js";
 import { canonicalizeForHash, RECEIPT_BOUNDARY } from "../reader-receipt.js";
+import { describeReceipt } from "../reader-receipt-page.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const TABLE = process.env.AIRTABLE_INSPECTION_SHARES_TABLE || "";
@@ -235,6 +236,30 @@ function extractPaired(receipt) {
   };
 }
 
+// ── Capture facts, copied off the proof row at mint ───────────────────────────
+//
+// A dated receipt renders from its own record. It never joins to live state to display
+// what it attests to, because a displayed value that depends on a second read
+// succeeding is a live query wearing a receipt's clothes — and its failure mode is
+// worse than a blank, since flickering to "not recorded" would assert NOT_CAPTURED
+// about a value that was captured. So the capture time and the declared model are
+// copied here, once, and the render side reads one row.
+//
+// The proof row is the capture record: it is located by the verified Receipt Hash, so
+// the same receipt always resolves to the same row, and that row's timestamp does not
+// move. Paired runs carry no model — Reader Paired Analyses has no field for one — and
+// that absence is real, so the key is omitted and the receipt says the model was not
+// observed rather than borrowing one from the single side.
+function captureFromProof(proofFields, mode) {
+  const f = proofFields || {};
+  const out = {};
+  const capturedAt = str(f.Created).trim();
+  if (capturedAt) out["Captured At"] = capturedAt;
+  const model = mode === "single" ? clip(f["Inspected AI Model"], LABEL_MAX) : "";
+  if (model) out["AI Model"] = model;
+  return out;
+}
+
 // ── Public projection (read side) — mode-aware, with legacy fallback ──────────
 // A P4 row carries Mode + Findings JSON; a pre-P4 row does not. G3: pre-P4 rows keep
 // their legacy full-answer render so old shares still resolve. Both projections are
@@ -271,6 +296,10 @@ function p4RecordToPublic(fields, shareId, mode) {
     share_id: shareId,
     mode,
     created_at: fields["Created At"] || "",
+    // The dated receipt's two anchor facts. Empty means the record does not hold the
+    // value, and the page says so — never a default, never the neighbouring clock.
+    captured_at: fields["Captured At"] || "",
+    ai_model: fields["AI Model"] || "",
     question: fields.Question || "",
     findings: mode === "single" ? sanitizeSingleFindings(raw) : [],
     delta_items: mode === "paired" ? sanitizePairedItems(raw) : [],
@@ -298,6 +327,10 @@ function legacyRecordToPublic(fields, shareId) {
     share_id: shareId,
     mode: "legacy",
     created_at: fields["Created At"] || "",
+    // Uniform receipt shape across projections. Pre-P4 rows were minted before anything
+    // copied the capture time, so this is empty on every one of them, and the receipt
+    // states the capture time as unobserved rather than showing when the link was made.
+    captured_at: fields["Captured At"] || "",
     question: fields.Question || "",
     topic: fields.Topic || "",
     ai_model: fields["AI Model"] || "",
@@ -318,8 +351,14 @@ function legacyRecordToPublic(fields, shareId) {
 
 export function recordToPublic(fields, shareId) {
   const mode = str(fields.Mode);
-  if (mode === "single" || mode === "paired") return p4RecordToPublic(fields, shareId, mode);
-  return legacyRecordToPublic(fields, shareId);
+  const record =
+    mode === "single" || mode === "paired"
+      ? p4RecordToPublic(fields, shareId, mode)
+      : legacyRecordToPublic(fields, shareId);
+  // The dated receipt travels on the projection, built from the row that was just read
+  // and from nothing else. The page is a classic script that computes nothing, and this
+  // keeps it that way: one record in, one rendered receipt out, identical on every load.
+  return { ...record, receipt: describeReceipt(record) };
 }
 
 export async function fetchShareById(shareId) {
@@ -453,8 +492,19 @@ export default async function handler(req, res) {
   const shareId = newShareId();
   if (!SHARE_ID_RE.test(shareId)) return res.status(500).json({ ok: false, error: "id" });
 
+  // The two facts a dated receipt is dated by. They come off the proof row, not the
+  // client envelope and not this process's clock, and the proof row is already in hand
+  // from the possession check above — so this costs no extra read and cannot disagree
+  // with the row that authorized the share. Absent values are omitted, never written
+  // empty: the receipt states an unheld value as unobserved, and an empty string in a
+  // dateTime field is a write error rather than a recorded absence.
   const fields = {
     "Share ID": shareId,
+    // Share-mint time. Distinct from "Captured At" below, and load-bearing on its own:
+    // pickCanonicalShare resolves a concurrent-write race by earliest "Created At", so
+    // this must stay this process's clock and must never be aliased to the capture time
+    // — two mints of one receipt would carry an identical capture time and collapse the
+    // tiebreak to record-ID alone.
     "Created At": new Date().toISOString(),
     Question: payload.question,
     Mode: mode,
@@ -462,6 +512,11 @@ export default async function handler(req, res) {
     "Findings JSON": JSON.stringify(payload.items),
     Visibility: "unlisted",
     "Reviewed Status": "Unreviewed",
+    // Written once, here, and never after. A product rerun mints a new row rather than
+    // updating this one, which is what lets the page promise the record does not change.
+    // Concurrent mints copy identical values from the same proof row, so this is safe
+    // under the race the reconciliation below resolves.
+    ...captureFromProof(proof.record.fields, mode),
   };
 
   try {

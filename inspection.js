@@ -122,6 +122,65 @@ function mastHtml(mode) {
     </header>`;
 }
 
+// ── The dated capture receipt ────────────────────────────────────────────────
+//
+// Built server-side by reader-receipt-page.js and delivered on the projection, so this
+// page still computes nothing and two loads of one share cannot differ. The section
+// list is walked, never enumerated: the day a section is added there, it renders here
+// without this function changing.
+//
+// A section with nothing in it prints why it has nothing. Rendering it as an empty list
+// would say Imbas looked and found none, and for sources that is not what happened.
+function receiptSectionHtml(section) {
+  const items = Array.isArray(section.items) ? section.items : [];
+  const note = (section.note || "").trim();
+  const body = items.length
+    ? `<ul class="insp-receipt__items">${items
+        .map(
+          (i) => `<li class="insp-receipt__item">
+            ${i.label ? `<span class="insp-receipt__item-label">${escapeHtml(i.label)}</span>` : ""}
+            <blockquote class="insp-receipt__quote">"${escapeHtml(i.text)}"</blockquote>
+          </li>`,
+        )
+        .join("")}</ul>`
+    : "";
+  return `
+    <article class="insp-receipt__section" data-state="${escapeHtml(section.state || "")}">
+      <h3 class="insp-receipt__section-title">${escapeHtml(section.heading || "")}</h3>
+      ${note ? `<p class="insp-receipt__note">${escapeHtml(note)}</p>` : ""}
+      ${body}
+    </article>`;
+}
+
+function receiptHtml(record) {
+  const receipt = record && record.receipt;
+  if (!receipt) return "";
+  const sections = Array.isArray(receipt.sections) ? receipt.sections : [];
+  const closing = receipt.closing || { heading: "", items: [] };
+  const closingItems = Array.isArray(closing.items) ? closing.items : [];
+  return `
+    <section class="insp-receipt" aria-label="Capture record">
+      <div class="insp-receipt__sections">
+        ${sections.map(receiptSectionHtml).join("")}
+      </div>
+      <aside class="insp-receipt__closing">
+        <h3 class="insp-receipt__closing-title">${escapeHtml(closing.heading || "")}</h3>
+        <ul class="insp-receipt__closing-list">
+          ${closingItems.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+        </ul>
+      </aside>
+    </section>`;
+}
+
+// The line the page is named for. It sits under the masthead because it is the record's
+// identity — which answer, said by what, on what day — and everything below it is that
+// capture's contents.
+function anchorHtml(record) {
+  const anchor = record && record.receipt && record.receipt.anchor;
+  const text = anchor && (anchor.text || "").trim();
+  return text ? `<p class="insp-record__anchor">${escapeHtml(text)}</p>` : "";
+}
+
 function questionHtml(record) {
   return `
     <div class="insp-context">
@@ -194,7 +253,14 @@ function singlePanelHtml(record) {
 }
 
 function renderSingle(root, record) {
-  root.innerHTML = mastHtml("single") + questionHtml(record) + singlePanelHtml(record) + actionsHtml() + reportSeamHtml();
+  root.innerHTML =
+    mastHtml("single") +
+    anchorHtml(record) +
+    questionHtml(record) +
+    singlePanelHtml(record) +
+    receiptHtml(record) +
+    actionsHtml() +
+    reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);
 }
@@ -235,7 +301,14 @@ function pairedPanelHtml(record) {
 }
 
 function renderPaired(root, record) {
-  root.innerHTML = mastHtml("paired") + questionHtml(record) + pairedPanelHtml(record) + actionsHtml() + reportSeamHtml();
+  root.innerHTML =
+    mastHtml("paired") +
+    anchorHtml(record) +
+    questionHtml(record) +
+    pairedPanelHtml(record) +
+    receiptHtml(record) +
+    actionsHtml() +
+    reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);
 }
