@@ -191,13 +191,28 @@ function questionHtml(record) {
     </div>`;
 }
 
-function actionsHtml() {
+// The product rerun. The receipt lists "what the same question returns now" among the
+// things it cannot tell you; this is how a reader finds out, by hand. It carries the
+// question over to a blank inspection and stops there — Imbas does not ask anything,
+// so the person re-asks their own system and pastes what comes back.
+//
+// It reads this record and writes nothing to it. The run it starts is a separate
+// record with its own date, and this page is the same page afterwards as before.
+function rerunHref(record) {
+  const id = (record && record.share_id) || "";
+  return id ? `/workbench.html?rerun=${encodeURIComponent(id)}` : "";
+}
+
+function actionsHtml(record) {
+  const rerun = rerunHref(record);
   return `
     <div class="insp-actions">
+      ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--ghost" href="/workbench.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
-    </div>`;
+    </div>
+    ${rerun ? `<p class="insp-actions__note">Running it again starts a new record with its own date. This one does not change.</p>` : ""}`;
 }
 
 // The report seam (design §F, approved verbatim). Present on every share, every mode.
@@ -259,7 +274,7 @@ function renderSingle(root, record) {
     questionHtml(record) +
     singlePanelHtml(record) +
     receiptHtml(record) +
-    actionsHtml() +
+    actionsHtml(record) +
     reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);
@@ -307,7 +322,7 @@ function renderPaired(root, record) {
     questionHtml(record) +
     pairedPanelHtml(record) +
     receiptHtml(record) +
-    actionsHtml() +
+    actionsHtml(record) +
     reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);

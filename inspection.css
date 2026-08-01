@@ -109,6 +109,16 @@
   margin-top: 1rem;
 }
 
+/* Sits under the actions row and qualifies the rerun button beside it: running the
+   question again starts a record, it does not revise this one. */
+.insp-actions__note {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(175, 162, 148, 0.82);
+}
+
 .insp-btn {
   display: inline-flex;
   align-items: center;

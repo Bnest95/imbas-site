@@ -5747,6 +5747,17 @@
   color: rgba(230, 218, 200, 0.92);
 }
 
+/* The product rerun's arrival line. It says more than the standing intro because it
+   has more to account for: why the question is already filled, who does the asking,
+   and what happens to the record the visitor came from. The ember rule marks it as
+   arrival context rather than instruction. */
+.wb-shell--reader-v2 .wb-reader-v2__own-intro--rerun {
+  padding-left: 0.8rem;
+  border-left: 2px solid rgba(222, 111, 56, 0.42);
+  font-size: 0.95rem;
+  color: rgba(222, 210, 193, 0.9);
+}
+
 .wb-shell--reader-v2 .wb-reader-confirm {
   margin-top: 0.35rem;
   padding: 0.6rem 0.7rem 0.7rem;

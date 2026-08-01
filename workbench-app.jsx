@@ -5676,6 +5676,11 @@ function ReaderWorkbench() {
   // the render tree cannot derive on its own; every other stage input is already here.
   const [lane, setLane] = useState(() => parseArrival(window.location).lane);
   const [chipMounted, setChipMounted] = useState(() => parseArrival(window.location).lane === LANE_CHIPS);
+  // The product rerun (?rerun=<shareId>). True once a published question has been
+  // carried over, which is the only thing it carries: the answer box stays empty
+  // because the point is the answer you get today, and Imbas asks nothing on anyone's
+  // behalf. Nothing is written back to the record named in the URL.
+  const [rerunSeeded, setRerunSeeded] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [hasDelta, setHasDelta] = useState(false);
   const stageRef = useRef(null);
@@ -5797,6 +5802,34 @@ function ReaderWorkbench() {
     if (norm.rewrite) {
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
+  }, []);
+
+  // The product rerun. One GET against the share the visitor came from, to copy its
+  // published question into the box — nothing else moves. The named record is read and
+  // never written, so the receipt that offered this link reads the same afterwards as
+  // before, and the run this starts is a separate record with its own date.
+  //
+  // This deliberately seeds the question and nothing else. Restoring the old answer
+  // would recreate the old capture, and the reason to be here is the answer the system
+  // gives now. A failed or missing read leaves the box blank rather than half-filled:
+  // the person can type the question, and a rerun that quietly seeded the wrong text
+  // would be worse than one that seeded none.
+  useEffect(() => {
+    const { rerunShareId } = parseArrival(window.location);
+    if (!rerunShareId) return undefined;
+    let live = true;
+    fetch(`/api/inspection/${encodeURIComponent(rerunShareId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const q = data && data.ok && data.record ? String(data.record.question || "").trim() : "";
+        if (!live || !q) return;
+        setQuestion(q);
+        setRerunSeeded(true);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
   }, []);
 
   // The hash mirrors the stage so deep links and bookmarks name something real. It is
@@ -6202,9 +6235,15 @@ function ReaderWorkbench() {
               </>
             ) : (
               <div className="wb-reader-v2__own-header">
-                <p className="wb-reader-v2__own-intro">
-                  Paste an AI answer below. The Reader inspects what it might be missing.
-                </p>
+                {rerunSeeded ? (
+                  <p className="wb-reader-v2__own-intro wb-reader-v2__own-intro--rerun">
+                    You carried this question over from a record you were reading. Ask your AI again and paste what it says today. Imbas asks nothing on your behalf. What comes back becomes its own record with its own date, and the one you came from does not change.
+                  </p>
+                ) : (
+                  <p className="wb-reader-v2__own-intro">
+                    Paste an AI answer below. The Reader inspects what it might be missing.
+                  </p>
+                )}
               </div>
             )}
 
