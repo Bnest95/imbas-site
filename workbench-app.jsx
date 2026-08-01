@@ -1354,20 +1354,29 @@ const SHARE_COPY = {
   },
 };
 
+// The share card the curated lane writes. Three sentences it used to carry are gone.
+// "gap held / gap mostly held / gap closed" was a verdict on the visitor's own paste,
+// produced by a term match, and a stranger could not tell what had been checked or
+// where. The card now carries the same neutral inspection state the run surface shows,
+// then the term check itself as one finding that names what it looked for and whether
+// it turned up — which is the part the visitor can verify against their own answer.
+// The archive line stays because it is the human-scored record, not this run's result,
+// and the "My run" / "Imbas measured" split keeps the two from reading as one claim.
 function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
   const { keyAnchor, significance } = SHARE_COPY[caseId];
-  const runLines = {
-    gap_held: `gap held — the answer did not name ${keyAnchor}, ${significance}.`,
-    partial: `gap mostly held — the answer touched the area but did not name ${keyAnchor}, ${significance}.`,
-    key_found: `gap closed — the answer surfaced ${keyAnchor}. This gap may be narrowing since May 2026.`,
-  };
+  const flagged = verdict !== "key_found";
+  const finding = flagged
+    ? `This term check did not find ${keyAnchor} in your answer.`
+    : `This term check found ${keyAnchor} in your answer.`;
   const measured =
     caseId === "006"
       ? "Imbas measured: all 4 frontier models tested left it out (May 2026)."
       : "Imbas measured: 3 of the 4 frontier models tested left it out (May 2026).";
   return [
     `Imbas · Case ${caseId} — ${caseTitle}`,
-    `My run (${model}, ${runDate}): ${runLines[verdict]}`,
+    `My run (${model}, ${runDate}): ${flagged ? "SOMETHING TO CHECK" : "NOTHING FLAGGED"}`,
+    finding,
+    `Case context: ${significance}.`,
     measured,
     "Run it yourself: imbaslabs.com/workbench",
   ].join("\n");
@@ -3242,17 +3251,18 @@ function formatInspectionCard({ copy, firstText, secondText, smallPrint }) {
   return lines.join("\n").trim();
 }
 
-// Pre-publish consent disclosure (design §D, claims-checked — do not reword). Shown
-// in a modal before a share is minted, so nothing is published until the person has
-// seen exactly what the page will carry. Mode-aware: single names the candidate gaps
-// and the "Candidate gap estimate" label; paired names the delta and the "Machine gap
-// estimate" label. Both state plainly that the full answer(s) are never shown.
+// Pre-publish consent disclosure (design §D, claims-checked). Shown in a modal before
+// a share is minted, so nothing is published until the person has seen exactly what
+// the page will carry. This is a disclosure, so it has to track the page: the share
+// used to publish a figure, both lines named that figure, and after 2B-C neither the
+// page nor these lines carries one. What each line promises is now the findings
+// themselves and the excerpt each one points to.
 const READER_SHARE_CONSENT = {
   single: {
     title: "Share this inspection",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the unvalidated estimate (“Candidate gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show your full answer — only the short excerpts above.",
     ],
   },
@@ -3260,7 +3270,7 @@ const READER_SHARE_CONSENT = {
     title: "Share this two-question test",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · the delta — what the second answer surfaced that the first did not — each with the short quoted excerpts from both answers · the unvalidated estimate (“Machine gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · what the second answer surfaced that the first did not, each with the short quoted excerpts from both answers · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show either full answer — only the short excerpts above.",
     ],
   },

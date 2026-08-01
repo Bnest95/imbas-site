@@ -37,6 +37,19 @@
   color: rgba(175, 162, 148, 0.88);
 }
 
+/* Pre-P4 shares carried a completeness badge in this slot. The badge is retired; the
+   notice that replaces it reads as archival furniture, not as a result, so it is set
+   quieter than the record it introduces. */
+.wb-reader-result__archival-notice {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-left: 2px solid rgba(230, 175, 130, 0.4);
+  font-family: var(--font-sans);
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.55;
+  color: rgba(175, 162, 148, 0.88);
+}
+
 .insp-context {
   display: grid;
   gap: 0.85rem;

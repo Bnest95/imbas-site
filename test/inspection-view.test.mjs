@@ -65,19 +65,25 @@ test("renderShareHtml: OG/Twitter tags present and well-formed", () => {
   const html = renderShareHtml(TEMPLATE, HOSTILE, "https://www.imbaslabs.com");
   const head = html.slice(0, html.indexOf("</head>"));
 
-  assert.match(head, /<meta property="og:title" content="THIN · /);
+  assert.match(head, /<meta property="og:title" content="Imbas Reader · Unlisted · Unreviewed /);
   assert.ok(head.includes(`<meta property="og:type" content="article">`));
   assert.ok(head.includes(`<meta name="twitter:card" content="summary_large_image">`));
   assert.ok(head.includes(`<meta property="og:url" content="https://www.imbaslabs.com/inspection/abc123DEF456ghi789jk">`));
   assert.ok(head.includes(`<meta property="og:image" content="https://www.imbaslabs.com/og-image.png">`));
-  // og:description carries the verdict gloss + item count, never the answer text.
+  // og:description carries the preserved item count, never the answer text — and, since
+  // 2B-C, never the retired completeness rating that used to gloss it.
   assert.match(head, /<meta property="og:description" content="[^"]*2 items left out\./);
   assert.ok(!html.includes("SECRET_ANSWER_TEXT"), "answer text must never appear");
   // Unreviewed marker rides both tags so the card can't read as an Imbas-endorsed
-  // verdict on self-authored text: right behind the verdict in the title, leading the
-  // description (where it survives truncation).
-  assert.match(head, /<meta property="og:title" content="THIN · Unlisted · Unreviewed · /);
+  // verdict on self-authored text. It now leads both: the title slot the retired
+  // completeness word used to occupy, and the description (where it survives truncation).
+  assert.match(
+    head,
+    /<meta property="og:title" content="Imbas Reader · Unlisted · Unreviewed inspection \(earlier format\) · /,
+  );
   assert.match(head, /<meta property="og:description" content="Unlisted · Unreviewed\. /);
+  // The retired rating led this card before 2B-C. It leads nothing now.
+  assert.doesNotMatch(head, /content="(FULL|PARTIAL|THIN) /);
 });
 
 test("renderShareHtml: exactly one title/head, body byte-identical to template", () => {
@@ -90,14 +96,16 @@ test("renderShareHtml: exactly one title/head, body byte-identical to template",
 
 test("buildTitle truncates the question to 80 chars with an ellipsis", () => {
   const long = "q ".repeat(100).trim();
-  const title = buildTitle({ completeness: "full", question: long });
+  const title = buildTitle({ mode: "single", question: long });
   const inner = title.slice(title.indexOf(`"`) + 1, title.lastIndexOf(`"`));
   assert.ok(inner.length <= 81, "truncated question <= 80 chars + ellipsis");
   assert.ok(inner.endsWith("…"));
-  assert.ok(title.startsWith("FULL · "));
+  assert.ok(title.startsWith("Imbas Reader · Unlisted · Unreviewed inspection · "));
   assert.ok(title.includes("Unlisted · Unreviewed"), "title carries the unreviewed marker");
 });
 
+// These fixtures still carry `completeness` because real legacy rows still do — the
+// §4 freeze ruling leaves the stored value alone. What changed is that nothing reads it.
 test("buildDescription: singular vs plural item count, no answer leakage", () => {
   const one = buildDescription({ completeness: "partial", what_was_left_out: ["x"], answer: "A" });
   assert.ok(one.includes("1 item left out."));

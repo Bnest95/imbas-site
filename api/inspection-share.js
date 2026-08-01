@@ -14,14 +14,20 @@
 // The published payload is an ALLOWLIST extracted from the VERIFIED envelope only —
 // never the whole envelope, never the raw answer:
 //   single: question · [{type, materiality, anchor}] candidate findings (anchor = the
-//           short verbatim span each finding points to) · gap_estimate (0-3). Render
-//           claims language: "candidate", "unvalidated" — never "left out"/"omitted".
+//           short verbatim span each finding points to). Render claims language:
+//           "candidate", "unvalidated" — never "left out"/"omitted".
 //   paired: question · [{point, signal_pattern, open_side, targeted_side}] delta items
 //           (open_side/targeted_side = the short verbatim spans quoted from the first
-//           and second answers) · gap_estimate (0-3). Render label:
-//           "Machine gap estimate: N of 3 (unvalidated)".
-// The boundary line and the estimate LABEL are constants derived at render time from
-// Mode + Gap Estimate — not stored. Raw answers are NEVER stored on a P4 share row.
+//           and second answers).
+// The boundary line is a constant supplied at render time — not stored. Raw answers
+// are NEVER stored on a P4 share row.
+//
+// Pass 2B-C: a share carries no score. The share page used to publish the receipt's
+// 0-3 figure and a rendered label built from it, which put a number a reader cannot
+// check on the one Imbas surface a stranger reaches first. What a share publishes now
+// is the findings themselves, each with the span it points to, which a reader can hold
+// against the question. The figure is untouched wherever it is still generated; this
+// endpoint no longer extracts it, stores it, or projects it.
 //
 // Idempotent per (verified Receipt Hash + Mode): a repeat create returns the existing
 // share URL and mints no duplicate row.
@@ -41,12 +47,7 @@ import {
   checkShareCreationLimits,
   recordShareCreation,
 } from "../reader-security.js";
-import {
-  canonicalizeForHash,
-  gapEstimateLabel,
-  pairedGapEstimateLabel,
-  RECEIPT_BOUNDARY,
-} from "../reader-receipt.js";
+import { canonicalizeForHash, RECEIPT_BOUNDARY } from "../reader-receipt.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
 const TABLE = process.env.AIRTABLE_INSPECTION_SHARES_TABLE || "";
@@ -199,13 +200,6 @@ function verifyReceiptIntegrity(receipt) {
 // Only these fields ever leave the receipt. No field is published merely because it
 // is present; whole structured objects are never stored. The raw answer(s) are never
 // read here.
-function clampEstimate(n) {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return null;
-  const i = Math.round(v);
-  return i < 0 ? 0 : i > 3 ? 3 : i;
-}
-
 function extractSingle(receipt) {
   const run = receipt.open_run || {};
   const m = run.measurement || {};
@@ -219,7 +213,6 @@ function extractSingle(receipt) {
     .slice(0, MAX_ITEMS);
   return {
     question: clip(run.question, QUESTION_MAX),
-    gap_estimate: clampEstimate(m.gap_estimate),
     items: findings,
   };
 }
@@ -238,7 +231,6 @@ function extractPaired(receipt) {
     .slice(0, MAX_ITEMS);
   return {
     question: clip(run.question, QUESTION_MAX),
-    gap_estimate: clampEstimate(pa.gap_estimate),
     items: deltas,
   };
 }
@@ -275,16 +267,11 @@ function sanitizePairedItems(arr) {
 
 function p4RecordToPublic(fields, shareId, mode) {
   const raw = jsonArray(fields["Findings JSON"]);
-  const gap = typeof fields["Gap Estimate"] === "number" ? fields["Gap Estimate"] : null;
-  const label =
-    gap == null ? "" : mode === "single" ? gapEstimateLabel(gap) : pairedGapEstimateLabel(gap);
   return {
     share_id: shareId,
     mode,
     created_at: fields["Created At"] || "",
     question: fields.Question || "",
-    gap_estimate: gap,
-    gap_estimate_label: label,
     findings: mode === "single" ? sanitizeSingleFindings(raw) : [],
     delta_items: mode === "paired" ? sanitizePairedItems(raw) : [],
     boundary: RECEIPT_BOUNDARY,
@@ -476,7 +463,6 @@ export default async function handler(req, res) {
     Visibility: "unlisted",
     "Reviewed Status": "Unreviewed",
   };
-  if (payload.gap_estimate != null) fields["Gap Estimate"] = payload.gap_estimate;
 
   try {
     const r = await fetchWithTimeout(`https://api.airtable.com/v0/${BASE}/${TABLE}`, {

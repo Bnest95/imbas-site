@@ -20,20 +20,21 @@ import { readFileSync } from "node:fs";
 import { fetchShareById } from "./inspection-share.js";
 
 const SHARE_ID_RE = /^[A-Za-z0-9_-]{20,32}$/;
-const COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
-const COMPLETENESS_GLOSS = {
-  full: "The answer substantially served the question.",
-  partial: "Some material context was missing or shaped.",
-  thin: "The answer was evasive or substantially incomplete.",
-};
 const OG_IMAGE_PATH = "/og-image.png";
-// P4 mode descriptions — fixed, claims-safe copy. No bare estimate number, no answer
-// text, single-mode never says "left out". The static OG image carries no numbers by
-// design (design §7), so the estimate never rides the card.
+// P4 mode descriptions — fixed, claims-safe copy. No figure, no answer text, single
+// mode never says "left out". The static OG image carries no numbers by design
+// (design §7), and after 2B-C neither does the record behind it.
 const OG_SINGLE_DESC =
   "Unlisted · Unreviewed. An Imbas Reader inspection of one AI answer — candidate gaps flagged, unvalidated. Discovery, not evidence.";
 const OG_PAIRED_DESC =
-  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. Machine estimate, unvalidated. Discovery, not evidence.";
+  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. Machine observations, unvalidated. Discovery, not evidence.";
+// Pre-P4 rows were published under a format that rated how complete an answer was.
+// That rating is retired, so the unfurl no longer leads with it and no longer glosses
+// it. The row itself is untouched: a published share is a dated record of what was
+// published, and remapping its retired label onto today's vocabulary would rewrite
+// what it said rather than stop repeating it.
+const LEGACY_DESC =
+  "Unlisted · Unreviewed. An Imbas Reader inspection published under an earlier format.";
 
 // Read the static shell once at module load. @vercel/nft traces a readFileSync on a
 // URL relative to import.meta.url and bundles inspection.html alongside the function.
@@ -58,39 +59,42 @@ function truncate(s, max) {
   return t.length > max ? `${t.slice(0, max).trimEnd()}…` : t;
 }
 
-// Mode-aware title. P4 rows (single/paired) lead with "Imbas Reader · Unlisted
-// {inspection|two-question test}" so the card can never read as an Imbas verdict on
-// self-authored text; only the question (≤80) is user text. Pre-P4 (legacy) rows keep
-// the original verdict form. Assembled raw, then escaped whole so truncation never
-// splits an entity and the decorative quotes get escaped for the content="…" attr.
+// Mode-aware title. The slot the retired completeness word used to lead now names the
+// instrument instead: every row reads "Imbas Reader · Unlisted · Unreviewed
+// {inspection|two-question test}", so the card can never read as an Imbas verdict on
+// self-authored text. The "Unlisted · Unreviewed" marker is load-bearing and stays
+// contiguous. Only the question (≤80) is user text. Pre-P4 (legacy) rows lead the same
+// way and say which format they were published under. Assembled raw, then escaped whole
+// so truncation never splits an entity and the decorative quotes get escaped for the
+// content="…" attr.
 export function buildTitle(record) {
   const question = truncate(str(record.question), 80);
   const mode = str(record.mode);
-  if (mode === "single") return `Imbas Reader · Unlisted inspection · "${question}"`;
-  if (mode === "paired") return `Imbas Reader · Unlisted two-question test · "${question}"`;
-  const comp = str(record.completeness).toLowerCase();
-  const verdict = COMPLETENESS_LABEL[comp] || "PARTIAL";
-  return `${verdict} · Unlisted · Unreviewed · "${question}" · Imbas Reader`;
+  if (mode === "single") return `Imbas Reader · Unlisted · Unreviewed inspection · "${question}"`;
+  if (mode === "paired")
+    return `Imbas Reader · Unlisted · Unreviewed two-question test · "${question}"`;
+  return `Imbas Reader · Unlisted · Unreviewed inspection (earlier format) · "${question}"`;
 }
 
-// Mode-aware description. Fixed claims-safe copy for P4 rows (never a bare number,
-// never answer text, single mode never says "left out"). Legacy rows keep the v1
-// completeness gloss. The "Unlisted · Unreviewed" marker leads so it always survives
-// the 200-char truncation (which only ever cuts the tail).
+// Mode-aware description. Fixed claims-safe copy for every mode (never a figure,
+// never answer text, single mode never says "left out"). Legacy rows carry the
+// preserved item count and shaping note, which are the record, and no rating, which
+// was the retired reading of it. The "Unlisted · Unreviewed" marker leads so it always
+// survives the 200-char truncation (which only ever cuts the tail).
 export function buildDescription(record) {
   const mode = str(record.mode);
   if (mode === "single") return truncate(OG_SINGLE_DESC, 200);
   if (mode === "paired") return truncate(OG_PAIRED_DESC, 200);
-  const comp = str(record.completeness).toLowerCase();
-  const gloss = COMPLETENESS_GLOSS[comp] || COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(record.what_was_left_out)
     ? record.what_was_left_out.filter(Boolean)
     : [];
   const n = leftOut.length;
   const missing = `${n} ${n === 1 ? "item" : "items"} left out.`;
   const shapedRaw = str(record.how_it_was_shaped).replace(/\s+/g, " ").trim();
-  const shaped = shapedRaw ? `Shaping: ${shapedRaw}` : "No meaningful shaping detected.";
-  return truncate(`Unlisted · Unreviewed. ${gloss} ${missing} ${shaped}`, 200);
+  const shaped = shapedRaw
+    ? `Shaping: ${shapedRaw}`
+    : "The Reader recorded no shaping under the tested conditions.";
+  return truncate(`${LEGACY_DESC} ${missing} ${shaped}`, 200);
 }
 
 // Inject the per-share <title> + OG/Twitter meta into the template head. The body

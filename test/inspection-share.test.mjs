@@ -15,7 +15,7 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
-import { canonicalizeForHash, gapEstimateLabel, pairedGapEstimateLabel, RECEIPT_BOUNDARY } from "../reader-receipt.js";
+import { canonicalizeForHash, RECEIPT_BOUNDARY } from "../reader-receipt.js";
 import { _resetMemoryStateForTests } from "../reader-security.js";
 
 const TEST_TABLE = "tblTESTSHARES0001";
@@ -139,7 +139,11 @@ beforeEach(() => {
 });
 
 // ── recordToPublic: mode-aware projection, G1 (no model/topic), G3 (legacy) ──────
-test("recordToPublic single: p4 shape, single label, no answer/model/topic keys", () => {
+// The "Gap Estimate" field is present on these fixtures on purpose: rows written before
+// 2B-C still carry it, and the projection has to leave it behind rather than merely
+// stop being handed it. A share that could still publish the figure from an old row is
+// not a share that stopped publishing the figure.
+test("recordToPublic single: p4 shape, no score, no answer/model/topic keys", () => {
   const pub = recordToPublic(
     {
       Mode: "single",
@@ -151,8 +155,8 @@ test("recordToPublic single: p4 shape, single label, no answer/model/topic keys"
     "abc123DEF456ghi789jk",
   );
   assert.equal(pub.mode, "single");
-  assert.equal(pub.gap_estimate, 2);
-  assert.equal(pub.gap_estimate_label, gapEstimateLabel(2));
+  assert.ok(!("gap_estimate" in pub), "a stored score never reaches the share projection");
+  assert.ok(!("gap_estimate_label" in pub), "and neither does a label rendered from it");
   assert.deepEqual(pub.findings, [{ type: "Omission", materiality: "high", anchor: "span" }]);
   assert.deepEqual(pub.delta_items, []);
   assert.equal(pub.reviewed_status, "Unreviewed");
@@ -163,7 +167,7 @@ test("recordToPublic single: p4 shape, single label, no answer/model/topic keys"
   assert.ok(!("topic" in pub), "no topic on a P4 projection");
 });
 
-test("recordToPublic paired: delta items, paired label, no single findings", () => {
+test("recordToPublic paired: delta items, no score, no single findings", () => {
   const pub = recordToPublic(
     {
       Mode: "paired",
@@ -174,7 +178,8 @@ test("recordToPublic paired: delta items, paired label, no single findings", () 
     "abc123DEF456ghi789jk",
   );
   assert.equal(pub.mode, "paired");
-  assert.equal(pub.gap_estimate_label, pairedGapEstimateLabel(3));
+  assert.ok(!("gap_estimate" in pub), "a stored score never reaches the share projection");
+  assert.ok(!("gap_estimate_label" in pub), "and neither does a label rendered from it");
   assert.deepEqual(pub.delta_items, [{ point: "p", signal_pattern: "Deflection", open_side: "a", targeted_side: "b" }]);
   assert.deepEqual(pub.findings, []);
   assert.equal(pub.source, "Workbench two-question test");
@@ -195,16 +200,20 @@ test("recordToPublic legacy (G3): Mode absent → full-answer render preserved",
   assert.equal(pub.mode, "legacy");
   assert.equal(pub.answer, "the full legacy answer text", "legacy shares still render the stored answer");
   assert.deepEqual(pub.what_was_left_out, ["one", "two", "three"]);
+  // The stored Completeness value survives the projection untouched. A published share
+  // is a dated record of what was published, so 2B-C stops RENDERING the retired rating
+  // rather than deleting it from the row or remapping it onto today's vocabulary —
+  // either of those would rewrite what the record said instead of stopping repeating it.
   assert.equal(pub.completeness, "thin");
   // G3: the legacy projection must also carry the verbatim boundary sentence (same
   // single source as P4), so every mode's share renders it — no drift, no gap.
   assert.equal(pub.boundary, RECEIPT_BOUNDARY);
 });
 
-test("recordToPublic single: gap null → empty label; garbage Findings JSON → []", () => {
+test("recordToPublic single: no score key on a row that never had one; garbage Findings JSON → []", () => {
   const pub = recordToPublic({ Mode: "single", Question: "Q", "Findings JSON": "{not json" }, "abc123DEF456ghi789jk");
-  assert.equal(pub.gap_estimate, null);
-  assert.equal(pub.gap_estimate_label, "");
+  assert.ok(!("gap_estimate" in pub));
+  assert.ok(!("gap_estimate_label" in pub));
   assert.deepEqual(pub.findings, []);
 });
 
@@ -281,14 +290,13 @@ test("handler single: mints an allowlist-only row; no Answer/AI Model/Topic; ans
   const f = create.body.fields;
   assert.deepEqual(
     Object.keys(f).sort(),
-    ["Created At", "Findings JSON", "Gap Estimate", "Mode", "Question", "Receipt Hash", "Reviewed Status", "Share ID", "Visibility"],
+    ["Created At", "Findings JSON", "Mode", "Question", "Receipt Hash", "Reviewed Status", "Share ID", "Visibility"],
     "exactly the allowlist keys are written",
   );
   assert.equal(f.Mode, "single");
   assert.equal(f["Receipt Hash"], verifiedHash);
   assert.equal(f.Visibility, "unlisted");
   assert.equal(f["Reviewed Status"], "Unreviewed");
-  assert.equal(f["Gap Estimate"], 2);
   assert.deepEqual(JSON.parse(f["Findings JSON"]), [
     { type: "Omission", materiality: "high", anchor: "first verbatim span" },
     { type: "Framing Drift", materiality: "med", anchor: "second verbatim span" },
@@ -297,12 +305,11 @@ test("handler single: mints an allowlist-only row; no Answer/AI Model/Topic; ans
   assert.ok(!JSON.stringify(create.body).includes(SECRET), "the raw answer is never serialized into the write");
 });
 
-test("handler single: gap null omits the Gap Estimate field entirely", async () => {
-  // A receipt whose measurement.gap_estimate is non-numeric clamps to null → field omitted.
-  const receipt = sign({
-    receipt_type: "single",
-    open_run: { question: "no gap here please", answer: SECRET, measurement: { findings: [{ type: "Omission", materiality: "m", anchor: "s" }], gap_estimate: "n/a" } },
-  });
+// The receipt still carries a score — the API that generates it is frozen. What 2B-C
+// changed is that possessing one no longer publishes one: the extraction allowlist
+// drops it, so a share row cannot acquire the figure even from a receipt that has it.
+test("handler single: a scored receipt still writes no Gap Estimate field", async () => {
+  const receipt = singleReceipt({ gap: 3 });
   const mock = makeAirtable({ proof: { id: "recRUN", fields: {} } });
   let res;
   await withFetch(mock, async () => {
@@ -311,7 +318,8 @@ test("handler single: gap null omits the Gap Estimate field entirely", async () 
   });
   assert.equal(res.statusCode, 200);
   const f = mock.calls.find((c) => c.method === "POST").body.fields;
-  assert.ok(!("Gap Estimate" in f), "a null estimate writes no Gap Estimate field");
+  assert.ok(!("Gap Estimate" in f), "the share write carries no score, whatever the receipt carries");
+  assert.equal(receipt.open_run.measurement.gap_estimate, 3, "and the receipt itself is untouched");
 });
 
 test("handler paired: mints Mode=paired with delta items; no raw answer", async () => {
