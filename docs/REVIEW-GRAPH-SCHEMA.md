@@ -1,6 +1,37 @@
-REVIEW GRAPH — SCHEMA v0.3.1 (FROZEN)
-Status: FROZEN. v0.3.1 issued 2026-07-21 as a DELIBERATE VERSIONED CHANGE
-(not an erratum): PairRun gains run provenance so a Review Record is
+REVIEW GRAPH — SCHEMA v0.3.2 (FROZEN)
+Status: FROZEN. v0.3.2 issued 2026-08-02 as a DELIBERATE VERSIONED CHANGE
+(not an erratum): PairRun gains `declaration` — the run conditions the person
+reported, preserved as reported. One additive field —
+- declaration: {declaration_version, declaration_source, status, status_label,
+  same_model, model_version, edits, declared_at_client, received_at_server}.
+  Present on EVERY PairRun. status is one of two stable machine tokens:
+  DECLARED_NOT_VERIFIED or NOT_DECLARED. status_label is the display copy for
+  that token, carried inside the artifact so import-free render surfaces
+  (reader-receipt.js, inspection.js) cannot invent their own wording.
+  declaration_source is pair_capture_client_declaration — the vocabulary
+  reader-result.js already defined for this input, which classifies the
+  artifact as REPORTED_CLIENT_DECLARATION and therefore bars it from the
+  matched-conditions register.
+  The declaration is evidence of what the person REPORTED. It is not evidence
+  that the conditions matched. It does not replace `capture`, which stays and
+  stays derived: capture.conditions_matched is a CONCLUSION drawn from the
+  answers, and capture flattens distinct reports (a "no", a "not sure", and a
+  question never answered all reach the same boolean). declaration is the
+  disclosure itself, lossless, and carries no conclusion. The two live in
+  separate objects on the PairRun for exactly that reason and no validator
+  makes them agree — a rule forcing agreement would be deriving a conclusion
+  from a disclosure.
+  Absence is stated, never inferred. No declaration → status NOT_DECLARED,
+  which is NOT a negative declaration and NEVER renders as "unmatched". A
+  partial declaration preserves the fields supplied and marks the rest
+  undeclared field by field. If the form captured no client-side declaration
+  time, declared_at_client is NOT_CAPTURED — never backfilled from
+  received_at_server.
+  Distinct from the cfp.1 family (inspector_run_conditions,
+  condition_fingerprint), which covers the INSPECTOR call's sampling
+  parameters, model version, and prompt version. Different subject, different
+  names, never merged on a surface that renders both.
+v0.3.1 (2026-07-21) added PairRun run provenance so a Review Record is
 self-contained about how each pair was created. Four additive fields —
 - initiator: inspection_followup | user_chip | legacy_unknown. The shipped
   inspection follow-up write stamps inspection_followup; the user-chip lane
@@ -31,9 +62,10 @@ Binding: a chip selection may not, by itself, create a finding, behavior
 classification, DetectorEvent, or any evidence-record (ResolutionEvidence)
 entry — user_chip PairRuns therefore carry no gap estimate and no
 signal-pattern classification (the Option B ceiling).
-Records exported under v0.2.x and v0.3.0 remain valid under their own declared
-versions.schema; no retroactive migration or reinterpretation.
-Chain: v0.3.1 ← v0.3.0 (deflection rename; paired-mode marker convention) ←
+Records exported under v0.2.x, v0.3.0 and v0.3.1 remain valid under their own
+declared versions.schema; no retroactive migration or reinterpretation.
+Chain: v0.3.2 ← v0.3.1 (PairRun run provenance) ←
+v0.3.0 (deflection rename; paired-mode marker convention) ←
 v0.2.3 (AT-14 timestamp rule + c14n pinning) ← v0.2.2 (demonstration shapes)
 ← v0.2.1 (verification optional, per-family rules) ← v0.2 (four freeze-pass
 corrections) ← v0.1 (PROPOSED).
@@ -67,6 +99,27 @@ PairRun   // run-the-pair; mode = paired
 - original_artifact_id, targeted_artifact_id
 - capture: {same_model_claimed: bool, model_version_user_reported?,
             user_edits_disclosed: bool, conditions_matched: true|false|unverified}
+  // DERIVED. conditions_matched is a conclusion drawn from the answers, and the
+  // booleans flatten distinct reports onto one value. Never treat it as the
+  // person's words; `declaration` below holds those.
+- declaration   // v0.3.2; what the person REPORTED about how the pair was run,
+  // preserved as reported. Present on EVERY PairRun (never omitted — an absent
+  // declaration is stated, not structurally absent, because "they did not say"
+  // is itself the record). Shape:
+  //   declaration_version   // decl.1
+  //   declaration_source    // pair_capture_client_declaration
+  //   status                // DECLARED_NOT_VERIFIED | NOT_DECLARED
+  //   status_label          // display copy for status, carried in-artifact so
+  //                         // import-free renderers cannot reword it
+  //   same_model, model_version, edits   // the declared values, or NOT_DECLARED
+  //                         // field by field when a partial declaration arrives
+  //   declared_at_client    // ISO instant, or NOT_CAPTURED if the form captured
+  //                         // none — NEVER backfilled from received_at_server
+  //   received_at_server    // ISO instant the server received the declaration
+  // The declaration is evidence of what was reported, NOT evidence that the
+  // conditions matched. It never appears in the same field, object, or rendered
+  // element as capture.conditions_matched in a way that could read as one, and
+  // no validator makes the two agree.
 - initiator: inspection_followup | user_chip | legacy_unknown   // v0.3.1;
   // how this pair was created. inspection_followup = the shipped follow-up
   // write; user_chip = a bank instruction the reader selected; legacy_unknown
@@ -210,6 +263,10 @@ ReviewRecord   // the export; "Review Packet"
   probe text of every pair without re-fetching the live probe. initiator (and,
   for user_chip, chip_id + instruction_version) travels in the same PairRun,
   so the record states how each pair was created without any external lookup.
+- self-containment (v0.3.2): each embedded PairRun also carries `declaration`,
+  so the record states what the person reported about the run conditions — or
+  states that they reported nothing — without any external lookup, and carries
+  the display label for that status alongside the machine token.
 - integrity:
     algorithm: sha256
     canonicalization: review-record.c14n.v1
@@ -350,3 +407,15 @@ AT-15 Pair provenance (v0.3.1): every PairRun carries initiator ∈
       selection alone creates no finding, behavior classification,
       DetectorEvent, or ResolutionEvidence entry. Records exported under an
       earlier versions.schema remain valid unchanged.
+AT-16 Run declaration (v0.3.2): every PairRun carries a declaration whose
+      status ∈ {DECLARED_NOT_VERIFIED, NOT_DECLARED}, whose status_label is the
+      display copy for that status, and whose declaration_version,
+      declaration_source, same_model, model_version, edits, declared_at_client
+      and received_at_server are each non-empty (stated absence counts as
+      stated: NOT_DECLARED / NOT_CAPTURED are values, blanks are not). A missing
+      declaration NEVER normalizes to an unmatched or negative reading, and
+      declared_at_client is NEVER manufactured from received_at_server. The
+      declaration is never checked against capture.conditions_matched — the
+      disclosure and the derivation are independent by design, and a rule making
+      them agree would derive a conclusion from a disclosure. Records exported
+      under an earlier versions.schema remain valid unchanged.

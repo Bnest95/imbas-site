@@ -9,7 +9,7 @@
 // record is assembled and hashed in the browser and downloaded as JSON.
 //
 // Implements the review-record.c14n.v1 canonicalization contract frozen in
-// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.1). That contract is DELIBERATELY DISTINCT
+// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.2). That contract is DELIBERATELY DISTINCT
 // from reader-receipt.js's canonicalization_version 1.0: the receipt normalizes
 // string line endings, but c14n.v1 normalizes ONLY timestamps and hashes every
 // other string value verbatim (span offsets into Artifact.body depend on the
@@ -32,7 +32,7 @@ import { buildPairRun, PAIR_INITIATOR } from "./reader-paired.js";
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
 // below change, so a digest recorded under the old rules stays reproducible.
-export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.1";
+export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.2";
 export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
 // v2 is additive over v1: contents.canonical_result carries the run's canonical
 // findings collection. Before it, the packet exported only the checks the Check
@@ -198,7 +198,7 @@ function normalizeStatus(s) {
   return RECORD_STATUSES.has(s) ? s : null;
 }
 
-// Assemble a ReviewRecord (schema v0.3.1) from an inspection result + client-held
+// Assemble a ReviewRecord (schema v0.3.2) from an inspection result + client-held
 // check states, with the integrity.digest left empty for buildReviewRecord to fill.
 //
 //   result      — the Reader read response: { receipt.open_run, checks (register) }
@@ -274,6 +274,9 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair
         original_artifact_id: "original_answer",
         targeted_artifact_id: "targeted_answer",
         capture: pair.capture,
+        // The person's own report, carried beside the derived capture rather than
+        // folded into it (schema v0.3.2). Absent, it records NOT_DECLARED.
+        declaration: pair.declaration,
         // The shipped path IS the inspection follow-up; stamp it explicitly (never
         // inferred) and carry the hash the receipt already computed over the verbatim
         // probe, so the record is self-contained without recomputing async (schema v0.3.1).
@@ -377,7 +380,7 @@ export function reviewRecordFilename(record) {
   return `imbas-review-record-${datePart}-${shortDigest}.json`;
 }
 
-// Validate a record against the schema v0.3.1 shapes. Returns { ok, reason? }.
+// Validate a record against the schema v0.3.2 shapes. Returns { ok, reason? }.
 // Defense in depth for the export path and a fixture for the schema-conformance
 // tests; not a substitute for the register's own validators.
 export function validateReviewRecord(record) {
@@ -446,6 +449,25 @@ export function validateReviewRecord(record) {
     }
     if (cap.model_version_user_reported !== undefined && typeof cap.model_version_user_reported !== "string") {
       return { ok: false, reason: "pair_run.capture.model_version_user_reported must be a string when present" };
+    }
+    // v0.3.2 declaration: what the person reported, required on every PairRun and
+    // required to be POPULATED. A pair with nothing declared carries the NOT_DECLARED
+    // status, so the missing case the validator guards against is a record that stays
+    // silent about whether anything was declared — not one that declares nothing.
+    //
+    // Every field is checked as a non-empty string because each carries its own stated
+    // absence; an empty string here would be the blank the whole artifact exists to
+    // replace. Nothing about conditions_matched is checked against it: the derived
+    // state and the declaration are not required to agree, and a validator that made
+    // them agree would be deriving a conclusion from a disclosure.
+    const dec = pr.declaration;
+    if (!dec || typeof dec !== "object") return { ok: false, reason: "pair_run.declaration required" };
+    if (dec.status !== "DECLARED_NOT_VERIFIED" && dec.status !== "NOT_DECLARED") {
+      return { ok: false, reason: "pair_run.declaration.status must be DECLARED_NOT_VERIFIED or NOT_DECLARED" };
+    }
+    for (const k of ["declaration_version", "declaration_source", "status_label", "same_model",
+                     "model_version", "edits", "declared_at_client", "received_at_server"]) {
+      if (!str(dec[k])) return { ok: false, reason: `pair_run.declaration.${k} required` };
     }
     // v0.3.1 run provenance: initiator is one of the three named values, the
     // targeted_prompt_hash is a 64-char lowercase-hex sha256, and the chip fields
