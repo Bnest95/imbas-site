@@ -496,7 +496,7 @@ down. Pass 2B-A repointed every visible count on the SINGLE surface to the named
 `surfaced_findings` subset so that no displayed number can include a finding the reader
 cannot verify. It did not do that on the paired surface. This is the remaining half.
 
-**1. `PairedDeltaView` tallies and lists the pre-canonical wire fields.**
+**1. `PairedDeltaView` tallies and lists the pre-canonical wire fields.** — **CLOSED, Pass 2B-A2.**
 The visible tally comes from `paired.signal_counts` and the rows from `paired.delta_items`
 (`workbench-app.jsx:4167`, `4170`). Both are pre-canonical, so neither consults the anchor
 contract. The named subset the canonical result already carries —
@@ -521,6 +521,42 @@ Two tests in `test/paired-claim-register-normalization.test.mjs` (5a, 5b) hold t
 one asserts `PairedDeltaView` still reads the legacy fields, so it fails the moment someone
 repoints it and tells them which divergence demonstration to delete alongside it; the other
 pins the arithmetic of the divergence itself.
+
+Closed by `4416ffd` (Pass 2B-A2), which repointed both halves in one move rather than only
+the tally — the outcome this entry named as worse than leaving it alone. `PairedDeltaView`
+builds its rows from `selectSubset(canonical, "probe_surfaced_differences")` through
+`describeFinding`, and derives its count from that same canonical result, so the number and
+the rows are one collection and cannot disagree. `paired.signal_counts` is gone from the
+view. `paired.delta_items` survives on exactly one line — the legacy binding, which renders
+a pre-2.0 record's readings and none of its excerpts.
+
+The demonstrated consequence is closed at the data layer rather than filtered at the render.
+`reader-result.js` resolves the model's proposed snippet to an exact span in the stored
+answer; a snippet that resolves nowhere is recorded as UNLOCATABLE_SNIPPET with an
+UNRESOLVED anchor carrying no text, so it can reach neither the count nor a row. The
+divergence driven live for this entry — a tally of 2 against a `probe_surfaced_differences`
+of 1, with an unquotable "Second answer" excerpt on screen — is no longer constructable.
+
+The two guards handed off as this entry designed them to. Test 5a inverted from "DEFERRED
+DEFECT: PairedDeltaView still tallies the pre-canonical wire fields" to "PairedDeltaView
+reads the named subset, not the pre-canonical wire fields", and now pins the legacy binding
+to its one permitted line. The old 5b, whose job was to demonstrate the divergence and
+instruct its own deletion, is replaced by a 5b that proves the exclusion from the other
+side: the fabricated snippet is absent from the named subset and still present in the
+record, with its rejection reason enumerated on the anchor.
+
+The stated blocker resolved inside the same commit. Repointing the rows required the paired
+class vocabulary to be settled, which is COPY AND OUTPUT QUEUE item 2; the repointed row
+takes its label from `class_display` on the descriptor, which is that item's remedy applied
+rather than a second copy of it made.
+
+One later change is worth naming, so this entry reads against the surface as it now stands.
+The per-class tally and the gap x-ray described above no longer render at all: `7e9ebb9`
+removed `pairedSignalCounts`, `GapXray` and `GAP_XRAY_SEGMENTS` under COPY AND OUTPUT QUEUE
+item 12, which withdraws any aggregate across the class vocabulary from every user-facing
+surface. That is a different ruling from this one. What closes this entry is the repointing;
+what a reader sees today is the single count above the list, drawn from the same named
+subset as the rows beneath it.
 
 **2. The server-side claim register reaches the paired surface and is rendered nowhere.** — **CLOSED, Pass 2B-B.**
 `claim_register`, `claim_basis`, and `conditions_status` travel intact from the construction
