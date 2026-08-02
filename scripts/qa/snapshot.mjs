@@ -363,6 +363,20 @@ export function assertScenarioCapturable(name, scenario) {
       );
     }
   }
+  // A page is checked before a query, and more strictly, because it decides which
+  // document the harness photographs at all. The path is absolute and carries nothing
+  // else: a query belongs in `query`, where it is recorded separately, and a fragment
+  // never reaches the server — either one appearing here would mean two places decide
+  // the URL and they are free to disagree.
+  if (scenario.page !== undefined) {
+    if (typeof scenario.page !== "string" || !scenario.page.length) {
+      problems.push("scenario declares a page that is not a non-empty string");
+    } else if (!scenario.page.startsWith("/")) {
+      problems.push("scenario page is not an absolute path; the harness serves the repo root");
+    } else if (/[?#\s]/.test(scenario.page)) {
+      problems.push("scenario page carries a query, a fragment or whitespace; only the path belongs here");
+    }
+  }
   // A query string changes which page renders, so it is checked like a route and not
   // waved through as decoration. An object or array here would stringify to something
   // the browser accepts and nobody intended, and the baseline would record it.

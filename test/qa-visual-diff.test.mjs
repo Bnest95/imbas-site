@@ -26,7 +26,13 @@ import {
   IMAGE_ENV_KEYS,
   SNAPSHOT_FORMAT,
 } from "../scripts/qa/snapshot.mjs";
-import { captureAll, commitResults, parseArgs, resolveNavigation } from "../scripts/qa/visual-acceptance.mjs";
+import {
+  captureAll,
+  commitResults,
+  parseArgs,
+  resolveNavigation,
+  resolveReadiness,
+} from "../scripts/qa/visual-acceptance.mjs";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
 
 const snap = (lines, payload = {}, env = {}) =>
@@ -330,12 +336,78 @@ test("a scenario's query reaches the URL and the recorded environment together",
   assert.equal(resolveNavigation({ query: "??reader=0" }).path, "/workbench.html?reader=0");
 });
 
-test("the committed curated scenario is the one that carries a query, and it is recorded", () => {
-  // Named rather than discovered: the query exists to reach a specific surface, and if
-  // some other scenario starts needing one, that is a decision to make on purpose.
+test("every scenario carrying a query is named here, and its query is recorded", () => {
+  // Named rather than discovered: a query exists to reach a specific surface, and a
+  // scenario needing one is a decision to make on purpose, not a default to drift into.
+  // Two reasons appear in this list and they are different. The curated console needs a
+  // FLAG — it renders when the Reader flag is off, and the flag is read from the URL.
+  // Every share scenario needs an IDENTITY — the page resolves one published record and
+  // the id is the only thing that names it, so a share page with no query is not a
+  // degraded share page, it is a different screen entirely.
   const withQuery = Object.entries(SCENARIOS).filter(([, s]) => s.query);
-  assert.deepEqual(withQuery.map(([n]) => n), ["curated-readout"]);
+  assert.deepEqual(withQuery.map(([n]) => n), [
+    "curated-readout",
+    "share-single",
+    "share-receipt",
+    "share-single-empty",
+    "share-paired-no-model",
+    "share-legacy",
+    "share-not-found",
+  ]);
   assert.equal(resolveNavigation(SCENARIOS["curated-readout"]).query_parameters, "?reader=0");
+  for (const [name, s] of withQuery) {
+    if (name === "curated-readout") continue;
+    const nav = resolveNavigation(s);
+    assert.equal(nav.page, "/inspection.html", `${name} is a share scenario and belongs on the share page`);
+    // The id in the URL and the id in the stubbed route are the same string, or the
+    // page fetches a route the stub does not serve and the capture is of an error.
+    const routes = Object.keys(s.routes);
+    assert.deepEqual(routes.length, 1, `${name} stubs exactly the one route the share page fetches`);
+    assert.equal(nav.path, `/inspection.html?share=${routes[0].split("/").pop()}`);
+  }
+});
+
+test("a page is validated like a route, not waved through as decoration", () => {
+  const base = {
+    name: "x",
+    routes: { "/api/read": {} },
+    drivable: true,
+    steps: [{ click: ".go" }],
+    assertSelector: ".x",
+  };
+  assert.deepEqual(assertScenarioCapturable("x", { ...base, page: "/inspection.html" }), []);
+  for (const bad of ["", "inspection.html", "/inspection.html?share=a", "/inspection.html#top", "/a b.html"]) {
+    assert.ok(
+      assertScenarioCapturable("x", { ...base, page: bad }).length,
+      `page ${JSON.stringify(bad)} must be rejected`,
+    );
+  }
+  assert.ok(assertScenarioCapturable("x", { ...base, page: ["/a.html"] }).length);
+});
+
+test("a scenario may name its own page, and the page it names is recorded", () => {
+  // The board was one page until the share surfaces arrived. A share photographed by
+  // driving the Workbench would be a picture of the wrong thing filed under the right
+  // name, so the page is per-scenario and travels into the baseline's env block beside
+  // the query — for the same reason the query does.
+  assert.equal(resolveNavigation({ name: "x" }).page, "/workbench.html");
+  assert.equal(
+    resolveNavigation({ name: "x", page: "/inspection.html", query: "share=abc" }).path,
+    "/inspection.html?share=abc",
+  );
+});
+
+test("every page a scenario names has a readiness rule", () => {
+  // The Workbench is React and the share page is a classic script, so "ready to
+  // photograph" is not one condition. resolveReadiness refuses to guess: a page with no
+  // rule fails the run rather than capturing a half-built screen and filing it.
+  for (const s of Object.values(SCENARIOS)) {
+    const ready = resolveReadiness(resolveNavigation(s).page);
+    assert.equal(typeof ready.react, "boolean");
+    assert.ok(ready.rendered, "a readiness rule names what rendered means on that page");
+  }
+  assert.equal(resolveReadiness("/workbench.html").react, true);
+  assert.equal(resolveReadiness("/inspection.html").react, false);
 });
 
 test("a query difference is a real difference, not an incomparability", () => {

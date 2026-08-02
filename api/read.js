@@ -86,7 +86,7 @@ import {
   canonicalizeForHash,
   hasGapEstimate,
 } from "../reader-receipt.js";
-import { PAIRED_METHOD_VERSION, buildTargetedPrompt } from "../reader-paired.js";
+import { PAIRED_METHOD_VERSION, targetedPromptOffer } from "../reader-paired.js";
 import { extractJson } from "../reader-json.js";
 import { buildCheckRegister } from "../reader-checks.js";
 import {
@@ -519,7 +519,7 @@ function parseMeasurement(raw) {
 // recorded inspection_method_version (an earlier revision of this comment called it
 // "non-leading"; a calibration finding retracted that framing — see reader-paired.js)
 // whenever the P1 measurement flagged a candidate missing item
-// (buildTargetedPrompt — no third model call), carried on the response so the client
+// (targetedPromptOffer — no third model call), carried on the response so the client
 // can show it with a copy button and record it verbatim + hashed later (design §1).
 //
 // Capacity grounding (design §8): the two live controls are the per-IP rate limiter
@@ -538,9 +538,9 @@ function parseMeasurement(raw) {
 //
 // Returns null when there is no measurement (fallback path / older rows): the offer
 // never renders and Act 1 is untouched.
-function buildAct2(measurement, question, spendTotalUsd, spendCeilingUsd) {
+function buildAct2(measurement, spendTotalUsd, spendCeilingUsd) {
   if (!measurement) return null;
-  const { eligible, targeted_prompt } = buildTargetedPrompt({ question, measurement });
+  const { eligible, targeted_prompt } = targetedPromptOffer({ measurement });
   const available = spendCeilingUsd != null && !(Number(spendTotalUsd) >= spendCeilingUsd);
   return {
     eligible,
@@ -1174,7 +1174,7 @@ export function createReadHandler(deps = {}) {
     // Act 2 offer (Reader v2 P2, Phase A): the deterministic targeted prompt + its
     // hash + a spend-grounded capacity signal. null-safe on the fallback path
     // (measurement null -> act2 null -> no offer).
-    payload.act2 = buildAct2(measurement, input.openQuestion || "", spendTotalAfter, spendCeilingUsd);
+    payload.act2 = buildAct2(measurement, spendTotalAfter, spendCeilingUsd);
 
     // Additive and null-safe: attached only on the agent path where measurement
     // exists; the fallback path leaves it unset.

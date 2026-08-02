@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 6197
+scroll_offset: 6113
 timezone: UTC
 url: /workbench.html
 viewport: 1440x900
@@ -1265,10 +1265,10 @@ a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
+p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
 div "2 differences surfaced"
 p "Differences the second answer surfaced that the Reader could quote from both answers."
 h3 "What the second answer added"
-p "Omission: 2 · Framing Drift: 0 · Deflection: 0"
 span "Omission"
 span "The Reader's reading"
 p "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number."

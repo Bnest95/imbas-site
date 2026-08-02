@@ -218,11 +218,14 @@ const UNPHOTOGRAPHED = [
       "driving a lane it could not fix if the capture found something wrong.",
   },
   {
-    state: "The share and permalink page, in every state",
+    state: "A published share whose sources WERE captured",
     why:
-      "Carved out of this pass by ruling. The share surface still renders a score from its " +
-      "stored row, and schema, render, page metadata and consent copy move together in 2B-C. " +
-      "Share scenarios arrive with 2B-C under 2B-C's own coverage.",
+      "The share board photographs `share-receipt`, where the sources section stands as " +
+      "NOT_CAPTURED and says so in words — which is the state every share is in today, because " +
+      "nothing in the capture path preserves source artifacts yet. The OBSERVED rendering of " +
+      "that section has no product path to reach it, so a scenario for it would photograph a " +
+      "fixture rather than the product. It arrives with the first capture path that preserves " +
+      "sources.",
   },
   {
     state: "A route that returns an unparseable body",
@@ -300,6 +303,8 @@ const PINNED = {
   // layer was trustworthy when that baseline was written.
   image_diff: "enabled",
   capture_region: "viewport (state scrolled into it)",
+  // url and query_parameters are defaults, not pins: a scenario may name its own page
+  // and its own query, and what it names is what gets recorded. See resolveNavigation.
   url: "/workbench.html",
   query_parameters: "(none)",
   font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
@@ -316,12 +321,55 @@ const PINNED = {
 // to report, not an incomparability to skip. Recording it means a baseline captured
 // under ?reader=0 can be read back as such instead of being mistaken for a capture of
 // the bare page that happens to look nothing like it.
+//
+// A scenario may also name its own PAGE. The board was one page for as long as every
+// state it photographed lived in the Workbench app; the share surfaces do not, and a
+// share page photographed by driving the Workbench would be a picture of the wrong
+// thing filed under the right name. The page is recorded beside the query for the same
+// reason the query is: a baseline captured on another page has to read back as such
+// rather than as a capture of this one that looks nothing like it.
 export function resolveNavigation(scenario, pinned = PINNED) {
   const query = String((scenario && scenario.query) || "").replace(/^\?+/, "");
+  const page = String((scenario && scenario.page) || pinned.url);
   return {
-    path: `${pinned.url}${query ? `?${query}` : ""}`,
+    page,
+    path: `${page}${query ? `?${query}` : ""}`,
     query_parameters: query ? `?${query}` : pinned.query_parameters,
   };
+}
+
+// ── Page readiness ───────────────────────────────────────────────────────────
+// When a page is ready to photograph is a property of the PAGE, not of the scenario.
+// The Workbench is a React app: if React never loaded, nothing will ever mount, so
+// that is a hard failure rather than something to wait out. The share surfaces are a
+// classic script rendering into a container it first fills with a loading line, so
+// waiting for the container would photograph the spinner; the wait is for the record
+// or the error that replaces it.
+//
+// Deriving this from the resolved page rather than from a per-scenario flag is the
+// point: a Workbench scenario cannot opt out of the check it most needs, and a share
+// scenario is not failed by a check its page was never built to satisfy.
+const PAGE_READINESS = {
+  "/workbench.html": {
+    react: true,
+    rendered: "#root, [data-reactroot], main",
+  },
+  "/inspection.html": {
+    react: false,
+    rendered: ".insp-record__mast, .insp-error",
+  },
+};
+
+export function resolveReadiness(page) {
+  const rule = PAGE_READINESS[page];
+  if (!rule) {
+    fail(
+      `No readiness rule for page "${page}". Add one to PAGE_READINESS naming what ` +
+        `"rendered" means there — the harness will not guess, because guessing wrong ` +
+        `captures a half-built page and files it as a baseline.`,
+    );
+  }
+  return rule;
 }
 
 // ── Browser resolution ───────────────────────────────────────────────────────
@@ -718,7 +766,11 @@ function buildStubScript(payloads) {
       );
       return Promise.race([frames, bounded]);
     },
-    mounted() { return !!document.querySelector("#root, [data-reactroot], main"); },
+    // The selector comes from the page's readiness rule, not from a default here: a
+    // page that renders its record into a container it also fills with a loading line
+    // is "mounted" only once the record itself is there, and only the caller knows
+    // which element that is.
+    mounted(sel) { return !!document.querySelector(sel); },
     scrollHeight() { return document.documentElement.scrollHeight; },
     reactLoaded() { return typeof window.React !== "undefined" && typeof window.ReactDOM !== "undefined"; },
     calls() { return window.__qaCalls; },
@@ -810,10 +862,11 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
   await cdp.send("Page.navigate", { url: `${serverState.origin}${nav.path}` });
   await waitUntil(cdp, "document.readyState === 'complete'", { label: "document ready" });
 
-  if (!(await evaluate(cdp, "__qa.reactLoaded()"))) {
+  const ready = resolveReadiness(nav.page);
+  if (ready.react && !(await evaluate(cdp, "__qa.reactLoaded()"))) {
     fail("React/ReactDOM did not load — the app cannot mount, so any capture would be of an empty shell.");
   }
-  await waitUntil(cdp, "__qa.mounted()", { label: "app mounted" });
+  await waitUntil(cdp, `__qa.mounted(${JSON.stringify(ready.rendered)})`, { label: `rendered ${nav.page}` });
 
   for (const step of scenario.steps) {
     if (step.waitFor) {
@@ -976,6 +1029,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   const env = {
     ...PINNED,
+    url: nav.page,
     query_parameters: nav.query_parameters,
     browser_version: browserVersion,
     viewport: `${vp.width}x${vp.height}`,
@@ -1517,11 +1571,12 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   lines.push("");
   lines.push(`| pinned value | setting |`);
   lines.push(`| --- | --- |`);
-  // query_parameters is per-scenario, not pinned. One surface needs a query, so listing
-  // a single value here would state a setting the board does not share. It is dropped
-  // from the pinned table and printed against each image instead.
+  // url and query_parameters are per-scenario, not pinned. The board photographs more
+  // than one page, so listing a single value here would state a setting the board does
+  // not share. Both are dropped from the pinned table and printed against each image.
   const shared = { ...PINNED, browser_version: browserVersion, browser_executable: binary };
   delete shared.query_parameters;
+  delete shared.url;
   for (const k of Object.keys(shared).sort()) lines.push(`| ${k} | \`${shared[k]}\` |`);
   for (const r of results) {
     lines.push(
@@ -1564,7 +1619,7 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
     lines.push(`| sha256 | \`${r.sha256}\` |`);
     lines.push(`| bytes | ${r.bytes} |`);
     lines.push(`| viewport | ${r.viewport} (${r.viewport_name}) |`);
-    lines.push(`| url | \`${PINNED.url}\`, query \`${r.env.query_parameters}\` |`);
+    lines.push(`| url | \`${r.env.url}\`, query \`${r.env.query_parameters}\` |`);
     lines.push(`| snapshot | \`${r.snapshotFilename}\` |`);
     lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
     lines.push(`| state captured | ${r.state} |`);

@@ -65,7 +65,7 @@ import {
   PAIRED_METHOD_VERSION,
   CHIP_PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
-  buildTargetedPrompt,
+  targetedPromptOffer,
 } from "../reader-paired.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
@@ -1041,8 +1041,7 @@ export function createReadPairedHandler(deps = {}) {
       targetedPrompt = chipEntry.instruction_text;
       targetedPromptHash = chipEntry.content_hash;
     } else {
-      const { eligible, targeted_prompt } = buildTargetedPrompt({
-        question: openQuestion,
+      const { eligible, targeted_prompt } = targetedPromptOffer({
         measurement: openRun.measurement,
       });
       if (!eligible) {

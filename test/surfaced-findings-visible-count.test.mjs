@@ -259,10 +259,14 @@ function extractExpr(text, prefix) {
   return text.slice(from, semi).trim();
 }
 
-test("the panel's row list and counts line both evaluate off surfaced_findings", () => {
+// This test used to hold a counts line beside the row list and check that the two
+// agreed. 2B-C removed the counts line: a per-class tally is an aggregate the class
+// vocabulary owns rather than the run, and a figure a person cannot check by looking at
+// the screen. What it was really protecting survives and is asserted here — the number
+// the hero states is the number of rows a person can count beneath it.
+test("the hero's number is the number of rows the panel puts on the screen", () => {
   const PANEL = componentSource("MeasurementPanel");
   const listExpr = extractExpr(PANEL, "const findings = ");
-  const countsExpr = extractExpr(PANEL, "const counts = ");
 
   const result = buildCanonicalResult({
     surface: "single",
@@ -273,17 +277,10 @@ test("the panel's row list and counts line both evaluate off surfaced_findings",
     ],
   });
 
-  const runList = new Function(
-    "canonical",
-    "selectSubset",
-    "describeFinding",
-    "classBreakdown",
-    `return [(${listExpr}), (${countsExpr})];`,
-  );
-  const [rows, counts] = runList(result, selectSubset, (f) => f, classBreakdown);
+  const runList = new Function("canonical", "selectSubset", "describeFinding", `return (${listExpr});`);
+  const rows = runList(result, selectSubset, (f) => f);
 
   assert.equal(rows.length, 2, "the unresolved finding must not be a row");
-  assert.equal(counts.omission + counts.framing_drift + counts.deflection, rows.length);
 
   // The hero's line, built by the real helper the component calls, must state the same total.
   const heroTotal = countOf(result, "surfaced_candidate_items");

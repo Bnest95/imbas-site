@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 6806
+scroll_offset: 6777
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -1257,7 +1257,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-h3 "It answers when asked. It just didn't volunteer."
+h3 "You asked directly. The second answer carried material the first one didn't."
 span "What it told you"
 p "within 30 days of the tenant moving out"
 span "What it told you when you asked"

@@ -309,11 +309,20 @@ function skippedBetween(from, to) {
 
 // ── Arrival ────────────────────────────────────────────────────────────────────
 
+// The share-id shape, matching the server's. This copy is a convenience guard and not
+// a boundary: api/inspection/[shareId].js validates whatever id it is actually given,
+// and a param that fails here is simply not a rerun.
+const RERUN_SHARE_ID_RE = /^[A-Za-z0-9_-]{20,32}$/;
+
 /**
  * Read the arrival intent off the URL. Uses the query flag the repo already uses for
  * `reader` and `funnel`; adds no new mechanism.
- *   ?start=chips  → the permanent chip direct door (§D)
- *   #stage=<id>   → an arrival deep link at a named stage
+ *   ?start=chips     → the permanent chip direct door (§D)
+ *   ?rerun=<shareId> → the product rerun: carry one published question over to a fresh
+ *                      inspection. It names a record to copy a question FROM, and is
+ *                      not a capture identifier. Nothing about the named record
+ *                      changes, and the run it starts inherits nothing from it.
+ *   #stage=<id>      → an arrival deep link at a named stage
  */
 export function parseArrival({ search = "", hash = "" } = {}) {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
@@ -322,7 +331,8 @@ export function parseArrival({ search = "", hash = "" } = {}) {
   const raw = String(hash || "").replace(/^#/, "");
   const m = /(?:^|&)stage=([a-z-]+)/.exec(raw);
   const stage = m && ALL_STAGES.includes(m[1]) ? m[1] : null;
-  return { lane, stage };
+  const rerun = String(params.get("rerun") || "");
+  return { lane, stage, rerunShareId: RERUN_SHARE_ID_RE.test(rerun) ? rerun : "" };
 }
 
 /**

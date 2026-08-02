@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 2749
+scroll_offset: 2721
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -314,7 +314,6 @@ dt "Captured"
 dd "<TIMESTAMP>"
 p "The answer model is the one you declared. Imbas records it, and does not observe it."
 h3 "Candidate findings"
-p "Omission: 0 · Framing Drift: 0 · Deflection: 0"
 p "No candidate finding surfaced under the tested conditions."
 p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."

@@ -7,7 +7,6 @@ import {
   canonicalizeForHash,
 } from "./reader-receipt.js";
 import {
-  classBreakdown,
   countLabel,
   countOf,
   describeFinding,
@@ -15,7 +14,6 @@ import {
   ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
-  FINDING_CLASSES,
 } from "./reader-result.js";
 import {
   ACT2_OFFER_COPY,
@@ -1354,20 +1352,29 @@ const SHARE_COPY = {
   },
 };
 
+// The share card the curated lane writes. Three sentences it used to carry are gone.
+// "gap held / gap mostly held / gap closed" was a verdict on the visitor's own paste,
+// produced by a term match, and a stranger could not tell what had been checked or
+// where. The card now carries the same neutral inspection state the run surface shows,
+// then the term check itself as one finding that names what it looked for and whether
+// it turned up — which is the part the visitor can verify against their own answer.
+// The archive line stays because it is the human-scored record, not this run's result,
+// and the "My run" / "Imbas measured" split keeps the two from reading as one claim.
 function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
   const { keyAnchor, significance } = SHARE_COPY[caseId];
-  const runLines = {
-    gap_held: `gap held — the answer did not name ${keyAnchor}, ${significance}.`,
-    partial: `gap mostly held — the answer touched the area but did not name ${keyAnchor}, ${significance}.`,
-    key_found: `gap closed — the answer surfaced ${keyAnchor}. This gap may be narrowing since May 2026.`,
-  };
+  const flagged = verdict !== "key_found";
+  const finding = flagged
+    ? `This term check did not find ${keyAnchor} in your answer.`
+    : `This term check found ${keyAnchor} in your answer.`;
   const measured =
     caseId === "006"
       ? "Imbas measured: all 4 frontier models tested left it out (May 2026)."
       : "Imbas measured: 3 of the 4 frontier models tested left it out (May 2026).";
   return [
     `Imbas · Case ${caseId} — ${caseTitle}`,
-    `My run (${model}, ${runDate}): ${runLines[verdict]}`,
+    `My run (${model}, ${runDate}): ${flagged ? "SOMETHING TO CHECK" : "NOTHING FLAGGED"}`,
+    finding,
+    `Case context: ${significance}.`,
     measured,
     "Run it yourself: imbaslabs.com/workbench",
   ].join("\n");
@@ -3150,6 +3157,21 @@ function readerResultProvenanceLabel({ mode, sel, result }) {
 }
 
 function formatReaderResultCopy(result) {
+  // A fallback is not an inspection, and this branch comes first so nothing below it
+  // can reach for a reading that was never taken. The card is the copy that travels:
+  // pasted into a document, a signal name over a failed request is a finding Imbas
+  // never made, with nothing around it to say so. It used to be exactly that — the
+  // flag lookup below ran over the fallback's `completeness` key, which the client set
+  // to drive the muted styling rather than because anything was observed. The key is
+  // `display_treatment` now and no lookup here reads it.
+  if (result?.source === "fallback") {
+    return [
+      "This inspection did not run.",
+      readerFallbackDisplayMessage(result),
+      "",
+      readerFallbackReadBody(),
+    ].join("\n").trim();
+  }
   const compKey = result?.completeness || "partial";
   // The card carries the same words the badge shows, not the raw key. Printing
   // "Completeness: FULL" here would put back the all-clear the badge just stopped
@@ -3159,21 +3181,6 @@ function formatReaderResultCopy(result) {
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
-  // A fallback is not an inspection. The client builds one when the route errored or
-  // was withheld, and it carries completeness "thin" because that is what keys the
-  // muted styling — so the flag lookup above resolves to a signal name for a run that
-  // never read anything. The screen already knows this and prints no badge. The card
-  // has to know it too, because the card is the copy that travels: pasted into a
-  // document, "DEFLECTION FLAGGED" over a failed request is a finding Imbas never
-  // made, with nothing around it to say so.
-  if (result?.source === "fallback") {
-    return [
-      "This inspection did not run.",
-      readerFallbackDisplayMessage(result),
-      "",
-      readerFallbackReadBody(),
-    ].join("\n").trim();
-  }
   const lines = [
     `This inspection: ${comp}`,
     gloss,
@@ -3220,8 +3227,8 @@ const readerCreditLine = (shareUrl) =>
 // Confirmation Loop run, STATE-AWARE: the headline and the panel order follow the state
 // the person landed on (or corrected to), mirroring the on-screen reveal (not_clear_yet
 // swaps the two panels). This is a shareable paste artifact, not the audit receipt —
-// behavioral verbs only (the state copy already says "didn't volunteer / didn't
-// surface", never measured/proven), the boundary sentence verbatim, and the run's truth
+// behavioral verbs only (the state copy already says "carried / didn't surface", never
+// measured/proven), the boundary sentence verbatim, and the run's truth
 // small-print in [brackets]. Pure string builder, mirroring formatReaderResultCopy.
 //
 // It takes the ALREADY-RESOLVED copy object, never a bare state: this artifact leaves
@@ -3242,17 +3249,23 @@ function formatInspectionCard({ copy, firstText, secondText, smallPrint }) {
   return lines.join("\n").trim();
 }
 
-// Pre-publish consent disclosure (design §D, claims-checked — do not reword). Shown
-// in a modal before a share is minted, so nothing is published until the person has
-// seen exactly what the page will carry. Mode-aware: single names the candidate gaps
-// and the "Candidate gap estimate" label; paired names the delta and the "Machine gap
-// estimate" label. Both state plainly that the full answer(s) are never shown.
+// Pre-publish consent disclosure (design §D, claims-checked). Shown in a modal before
+// a share is minted, so nothing is published until the person has seen exactly what
+// the page will carry. This is a disclosure, so it has to track the page: the share
+// used to publish a figure, both lines named that figure, and after 2B-C neither the
+// page nor these lines carries one. What each line promises is now the findings
+// themselves and the excerpt each one points to.
+//
+// The share page became a dated record in 2B-C, so these lines name the two facts that
+// dates it. The single line names the AI system and the paired line does not, and that
+// asymmetry is real rather than an oversight: a paired capture records no system name,
+// so promising one here would disclose something the page cannot show.
 const READER_SHARE_CONSENT = {
   single: {
     title: "Share this inspection",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the unvalidated estimate (“Candidate gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · the date this answer was captured and the AI system you named · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show your full answer — only the short excerpts above.",
     ],
   },
@@ -3260,7 +3273,7 @@ const READER_SHARE_CONSENT = {
     title: "Share this two-question test",
     lines: [
       "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it.",
-      "The page will show: your question · the delta — what the second answer surfaced that the first did not — each with the short quoted excerpts from both answers · the unvalidated estimate (“Machine gap estimate: N of 3 (unvalidated)”) · the boundary line (“Reader inspections are discovery, not evidence…”).",
+      "The page will show: your question · the date this test was captured · what the second answer surfaced that the first did not, each with the short quoted excerpts from both answers · the boundary line (“Reader inspections are discovery, not evidence…”).",
       "It will not show either full answer — only the short excerpts above.",
     ],
   },
@@ -3527,13 +3540,16 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
   const inspectionNote = (result?.inspection_note || "").trim();
   const isFallback = result?.source === "fallback";
   const isAgent = result?.source === "agent";
+  // A fallback measured nothing, so it gets its presentation key, never the
+  // measurement's. The two never mix: a run has one or the other.
+  const tone = isFallback ? result?.display_treatment || "muted" : comp;
   const provenance = readerResultProvenanceLabel({ mode: context.mode, sel: context.sel, result });
   const paragraphs = isFallback
     ? [readerFallbackReadBody()]
     : (result?.the_read || "").split(/\n\n+/).filter(Boolean);
 
   return (
-    <section className={`wb-reader-result wb-scroll-anchor is-${comp}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
+    <section className={`wb-reader-result wb-scroll-anchor is-${tone}${isFallback ? " is-fallback" : ""}${isAgent ? " is-agent" : ""}`} aria-labelledby="wb-reader-result-heading">
       <div className="wb-reader-result__head">
         {isAgent ? (
           <div className={`wb-reader-result__status is-${comp}`}>
@@ -3619,20 +3635,14 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
 // Everything here is candidate vocabulary — unvalidated inspection hypotheses,
 // never validated classifications, never evidence. The unvalidated label and the
 // boundary line are non-negotiable and never below the fold.
-// Keyed by the ONE class id (reader-result.js FINDING_CLASSES), not by the
-// inspector's candidate string. ONE vocabulary across every surface: the three
-// locked signal names, single-answer and paired alike. The surfaces previously
-// disagreed — this one said "Candidate missing item" where the paired surface said
-// "Omission" — and a person reading both could not tell whether they were looking at
-// two things or one. They are one. The candidate/unvalidated status is carried by the
-// section header and the boundary line, which is where a status belongs; it is not
-// smuggled into the name of the signal.
-const MEASURE_FINDING_LABEL = {
-  omission: "Omission",
-  framing_drift: "Framing Drift",
-  deflection: "Deflection",
-};
-
+// The row label used to come from a three-entry map here, keyed by class id. It held
+// the same three strings reader-result.js already publishes as class_display, so it
+// was a second copy of the one vocabulary and a place the view had to be edited for
+// every finding type. The rows read the descriptor's own label now. What that map was
+// protecting stands: ONE vocabulary across every surface, and the candidate status
+// carried by the section header and the boundary line rather than smuggled into the
+// name of the signal.
+//
 // onExport is an OPTIONAL success hook (kind "json" | "receipt"). Inspection callers
 // omit it (unchanged); the user-chip lane passes one to emit the reused CARD_EXPORTED
 // event, so a downloaded follow-up receipt counts on the same funnel row as an
@@ -3753,30 +3763,22 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
   );
 }
 
-// Reader v2 redesign edit 4 — plain summary that sits under the hero's count line.
-// The three locked signal names, never "left out / skipped / hid". The breakdown
-// comes from the SAME named subset the line above states (surfaced_candidate_items),
-// so the two can never disagree about how many items surfaced.
+// The line that sits under the hero's count. It used to enumerate the run's items by
+// class — "Reader surfaced 2 Omission items, 1 Framing Drift item." — which is an
+// aggregate across the class vocabulary, and an aggregate is the one thing a person
+// cannot check against what is on the screen. What the line says now is what the count
+// counts: surfaced_candidate_items is the items carrying a quotation that resolved
+// verbatim against the pasted answer, so the sentence states that predicate in plain
+// words and every row carries the quotation that earned it a place.
 //
-// The signal names never inflect. "Framing Drift" has no plural a reader would
-// recognize, and bending one name and not the others would read as three different
-// kinds of thing. The unit carries the number instead — the same unit the hero above
-// states, so the sentence and the count answer to one word.
+// The empty branch keeps its second sentence. "It read clean" was a verdict on the
+// answer, which is the one thing a null result cannot support: the Reader can report
+// what it surfaced, and surfacing nothing is not a finding of completeness.
 function readerCandidateSummary(canonical) {
-  const c = classBreakdown(canonical, "surfaced_candidate_items");
-  const parts = [];
-  for (const [id, label] of [["omission", "Omission"], ["framing_drift", "Framing Drift"], ["deflection", "Deflection"]]) {
-    const n = c[id] || 0;
-    if (n) parts.push(`${n} ${label} item${n === 1 ? "" : "s"}`);
+  if (!countOf(canonical, "surfaced_candidate_items")) {
+    return "Reader surfaced nothing to list here under the tested conditions. That records what this inspection found, not a verdict on the answer.";
   }
-  // The empty branch names the same three signals the populated branch names, so a
-  // reader learns what was looked for either way. "It read clean" was a verdict on
-  // the answer, which is the one thing a null result cannot support: the Reader can
-  // report what it surfaced, and surfacing nothing is not a finding of completeness.
-  if (!parts.length) {
-    return "Reader surfaced no Omission, Framing Drift, or Deflection items here. That records what this inspection found, not a verdict on the answer.";
-  }
-  return `Reader surfaced ${parts.join(", ")}.`;
+  return "Each one is a candidate the Reader could quote from your answer.";
 }
 
 // Reader v2 P3 — the perception-tap write (design §4). A client-triggered telemetry
@@ -3950,7 +3952,6 @@ function MeasurementPanel({ result, context }) {
   const receipt = result?.receipt || null;
   const canonical = result.result;
   const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
-  const counts = classBreakdown(canonical, "surfaced_findings");
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
   return (
@@ -3966,9 +3967,9 @@ function MeasurementPanel({ result, context }) {
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
           <h3 className="wb-reader-result__section-title">Candidate findings</h3>
-          <p className="wb-measure__counts">
-            {`Omission: ${counts.omission || 0} · Framing Drift: ${counts.framing_drift || 0} · Deflection: ${counts.deflection || 0}`}
-          </p>
+          {/* A per-class tally stood here. It summed the rows below into a figure the
+              class vocabulary owned rather than the run, and it went stale the moment
+              a shape registered outside those three names. The rows are the account. */}
           {findings.length ? (
             <ul className="wb-measure__list">
               {findings.map((f) => {
@@ -3981,7 +3982,7 @@ function MeasurementPanel({ result, context }) {
                 );
                 return (
                   <li key={f.id} className="wb-measure__finding">
-                    <span className="wb-measure__finding-type">{MEASURE_FINDING_LABEL[f.class_id] || f.class_display}</span>
+                    <span className="wb-measure__finding-type">{f.class_display}</span>
                     {(f.materiality || "").trim() ? (
                       <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
                     ) : null}
@@ -4013,48 +4014,17 @@ function MeasurementPanel({ result, context }) {
   );
 }
 
-// Reader v2 R1 (item 9) — the Gap X-ray. A compact, single-glance read of the
-// delta's signal composition: the same Omission / Framing Drift / Deflection counts
-// rendered as a thin proportional bar so the SHAPE of the gap is legible before the
-// numbers are read (mostly left out? mostly reframed?). Purely additive and
-// decorative (aria-hidden) — the counts line directly beneath stays the precise,
-// screen-reader-accessible source of truth. No new hue: the three segments are
-// ember-ramp shades only. Renders nothing when the delta is empty (total 0).
-const GAP_XRAY_SEGMENTS = [
-  { key: "Omission", cls: "is-omission" },
-  { key: "Framing Drift", cls: "is-framing" },
-  { key: "Deflection", cls: "is-deflection" },
-];
-function GapXray({ counts }) {
-  const c = counts || {};
-  const segs = GAP_XRAY_SEGMENTS.map((s) => ({ ...s, n: Number(c[s.key]) || 0 }));
-  const total = segs.reduce((t, s) => t + s.n, 0);
-  if (total <= 0) return null;
-  return (
-    <div className="wb-xray" aria-hidden="true">
-      {segs
-        .filter((s) => s.n > 0)
-        .map((s) => (
-          <span key={s.key} className={`wb-xray__seg ${s.cls}`} style={{ flexGrow: s.n }} />
-        ))}
-    </div>
-  );
-}
+// A proportional bar (the "Gap X-ray") stood here, with one segment per class, over a
+// paired tally that stood beside it. Both are gone. The bar drew the delta's shape as
+// a ratio between the three class names, which is a claim about proportions the run
+// never measured — a decorative element cannot be aria-hidden and still be the thing
+// a person reads the result off. The rows carry each difference with the words from
+// both answers, and the count above them states how many there are.
 
 // The three labels on a delta row. Two name an answer and sit above a quotation the
 // server resolved; this one names the Reader and sits above a sentence the Reader
 // wrote. Labelling it is how a person can tell the evidence from the reading of it.
 const PAIRED_READING_LABEL = "The Reader's reading";
-
-// The paired tally, in the display vocabulary, over the named PROBE_ONLY subset.
-// Derived from the same subset that produces the rows, so the number above the list
-// and the list itself are one collection rather than two counts that can disagree.
-function pairedSignalCounts(canonical) {
-  const c = classBreakdown(canonical, "probe_surfaced_differences");
-  const out = {};
-  for (const [id, label] of Object.entries(FINDING_CLASSES)) out[label] = c[id] || 0;
-  return out;
-}
 
 function quotedAnchorText(finding, role) {
   const a = finding.anchors.find((x) => x.role === role && x.status === ANCHOR_STATUS.QUOTED);
@@ -4117,7 +4087,6 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
         openQuote: "",
         probeQuote: "",
       }));
-  const counts = canonical ? pairedSignalCounts(canonical) : null;
 
   // Run-the-pair v1: when the capture didn't come through as matched conditions
   // (a different model, a disclosed edit, or a setup the person wasn't sure about),
@@ -4296,12 +4265,9 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           {/* Was "The delta". Delta is a word from the data model, and it is the
               heading over the one thing the whole surface exists to show. */}
           <h3 className="wb-reader-result__section-title">What the second answer added</h3>
-          {counts ? <GapXray counts={counts} /> : null}
-          {counts ? (
-            <p className="wb-measure__counts">
-              {`Omission: ${counts.Omission || 0} · Framing Drift: ${counts["Framing Drift"] || 0} · Deflection: ${counts.Deflection || 0}`}
-            </p>
-          ) : null}
+          {/* The proportional bar and the per-class tally that stood here are gone.
+              The count above this section states how many differences surfaced, and
+              each row below names its own signal and quotes both answers. */}
           {rows.length ? (
             <ol className="wb-measure__list">
               {rows.map((r) => (
@@ -5710,6 +5676,11 @@ function ReaderWorkbench() {
   // the render tree cannot derive on its own; every other stage input is already here.
   const [lane, setLane] = useState(() => parseArrival(window.location).lane);
   const [chipMounted, setChipMounted] = useState(() => parseArrival(window.location).lane === LANE_CHIPS);
+  // The product rerun (?rerun=<shareId>). True once a published question has been
+  // carried over, which is the only thing it carries: the answer box stays empty
+  // because the point is the answer you get today, and Imbas asks nothing on anyone's
+  // behalf. Nothing is written back to the record named in the URL.
+  const [rerunSeeded, setRerunSeeded] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [hasDelta, setHasDelta] = useState(false);
   const stageRef = useRef(null);
@@ -5831,6 +5802,34 @@ function ReaderWorkbench() {
     if (norm.rewrite) {
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
+  }, []);
+
+  // The product rerun. One GET against the share the visitor came from, to copy its
+  // published question into the box — nothing else moves. The named record is read and
+  // never written, so the receipt that offered this link reads the same afterwards as
+  // before, and the run this starts is a separate record with its own date.
+  //
+  // This deliberately seeds the question and nothing else. Restoring the old answer
+  // would recreate the old capture, and the reason to be here is the answer the system
+  // gives now. A failed or missing read leaves the box blank rather than half-filled:
+  // the person can type the question, and a rerun that quietly seeded the wrong text
+  // would be worse than one that seeded none.
+  useEffect(() => {
+    const { rerunShareId } = parseArrival(window.location);
+    if (!rerunShareId) return undefined;
+    let live = true;
+    fetch(`/api/inspection/${encodeURIComponent(rerunShareId)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const q = data && data.ok && data.record ? String(data.record.question || "").trim() : "";
+        if (!live || !q) return;
+        setQuestion(q);
+        setRerunSeeded(true);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
   }, []);
 
   // The hash mirrors the stage so deep links and bookmarks name something real. It is
@@ -6159,7 +6158,12 @@ function ReaderWorkbench() {
         causeRef.current = CAUSE_DEGRADED;
         setReaderResult({
           source: "fallback",
-          completeness: "thin",
+          // Was `completeness: "thin"`. Nothing was measured, so there was no
+          // completeness to carry; the value was set to drive the muted styling and it
+          // was doing that under a measurement field's name, which is how the copyable
+          // card came to look a signal name up from a request that never ran. It is a
+          // presentation key and it is named as one now.
+          display_treatment: "muted",
           the_read: readerFallbackReadBody(),
           what_was_left_out: [],
           how_it_was_shaped: "",
@@ -6231,9 +6235,15 @@ function ReaderWorkbench() {
               </>
             ) : (
               <div className="wb-reader-v2__own-header">
-                <p className="wb-reader-v2__own-intro">
-                  Paste an AI answer below. The Reader inspects what it might be missing.
-                </p>
+                {rerunSeeded ? (
+                  <p className="wb-reader-v2__own-intro wb-reader-v2__own-intro--rerun">
+                    You carried this question over from a record you were reading. Ask your AI again and paste what it says today. Imbas asks nothing on your behalf. What comes back becomes its own record with its own date, and the one you came from does not change.
+                  </p>
+                ) : (
+                  <p className="wb-reader-v2__own-intro">
+                    Paste an AI answer below. The Reader inspects what it might be missing.
+                  </p>
+                )}
               </div>
             )}
 

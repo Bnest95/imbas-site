@@ -1,0 +1,40 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .insp-error
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: ?share=Ab3xQ7zK9mNpR2sTuV4w
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 0
+timezone: UTC
+url: /inspection.html
+viewport: 375x812
+
+## payload
+{
+  "/api/inspection/Ab3xQ7zK9mNpR2sTuV4w": {
+    "__qa_inject_http__": true,
+    "body": {
+      "error": "not_found",
+      "ok": false
+    },
+    "status": 404
+  }
+}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+h1 "Inspection not found."
+p "This link may be incorrect, or the share was removed."
+a "Test another answer" href="/workbench.html?reader=1"
+a "Explore reviewed archive" href="/archive.html"

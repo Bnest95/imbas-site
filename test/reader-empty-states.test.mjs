@@ -53,7 +53,7 @@ const EMPTY_STATES = [
   {
     site: "readerCandidateSummary — the line under the hero count",
     kind: "null_result",
-    text: "Reader surfaced no Omission, Framing Drift, or Deflection items here. That records what this inspection found, not a verdict on the answer.",
+    text: "Reader surfaced nothing to list here under the tested conditions. That records what this inspection found, not a verdict on the answer.",
   },
   {
     site: "MeasurementPanel — the Candidate findings list",

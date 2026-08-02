@@ -41,6 +41,7 @@ import { CLAIM_STATE_UI } from "../reader-provenance.js";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SRC = readFileSync(join(ROOT, "workbench-app.jsx"), "utf8");
+const RECEIPT_SRC = readFileSync(join(ROOT, "reader-receipt-page.js"), "utf8");
 const BOARD_DIR = join(ROOT, "docs", "qa", "visual-acceptance-harness");
 
 // ── The prohibited vocabulary, listed rather than described ──────────────────
@@ -211,6 +212,21 @@ test("3) the component source carries none of the prohibited strings", () => {
     "A prohibited string is back in workbench-app.jsx. The observation may be real — " +
       "ship it as a flag in the ruled vocabulary (Omission, Framing Drift, Deflection), " +
       "not as a grade on the answer or a verdict on the visitor's paste.",
+  );
+});
+
+// The receipt is scanned at source rather than left to test 4, because the camera cannot
+// reach all of its copy. Its sections choose a branch per record, and one branch — a
+// preserved source artifact — has no product path that produces it, so no board scenario
+// can photograph the sentence it would print. Copy that ships in a branch nothing
+// photographs is exactly the copy a screen-only scan misses.
+test("3b) the receipt source carries none of the prohibited strings", () => {
+  const offenders = hits(stripComments(RECEIPT_SRC));
+  assert.deepEqual(
+    offenders,
+    [],
+    "A prohibited string reached reader-receipt-page.js. The receipt states what the " +
+      "record does not establish; it never grades the answer it preserves.",
   );
 });
 

@@ -1,25 +1,50 @@
 // inspection.js — Load and render an unlisted Workbench inspection share.
 //
 // Mode-aware (Reader v2 P4). The GET /api/inspection/:shareId projection carries a
-// `mode`: "single" (candidate findings + candidate gap estimate), "paired" (the
-// two-question delta + machine gap estimate), or "legacy" (pre-P4 rows: the original
-// full-answer render, kept so old links still resolve). Every mode renders the same
-// report seam beneath the result. Nothing here computes an estimate or a boundary:
-// the label and boundary sentence arrive on the projection, already claims-checked.
+// `mode`: "single" (candidate findings), "paired" (the two-question delta), or
+// "legacy" (pre-P4 rows, kept so old links still resolve). Every mode renders the
+// same report seam beneath the result. Nothing here computes anything: the boundary
+// sentence arrives on the projection, already claims-checked.
+//
+// Pass 2B-C: a share publishes findings, not a figure and not a tally. A stranger
+// reaching this page reads each thing the inspection found and the span it points to,
+// which is the part they can hold against the question themselves. The run surface and
+// this page now say the same thing about the same absence — a visitor who read NOTHING
+// FLAGGED on the run cannot land here and read a claim about how complete the answer
+// was, because no surface makes that claim any more.
 
-const COMPLETENESS_LABEL = { full: "FULL", partial: "PARTIAL", thin: "THIN" };
-const COMPLETENESS_GLOSS = {
-  full: "The answer substantially served the question.",
-  partial: "Some material context was missing or shaped.",
-  thin: "The answer was evasive or substantially incomplete.",
-};
-// Candidate finding type → display label. Mirrors MEASURE_FINDING_LABEL in the
-// Workbench so a share reads as the same instrument that produced it.
+// Stored class string → display label, for the spellings that reach this page. A share
+// row is a wire projection and carries no render descriptor, so the mapping happens
+// here; rows written before the shipped vocabulary carry the older candidate strings,
+// and both spellings resolve to the one name. A string this map does not know prints
+// itself rather than vanishing, which is what keeps the page open to a finding type
+// that did not exist when it was written.
 const MEASURE_FINDING_LABEL = {
-  "candidate missing item": "Candidate missing item",
-  "candidate framing issue": "Candidate framing issue",
-  "candidate deflection": "Candidate deflection",
+  omission: "Omission",
+  framing_drift: "Framing Drift",
+  deflection: "Deflection",
+  "candidate missing item": "Omission",
+  "candidate framing issue": "Framing Drift",
+  "candidate deflection": "Deflection",
 };
+
+// Pre-P4 rows were published under an earlier Reader format that printed a
+// completeness label over the answer. That label is retired. A published share is a
+// dated record of what was published, so nothing preserved on the row is rewritten
+// here and nothing is remapped onto the current vocabulary: the retired label simply
+// stops rendering, and this notice says so.
+const LEGACY_FORMAT_NOTICE =
+  "This inspection was published under an earlier Reader format that rated how complete an answer was. That rating is retired and is not shown. Everything else below is preserved exactly as it was published.";
+
+// The empty-state lines, verbatim from the run surface. A visitor who read one of
+// these on the run must not meet a differently-worded — or differently-confident —
+// version of it on that same run's share page. They are constants rather than inline
+// template text because an apostrophe inside template HTML desyncs the scanner in
+// test/zero-score-language.test.mjs.
+const SINGLE_EMPTY = "No candidate finding surfaced under the tested conditions.";
+const PAIRED_EMPTY = "This probe surfaced nothing new. That doesn't mean either answer is complete.";
+const LEGACY_MISSING_EMPTY = "The Reader flagged nothing missing under the tested conditions.";
+const LEGACY_SHAPED_EMPTY = "The Reader recorded no shaping under the tested conditions.";
 
 function escapeHtml(s) {
   return String(s)
@@ -53,13 +78,13 @@ function flash(btn, okLabel) {
 
 // ── Legacy (pre-P4) copy-full text ────────────────────────────────────────────
 function formatShareCopy(record, url) {
-  const comp = (record.completeness || "partial").toUpperCase();
-  const gloss = COMPLETENESS_GLOSS[record.completeness] || COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(record.what_was_left_out) ? record.what_was_left_out.filter(Boolean) : [];
   const lines = [
     "Inspection receipt",
     "Unlisted Workbench inspection",
     url,
+    "",
+    LEGACY_FORMAT_NOTICE,
     "",
     `Status: Unlisted · Unreviewed`,
     `Source: ${record.source_label || "Workbench inspection"}${record.case_label ? ` · ${record.case_label}` : ""}`,
@@ -70,17 +95,14 @@ function formatShareCopy(record, url) {
   if ((record.ai_model || "").trim()) lines.push(`AI used: ${record.ai_model.trim()}`);
   lines.push("", "Answer", (record.answer || "").trim(), "");
   lines.push(
-    `Completeness: ${comp}`,
-    gloss,
-    "",
     "THE READ",
     record.the_read || "",
     "",
     "WHAT WAS LEFT OUT",
-    ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : ["- (none identified)"]),
+    ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : [LEGACY_MISSING_EMPTY]),
     "",
     "HOW IT WAS SHAPED",
-    (record.how_it_was_shaped || "").trim() || "(none detected)",
+    (record.how_it_was_shaped || "").trim() || LEGACY_SHAPED_EMPTY,
   );
   if ((record.inspection_note || "").trim()) {
     lines.push("", "INSPECTION NOTE", record.inspection_note.trim());
@@ -100,6 +122,72 @@ function mastHtml(mode) {
     </header>`;
 }
 
+// ── The dated capture receipt ────────────────────────────────────────────────
+//
+// Built server-side by reader-receipt-page.js and delivered on the projection, so this
+// page still computes nothing and two loads of one share cannot differ. The section
+// list is walked, never enumerated: the day a section is added there, it renders here
+// without this function changing.
+//
+// A section with nothing in it prints why it has nothing. Rendering it as an empty list
+// would say Imbas looked and found none, and for sources that is not what happened.
+//
+// Quotation marks are reserved for the answer's own words. A line Imbas wrote — the
+// limits under "What Imbas could not observe" — is set as a statement, because the same
+// treatment for both would put our sentences in the system's mouth on the one page whose
+// promise is that a reader can tell them apart.
+function receiptItemHtml(item) {
+  const label = item.label ? `<span class="insp-receipt__item-label">${escapeHtml(item.label)}</span>` : "";
+  const body =
+    item.kind === "QUOTED"
+      ? `<blockquote class="insp-receipt__quote">"${escapeHtml(item.text)}"</blockquote>`
+      : `<p class="insp-receipt__statement">${escapeHtml(item.text)}</p>`;
+  return `<li class="insp-receipt__item">${label}${body}</li>`;
+}
+
+function receiptSectionHtml(section) {
+  const items = Array.isArray(section.items) ? section.items : [];
+  const note = (section.note || "").trim();
+  const body = items.length
+    ? `<ul class="insp-receipt__items">${items.map(receiptItemHtml).join("")}</ul>`
+    : "";
+  return `
+    <article class="insp-receipt__section" data-state="${escapeHtml(section.state || "")}">
+      <h3 class="insp-receipt__section-title">${escapeHtml(section.heading || "")}</h3>
+      ${note ? `<p class="insp-receipt__note">${escapeHtml(note)}</p>` : ""}
+      ${body}
+    </article>`;
+}
+
+function receiptHtml(record) {
+  const receipt = record && record.receipt;
+  if (!receipt) return "";
+  const sections = Array.isArray(receipt.sections) ? receipt.sections : [];
+  const closing = receipt.closing || { heading: "", items: [] };
+  const closingItems = Array.isArray(closing.items) ? closing.items : [];
+  return `
+    <section class="insp-receipt" aria-label="Capture record">
+      <div class="insp-receipt__sections">
+        ${sections.map(receiptSectionHtml).join("")}
+      </div>
+      <aside class="insp-receipt__closing">
+        <h3 class="insp-receipt__closing-title">${escapeHtml(closing.heading || "")}</h3>
+        <ul class="insp-receipt__closing-list">
+          ${closingItems.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}
+        </ul>
+      </aside>
+    </section>`;
+}
+
+// The line the page is named for. It sits under the masthead because it is the record's
+// identity — which answer, said by what, on what day — and everything below it is that
+// capture's contents.
+function anchorHtml(record) {
+  const anchor = record && record.receipt && record.receipt.anchor;
+  const text = anchor && (anchor.text || "").trim();
+  return text ? `<p class="insp-record__anchor">${escapeHtml(text)}</p>` : "";
+}
+
 function questionHtml(record) {
   return `
     <div class="insp-context">
@@ -110,13 +198,28 @@ function questionHtml(record) {
     </div>`;
 }
 
-function actionsHtml() {
+// The product rerun. The receipt lists "what the same question returns now" among the
+// things it cannot tell you; this is how a reader finds out, by hand. It carries the
+// question over to a blank inspection and stops there — Imbas does not ask anything,
+// so the person re-asks their own system and pastes what comes back.
+//
+// It reads this record and writes nothing to it. The run it starts is a separate
+// record with its own date, and this page is the same page afterwards as before.
+function rerunHref(record) {
+  const id = (record && record.share_id) || "";
+  return id ? `/workbench.html?rerun=${encodeURIComponent(id)}` : "";
+}
+
+function actionsHtml(record) {
+  const rerun = rerunHref(record);
   return `
     <div class="insp-actions">
+      ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--ghost" href="/workbench.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
-    </div>`;
+    </div>
+    ${rerun ? `<p class="insp-actions__note">Running it again starts a new record with its own date. This one does not change.</p>` : ""}`;
 }
 
 // The report seam (design §F, approved verbatim). Present on every share, every mode.
@@ -138,7 +241,7 @@ function reportSeamHtml() {
     </aside>`;
 }
 
-// ── Single mode: candidate findings + candidate gap estimate ──────────────────
+// ── Single mode: the candidate findings, each with the span it points to ──────
 function singleFindingHtml(f) {
   const type = escapeHtml(MEASURE_FINDING_LABEL[f.type] || f.type || "");
   const why = (f.materiality || "").trim();
@@ -152,25 +255,18 @@ function singleFindingHtml(f) {
 
 function singlePanelHtml(record) {
   const findings = Array.isArray(record.findings) ? record.findings : [];
-  const counts = { "candidate missing item": 0, "candidate framing issue": 0, "candidate deflection": 0 };
-  findings.forEach((f) => {
-    if (counts[f.type] != null) counts[f.type] += 1;
-  });
-  const label = (record.gap_estimate_label || "").trim();
   const boundary = (record.boundary || "").trim();
   return `
     <section class="wb-reader-result is-agent wb-measure" aria-label="Inspection result">
       <div class="wb-reader-result__head">
         <h2 class="wb-reader-result__title">MEASUREMENT</h2>
       </div>
-      ${label ? `<div class="wb-measure__estimate"><div class="wb-measure__estimate-value">${escapeHtml(label)}</div></div>` : ""}
       <div class="wb-reader-result__sections">
         <article class="wb-reader-result__section wb-measure__findings">
           <h3 class="wb-reader-result__section-title">Candidate findings</h3>
-          <p class="wb-measure__counts">Missing item: ${counts["candidate missing item"]} · Framing issue: ${counts["candidate framing issue"]} · Deflection: ${counts["candidate deflection"]}</p>
           ${findings.length
             ? `<ul class="wb-measure__list">${findings.map(singleFindingHtml).join("")}</ul>`
-            : `<p class="wb-reader-result__empty">No candidate findings — the answer read clean.</p>`}
+            : `<p class="wb-reader-result__empty">${escapeHtml(SINGLE_EMPTY)}</p>`}
         </article>
       </div>
       <p class="wb-measure__unvalidated">These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence.</p>
@@ -179,12 +275,19 @@ function singlePanelHtml(record) {
 }
 
 function renderSingle(root, record) {
-  root.innerHTML = mastHtml("single") + questionHtml(record) + singlePanelHtml(record) + actionsHtml() + reportSeamHtml();
+  root.innerHTML =
+    mastHtml("single") +
+    anchorHtml(record) +
+    questionHtml(record) +
+    singlePanelHtml(record) +
+    receiptHtml(record) +
+    actionsHtml(record) +
+    reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);
 }
 
-// ── Paired mode: the two-question delta + machine gap estimate ────────────────
+// ── Paired mode: what the second answer added, with both sides quoted ─────────
 function deltaItemHtml(d) {
   const pattern = (d.signal_pattern || "").trim();
   const point = (d.point || "").trim();
@@ -200,42 +303,40 @@ function deltaItemHtml(d) {
 
 function pairedPanelHtml(record) {
   const items = Array.isArray(record.delta_items) ? record.delta_items : [];
-  const counts = { Omission: 0, "Framing Drift": 0, Deflection: 0 };
-  items.forEach((d) => {
-    if (counts[d.signal_pattern] != null) counts[d.signal_pattern] += 1;
-  });
-  const label = (record.gap_estimate_label || "").trim();
   const boundary = (record.boundary || "").trim();
   return `
     <section class="wb-reader-result is-agent wb-measure" aria-label="Two-question test result">
       <div class="wb-reader-result__head">
         <h2 class="wb-reader-result__title">TWO-QUESTION TEST</h2>
       </div>
-      ${label ? `<div class="wb-measure__estimate"><div class="wb-measure__estimate-value">${escapeHtml(label)}</div></div>` : ""}
       <div class="wb-reader-result__sections">
         <article class="wb-reader-result__section">
-          <h3 class="wb-reader-result__section-title">The delta</h3>
-          <p class="wb-measure__counts">Omission: ${counts.Omission} · Framing Drift: ${counts["Framing Drift"]} · Deflection: ${counts.Deflection}</p>
+          <h3 class="wb-reader-result__section-title">What the second answer added</h3>
           ${items.length
             ? `<ol class="wb-measure__list">${items.map(deltaItemHtml).join("")}</ol>`
-            : `<p class="wb-reader-result__empty">No material gap. The direct question surfaced nothing decision-relevant the first answer left out.</p>`}
+            : `<p class="wb-reader-result__empty">${escapeHtml(PAIRED_EMPTY)}</p>`}
         </article>
       </div>
-      <p class="wb-measure__unvalidated">This is a machine estimate over one answer pair. Not a human-scored result, not evidence.</p>
+      <p class="wb-measure__unvalidated">These are machine observations over one answer pair. Not a human-scored result, not evidence.</p>
       ${boundary ? `<p class="wb-reader-result__trust wb-measure__boundary">${escapeHtml(boundary)}</p>` : ""}
     </section>`;
 }
 
 function renderPaired(root, record) {
-  root.innerHTML = mastHtml("paired") + questionHtml(record) + pairedPanelHtml(record) + actionsHtml() + reportSeamHtml();
+  root.innerHTML =
+    mastHtml("paired") +
+    anchorHtml(record) +
+    questionHtml(record) +
+    pairedPanelHtml(record) +
+    receiptHtml(record) +
+    actionsHtml(record) +
+    reportSeamHtml();
   wireCopyLink();
   wireReport(record.share_id);
 }
 
 // ── Legacy (pre-P4) full-answer render ────────────────────────────────────────
 function renderLegacy(root, record) {
-  const comp = record.completeness || "partial";
-  const gloss = COMPLETENESS_GLOSS[comp] || COMPLETENESS_GLOSS.partial;
   const leftOut = Array.isArray(record.what_was_left_out) ? record.what_was_left_out.filter(Boolean) : [];
   const shaped = (record.how_it_was_shaped || "").trim();
   const inspectionNote = (record.inspection_note || "").trim();
@@ -250,12 +351,9 @@ function renderLegacy(root, record) {
       <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
     </header>
 
-    <section class="wb-reader-result is-agent is-${escapeHtml(comp)}" aria-label="Inspection result">
+    <section class="wb-reader-result is-agent is-legacy" aria-label="Inspection result">
       <div class="wb-reader-result__head">
-        <div class="wb-reader-result__status is-${escapeHtml(comp)}">
-          <div class="wb-reader-result__badge is-${escapeHtml(comp)}">${COMPLETENESS_LABEL[comp] || "PARTIAL"}</div>
-          <p class="wb-reader-result__badge-gloss">${escapeHtml(gloss)}</p>
-        </div>
+        <p class="wb-reader-result__archival-notice">${escapeHtml(LEGACY_FORMAT_NOTICE)}</p>
       </div>
       <h2 class="wb-reader-result__title wb-reader-result__title--sub">THE READER</h2>
       ${provenance ? `<p class="wb-reader-result__provenance">${escapeHtml(provenance)}</p>` : ""}
@@ -294,11 +392,11 @@ function renderLegacy(root, record) {
           <h3 class="wb-reader-result__section-title">What was left out</h3>
           ${leftOut.length
             ? `<ul class="wb-reader-result__list">${leftOut.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
-            : `<p class="wb-reader-result__empty">No major substantive omissions identified.</p>`}
+            : `<p class="wb-reader-result__empty">${escapeHtml(LEGACY_MISSING_EMPTY)}</p>`}
         </article>
         <article class="wb-reader-result__section wb-reader-result__section--shaped">
           <h3 class="wb-reader-result__section-title">How it was shaped</h3>
-          <p class="wb-reader-result__shaped">${escapeHtml(shaped || "No meaningful shaping detected.")}</p>
+          <p class="wb-reader-result__shaped">${escapeHtml(shaped || LEGACY_SHAPED_EMPTY)}</p>
         </article>
         ${inspectionNote ? `
         <article class="wb-reader-result__section wb-reader-result__section--inspection">

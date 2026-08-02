@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 8567
+scroll_offset: 8467
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -1257,8 +1257,8 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
+p "Differences the second answer surfaced that the Reader could quote from both answers."
 h3 "What the second answer added"
-p "Omission: 2 · Framing Drift: 0 · Deflection: 0"
 span "Omission"
 span "The Reader's reading"
 p "The second answer names the deadline as state-set and gives a range, where the first gave a single national-sounding number."

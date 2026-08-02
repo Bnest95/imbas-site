@@ -172,38 +172,14 @@ function scanSource(path) {
 // were derived in-session; the BASE_SHA figures they descend from are recorded in the
 // PR body as the elimination proof.
 //
-// CARVED SURFACE (share / permalink). Ruled out of scope for Pass 2B-B: the share
-// page still renders the score from its stored Airtable row, so the consent copy and
-// the page metadata must keep disclosing it. Changing the disclosure alone would make
-// it a lie — consent copy that understates what gets published is worse than the
-// score. Schema, render, metadata and consent copy move together, in 2B-C.
+// CARVED SURFACE (share / permalink). Ruled out of scope for Pass 2B-B, closed by
+// 2B-C: the share row no longer stores the score, the page no longer renders it, the
+// metadata no longer prints it, and the consent copy no longer promises it. Schema,
+// render, metadata and consent copy moved in one commit, because a disclosure that
+// understates what gets published is worse than the thing it fails to disclose. Those
+// five entries are DELETED rather than lowered to zero — a zero ceiling is still a
+// permission slip, and the surface is now held by Part A like every other file.
 const BASELINE = {
-  "api/inspection-share.js": {
-    count: 3,
-    status: "temporary",
-    retired_by: "2B-C — share/permalink surface migration",
-  },
-  "inspection.js": {
-    count: 1,
-    status: "temporary",
-    retired_by: "2B-C — share/permalink surface migration",
-  },
-  "api/inspection-view.js": {
-    count: 1,
-    status: "temporary",
-    retired_by: "2B-C — share/permalink surface migration",
-  },
-  "workbench-app.jsx": {
-    count: 2,
-    status: "temporary",
-    retired_by: "2B-C — the READER_SHARE_CONSENT disclosure strings, which move with the page they describe",
-  },
-  "workbench.bundle.js": {
-    count: 2,
-    status: "temporary",
-    retired_by: "2B-C — generated from workbench-app.jsx; tracks it exactly",
-  },
-
   // COMPATIBILITY ENVELOPE. Score generation and storage persist untouched behind
   // frozen API semantics. After 2B-B none of it drives a current render, a canonical
   // receipt claim, an export, a tally, a label, or explanatory copy — Part A is what
@@ -222,7 +198,7 @@ const BASELINE = {
     count: 2,
     status: "temporary",
     retired_by:
-      "2B-C for gapEstimateLabel/pairedGapEstimateLabel, which survive only because api/inspection-share.js and api/read-paired.js import them; relocation is prohibited while api semantics are frozen",
+      "API-spec lane — pairedGapEstimateLabel survives only because api/read-paired.js still publishes gap_estimate_label on a frozen payload; gapEstimateLabel has had no production caller since 2B-C removed the share projection, and deleting it is the API-spec lane's call, not a presentation pass's, because relocation is prohibited while api semantics are frozen",
   },
 
   // FROZEN DOCUMENTS. Dated papers and the pages that define the term. Editorial
@@ -538,27 +514,59 @@ test("output scan: the export control copy names no score", () => {
 });
 
 // ── The consistency invariant ─────────────────────────────────────────────────
-// While the share page renders a score, the consent copy shown before publishing and
-// the page metadata must both disclose it. Truthful-and-consistent is the required
-// interim state: a person must not consent to publishing a page that says more than
-// the dialog admitted. When 2B-C removes the score, all three move together and this
-// test's expectation inverts to zero on every one of them.
+// The share page, the metadata that unfurls it, and the consent dialog shown before
+// it is published all speak about the same page, so they must not disagree about what
+// that page carries. Until 2B-C the shared fact was a score, and the invariant held
+// all three to disclosing it. 2B-C removed it from all three in one commit, so the
+// invariant now holds all three to zero. It is one assertion, not three, on purpose:
+// a person must never consent to publishing a page that says more than the dialog
+// admitted, and the only way to fail that is to move one of these without the others.
+// The serialization is included because a field the endpoint still stores is a field
+// the page can start printing again without anyone editing the page.
 test("consistency invariant: the share page, its metadata, and the consent copy agree", () => {
-  const page = readFileSync(join(ROOT, "inspection.js"), "utf8");
-  const meta = readFileSync(join(ROOT, "api/inspection-view.js"), "utf8");
+  const surfaces = {
+    "inspection.js": readFileSync(join(ROOT, "inspection.js"), "utf8"),
+    "api/inspection-view.js": readFileSync(join(ROOT, "api/inspection-view.js"), "utf8"),
+    "api/inspection-share.js": readFileSync(join(ROOT, "api/inspection-share.js"), "utf8"),
+    "workbench-app.jsx": readFileSync(join(ROOT, "workbench-app.jsx"), "utf8"),
+    "workbench.bundle.js": readFileSync(join(ROOT, "workbench.bundle.js"), "utf8"),
+  };
+
+  const disagreements = [];
+  for (const [name, src] of Object.entries(surfaces)) {
+    const hits = occurrences(stripComments(src));
+    for (const h of hits) disagreements.push(`${name}: ${h.label} ("${h.match}")`);
+  }
+
+  assert.deepEqual(
+    disagreements,
+    [],
+    "The share surface carries no score, so neither its serialization, its metadata, " +
+      "nor the consent dialog may name one. Whichever of these came back is either a " +
+      "reintroduction or a survivor of the 2B-C migration; all of them move together " +
+      "or none of them move.\n" + disagreements.join("\n"),
+  );
+});
+
+// The disclosure has to describe the page, not merely avoid the retired words. A
+// consent dialog that promised a figure the page no longer prints would be as wrong
+// as one that hid a figure it does print, and the failure is quieter because nothing
+// scans for a promise that overstates.
+test("consistency invariant: the consent dialog promises no figure the page cannot show", () => {
   const consent = readFileSync(join(ROOT, "workbench-app.jsx"), "utf8");
-
-  const pageScores = occurrences(stripComments(page)).length > 0;
-  const metaScores = occurrences(stripComments(meta)).length > 0;
-  const consentDiscloses = /gap estimate/i.test(stripComments(consent));
-
-  assert.equal(
-    pageScores && metaScores && consentDiscloses,
-    true,
-    "The share page still renders a score, so the consent dialog and the page " +
-      "metadata must keep disclosing it. If the page stopped scoring, 2B-C should be " +
-      "removing all three together and emptying the temporary share entries from the " +
-      "ratchet baseline — not leaving a disclosure that no longer matches the page.",
+  const block = consent.slice(
+    consent.indexOf("const READER_SHARE_CONSENT"),
+    consent.indexOf("function shareFailureMessage"),
+  );
+  assert.ok(block.length > 200, "READER_SHARE_CONSENT block not found — the slice bounds moved");
+  assert.equal(occurrences(block).length, 0);
+  assert.ok(
+    !/\bestimate\b/i.test(block),
+    "The consent copy still promises an estimate the share page does not render.",
+  );
+  assert.ok(
+    block.includes("Reader inspections are discovery, not evidence"),
+    "The consent copy must still name the boundary line the page carries.",
   );
 });
 

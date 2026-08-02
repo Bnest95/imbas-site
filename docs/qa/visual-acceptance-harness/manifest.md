@@ -1,5 +1,24 @@
 # Visual acceptance manifest
 
+> **STALE — this manifest is a qualified historical record, not a current inventory.**
+>
+> The current board contains 31 scenarios and 62 PNG baselines. This manifest describes an earlier 48-image board and is therefore not current on inventory, coverage count, checksums, byte counts, or board-wide capture provenance.
+>
+> The committed baseline files currently divide by the commit in which each file was last changed:
+>
+> - 34 images: 7e9ebb9f84df5b02f38ad5f629033413028d1677
+> - 14 images: af51c2243f8da2953a3850377bff6c9b7d84af0e
+> - 8 images: d914e47d95921d0c08335c13888487001c2919da
+> - 6 images: 0c308b6521cf8c08ab4fcc2d49643813cbf6801e
+>
+> These SHAs identify where the committed baseline files were last changed. They do not establish when the pixels were captured, which working tree produced them, or that checking out those commits reproduces them.
+>
+> The historical capture-provenance paragraphs below describe the earlier subset to which they originally applied. They do not describe the current 62-image board as a whole.
+>
+> A named follow-on will separate per-image capture provenance from the derived manifest inventory and add browser-free manifest generation. Until then, this file is retained as a qualified historical record and must not be treated as a current complete inventory of the acceptance board.
+>
+> Nothing here is wrong by accident. `--update <scenario>` refuses to rewrite the manifest when the run did not re-capture every image, because rewriting it from a partial run would silently drop the images that run did not touch. Two passes have now accepted baselines one scenario at a time under a scope rule that forbids a broad update, so the manifest has fallen behind twice by design.
+
 captured_against_sha: `da08ce44a8b3ffc6130deb769a139169551f8eea`
 
 **These images were captured against commit `da08ce44a8b3ffc6130deb769a139169551f8eea` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat `captured_against_sha` as the base the working tree sat on top of, nothing stronger.

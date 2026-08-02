@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5125
+scroll_offset: 5116
 timezone: UTC
 url: /workbench.html
 viewport: 1440x900
@@ -1269,7 +1269,7 @@ pre "Are there any required notices, deadlines, safeguards, exceptions, or other
 p "Generated from this Reader run. Any question shapes an answer — this one included."
 button "Ask your AI →" disabled=false
 p "Copy this question. Drop it in your chat. Paste what comes back."
-h3 "It answers when asked. It just didn't volunteer."
+h3 "You asked directly. The second answer carried material the first one didn't."
 span "What it told you"
 p "within 30 days of the tenant moving out"
 span "What it told you when you asked"
