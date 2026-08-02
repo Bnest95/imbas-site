@@ -24,3 +24,8 @@ docs/qa/**/rejected/
 docs/qa/**/retry-*/
 docs/qa/**/diagnostic-*/
 docs/qa/**/*.rejected.png
+
+# D1 import output. The report carries governed Wave 0 capture content, which
+# lives outside this repository and never becomes a tracked artifact inside it.
+# This repository is public; the record is not.
+.d1-import/
