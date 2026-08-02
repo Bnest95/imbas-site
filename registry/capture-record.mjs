@@ -52,8 +52,9 @@ export const CAPTURE_CONDITION_FIELDS = Object.freeze([
 ]);
 
 // retry_of is prospective: a nullable pointer from a later capture to a first
-// attempt. No Wave 0 row carries it, and the importer never creates one. A
-// retry does not by itself make a REPLICATE relation (FR-2026-08-02-REPLICATION).
+// attempt. The sitting has zero retries and zero re-asks, so no Wave 0 row
+// carries it and the importer never creates one (FR-2026-08-02-D1 R19). A retry
+// does not by itself make a REPLICATE relation (FR-2026-08-02-REPLICATION).
 export const LINEAGE_FIELDS = Object.freeze([
   "retry_of",
   "replicate_index",

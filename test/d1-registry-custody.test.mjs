@@ -14,9 +14,17 @@
 //        value the record permits; one that merges them loses the ability to say
 //        which rows were judged against which vocabulary. ACCESS_RESTRICTED is a
 //        capture status and never an artifact status.
-//   R19  A field the record does not carry is ABSENT from the imported record.
-//        Creating the key and filling it with null asserts "we looked and found
-//        nothing" where the record supports only "the schema never carried it".
+//   R19  The continuity addendum is withdrawn: the term does not exist in the
+//        governed record. What the record supports is that a retry gets its own
+//        capture_id and preserves a reference to the first attempt. This sitting
+//        has zero retries, so retry_of is prospective and never invented.
+//
+// and from the import contract's own numbered rules:
+//
+//   rule 2  A field the record does not carry is ABSENT from the imported
+//        record. Creating the key and filling it with null asserts "we looked
+//        and found nothing" where the record supports only "the schema never
+//        carried it".
 //
 // WHY IT IS SPLIT IN TWO. The synthetic tests are the guarantee: they run
 // everywhere, including CI, and they fail on the rule rather than on the data.
@@ -36,7 +44,7 @@
 // reapply any of these and the named tests should go red:
 //   · the importer aliases PRESENT onto CAPTURED ............... R13, synthetic
 //                                                               and on the record
-//   · carryPresentFields fills an absent key with null ........ R19, four tests,
+//   · carryPresentFields fills an absent key with null ..... rule 2, four tests,
 //                                                               and four on the record
 //   · the importer writes the amended status over capture_status .. R16, two
 //                                                               synthetic and one on the record
@@ -93,10 +101,10 @@ function record() {
 }
 
 // ---------------------------------------------------------------------------
-// R19 — absent and null are different claims
+// Import contract rule 2 — absent and null are different claims
 // ---------------------------------------------------------------------------
 
-test("R19: a field the source does not carry stays absent, and is not created as null", () => {
+test("rule 2: a field the source does not carry stays absent, and is not created as null", () => {
   const source = { present_value: "PRESENT", present_null: null };
   const carried = carryPresentFields(source, ["present_value", "present_null", "never_existed"]);
 
@@ -109,14 +117,14 @@ test("R19: a field the source does not carry stays absent, and is not created as
   assert.equal("never_existed" in carried, false);
 });
 
-test("R19: absence and present-null are distinguishable after a round trip through JSON", () => {
+test("rule 2: absence and present-null are distinguishable after a round trip through JSON", () => {
   const carried = carryPresentFields({ a: null }, ["a", "b"]);
   const round = JSON.parse(JSON.stringify(carried));
   assert.ok(isPresentAndNull(round, "a"));
   assert.ok(isAbsent(round, "b"), "serialization must not turn absence into a null-valued key");
 });
 
-test("R19 and prospective lineage: retry_of is nullable and never invented", () => {
+test("R19: retry_of is prospective, nullable, and never invented", () => {
   assert.ok(LINEAGE_FIELDS.includes("retry_of"), "retry_of exists as a prospective lineage field");
 
   const historical = importCaptureRecord({ capture_id: "SYN-A", capture_status: "COMPLETE" });

@@ -4,7 +4,7 @@
 // the key is not there. A field the governed record carries as null is PRESENT
 // AND NULL. Creating a key and filling it with null asserts "we looked and found
 // nothing" where the record supports only "the schema never carried the concept"
-// (FR-2026-08-02-D1 R19, and the D1 import contract's absent-fields rule).
+// (the D1 import contract's absent-fields rule).
 
 export function carryPresentFields(source, keys) {
   const carried = {};
