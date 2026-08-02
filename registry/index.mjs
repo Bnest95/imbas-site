@@ -73,4 +73,14 @@ export {
   findOrphanRelations,
 } from "./relation-types.mjs";
 
+export {
+  CAPTURE_PROVENANCE_CLASSES,
+  PROTOCOL_CUSTODY_BASIS_KEYS,
+  ARTIFACT_CUSTODY_STATES,
+  createCaptureProvenance,
+  hasProtocolAuthority,
+  requireProtocolAuthority,
+  groupByProvenanceClass,
+} from "./capture-provenance.mjs";
+
 export { locateWave0Record, importWave0, evaluateAcceptance } from "./wave0-import.mjs";

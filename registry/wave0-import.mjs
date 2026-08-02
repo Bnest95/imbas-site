@@ -16,6 +16,7 @@ import { registerQuestionSeries, verifyBankRegeneration, waveScheduleFromBankEnt
 import { extractSourceObservations, checkDeclaredCounts } from "./source-observation.mjs";
 import { readStatusAmendments, captureStatusVocabulary, diffAgainstRecordVocabulary, classifyArtifactStatus } from "./status-vocabulary.mjs";
 import { findOrphanRelations } from "./relation-types.mjs";
+import { createCaptureProvenance, groupByProvenanceClass } from "./capture-provenance.mjs";
 
 const REQUIRED_ENTRIES = Object.freeze([
   "manifest.json",
@@ -171,8 +172,32 @@ export function importWave0({ root = process.env.IMBAS_WAVE0_ROOT ?? null } = {}
       }
     }
 
+    // Provenance is asserted by the custody chain, not by the row. Every mark
+    // below comes from the governed record the row arrived inside; a pasted
+    // answer has none of them to present, which is what keeps the two classes
+    // from ever being rendered with the same authority.
+    const provenance = createCaptureProvenance({
+      capture_id: row.capture_id,
+      provenance_class: "PROTOCOL_CAPTURE",
+      custody_basis: {
+        protocol_version: manifest.protocol_version,
+        record_status: manifest.status,
+        ledger_sha256: ledger.sha256,
+        instrument_version: row.instrument_ref,
+      },
+      artifact_custody:
+        artifact_hash_checks.length === 0
+          ? "NONE_DECLARED"
+          : artifact_hash_checks.every(
+                (check) => check.present && check.sha256_matches && check.size_matches,
+              )
+            ? "VERIFIED"
+            : "FAILED",
+    });
+
     captures.push({
       record,
+      provenance,
       effective: effectiveCaptureStatus(record),
       artifact_status_audit: auditArtifactStatuses(record),
       artifact_hash_checks,
@@ -225,6 +250,19 @@ export function importWave0({ root = process.env.IMBAS_WAVE0_ROOT ?? null } = {}
         0,
       ),
       observations: observations.length,
+    }),
+    provenance: Object.freeze({
+      by_class: groupByProvenanceClass(captures.map((entry) => entry.provenance)),
+      without_protocol_authority: Object.freeze(
+        captures
+          .filter((entry) => !entry.provenance.protocol_authority)
+          .map((entry) =>
+            Object.freeze({
+              capture_id: entry.provenance.capture_id,
+              reason: entry.provenance.authority_denied_reason,
+            }),
+          ),
+      ),
     }),
     observations: Object.freeze(observations),
     observation_count_checks: Object.freeze(count_checks),
@@ -378,6 +416,21 @@ export function evaluateAcceptance(result) {
       criterion: "the code's frozen vocabulary agrees with the record's",
       found: result.vocabulary.diff,
       passed: result.vocabulary.agrees,
+    },
+    {
+      criterion:
+        "every imported capture carries a PROTOCOL_CAPTURE provenance envelope, and the import mints no USER_SUPPLIED",
+      found: {
+        classes: Object.fromEntries(
+          Object.entries(result.provenance.by_class).map(([cls, ids]) => [cls, ids.length]),
+        ),
+        without_protocol_authority: result.provenance.without_protocol_authority.length,
+      },
+      passed:
+        captures.length > 0 &&
+        captures.every((entry) => entry.provenance.provenance_class === "PROTOCOL_CAPTURE") &&
+        captures.every((entry) => entry.provenance.protocol_authority === true) &&
+        !Object.hasOwn(result.provenance.by_class, "USER_SUPPLIED"),
     },
   ];
 

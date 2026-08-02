@@ -11,6 +11,19 @@
 // kept and neither replaces the other. Nothing in this module reads two
 // captures together, and grouping by a stored status is custody of a field the
 // record already carries, not a comparison of the captures in the group.
+//
+// capture_id is the stable external reference to a capture, and D1 asserts no
+// exclusive parent for one. A wave, a slot and a series are things a capture
+// was scheduled by, not containers it lives inside: the wave is a property of
+// the import, and slot travels in lineage only because the governed row carries
+// it. A higher-level object — an Inspection — can therefore reference a capture
+// by identifier without any change to this schema, which is the point. Nothing
+// here may grow a field naming a single owning container.
+//
+// This schema is protocol-only. The class distinguishing a governed protocol
+// capture from a user-supplied one is deliberately not a field here; see
+// capture-provenance.mjs for where it lives and why putting it here would make
+// every protocol-required field optional.
 
 import { carryPresentFields, presentKeys } from "./field-custody.mjs";
 import { classifyArtifactStatus } from "./status-vocabulary.mjs";
