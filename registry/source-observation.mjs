@@ -35,10 +35,10 @@ export const ARTIFACT_CLASS_TO_ROLE = Object.freeze({
 // A panel that was collapsed on completion and opened by the session carries
 // the items the protocol requires, and dropping them would leave a PRESENT
 // panel with no observations. It is admitted under its own reading state
-// instead: W0-01-PPLX-R1's source_panel artifact records that its expanded
-// reading "must not be quoted as what the interface showed on completion", so
-// the qualification travels on every row it produced rather than sitting in a
-// note one level up.
+// instead. The artifact that records such a reading also records that it "must
+// not be quoted as what the interface showed on completion", so the
+// qualification travels on every row it produced rather than sitting in a note
+// one level up where a later reader has to go looking for it.
 export const OBSERVATION_LIST_SOURCES = Object.freeze([
   Object.freeze({ path: "items", reading_state: "AS_DISPLAYED", count_path: "count" }),
   Object.freeze({ path: "clusters", reading_state: "AS_DISPLAYED", count_path: "cluster_count" }),
