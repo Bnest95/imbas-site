@@ -371,6 +371,186 @@ export function pairConditionsUnmatched(capture) {
   return !capture || capture.conditions_matched !== true;
 }
 
+// ── The run declaration (conditions provenance) ───────────────────────────────
+// The governing distinction, and the reason this is a separate artifact from the
+// capture block above:
+//
+//   The declaration is evidence of what the person reported. It is not evidence
+//   that the conditions actually matched.
+//
+// buildPairCapture derives conditions_matched — a CONCLUSION about the run. That
+// derivation runs in the browser, off a capture the server never sees, and
+// reader-receipt.js records the decision that it must never be frozen into a hashed
+// artifact where it could contradict the conditions actually disclosed. That
+// decision stands and is untouched here.
+//
+// It objected to freezing a derived conclusion. It did not object to preserving what
+// the person said. This artifact carries only the disclosure — the three values as
+// declared, unjudged — so it may be persisted and hashed: a record of what was said
+// is true whatever the conditions turn out to have been.
+//
+// Naming is deliberately kept clear of the cfp.1 family. inspector_run_conditions and
+// condition_fingerprint (reader-receipt.js) describe the INSPECTOR call's sampling
+// parameters, model version and prompt version. They say nothing about whether a
+// person ran two answers on the same model without edits. Nothing here is named
+// `conditions`, so the two families cannot be read as one.
+export const DECLARATION_VERSION = "decl.1";
+
+// Per-field absence. An unanswered question is NOT a negative answer: the capture
+// block's booleans cannot tell "no" from "not sure" from "never asked", because all
+// three project to false. This token keeps the difference legible, and it is the same
+// discipline reader-receipt-page.js applies with NOT_CAPTURED — a stated absence,
+// never a blank.
+export const DECLARATION_NOT_DECLARED = "NOT_DECLARED";
+// A timestamp the form never collected. Distinct from NOT_DECLARED: the person did
+// not decline to give it, it was never asked for.
+export const DECLARATION_NOT_CAPTURED = "NOT_CAPTURED";
+
+// The status of the artifact as a whole. Stored as a machine token; the rendered copy
+// lives in DECLARATION_STATUS_LABEL below and nowhere else, so a future surface
+// cannot invent its own wording for the same state.
+export const DECLARATION_STATUS = Object.freeze({
+  DECLARED_NOT_VERIFIED: "DECLARED_NOT_VERIFIED",
+  NOT_DECLARED: "NOT_DECLARED",
+});
+
+// The one mapping from stored token to display copy. "declared, not verified" says
+// both halves of the governing distinction in the reader's own words: the person
+// said it, and Imbas did not check it.
+export const DECLARATION_STATUS_LABEL = Object.freeze({
+  [DECLARATION_STATUS.DECLARED_NOT_VERIFIED]: "declared, not verified",
+  [DECLARATION_STATUS.NOT_DECLARED]: "not declared",
+});
+
+// The source name this artifact reports itself under. It is not a new concept: it is
+// CLIENT_DECLARATION_SOURCES[0] from reader-result.js, the vocabulary that module
+// already defined for exactly this input. Carrying it means the artifact classifies
+// under the existing claim rules — normalizeClaim reads it as REPORTED_CLIENT_DECLARATION,
+// which cannot reach the MATCHED_CONDITIONS register.
+//
+// That module also records that persisting an AUTHORITATIVE conditions field
+// (server_observed_pair_conditions) is blocked on a founder ruling. This pass creates no
+// such field and makes no such claim; it persists the client declaration, which the same
+// decision already names as non-authorizing. Duplicated as a literal because both modules
+// are pure leaves that import nothing; a test pins the two strings equal.
+export const DECLARATION_SOURCE = "pair_capture_client_declaration";
+
+export function declarationStatusLabel(status) {
+  return DECLARATION_STATUS_LABEL[status] || DECLARATION_STATUS_LABEL[DECLARATION_STATUS.NOT_DECLARED];
+}
+
+const DECLARED_SAME_MODEL = new Set([PAIR_SAME_MODEL.YES, PAIR_SAME_MODEL.NO, PAIR_SAME_MODEL.NOT_SURE]);
+const DECLARED_EDITS = new Set([PAIR_EDITS.NONE, PAIR_EDITS.EDITED]);
+
+// An ISO-8601 instant, or the stated absence. Never manufactured: a missing client
+// declaration time is NOT_CAPTURED, and is never backfilled from the server's clock.
+function declaredInstant(v) {
+  const s = typeof v === "string" ? v.trim() : "";
+  return s ? s : DECLARATION_NOT_CAPTURED;
+}
+
+// Build the declaration from the paste-back / chip form's own three values. Each is
+// preserved independently and in the form's own vocabulary — the same_model enum
+// survives whole rather than collapsing to a boolean — so a partial declaration stays
+// representable field by field instead of reading as three negatives.
+//
+// Deterministic and side-effect free, like everything else in this module: both
+// timestamps are supplied by the caller, never read off a clock here.
+export function buildRunDeclaration({
+  same_model,
+  model_version,
+  edits,
+  declared_at_client,
+  received_at_server,
+} = {}) {
+  const sameModel = DECLARED_SAME_MODEL.has(same_model) ? same_model : DECLARATION_NOT_DECLARED;
+  const editsValue = DECLARED_EDITS.has(edits) ? edits : DECLARATION_NOT_DECLARED;
+  const trimmed = typeof model_version === "string" ? model_version.trim() : "";
+  const modelVersion = trimmed ? trimmed.slice(0, PAIR_MODEL_VERSION_MAX) : DECLARATION_NOT_DECLARED;
+  const anyDeclared =
+    sameModel !== DECLARATION_NOT_DECLARED ||
+    editsValue !== DECLARATION_NOT_DECLARED ||
+    modelVersion !== DECLARATION_NOT_DECLARED;
+  // Absence of every field is its own state. A form nobody touched is NOT_DECLARED —
+  // never "unmatched", which would be a claim about the run rather than about the
+  // record of it.
+  const status = anyDeclared ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED : DECLARATION_STATUS.NOT_DECLARED;
+  return {
+    declaration_version: DECLARATION_VERSION,
+    declaration_source: DECLARATION_SOURCE,
+    status,
+    // The rendered label travels WITH the token, rather than each surface looking it
+    // up. reader-receipt.js is a pure leaf by contract — it imports nothing — so a
+    // shared lookup could not reach it, and the receipt would have to keep its own
+    // copy of the wording. Carrying the label makes DECLARATION_STATUS_LABEL the only
+    // place the words are written, on every surface including that one.
+    status_label: declarationStatusLabel(status),
+    same_model: sameModel,
+    model_version: modelVersion,
+    edits: editsValue,
+    declared_at_client: declaredInstant(declared_at_client),
+    received_at_server: declaredInstant(received_at_server),
+  };
+}
+
+// Reshape an arbitrary object into a well-formed declaration, for surfaces that read
+// one back out of storage or off the wire rather than building it. Every field lands
+// on a known key with a stated absence for its default, and the label is RE-DERIVED
+// from the status here rather than trusted from the input — so a stored label written
+// under older wording renders as today's, and no surface can display a label that
+// disagrees with the token beside it.
+//
+// A missing or malformed input is NOT_DECLARED, which is the honest reading: nothing
+// was recorded. It is never read as a declaration that the conditions did not match.
+export function sanitizeRunDeclaration(raw) {
+  const d = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const status =
+    d.status === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
+      ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED
+      : DECLARATION_STATUS.NOT_DECLARED;
+  const text = (v, fallback) => {
+    const s = typeof v === "string" ? v.trim() : "";
+    return s ? s.slice(0, PAIR_MODEL_VERSION_MAX) : fallback;
+  };
+  return {
+    // Stamped, never echoed. The status is CONTENT — what the person said — so it is
+    // read off the input. The version is SHAPE, and the object being returned is
+    // decl.1 shaped whatever it was built from: this function drops any key decl.1
+    // does not know. Echoing a stored "decl.2" would promise a reader fields that
+    // this return does not carry, and echoing a blank would write the empty cell the
+    // absence tokens exist to avoid. Both failures are the same mistake — describing
+    // the row instead of the object. A row that carried no declaration says so in
+    // `status`, which is the field that means that.
+    declaration_version: DECLARATION_VERSION,
+    declaration_source: DECLARATION_SOURCE,
+    status,
+    status_label: declarationStatusLabel(status),
+    same_model: text(d.same_model, DECLARATION_NOT_DECLARED),
+    model_version: text(d.model_version, DECLARATION_NOT_DECLARED),
+    edits: text(d.edits, DECLARATION_NOT_DECLARED),
+    declared_at_client: text(d.declared_at_client, DECLARATION_NOT_CAPTURED),
+    received_at_server: text(d.received_at_server, DECLARATION_NOT_CAPTURED),
+  };
+}
+
+// ── The derived state, kept structurally apart ────────────────────────────────
+// The fourth absence state, and it belongs to the DERIVATION, not to the declaration.
+// A surface that holds the declaration but not the client-side capture cannot say
+// whether the conditions matched, and must say so rather than guessing.
+export const DERIVATION_UNAVAILABLE = "DERIVATION_UNAVAILABLE";
+
+// Report the derived conditions state, or state that it is unavailable. This reads
+// the CAPTURE and only the capture, so it is structurally incapable of inferring a
+// derivation from a declaration: hand it a fully populated declaration and no capture
+// and it still answers DERIVATION_UNAVAILABLE. That is the separation the whole
+// artifact exists to keep, expressed as a signature rather than as a rule to remember.
+export function derivationState(capture) {
+  if (!capture || typeof capture !== "object" || !("conditions_matched" in capture)) {
+    return DERIVATION_UNAVAILABLE;
+  }
+  return capture.conditions_matched;
+}
+
 // Run provenance (schema v0.3.1). How a PairRun came to exist — the shipped
 // inspection follow-up writes inspection_followup; the user-chip lane (schema-only
 // here, wired in a later lane) writes user_chip; anything not attributable is
@@ -401,11 +581,30 @@ export function normalizeInitiator(initiator) {
 // chip_id + instruction_version are present ONLY for a user_chip run and OMITTED
 // otherwise (absence is the signal, never a serialized null — see schema v0.3.1).
 // Deterministic — no time, no randomness — so a paired run records and hashes reproducibly.
+//
+// v0.3.2 adds `declaration`, and it is RECONCILED with `capture` rather than repeating
+// it. The two are not the same statement:
+//   capture      — the DERIVED reading the Reader works from. conditions_matched is
+//                  computed from the declared values under the conservative rule, and
+//                  its two booleans are a lossy projection: same_model_claimed is false
+//                  for "no", for "not sure", and for a question never answered.
+//   declaration  — the person's report, unjudged and lossless. Every value survives in
+//                  the form's own vocabulary, and an unanswered question reads
+//                  NOT_DECLARED instead of collapsing into a negative.
+// A reviewer comparing them should read the declaration as the record of what was said
+// and the capture as what the Reader did with it. When they appear to disagree, the
+// declaration is what the person actually reported.
+//
+// It is always present and always populated — a pair with nothing declared carries a
+// NOT_DECLARED declaration, not an omitted key. That is the opposite of the chip_id
+// rule above, and deliberately so: an absent chip_id means the lane does not apply,
+// while an absent declaration is a fact about this run that the record must state.
 export function buildPairRun({
   targeted_prompt,
   original_artifact_id,
   targeted_artifact_id,
   capture,
+  declaration,
   initiator,
   targeted_prompt_hash,
   chip_id,
@@ -416,6 +615,7 @@ export function buildPairRun({
     original_artifact_id: typeof original_artifact_id === "string" ? original_artifact_id : "",
     targeted_artifact_id: typeof targeted_artifact_id === "string" ? targeted_artifact_id : "",
     capture: capture && typeof capture === "object" ? capture : {},
+    declaration: sanitizeRunDeclaration(declaration),
     initiator: normalizeInitiator(initiator),
     targeted_prompt_hash: typeof targeted_prompt_hash === "string" ? targeted_prompt_hash : "",
   };
