@@ -394,7 +394,19 @@ export function pairConditionsUnmatched(capture) {
 // parameters, model version and prompt version. They say nothing about whether a
 // person ran two answers on the same model without edits. Nothing here is named
 // `conditions`, so the two families cannot be read as one.
-export const DECLARATION_VERSION = "decl.1";
+// decl.2 adds identity, stage, actor and supersession to decl.1's content fields.
+// The reason is that a declaration is not one snapshot taken at submission. The same
+// person may declare something at submission, add more once they have seen the
+// side-by-side, and correct themselves on a later visit. A correction is a DIFFERENT
+// FACT from an original, not a better version of it — so it becomes its own artifact
+// pointing backward, and the earlier one stays exactly as it was said.
+export const DECLARATION_VERSION = "decl.2";
+
+// decl.1 is legacy: the single-snapshot shape, which had no identity, no stage, no
+// actor and no supersession. It is readable ONLY through adaptLegacyDeclaration below.
+// The ordinary read path refuses it outright rather than quietly treating it as a
+// complete decl.2 — see the fail-closed rules on sanitizeRunDeclaration.
+export const DECLARATION_VERSION_LEGACY = "decl.1";
 
 // Per-field absence. An unanswered question is NOT a negative answer: the capture
 // block's booleans cannot tell "no" from "not sure" from "never asked", because all
@@ -405,6 +417,21 @@ export const DECLARATION_NOT_DECLARED = "NOT_DECLARED";
 // A timestamp the form never collected. Distinct from NOT_DECLARED: the person did
 // not decline to give it, it was never asked for.
 export const DECLARATION_NOT_CAPTURED = "NOT_CAPTURED";
+// The stage of the product surface this declaration was made at, when the surface did
+// not record one. It is NEVER backfilled from the request path, the route, the receipt
+// type, or which endpoint happened to be called: those describe where the server was
+// touched, not where the person was standing when they said it. Inferring the stage
+// would be the same manufacturing error as backfilling declared_at_client from the
+// server's clock.
+export const DECLARATION_STAGE_NOT_RECORDED = "STAGE_NOT_RECORDED";
+// Who declared it, when no declaring identity was captured. A session identifier is
+// not an actor unless that session was explicitly recorded AS the declarer; knowing
+// which browser sent a request is not the same as knowing who answered the question.
+export const DECLARATION_ACTOR_NOT_IDENTIFIED = "ACTOR_NOT_IDENTIFIED";
+// This declaration corrects nothing before it. Distinct from a dangling reference:
+// NO_SUPERSESSION is a first declaration standing on its own, whereas a supersedes
+// value naming an unknown declaration is a broken chain and fails validation.
+export const DECLARATION_NO_SUPERSESSION = "NO_SUPERSESSION";
 
 // The status of the artifact as a whole. Stored as a machine token; the rendered copy
 // lives in DECLARATION_STATUS_LABEL below and nowhere else, so a future surface
@@ -439,6 +466,63 @@ export function declarationStatusLabel(status) {
   return DECLARATION_STATUS_LABEL[status] || DECLARATION_STATUS_LABEL[DECLARATION_STATUS.NOT_DECLARED];
 }
 
+// Where in the product the person was standing when they declared. The progressive
+// surface asks for provenance once someone has seen value rather than front-loading it,
+// so the same pair can collect declarations at four different moments. The stage is
+// supplied by the surface that asked; it is never derived from the request.
+export const DECLARATION_STAGE = Object.freeze({
+  SUBMISSION: "submission",
+  INSPECTION: "inspection",
+  REVIEW: "review",
+  RETURNING_VISIT: "returning_visit",
+});
+const DECLARED_STAGES = new Set(Object.values(DECLARATION_STAGE));
+
+// Declaration identity. The id is chosen by the caller BEFORE the row is created, so a
+// client that retries after a timeout re-sends the same id and the append is idempotent.
+// The charset is deliberately narrow: ids are matched by value in Airtable filter
+// formulas, and a value carrying a quote or a paren would change the shape of the
+// formula rather than the value inside it. Refusing those characters at the boundary is
+// cheaper than escaping them at every use.
+export const DECLARATION_ID_MAX = 128;
+const DECLARATION_ID_PATTERN = /^[A-Za-z0-9_.:-]{8,128}$/;
+
+// True for a well-formed declaration id. Exported so a caller can check before minting
+// a row rather than discovering the problem inside the write path.
+export function isDeclarationId(v) {
+  return typeof v === "string" && DECLARATION_ID_PATTERN.test(v);
+}
+
+// Actors are free text — an email, a reviewer handle, whatever the surface actually
+// captured — so they are bounded and trimmed rather than enumerated. What matters is
+// that an actor is never INVENTED; absence is stated with ACTOR_NOT_IDENTIFIED.
+export const DECLARATION_ACTOR_MAX = 200;
+
+// The four things an inbound object can be. These are kept distinct because collapsing
+// them is exactly the failure this version exists to end: a decl.1 object and a
+// malformed decl.2 object are not the same problem, and neither is a version this build
+// has never heard of. A caller that cannot tell them apart cannot respond correctly to
+// any of them.
+export const DECLARATION_READ = Object.freeze({
+  DECL_2: "DECL_2",
+  LEGACY_DECL_1: "LEGACY_DECL_1",
+  UNSUPPORTED_VERSION: "UNSUPPORTED_VERSION",
+  MALFORMED: "MALFORMED",
+});
+
+// A structured, catchable refusal. It carries the classification alongside the reason so
+// a caller can branch on `kind` — legacy objects route to the adapter, malformed ones
+// are a bug or an attack, unsupported versions mean this build is older than the record
+// it is reading and must say so rather than guess.
+export class DeclarationError extends Error {
+  constructor(kind, reason) {
+    super(`${kind}: ${reason}`);
+    this.name = "DeclarationError";
+    this.kind = kind;
+    this.reason = reason;
+  }
+}
+
 const DECLARED_SAME_MODEL = new Set([PAIR_SAME_MODEL.YES, PAIR_SAME_MODEL.NO, PAIR_SAME_MODEL.NOT_SURE]);
 const DECLARED_EDITS = new Set([PAIR_EDITS.NONE, PAIR_EDITS.EDITED]);
 
@@ -457,12 +541,56 @@ function declaredInstant(v) {
 // Deterministic and side-effect free, like everything else in this module: both
 // timestamps are supplied by the caller, never read off a clock here.
 export function buildRunDeclaration({
+  declaration_id,
+  declaration_source = DECLARATION_SOURCE,
+  stage,
+  actor,
+  supersedes,
   same_model,
   model_version,
   edits,
   declared_at_client,
   received_at_server,
 } = {}) {
+  // Identity is required, and required HERE rather than at the row create, because the
+  // point of a stable id is that it exists before anything durable happens. A caller
+  // who cannot name the declaration is not ready to record one.
+  if (!isDeclarationId(declaration_id)) {
+    throw new DeclarationError(DECLARATION_READ.MALFORMED, "declaration_id required");
+  }
+  if (typeof declaration_source !== "string" || !declaration_source.trim()) {
+    throw new DeclarationError(DECLARATION_READ.MALFORMED, "declaration_source required");
+  }
+  // A stage the surface did not record is STAGE_NOT_RECORDED. A stage it recorded as
+  // something this vocabulary does not know is a different matter entirely — that is a
+  // caller sending a value nobody defined, and accepting it would put an unreadable
+  // token into the provenance record. Absence is stated; nonsense is refused.
+  let stageValue = DECLARATION_STAGE_NOT_RECORDED;
+  if (stage !== undefined && stage !== null && stage !== DECLARATION_STAGE_NOT_RECORDED) {
+    if (!DECLARED_STAGES.has(stage)) {
+      throw new DeclarationError(DECLARATION_READ.MALFORMED, `unknown stage: ${String(stage).slice(0, 40)}`);
+    }
+    stageValue = stage;
+  }
+  const actorText = typeof actor === "string" ? actor.trim() : "";
+  const actorValue = actorText
+    ? actorText.slice(0, DECLARATION_ACTOR_MAX)
+    : DECLARATION_ACTOR_NOT_IDENTIFIED;
+  // A correction points backward at the declaration it replaces. Whether that target
+  // actually exists, and whether it belongs to this same pair, cannot be settled here —
+  // this module reads no storage. It is settled on the write path, which can see the
+  // rest of the chain. What is settled here is the SHAPE: a supersedes value is either
+  // a well-formed id or the explicit statement that this corrects nothing.
+  let supersedesValue = DECLARATION_NO_SUPERSESSION;
+  if (supersedes !== undefined && supersedes !== null && supersedes !== DECLARATION_NO_SUPERSESSION) {
+    if (!isDeclarationId(supersedes)) {
+      throw new DeclarationError(DECLARATION_READ.MALFORMED, "supersedes must be a declaration id");
+    }
+    if (supersedes === declaration_id) {
+      throw new DeclarationError(DECLARATION_READ.MALFORMED, "declaration cannot supersede itself");
+    }
+    supersedesValue = supersedes;
+  }
   const sameModel = DECLARED_SAME_MODEL.has(same_model) ? same_model : DECLARATION_NOT_DECLARED;
   const editsValue = DECLARED_EDITS.has(edits) ? edits : DECLARATION_NOT_DECLARED;
   const trimmed = typeof model_version === "string" ? model_version.trim() : "";
@@ -473,11 +601,13 @@ export function buildRunDeclaration({
     modelVersion !== DECLARATION_NOT_DECLARED;
   // Absence of every field is its own state. A form nobody touched is NOT_DECLARED —
   // never "unmatched", which would be a claim about the run rather than about the
-  // record of it.
+  // record of it. Stage and actor are deliberately excluded from this test: they say
+  // when and by whom, not what was declared about the run.
   const status = anyDeclared ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED : DECLARATION_STATUS.NOT_DECLARED;
   return {
     declaration_version: DECLARATION_VERSION,
-    declaration_source: DECLARATION_SOURCE,
+    declaration_id,
+    declaration_source,
     status,
     // The rendered label travels WITH the token, rather than each surface looking it
     // up. reader-receipt.js is a pure leaf by contract — it imports nothing — so a
@@ -485,51 +615,301 @@ export function buildRunDeclaration({
     // copy of the wording. Carrying the label makes DECLARATION_STATUS_LABEL the only
     // place the words are written, on every surface including that one.
     status_label: declarationStatusLabel(status),
+    stage: stageValue,
+    actor: actorValue,
     same_model: sameModel,
     model_version: modelVersion,
     edits: editsValue,
     declared_at_client: declaredInstant(declared_at_client),
     received_at_server: declaredInstant(received_at_server),
+    supersedes: supersedesValue,
   };
 }
 
-// Reshape an arbitrary object into a well-formed declaration, for surfaces that read
-// one back out of storage or off the wire rather than building it. Every field lands
-// on a known key with a stated absence for its default, and the label is RE-DERIVED
-// from the status here rather than trusted from the input — so a stored label written
-// under older wording renders as today's, and no surface can display a label that
-// disagrees with the token beside it.
+// ── Reading a declaration back ────────────────────────────────────────────────
+// The content fields both versions share. Each must be a non-empty string: every
+// absence in this artifact is spoken with a token, so a blank is never a legal value
+// and reaching one means the object was not built by this module.
+function readSharedContent(d) {
+  for (const key of ["same_model", "model_version", "edits", "declared_at_client", "received_at_server"]) {
+    if (typeof d[key] !== "string" || !d[key].trim()) return `${key} required`;
+  }
+  if (
+    d.status !== DECLARATION_STATUS.DECLARED_NOT_VERIFIED &&
+    d.status !== DECLARATION_STATUS.NOT_DECLARED
+  ) {
+    return "status must be a declaration status token";
+  }
+  if (typeof d.declaration_source !== "string" || !d.declaration_source.trim()) {
+    return "declaration_source required";
+  }
+  return "";
+}
+
+// Classify an inbound object. Four answers, never a fifth, and never a silent repair.
+// Separating classification from acceptance is the whole point: a decl.1 object, a
+// broken decl.2 object and a version this build has never heard of are three different
+// situations, and a caller that cannot tell them apart cannot answer any of them
+// correctly. Returns { kind, reason } and throws nothing.
+export function classifyRunDeclaration(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "declaration must be an object" };
+  }
+  const v = raw.declaration_version;
+  if (typeof v !== "string" || !v.trim()) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "declaration_version required" };
+  }
+  if (v === DECLARATION_VERSION_LEGACY) {
+    const bad = readSharedContent(raw);
+    return bad
+      ? { kind: DECLARATION_READ.MALFORMED, reason: `decl.1: ${bad}` }
+      : { kind: DECLARATION_READ.LEGACY_DECL_1, reason: "decl.1 must be read through adaptLegacyDeclaration" };
+  }
+  if (v !== DECLARATION_VERSION) {
+    return { kind: DECLARATION_READ.UNSUPPORTED_VERSION, reason: `unsupported declaration_version: ${v.slice(0, 40)}` };
+  }
+  const bad = readSharedContent(raw);
+  if (bad) return { kind: DECLARATION_READ.MALFORMED, reason: bad };
+  if (!isDeclarationId(raw.declaration_id)) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "declaration_id required" };
+  }
+  if (raw.stage !== DECLARATION_STAGE_NOT_RECORDED && !DECLARED_STAGES.has(raw.stage)) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "stage must be a stage token or STAGE_NOT_RECORDED" };
+  }
+  if (typeof raw.actor !== "string" || !raw.actor.trim()) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "actor required" };
+  }
+  if (raw.supersedes !== DECLARATION_NO_SUPERSESSION && !isDeclarationId(raw.supersedes)) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "supersedes must be a declaration id or NO_SUPERSESSION" };
+  }
+  if (raw.supersedes === raw.declaration_id) {
+    return { kind: DECLARATION_READ.MALFORMED, reason: "declaration cannot supersede itself" };
+  }
+  return { kind: DECLARATION_READ.DECL_2, reason: "" };
+}
+
+// Accept a declaration read back out of storage or off the wire, or refuse it out loud.
 //
-// A missing or malformed input is NOT_DECLARED, which is the honest reading: nothing
-// was recorded. It is never read as a declaration that the conditions did not match.
+// This function used to be lenient: it coerced anything at all into a nine-key decl.1
+// object, defaulting missing fields to absence tokens and DROPPING any key decl.1 did
+// not know. That leniency is now the exact hazard. A decl.2 declaration carrying an
+// identity, a stage, an actor and a correction chain would pass through it and come out
+// the other side as decl.1 with all four silently gone — no error, no warning, and a
+// provenance record quietly missing the fields that make it a history rather than a
+// snapshot. Losing provenance must be louder than keeping it.
+//
+// So it fails closed. Only a natively well-formed decl.2 object is accepted. A legacy
+// decl.1 object is refused HERE and routed through adaptLegacyDeclaration, which is
+// named, explicit, and cannot be reached by accident. The label is still re-derived
+// from the status rather than trusted, so a stored label written under older wording
+// renders as today's and no surface can show a label that disagrees with its token.
 export function sanitizeRunDeclaration(raw) {
-  const d = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const status =
-    d.status === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
-      ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED
-      : DECLARATION_STATUS.NOT_DECLARED;
-  const text = (v, fallback) => {
-    const s = typeof v === "string" ? v.trim() : "";
-    return s ? s.slice(0, PAIR_MODEL_VERSION_MAX) : fallback;
-  };
+  const { kind, reason } = classifyRunDeclaration(raw);
+  if (kind !== DECLARATION_READ.DECL_2) throw new DeclarationError(kind, reason);
   return {
-    // Stamped, never echoed. The status is CONTENT — what the person said — so it is
-    // read off the input. The version is SHAPE, and the object being returned is
-    // decl.1 shaped whatever it was built from: this function drops any key decl.1
-    // does not know. Echoing a stored "decl.2" would promise a reader fields that
-    // this return does not carry, and echoing a blank would write the empty cell the
-    // absence tokens exist to avoid. Both failures are the same mistake — describing
-    // the row instead of the object. A row that carried no declaration says so in
-    // `status`, which is the field that means that.
     declaration_version: DECLARATION_VERSION,
-    declaration_source: DECLARATION_SOURCE,
-    status,
-    status_label: declarationStatusLabel(status),
-    same_model: text(d.same_model, DECLARATION_NOT_DECLARED),
-    model_version: text(d.model_version, DECLARATION_NOT_DECLARED),
-    edits: text(d.edits, DECLARATION_NOT_DECLARED),
-    declared_at_client: text(d.declared_at_client, DECLARATION_NOT_CAPTURED),
-    received_at_server: text(d.received_at_server, DECLARATION_NOT_CAPTURED),
+    declaration_id: raw.declaration_id,
+    declaration_source: raw.declaration_source.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    status: raw.status,
+    status_label: declarationStatusLabel(raw.status),
+    stage: raw.stage,
+    actor: raw.actor.trim().slice(0, DECLARATION_ACTOR_MAX),
+    same_model: raw.same_model.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    model_version: raw.model_version.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    edits: raw.edits.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    declared_at_client: raw.declared_at_client.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    received_at_server: raw.received_at_server.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    supersedes: raw.supersedes,
+  };
+}
+
+// The one documented route from decl.1 to decl.2. It is lossless in the only direction
+// that matters: every value decl.1 actually carried survives verbatim, and every field
+// decl.1 never had is stated as an explicit absence rather than guessed at.
+//
+// It invents nothing. A decl.1 object has no identity of its own, so the CALLER must
+// supply one and say where it came from; manufacturing an id here would mint provenance
+// out of nothing, and two adapters reading the same legacy object would disagree about
+// what it was called. Stage and actor become their absence tokens because decl.1 never
+// asked those questions — not because the answers were no. Supersession is
+// NO_SUPERSESSION because a snapshot corrects nothing by construction.
+export function adaptLegacyDeclaration(raw, { declaration_id } = {}) {
+  const { kind, reason } = classifyRunDeclaration(raw);
+  if (kind !== DECLARATION_READ.LEGACY_DECL_1) {
+    throw new DeclarationError(kind, kind === DECLARATION_READ.DECL_2 ? "already decl.2" : reason);
+  }
+  if (!isDeclarationId(declaration_id)) {
+    throw new DeclarationError(
+      DECLARATION_READ.MALFORMED,
+      "adaptLegacyDeclaration requires a caller-supplied declaration_id",
+    );
+  }
+  return {
+    declaration_version: DECLARATION_VERSION,
+    declaration_id,
+    // Preserved, not restamped. A future entry surface may declare under a different
+    // source, and rewriting this to today's constant would erase where it came from.
+    declaration_source: raw.declaration_source.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    status: raw.status,
+    status_label: declarationStatusLabel(raw.status),
+    stage: DECLARATION_STAGE_NOT_RECORDED,
+    actor: DECLARATION_ACTOR_NOT_IDENTIFIED,
+    same_model: raw.same_model.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    model_version: raw.model_version.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    edits: raw.edits.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    declared_at_client: raw.declared_at_client.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    received_at_server: raw.received_at_server.trim().slice(0, PAIR_MODEL_VERSION_MAX),
+    supersedes: DECLARATION_NO_SUPERSESSION,
+  };
+}
+
+// ── History: order, chain, projection ─────────────────────────────────────────
+// The states a declaration history can be in. Every one of them is reportable: there is
+// no state here that quietly resolves to "probably this one".
+export const DECLARATION_HISTORY = Object.freeze({
+  // Nobody has declared anything for this pair. A real, sayable answer.
+  NONE: "NO_DECLARATIONS",
+  // One unambiguous leaf. A current declaration exists and can be named.
+  RESOLVED: "RESOLVED",
+  // Two or more declarations compete to be current. Both branches are kept.
+  CONFLICT: "DECLARATION_CHAIN_CONFLICT",
+  // A supersedes reference points at something that is not here, or the links form a
+  // loop. The history exists but cannot be walked.
+  BROKEN: "DECLARATION_CHAIN_BROKEN",
+  // A stored row would not validate. The history cannot be read at all, and saying
+  // "no declarations" instead would be a lie about the record.
+  UNREADABLE: "DECLARATION_HISTORY_UNREADABLE",
+});
+
+// Canonical order: server receipt time, tie-broken by declaration id.
+//
+// declared_at_client is deliberately NOT consulted. It is evidence the client supplied
+// and may be absent, wrong, skewed by a bad device clock, or written after the fact by
+// someone declaring about a run from last week. It is worth recording and worthless for
+// sequencing. The server time is the only clock this system controls.
+//
+// A row whose server time is NOT_CAPTURED sorts last, because "N" falls after every
+// digit an ISO-8601 instant can start with. That is deterministic rather than lucky,
+// and the id tie-breaker makes the whole order total.
+export function orderDeclarations(list) {
+  return (Array.isArray(list) ? list.slice() : []).sort((a, b) => {
+    const at = a.received_at_server || "";
+    const bt = b.received_at_server || "";
+    if (at !== bt) return at < bt ? -1 : 1;
+    const ai = a.declaration_id || "";
+    const bi = b.declaration_id || "";
+    if (ai !== bi) return ai < bi ? -1 : 1;
+    return 0;
+  });
+}
+
+// Read a set of stored declaration rows as a history: validate every one, order them,
+// walk the correction chain, and either name the current declaration or say why one
+// cannot be named.
+//
+// The refusals matter more than the successes. A history containing a row this build
+// cannot validate is UNREADABLE, not "the rows I could read" — dropping the bad one
+// would silently shorten someone's provenance. Two declarations correcting the same
+// parent are a CONFLICT with both preserved, never a winner picked by whichever
+// happened to be written last. A supersedes pointing outside the set is BROKEN, because
+// a correction whose target is missing is not a correction anyone can interpret.
+export function resolveDeclarationHistory(rows) {
+  const input = Array.isArray(rows) ? rows : [];
+  if (input.length === 0) {
+    return { ok: true, state: DECLARATION_HISTORY.NONE, declarations: [], current: null, conflicts: [], reason: "" };
+  }
+  const declarations = [];
+  for (const row of input) {
+    try {
+      declarations.push(sanitizeRunDeclaration(row));
+    } catch (err) {
+      const reason = err instanceof DeclarationError ? `${err.kind}: ${err.reason}` : String(err && err.message);
+      return { ok: false, state: DECLARATION_HISTORY.UNREADABLE, declarations: [], current: null, conflicts: [], reason };
+    }
+  }
+  const ordered = orderDeclarations(declarations);
+  const byId = new Map();
+  for (const d of ordered) {
+    if (byId.has(d.declaration_id)) {
+      return {
+        ok: false,
+        state: DECLARATION_HISTORY.BROKEN,
+        declarations: ordered,
+        current: null,
+        conflicts: [],
+        reason: `duplicate declaration_id: ${d.declaration_id}`,
+      };
+    }
+    byId.set(d.declaration_id, d);
+  }
+  // Every correction must name a target that is actually here, and the links must not
+  // loop. A cycle would make "read forward to the newest" run forever.
+  const supersededBy = new Map();
+  for (const d of ordered) {
+    if (d.supersedes === DECLARATION_NO_SUPERSESSION) continue;
+    if (!byId.has(d.supersedes)) {
+      return {
+        ok: false,
+        state: DECLARATION_HISTORY.BROKEN,
+        declarations: ordered,
+        current: null,
+        conflicts: [],
+        reason: `unknown supersedes target: ${d.supersedes}`,
+      };
+    }
+    const seen = new Set([d.declaration_id]);
+    let walk = d.supersedes;
+    while (walk && walk !== DECLARATION_NO_SUPERSESSION) {
+      if (seen.has(walk)) {
+        return {
+          ok: false,
+          state: DECLARATION_HISTORY.BROKEN,
+          declarations: ordered,
+          current: null,
+          conflicts: [],
+          reason: `supersession cycle at ${walk}`,
+        };
+      }
+      seen.add(walk);
+      const parent = byId.get(walk);
+      walk = parent ? parent.supersedes : DECLARATION_NO_SUPERSESSION;
+    }
+    const siblings = supersededBy.get(d.supersedes) || [];
+    siblings.push(d.declaration_id);
+    supersededBy.set(d.supersedes, siblings);
+  }
+  const branched = [...supersededBy.entries()].filter(([, kids]) => kids.length > 1);
+  if (branched.length > 0) {
+    return {
+      ok: false,
+      state: DECLARATION_HISTORY.CONFLICT,
+      declarations: ordered,
+      current: null,
+      conflicts: branched.map(([parent, kids]) => ({ parent, declaration_ids: kids })),
+      reason: `competing corrections of ${branched.map(([p]) => p).join(", ")}`,
+    };
+  }
+  // A leaf is a declaration nothing corrects. Exactly one means the current state is
+  // unambiguous. More than one means two declarations stand side by side with neither
+  // claiming to replace the other, and choosing between them would be invention.
+  const leaves = ordered.filter((d) => !supersededBy.has(d.declaration_id));
+  if (leaves.length > 1) {
+    return {
+      ok: false,
+      state: DECLARATION_HISTORY.CONFLICT,
+      declarations: ordered,
+      current: null,
+      conflicts: [{ parent: DECLARATION_NO_SUPERSESSION, declaration_ids: leaves.map((d) => d.declaration_id) }],
+      reason: "multiple declarations stand uncorrected; no single current declaration",
+    };
+  }
+  return {
+    ok: true,
+    state: DECLARATION_HISTORY.RESOLVED,
+    declarations: ordered,
+    current: leaves[0] || null,
+    conflicts: [],
+    reason: "",
   };
 }
 
@@ -582,7 +962,7 @@ export function normalizeInitiator(initiator) {
 // otherwise (absence is the signal, never a serialized null — see schema v0.3.1).
 // Deterministic — no time, no randomness — so a paired run records and hashes reproducibly.
 //
-// v0.3.2 adds `declaration`, and it is RECONCILED with `capture` rather than repeating
+// v0.3.2 added `declaration`, and it is RECONCILED with `capture` rather than repeating
 // it. The two are not the same statement:
 //   capture      — the DERIVED reading the Reader works from. conditions_matched is
 //                  computed from the declared values under the conservative rule, and
@@ -595,16 +975,19 @@ export function normalizeInitiator(initiator) {
 // and the capture as what the Reader did with it. When they appear to disagree, the
 // declaration is what the person actually reported.
 //
-// It is always present and always populated — a pair with nothing declared carries a
-// NOT_DECLARED declaration, not an omitted key. That is the opposite of the chip_id
-// rule above, and deliberately so: an absent chip_id means the lane does not apply,
-// while an absent declaration is a fact about this run that the record must state.
+// v0.3.3 makes it `declarations`, an ordered array, because the singular was a claim
+// this record had no right to make: that a pair is declared about ONCE. The same person
+// may declare at submission, add more after seeing the side-by-side, and correct
+// themselves later, and a correction is a different fact from an original rather than an
+// overwrite of it. An empty array is the honest reading of a pair nobody has declared
+// anything about — not an omitted key, and not a fabricated NOT_DECLARED event that
+// nobody actually made.
 export function buildPairRun({
   targeted_prompt,
   original_artifact_id,
   targeted_artifact_id,
   capture,
-  declaration,
+  declarations,
   initiator,
   targeted_prompt_hash,
   chip_id,
@@ -615,7 +998,11 @@ export function buildPairRun({
     original_artifact_id: typeof original_artifact_id === "string" ? original_artifact_id : "",
     targeted_artifact_id: typeof targeted_artifact_id === "string" ? targeted_artifact_id : "",
     capture: capture && typeof capture === "object" ? capture : {},
-    declaration: sanitizeRunDeclaration(declaration),
+    // Each element is validated and the set is put in canonical server order here, so a
+    // caller cannot smuggle in array order as history. Anything that fails to validate
+    // throws rather than being dropped: a record silently missing one of someone's
+    // declarations is worse than a record that refuses to build.
+    declarations: orderDeclarations((Array.isArray(declarations) ? declarations : []).map(sanitizeRunDeclaration)),
     initiator: normalizeInitiator(initiator),
     targeted_prompt_hash: typeof targeted_prompt_hash === "string" ? targeted_prompt_hash : "",
   };
