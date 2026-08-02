@@ -49,6 +49,11 @@ import {
   PAIR_EDITS,
   PAIR_CONDITIONS_UNVERIFIED,
   PAIR_INITIATOR,
+  DECLARATION_STATUS,
+  DECLARATION_NOT_DECLARED,
+  DECLARATION_NOT_CAPTURED,
+  DECLARATION_VERSION,
+  DECLARATION_SOURCE,
 } from "../reader-paired.js";
 import {
   RECEIPT_SCHEMA_VERSION,
@@ -243,11 +248,15 @@ function mockRes() {
   };
 }
 
-async function runPaired({ receipt, answer = TARGETED_ANSWER, fetchOpts = {}, env = ENV, ip } = {}) {
+async function runPaired({ receipt, answer = TARGETED_ANSWER, fetchOpts = {}, env = ENV, ip, declaration } = {}) {
   const { fetchImpl, stats } = makePairedFetch(fetchOpts);
   const handler = createReadPairedHandler({ env, fetch: fetchImpl });
   const clientIp = ip || `198.51.100.${ipCounter++}`;
-  const req = { method: "POST", headers: { "x-forwarded-for": clientIp }, body: { open_receipt: receipt, targeted_answer: answer } };
+  const body = { open_receipt: receipt, targeted_answer: answer };
+  // Omitted entirely unless a test supplies one, so every pre-existing case still
+  // exercises the no-declaration path exactly as it did before.
+  if (declaration !== undefined) body.declaration = declaration;
+  const req = { method: "POST", headers: { "x-forwarded-for": clientIp }, body };
   const res = mockRes();
   await handler(req, res);
   return { status: res.out.statusCode, body: res.out.body, stats, ip: clientIp };
@@ -897,7 +906,7 @@ test("pairConditionsUnmatched: the schema rule (conditions_matched != true) as o
   assert.equal(pairConditionsUnmatched(null), true, "a missing capture is treated as unmatched");
 });
 
-test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids, capture, v0.3.1 provenance)", () => {
+test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids, capture, v0.3.1 provenance, v0.3.2 declaration)", () => {
   const capture = buildPairCapture({ same_model: "yes", edits: "none" });
   const hash = sha256Hex(TARGETED_PROMPT_TEXT);
   const pr = buildPairRun({
@@ -908,15 +917,19 @@ test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids,
     initiator: PAIR_INITIATOR.INSPECTION_FOLLOWUP,
     targeted_prompt_hash: hash,
   });
-  // An inspection_followup run carries no chip fields (OMITTED, never null).
+  // An inspection_followup run carries no chip fields (OMITTED, never null). The
+  // declaration is the opposite rule and always present: "they did not say" is itself
+  // the record, so it is stated as NOT_DECLARED rather than left structurally absent.
   assert.deepEqual(Object.keys(pr).sort(), [
     "capture",
+    "declaration",
     "initiator",
     "original_artifact_id",
     "targeted_artifact_id",
     "targeted_prompt",
     "targeted_prompt_hash",
   ]);
+  assert.equal(pr.declaration.status, DECLARATION_STATUS.NOT_DECLARED, "none was supplied to this call");
   assert.equal(pr.targeted_prompt, TARGETED_PROMPT_TEXT);
   assert.equal(pr.original_artifact_id, "original_answer");
   assert.equal(pr.targeted_artifact_id, "targeted_answer");
@@ -927,12 +940,29 @@ test("buildPairRun: the schema PairRun shape (targeted_prompt, two artifact ids,
   assert.ok(!("instruction_version" in pr));
 
   // Defensive defaults: bad inputs never throw. An absent initiator is NEVER promoted
-  // to inspection_followup — it falls to legacy_unknown; the hash defaults to "".
+  // to inspection_followup — it falls to legacy_unknown; the hash defaults to "". The
+  // declaration defaults to a stated NOT_DECLARED with per-field absences, never to a
+  // negative and never to blanks.
   assert.deepEqual(buildPairRun(), {
     targeted_prompt: "",
     original_artifact_id: "",
     targeted_artifact_id: "",
     capture: {},
+    declaration: {
+      // Present even here. The version states which shape this object is, and it is
+      // decl.1 shaped whether or not anyone declared anything — so it is stamped, not
+      // conditioned on the content. Blank would be the empty cell the absence tokens
+      // exist to avoid.
+      declaration_version: DECLARATION_VERSION,
+      declaration_source: DECLARATION_SOURCE,
+      status: "NOT_DECLARED",
+      status_label: "not declared",
+      same_model: DECLARATION_NOT_DECLARED,
+      model_version: DECLARATION_NOT_DECLARED,
+      edits: DECLARATION_NOT_DECLARED,
+      declared_at_client: DECLARATION_NOT_CAPTURED,
+      received_at_server: DECLARATION_NOT_CAPTURED,
+    },
     initiator: "legacy_unknown",
     targeted_prompt_hash: "",
   });
@@ -978,4 +1008,146 @@ test("normalizeInitiator: only the two named provenances pass; everything else i
   assert.equal(normalizeInitiator("legacy_unknown"), "legacy_unknown");
   assert.equal(normalizeInitiator("INSPECTION_FOLLOWUP"), "legacy_unknown", "case-sensitive; not coerced");
   assert.equal(normalizeInitiator(42), "legacy_unknown");
+});
+
+// ── The wire: the endpoint records the declaration it was told, and nothing more ──
+// The endpoint makes NO assessment of the declaration. It writes what it received,
+// returns it, and never converts silence into a negative.
+
+test("wire: a declaration on the request body is persisted, returned, and rides the receipt", async () => {
+  const receipt = buildOpenReceipt();
+  const { status, body, stats } = await runPaired({
+    receipt,
+    declaration: {
+      same_model: PAIR_SAME_MODEL.YES,
+      model_version: "claude-opus-4-8",
+      edits: PAIR_EDITS.NONE,
+      declared_at_client: "2026-08-02T09:15:00.000Z",
+    },
+  });
+  assert.equal(status, 200);
+
+  // Returned in the payload...
+  const d = body.run_declaration;
+  assert.equal(d.status, DECLARATION_STATUS.DECLARED_NOT_VERIFIED);
+  assert.equal(d.status_label, "declared, not verified");
+  assert.equal(d.same_model, "yes");
+  assert.equal(d.model_version, "claude-opus-4-8");
+  assert.equal(d.edits, "none");
+  assert.equal(d.declaration_version, DECLARATION_VERSION);
+  assert.equal(d.declaration_source, DECLARATION_SOURCE);
+
+  // ...on the hashed receipt...
+  assert.equal(body.receipt.run_declaration.status, DECLARATION_STATUS.DECLARED_NOT_VERIFIED);
+
+  // ...and on the row, one column per declared value so a partial stays partial.
+  const f = stats.captureBodies[0].fields;
+  assert.equal(f["Declaration Status"], "DECLARED_NOT_VERIFIED");
+  assert.equal(f["Declared Same Model"], "yes");
+  assert.equal(f["Declared Model Version"], "claude-opus-4-8");
+  assert.equal(f["Declared Edits"], "none");
+  assert.equal(f["Declared At Client"], "2026-08-02T09:15:00.000Z");
+  assert.equal(f["Declaration Version"], DECLARATION_VERSION);
+});
+
+test("wire: the server stamps its own receipt time and NEVER backfills the client's", async () => {
+  const receipt = buildOpenReceipt();
+  const { body, stats } = await runPaired({
+    receipt,
+    // A declaration with no client-side timestamp — the form collected none.
+    declaration: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+  });
+  const d = body.run_declaration;
+  assert.equal(d.declared_at_client, DECLARATION_NOT_CAPTURED, "never manufactured from the server clock");
+  assert.match(d.received_at_server, /^\d{4}-\d{2}-\d{2}T/, "the server records when IT received the declaration");
+  assert.notEqual(d.declared_at_client, d.received_at_server);
+  const f = stats.captureBodies[0].fields;
+  assert.equal(f["Declared At Client"], DECLARATION_NOT_CAPTURED);
+  assert.equal(f["Received At Server"], d.received_at_server);
+});
+
+test("wire: a request with no declaration writes NOT_DECLARED, never blanks and never a negative", async () => {
+  const receipt = buildOpenReceipt();
+  const { body, stats } = await runPaired({ receipt });
+  const d = body.run_declaration;
+  assert.equal(d.status, DECLARATION_STATUS.NOT_DECLARED);
+  assert.equal(d.status_label, "not declared");
+  const f = stats.captureBodies[0].fields;
+  // Stated absence, not an empty cell: a blank cannot be told apart from a column
+  // that did not exist yet.
+  assert.equal(f["Declaration Status"], "NOT_DECLARED");
+  assert.equal(f["Declared Same Model"], DECLARATION_NOT_DECLARED);
+  assert.equal(f["Declared Model Version"], DECLARATION_NOT_DECLARED);
+  assert.equal(f["Declared Edits"], DECLARATION_NOT_DECLARED);
+  assert.equal(f["Declared At Client"], DECLARATION_NOT_CAPTURED);
+});
+
+test("wire: a hostile or malformed declaration is recorded as NOT_DECLARED, never trusted", async () => {
+  for (const bad of ["DECLARED_NOT_VERIFIED", 42, [1, 2], { status: "DECLARED_NOT_VERIFIED" }]) {
+    const { body } = await runPaired({ receipt: buildOpenReceipt(), declaration: bad });
+    assert.equal(
+      body.run_declaration.status,
+      DECLARATION_STATUS.NOT_DECLARED,
+      `${JSON.stringify(bad)} must not be accepted as a declaration`,
+    );
+  }
+});
+
+test("wire: the endpoint records what it was told and makes no assessment — no derived state anywhere", async () => {
+  const { body, stats } = await runPaired({
+    receipt: buildOpenReceipt(),
+    declaration: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+  });
+  // The declaration says "same model, no edits". A conclusion drawn from that would be
+  // conditions_matched=true. The server draws none: not in the payload, not on the
+  // receipt, not on the row.
+  assert.ok(!("conditions_matched" in body.run_declaration));
+  assert.doesNotMatch(JSON.stringify(body.receipt), /conditions_matched/);
+  const f = stats.captureBodies[0].fields;
+  for (const k of Object.keys(f)) assert.doesNotMatch(k, /Conditions Matched/i, `row column "${k}"`);
+});
+
+test("wire: a replay reports the STORED declaration, not the one resubmitted with the replay", async () => {
+  const receipt = buildOpenReceipt();
+  const openRunId = receipt.open_run.provenance.request_id;
+  const existingRecord = {
+    id: "recPairedStored",
+    fields: {
+      "Open Run ID": openRunId,
+      "Targeted Answer Hash": sha256Hex(TARGETED_ANSWER),
+      "Declaration Version": DECLARATION_VERSION,
+      "Declaration Status": "DECLARED_NOT_VERIFIED",
+      "Declared Same Model": "not sure",
+      "Declared Model Version": DECLARATION_NOT_DECLARED,
+      "Declared Edits": "none",
+      "Declared At Client": DECLARATION_NOT_CAPTURED,
+      "Received At Server": "2026-08-01T00:00:00.000Z",
+    },
+  };
+  const { status, body, stats } = await runPaired({
+    receipt,
+    fetchOpts: { existingRecord },
+    // A different declaration on the replay. The row is the record; this is not.
+    declaration: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+  });
+  assert.equal(status, 200);
+  assert.equal(stats.post, 0, "a replay writes no second row");
+  assert.equal(body.run_declaration.same_model, "not sure", "the STORED declaration is reported back");
+  assert.equal(body.run_declaration.received_at_server, "2026-08-01T00:00:00.000Z");
+});
+
+test("wire: a row predating these columns replays honestly as NOT_DECLARED", async () => {
+  const receipt = buildOpenReceipt();
+  const existingRecord = {
+    id: "recPairedLegacy",
+    fields: {
+      "Open Run ID": receipt.open_run.provenance.request_id,
+      "Targeted Answer Hash": sha256Hex(TARGETED_ANSWER),
+      // No declaration columns at all.
+    },
+  };
+  const { body } = await runPaired({ receipt, fetchOpts: { existingRecord } });
+  assert.equal(body.run_declaration.status, DECLARATION_STATUS.NOT_DECLARED);
+  assert.equal(body.run_declaration.status_label, "not declared");
+  assert.equal(body.run_declaration.same_model, DECLARATION_NOT_DECLARED);
 });

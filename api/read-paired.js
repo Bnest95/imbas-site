@@ -66,6 +66,13 @@ import {
   CHIP_PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
   targetedPromptOffer,
+  buildRunDeclaration,
+  DECLARATION_VERSION,
+  DECLARATION_STATUS,
+  DECLARATION_NOT_DECLARED,
+  DECLARATION_NOT_CAPTURED,
+  DECLARATION_SOURCE,
+  declarationStatusLabel,
 } from "../reader-paired.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
@@ -609,6 +616,10 @@ function buildPairedPayload(pairedAnalysis, receipt, opts = {}) {
     targeted_prompt: pa.targeted_prompt || "",
     unvalidated: true,
     idempotent: !!opts.idempotent,
+    // What the person declared about how they ran the pair, returned as its own
+    // top-level field. It sits beside the measurement, never inside it: nothing
+    // above this line is a declared value, and this is not a measurement.
+    run_declaration: opts.declaration || null,
     receipt,
   };
 }
@@ -631,6 +642,10 @@ function buildChipPairedPayload(chipAnalysis, receipt, opts = {}) {
     paired_method_version: ca.paired_method_version || CHIP_PAIRED_METHOD_VERSION,
     unvalidated: true,
     idempotent: !!opts.idempotent,
+    // Same placement as the inspection payload: a sibling of the analysis, not a
+    // member of it. The chip lane's suggested loop state is still derived on the
+    // client from its own capture, and this field is not an input to it.
+    run_declaration: opts.declaration || null,
     receipt,
   };
 }
@@ -699,6 +714,59 @@ export async function findExistingPaired(openRunId, answerHash, deps = {}, promp
 // Operator dedupe (manual, not automated): for a given (Open Run ID, Targeted Answer
 // Hash), keep the earliest Created row and remove the rest ONLY after confirming no
 // Inspection Shares row carries a Receipt Hash that exists solely on a row being removed.
+// The declaration's seven columns, written on BOTH lanes. Each declared value gets
+// its own column so a partial declaration stays partial on the row: "not sure" and
+// "never answered" land in different cells, which a single packed blob or a boolean
+// could not express. The columns are named Declared*/Declaration* and never
+// Conditions*, keeping them clear of the cfp.1 family (Reader Runs.Inspector Run
+// Conditions), which describes the INSPECTOR call and not the person's run.
+//
+// A row that fails to receive a declaration writes NOT_DECLARED, not blanks: an
+// empty cell cannot be told apart from a column that did not exist yet.
+function declarationFields(declaration) {
+  const d = declaration || {};
+  return {
+    "Declaration Version": d.declaration_version || DECLARATION_VERSION,
+    "Declaration Status": d.status || DECLARATION_STATUS.NOT_DECLARED,
+    "Declared Same Model": d.same_model || DECLARATION_NOT_DECLARED,
+    "Declared Model Version": d.model_version || DECLARATION_NOT_DECLARED,
+    "Declared Edits": d.edits || DECLARATION_NOT_DECLARED,
+    "Declared At Client": d.declared_at_client || DECLARATION_NOT_CAPTURED,
+    "Received At Server": d.received_at_server || DECLARATION_NOT_CAPTURED,
+  };
+}
+
+// Rebuild the declaration from a stored row on idempotent replay. The stored status
+// is echoed rather than recomputed — a replay reports what the row recorded, the same
+// no-silent-upgrade discipline Paired Method Version follows above. The label is
+// re-derived from the one mapping so the wording cannot drift between a fresh
+// response and a replayed one, and a row predating these columns replays honestly as
+// NOT_DECLARED rather than as a declaration nobody made.
+//
+// Content is echoed; shape is stamped. The declared values and the status come off the
+// row, because they are what was recorded. The version is not read back, because it
+// describes the object assembled here — decl.1 keys, decl.1 absence tokens — and not
+// the cell it came from. That split is the same one this whole family turns on: what
+// was reported, kept apart from the frame Imbas puts around it.
+function declarationFromRecord(recordFields) {
+  const f = recordFields || {};
+  const status =
+    f["Declaration Status"] === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
+      ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED
+      : DECLARATION_STATUS.NOT_DECLARED;
+  return {
+    declaration_version: DECLARATION_VERSION,
+    declaration_source: DECLARATION_SOURCE,
+    status,
+    status_label: declarationStatusLabel(status),
+    same_model: f["Declared Same Model"] || DECLARATION_NOT_DECLARED,
+    model_version: f["Declared Model Version"] || DECLARATION_NOT_DECLARED,
+    edits: f["Declared Edits"] || DECLARATION_NOT_DECLARED,
+    declared_at_client: f["Declared At Client"] || DECLARATION_NOT_CAPTURED,
+    received_at_server: f["Received At Server"] || DECLARATION_NOT_CAPTURED,
+  };
+}
+
 export async function capturePaired(record, ctx, deps = {}) {
   const env = deps.env || process.env;
   const fetchImpl = deps.fetch || fetch;
@@ -751,6 +819,7 @@ export async function capturePaired(record, ctx, deps = {}) {
           Initiator: record.initiator,
           "Chip ID": record.chipId || "",
           "Instruction Version": record.instructionVersion || "",
+          ...declarationFields(record.declaration),
           Created: new Date().toISOString(),
         }
       : {
@@ -768,6 +837,7 @@ export async function capturePaired(record, ctx, deps = {}) {
           "Paired Method Version": PAIRED_METHOD_VERSION,
           "Schema Version": RECEIPT_SCHEMA_VERSION,
           "Receipt Hash": record.receiptHash || "",
+          ...declarationFields(record.declaration),
           Created: new Date().toISOString(),
         };
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${PAIRED_TABLE}`;
@@ -879,13 +949,18 @@ function reconstructPairedFromRecord(recordFields, embed) {
     // upgrade this pass exists to prevent.
     paired_method_version: storedVersion,
   };
+  // The STORED declaration, not the resubmitted one. A replay returns the analysis
+  // that was made, and the declaration is part of that record: it says what the
+  // person reported at the time, which a later resubmission cannot revise.
+  const declaration = declarationFromRecord(f);
   const receipt = buildPairedReceipt({
     generatedAt: new Date().toISOString(),
     openRun: embed.openRun,
     pairedAnalysis,
+    declaration,
   });
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-  return buildPairedPayload(pairedAnalysis, receipt, { idempotent: true });
+  return buildPairedPayload(pairedAnalysis, receipt, { idempotent: true, declaration });
 }
 
 // Rebuild a chip paired payload from a stored record (idempotent replay). Delta
@@ -918,13 +993,15 @@ function reconstructChipFromRecord(recordFields, embed) {
     delta_items,
     paired_method_version: f["Paired Method Version"] || CHIP_PAIRED_METHOD_VERSION,
   };
+  const declaration = declarationFromRecord(f);
   const receipt = buildChipPairedReceipt({
     generatedAt: new Date().toISOString(),
     openRun: embed.openRun,
     chipAnalysis,
+    declaration,
   });
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-  return buildChipPairedPayload(chipAnalysis, receipt, { idempotent: true });
+  return buildChipPairedPayload(chipAnalysis, receipt, { idempotent: true, declaration });
 }
 
 function rejectValidation(res, ctx, reason, status, body = {}) {
@@ -992,6 +1069,29 @@ export function createReadPairedHandler(deps = {}) {
     } catch {
       return rejectValidation(res, ctx, "invalid_body", 400, { error: "invalid" });
     }
+
+    // The run declaration: what the person reported about how they ran the pair.
+    // The endpoint RECORDS it and makes no assessment of it — it never decides
+    // whether the declaration is true, and it never derives the matched/unmatched
+    // state, which stays client-side.
+    //
+    // Rebuilt server-side from the declared values rather than stored as sent, so the
+    // status and label are derived here under one rule and a client cannot post a
+    // status of its own choosing. received_at_server is stamped from this server's
+    // clock at the moment the declaration arrives; declared_at_client is passed
+    // through and never backfilled from it, so a form that collects no client time
+    // records NOT_CAPTURED rather than a manufactured one.
+    const sent =
+      body.declaration && typeof body.declaration === "object" && !Array.isArray(body.declaration)
+        ? body.declaration
+        : {};
+    const declaration = buildRunDeclaration({
+      same_model: sent.same_model,
+      model_version: sent.model_version,
+      edits: sent.edits,
+      declared_at_client: sent.declared_at_client,
+      received_at_server: new Date().toISOString(),
+    });
 
     // Targeted (second) answer: same caps + reject-not-clip word ceiling as the
     // first paste (design §7).
@@ -1260,9 +1360,9 @@ export function createReadPairedHandler(deps = {}) {
         delta_items: pm.delta_items,
         paired_method_version: CHIP_PAIRED_METHOD_VERSION,
       };
-      receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis });
+      receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declaration });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-      payload = buildChipPairedPayload(chipAnalysis, receipt, { idempotent: false });
+      payload = buildChipPairedPayload(chipAnalysis, receipt, { idempotent: false, declaration });
       captureRecord = {
         initiator: PAIR_INITIATOR.USER_CHIP,
         chipId: body.chip_id,
@@ -1273,6 +1373,7 @@ export function createReadPairedHandler(deps = {}) {
         targetedAnswer,
         answerHash,
         pm,
+        declaration,
         receiptHash: receipt.integrity.content_hash,
       };
     } else {
@@ -1294,9 +1395,9 @@ export function createReadPairedHandler(deps = {}) {
         paired_method_version: PAIRED_METHOD_VERSION,
         canonical,
       };
-      receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis });
+      receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis, declaration });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-      payload = buildPairedPayload(pairedAnalysis, receipt, { idempotent: false });
+      payload = buildPairedPayload(pairedAnalysis, receipt, { idempotent: false, declaration });
       captureRecord = {
         openRunId,
         targetedPrompt,
@@ -1305,6 +1406,7 @@ export function createReadPairedHandler(deps = {}) {
         answerHash,
         pm,
         canonical,
+        declaration,
         receiptHash: receipt.integrity.content_hash,
       };
     }
