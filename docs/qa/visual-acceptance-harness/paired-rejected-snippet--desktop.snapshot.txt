@@ -1067,6 +1067,7 @@ viewport: 1440x900
         "unvalidated": true
       },
       "receipt_type": "paired",
+      "run_declaration": null,
       "schema_version": "reader-receipt-1.2"
     },
     "result": {

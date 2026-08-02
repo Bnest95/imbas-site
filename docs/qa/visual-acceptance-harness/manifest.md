@@ -17,7 +17,9 @@
 >
 > A named follow-on will separate per-image capture provenance from the derived manifest inventory and add browser-free manifest generation. Until then, this file is retained as a qualified historical record and must not be treated as a current complete inventory of the acceptance board.
 >
-> Nothing here is wrong by accident. `--update <scenario>` refuses to rewrite the manifest when the run did not re-capture every image, because rewriting it from a partial run would silently drop the images that run did not touch. Two passes have now accepted baselines one scenario at a time under a scope rule that forbids a broad update, so the manifest has fallen behind twice by design.
+> Nothing here is wrong by accident. `--update <scenario>` refuses to rewrite the manifest when the run did not re-capture every image, because rewriting it from a partial run would silently drop the images that run did not touch. Three passes have now accepted baselines one scenario at a time under a scope rule that forbids a broad update, so the manifest has fallen behind three times by design.
+>
+> The third pass (conditions provenance) accepted 17 scenarios and moved exactly one image: `share-paired-no-model--mobile.png`. Its other 16 acceptances were snapshot-only — the payload gained a `run_declaration` block and no pixel changed. That one image moved because the share page grew a section below the fold, which lengthened the document and re-rasterized the fixed-attachment masthead gradient by at most 2 RGB levels; the section itself is not in frame at either viewport.
 
 captured_against_sha: `da08ce44a8b3ffc6130deb769a139169551f8eea`
 

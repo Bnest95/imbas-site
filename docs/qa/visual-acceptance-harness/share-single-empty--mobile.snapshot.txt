@@ -97,6 +97,7 @@ viewport: 375x812
         "version": "receipt-page.v1"
       },
       "reviewed_status": "Unreviewed",
+      "run_declaration": null,
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
       "source": "Workbench inspection",
       "visibility": "unlisted"

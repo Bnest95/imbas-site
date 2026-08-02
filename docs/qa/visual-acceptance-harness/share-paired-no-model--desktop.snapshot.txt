@@ -115,6 +115,17 @@ viewport: 1440x900
         "version": "receipt-page.v1"
       },
       "reviewed_status": "Unreviewed",
+      "run_declaration": {
+        "declaration_source": "pair_capture_client_declaration",
+        "declaration_version": "decl.1",
+        "declared_at_client": "NOT_CAPTURED",
+        "edits": "NOT_DECLARED",
+        "model_version": "NOT_DECLARED",
+        "received_at_server": "NOT_CAPTURED",
+        "same_model": "NOT_DECLARED",
+        "status": "NOT_DECLARED",
+        "status_label": "not declared"
+      },
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
       "source": "Workbench two-question test",
       "visibility": "unlisted"
