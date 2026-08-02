@@ -48,6 +48,7 @@ import {
   recordShareCreation,
 } from "../reader-security.js";
 import { canonicalizeForHash, RECEIPT_BOUNDARY } from "../reader-receipt.js";
+import { sanitizeRunDeclaration, DECLARATION_STATUS } from "../reader-paired.js";
 import { describeReceipt } from "../reader-receipt-page.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
@@ -230,9 +231,14 @@ function extractPaired(receipt) {
     }))
     .filter((d) => d.point || d.signal_pattern || d.open_side || d.targeted_side)
     .slice(0, MAX_ITEMS);
+  // The declaration travels with the shared pair, read off the SAME hash-verified
+  // receipt as the delta items. It is not one of them: the items are what Imbas
+  // measured, and this is what the person said about how they ran it. A receipt
+  // carrying none yields NOT_DECLARED, which the page states plainly.
   return {
     question: clip(run.question, QUESTION_MAX),
     items: deltas,
+    declaration: sanitizeRunDeclaration(receipt.run_declaration),
   };
 }
 
@@ -273,6 +279,15 @@ function jsonArray(s) {
   }
 }
 
+function jsonObject(s) {
+  try {
+    const parsed = JSON.parse(str(s) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function sanitizeSingleFindings(arr) {
   return arr
     .filter((f) => f && typeof f === "object")
@@ -303,6 +318,12 @@ function p4RecordToPublic(fields, shareId, mode) {
     question: fields.Question || "",
     findings: mode === "single" ? sanitizeSingleFindings(raw) : [],
     delta_items: mode === "paired" ? sanitizePairedItems(raw) : [],
+    // Paired only. A row without the column, or a share from before it existed, comes
+    // back NOT_DECLARED with the label already resolved — so the page reports that
+    // nothing was declared instead of rendering a blank the reader has to interpret.
+    // The DERIVED matched state is not here and never was: it stayed in the browser.
+    run_declaration:
+      mode === "paired" ? sanitizeRunDeclaration(jsonObject(fields["Declaration JSON"])) : null,
     boundary: RECEIPT_BOUNDARY,
     reviewed_status: fields["Reviewed Status"] || "Unreviewed",
     visibility: fields.Visibility || "unlisted",
@@ -510,6 +531,13 @@ export default async function handler(req, res) {
     Mode: mode,
     "Receipt Hash": verifiedHash,
     "Findings JSON": JSON.stringify(payload.items),
+    // Paired only, and only when something was actually declared. A single-mode share
+    // has no declaration to carry, and writing NOT_DECLARED on a paired share nobody
+    // filled in would be indistinguishable from one that predates the column — so the
+    // key is omitted and the read side supplies the absence.
+    ...(payload.declaration && payload.declaration.status === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
+      ? { "Declaration JSON": JSON.stringify(payload.declaration) }
+      : {}),
     Visibility: "unlisted",
     "Reviewed Status": "Unreviewed",
     // Written once, here, and never after. A product rerun mints a new row rather than

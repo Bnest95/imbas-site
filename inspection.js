@@ -322,12 +322,60 @@ function pairedPanelHtml(record) {
     </section>`;
 }
 
+// What the person said about how they ran the pair. It renders OUTSIDE the measurement
+// panel above, in the capture record's own treatment, because it is not a measurement:
+// the panel is what Imbas observed, and this is what it was told.
+//
+// The status label leads, so the first thing read about these values is that nobody
+// checked them. The label arrives on the record rather than being written here — one
+// mapping owns the wording, and this page cannot drift from it.
+//
+// The DERIVED conditions state is not rendered here and is not on the record. Whether
+// the conditions matched is computed in the workbench from the person's own capture and
+// stays there; a share link carries no such conclusion, so this section says what was
+// declared and stops.
+function declarationHtml(record) {
+  const d = record && record.run_declaration;
+  if (!d) return "";
+  const declared = d.status === "DECLARED_NOT_VERIFIED";
+  const rows = declared
+    ? [
+        ["Same AI for both answers", d.same_model],
+        ["Model, as reported", d.model_version],
+        ["Either answer edited", d.edits],
+        ["Declared at", d.declared_at_client],
+        ["Received at", d.received_at_server],
+      ]
+    : [];
+  const note = declared
+    ? "These values were reported by the person who ran the pair. Imbas did not verify them."
+    : "No declaration was recorded with this run. That means nothing was reported, not that anything failed.";
+  return `
+    <section class="insp-receipt insp-receipt--declaration" aria-label="How this pair was run">
+      <div class="insp-receipt__sections">
+        <article class="insp-receipt__section" data-state="${escapeHtml(d.status || "")}">
+          <h3 class="insp-receipt__section-title">How this pair was run — ${escapeHtml(d.status_label || "")}</h3>
+          <p class="insp-receipt__note">${escapeHtml(note)}</p>
+          ${rows.length
+            ? `<ul class="insp-receipt__items">${rows
+                .map(
+                  ([label, value]) =>
+                    `<li class="insp-receipt__item"><span class="insp-receipt__item-label">${escapeHtml(label)}</span><p class="insp-receipt__statement">${escapeHtml(value || "")}</p></li>`,
+                )
+                .join("")}</ul>`
+            : ""}
+        </article>
+      </div>
+    </section>`;
+}
+
 function renderPaired(root, record) {
   root.innerHTML =
     mastHtml("paired") +
     anchorHtml(record) +
     questionHtml(record) +
     pairedPanelHtml(record) +
+    declarationHtml(record) +
     receiptHtml(record) +
     actionsHtml(record) +
     reportSeamHtml();
