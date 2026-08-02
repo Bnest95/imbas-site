@@ -100,7 +100,7 @@ Single-mode live output should report a count of candidate items, not a gap scor
 matched output, paired unmatched output, and archive figures are three different kinds of
 claim. Each needs its own register and its own provenance label. None of that is decided.
 
-**7. The result surface should render findings generically.**
+**7. The result surface should render findings generically.** — **CLOSED, Pass 2B-C.**
 The result view should present a set of things this inspection found, each anchored to
 quoted text, rather than hardcoding three classes or a paired-comparison shape. New
 measurements ship as detectors. A result view that hardcodes today's three classes forces
@@ -115,6 +115,26 @@ architecture claim holds: `FAMILIES` (`reader-checks.js:37`) already covers `com
 `local_integrity`, and `profile`; `validateDetectorEvent` (`390`) validates each family
 independently; `buildCheckRegister` (`339`) assembles and ranks. A detector can be added
 without changing the construct.
+
+Closed by `7e9ebb9`, which supplied the other half: a view that does not have to be edited
+when a detector is added. Both result surfaces build their rows from a named canonical
+subset and take each row's label off the render descriptor. `MeasurementPanel` maps
+`selectSubset(canonical, "surfaced_findings")` through `describeFinding` and prints
+`class_display`; `PairedDeltaView` does the same over `probe_surfaced_differences`. Neither
+branches on a shape id. `MEASURE_FINDING_LABEL` — a three-entry map inside the component
+holding the same strings `reader-result.js` already publishes — is gone, and with it the
+second copy of the vocabulary that had to be edited for every new finding type.
+
+The generic claim is proven by running the view rather than by reading it.
+`test/measurement-panel-generic-rendering.test.mjs` compiles `MeasurementPanel` out of
+`workbench-app.jsx`, hands it a finding whose shape is registered only in the test, and
+reads the output back: the row renders, quotes its anchor, and prints whatever class label
+the descriptor gives it, including one the shipped vocabulary does not contain. Nothing in
+`workbench-app.jsx` is touched to make that pass, which is the whole claim. The two axes are
+not the same axis and the test says so: shape is open at `registerFindingShape`, while class
+stays closed at the construction door, because the vocabulary is a product ruling and not an
+architecture affordance. The paired half is held at the source by
+`test/paired-claim-register-normalization.test.mjs`.
 
 **8. The completeness badge states a verdict on the answer, on every read.** — **CLOSED, Pass 2B-B correction.**
 Found while building the honest empty states in Pass 2B-B, and deliberately not fixed there.
@@ -156,7 +176,7 @@ entitled to make at all — is NOT answered here. What ships is a three-way flag
 a three-way grade. Whether the summary earns its place is a register-lane question and it
 stays open as item 12.
 
-**9. The curated case surface computed a three-way verdict from the visitor's paste.**
+**9. The curated case surface computed a three-way verdict from the visitor's paste.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30 by the Pass 2B-B correction, which removed the render and preserved the
 idea. `detectAnchors` in `workbench-app.jsx` token-matched the visitor's pasted answer
 against the stored anchors of a published case and printed CLOSED GAP, PARTIALLY SURFACED
@@ -174,7 +194,18 @@ not, and neither is any label that needs an Imbas word to parse. A term match ov
 anchor list is weak evidence, and a flag that says so is honest where a badge that hides it
 is not. Register lane, or C.
 
-**10. The share card still writes verdict prose from the same detection.**
+Closed by `3609e47`, taking the "or C" branch of this entry's own disposition. The detector
+is kept and demoted: `verdict` is a record key from here on, riding the repository candidate
+and the share text, rendering no badge and no headline. The comment at `detectAnchors`
+(`workbench-app.jsx`) states that in those terms and names the three retired labels — CLOSED
+GAP, PARTIALLY SURFACED, GAP HELD — as a categorical rebuild of the figure the same pass
+removed. The dead `verdictLine` table went with the badge.
+
+Where the detector still speaks, it speaks in the register this entry set. The one surface
+left is the share card, which is item 10; the sentence it now writes states its own basis
+and needs no Imbas word to parse.
+
+**10. The share card still writes verdict prose from the same detection.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30, alongside item 9, and deliberately not taken by that correction.
 `buildShareResultText` in `workbench-app.jsx` assembles the copyable card for a curated run
 and still speaks in the removed vocabulary — "gap held — the answer did not name…". It is
@@ -187,7 +218,17 @@ surface.
 It should be read against item 9's ruling when that ruling lands, so the card and the
 detector move together rather than one being fixed twice.
 
-**11. Two shipped surfaces now say different things about the same absence.**
+Closed by `3609e47`, in the same commit as item 9, which is what this entry asked for. The
+three-line `runLines` table in `buildShareResultText` is gone — "gap held — the answer did
+not name…", "gap mostly held…", and "gap closed — … This gap may be narrowing since May
+2026." The card now carries the two words the run surface itself shows, SOMETHING TO CHECK
+or NOTHING FLAGGED, over one sentence that names its own instrument: "This term check did
+not find [the anchor] in your answer." The archived case's significance follows on its own
+line, labelled `Case context:`, so the stored fact and the live term match cannot be read as
+one claim. The narrowing-over-time reading went with the table; a term match on one pasted
+answer never supported it.
+
+**11. Two shipped surfaces now say different things about the same absence.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30. The correction replaced the zero-delta copy on the run surface with
 "This probe surfaced nothing new. That doesn't mean either answer is complete." The share
 page (`inspection.js`) still renders the retired pair — the heading "The delta" and the body
@@ -201,6 +242,13 @@ result, one of which puts the absence on the answers. It moves with SCORE RETIRE
 item 1, which already carries `inspection.js` for the score and the retired split
 vocabulary. Adding a third string to that same move costs nothing; moving it early would
 break the carve.
+
+Closed by `3609e47`, riding the score-retirement move exactly as this entry said it would.
+The retired pair is gone from the share page: `pairedPanelHtml` (`inspection.js`) heads the
+section "What the second answer added", and the zero-delta body is `PAIRED_EMPTY`, which is
+`PAIRED_EMPTY_CLOSE` from `reader-paired.js` character for character. The two surfaces now
+say the same sentence about the same absence, and it is the sentence that puts the absence
+on the probe rather than on the answers.
 
 **12. Whether a three-way flag summary is a claim the Reader may make at all.** — **CLOSED, Pass 2B-C.**
 Recorded 2026-07-30, split off from item 8 when that item closed. Item 8 removed the
@@ -448,7 +496,7 @@ down. Pass 2B-A repointed every visible count on the SINGLE surface to the named
 `surfaced_findings` subset so that no displayed number can include a finding the reader
 cannot verify. It did not do that on the paired surface. This is the remaining half.
 
-**1. `PairedDeltaView` tallies and lists the pre-canonical wire fields.**
+**1. `PairedDeltaView` tallies and lists the pre-canonical wire fields.** — **CLOSED, Pass 2B-A2.**
 The visible tally comes from `paired.signal_counts` and the rows from `paired.delta_items`
 (`workbench-app.jsx:4167`, `4170`). Both are pre-canonical, so neither consults the anchor
 contract. The named subset the canonical result already carries —
@@ -473,6 +521,42 @@ Two tests in `test/paired-claim-register-normalization.test.mjs` (5a, 5b) hold t
 one asserts `PairedDeltaView` still reads the legacy fields, so it fails the moment someone
 repoints it and tells them which divergence demonstration to delete alongside it; the other
 pins the arithmetic of the divergence itself.
+
+Closed by `4416ffd` (Pass 2B-A2), which repointed both halves in one move rather than only
+the tally — the outcome this entry named as worse than leaving it alone. `PairedDeltaView`
+builds its rows from `selectSubset(canonical, "probe_surfaced_differences")` through
+`describeFinding`, and derives its count from that same canonical result, so the number and
+the rows are one collection and cannot disagree. `paired.signal_counts` is gone from the
+view. `paired.delta_items` survives on exactly one line — the legacy binding, which renders
+a pre-2.0 record's readings and none of its excerpts.
+
+The demonstrated consequence is closed at the data layer rather than filtered at the render.
+`reader-result.js` resolves the model's proposed snippet to an exact span in the stored
+answer; a snippet that resolves nowhere is recorded as UNLOCATABLE_SNIPPET with an
+UNRESOLVED anchor carrying no text, so it can reach neither the count nor a row. The
+divergence driven live for this entry — a tally of 2 against a `probe_surfaced_differences`
+of 1, with an unquotable "Second answer" excerpt on screen — is no longer constructable.
+
+The two guards handed off as this entry designed them to. Test 5a inverted from "DEFERRED
+DEFECT: PairedDeltaView still tallies the pre-canonical wire fields" to "PairedDeltaView
+reads the named subset, not the pre-canonical wire fields", and now pins the legacy binding
+to its one permitted line. The old 5b, whose job was to demonstrate the divergence and
+instruct its own deletion, is replaced by a 5b that proves the exclusion from the other
+side: the fabricated snippet is absent from the named subset and still present in the
+record, with its rejection reason enumerated on the anchor.
+
+The stated blocker resolved inside the same commit. Repointing the rows required the paired
+class vocabulary to be settled, which is COPY AND OUTPUT QUEUE item 2; the repointed row
+takes its label from `class_display` on the descriptor, which is that item's remedy applied
+rather than a second copy of it made.
+
+One later change is worth naming, so this entry reads against the surface as it now stands.
+The per-class tally and the gap x-ray described above no longer render at all: `7e9ebb9`
+removed `pairedSignalCounts`, `GapXray` and `GAP_XRAY_SEGMENTS` under COPY AND OUTPUT QUEUE
+item 12, which withdraws any aggregate across the class vocabulary from every user-facing
+surface. That is a different ruling from this one. What closes this entry is the repointing;
+what a reader sees today is the single count above the list, drawn from the same named
+subset as the rows beneath it.
 
 **2. The server-side claim register reaches the paired surface and is rendered nowhere.** — **CLOSED, Pass 2B-B.**
 `claim_register`, `claim_basis`, and `conditions_status` travel intact from the construction
@@ -522,7 +606,7 @@ The ceilings may only go down. These three items are what takes them to zero.
 
 Counts below are the ceilings recorded in that test's `BASELINE`, derived in-session.
 
-**1. The share and permalink surface still renders a score. (2B-C)**
+**1. The share and permalink surface still renders a score. (2B-C)** — **CLOSED, Pass 2B-C.**
 Carved out of 2B-B by ruling, because the share page renders the stored score from its
 Airtable row: `api/inspection-share.js` (3), `inspection.js` (1), `api/inspection-view.js`
 (1), and the `READER_SHARE_CONSENT` disclosure strings in `workbench-app.jsx` (2, plus the
@@ -553,6 +637,30 @@ An invariant test holds the interim state honest: while the page scores, the met
 the consent copy must both keep disclosing it. When 2B-C lands, that test's expectation
 inverts to zero on all three and the five temporary baseline entries above must be deleted,
 not lowered.
+
+Closed by `3609e47`, with schema, render, page metadata and consent copy in the one commit
+this entry required them to move in. `api/inspection-share.js` no longer extracts, stores,
+or projects the estimate, and stops writing the Gap Estimate field. `inspection.js` and
+`api/inspection-view.js` each drop their identical `COMPLETENESS_LABEL` and
+`COMPLETENESS_GLOSS`, so neither the page nor the link preview publishes the all-clear
+string or the conduct string. The two `READER_SHARE_CONSENT` lines stop disclosing an
+estimate the page can no longer show, which is the direction this entry insisted on: the
+disclosure narrowed only once the thing disclosed was gone.
+
+The retired split vocabulary went with it, as this entry said it must. `MEASURE_FINDING_LABEL`
+in `inspection.js` resolves both the stored candidate strings and the shipped ids onto
+Omission / Framing Drift / Deflection, so an older row prints today's names without its
+stored bytes being rewritten. Pre-P4 rows are frozen rather than remapped:
+`LEGACY_FORMAT_NOTICE` states which format the row was published under and the rating does
+not render. The live Inspection Shares table read zero records when the change landed, so no
+published link changed meaning.
+
+The interim invariant inverted as forecast. In `test/zero-score-language.test.mjs` the five
+share-surface `BASELINE` entries are deleted rather than lowered — `api/inspection-share.js`,
+`inspection.js`, `api/inspection-view.js`, `workbench-app.jsx` and `workbench.bundle.js` —
+and the consistency test now asserts zero across render, metadata and consent copy together.
+`af51c22` then put the share surface in front of a camera for the first time, so the board
+photographs the surface this entry was about instead of taking a source scan's word for it.
 
 **2. Score generation and storage. (API-spec lane)**
 The compatibility envelope, untouched by 2B-B because API semantics are frozen: the
