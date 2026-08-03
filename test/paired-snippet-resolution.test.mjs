@@ -72,7 +72,7 @@ function difference({ interpretation, open = null, targeted, targetedContext = "
 function canonicalFrom(differences, probeAnswer = PROBE_ANSWER) {
   const pm = parsePairedMeasurement({ differences, gap_estimate: 2, estimate_rationale: "r" });
   assert.ok(pm, "the fixture must parse");
-  return buildCanonicalPaired(pm, OPEN_ANSWER, probeAnswer);
+  return buildCanonicalPaired(pm, { open: OPEN_ANSWER, targeted: probeAnswer });
 }
 
 function anchorFor(finding, role) {

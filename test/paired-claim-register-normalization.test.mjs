@@ -70,7 +70,7 @@ function difference({ interpretation, open = null, targeted, signal_pattern = "O
 function canonicalFrom(differences) {
   const pm = parsePairedMeasurement({ differences, gap_estimate: 2, estimate_rationale: "r" });
   assert.ok(pm, "the fixture must parse");
-  return buildCanonicalPaired(pm, OPEN_ANSWER, PROBE_ANSWER);
+  return buildCanonicalPaired(pm, { open: OPEN_ANSWER, targeted: PROBE_ANSWER });
 }
 
 const QUOTABLE_DELTA = difference({

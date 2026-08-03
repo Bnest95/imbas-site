@@ -56,6 +56,10 @@ const ANSWER =
 const PROP = "The vendor's contract was signed in 2019";
 const DEP = "the vendor is exempt from the new reporting rule";
 
+// Every resolver entry point takes the artifact MAP, never a loose body string:
+// identity and text arrive together or not at all.
+const ARTIFACTS = { original_answer: ANSWER };
+
 function omissionFinding(overrides = {}) {
   return {
     type: "omission",
@@ -74,13 +78,18 @@ function omissionFinding(overrides = {}) {
 }
 
 function assemble(finding, text = ANSWER) {
-  return assembleComparativeCheck({ artifactId: "original_answer", artifactText: text, finding, index: 0 });
+  return assembleComparativeCheck({
+    artifacts: { original_answer: text },
+    artifactId: "original_answer",
+    finding,
+    index: 0,
+  });
 }
 
 // ── Span resolution (AT-2 mechanical heart) ─────────────────────────────────────
 
 test("resolveSpan returns an exact, self-consistent span for a substring", () => {
-  const span = resolveSpan(ANSWER, PROP, "original_answer");
+  const span = resolveSpan(ARTIFACTS, "original_answer", PROP);
   assert.ok(span);
   assert.equal(span.artifact_id, "original_answer");
   assert.equal(ANSWER.slice(span.start, span.end), PROP);
@@ -88,18 +97,18 @@ test("resolveSpan returns an exact, self-consistent span for a substring", () =>
 });
 
 test("resolveSpan returns null for text that does not occur (never fabricates offsets)", () => {
-  assert.equal(resolveSpan(ANSWER, "a sentence that is not in the answer", "original_answer"), null);
+  assert.equal(resolveSpan(ARTIFACTS, "original_answer", "a sentence that is not in the answer"), null);
 });
 
 test("resolveSpan strips a single layer of wrapping quotation marks", () => {
-  const span = resolveSpan(ANSWER, `“${PROP}”`, "original_answer");
+  const span = resolveSpan(ARTIFACTS, "original_answer", `“${PROP}”`);
   assert.ok(span);
   assert.equal(ANSWER.slice(span.start, span.end), PROP);
 });
 
 test("resolveSpans is all-or-nothing: one unresolvable quote drops the whole set", () => {
-  assert.ok(resolveSpans(ANSWER, [PROP, DEP], "original_answer"));
-  assert.equal(resolveSpans(ANSWER, [PROP, "not present"], "original_answer"), null);
+  assert.ok(resolveSpans(ARTIFACTS, "original_answer", [PROP, DEP]));
+  assert.equal(resolveSpans(ARTIFACTS, "original_answer", [PROP, "not present"]), null);
 });
 
 test("normalizeQuotes accepts the tolerant shapes a model may emit", () => {
@@ -182,7 +191,7 @@ test("resolver out of enum defaults to direct_question rather than suppressing a
 test("AT-1: a check with no detector_event_id fails validation", () => {
   const { check, detector_event } = assemble(omissionFinding());
   const bad = { ...check, detector_event_id: "" };
-  const r = validateCheck(bad, detector_event, ANSWER);
+  const r = validateCheck(bad, detector_event, ARTIFACTS);
   assert.equal(r.ok, false);
   assert.match(r.reason, /detector_event_id required/);
 });
@@ -190,7 +199,7 @@ test("AT-1: a check with no detector_event_id fails validation", () => {
 test("AT-1: a detector_event_id that does not resolve to the event fails validation", () => {
   const { check, detector_event } = assemble(omissionFinding());
   const other = { ...detector_event, id: "de_something_else" };
-  const r = validateCheck(check, other, ANSWER);
+  const r = validateCheck(check, other, ARTIFACTS);
   assert.equal(r.ok, false);
   assert.match(r.reason, /does not resolve/);
 });
@@ -198,7 +207,7 @@ test("AT-1: a detector_event_id that does not resolve to the event fails validat
 test("AT-1: a well-formed check + its event validate ok", () => {
   const { check, detector_event } = assemble(omissionFinding());
   assert.equal(validateDetectorEvent(detector_event).ok, true);
-  assert.equal(validateCheck(check, detector_event, ANSWER).ok, true);
+  assert.equal(validateCheck(check, detector_event, ARTIFACTS).ok, true);
 });
 
 test("AT-2: validateCheck rejects a proposition span that no longer resolves", () => {
@@ -210,7 +219,7 @@ test("AT-2: validateCheck rejects a proposition span that no longer resolves", (
       spans: [{ ...check.proposition_at_issue.spans[0], end: check.proposition_at_issue.spans[0].end + 5 }],
     },
   };
-  const r = validateCheck(tampered, detector_event, ANSWER);
+  const r = validateCheck(tampered, detector_event, ARTIFACTS);
   assert.equal(r.ok, false);
   assert.match(r.reason, /proposition span does not resolve/);
 });
@@ -398,8 +407,8 @@ test("finding labels use the shipped Deflection name for deflection", () => {
 
 test("AT-7: buildCheckRegister status is provisional and every card is provisional", () => {
   const reg = buildCheckRegister({
+    artifacts: ARTIFACTS,
     artifactId: "original_answer",
-    artifactText: ANSWER,
     findings: [omissionFinding()],
     inspector: { model: "m", model_version: "m", prompt_version: "reader.v3" },
   });
@@ -416,8 +425,8 @@ test("AT-7: the shipped register UI copy carries no instrument-grade / world-cla
 
 test("AT-4: measurement findings query returns only comparative checks", () => {
   const reg = buildCheckRegister({
+    artifacts: ARTIFACTS,
     artifactId: "original_answer",
-    artifactText: ANSWER,
     findings: [omissionFinding()],
   });
   assert.equal(comparativeChecks(reg).length, 1);
@@ -428,8 +437,8 @@ test("AT-4: measurement findings query returns only comparative checks", () => {
 
 test("buildCheckRegister drops silent findings and dedups identical spans", () => {
   const reg = buildCheckRegister({
+    artifacts: ARTIFACTS,
     artifactId: "original_answer",
-    artifactText: ANSWER,
     findings: [
       omissionFinding(),
       omissionFinding(), // identical span-derived id → deduped
@@ -450,6 +459,8 @@ const MULTI =
   "Premise B holds. Therefore outcome B is settled. " + // later
   "Premise C holds. Therefore outcome C is settled."; // latest
 
+const MULTI_ARTIFACTS = { original_answer: MULTI };
+
 function multiFinding(letter) {
   return {
     type: "omission",
@@ -468,7 +479,7 @@ function multiFinding(letter) {
 test("AT-9: fixed inputs → identical top-3, independent of input order", () => {
   const findings = [multiFinding("A"), multiFinding("B"), multiFinding("C")];
   const build = (order) =>
-    buildCheckRegister({ artifactId: "original_answer", artifactText: MULTI, findings: order });
+    buildCheckRegister({ artifacts: MULTI_ARTIFACTS, artifactId: "original_answer", findings: order });
 
   const forward = build(findings);
   const shuffled = build([findings[2], findings[0], findings[1]]);
@@ -516,13 +527,13 @@ test("AT-9: rankChecks is a pure total order over the full ranking key", () => {
 
 test("every assembled register object passes validateDetectorEvent + validateCheck", () => {
   const reg = buildCheckRegister({
+    artifacts: MULTI_ARTIFACTS,
     artifactId: "original_answer",
-    artifactText: MULTI,
     findings: [multiFinding("A"), multiFinding("B"), multiFinding("C")],
   });
   for (const check of reg.checks) {
     const ev = eventById(reg.detector_events, check.detector_event_id);
     assert.equal(validateDetectorEvent(ev).ok, true);
-    assert.equal(validateCheck(check, ev, MULTI).ok, true);
+    assert.equal(validateCheck(check, ev, MULTI_ARTIFACTS).ok, true);
   }
 });

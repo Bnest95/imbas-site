@@ -27,6 +27,9 @@
 // lane); this module embeds it when a paired capture is exported. Pure-JS import,
 // no cycle (reader-paired.js imports nothing from here) and already in the bundle.
 import { buildPairRun, PAIR_INITIATOR } from "./reader-paired.js";
+// Span resolution is single-sourced in reader-checks.js. This module re-runs it
+// against the record's OWN artifacts rather than trusting that construction did.
+import { normalizeArtifactMap, resolveSpanAgainst } from "./reader-checks.js";
 
 // Version ids. The schema version tracks the frozen Review Graph erratum; the
 // c14n id names the canonicalization contract this module implements; the record
@@ -377,6 +380,75 @@ export function reviewRecordFilename(record) {
   return `imbas-review-record-${datePart}-${shortDigest}.json`;
 }
 
+// ── Span binding over the record's own artifacts ───────────────────────────────
+// The Review Record is an exported, hashed work product and therefore its own
+// trust boundary. It carries every artifact body, so it can prove every span it
+// asserts, and it must: nothing here may assume construction or any upstream
+// validator already did the check. Before this pass the module knew that span
+// offsets index into Artifact.body — it said so in its own header comment — and
+// never opened a single span.
+//
+// Two anchor shapes ship and both are validated:
+//   Shape A (Check Register): { artifact_id, start, end, quote }
+//   Shape B (canonical anchor): { role, status, quote, span: {artifact_id, start, end} }
+// A validator that knows one shape produces a confident, false all-clear.
+function checkSpan(span, artifacts, where, { requiredRole = null, quote = null } = {}) {
+  const r = resolveSpanAgainst(span, artifacts, { requiredRole, quote });
+  if (r.ok) return null;
+  const named = span && typeof span === "object" ? str(span.artifact_id) || "(unnamed)" : "(malformed)";
+  return { ok: false, reason: `${where} span does not resolve against artifact ${named}: ${r.reason}` };
+}
+
+function validateRecordSpans(c) {
+  // Duplicate artifact ids make "the artifact this span names" ambiguous, so the
+  // map cannot be built and no span in the record can be proven.
+  let artifacts;
+  try {
+    artifacts = normalizeArtifactMap(c.artifacts);
+  } catch (e) {
+    return { ok: false, reason: `contents.artifacts is not a usable artifact map: ${e.message}` };
+  }
+
+  for (const ev of c.detector_events) {
+    const spans = (ev && ev.evidence_spans) || [];
+    for (const s of spans) {
+      const bad = checkSpan(s, artifacts, `detector_event ${(ev && ev.id) || "(unnamed)"} evidence`);
+      if (bad) return bad;
+    }
+  }
+
+  for (const chk of c.checks) {
+    for (const [field, block] of [
+      ["proposition_at_issue", chk && chk.proposition_at_issue],
+      ["dependent_output", chk && chk.dependent_output],
+    ]) {
+      const spans = (block && block.spans) || [];
+      for (const s of spans) {
+        const bad = checkSpan(s, artifacts, `check ${(chk && chk.id) || "(unnamed)"} ${field}`);
+        if (bad) return bad;
+      }
+    }
+  }
+
+  // Shape B. Only a QUOTED anchor carries a span; UNRESOLVED and ABSENT carry
+  // null by construction and have nothing to prove. The anchor's role must be the
+  // role of the artifact its span names — that is what makes an open/targeted
+  // transposition detectable in the exported record rather than only at build time.
+  const findings = (c.canonical_result && c.canonical_result.findings) || [];
+  for (const f of findings) {
+    for (const anchor of (f && f.anchors) || []) {
+      if (!anchor || anchor.status !== "QUOTED") continue;
+      const bad = checkSpan(anchor.span, artifacts, `finding ${(f && f.id) || "(unnamed)"} ${anchor.role} anchor`, {
+        requiredRole: anchor.role,
+        quote: anchor.quote,
+      });
+      if (bad) return bad;
+    }
+  }
+
+  return { ok: true };
+}
+
 // Validate a record against the schema v0.3.1 shapes. Returns { ok, reason? }.
 // Defense in depth for the export path and a fixture for the schema-conformance
 // tests; not a substitute for the register's own validators.
@@ -489,6 +561,12 @@ export function validateReviewRecord(record) {
       return { ok: false, reason: `check ${chk && chk.id} missing demonstration` };
     }
   }
+
+  // Every span in the record, proven against the record's own artifact bodies.
+  // Runs after the artifact and check shapes are known good, so a span failure is
+  // reported as a span failure rather than as a symptom of a malformed record.
+  const spanCheck = validateRecordSpans(c);
+  if (!spanCheck.ok) return spanCheck;
 
   const integ = record.integrity;
   if (!integ || typeof integ !== "object") return { ok: false, reason: "integrity block required" };
