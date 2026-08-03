@@ -372,7 +372,7 @@
   color: rgba(165, 152, 138, 0.78);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
   .page--inspection .wb-reader-result.is-agent {
     padding: 1.15rem 0.72rem 1.3rem;
   }
