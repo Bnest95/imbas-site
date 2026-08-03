@@ -27,6 +27,8 @@ viewport: 375x812
       "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
       "captured_at": "<TIMESTAMP>",
       "created_at": "<TIMESTAMP>",
+      "declaration_ids": [],
+      "declaration_state": "NO_DECLARATIONS",
       "delta_items": [
         {
           "open_side": "A landlord must return a security deposit within 30 days of the tenant moving out.",
@@ -115,17 +117,7 @@ viewport: 375x812
         "version": "receipt-page.v1"
       },
       "reviewed_status": "Unreviewed",
-      "run_declaration": {
-        "declaration_source": "pair_capture_client_declaration",
-        "declaration_version": "decl.1",
-        "declared_at_client": "NOT_CAPTURED",
-        "edits": "NOT_DECLARED",
-        "model_version": "NOT_DECLARED",
-        "received_at_server": "NOT_CAPTURED",
-        "same_model": "NOT_DECLARED",
-        "status": "NOT_DECLARED",
-        "status_label": "not declared"
-      },
+      "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
       "source": "Workbench two-question test",
       "visibility": "unlisted"

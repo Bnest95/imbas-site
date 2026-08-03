@@ -27,6 +27,8 @@ viewport: 1440x900
       "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
       "captured_at": "<TIMESTAMP>",
       "created_at": "<TIMESTAMP>",
+      "declaration_ids": [],
+      "declaration_state": "DECLARATION_NOT_APPLICABLE",
       "delta_items": [],
       "findings": [],
       "mode": "single",
@@ -97,7 +99,7 @@ viewport: 1440x900
         "version": "receipt-page.v1"
       },
       "reviewed_status": "Unreviewed",
-      "run_declaration": null,
+      "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
       "source": "Workbench inspection",
       "visibility": "unlisted"
