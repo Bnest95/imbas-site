@@ -321,6 +321,45 @@ the rule that already carried that treatment, so the class has a home and the pi
 move. `test/reader-degraded-states.test.mjs` still passes unchanged, which is the point: the
 two surfaces it holds were fixed as strings in 2B-B and the rename does not disturb them.
 
+**14. The archive's featured case cites itself as an earlier case record.**
+Found 2026-08-02 by the product-example registry pass, which had to classify every case link
+on every shipped page and could not classify this one as anything but wrong. It postdates
+Pass 2B and belongs to the copy lane generally, not to 2B; it lands here because this is
+where copy and output defects are held.
+
+*Locator.* `archive.html`, inside the featured block — the `<p class="arc-featured__note"
+data-case-record>` that closes `.arc-featured__finding`, directly beneath the Volunteer Gap
+finding paragraph and directly above the generated `archiveFeaturedReadLink` region.
+
+*Current text, verbatim.* "Earlier case records include Case 005 (Buybacks &amp; SEC Rule
+10b-18, gap 2.50) as a parallel structural omission, Case 003 (Palantir / ICE) as a
+cross-tier methodological demonstration, and Case 013 (OxyContin, gap 0.75) as the
+strongest control validation."
+
+*Why it is self-contradictory.* Case 005 is the featured case. The sentence sits inside
+005's own featured block, under 005's own finding, and offers 005 to the reader as a
+different record that runs parallel to the one they are reading. It also repeats 005's own
+gap of 2.50 as though it were a second, corroborating figure, when it is the same number
+already printed twice above it in the meta row and the finding label. A reader who follows
+the link arrives back where they started. The paragraph was written when a different case
+held the featured slot and was never revisited when 005 took it.
+
+*Why this pass did not fix it.* Two reasons, and both are constraints rather than
+preferences. The paragraph is case-owned prose — a human editorial judgment about how three
+records relate — so it is annotated `data-case-record` and stays outside the placement
+registry by the same rule that keeps archive membership lists and citations out of it. And
+the fix is a rewrite, not a substitution: there is no correct string to swap in, because
+which records genuinely stand parallel to the featured one is an editorial call about the
+archive, not a lookup. A mechanical pass that invented that sentence would be fabricating a
+finding.
+
+*Disposition.* Rewrite during the redesign/copy pass. Whoever takes it should treat the
+whole paragraph as the unit and should expect the featured case to change again: Montana
+holds `SITE_FLAGSHIP` in `product-example-registry.js` and is the standing candidate for
+`ARCHIVE_FEATURED` once it has a public URL, which is the Inspection URL lane's to give.
+Copy that names the featured case by number, inside the featured block, will go stale a
+second time. If the rewrite still needs to name records, the durable form is a relation the
+archive can state about whichever case is featured, not a fixed list of three.
 
 ---
 
