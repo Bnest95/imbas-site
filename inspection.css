@@ -369,7 +369,7 @@
 .insp-error__hint {
   margin: 0 0 1rem;
   font-size: max(0.8125rem, 13px);
-  color: rgba(165, 152, 138, 0.78);
+  color: var(--ink-secondary);
 }
 
 @media (max-width: 699px) {

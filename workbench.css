@@ -6395,7 +6395,7 @@
 
   .wb-shell--reader-v2 .wb-reader-v2__context-links a:not(:first-child) {
     font-size: 0.82rem;
-    color: rgba(165, 152, 138, 0.78);
+    color: var(--ink-secondary);
     font-weight: 400;
   }
 
