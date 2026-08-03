@@ -4870,8 +4870,7 @@
 }
 
 .wb-act2__capture-input:focus {
-  outline: none;
-  border-color: rgba(222, 111, 56, 0.55);
+  border-color: var(--ember);
 }
 
 .wb-act2__capture-input::placeholder {

@@ -1264,7 +1264,6 @@ body:has(main > section.hero) .nav__menu-btn {
   font-family: var(--font-body);
   font-size: clamp(0.9375rem, 2.2vw, 1rem);
   padding: 0.7rem 0;
-  outline: none;
   min-width: 0;
 }
 .hero__capture input::placeholder { color: var(--ink-secondary); }
@@ -2642,9 +2641,7 @@ body:has(main > section.hero) .nav__menu-btn {
   color: var(--ink-muted);
 }
 .experience-capture__field:focus {
-  outline: none;
-  border-color: rgba(var(--ember-rgb), 0.35);
-  background: var(--bg-deep);
+  border-color: var(--ember);
 }
 .experience-capture__field--area {
   min-height: 9rem;
@@ -4349,7 +4346,6 @@ body:has(main > section.hero) .nav__menu-btn {
   font-family: var(--font-body);
   font-size: 1rem;
   padding: 0.75rem 0;
-  outline: none;
   min-width: 0;
 }
 .subscribe input::placeholder { color: var(--ink-muted); }
@@ -4388,9 +4384,7 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .close__signup .subscribe.subscribe--field-notes input[type="email"]:focus,
 .field-notes-signup .subscribe.subscribe--field-notes input[type="email"]:focus {
-  outline: none;
-  border-color: rgba(var(--ember-rgb), 0.35);
-  background: var(--bg-deep);
+  border-color: var(--ember);
 }
 .close__signup .subscribe.subscribe--field-notes button,
 .field-notes-signup .subscribe.subscribe--field-notes button {
@@ -8857,9 +8851,8 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .page--contact .ct-record-field a:hover,
 .page--contact .ct-record-field a:focus-visible {
-  color: var(--ember-soft);
+  color: var(--ember-bright);
   border-bottom-color: var(--ember);
-  outline: none;
 }
 .page--contact .ct-record-field--action {
   margin: var(--space-2) 0 0;
@@ -8882,12 +8875,11 @@ main, .site-footer { position: relative; z-index: 2; }
 }
 .page--contact .ct-route__action:hover,
 .page--contact .ct-route__action:focus-visible {
-  color: var(--ember-soft);
+  color: var(--ember-bright);
   border-bottom-color: var(--ember);
-  outline: none;
 }
 .page--contact .ct-route__action .arrow {
-  color: var(--ember-soft);
+  color: var(--ember-bright);
   transition: transform 0.3s ease, color 0.25s ease;
 }
 .page--contact .ct-route__action:hover .arrow,

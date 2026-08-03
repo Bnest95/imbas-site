@@ -1604,7 +1604,7 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
   );
 }
 
-const inputStyle = { width: "100%", boxSizing: "border-box", background: "var(--bg-deep)", color: C.text, border: `1px solid ${C.lineControl}`, borderRadius: 7, padding: "18px 18px 16px", fontFamily: SANS, fontSize: 16, lineHeight: 1.5, outline: "none", resize: "vertical", minHeight: 44 };
+const inputStyle = { width: "100%", boxSizing: "border-box", background: "var(--bg-deep)", color: C.text, border: `1px solid ${C.lineControl}`, borderRadius: 7, padding: "18px 18px 16px", fontFamily: SANS, fontSize: 16, lineHeight: 1.5, resize: "vertical", minHeight: 44 };
 
 function ModelSelect({ value, onChange }) {
   return (
