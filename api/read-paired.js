@@ -67,13 +67,16 @@ import {
   PAIR_INITIATOR,
   targetedPromptOffer,
   buildRunDeclaration,
-  DECLARATION_VERSION,
-  DECLARATION_STATUS,
-  DECLARATION_NOT_DECLARED,
-  DECLARATION_NOT_CAPTURED,
-  DECLARATION_SOURCE,
-  declarationStatusLabel,
+  DECLARATION_NO_SUPERSESSION,
+  DECLARATION_HISTORY,
+  DeclarationError,
+  isDeclarationId,
 } from "../reader-paired.js";
+import {
+  appendDeclaration,
+  readDeclarationHistory,
+  DECLARATION_WRITE,
+} from "../reader-declaration-log.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
 import {
@@ -619,7 +622,13 @@ function buildPairedPayload(pairedAnalysis, receipt, opts = {}) {
     // What the person declared about how they ran the pair, returned as its own
     // top-level field. It sits beside the measurement, never inside it: nothing
     // above this line is a declared value, and this is not a measurement.
-    run_declaration: opts.declaration || null,
+    //
+    // An ARRAY, because there is no single answer to "what did they say" — they may
+    // have said one thing at submission and corrected it on a later visit, and both
+    // are true statements about different moments. Canonically ordered by when the
+    // server received each one, but order alone is not the history: which declaration
+    // corrects which is carried inside each artifact, not implied by position.
+    run_declarations: Array.isArray(opts.declarations) ? opts.declarations : [],
     receipt,
   };
 }
@@ -644,8 +653,8 @@ function buildChipPairedPayload(chipAnalysis, receipt, opts = {}) {
     idempotent: !!opts.idempotent,
     // Same placement as the inspection payload: a sibling of the analysis, not a
     // member of it. The chip lane's suggested loop state is still derived on the
-    // client from its own capture, and this field is not an input to it.
-    run_declaration: opts.declaration || null,
+    // client from its own capture, and this array is not an input to it.
+    run_declarations: Array.isArray(opts.declarations) ? opts.declarations : [],
     receipt,
   };
 }
@@ -714,58 +723,119 @@ export async function findExistingPaired(openRunId, answerHash, deps = {}, promp
 // Operator dedupe (manual, not automated): for a given (Open Run ID, Targeted Answer
 // Hash), keep the earliest Created row and remove the rest ONLY after confirming no
 // Inspection Shares row carries a Receipt Hash that exists solely on a row being removed.
-// The declaration's seven columns, written on BOTH lanes. Each declared value gets
-// its own column so a partial declaration stays partial on the row: "not sure" and
-// "never answered" land in different cells, which a single packed blob or a boolean
-// could not express. The columns are named Declared*/Declaration* and never
-// Conditions*, keeping them clear of the cfp.1 family (Reader Runs.Inspector Run
-// Conditions), which describes the INSPECTOR call and not the person's run.
+// Did the request carry a declaration at all? A request with no declaration block, or
+// one where every field is absent, declared NOTHING — and a row saying NOT_DECLARED
+// across the board is not the same as no row. The first is a person who was asked and
+// skipped it; the second is a person who was never asked, which is the ordinary case
+// while the surface discloses these questions progressively. Recording the second as
+// the first would manufacture a declining that never happened.
 //
-// A row that fails to receive a declaration writes NOT_DECLARED, not blanks: an
-// empty cell cannot be told apart from a column that did not exist yet.
-function declarationFields(declaration) {
-  const d = declaration || {};
+// stage, actor and supersedes count as content: a surface that records where someone
+// was standing has told us something even if the person answered no question yet.
+const DECLARATION_KEYS = ["same_model", "model_version", "edits", "declared_at_client", "stage", "actor", "supersedes", "declaration_id"];
+function declarationSent(sent) {
+  return DECLARATION_KEYS.some((k) => {
+    const v = sent[k];
+    return typeof v === "string" ? v.trim() !== "" : v !== undefined && v !== null;
+  });
+}
+
+// The declaration's stable identity, settled BEFORE anything durable happens so a
+// network retry re-uses it instead of appending a second event.
+//
+// The client should send one; a client that mints its own id can retry across page
+// reloads and browser restarts. When it does not, the id is DERIVED from the pair plus
+// the declared content, which gives the same guarantee within the one thing that
+// matters: re-sending the same declaration produces the same id, so the append collapses
+// onto the existing row. Server receipt time is deliberately excluded from the digest —
+// it differs on every retry, and including it would defeat the whole point.
+//
+// A derived id is marked as derived. Reading `decl.d.` in the log tells you the identity
+// came from content rather than from a client that chose it, which matters when two
+// genuinely separate declarations happen to carry identical content and collapse into
+// one row: that is correct behavior for a restatement, and the marking is what lets
+// someone tell the two situations apart later.
+function declarationIdFor(sent, { openRunId, answerHash }) {
+  if (isDeclarationId(sent.declaration_id)) return sent.declaration_id;
+  const parts = [
+    openRunId,
+    answerHash,
+    str(sent.stage),
+    str(sent.actor),
+    str(sent.supersedes),
+    str(sent.same_model),
+    str(sent.model_version),
+    str(sent.edits),
+    str(sent.declared_at_client),
+  ];
+  // JSON, not a joined string. Any separator that can appear inside a value lets two
+  // different declarations digest identically, and two facts sharing one identity is
+  // the exact failure this id exists to prevent.
+  return `decl.d.${sha256Hex(JSON.stringify(parts)).slice(0, 40)}`;
+}
+
+// Append the declaration if there is one, then read the whole history back.
+//
+// Both halves run even when nothing was declared: a pair someone declared nothing about
+// on THIS request may still carry declarations from an earlier one, and the response
+// should say so. The read is the authority — what comes back is what the log holds, not
+// what this request sent, so a client cannot see its own declaration reflected before
+// the store has it.
+//
+// Fail-open by design, and stated rather than hidden. A store that refused the write
+// leaves declaration_uncertain on the payload so the client can say the record may be
+// incomplete, exactly as capture_uncertain does for the analysis row. A store that
+// refused the READ leaves the history state saying so. What never happens is a response
+// that looks settled while the record is not.
+async function recordDeclaration({ openRunId, answerHash, declaration }, ctx, deps = {}) {
+  let write = null;
+  if (declaration) {
+    write = await appendDeclaration({ openRunId, answerHash, declaration }, deps);
+    logRuntimeEvent(write.ok ? "declaration_recorded" : "declaration_write_failed", {
+      request_id: ctx.request_id,
+      route: ctx.route,
+      outcome: write.outcome,
+      // The id, never the content. A declaration is a person's account of their own
+      // session; the log holds it and the runtime log does not need it.
+      declaration_id: declaration.declaration_id,
+      supersedes: declaration.supersedes !== DECLARATION_NO_SUPERSESSION,
+    });
+  }
+  const history = await readDeclarationHistory({ openRunId, answerHash }, deps);
   return {
-    "Declaration Version": d.declaration_version || DECLARATION_VERSION,
-    "Declaration Status": d.status || DECLARATION_STATUS.NOT_DECLARED,
-    "Declared Same Model": d.same_model || DECLARATION_NOT_DECLARED,
-    "Declared Model Version": d.model_version || DECLARATION_NOT_DECLARED,
-    "Declared Edits": d.edits || DECLARATION_NOT_DECLARED,
-    "Declared At Client": d.declared_at_client || DECLARATION_NOT_CAPTURED,
-    "Received At Server": d.received_at_server || DECLARATION_NOT_CAPTURED,
+    declarations: history.declarations || [],
+    state: history.state,
+    current: history.current || null,
+    conflicts: history.conflicts || [],
+    // A write that was attempted and did not land. UNCONFIGURED is not uncertainty —
+    // with no store there was never a record to be missing from.
+    uncertain: !!(write && !write.ok && write.outcome !== DECLARATION_WRITE.UNCONFIGURED),
+    outcome: write ? write.outcome : "",
   };
 }
 
-// Rebuild the declaration from a stored row on idempotent replay. The stored status
-// is echoed rather than recomputed — a replay reports what the row recorded, the same
-// no-silent-upgrade discipline Paired Method Version follows above. The label is
-// re-derived from the one mapping so the wording cannot drift between a fresh
-// response and a replayed one, and a row predating these columns replays honestly as
-// NOT_DECLARED rather than as a declaration nobody made.
-//
-// Content is echoed; shape is stamped. The declared values and the status come off the
-// row, because they are what was recorded. The version is not read back, because it
-// describes the object assembled here — decl.1 keys, decl.1 absence tokens — and not
-// the cell it came from. That split is the same one this whole family turns on: what
-// was reported, kept apart from the frame Imbas puts around it.
-function declarationFromRecord(recordFields) {
-  const f = recordFields || {};
-  const status =
-    f["Declaration Status"] === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
-      ? DECLARATION_STATUS.DECLARED_NOT_VERIFIED
-      : DECLARATION_STATUS.NOT_DECLARED;
-  return {
-    declaration_version: DECLARATION_VERSION,
-    declaration_source: DECLARATION_SOURCE,
-    status,
-    status_label: declarationStatusLabel(status),
-    same_model: f["Declared Same Model"] || DECLARATION_NOT_DECLARED,
-    model_version: f["Declared Model Version"] || DECLARATION_NOT_DECLARED,
-    edits: f["Declared Edits"] || DECLARATION_NOT_DECLARED,
-    declared_at_client: f["Declared At Client"] || DECLARATION_NOT_CAPTURED,
-    received_at_server: f["Received At Server"] || DECLARATION_NOT_CAPTURED,
-  };
+// Put the read history's own verdict on the payload. The current-effective declaration
+// is a PROJECTION, derived here from the log every time and never stored: where the log
+// branches there is no single current value, and the payload says DECLARATION_CHAIN_CONFLICT
+// instead of naming a winner. Choosing one would be reporting a history nobody recorded.
+function applyDeclarationState(payload, declared) {
+  payload.declaration_state = declared.state;
+  payload.declaration_current = declared.current;
+  if (declared.conflicts.length) payload.declaration_conflicts = declared.conflicts;
+  if (declared.uncertain) payload.declaration_uncertain = true;
+  return payload;
 }
+
+// NO DECLARATION COLUMNS ON THIS ROW. A paired analysis is one row per PAIR; a
+// declaration log needs one row per EVENT, because the same pair collects declarations
+// at submission, at inspection, at review, and on a later visit, and a correction is a
+// different fact from the original rather than a better version of it. Declarations
+// live in Reader Run Declarations, owned by reader-declaration-log.js and joined by
+// value on (Open Run ID, Targeted Answer Hash).
+//
+// The eight columns this table used to carry are retired and refuse writes. Two places
+// holding declaration state would be two answers to "what did this person say", and a
+// row here would be the one that looked authoritative while being a snapshot.
 
 export async function capturePaired(record, ctx, deps = {}) {
   const env = deps.env || process.env;
@@ -819,7 +889,6 @@ export async function capturePaired(record, ctx, deps = {}) {
           Initiator: record.initiator,
           "Chip ID": record.chipId || "",
           "Instruction Version": record.instructionVersion || "",
-          ...declarationFields(record.declaration),
           Created: new Date().toISOString(),
         }
       : {
@@ -837,7 +906,6 @@ export async function capturePaired(record, ctx, deps = {}) {
           "Paired Method Version": PAIRED_METHOD_VERSION,
           "Schema Version": RECEIPT_SCHEMA_VERSION,
           "Receipt Hash": record.receiptHash || "",
-          ...declarationFields(record.declaration),
           Created: new Date().toISOString(),
         };
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${PAIRED_TABLE}`;
@@ -905,7 +973,7 @@ export async function capturePaired(record, ctx, deps = {}) {
 // legacy path. It is never silently upgraded. The receipt is rebuilt fresh over the
 // re-sent open run, so it re-verifies even though its generated_at differs from the
 // original write.
-function reconstructPairedFromRecord(recordFields, embed) {
+function reconstructPairedFromRecord(recordFields, embed, declarations = []) {
   const f = recordFields || {};
   let stored = [];
   try {
@@ -949,18 +1017,20 @@ function reconstructPairedFromRecord(recordFields, embed) {
     // upgrade this pass exists to prevent.
     paired_method_version: storedVersion,
   };
-  // The STORED declaration, not the resubmitted one. A replay returns the analysis
-  // that was made, and the declaration is part of that record: it says what the
-  // person reported at the time, which a later resubmission cannot revise.
-  const declaration = declarationFromRecord(f);
+  // The STORED declarations, in canonical order, read from the log rather than from
+  // this row. A replay returns the analysis that was made AND everything the person has
+  // said about how they ran it since — including a correction added on a later visit,
+  // which is a new fact rather than an edit to an old one. The receipt minted here is
+  // dated now, so it states the history as it stands now; the receipt minted at the
+  // original write stated the history as it stood then, and stays true.
   const receipt = buildPairedReceipt({
     generatedAt: new Date().toISOString(),
     openRun: embed.openRun,
     pairedAnalysis,
-    declaration,
+    declarations,
   });
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-  return buildPairedPayload(pairedAnalysis, receipt, { idempotent: true, declaration });
+  return buildPairedPayload(pairedAnalysis, receipt, { idempotent: true, declarations });
 }
 
 // Rebuild a chip paired payload from a stored record (idempotent replay). Delta
@@ -968,7 +1038,7 @@ function reconstructPairedFromRecord(recordFields, embed) {
 // Version) is read from the row, with the request's values as fallback; the receipt
 // is rebuilt fresh over the re-sent open run so it re-verifies even though its
 // generated_at differs from the original write.
-function reconstructChipFromRecord(recordFields, embed) {
+function reconstructChipFromRecord(recordFields, embed, declarations = []) {
   const f = recordFields || {};
   let delta_items = [];
   try {
@@ -993,15 +1063,14 @@ function reconstructChipFromRecord(recordFields, embed) {
     delta_items,
     paired_method_version: f["Paired Method Version"] || CHIP_PAIRED_METHOD_VERSION,
   };
-  const declaration = declarationFromRecord(f);
   const receipt = buildChipPairedReceipt({
     generatedAt: new Date().toISOString(),
     openRun: embed.openRun,
     chipAnalysis,
-    declaration,
+    declarations,
   });
   receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-  return buildChipPairedPayload(chipAnalysis, receipt, { idempotent: true, declaration });
+  return buildChipPairedPayload(chipAnalysis, receipt, { idempotent: true, declarations });
 }
 
 function rejectValidation(res, ctx, reason, status, body = {}) {
@@ -1070,28 +1139,13 @@ export function createReadPairedHandler(deps = {}) {
       return rejectValidation(res, ctx, "invalid_body", 400, { error: "invalid" });
     }
 
-    // The run declaration: what the person reported about how they ran the pair.
-    // The endpoint RECORDS it and makes no assessment of it — it never decides
-    // whether the declaration is true, and it never derives the matched/unmatched
-    // state, which stays client-side.
-    //
-    // Rebuilt server-side from the declared values rather than stored as sent, so the
-    // status and label are derived here under one rule and a client cannot post a
-    // status of its own choosing. received_at_server is stamped from this server's
-    // clock at the moment the declaration arrives; declared_at_client is passed
-    // through and never backfilled from it, so a form that collects no client time
-    // records NOT_CAPTURED rather than a manufactured one.
+    // The run declaration as the client sent it. It is read here, with the rest of the
+    // body, but not turned into an artifact until the pair identity is known below —
+    // a declaration that cannot say which pair it belongs to has no owner.
     const sent =
       body.declaration && typeof body.declaration === "object" && !Array.isArray(body.declaration)
         ? body.declaration
         : {};
-    const declaration = buildRunDeclaration({
-      same_model: sent.same_model,
-      model_version: sent.model_version,
-      edits: sent.edits,
-      declared_at_client: sent.declared_at_client,
-      received_at_server: new Date().toISOString(),
-    });
 
     // Targeted (second) answer: same caps + reject-not-clip word ceiling as the
     // first paste (design §7).
@@ -1152,6 +1206,44 @@ export function createReadPairedHandler(deps = {}) {
     }
     const answerHash = sha256Hex(targetedAnswer);
 
+    // The run declaration: what the person reported about how they ran the pair.
+    // The endpoint RECORDS it and makes no assessment of it — it never decides
+    // whether the declaration is true, and it never derives the matched/unmatched
+    // state, which stays client-side.
+    //
+    // Rebuilt server-side from the declared values rather than stored as sent, so the
+    // status is derived here under one rule and a client cannot post a status of its
+    // own choosing. received_at_server is stamped from this server's clock at the
+    // moment the declaration arrives; declared_at_client is passed through and never
+    // backfilled from it, so a form that collects no client time records NOT_CAPTURED
+    // rather than a manufactured one. Stage and actor are likewise taken only from what
+    // the surface sent: a stage inferred from which endpoint was called would describe
+    // where the server was touched, not where the person was standing.
+    let declaration = null;
+    if (declarationSent(sent)) {
+      try {
+        declaration = buildRunDeclaration({
+          declaration_id: declarationIdFor(sent, { openRunId, answerHash }),
+          stage: sent.stage,
+          actor: sent.actor,
+          supersedes: sent.supersedes,
+          same_model: sent.same_model,
+          model_version: sent.model_version,
+          edits: sent.edits,
+          declared_at_client: sent.declared_at_client,
+          received_at_server: new Date().toISOString(),
+        });
+      } catch (e) {
+        // A declaration this endpoint cannot build is refused outright rather than
+        // recorded in a reduced form. Half a provenance record reads as a whole one.
+        const err = e instanceof DeclarationError ? e : null;
+        return rejectValidation(res, ctx, "invalid_declaration", 400, {
+          error: "invalid_declaration",
+          detail: err ? err.reason : "invalid",
+        });
+      }
+    }
+
     // Authoritative abuse enforcement at submit — the same limiter + spend controls
     // as the single read. The limiter is consume-on-check, so every request that
     // reaches here (including the idempotency read and the paid call below) is
@@ -1203,6 +1295,16 @@ export function createReadPairedHandler(deps = {}) {
       });
     }
 
+    // Record the declaration BEFORE the idempotency branch, because a declaration does
+    // not depend on whether the analysis is new. Someone who comes back to a pair they
+    // already ran and corrects what they said is making a new declaration against an old
+    // analysis; that is the ordinary correction case, not an edge case.
+    //
+    // Never blocks the read. A declaration the store refused is reported on the payload
+    // and the analysis still returns — the same fail-open posture the paired capture
+    // takes, for the same reason: a lost row must never cost someone their read.
+    const declared = await recordDeclaration({ openRunId, answerHash, declaration }, ctx, deps);
+
     // Idempotency: a resubmit of the identical pair returns the stored analysis with
     // NO model call and NO duplicate record. Run before the paid call.
     // The chip lookup adds the prompt hash as a third key (a chip's prompt varies by
@@ -1211,12 +1313,13 @@ export function createReadPairedHandler(deps = {}) {
     if (existing.record) {
       const embed = { openRun, openRunId, targetedPrompt, targetedPromptHash, targetedAnswer, answerHash };
       const payload = isChip
-        ? reconstructChipFromRecord(existing.record.fields, {
-            ...embed,
-            chipId: body.chip_id,
-            instructionVersion: chipEntry.instruction_version,
-          })
-        : reconstructPairedFromRecord(existing.record.fields, embed);
+        ? reconstructChipFromRecord(
+            existing.record.fields,
+            { ...embed, chipId: body.chip_id, instructionVersion: chipEntry.instruction_version },
+            declared.declarations,
+          )
+        : reconstructPairedFromRecord(existing.record.fields, embed, declared.declarations);
+      applyDeclarationState(payload, declared);
       logRuntimeEvent("paired_idempotent_hit", {
         request_id: ctx.request_id,
         route: ctx.route,
@@ -1360,9 +1463,9 @@ export function createReadPairedHandler(deps = {}) {
         delta_items: pm.delta_items,
         paired_method_version: CHIP_PAIRED_METHOD_VERSION,
       };
-      receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declaration });
+      receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declarations: declared.declarations });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-      payload = buildChipPairedPayload(chipAnalysis, receipt, { idempotent: false, declaration });
+      payload = buildChipPairedPayload(chipAnalysis, receipt, { idempotent: false, declarations: declared.declarations });
       captureRecord = {
         initiator: PAIR_INITIATOR.USER_CHIP,
         chipId: body.chip_id,
@@ -1373,7 +1476,6 @@ export function createReadPairedHandler(deps = {}) {
         targetedAnswer,
         answerHash,
         pm,
-        declaration,
         receiptHash: receipt.integrity.content_hash,
       };
     } else {
@@ -1395,9 +1497,9 @@ export function createReadPairedHandler(deps = {}) {
         paired_method_version: PAIRED_METHOD_VERSION,
         canonical,
       };
-      receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis, declaration });
+      receipt = buildPairedReceipt({ generatedAt, openRun, pairedAnalysis, declarations: declared.declarations });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
-      payload = buildPairedPayload(pairedAnalysis, receipt, { idempotent: false, declaration });
+      payload = buildPairedPayload(pairedAnalysis, receipt, { idempotent: false, declarations: declared.declarations });
       captureRecord = {
         openRunId,
         targetedPrompt,
@@ -1406,7 +1508,6 @@ export function createReadPairedHandler(deps = {}) {
         answerHash,
         pm,
         canonical,
-        declaration,
         receiptHash: receipt.integrity.content_hash,
       };
     }
@@ -1416,6 +1517,7 @@ export function createReadPairedHandler(deps = {}) {
     // analysis — the read is never broken by a lost row.
     const cap = await capturePaired(captureRecord, ctx, deps);
     if (cap && cap.capture_uncertain) payload.capture_uncertain = true;
+    applyDeclarationState(payload, declared);
 
     return finishPaired(res, ctx, payload);
   };
