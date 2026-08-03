@@ -113,10 +113,142 @@ export const CHECK_UI = {
 
 // ---------------------------------------------------------------------------
 // Span resolution — the mechanical heart of the both-ends rule.
+//
+// ARTIFACT IDENTITY IS NOT A LABEL. A span states which document it came from,
+// and that statement is the whole traceability claim the Check Register makes.
+// So no function here takes an artifact's text and its id as two independent
+// arguments: both come from ONE lookup in an artifact map, and they cannot
+// disagree because there is no second parameter to disagree with.
+//
+// The prior contract was resolveSpan(artifactText, quote, artifactId), which let
+// a caller locate a quote in Artifact B and stamp it "Artifact A". Every offset
+// was verified and the attribution was merely asserted.
 // ---------------------------------------------------------------------------
 
 function asString(v) {
   return typeof v === "string" ? v : "";
+}
+
+// An artifact map keyed by id, each entry { id, role, body }. Accepts the two
+// shapes the repository already carries: the role→body object the canonical
+// builders pass, and the {id, role, body} array a Review Record carries.
+//
+// Throws on a malformed map rather than returning empty, because a malformed map
+// is a caller bug and the failure mode this module exists to prevent is silent
+// wrong attribution. A duplicate id is malformed by definition: it makes
+// "the artifact this span names" ambiguous, which is the question every span asks.
+export function normalizeArtifactMap(input) {
+  const map = new Map();
+  if (!input || typeof input !== "object") {
+    throw new Error("reader-checks: an artifact map is required (id → {id, role, body})");
+  }
+  const entries = Array.isArray(input)
+    ? input.map((a) => [a && a.id, a])
+    : Object.keys(input).map((k) => [k, input[k]]);
+  for (const [rawId, value] of entries) {
+    const id = asString(rawId);
+    if (!id) throw new Error("reader-checks: every artifact requires a non-empty id");
+    if (map.has(id)) throw new Error(`reader-checks: duplicate artifact id in map: ${id}`);
+    // A bare string is the role→body shape, where the key is both id and role.
+    const isBare = typeof value === "string";
+    const body = isBare ? value : value && value.body;
+    if (typeof body !== "string") {
+      throw new Error(`reader-checks: artifact ${id} requires a string body`);
+    }
+    const role = isBare ? id : asString(value.role) || id;
+    map.set(id, { id, role, body });
+  }
+  return map;
+}
+
+// Already-normalized maps pass through, so a caller that normalized once does not
+// pay for it again and cannot accidentally normalize a Map into nonsense.
+function asArtifactMap(input) {
+  return input instanceof Map ? input : normalizeArtifactMap(input);
+}
+
+// The artifact carrying a given role, or null. Throws when two artifacts claim the
+// same role: a role-keyed consumer asking "which document is the targeted answer"
+// must get one answer or none, and picking the first would be exactly the silent
+// wrong attribution this module exists to prevent.
+export function artifactForRole(artifacts, role) {
+  const map = asArtifactMap(artifacts);
+  let found = null;
+  for (const artifact of map.values()) {
+    if (artifact.role !== role) continue;
+    if (found) throw new Error(`reader-checks: role ${role} is carried by more than one artifact`);
+    found = artifact;
+  }
+  return found;
+}
+
+// Two roles carrying the same document is not a pair, and every anchor minted
+// from such a map attributes one document's text to two different artifacts.
+// Enforced where the map is built rather than where the anchor is minted, because
+// two roles MAY legitimately quote the same sentence when both answers genuinely
+// contain it — what cannot be legitimate is the two answers being one answer.
+//
+// Empty bodies are exempt: an absent artifact is already reported as absent, and
+// two absent sides are not a claim about provenance.
+export function assertDistinctArtifactBodies(artifacts) {
+  const map = asArtifactMap(artifacts);
+  const seen = new Map();
+  for (const artifact of map.values()) {
+    if (!artifact.body) continue;
+    const prior = seen.get(artifact.body);
+    if (prior) {
+      throw new Error(
+        `reader-checks: artifacts ${prior} and ${artifact.id} carry byte-identical bodies; that is one document, not two`,
+      );
+    }
+    seen.set(artifact.body, artifact.id);
+  }
+  return map;
+}
+
+// Enumerated so a rejection can be asserted by cause. A test that only asserts
+// "rejected" cannot tell a real rejection from a rejection for an unrelated
+// reason, and a rejection for the wrong reason is a false pass.
+export const SPAN_REJECTION = {
+  MALFORMED_SPAN: "MALFORMED_SPAN",
+  NO_ARTIFACT_ID: "NO_ARTIFACT_ID",
+  UNKNOWN_ARTIFACT: "UNKNOWN_ARTIFACT",
+  OFFSETS_OUT_OF_RANGE: "OFFSETS_OUT_OF_RANGE",
+  QUOTE_MISMATCH: "QUOTE_MISMATCH",
+  ROLE_MISMATCH: "ROLE_MISMATCH",
+};
+
+// The single door every span passes through to be believed. A span resolves only
+// when all of these agree with the artifact it NAMES: identity, body, both
+// offsets, the quoted text, and the artifact's role where the caller states one.
+//
+// Evaluating a span against a different artifact is a rejection, not a fallback.
+// That holds even when the other artifact carries identical text at identical
+// offsets — the span's claim is about provenance, and provenance is not
+// something matching text can establish.
+export function resolveSpanAgainst(span, artifacts, { requiredRole = null, quote = null } = {}) {
+  const map = asArtifactMap(artifacts);
+  if (!span || typeof span !== "object") return { ok: false, reason: SPAN_REJECTION.MALFORMED_SPAN };
+  if (!Number.isInteger(span.start) || !Number.isInteger(span.end)) {
+    return { ok: false, reason: SPAN_REJECTION.MALFORMED_SPAN };
+  }
+  if (span.end <= span.start || span.start < 0) return { ok: false, reason: SPAN_REJECTION.MALFORMED_SPAN };
+  const id = asString(span.artifact_id);
+  if (!id) return { ok: false, reason: SPAN_REJECTION.NO_ARTIFACT_ID };
+  const artifact = map.get(id);
+  if (!artifact) return { ok: false, reason: SPAN_REJECTION.UNKNOWN_ARTIFACT };
+  if (requiredRole != null && artifact.role !== requiredRole) {
+    return { ok: false, reason: SPAN_REJECTION.ROLE_MISMATCH };
+  }
+  if (span.end > artifact.body.length) return { ok: false, reason: SPAN_REJECTION.OFFSETS_OUT_OF_RANGE };
+  // The quote may ride on the span (Check Register shape) or on the span's parent
+  // (canonical anchor shape); the caller supplies it when it lives on the parent.
+  const expected = quote == null ? span.quote : quote;
+  if (typeof expected !== "string") return { ok: false, reason: SPAN_REJECTION.MALFORMED_SPAN };
+  if (artifact.body.slice(span.start, span.end) !== expected) {
+    return { ok: false, reason: SPAN_REJECTION.QUOTE_MISMATCH };
+  }
+  return { ok: true, artifact };
 }
 
 // Accept a quote payload in the tolerant shapes a model might emit and return a
@@ -135,12 +267,21 @@ export function normalizeQuotes(input) {
   return arr.map(asString).filter((s) => s.trim().length > 0);
 }
 
-// Resolve one quote to an exact span of artifactText. Tries the raw quote first,
-// then a trimmed variant (models often pad with whitespace/quotation marks).
-// Returns {artifact_id, start, end, quote} whose quote === artifactText.slice
-// (start, end), or null if it does not occur. Never fabricates offsets.
-export function resolveSpan(artifactText, quote, artifactId) {
-  const text = asString(artifactText);
+// Resolve one quote to an exact span of the artifact NAMED by artifactId. Tries
+// the raw quote first, then a trimmed variant (models often pad with whitespace/
+// quotation marks). Returns {artifact_id, start, end, quote} whose quote ===
+// artifact.body.slice(start, end), or null if it does not occur. Never fabricates
+// offsets and never stamps an id it did not resolve against.
+//
+// The id is not a parameter the caller supplies alongside a text — it is the key
+// that produced the text. An id naming no artifact in the map resolves to nothing
+// rather than throwing, because "this artifact is not available here" is a real
+// runtime state and silence is the contract for it.
+export function resolveSpan(artifacts, artifactId, quote) {
+  const map = asArtifactMap(artifacts);
+  const id = asString(artifactId);
+  const artifact = id ? map.get(id) : null;
+  const text = artifact ? artifact.body : "";
   const raw = asString(quote);
   if (!text || !raw) return null;
   const candidates = [];
@@ -154,7 +295,9 @@ export function resolveSpan(artifactText, quote, artifactId) {
     const start = text.indexOf(cand);
     if (start !== -1) {
       const end = start + cand.length;
-      return { artifact_id: artifactId, start, end, quote: text.slice(start, end) };
+      // artifact.id, not the raw argument: the identity stamped on the span is the
+      // one carried by the document the quote was actually located in.
+      return { artifact_id: artifact.id, start, end, quote: text.slice(start, end) };
     }
   }
   return null;
@@ -162,10 +305,11 @@ export function resolveSpan(artifactText, quote, artifactId) {
 
 // Resolve every quote in a list. All-or-nothing: if any quote fails to resolve,
 // return null so the caller drops the whole check (silence, not degradation).
-export function resolveSpans(artifactText, quotes, artifactId) {
+export function resolveSpans(artifacts, artifactId, quotes) {
+  const map = asArtifactMap(artifacts);
   const spans = [];
   for (const q of quotes) {
-    const span = resolveSpan(artifactText, q, artifactId);
+    const span = resolveSpan(map, artifactId, q);
     if (!span) return null;
     spans.push(span);
   }
@@ -183,7 +327,8 @@ function detectorShortName(detectorId) {
 // Build a comparative DetectorEvent + finding_derived Check from a single
 // inspector finding, or return null if the finding does not qualify. Every
 // null return is deliberate silence per the schema's failure-is-silence rule.
-export function assembleComparativeCheck({ artifactId, artifactText, finding, index = 0 }) {
+export function assembleComparativeCheck({ artifacts, artifactId, finding, index = 0 }) {
+  const artifactMap = asArtifactMap(artifacts);
   const map = FINDING_TYPE_TO_DETECTOR[finding && finding.type];
   if (!map) return null; // not a comparative family → later lane, no check here
 
@@ -196,8 +341,8 @@ export function assembleComparativeCheck({ artifactId, artifactText, finding, in
   // proposition to rest on is equally required.
   if (propQuotes.length === 0 || depQuotes.length === 0) return null;
 
-  const propSpans = resolveSpans(artifactText, propQuotes, artifactId);
-  const depSpans = resolveSpans(artifactText, depQuotes, artifactId);
+  const propSpans = resolveSpans(artifactMap, artifactId, propQuotes);
+  const depSpans = resolveSpans(artifactMap, artifactId, depQuotes);
   if (!propSpans || !depSpans) return null; // an end could not be quoted → silence
 
   const dependency = asString(block.dependency_statement).trim();
@@ -337,22 +482,23 @@ export function buildCard(check, event) {
 // rendered), rank, and denormalize into render cards. status is the constant
 // "provisional"; Reader output is never instrument-grade.
 export function buildCheckRegister({
+  artifacts,
   artifactId,
-  artifactText,
   findings,
   inspector = null,
   topN = DEFAULT_TOP_N,
 }) {
+  const artifactMap = asArtifactMap(artifacts);
   const detector_events = [];
   const checks = [];
   const seen = new Set();
 
   (findings || []).forEach((finding, index) => {
-    const built = assembleComparativeCheck({ artifactId, artifactText, finding, index });
+    const built = assembleComparativeCheck({ artifacts: artifactMap, artifactId, finding, index });
     if (!built) return;
     if (seen.has(built.check.id)) return; // identical span-derived id → dedup
     const evV = validateDetectorEvent(built.detector_event);
-    const ckV = validateCheck(built.check, built.detector_event, artifactText);
+    const ckV = validateCheck(built.check, built.detector_event, artifactMap);
     if (!evV.ok || !ckV.ok) return; // silence on any invalid object
     seen.add(built.check.id);
     detector_events.push(built.detector_event);
@@ -380,12 +526,6 @@ export function buildCheckRegister({
 // Validators. Return {ok:boolean, reason?:string}. Tests assert both the
 // positive path and each rejection reason.
 // ---------------------------------------------------------------------------
-
-function spanResolves(span, artifactText) {
-  if (!span || typeof span.start !== "number" || typeof span.end !== "number") return false;
-  if (span.end <= span.start) return false;
-  return asString(artifactText).slice(span.start, span.end) === span.quote;
-}
 
 export function validateDetectorEvent(event) {
   if (!event || typeof event !== "object") return { ok: false, reason: "detector_event missing" };
@@ -424,7 +564,8 @@ export function validateDetectorEvent(event) {
   return { ok: true };
 }
 
-export function validateCheck(check, event, artifactText) {
+export function validateCheck(check, event, artifacts) {
+  const artifactMap = asArtifactMap(artifacts);
   if (!check || typeof check !== "object") return { ok: false, reason: "check missing" };
   // AT-1: no check without a resolving detector_event_id.
   if (!check.detector_event_id) return { ok: false, reason: "detector_event_id required (AT-1)" };
@@ -432,12 +573,16 @@ export function validateCheck(check, event, artifactText) {
     return { ok: false, reason: "detector_event_id does not resolve (AT-1)" };
   if (!SUBCLASSES.has(check.subclass)) return { ok: false, reason: `bad subclass: ${check.subclass}` };
 
-  // AT-2: proposition spans always resolve to exact substrings.
+  // AT-2: proposition spans always resolve to exact substrings OF THE ARTIFACT
+  // THEY NAME. The unqualified form of this rule — "exact substrings" of whatever
+  // text the validator was handed — is what let a span cite the wrong document.
   const prop = check.proposition_at_issue;
   if (!prop || !Array.isArray(prop.spans) || prop.spans.length === 0)
     return { ok: false, reason: "proposition_at_issue.spans required" };
-  for (const s of prop.spans)
-    if (!spanResolves(s, artifactText)) return { ok: false, reason: "proposition span does not resolve (AT-2)" };
+  for (const s of prop.spans) {
+    const r = resolveSpanAgainst(s, artifactMap);
+    if (!r.ok) return { ok: false, reason: `proposition span does not resolve against its artifact: ${r.reason} (AT-2)` };
+  }
 
   // dependent_output binding rule (AT-2). finding_derived ALWAYS requires it;
   // otherwise required for high-propagation, optional for isolated_detail.
@@ -451,8 +596,12 @@ export function validateCheck(check, event, artifactText) {
   if (dep) {
     if (!Array.isArray(dep.spans) || dep.spans.length === 0)
       return { ok: false, reason: "dependent_output present but has no spans" };
-    for (const s of dep.spans)
-      if (!spanResolves(s, artifactText)) return { ok: false, reason: "dependent_output span does not resolve (AT-2)" };
+    for (const s of dep.spans) {
+      const r = resolveSpanAgainst(s, artifactMap);
+      if (!r.ok) {
+        return { ok: false, reason: `dependent_output span does not resolve against its artifact: ${r.reason} (AT-2)` };
+      }
+    }
   } else if (depRequired) {
     return { ok: false, reason: "dependent_output required for this subclass/propagation (AT-2)" };
   }

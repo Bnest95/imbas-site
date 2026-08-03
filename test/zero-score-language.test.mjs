@@ -455,8 +455,8 @@ test("output scan: the paired canonical receipt presents no score", () => {
 // open_run.measurement, this is what catches it.
 function exportedResult() {
   const register = buildCheckRegister({
+    artifacts: { original_answer: ANSWER },
     artifactId: "original_answer",
-    artifactText: ANSWER,
     findings: [FINDING],
     inspector: { model: "claude-opus-4-8", model_version: "claude-opus-4-8", prompt_version: "reader.v3" },
   });

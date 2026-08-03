@@ -53,7 +53,13 @@
 // Pure JS by contract (like reader-checks.js / reader-json.js): no node: imports,
 // no DOM, no Date.now, no random. Fixed input produces an identical result.
 
-import { resolveSpan } from "./reader-checks.js";
+import {
+  resolveSpan,
+  resolveSpanAgainst,
+  normalizeArtifactMap,
+  artifactForRole,
+  assertDistinctArtifactBodies,
+} from "./reader-checks.js";
 
 export const RESULT_SCHEMA_VERSION = "reader-result.v1";
 
@@ -310,18 +316,34 @@ export const ANCHOR_REQUIREMENT = deepFreeze({
 
 // A quotation that resolves verbatim against the named artifact. Carries the span
 // so a reader can point at it without re-resolving.
-export function quotedAnchor({ role, quote, span }) {
+//
+// The artifact OBJECT is the parameter, not a role string beside a span. Before
+// this, the function received no artifact text at all and copied `role` onto the
+// span as `artifact_id` — it could not tell whether the quote reproduced from the
+// document it was about to name, so it stamped a claim it had no way to check.
+// Now the identity comes off the artifact the quote was proven against, and a
+// caller cannot name one document while quoting another.
+export function quotedAnchor({ artifact, quote, span }) {
+  if (!artifact || typeof artifact !== "object") reject("a QUOTED anchor requires the artifact it quotes");
+  const role = artifact.role;
   if (!ARTIFACT_ROLES.includes(role)) reject(`anchor role not enumerated: ${role}`);
   const q = str(quote);
   if (!q.trim()) reject("a QUOTED anchor requires a non-empty quotation");
-  if (!span || typeof span.start !== "number" || typeof span.end !== "number") {
+  if (!span || !Number.isInteger(span.start) || !Number.isInteger(span.end)) {
     reject("a QUOTED anchor requires a resolved span");
+  }
+  const proof = resolveSpanAgainst({ artifact_id: artifact.id, start: span.start, end: span.end }, [artifact], {
+    requiredRole: role,
+    quote: q,
+  });
+  if (!proof.ok) {
+    reject(`a QUOTED anchor must reproduce from the artifact it names (${artifact.id}): ${proof.reason}`);
   }
   return deepFreeze({
     role,
     status: ANCHOR_STATUS.QUOTED,
     quote: q,
-    span: { artifact_id: role, start: span.start, end: span.end },
+    span: { artifact_id: artifact.id, start: span.start, end: span.end },
     absent_reason: null,
   });
 }
@@ -381,8 +403,9 @@ export function absentAnchor({ role, reason }) {
 // tally is the per-run instrumentation sink. It counts what the model PROPOSED
 // against what survived, which is the only way to tell a prompt that stopped
 // fabricating from a prompt that fabricates just as often into a filter.
-function buildAnchor({ role, supplied, snippet, context, artifactText, requirement, tally }) {
+function buildAnchor({ role, supplied, snippet, context, artifacts, requirement, tally }) {
   if (requirement === ANCHOR_REQUIREMENT.FORBIDDEN) return null;
+  const artifact = artifactForRole(artifacts, role);
   const useSnippet = snippet != null;
   const s = str(useSnippet ? snippet : supplied).trim();
   if (!s) {
@@ -391,7 +414,7 @@ function buildAnchor({ role, supplied, snippet, context, artifactText, requireme
     }
     return absentAnchor({ role, reason: ANCHOR_ABSENT_REASONS.SOURCE_SUPPLIED_NO_QUOTATION });
   }
-  if (typeof artifactText !== "string" || !artifactText) {
+  if (!artifact || !artifact.body) {
     if (requirement === ANCHOR_REQUIREMENT.REQUIRED) {
       reject(`shape requires a ${role} quotation but that artifact is not available here`);
     }
@@ -400,10 +423,10 @@ function buildAnchor({ role, supplied, snippet, context, artifactText, requireme
 
   if (useSnippet) {
     if (tally) tally.snippets_proposed++;
-    const outcome = resolvePairedSnippet({ artifactText, snippet: s, context });
+    const outcome = resolvePairedSnippet({ artifactText: artifact.body, snippet: s, context });
     if (outcome.ok) {
       if (tally) tally.snippets_resolved_unique++;
-      return quotedAnchor({ role, quote: outcome.quote, span: outcome.span });
+      return quotedAnchor({ artifact, quote: outcome.quote, span: outcome.span });
     }
     if (tally) {
       if (outcome.reason === SNIPPET_REJECTION.AMBIGUOUS_SNIPPET) tally.snippets_rejected_ambiguous++;
@@ -412,8 +435,8 @@ function buildAnchor({ role, supplied, snippet, context, artifactText, requireme
     return unresolvedAnchor({ role, supplied: s, rejection_reason: outcome.reason });
   }
 
-  const span = resolveSpan(artifactText, s, role);
-  if (span) return quotedAnchor({ role, quote: span.quote, span });
+  const span = resolveSpan(artifacts, artifact.id, s);
+  if (span) return quotedAnchor({ artifact, quote: span.quote, span });
   return unresolvedAnchor({ role, supplied: s });
 }
 
@@ -596,7 +619,7 @@ export function registerDisposition({ status, card_id = null, suppression_reason
 // When the block resolved verbatim yet produced no card, the register dropped it
 // under a rule it does not report (failure-is-silence), and the disposition says
 // exactly that rather than blaming the anchor.
-export function classifyRegisterOutcome({ check, artifactText, cards = [] }) {
+export function classifyRegisterOutcome({ check, artifacts, cards = [] }) {
   if (!check || typeof check !== "object") {
     return registerDisposition({
       status: REGISTER_STATUS.SUPPRESSED,
@@ -615,7 +638,7 @@ export function classifyRegisterOutcome({ check, artifactText, cards = [] }) {
   if (card) return registerDisposition({ status: REGISTER_STATUS.EMITTED, card_id: card.id });
   const quoted = [check.supporting_proposition, check.dependent_output];
   for (const q of quoted) {
-    if (!resolveSpan(artifactText, q, ARTIFACT_ORIGINAL)) {
+    if (!resolveSpan(artifacts, ARTIFACT_ORIGINAL, q)) {
       return registerDisposition({
         status: REGISTER_STATUS.SUPPRESSED,
         suppression_reasons: [SUPPRESSION_REASONS.ANCHOR_NOT_VERBATIM],
@@ -821,6 +844,11 @@ export function buildFinding({
   const point = str(statement).trim();
   if (!point) reject("a finding requires a non-empty statement");
 
+  // One normalization, one identity per role. A malformed or ambiguous map throws
+  // here rather than producing anchors that name documents nobody can look up.
+  const artifactMap = normalizeArtifactMap(artifacts);
+  assertDistinctArtifactBodies(artifactMap);
+
   const anchors = [];
   for (const role of ARTIFACT_ROLES) {
     const proposed = snippets[role];
@@ -829,7 +857,7 @@ export function buildFinding({
       supplied: quotations[role],
       snippet: proposed ? proposed.verbatim_snippet : null,
       context: proposed ? proposed.disambiguating_context : "",
-      artifactText: artifacts[role],
+      artifacts: artifactMap,
       requirement: shape.anchors[role],
       tally: resolution_tally,
     });

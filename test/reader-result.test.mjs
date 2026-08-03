@@ -120,8 +120,9 @@ test("an unknown class label is rejected rather than passed through", () => {
 // ── Anchor contract (item 3) ────────────────────────────────────────────────
 
 test("an anchor cannot carry both a quotation and absence: there is no such factory", () => {
-  throwsCanon(() => quotedAnchor({ role: ARTIFACT_ORIGINAL, quote: "", span: { start: 0, end: 1 } }));
-  throwsCanon(() => quotedAnchor({ role: ARTIFACT_ORIGINAL, quote: "x", span: null }));
+  const openArtifact = { id: ARTIFACT_ORIGINAL, role: ARTIFACT_ORIGINAL, body: OPEN };
+  throwsCanon(() => quotedAnchor({ artifact: openArtifact, quote: "", span: { start: 0, end: 1 } }));
+  throwsCanon(() => quotedAnchor({ artifact: openArtifact, quote: "x", span: null }));
   throwsCanon(() => unresolvedAnchor({ role: ARTIFACT_ORIGINAL, supplied: "" }));
   const absent = absentAnchor({
     role: ARTIFACT_ORIGINAL,
@@ -437,16 +438,16 @@ test("classifyRegisterOutcome separates a weak anchor from the register's own si
     dependent_output: { text: check.dependent_output },
   };
 
-  const emitted = classifyRegisterOutcome({ check, artifactText: answer, cards: [card] });
+  const emitted = classifyRegisterOutcome({ check, artifacts: { [ARTIFACT_ORIGINAL]: answer }, cards: [card] });
   assert.equal(emitted.status, REGISTER_STATUS.EMITTED);
   assert.equal(emitted.card_id, "chk_omission_0_26");
 
-  const noBlock = classifyRegisterOutcome({ check: null, artifactText: answer, cards: [] });
+  const noBlock = classifyRegisterOutcome({ check: null, artifacts: { [ARTIFACT_ORIGINAL]: answer }, cards: [] });
   assert.deepEqual(noBlock.suppression_reasons, [SUPPRESSION_REASONS.NO_CHECK_BLOCK]);
 
   const notVerbatim = classifyRegisterOutcome({
     check: { ...check, dependent_output: "Turnout was never counted." },
-    artifactText: answer,
+    artifacts: { [ARTIFACT_ORIGINAL]: answer },
     cards: [],
   });
   assert.deepEqual(notVerbatim.suppression_reasons, [SUPPRESSION_REASONS.ANCHOR_NOT_VERBATIM]);
@@ -454,7 +455,7 @@ test("classifyRegisterOutcome separates a weak anchor from the register's own si
   // Both ends resolve verbatim and the register still emitted nothing: its
   // assembler dropped the block under a rule it does not report. Recorded as the
   // register's silence — never as a weak anchor, which is the opposite conclusion.
-  const silent = classifyRegisterOutcome({ check, artifactText: answer, cards: [] });
+  const silent = classifyRegisterOutcome({ check, artifacts: { [ARTIFACT_ORIGINAL]: answer }, cards: [] });
   assert.deepEqual(silent.suppression_reasons, [
     SUPPRESSION_REASONS.REGISTER_DROPPED_WITHOUT_REPORTING_CAUSE,
   ]);
