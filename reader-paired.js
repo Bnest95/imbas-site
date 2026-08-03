@@ -779,6 +779,14 @@ export const DECLARATION_HISTORY = Object.freeze({
   // A stored row would not validate. The history cannot be read at all, and saying
   // "no declarations" instead would be a lie about the record.
   UNREADABLE: "DECLARATION_HISTORY_UNREADABLE",
+  // There is no pair, so the question does not arise. A single-mode record owns no
+  // declarations because declarations belong to a pair, not because nobody made one.
+  // Distinct from NONE for the same reason NONE is distinct from UNREADABLE: NONE says
+  // a pair exists and its log is empty, which is a fact about a person who did not
+  // declare. This says there was never a pair to declare about. A blank would have
+  // collapsed both into "nothing here" — the failure this file names everywhere else
+  // with NOT_DECLARED, NOT_CAPTURED, STAGE_NOT_RECORDED and ACTOR_NOT_IDENTIFIED.
+  NOT_APPLICABLE: "DECLARATION_NOT_APPLICABLE",
 });
 
 // Canonical order: server receipt time, tie-broken by declaration id.

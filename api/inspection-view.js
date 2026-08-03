@@ -101,9 +101,17 @@ export function buildDescription(record) {
   const mode = str(record.mode);
   if (mode === "single") return truncate(OG_SINGLE_DESC, 200);
   if (mode === "paired") {
-    const d = record.run_declaration;
-    const declared = !!d && d.status === "DECLARED_NOT_VERIFIED";
-    return truncate(declared ? OG_PAIRED_DESC_DECLARED : OG_PAIRED_DESC_NOT_DECLARED, 200);
+    // A pair can carry several declarations — an original and the corrections that came
+    // after it. The card does not count them and does not summarize the newest one: it
+    // says only whether the record holds any, because an unfurl is read in a glance and
+    // "declared, not verified" is the fact that has to survive the glance.
+    //
+    // Read off the IDENTITIES, which the share row always holds, rather than off the
+    // resolved declarations, which a failed lookup leaves empty. A card that flipped to
+    // "not declared" because a second read timed out would assert something false about
+    // the person's run, on the surface that gets screenshotted.
+    const ids = Array.isArray(record.declaration_ids) ? record.declaration_ids : [];
+    return truncate(ids.length ? OG_PAIRED_DESC_DECLARED : OG_PAIRED_DESC_NOT_DECLARED, 200);
   }
   const leftOut = Array.isArray(record.what_was_left_out)
     ? record.what_was_left_out.filter(Boolean)

@@ -48,7 +48,13 @@ import {
   recordShareCreation,
 } from "../reader-security.js";
 import { canonicalizeForHash, RECEIPT_BOUNDARY } from "../reader-receipt.js";
-import { sanitizeRunDeclaration, DECLARATION_STATUS } from "../reader-paired.js";
+import { sanitizeRunDeclaration, DECLARATION_HISTORY } from "../reader-paired.js";
+import {
+  declarationIdList,
+  serializeDeclarationIds,
+  parseDeclarationIds,
+  readDeclarationsByIds,
+} from "../reader-declaration-log.js";
 import { describeReceipt } from "../reader-receipt-page.js";
 
 const BASE = process.env.AIRTABLE_BASE || "appfxHraqlcpP1AAP";
@@ -231,14 +237,38 @@ function extractPaired(receipt) {
     }))
     .filter((d) => d.point || d.signal_pattern || d.open_side || d.targeted_side)
     .slice(0, MAX_ITEMS);
-  // The declaration travels with the shared pair, read off the SAME hash-verified
-  // receipt as the delta items. It is not one of them: the items are what Imbas
-  // measured, and this is what the person said about how they ran it. A receipt
-  // carrying none yields NOT_DECLARED, which the page states plainly.
+  // The declarations travel with the shared pair, read off the SAME hash-verified
+  // receipt as the delta items. They are not one of them: the items are what Imbas
+  // measured, and these are what the person said about how they ran it.
+  //
+  // IDENTITIES ONLY. What the share records is WHICH declarations existed at the moment
+  // it was minted, not copies of their content. A snapshot would have to be kept in step
+  // with the log to stay true, and the only two ways to do that are to update the share
+  // (which would stop it being a dated record) or to let it drift (which would make it a
+  // wrong one). The identities are enough: the rows they name are immutable, so reading
+  // them back reconstructs the mint-time state exactly, and a declaration made afterward
+  // is simply not in the list — which is the whole point. Answers change; this record
+  // does not.
+  //
+  // A declaration this build cannot read stops the mint rather than being dropped from
+  // the list. A share is dated and never edited, so an incomplete list written now is
+  // wrong for as long as the link lives, and nothing downstream would ever be able to
+  // tell that something was missing.
+  const raw = Array.isArray(receipt.run_declarations) ? receipt.run_declarations : [];
+  const declarations = [];
+  let unreadable = false;
+  for (const d of raw) {
+    try {
+      declarations.push(sanitizeRunDeclaration(d));
+    } catch {
+      unreadable = true;
+    }
+  }
   return {
     question: clip(run.question, QUESTION_MAX),
     items: deltas,
-    declaration: sanitizeRunDeclaration(receipt.run_declaration),
+    declaration_ids: declarationIdList(declarations),
+    declaration_unreadable: unreadable,
   };
 }
 
@@ -279,15 +309,6 @@ function jsonArray(s) {
   }
 }
 
-function jsonObject(s) {
-  try {
-    const parsed = JSON.parse(str(s) || "{}");
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 function sanitizeSingleFindings(arr) {
   return arr
     .filter((f) => f && typeof f === "object")
@@ -305,7 +326,46 @@ function sanitizePairedItems(arr) {
     }));
 }
 
-function p4RecordToPublic(fields, shareId, mode) {
+// Declaration state for a projection. `resolved` is what the caller read back from the
+// declaration log using the ids this row stored at mint; a caller that did not read
+// (the sync projection, the QA fixture) passes nothing and gets an honest unresolved
+// state rather than a confident empty one.
+//
+// The states are kept apart on purpose, and this is the one place the earlier snapshot
+// design was better and the trade was made anyway. A snapshot could always render;
+// identities have to be looked up, and a lookup can fail. So the failure is named:
+// NO_DECLARATIONS means the record holds none, UNREADABLE means it holds some this page
+// could not read. Collapsing the second into the first would tell a reader that nobody
+// declared anything, about a run where somebody did. NOT_APPLICABLE is the third: a
+// single-mode share is not a pair, so it owns no declarations for a structural reason
+// rather than because its log came back empty.
+function declarationProjection(fields, mode, resolved) {
+  if (mode !== "paired") {
+    return { declaration_ids: [], run_declarations: [], declaration_state: DECLARATION_HISTORY.NOT_APPLICABLE };
+  }
+  const ids = parseDeclarationIds(fields["Declaration IDs"]);
+  if (!ids.length) {
+    return { declaration_ids: [], run_declarations: [], declaration_state: DECLARATION_HISTORY.NONE };
+  }
+  if (!resolved || !resolved.ok) {
+    return {
+      declaration_ids: ids,
+      run_declarations: [],
+      declaration_state: (resolved && resolved.state) || DECLARATION_HISTORY.UNREADABLE,
+    };
+  }
+  const out = {
+    declaration_ids: ids,
+    run_declarations: Array.isArray(resolved.declarations) ? resolved.declarations : [],
+    declaration_state: resolved.state,
+  };
+  if (Array.isArray(resolved.conflicts) && resolved.conflicts.length) {
+    out.declaration_conflicts = resolved.conflicts;
+  }
+  return out;
+}
+
+function p4RecordToPublic(fields, shareId, mode, resolved) {
   const raw = jsonArray(fields["Findings JSON"]);
   return {
     share_id: shareId,
@@ -318,12 +378,11 @@ function p4RecordToPublic(fields, shareId, mode) {
     question: fields.Question || "",
     findings: mode === "single" ? sanitizeSingleFindings(raw) : [],
     delta_items: mode === "paired" ? sanitizePairedItems(raw) : [],
-    // Paired only. A row without the column, or a share from before it existed, comes
-    // back NOT_DECLARED with the label already resolved — so the page reports that
-    // nothing was declared instead of rendering a blank the reader has to interpret.
+    // Paired only. A row with no ids — including every share minted before the column
+    // existed — comes back NO_DECLARATIONS, so the page reports that nothing was
+    // declared instead of rendering a blank the reader has to interpret.
     // The DERIVED matched state is not here and never was: it stayed in the browser.
-    run_declaration:
-      mode === "paired" ? sanitizeRunDeclaration(jsonObject(fields["Declaration JSON"])) : null,
+    ...declarationProjection(fields, mode, resolved),
     boundary: RECEIPT_BOUNDARY,
     reviewed_status: fields["Reviewed Status"] || "Unreviewed",
     visibility: fields.Visibility || "unlisted",
@@ -370,11 +429,15 @@ function legacyRecordToPublic(fields, shareId) {
   };
 }
 
-export function recordToPublic(fields, shareId) {
+// `resolved` is the already-read declaration history for this row's stored identities.
+// The projection stays synchronous so the QA harness and the unit tests can call it on a
+// fixture row without a store; the read is the caller's job, and fetchShareById below
+// does it.
+export function recordToPublic(fields, shareId, resolved) {
   const mode = str(fields.Mode);
   const record =
     mode === "single" || mode === "paired"
-      ? p4RecordToPublic(fields, shareId, mode)
+      ? p4RecordToPublic(fields, shareId, mode, resolved)
       : legacyRecordToPublic(fields, shareId);
   // The dated receipt travels on the projection, built from the row that was just read
   // and from nothing else. The page is a classic script that computes nothing, and this
@@ -397,7 +460,23 @@ export async function fetchShareById(shareId) {
   const data = await r.json();
   const rec = data.records && data.records[0];
   if (!rec) return null;
-  return recordToPublic(rec.fields || {}, shareId);
+  const fields = rec.fields || {};
+  // The second read, and the only one. It resolves the declaration identities this row
+  // stored at mint into the declarations themselves.
+  //
+  // This is a join, and this file otherwise refuses to join a dated receipt to live
+  // state. The distinction that makes it allowed: declaration rows are append-only and
+  // never updated, so the rows behind these ids cannot have changed since the share was
+  // minted — there is no live value to disagree with. What can still happen is that the
+  // read fails, and that outcome is carried through as UNREADABLE rather than as an
+  // absence, which is the case the old snapshot design could not produce and the reason
+  // the state is named on the projection at all.
+  let resolved = null;
+  if (str(fields.Mode) === "paired") {
+    const ids = parseDeclarationIds(fields["Declaration IDs"]);
+    if (ids.length) resolved = await readDeclarationsByIds(ids);
+  }
+  return recordToPublic(fields, shareId, resolved);
 }
 
 // ── Report a share (flag-only, manual review) ─────────────────────────────────
@@ -509,6 +588,11 @@ export default async function handler(req, res) {
   if (!payload.question || payload.question.length < 3) {
     return res.status(400).json({ ok: false, error: "missing" });
   }
+  // Refuse to mint a dated record whose declaration list is already known to be short.
+  // Nothing downstream could ever detect the gap, and the link would carry it forever.
+  if (payload.declaration_unreadable) {
+    return res.status(400).json({ ok: false, error: "declaration" });
+  }
 
   const shareId = newShareId();
   if (!SHARE_ID_RE.test(shareId)) return res.status(500).json({ ok: false, error: "id" });
@@ -531,12 +615,16 @@ export default async function handler(req, res) {
     Mode: mode,
     "Receipt Hash": verifiedHash,
     "Findings JSON": JSON.stringify(payload.items),
-    // Paired only, and only when something was actually declared. A single-mode share
-    // has no declaration to carry, and writing NOT_DECLARED on a paired share nobody
-    // filled in would be indistinguishable from one that predates the column — so the
-    // key is omitted and the read side supplies the absence.
-    ...(payload.declaration && payload.declaration.status === DECLARATION_STATUS.DECLARED_NOT_VERIFIED
-      ? { "Declaration JSON": JSON.stringify(payload.declaration) }
+    // Paired only, and only when something was actually declared. Identities, newline-
+    // joined, in the order the receipt carried them — the house convention for a list in
+    // a text cell. Written once, here, and never PATCHed: the list is the set of
+    // declarations that existed at this instant, and a later correction appends to the
+    // LOG, not to this row. A single-mode share has no declaration to carry, and writing
+    // an empty cell on a paired share nobody filled in would be indistinguishable from
+    // one that predates the column — so the key is omitted and the read side supplies
+    // the absence.
+    ...(payload.declaration_ids && payload.declaration_ids.length
+      ? { "Declaration IDs": serializeDeclarationIds(payload.declaration_ids) }
       : {}),
     Visibility: "unlisted",
     "Reviewed Status": "Unreviewed",
