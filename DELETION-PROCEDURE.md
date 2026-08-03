@@ -6,6 +6,7 @@ The public promise lives in [/retention.html](retention.html) ("What deletion me
 - Version: v4 (declaration history)
 - Applies to: a single-mode Reader run (Act 1) **and** any paired analysis (Act 2) derived from it, including the optional **Perception Tap** telemetry P3 adds to each — it is a single enum field *on* those same rows, deleted wholesale with them (see §1 items 1–2) — **and** any unlisted **Inspection Share** created from either (the Reader v2 P4 redesign; see §1 item 3, updated for the new share fields), **and every row of the append-only declaration log** a paired analysis owns (new in v4; see §1 item 7). The candidate-lead store still does not exist: P4 shipped the Inspection Shares redesign, **not** a leads store, so its row below stays **NOT YET BUILT** and becomes a live step only when a leads store is actually built.
 - v4 change: the declaration log is the first store in this base that **outlives the row it belongs to**. Every other location in the closure set is a row that carries its own content, so deleting the row deletes the content. Declarations live in their own table and are joined by value, so deleting a paired-analysis row leaves them standing. They must be walked explicitly or they survive the request.
+- v4 also introduces the first **append-only** store here, so §5a states the one exception and its boundary: a synthetic verification row is deleted after the test, a production declaration goes only through the §3 walk.
 - Base: Airtable `appfxHraqlcpP1AAP`.
 
 ---
@@ -72,7 +73,7 @@ Performed by a person, within 7 days, per the public policy.
 4. **Locate every paired analysis.** In Reader Paired Analyses `tblP1ekWWWscz6pBG`, find **all** rows where `Open Run ID` equals the run's `Request ID` (from step 2). One run may have several — a distinct second answer each. Note all record IDs, **each row's `Receipt Hash`** — a paired-mode share joins to its paired row by that hash (step 3) — **and each row's `Targeted Answer Hash`**, which with `Open Run ID` is the only key to that pair's declarations (step 5). Capture both hashes before deleting: the declaration rows are in another table and do not go with the paired row.
 5. **Locate every declaration row.** In Reader Run Declarations `tblMo8qwOVbDacLLd`, for **each** paired analysis from step 4, find **all** rows where `Open Run ID` **and** `Targeted Answer Hash` both equal that pair's values. Match on both — `Open Run ID` alone spans every pair built on the same open run and would sweep in another pair's declarations. Expect one row per declaration event, not one per pair: a submission plus every later correction. Note all record IDs.
 6. **Locate candidate-lead copies.** NOT YET BUILT — skip until a leads store exists. When built: find leads that retained this text (consent-checkbox rows); note IDs.
-7. **Delete.** Remove all located records: the run row, every share row, every paired-analysis row, **and every declaration row** (then candidate-lead rows when those exist). Deleting each Airtable row deletes the content it carried — none has a separate store: the run row's raw text and derived content; the paired row's second answer, targeted prompt, and both-side delta spans; a **P4 share's** Question, Findings-JSON excerpts, Mode, Receipt Hash, Captured At, AI Model, Declaration IDs, and any Report Flag (the report is a field on the row, so it dies with the row); a **legacy share's** full raw answer and derived copy; and each **declaration row's** reported model version, same-model answer, edit answer, stage, and actor. Deleting a declaration row is not a violation of the append-only rule — append-only governs *correction*, which must never overwrite; a deletion request removes the record entirely rather than rewriting what it says.
+7. **Delete.** Remove all located records: the run row, every share row, every paired-analysis row, **and every declaration row** (then candidate-lead rows when those exist). Deleting each Airtable row deletes the content it carried — none has a separate store: the run row's raw text and derived content; the paired row's second answer, targeted prompt, and both-side delta spans; a **P4 share's** Question, Findings-JSON excerpts, Mode, Receipt Hash, Captured At, AI Model, Declaration IDs, and any Report Flag (the report is a field on the row, so it dies with the row); a **legacy share's** full raw answer and derived copy; and each **declaration row's** reported model version, same-model answer, edit answer, stage, and actor. Deleting a declaration row is not a violation of the append-only rule — append-only governs *correction*, which must never overwrite; a deletion request removes the record entirely rather than rewriting what it says. That is the **only** route by which a production declaration is removed: not one at a time, not because a later declaration superseded it. See §5a for the boundary, and for why a synthetic test row is a different case.
 8. **Verify residue = zero** (section 4).
 9. **Record** the fulfilment (date, identifiers, what was removed) in the operator's deletion log.
 
@@ -96,6 +97,19 @@ If any query returns a row, the walk is incomplete — do not close the request 
 ## 5. Test log
 
 Each entry proves the procedure was exercised end-to-end against real storage using explicitly namespaced dummy records (prefix `DELETE_TEST_READER_V2_P1_`), never real user data.
+
+### 5a. Synthetic rows, and the boundary on deleting them
+
+**Founder ruling, 2026-08-03.** A synthetic row created **solely** for storage verification — carrying a reserved non-production namespace and **no production identity** — must be deleted after the test and the deletion recorded here. A **production declaration row is append-only** and is removed only under the governed deletion procedure applicable to its associated subject or record.
+
+Both halves are load-bearing, and the second is why the first needs writing down. The declaration log is append-only: a correction appends a row and never overwrites the one it corrects. Deleting a synthetic row does not contradict that, because a row written to prove the storage works was never a declaration — nobody reported anything. Leaving it would make the log's first entries fictions, which is the manufactured provenance the append-only rule exists to prevent. But that reasoning holds **only** for rows that are not evidence of anything. It is not a general license to prune the log.
+
+The test is the namespace and the identity, not the age or the convenience. A row qualifies as synthetic only if **both** hold:
+
+- it carries a reserved `DELETE_TEST_*` namespace, and
+- no part of it identifies a real person, run, pair, or share.
+
+A row failing either test is production. A production declaration goes when the subject it belongs to goes, through the walk in section 3 — never on its own, never because it looks wrong, never because a later declaration superseded it. Supersession is the reason the earlier row **stays**: the record has to be able to say what was declared first and what was corrected. Deleting the superseded row would leave a correction correcting nothing.
 
 ### 2026-07-09 (UTC) — v1 procedure proof, single-mode run
 
@@ -180,7 +194,7 @@ Each entry proves the procedure was exercised end-to-end against real storage us
   - By `Declaration ID` = `…Z.d1` — **1 row**. This is the read `appendDeclaration` performs before writing, so a client retrying after a timeout finds the row and reuses it. The live table answers that query, which is what the idempotency step depends on.
   - By the ownership join after the correction — **2 rows**, sorted by `Received At Server` then `Declaration ID`, returned in canonical order d1 → d2.
 - **Append-only held on the wire.** After the correction, `…Z.d1` still read `submission` / `yes` / `NO_SUPERSESSION`. The correction lives entirely in its own row. Nothing was PATCHed; the only writes were two creates.
-- **Deleted** both rows — `{deleted:true}` for each.
+- **Deleted** both rows — `{deleted:true}` for each. Both qualified as synthetic under §5a on both tests: reserved `DELETE_TEST_*` namespace, and no production identity anywhere on either row. Neither was a declaration — nobody reported anything — so removing them took no evidence with them.
 - **Verified residue = 0:** Reader Run Declarations re-listed with no filter — **0 rows**, the whole table. That is the correct resting state: the log has never received a production declaration, because the code that writes it is not deployed.
 - **Result: PASS** — the live schema accepts, preserves, orders, and releases a declaration event exactly as the artifact defines it.
 
