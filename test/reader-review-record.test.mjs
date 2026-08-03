@@ -1,7 +1,7 @@
 // reader-review-record — the ReviewRecord export, its review-record.c14n.v1
 // canonicalization, and the integrity digest (Reader v3 RR lane, site repo).
 //
-// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.3.2:
+// Gates pinned here, tied to docs/REVIEW-GRAPH-SCHEMA.md v0.3.3:
 //   - AT-14 in full: identical logical records → identical digests; same-instant
 //     timestamps collapse (offset + fractional-zero + sub-ms truncation); a
 //     changed instant changes the digest; any canonical-body mutation changes it;
@@ -22,7 +22,7 @@
 //     reader-receipt content_hash minted from the same open run.
 //   - No new server-side write path: no api/** file assembles or persists the
 //     record, and the module itself pulls in no node builtin and no network/write.
-//   - Record validation against the schema v0.3.2 shapes (positive + rejections),
+//   - Record validation against the schema v0.3.3 shapes (positive + rejections),
 //     including PairRun run provenance (initiator, targeted_prompt_hash, chip fields).
 //
 // Content-blind: synthetic answer + synthetic findings only. Run:
@@ -302,7 +302,7 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
   assert.equal(await digestReviewRecord(record), node);
 });
 
-// ── Pinned canonical vectors (schema v0.3.2) ─────────────────────────────────────
+// ── Pinned canonical vectors (schema v0.3.3) ─────────────────────────────────────
 // Two frozen records — a single-mode omission and one carrying a deflection finding —
 // over buildResult's fixed ids/timestamps + CREATED. Their canonical UTF-8 byte length
 // and 64-hex integrity digest are pinned as INTENTIONAL LITERALS so the suite itself
@@ -311,7 +311,7 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
 // schema version updates them DELIBERATELY, never casually. Both are single-mode (no
 // pair_runs), so v0.3.1's PairRun additions leave their bytes unchanged; only the
 // versions.schema string (…v0.3.0 → …v0.3.1) moves, so the byte length holds and the
-// digest turns over deliberately. Each asserts versions.schema is v0.3.2 first.
+// digest turns over deliberately. Each asserts versions.schema is v0.3.3 first.
 //
 // Turned over DELIBERATELY at record version v2, which adds contents.canonical_result.
 // Both fixtures supply no canonical result, so the added key serializes as
@@ -321,74 +321,109 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
 // string reproduces both v1 digests byte-for-byte, so review-record.c14n.v1 itself is
 // unchanged. The pin's job — catching drift nobody intended — is intact.
 //
-// Turned over DELIBERATELY again at schema v0.3.2, which adds PairRun.declaration —
-// the run-conditions artifact the user reported. Both fixtures are single-mode and
-// serialize pair_runs as [], so the added field reaches neither of them: the byte
-// lengths HOLD at 2599 / 2609 and the versions.schema string (…v0.3.1 → …v0.3.2)
-// is the only thing that moves, at equal length. Verified the same way as the v2
-// turnover: the version string occurs exactly once in each canonical body, and
-// substituting v0.3.1 back reproduces both v0.3.1 digests byte-for-byte. A paired
-// fixture is pinned separately below, where the new field does land.
-const PINNED_V032 = {
+// Turned over DELIBERATELY at schema v0.3.2, which added PairRun.declaration — the
+// run-conditions artifact the user reported. Both fixtures are single-mode and serialize
+// pair_runs as [], so the added field reached neither of them: the byte lengths HELD at
+// 2599 / 2609 and the versions.schema string (…v0.3.1 → …v0.3.2) was the only thing that
+// moved, at equal length.
+//
+// Turned over DELIBERATELY again at schema v0.3.3, which replaces the singular
+// PairRun.declaration with PairRun.declarations, an ordered array — a pair collects
+// declarations at submission, at inspection, at review and on a later visit, and a
+// correction is a separate fact rather than a better version of the first one. The two
+// single-mode fixtures still serialize pair_runs as [], so again the shape change reaches
+// neither: the byte lengths HOLD at 2599 / 2609 and the version string (…v0.3.2 →
+// …v0.3.3) is the only thing that moves, at equal length. Proved rather than asserted by
+// the turnover test below, which substitutes v0.3.2 back and must reproduce both v0.3.2
+// digests byte-for-byte.
+//
+// The paired fixture is pinned separately, immediately below, because that is where the
+// declarations array actually lands and where a silent reshape would otherwise pass.
+const PINNED_V033 = {
   single_omission: {
     bytes: 2599,
-    digest: "a2dbbf3d20da032419e18d94477863f25f53a07fb4c1eb4df9f5e971ae103a34",
+    digest: "f3c7001664bfbadcf938826b936265da96ca5ca53e25935d3cbf7ab6fa43cd0d",
   },
   deflection_finding: {
     bytes: 2609,
-    digest: "9b62757dd093311d4f7b06d139581028a67a7b7cf2985cd702a9bff6734d2cef",
+    digest: "7971b03b410046d803963b838fe7f4390dec7a56565cfdfe1a44381741d625c0",
   },
 };
 
 const byteLen = (s) => new TextEncoder().encode(s).length;
 
-test("pinned vector: a frozen single-mode omission record matches its pinned v0.3.2 digest and byte length", async () => {
+test("pinned vector: a frozen single-mode omission record matches its pinned v0.3.3 digest and byte length", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
-  assert.equal(record.contents.versions.schema, "review-graph.v0.3.2", "the pin is anchored to schema v0.3.2");
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.3", "the pin is anchored to schema v0.3.3");
   assert.equal(record.contents.detector_events[0].detector_id, "vg.omission");
   const canonical = serializeCanonical(record);
-  assert.equal(byteLen(canonical), PINNED_V032.single_omission.bytes, "canonical byte length drifted from the pin");
-  assert.equal(record.integrity.digest, PINNED_V032.single_omission.digest, "digest drifted from the pin");
+  assert.equal(byteLen(canonical), PINNED_V033.single_omission.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V033.single_omission.digest, "digest drifted from the pin");
 });
 
-test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.2 digest and byte length", async () => {
+test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.3 digest and byte length", async () => {
   const record = await buildReviewRecord({ result: buildResult({ findings: [DEFLECTION_FINDING] }).result, createdAt: CREATED });
-  assert.equal(record.contents.versions.schema, "review-graph.v0.3.2", "the pin is anchored to schema v0.3.2");
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.3", "the pin is anchored to schema v0.3.3");
   // The renamed family renders end-to-end: vg.deflection detector, deflection finding_type.
   assert.equal(record.contents.detector_events[0].detector_id, "vg.deflection");
   assert.equal(record.contents.checks[0].demonstration.finding_type, "deflection");
   const canonical = serializeCanonical(record);
-  assert.equal(byteLen(canonical), PINNED_V032.deflection_finding.bytes, "canonical byte length drifted from the pin");
-  assert.equal(record.integrity.digest, PINNED_V032.deflection_finding.digest, "digest drifted from the pin");
+  assert.equal(byteLen(canonical), PINNED_V033.deflection_finding.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V033.deflection_finding.digest, "digest drifted from the pin");
 });
 
-// The v0.3.1→v0.3.2 turnover above claims the two single-mode digests moved for one
+// The paired vector, pinned for the first time at v0.3.3. Every single-mode pin above is
+// blind to PairRun by construction, so before this the one shape the declaration work
+// actually changes had no pin on it at all: a reshaped declarations array, a reordered
+// key, or a declaration field silently dropped from the canonical body would all have
+// gone through green. No prior digest exists to turn over from, so there is nothing to
+// prove about a turnover here — the discipline this pin starts is the next one's problem.
+const PINNED_V033_PAIRED = {
+  bytes: 3411,
+  digest: "50413c3eef02a012a725c99035b5c8a7bab474ec4eba038ac0a60892819c1958",
+};
+
+test("pinned vector: a frozen paired record matches its pinned v0.3.3 digest and byte length", async () => {
+  const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  assert.equal(record.contents.versions.schema, "review-graph.v0.3.3", "the pin is anchored to schema v0.3.3");
+  assert.equal(record.contents.pair_runs.length, 1, "this vector exists to cover the paired shape");
+  const canonical = serializeCanonical(record);
+  // The declarations array is inside the hashed body, not alongside it. A packet whose
+  // declaration history could change without moving the digest would be a packet whose
+  // provenance nobody could check.
+  assert.ok(canonical.includes('"declarations":'), "declarations ride inside the canonical body");
+  assert.ok(!canonical.includes('"declaration":'), "the singular v0.3.2 key is gone, not shadowed");
+  assert.equal(byteLen(canonical), PINNED_V033_PAIRED.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V033_PAIRED.digest, "digest drifted from the pin");
+});
+
+// The v0.3.2→v0.3.3 turnover above claims the two single-mode digests moved for one
 // reason only: an equal-length version string. This re-derives that claim in the suite
 // instead of trusting the comment — substituting the old version back into the canonical
-// body must reproduce the v0.3.1 digests exactly. If a future change moves anything else,
+// body must reproduce the v0.3.2 digests exactly. If a future change moves anything else,
 // the reconstruction stops matching and this fails alongside the pins.
-test("pin turnover v0.3.1→v0.3.2 is confined to the version string in both single-mode vectors", async () => {
-  const V031 = {
-    single_omission: "ac6e696253574b58167934a093916939634e771e485f1cca82117c2800350265",
-    deflection_finding: "73ddc9b8e6deadf6911955d45a75c5d46cdb8b569ad6505fd61780bcb00bdcc3",
+test("pin turnover v0.3.2→v0.3.3 is confined to the version string in both single-mode vectors", async () => {
+  const V032 = {
+    single_omission: "a2dbbf3d20da032419e18d94477863f25f53a07fb4c1eb4df9f5e971ae103a34",
+    deflection_finding: "9b62757dd093311d4f7b06d139581028a67a7b7cf2985cd702a9bff6734d2cef",
   };
   for (const [name, findings] of [["single_omission", [FINDING]], ["deflection_finding", [DEFLECTION_FINDING]]]) {
     const record = await buildReviewRecord({ result: buildResult({ findings }).result, createdAt: CREATED });
     const canonical = serializeCanonical(record);
-    assert.equal(canonical.split("review-graph.v0.3.2").length - 1, 1, `${name}: version string is not unique in the canonical body`);
-    const rebuilt = canonical.replaceAll("review-graph.v0.3.2", "review-graph.v0.3.1");
+    assert.equal(canonical.split("review-graph.v0.3.3").length - 1, 1, `${name}: version string is not unique in the canonical body`);
+    const rebuilt = canonical.replaceAll("review-graph.v0.3.3", "review-graph.v0.3.2");
     assert.equal(byteLen(rebuilt), byteLen(canonical), `${name}: the substitution changed the byte length`);
-    assert.equal(createHash("sha256").update(rebuilt, "utf8").digest("hex"), V031[name], `${name}: more than the version string moved`);
+    assert.equal(createHash("sha256").update(rebuilt, "utf8").digest("hex"), V032[name], `${name}: more than the version string moved`);
   }
 });
 
-test("schema v0.3.2: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.2", () => {
-  assert.equal(REVIEW_GRAPH_SCHEMA_VERSION, "review-graph.v0.3.2");
+test("schema v0.3.3: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.3", () => {
+  assert.equal(REVIEW_GRAPH_SCHEMA_VERSION, "review-graph.v0.3.3");
   const base = buildResult().result;
   const single = assembleReviewRecord({ result: base, createdAt: CREATED });
   const paired = assembleReviewRecord({ result: base, createdAt: CREATED, pair: buildPair() });
-  assert.equal(single.contents.versions.schema, "review-graph.v0.3.2");
-  assert.equal(paired.contents.versions.schema, "review-graph.v0.3.2");
+  assert.equal(single.contents.versions.schema, "review-graph.v0.3.3");
+  assert.equal(paired.contents.versions.schema, "review-graph.v0.3.3");
   // The paired-mode marker is the populated pair_runs array (schema §1 v0.3.0 note);
   // single mode serializes pair_runs as [].
   assert.deepEqual(single.contents.pair_runs, []);
@@ -414,7 +449,7 @@ test("the method note states unkeyed SHA-256 fixity and never claims a signature
 
 // ── Record assembly + schema-shape validation ────────────────────────────────────
 
-test("assembly: a built record validates against the schema v0.3.2 shapes", async () => {
+test("assembly: a built record validates against the schema v0.3.3 shapes", async () => {
   const record = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
   const v = validateReviewRecord(record);
   assert.ok(v.ok, v.reason);
