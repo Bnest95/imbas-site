@@ -229,8 +229,8 @@ function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_RE
 
   // Check Register — real assembler, real span resolution against the answer.
   const checks = buildCheckRegister({
+    artifacts: { original_answer: SYNTHETIC_ANSWER },
     artifactId: "original_answer",
-    artifactText: SYNTHETIC_ANSWER,
     findings: measurement.findings
       .filter((f) => f.check)
       .map((f) => ({ type: CANDIDATE_TO_DETECTOR_FINDING[f.type], check: f.check })),
@@ -379,7 +379,7 @@ export function pairedReadPayload(modelOutput = PAIRED_MODEL_OUTPUT) {
   // is built FIRST and the wire fields are derived from it, in that order, exactly as
   // the handler does — so this fixture cannot carry a delta item the door rejected.
   const pm = parsePairedMeasurement(modelOutput);
-  return pairedWirePayload({ pm, canonical: buildCanonicalPaired(pm, SYNTHETIC_ANSWER, SYNTHETIC_SECOND_ANSWER) });
+  return pairedWirePayload({ pm, canonical: buildCanonicalPaired(pm, { open: SYNTHETIC_ANSWER, targeted: SYNTHETIC_SECOND_ANSWER }) });
 }
 
 // The wire half, shared. Every paired fixture assembles its payload here so the

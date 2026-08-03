@@ -398,8 +398,8 @@ const CREATED = "2026-07-17T12:00:00Z";
 
 function buildResult() {
   const register = buildCheckRegister({
+    artifacts: { original_answer: ANSWER },
     artifactId: "original_answer",
-    artifactText: ANSWER,
     findings: [FINDING],
     inspector: INSPECTOR,
   });

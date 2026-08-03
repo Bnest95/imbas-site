@@ -123,8 +123,8 @@ function buildResult({
   declaredModel = "GPT-5",
 } = {}) {
   const register = buildCheckRegister({
+    artifacts: { original_answer: answer },
     artifactId: "original_answer",
-    artifactText: answer,
     findings,
     inspector: INSPECTOR,
   });
@@ -765,7 +765,7 @@ test("v2: the packet carries every finding even when the register emits no check
         statement: "No source is given for the projected figure.",
         quotations: { [ARTIFACT_ORIGINAL]: "a projected figure of 4.2 million" },
         artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
-        check_register: classifyRegisterOutcome({ check: null, artifactText: ANSWER, cards: [] }),
+        check_register: classifyRegisterOutcome({ check: null, artifacts: { [ARTIFACT_ORIGINAL]: ANSWER }, cards: [] }),
       }),
     ],
   });
@@ -813,7 +813,7 @@ function canonicalWithFindings(n) {
         statement: `No source is given for the projected figure (${i}).`,
         quotations: { [ARTIFACT_ORIGINAL]: "a projected figure of 4.2 million" },
         artifacts: { [ARTIFACT_ORIGINAL]: ANSWER },
-        check_register: classifyRegisterOutcome({ check: null, artifactText: ANSWER, cards: [] }),
+        check_register: classifyRegisterOutcome({ check: null, artifacts: { [ARTIFACT_ORIGINAL]: ANSWER }, cards: [] }),
       }),
     );
   }

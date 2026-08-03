@@ -122,7 +122,7 @@ test("the claim-basis builder and the endpoint adapter differ only in the claim 
   // One input, two builders. Isolating the input is what makes the comparison mean
   // something: any difference in the output is a difference between the builders.
   const pm = parsePairedMeasurement(PAIRED_MODEL_OUTPUT);
-  const fromAdapter = buildCanonicalPaired(pm, SYNTHETIC.SYNTHETIC_ANSWER, SYNTHETIC.SYNTHETIC_SECOND_ANSWER);
+  const fromAdapter = buildCanonicalPaired(pm, { open: SYNTHETIC.SYNTHETIC_ANSWER, targeted: SYNTHETIC.SYNTHETIC_SECOND_ANSWER });
   const fromBuilder = claimBasisCanonical({
     conditions_source: "server_observed_pair_conditions",
     conditions_status: CONDITIONS_STATUS.MATCHED,

@@ -567,8 +567,8 @@ function buildChecks(measurement, answer) {
     .filter((f) => f && f.check)
     .map((f) => ({ type: CANDIDATE_TO_DETECTOR_FINDING[f.type], check: f.check }));
   return buildCheckRegister({
+    artifacts: { original_answer: answer || "" },
     artifactId: "original_answer",
-    artifactText: answer || "",
     findings,
     inspector: {
       model: MODEL,
@@ -598,6 +598,7 @@ function buildChecks(measurement, answer) {
 export function buildCanonicalSingle(measurement, answer, register) {
   if (!measurement) return null;
   const text = answer || "";
+  const artifacts = { [ARTIFACT_ORIGINAL]: text };
   const cards = (register && register.cards) || [];
   const findings = (measurement.findings || []).map((f, index) => {
     const class_label = CANDIDATE_TO_DETECTOR_FINDING[f.type];
@@ -608,8 +609,8 @@ export function buildCanonicalSingle(measurement, answer, register) {
       statement: f.materiality || f.anchor || FINDING_CLASSES[class_label],
       materiality: f.materiality,
       quotations: { [ARTIFACT_ORIGINAL]: f.anchor },
-      artifacts: { [ARTIFACT_ORIGINAL]: text },
-      check_register: classifyRegisterOutcome({ check: f.check, artifactText: text, cards }),
+      artifacts,
+      check_register: classifyRegisterOutcome({ check: f.check, artifacts, cards }),
     });
   });
   return buildCanonicalResult({

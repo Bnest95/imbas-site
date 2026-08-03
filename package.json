@@ -3,8 +3,11 @@
   "type": "module",
   "scripts": {
     "build:workbench": "node scripts/build-workbench.mjs",
+    "build:placements": "node scripts/materialize-placements.mjs",
     "check:workbench": "node scripts/check-workbench-bundle.mjs",
+    "check:placements": "node scripts/materialize-placements.mjs --check",
     "check:snapshots": "node scripts/check-submission-snapshots.mjs",
+    "d1:import": "node scripts/d1-import-wave0.mjs",
     "metrics": "node scripts/imbas-metrics.mjs",
     "ops:brief": "node scripts/founder-ops-brief.mjs",
     "reconcile:grants": "node scripts/grant-reconcile.mjs",

@@ -1040,8 +1040,8 @@ test("carry — OG: the single-mode and legacy cards are untouched by the declar
 
 function reviewResult() {
   const register = buildCheckRegister({
+    artifacts: { original_answer: OPEN_RUN.answer },
     artifactId: "original_answer",
-    artifactText: OPEN_RUN.answer,
     findings: [],
     inspector: { model: "claude-opus-4-8", model_version: "claude-opus-4-8", prompt_version: "reader.v3" },
   });

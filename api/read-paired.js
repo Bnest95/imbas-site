@@ -438,9 +438,21 @@ export function parsePairedMeasurement(raw) {
 //
 // Exported for the visual-acceptance harness, for the same reason as
 // buildCanonicalSingle: a fixture that copies the mapping drifts from it.
-export function buildCanonicalPaired(pm, openAnswer, targetedAnswer) {
+// The two answers arrive as NAMED keys, never as adjacent positional parameters.
+// The prior signature was (pm, openAnswer, targetedAnswer): two arguments of the
+// same type distinguished only by their order. Both call sites passed them
+// correctly, and a future edit that swapped them would have mislabelled every
+// anchor in the record at once, with no layer downstream able to detect it —
+// systematic rather than probabilistic, and it would have hashed and exported as
+// a valid work product. A transposition is now a named-key error at the door.
+//
+// This cannot fix input mislabeling. If the person's open answer is in fact their
+// targeted answer, every check here passes and the record is confidently wrong.
+// The claim the pipeline supports is: every anchor reproduces verbatim from the
+// artifact THIS RECORD LABELS as its source. Not: the labels are correct.
+export function buildCanonicalPaired(pm, { open, targeted } = {}) {
   if (!pm) return null;
-  const artifacts = { [ARTIFACT_ORIGINAL]: openAnswer || "", [ARTIFACT_TARGETED]: targetedAnswer || "" };
+  const artifacts = { [ARTIFACT_ORIGINAL]: open || "", [ARTIFACT_TARGETED]: targeted || "" };
   const resolution_tally = newResolutionTally();
   const findings = (pm.differences || []).map((d, index) => {
     const class_label = normalizeClass(d.signal_pattern);
@@ -989,8 +1001,9 @@ function reconstructPairedFromRecord(recordFields, embed, declarations = []) {
   const canonical = replayable
     ? buildCanonicalPaired(
         { differences, gap_estimate: Number.isFinite(gap) ? gap : 0, estimate_type: ESTIMATE_TYPE_PAIRED, rubric_version: f["Rubric Version"] || RUBRIC_VERSION },
-        (embed.openRun && embed.openRun.answer) || "",
-        embed.targetedAnswer || "",
+        // The replay path reconstructs the pair from stored fields, which is where the
+        // role→body binding is most exposed to drift. Named keys, for that reason.
+        { open: (embed.openRun && embed.openRun.answer) || "", targeted: embed.targetedAnswer || "" },
       )
     : null;
   const pairedAnalysis = {
@@ -1482,7 +1495,7 @@ export function createReadPairedHandler(deps = {}) {
       // The canonical result is built FIRST and everything else is derived from it.
       // Nothing downstream re-reads the model's output, so no surface can show a
       // quotation the door did not resolve.
-      const canonical = buildCanonicalPaired(pm, openAnswer, targetedAnswer);
+      const canonical = buildCanonicalPaired(pm, { open: openAnswer, targeted: targetedAnswer });
       const pairedAnalysis = {
         open_run_id: openRunId,
         targeted_prompt: targetedPrompt,
