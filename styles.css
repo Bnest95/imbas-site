@@ -122,7 +122,7 @@
   --text-min:         var(--text-min-desktop);
 }
 
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   :root { --text-min: var(--text-min-mobile); }
 }
 
@@ -1133,7 +1133,7 @@ body:has(main > section.hero) .nav__menu-btn {
 .hero__meta--instrument.reveal {
   transition-duration: 1.1s;
 }
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   .hero__meta--instrument::before,
   .hero__meta--instrument::after {
     width: min(8vw, 3.5rem);
@@ -1511,7 +1511,7 @@ body:has(main > section.hero) .nav__menu-btn {
   color: var(--ink-luminous);
   margin: 0;
 }
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .roadmap__grid { grid-template-columns: 1fr; gap: var(--space-4); }
 }
 
@@ -2019,7 +2019,7 @@ body:has(main > section.hero) .nav__menu-btn {
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .stakes {
     padding: var(--space-5) 0;
   }
@@ -2406,7 +2406,7 @@ body:has(main > section.hero) .nav__menu-btn {
     padding-top: 0.5rem;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .categories {
     padding: var(--space-3) 0;
   }
@@ -2749,7 +2749,7 @@ body:has(main > section.hero) .nav__menu-btn {
     max-width: none;
   }
 }
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   .your-experience {
     padding: var(--space-5) 0;
   }
@@ -2863,7 +2863,7 @@ body:has(main > section.hero) .nav__menu-btn {
   transition-delay: 0.35s;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 768px) {
   .compounding__inner { grid-template-columns: 1fr; }
   .divergence { aspect-ratio: 2; }
   .divergence__label--top { top: 2%; }
@@ -2983,7 +2983,7 @@ body:has(main > section.hero) .nav__menu-btn {
   padding-bottom: 0.3rem;
 }
 .audience a:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
-@media (min-width: 761px) {
+@media (min-width: 769px) {
   .audiences__grid { grid-template-columns: 1.25fr 0.75fr; }
   .audience--primary {
     padding: var(--space-6) var(--space-6) var(--space-7);
@@ -3092,7 +3092,7 @@ body:has(main > section.hero) .nav__menu-btn {
   letter-spacing: 0;
   color: var(--ink-muted);
 }
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   .record-compounds__progression {
     flex-direction: column;
     align-items: flex-start;
@@ -3115,7 +3115,7 @@ body:has(main > section.hero) .nav__menu-btn {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .audiences__grid { grid-template-columns: 1fr; }
   .audience--primary {
     padding: var(--space-5);
@@ -3585,7 +3585,7 @@ body:has(main > section.hero) .nav__menu-btn {
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 699px) {
   .archive__measure { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -4466,7 +4466,7 @@ body:has(main > section.hero) .nav__menu-btn {
   transition: opacity .4s ease;
 }
 .subscribe__msg.is-visible { opacity: 1; }
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .close__grid { grid-template-columns: 1fr; gap: var(--space-5); }
   .close__origin { padding: var(--space-2) 0 var(--space-4); }
   .origin__bloom {
@@ -5013,10 +5013,10 @@ main, .site-footer { position: relative; z-index: 2; }
   font-size: 0.875rem;
   letter-spacing: 0.04em;
 }
-@media (min-width: 900px) {
+@media (min-width: 901px) {
   .page__cards { grid-template-columns: repeat(3, 1fr); }
 }
-@media (min-width: 700px) and (max-width: 899px) {
+@media (min-width: 700px) and (max-width: 900px) {
   .page__cards { grid-template-columns: repeat(2, 1fr); }
   .page__card:last-child { grid-column: 1 / -1; }
 }
@@ -9111,7 +9111,7 @@ main > .close::before {
   display: none;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   /* — Section rhythm: trim bloated vertical padding ~12–16% — */
   main > .stakes {
     padding-top: clamp(2.25rem, 7vw, 2.65rem);
@@ -9463,7 +9463,7 @@ main > .close::before {
   }
 }
 
-@media (min-width: 681px) {
+@media (min-width: 700px) {
   .experience-intake__mobile-suggest {
     display: none !important;
   }
@@ -9473,7 +9473,7 @@ main > .close::before {
    HOMEPAGE MOBILE HERO HIERARCHY — IMBAS dominant, compact proof strip
    Index hero only; desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero .hero__stage {
     gap: 0.95rem;
     padding-top: clamp(0.85rem, 2.5vh, 1.15rem);
@@ -9583,7 +9583,7 @@ main > .close::before {
 
 /* Proof-strip lead+subline items: stack full-width and wrap internally so
    longer sublines never overflow or scroll on narrow viewports (≤680px). */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero + .proof-strip--landing .proof-strip__metrics {
     row-gap: 0.5rem;
   }
@@ -9607,7 +9607,7 @@ main > .close::before {
    HOMEPAGE MOBILE LANDING FINAL TUNE — roadmap trust + scan density
    Index only; desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .value.value--flow .value__beats {
     gap: 0.82rem;
     padding-top: 0.1rem;
@@ -9679,7 +9679,7 @@ main > .close::before {
    HOMEPAGE MOBILE HERO RHYTHM — CTA breathing room, first-scroll transition
    Index hero + proof + Why Imbas only; desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero:has(+ .proof-strip--landing) .hero__stage {
     padding-bottom: 0.72rem;
   }
@@ -9743,14 +9743,14 @@ main > .close::before {
   letter-spacing: -0.005em;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .compounding .compounding__scale {
     white-space: nowrap;
   }
 }
 
 /* HOMEPAGE MOBILE ARCHIVE PREVIEW — proof strip, not full case read */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .archive--home-preview .hp-arc-featured__prompts {
     display: none;
   }
@@ -9815,7 +9815,7 @@ main > .close::before {
    HOMEPAGE MOBILE CLOSE AURORA — richer Field Notes / lower close atmosphere
    Index close + footer transition only; desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .archive.archive--home-preview {
     background:
       radial-gradient(ellipse 78% 46% at 50% 100%, rgba(155, 188, 228, 0.26) 0%, transparent 66%),
@@ -9900,7 +9900,7 @@ main > .close::before {
    HOMEPAGE MOBILE FINAL CORRECTION — monumental IMBAS + warm close aurora
    Index hero + lower close/footer only; desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero .hero__stage {
     gap: 0.82rem;
     padding-top: clamp(0.72rem, 2.2vh, 1rem);
@@ -10012,7 +10012,7 @@ main > .close::before {
    HOMEPAGE MOBILE HERO BREATHING ROOM FINAL — CTA/proof/Why Imbas transition
    Index hero flow only; desktop unchanged (≤680px). IMBAS scale untouched.
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero:has(+ .proof-strip--landing) .hero__stage {
     padding-bottom: 0.88rem;
   }
@@ -10080,7 +10080,7 @@ main > .close::before {
    HOMEPAGE MOBILE HERO SPACING ONLY — vertical rhythm, no design changes
    Index hero stack only; desktop unchanged (≤680px). Margins/gaps/padding only.
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   /* 1. Eyebrow → IMBAS */
   main > .hero .hero__stage {
     gap: 1.78rem;
@@ -10148,7 +10148,7 @@ main > .close::before {
    HOMEPAGE MOBILE HERO FINAL MICRO-FIX — IMBAS scale + post-proof gap
    Index hero only; desktop unchanged (≤680px). Two tweaks only.
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero .hero__monolith-text {
     font-size: clamp(5.15rem, 25.2vw, 7.85rem);
   }
@@ -10164,7 +10164,7 @@ main > .close::before {
    HOMEPAGE MOBILE PROOF STRIP EDGE BLEND — soft band, no hard shelf
    Index proof-strip presentation only; hero/Why Imbas/desktop unchanged (≤680px).
    ============================================================= */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   main > .hero + .proof-strip.proof-strip--landing {
     position: relative;
     overflow: visible;

@@ -1164,7 +1164,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .wb-mode-btn {
     font-size: 0.875rem;
     padding: 0.5rem 0.65rem;
@@ -1188,7 +1188,7 @@
   display: none;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 901px) {
   .wb-shell__frame {
     max-width: min(1040px, 94vw);
   }
@@ -1584,13 +1584,13 @@
 }
 
 /* BYO console — hide mode readout on finished step if cramped */
-@media (max-width: 959px) {
+@media (max-width: 900px) {
   .wb-readout-rail--byo {
     display: none;
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 901px) {
   .wb-shell {
     padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
@@ -1624,7 +1624,7 @@
    WORKBENCH — Result score readout mobile stack (≤480px)
    ============================================================= */
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .wb-result-inner.wb-output-module .wb-output-module__head {
     padding-bottom: 0.28rem;
     margin-bottom: 0.32rem;
@@ -1893,7 +1893,7 @@
   margin: 0 0 var(--space-2);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .page--field-notes .fn-masthead {
     margin-bottom: var(--space-4);
   }
@@ -5407,7 +5407,7 @@
   color: var(--ink-dim);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
   .wb-funnel__grid {
     grid-template-columns: 1fr;
     gap: 0 0;
@@ -6217,7 +6217,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
   .wb-reader-v2__modes {
     grid-template-columns: 1fr;
   }
@@ -6361,7 +6361,7 @@
 }
 
 /* MOBILE PRODUCT UX — header flow, form density, suggest subordination, share + result polish */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   .wb-shell--reader-v2 .wb-shell__frame > div:first-child {
     margin-bottom: 4px !important;
   }
