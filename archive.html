@@ -44,35 +44,35 @@
     .page--archive .arc-ledger__head span:nth-child(4) {
       font-size: 0.6875rem;
       letter-spacing: 0.05em;
-      color: rgba(var(--ember-rgb), 0.42);
+      color: var(--ink-secondary);
     }
 
     .page--archive .arc-ledger__head span:nth-child(3),
     .page--archive .arc-ledger__gap-col {
       font-size: 0.75rem;
-      color: rgba(var(--ember-rgb), 0.88);
+      color: var(--ink-secondary);
     }
 
     .page--archive .arc-record__date,
     .page--archive .arc-record__type {
       font-size: 0.6875rem;
       letter-spacing: 0.03em;
-      color: rgba(180, 192, 210, 0.48);
+      color: var(--ink-muted);
     }
 
     .page--archive .arc-record__type-tag {
-      color: rgba(180, 192, 210, 0.42);
+      color: var(--ink-muted);
     }
 
     .page--archive .arc-record__id {
       font-size: 0.6875rem;
       letter-spacing: 0.05em;
-      color: rgba(180, 192, 210, 0.55);
+      color: var(--ink-secondary);
     }
 
     .page--archive .arc-record--hypothesis .arc-record__id,
     .page--archive .arc-record--lead .arc-record__id {
-      color: rgba(var(--ember-rgb), 0.62);
+      color: var(--ember-bright);
     }
 
     .page--archive .arc-record__title {
@@ -93,11 +93,11 @@
     .page--archive .arc-record--hypothesis .arc-record__gap,
     .page--archive .arc-record--lead .arc-record__gap {
       font-size: 1.0625rem;
-      color: var(--ember-soft);
+      color: var(--ember-bright);
     }
 
     .page--archive .arc-record--control .arc-record__gap {
-      color: rgba(212, 207, 194, 0.86);
+      color: var(--ink-secondary);
     }
 
     .page--archive .arc-record--public .arc-record__link {
@@ -134,7 +134,7 @@
     }
 
     .page--archive .arc-record--public + .arc-record--public .arc-record__link {
-      box-shadow: inset 0 1px 0 rgba(180, 192, 210, 0.06);
+      box-shadow: inset 0 1px 0 var(--line-faint);
     }
 
     /* Pass B — continuation visitor copy */
@@ -145,7 +145,7 @@
       font-style: normal;
       letter-spacing: -0.005em;
       text-transform: none;
-      color: rgba(212, 207, 194, 0.8);
+      color: var(--ink-secondary);
       line-height: 1.38;
     }
 
@@ -158,7 +158,7 @@
       font-style: normal;
       letter-spacing: 0.02em;
       text-transform: none;
-      color: rgba(180, 192, 210, 0.5);
+      color: var(--ink-secondary);
       line-height: 1.4;
     }
 
@@ -190,11 +190,11 @@
     }
 
     .page--archive .arc-cta a.arc-cta__primary {
-      background: var(--ember-deep);
-      border: 1px solid rgba(var(--ember-rgb), 0.72);
+      background: var(--ember);
+      border: 1px solid var(--ember);
       border-radius: 2px;
-      border-bottom: 1px solid rgba(var(--ember-rgb), 0.72);
-      color: #F2E8DC;
+      border-bottom: 1px solid var(--ember);
+      color: var(--bg-deep);
       font-family: var(--font-mono);
       font-size: max(0.74rem, var(--mono-min));
       font-weight: 500;
@@ -211,14 +211,14 @@
     }
 
     .page--archive .arc-cta a.arc-cta__primary:hover {
-      background: #B84E28;
-      border-color: rgba(var(--ember-rgb), 0.82);
-      color: #F2E8DC;
+      background: var(--ember-soft);
+      border-color: var(--ember-soft);
+      color: var(--bg-deep);
       box-shadow: 0 3px 14px rgba(var(--ember-rgb), 0.26);
     }
 
     .page--archive .arc-cta a.arc-cta__primary .arrow {
-      color: #F2E8DC;
+      color: var(--bg-deep);
     }
 
     .page--archive .arc-cta a.hero__secondary {
@@ -228,12 +228,12 @@
     }
 
     .page--archive .arc-cta a:not(.arc-cta__primary):not(.hero__secondary) {
-      color: rgba(180, 192, 210, 0.72);
-      border-bottom-color: rgba(180, 192, 210, 0.28);
+      color: var(--ink-secondary);
+      border-bottom-color: var(--ink-muted);
     }
 
     .page--archive .arc-cta a:not(.arc-cta__primary):not(.hero__secondary):hover {
-      color: rgba(212, 207, 194, 0.88);
+      color: var(--ink-soft);
       border-bottom-color: rgba(var(--ember-rgb), 0.45);
     }
 
