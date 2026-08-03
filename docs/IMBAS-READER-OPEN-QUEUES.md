@@ -453,12 +453,13 @@ choosing a replacement token.
 
 ## CHECK REGISTER QUEUE
 
-Recorded 2026-07-27. Pass 2B-A found these three while deciding whether the Check Register
+Recorded 2026-07-27. Pass 2B-A found items 1 to 3 while deciding whether the Check Register
 could carry a probe-side anchor. It fixed none of them. Each was verified against
-`reader-checks.js` at the time of writing.
+`reader-checks.js` at the time of writing. Item 4 was added 2026-08-02 by the
+anchor-integrity remediation that closed items 1 and 2.
 
 **1. A span's `artifact_id` is stamped from a parameter, not derived from the text it
-resolved against.**
+resolved against.** — **CLOSED, anchor-integrity remediation, 2026-08-02.**
 `resolveSpan` (`reader-checks.js:142`) takes `artifactText` and `artifactId` as two
 independent arguments and writes `artifact_id: artifactId` into the span it returns
 (`157`). It never checks that the id names the text. `assembleComparativeCheck` (`186`)
@@ -466,12 +467,51 @@ takes the same two as separate parameters, so a caller can pair one artifact's i
 another artifact's text and the span records the wrong id as fact. The offsets are
 verified. The attribution is asserted.
 
-**2. `spanResolves` never reads `artifact_id`.**
+*How it closed.* The two arguments became one. Every entry point now takes an artifact
+MAP — `normalizeArtifactMap` in `reader-checks.js`, keyed by id, each entry
+`{id, role, body}` — and looks the body up by the id the span names. Identity and text
+arrive together or not at all, so the pairing the item describes is no longer
+representable rather than merely detected. `resolveSpan(artifacts, artifactId, quote)`
+stamps the located artifact's own id; `quotedAnchor` in `reader-result.js` takes the
+artifact object and ignores any `artifact_id` a caller puts on the span. The signature
+change is deliberately incompatible with the old one so a missed call site throws
+instead of returning null — silence is this system's normal failure mode and would have
+hidden the miss.
+
+**2. `spanResolves` never reads `artifact_id`.** — **CLOSED, anchor-integrity
+remediation, 2026-08-02.**
 `spanResolves` (`reader-checks.js:384`) checks the offset arithmetic and re-slices
 `artifactText` to confirm the quote is verbatim. It does not consult `span.artifact_id`.
 The validator therefore establishes that the quote occurs in the text handed to it, not
 that the quote occurs in the artifact the span names. Taken with item 1, a span carrying
 the wrong artifact id passes validation and the check built on it enters the register.
+
+*How it closed.* `spanResolves` is gone. `resolveSpanAgainst(span, artifacts, {requiredRole,
+quote})` is the single door every span passes through, and it agrees or rejects on all of
+identity, body, both offsets, the quoted text, and the artifact's role where the caller
+states one. Rejections are enumerated (`SPAN_REJECTION`) so a test can assert the CAUSE —
+a rejection for the wrong reason is a false pass. Evaluating a span against a different
+artifact is a rejection, not a fallback, and that holds where both artifacts carry
+identical text at identical offsets: the span's claim is about provenance, and matching
+text cannot establish provenance.
+
+*Two further boundaries were patched in the same pass, because fixing the resolver alone
+leaves the layers downstream still assuming upstream correctness.* `validateReviewRecord`
+(`reader-review-record.js`) now re-proves every span in the record against the artifact map
+the record itself carries — the Review Record is an exported hashed work product and is its
+own trust boundary — reading both anchor shapes, Check Register spans and canonical anchors
+where the quote rides on the parent. And `buildCanonicalPaired` (`api/read-paired.js`) takes
+`{open, targeted}` by name instead of by position; under the old positional pair a swap of
+the two bodies was systematic, undetectable downstream, and would have hashed and exported
+as a valid work product.
+
+*What proves it.* `test/anchor-artifact-identity.test.mjs` (24 tests) and
+`test/anchor-artifact-identity-mutations.test.mjs` (5 source mutations, each required to
+fail the test named for it). The 680 committed anchors across the 32 QA snapshots
+revalidate clean under both anchor shapes; that is **evidence of non-regression, not
+evidence of correctness**, because the corpus is one hand-authored pair rendered 26 ways
+whose two sides share no sentence and is structurally incapable of exhibiting this defect.
+See item 4.
 
 **3. What blocks a probe-side anchor is a prompt change, not a signature change.**
 `assembleComparativeCheck` resolves both ends against a single `artifactText`
@@ -488,6 +528,47 @@ register cannot consume a valid anchor shape: `PROBE_SIDE_ANCHOR_UNSUPPORTED`
 (`reader-result.js:342`). The string is deliberately specific. A generic label such as
 "below threshold" would merge two opposite conclusions — the findings are weak, and the
 register cannot read a valid anchor — and no later pass could separate them again.
+
+**4. The committed paired fixture corpus cannot exercise cross-artifact resolution.**
+Recorded 2026-08-02 by the anchor-integrity remediation, which found the gap while
+proving its own work and did not fill it, because building a new corpus fixture was
+outside that lane.
+
+All 26 committed paired snapshots carry one hand-authored answer pair rendered 26 ways.
+Hashing the two bodies per record returns a single distinct `(open, targeted)`
+combination across all 26 files, and that pair's two sides share zero sentences of 25
+characters or more. A clean sweep over the corpus therefore measures the fixture, not the
+system: it can show a change broke nothing and can never show that artifact identity is
+doing any work. The remediation's correctness rests entirely on synthetic adversarial
+tests and a mutation set, with the corpus result reported only as non-regression.
+
+What would close it: at least one committed paired fixture whose two roles carry
+overlapping text — ideally a shared opening followed by divergent tails, so both roles
+hold the same quotable sentence at the same offsets. Then the corpus itself would fail
+if the resolver ever stopped consulting `artifact_id`. Whoever takes it should expect to
+regenerate a board scenario and its baseline images, which is why it was not folded into
+a lane authorized to make no visual changes. The synthetic form of the fixture already
+exists as the adversarial pair at the top of `test/anchor-artifact-identity.test.mjs`
+and can be lifted from there.
+
+**5. AT-2 is worded so that an identity-blind implementation passes it.**
+Recorded 2026-08-02 by the anchor-integrity remediation, following the audit's §8.2. The
+remediation did not act on it, because whether this lands as a reworded AT-2 or a new AT
+is a schema-governance decision and the schema is frozen.
+
+`docs/REVIEW-GRAPH-SCHEMA.md:281` states AT-2 as "proposition spans always resolve to
+exact substrings." It does not say *of the artifact named by their `artifact_id`*. The
+implementation that shipped from 2026-07 to 2026-08-02 satisfied the sentence as written
+while resolving spans against whatever text it was handed. The code no longer does that,
+and `test/anchor-artifact-identity.test.mjs` states the binding as an executable
+acceptance test — but the schema still permits the drift, so the next implementation is
+free to reintroduce it and still claim conformance.
+
+Whoever rules on it should note that the wording has to cover both anchor shapes: the
+Check Register span, where the quote rides on the span, and the canonical anchor, where
+the quote rides on the parent and the span carries only offsets and an id. A rule written
+for one shape silently exempts the other — that is how the audit's own first pass came to
+read 384 anchors, skip the entire paired surface, and report a clean result.
 
 ## PAIRED SURFACE QUEUE
 
