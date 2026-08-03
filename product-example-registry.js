@@ -98,6 +98,18 @@ export const FINDING_CLASS = Object.freeze({
 //   findingClass         FINDING_CLASS, above.
 //   eligibleForFirstLoad whether this example may be the first thing a visitor sees
 //                        with no interaction. Requires verificationDate.
+//   shortLabel           how a placement link names this example in running text, as
+//                        in "Read Case 005". Raw text, not HTML: the materializer
+//                        escapes it, so this field never carries an entity.
+//   title                the example's subject line, where a placement prints one.
+//                        Also raw text.
+//
+// shortLabel and title are here because a link's visible words are as much a fossil as
+// its href. Migrating the destination and leaving "Read Case 005" hard-coded next to it
+// would move the flagship to a link that still says the old example's name. Both are
+// placement display copy and both are generated. What stays static and case-owned is the
+// canonical finding: the archive's scores, prompts, dates and ledger rows are the case's
+// record, not this file's, and the materializer does not touch them.
 export const EXAMPLES = Object.freeze({
   // The flagship. Founder ruling: Montana employment replaces Case 005 as the
   // site-wide primary example. Historical prominence creates no entitlement to
@@ -131,6 +143,12 @@ export const EXAMPLES = Object.freeze({
     verificationDate: "2026-07-26",
     findingClass: FINDING_CLASS.READER_RUN,
     eligibleForFirstLoad: true,
+    // Both taken from the packet's own vetted context line rather than written here.
+    // No placement renders either one today, because the two placements that resolve to
+    // this example have no shipped consumer outside the reserved files. They are stated
+    // anyway so that the flagship's one blocker is the missing route and nothing else.
+    shortLabel: "the Montana example",
+    title: "Montana employment law",
   }),
 
   // Supporting, guided only. The disposition is REWRITE, and the rewritten line is
@@ -154,6 +172,8 @@ export const EXAMPLES = Object.freeze({
     verificationDate: null,
     findingClass: FINDING_CLASS.HYPOTHESIS,
     eligibleForFirstLoad: false,
+    shortLabel: "Case 005",
+    title: "Buybacks & SEC Rule 10b-18",
   }),
 
   // Supporting, guided. KEEP with no rewrite. The copy is the existing shipped line,
@@ -168,6 +188,8 @@ export const EXAMPLES = Object.freeze({
     verificationDate: null,
     findingClass: FINDING_CLASS.HYPOTHESIS,
     eligibleForFirstLoad: false,
+    shortLabel: "Case 021",
+    title: "PFAS & DuPont / 3M",
   }),
 
   // REMOVE from all product surfaces. The case page stays as an archive record and is
@@ -182,6 +204,8 @@ export const EXAMPLES = Object.freeze({
     verificationDate: null,
     findingClass: FINDING_CLASS.HYPOTHESIS,
     eligibleForFirstLoad: false,
+    shortLabel: "Case 018",
+    title: "FDA review & PDUFA industry fees",
   }),
 
   // MOVE DEEPER: archive, institutional and public-interest pages only, off the
@@ -195,6 +219,8 @@ export const EXAMPLES = Object.freeze({
     verificationDate: null,
     findingClass: FINDING_CLASS.HYPOTHESIS,
     eligibleForFirstLoad: false,
+    shortLabel: "Case 003",
+    title: "Palantir & ICE contracts",
   }),
 
   // MOVE DEEPER, and the control. Two guards rather than one, because this is the
@@ -209,6 +235,8 @@ export const EXAMPLES = Object.freeze({
     verificationDate: null,
     findingClass: FINDING_CLASS.CONTROL,
     eligibleForFirstLoad: false,
+    shortLabel: "Case 013",
+    title: "OxyContin & the Sacklers",
   }),
 });
 
@@ -271,14 +299,18 @@ export const PLACEMENTS = Object.freeze({
   // archive's featured block instead: a durable destination whose contents follow
   // archiveFeatured above.
   //
-  // The fragment is deliberate. The footer already carries a Case Archive link to
-  // /archive.html, and a second bare /archive.html two rows below it would be a
-  // duplicate destination with a different label. The featured block is a distinct
-  // place on that page and it is what this slot is for.
+  // The fragment is an adopted route decision, not an accident of implementation. The
+  // footer already carries a Case Archive link to /archive.html, and a second bare
+  // /archive.html two rows below it would be a duplicate destination under a different
+  // label. The featured block is a distinct place on that page, it is what this slot is
+  // for, and it follows archiveFeatured above rather than naming a case here.
   defaultPublicExample: Object.freeze({
     role: null,
     resolves: PLACEMENT_RESOLUTION.ROUTE,
     route: "/archive.html#archive-featured-title",
+    // The visible words. Owned here for the same reason the route is: a label naming a
+    // case would re-fossilize the slot the moment the featured case changed.
+    label: "Featured case",
   }),
 });
 
@@ -319,16 +351,23 @@ export const PHASE_2_EXCEPTIONS = Object.freeze([
   }),
 ]);
 
-// ── Resolution ───────────────────────────────────────────────────────────────
+// ── Resolution ─────────────────────────────────────────────────────────────────────────
+//
+// One implementation, reached two ways. The bare exports below read the shipped tables
+// and are what every consumer calls. makeRegistry() takes substitute tables and returns
+// the same functions over them, which is what lets a test prove that changing the
+// configuration changes the generated pages: the test swaps a placement, regenerates, and
+// reads the result out of the same resolver production uses. Two copies of this logic
+// would let the proof pass while the real path stayed broken.
 
-export function getExample(exampleId) {
-  return Object.prototype.hasOwnProperty.call(EXAMPLES, exampleId) ? EXAMPLES[exampleId] : null;
+function getIn(examples, exampleId) {
+  return Object.prototype.hasOwnProperty.call(examples, exampleId) ? examples[exampleId] : null;
 }
 
 // The examples a placement shows, in display order. A route placement shows none.
-export function resolvePlacement(placementName) {
-  const placement = Object.prototype.hasOwnProperty.call(PLACEMENTS, placementName)
-    ? PLACEMENTS[placementName]
+function resolveIn(placements, placementName) {
+  const placement = Object.prototype.hasOwnProperty.call(placements, placementName)
+    ? placements[placementName]
     : null;
   if (!placement) return null;
   if (placement.resolves === PLACEMENT_RESOLUTION.EXAMPLE) {
@@ -340,19 +379,65 @@ export function resolvePlacement(placementName) {
   return { placement, exampleIds: [], route: placement.route };
 }
 
+// The visible words a placement owns directly, rather than through its example. Only
+// defaultPublicExample has any: it points at a destination, so no example supplies them.
+function labelIn(placements, placementName) {
+  const placement = Object.prototype.hasOwnProperty.call(placements, placementName)
+    ? placements[placementName]
+    : null;
+  return placement && typeof placement.label === "string" ? placement.label : null;
+}
+
 // The URL a placement links to, or null where it has none. The flagship returns null
 // today, and that is the Inspection URL dependency rather than a defect here.
-export function placementRoute(placementName) {
-  const resolved = resolvePlacement(placementName);
+function routeIn(examples, placements, placementName) {
+  const resolved = resolveIn(placements, placementName);
   if (!resolved) return null;
   if (resolved.route) return resolved.route;
-  const first = getExample(resolved.exampleIds[0]);
+  const first = getIn(examples, resolved.exampleIds[0]);
   return first && first.routes.length ? first.routes[0] : null;
 }
 
-// Every registered example that owns the given route.
-export function examplesForRoute(route) {
-  return Object.entries(EXAMPLES)
-    .filter(([, example]) => example.routes.includes(route))
-    .map(([id]) => id);
+// Why a placement cannot be rendered as a link today, or null where it can be.
+//
+// This is the Montana Inspection URL dependency expressed as a function rather than as a
+// note. Two placements resolve to the flagship, the flagship has no public URL, and so
+// neither can produce a link no matter how the markup is written. Saying so here means a
+// test can assert the exact set, and that set shrinks to nothing on the day the URL
+// lands — which is how the lane finds out it is done.
+function blockerIn(examples, placements, placementName) {
+  const resolved = resolveIn(placements, placementName);
+  if (!resolved) return "no such placement";
+  if (resolved.route) return null;
+  const firstId = resolved.exampleIds[0];
+  const first = getIn(examples, firstId);
+  if (!first) return `resolves to unregistered example "${firstId}"`;
+  if (!first.routes.length) return `resolves to "${firstId}", which has no public URL`;
+  return null;
 }
+
+// A registry over the given tables. Defaults to the shipped ones.
+export function makeRegistry({ examples = EXAMPLES, placements = PLACEMENTS } = {}) {
+  return {
+    EXAMPLES: examples,
+    PLACEMENTS: placements,
+    getExample: (id) => getIn(examples, id),
+    resolvePlacement: (name) => resolveIn(placements, name),
+    placementLabel: (name) => labelIn(placements, name),
+    placementRoute: (name) => routeIn(examples, placements, name),
+    placementLinkBlocker: (name) => blockerIn(examples, placements, name),
+    examplesForRoute: (route) =>
+      Object.entries(examples)
+        .filter(([, example]) => example.routes.includes(route))
+        .map(([id]) => id),
+  };
+}
+
+const SHIPPED = makeRegistry();
+
+export const getExample = SHIPPED.getExample;
+export const resolvePlacement = SHIPPED.resolvePlacement;
+export const placementLabel = SHIPPED.placementLabel;
+export const placementRoute = SHIPPED.placementRoute;
+export const placementLinkBlocker = SHIPPED.placementLinkBlocker;
+export const examplesForRoute = SHIPPED.examplesForRoute;
