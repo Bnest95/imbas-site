@@ -50,7 +50,11 @@ import {
   quotedAnchor,
   buildFinding,
 } from "../reader-result.js";
-import { buildReviewRecord, validateReviewRecord } from "../reader-review-record.js";
+import {
+  buildReviewRecord,
+  validateReviewRecord,
+  REVIEW_GRAPH_SCHEMA_VERSION,
+} from "../reader-review-record.js";
 import { buildCanonicalPaired, parsePairedMeasurement } from "../api/read-paired.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -605,7 +609,12 @@ test("G: the audit's headline Review Record fixture is rejected", () => {
       resolution_evidence: [],
       inspector: { model: "m", model_version: "m", prompt_version: "p" },
       versions: {
-        schema: "review-graph.v0.3.1",
+        // Bound to the constant, not to a literal. This fixture must be rejected for
+        // its ANCHOR defect; pinning a schema string means a later version bump makes
+        // it fail the version check first and the anchor assertion below stops being
+        // exercised — a rejection for the wrong reason, which this file calls a false
+        // pass. The other three are unchanged by that bump and stay literal.
+        schema: REVIEW_GRAPH_SCHEMA_VERSION,
         canonicalization: "review-record.c14n.v1",
         record: "review-record.v2",
         check_model: "check-register.v1",
