@@ -51,7 +51,8 @@
   --line-strong:    rgba(242, 232, 220, 0.24);
   --line-luminous:  rgba(252, 248, 236, 0.38);
 
-  /* Ember — saturated signal; stronger presence against cool panels */
+  /* Ember — action and consequence only. Never body text, never two accented
+     words in one heading, never a large fill. */
   --ember:          #DE6F38;
   --ember-deep:     #C85830;
   --ember-soft:     #F08F58;
