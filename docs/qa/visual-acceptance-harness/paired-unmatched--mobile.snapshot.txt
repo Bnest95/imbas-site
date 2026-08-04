@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 8588
+scroll_offset: 8592
 timezone: UTC
 url: /workbench.html
 viewport: 375x812

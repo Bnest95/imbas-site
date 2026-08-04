@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: ?share=Ab3xQ7zK9mNpR2sTuV4w
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 23
+scroll_offset: 24
 timezone: UTC
 url: /inspection.html
 viewport: 1440x900
