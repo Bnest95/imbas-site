@@ -26,8 +26,24 @@ const OG_IMAGE_PATH = "/og-image.png";
 // (design §7), and after 2B-C neither does the record behind it.
 const OG_SINGLE_DESC =
   "Unlisted · Unreviewed. An Imbas Reader inspection of one AI answer — candidate gaps flagged, unvalidated. Discovery, not evidence.";
-const OG_PAIRED_DESC =
-  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. Machine observations, unvalidated. Discovery, not evidence.";
+// The paired card states how the pair was run, because an unfurl is where a shared
+// result is read fastest and most carelessly. Whether the person reported the run
+// conditions — and that Imbas did not check what they reported — belongs in the same
+// breath as the result, not one click away.
+//
+// Two variants rather than one string plus an appended clause: the description is
+// capped at 200 characters and truncation would cut a guard sentence mid-word. Each
+// variant is composed to fit whole. "Unlisted · Unreviewed", "Unvalidated" and
+// "Discovery, not evidence" survive in both.
+//
+// Neither variant reports the DERIVED matched state. The card says what was declared,
+// or that nothing was, and stops.
+const OG_PAIRED_DESC_DECLARED =
+  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. How the pair was run: declared, not verified. Unvalidated. Discovery, not evidence.";
+// Nothing reported is not a failed run and not a negative report. The wording says only
+// that the record holds no declaration.
+const OG_PAIRED_DESC_NOT_DECLARED =
+  "Unlisted · Unreviewed. An Imbas Reader two-question test — what a second AI answer surfaced that the first did not. How the pair was run: not declared. Unvalidated. Discovery, not evidence.";
 // Pre-P4 rows were published under a format that rated how complete an answer was.
 // That rating is retired, so the unfurl no longer leads with it and no longer glosses
 // it. The row itself is untouched: a published share is a dated record of what was
@@ -84,7 +100,19 @@ export function buildTitle(record) {
 export function buildDescription(record) {
   const mode = str(record.mode);
   if (mode === "single") return truncate(OG_SINGLE_DESC, 200);
-  if (mode === "paired") return truncate(OG_PAIRED_DESC, 200);
+  if (mode === "paired") {
+    // A pair can carry several declarations — an original and the corrections that came
+    // after it. The card does not count them and does not summarize the newest one: it
+    // says only whether the record holds any, because an unfurl is read in a glance and
+    // "declared, not verified" is the fact that has to survive the glance.
+    //
+    // Read off the IDENTITIES, which the share row always holds, rather than off the
+    // resolved declarations, which a failed lookup leaves empty. A card that flipped to
+    // "not declared" because a second read timed out would assert something false about
+    // the person's run, on the surface that gets screenshotted.
+    const ids = Array.isArray(record.declaration_ids) ? record.declaration_ids : [];
+    return truncate(ids.length ? OG_PAIRED_DESC_DECLARED : OG_PAIRED_DESC_NOT_DECLARED, 200);
+  }
   const leftOut = Array.isArray(record.what_was_left_out)
     ? record.what_was_left_out.filter(Boolean)
     : [];

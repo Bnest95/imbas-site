@@ -195,7 +195,8 @@
   color: rgba(200, 168, 150, 0.85);
 }
 
-.insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__section-title {
+.insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__section-title,
+.insp-receipt__section[data-state="NOT_DECLARED"] .insp-receipt__section-title {
   color: rgba(185, 172, 158, 0.62);
 }
 
@@ -207,7 +208,8 @@
   color: rgba(200, 186, 170, 0.88);
 }
 
-.insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__note {
+.insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__note,
+.insp-receipt__section[data-state="NOT_DECLARED"] .insp-receipt__note {
   color: rgba(175, 162, 148, 0.78);
 }
 

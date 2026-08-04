@@ -322,12 +322,101 @@ function pairedPanelHtml(record) {
     </section>`;
 }
 
+// What the person said about how they ran the pair. It renders OUTSIDE the measurement
+// panel above, in the capture record's own treatment, because it is not a measurement:
+// the panel is what Imbas observed, and this is what it was told.
+//
+// The status label leads, so the first thing read about these values is that nobody
+// checked them. The label arrives on the record rather than being written here — one
+// mapping owns the wording, and this page cannot drift from it.
+//
+// A pair can carry SEVERAL declarations. The workbench asks these questions as the
+// person gets further in, and someone who comes back a week later can correct what they
+// said. So this renders a history, oldest first, and a correction is shown next to what
+// it corrects rather than in place of it — the earlier statement is a fact about what
+// the person reported at the time, and replacing it would erase that fact.
+//
+// The list is FROZEN at the moment the link was minted. A declaration made after that
+// is not here, and belongs to the pair rather than to this record.
+//
+// The DERIVED conditions state is not rendered here and is not on the record. Whether
+// the conditions matched is computed in the workbench from the person's own capture and
+// stays there; a share link carries no such conclusion, so this section says what was
+// declared and stops.
+function declarationRows(d) {
+  return [
+    ["Same AI for both answers", d.same_model],
+    ["Model, as reported", d.model_version],
+    ["Either answer edited", d.edits],
+    ["Declared at", d.declared_at_client],
+    ["Received at", d.received_at_server],
+    ["Stage", d.stage],
+    ["Declared by", d.actor],
+    // Identity is shown rather than kept in the machine layer, because the row below it
+    // points at one. "Corrects decl.d.…" is unreadable unless a reader can see which
+    // entry on the page carries that name.
+    ["Declaration ID", d.declaration_id],
+    ["Corrects", d.supersedes],
+  ];
+}
+
+function declarationEntryHtml(d, index, total) {
+  const heading = total > 1 ? `Declaration ${index + 1} of ${total}` : "";
+  const corrects = d.supersedes && d.supersedes !== "NO_SUPERSESSION";
+  return `
+    <article class="insp-receipt__section" data-state="${escapeHtml(d.status || "")}">
+      ${heading ? `<p class="insp-receipt__item-label">${escapeHtml(heading)}${corrects ? " · correction" : ""}</p>` : ""}
+      <ul class="insp-receipt__items">${declarationRows(d)
+        .map(
+          ([label, value]) =>
+            `<li class="insp-receipt__item"><span class="insp-receipt__item-label">${escapeHtml(label)}</span><p class="insp-receipt__statement">${escapeHtml(value || "")}</p></li>`,
+        )
+        .join("")}</ul>
+    </article>`;
+}
+
+function declarationHtml(record) {
+  if (!record || record.mode !== "paired") return "";
+  const state = record.declaration_state || "";
+  if (!state) return "";
+  const list = Array.isArray(record.run_declarations) ? record.run_declarations : [];
+  const label = list.length ? list[0].status_label || "" : "";
+  let note = "";
+  let body = "";
+  if (state === "NO_DECLARATIONS") {
+    note = "No declaration was recorded with this run. That means nothing was reported, not that anything failed.";
+  } else if (list.length) {
+    note =
+      list.length > 1
+        ? "These values were reported by the person who ran the pair, oldest first. Imbas did not verify them, and a later entry corrects an earlier one rather than replacing it."
+        : "These values were reported by the person who ran the pair. Imbas did not verify them.";
+    body = list.map((d, i) => declarationEntryHtml(d, i, list.length)).join("");
+  } else {
+    // Identities on the record, nothing read back. Not the same as nothing declared, and
+    // the page must not let a failed read speak for the person.
+    note =
+      "This record holds a declaration, and it could not be read right now. That is a fault here, not a statement about how the pair was run.";
+  }
+  const heading = state === "NO_DECLARATIONS" || !label ? "How this pair was run" : `How this pair was run — ${label}`;
+  return `
+    <section class="insp-receipt insp-receipt--declaration" aria-label="How this pair was run">
+      <div class="insp-receipt__sections">
+        <article class="insp-receipt__section" data-state="${escapeHtml(state)}">
+          <h3 class="insp-receipt__section-title">${escapeHtml(heading)}</h3>
+          <p class="insp-receipt__note">${escapeHtml(note)}</p>
+        </article>
+        ${body}
+      </div>
+    </section>`;
+}
+
 function renderPaired(root, record) {
   root.innerHTML =
     mastHtml("paired") +
     anchorHtml(record) +
     questionHtml(record) +
     pairedPanelHtml(record) +
+    declarationHtml(record) +
     receiptHtml(record) +
     actionsHtml(record) +
     reportSeamHtml();

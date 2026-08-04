@@ -9,7 +9,7 @@
 // record is assembled and hashed in the browser and downloaded as JSON.
 //
 // Implements the review-record.c14n.v1 canonicalization contract frozen in
-// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.1). That contract is DELIBERATELY DISTINCT
+// docs/REVIEW-GRAPH-SCHEMA.md (v0.3.3). That contract is DELIBERATELY DISTINCT
 // from reader-receipt.js's canonicalization_version 1.0: the receipt normalizes
 // string line endings, but c14n.v1 normalizes ONLY timestamps and hashes every
 // other string value verbatim (span offsets into Artifact.body depend on the
@@ -26,7 +26,13 @@
 // The schema PairRun shape is single-sourced in reader-paired.js (run-the-pair
 // lane); this module embeds it when a paired capture is exported. Pure-JS import,
 // no cycle (reader-paired.js imports nothing from here) and already in the bundle.
-import { buildPairRun, PAIR_INITIATOR } from "./reader-paired.js";
+import {
+  buildPairRun,
+  orderDeclarations,
+  PAIR_INITIATOR,
+  DECLARATION_VERSION,
+  DECLARATION_VERSION_LEGACY,
+} from "./reader-paired.js";
 // Span resolution is single-sourced in reader-checks.js. This module re-runs it
 // against the record's OWN artifacts rather than trusting that construction did.
 import { normalizeArtifactMap, resolveSpanAgainst } from "./reader-checks.js";
@@ -35,7 +41,15 @@ import { normalizeArtifactMap, resolveSpanAgainst } from "./reader-checks.js";
 // c14n id names the canonicalization contract this module implements; the record
 // id versions the ReviewRecord envelope shape. Bump a c14n id only if the rules
 // below change, so a digest recorded under the old rules stays reproducible.
-export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.1";
+// v0.3.3 replaces PairRun.declaration (one object) with PairRun.declarations (an ordered
+// array). The declaration is not one mutable value per pair: the surface asks these
+// questions as the person gets further in, and a person who comes back and corrects
+// themselves has stated a NEW fact, not a better version of the old one. The record has
+// to be able to hold both. Because a PairRun's canonical form changes shape, every
+// paired digest computed under v0.3.2 differs from the one computed under v0.3.3 — that
+// turnover is intended and is proved in the tests. Single-mode records are untouched:
+// they carry no pair_runs, so nothing in their canonical form moved.
+export const REVIEW_GRAPH_SCHEMA_VERSION = "review-graph.v0.3.3";
 export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
 // v2 is additive over v1: contents.canonical_result carries the run's canonical
 // findings collection. Before it, the packet exported only the checks the Check
@@ -201,7 +215,7 @@ function normalizeStatus(s) {
   return RECORD_STATUSES.has(s) ? s : null;
 }
 
-// Assemble a ReviewRecord (schema v0.3.1) from an inspection result + client-held
+// Assemble a ReviewRecord (schema v0.3.3) from an inspection result + client-held
 // check states, with the integrity.digest left empty for buildReviewRecord to fill.
 //
 //   result      — the Reader read response: { receipt.open_run, checks (register) }
@@ -277,6 +291,11 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair
         original_artifact_id: "original_answer",
         targeted_artifact_id: "targeted_answer",
         capture: pair.capture,
+        // The person's own reports, carried beside the derived capture rather than
+        // folded into it (schema v0.3.3), oldest first. A pair with nothing declared
+        // carries an empty list — which says the record holds no declaration, not that
+        // the person declined to answer.
+        declarations: pair.declarations,
         // The shipped path IS the inspection follow-up; stamp it explicitly (never
         // inferred) and carry the hash the receipt already computed over the verbatim
         // probe, so the record is self-contained without recomputing async (schema v0.3.1).
@@ -449,7 +468,7 @@ function validateRecordSpans(c) {
   return { ok: true };
 }
 
-// Validate a record against the schema v0.3.1 shapes. Returns { ok, reason? }.
+// Validate a record against the schema v0.3.3 shapes. Returns { ok, reason? }.
 // Defense in depth for the export path and a fixture for the schema-conformance
 // tests; not a substitute for the register's own validators.
 export function validateReviewRecord(record) {
@@ -518,6 +537,82 @@ export function validateReviewRecord(record) {
     }
     if (cap.model_version_user_reported !== undefined && typeof cap.model_version_user_reported !== "string") {
       return { ok: false, reason: "pair_run.capture.model_version_user_reported must be a string when present" };
+    }
+    // v0.3.3 declarations: what the person reported, as a HISTORY. The array is required
+    // on every PairRun and may be empty — an empty list says the record holds no
+    // declaration for this pair, which is a different statement from a person who was
+    // asked and declined (that one is a recorded entry carrying NOT_DECLARED values).
+    //
+    // Every entry is validated in full. Nothing is dropped and nothing is defaulted: a
+    // record that quietly shortened someone's declaration history would read as complete
+    // while being wrong about the one thing this array exists to hold.
+    //
+    // Every field is checked as a non-empty string because each carries its own stated
+    // absence; an empty string here would be the blank the whole artifact exists to
+    // replace. Nothing about conditions_matched is checked against any of them: the
+    // derived state and the declarations are not required to agree, and a validator that
+    // made them agree would be deriving a conclusion from a disclosure.
+    const decs = pr.declarations;
+    if (!Array.isArray(decs)) return { ok: false, reason: "pair_run.declarations must be an array" };
+    const seenDeclarationIds = new Set();
+    for (const dec of decs) {
+      if (!dec || typeof dec !== "object") return { ok: false, reason: "pair_run.declarations entry must be an object" };
+      if (dec.status !== "DECLARED_NOT_VERIFIED" && dec.status !== "NOT_DECLARED") {
+        return { ok: false, reason: "pair_run.declarations[].status must be DECLARED_NOT_VERIFIED or NOT_DECLARED" };
+      }
+      for (const k of ["declaration_version", "declaration_id", "declaration_source", "status_label",
+                       "stage", "actor", "same_model", "model_version", "edits",
+                       "declared_at_client", "received_at_server", "supersedes"]) {
+        if (!str(dec[k])) return { ok: false, reason: `pair_run.declarations[].${k} required` };
+      }
+      // One identity, one entry. A repeated id would make the history unreadable: there
+      // would be no way to say which of two rows a correction pointed at.
+      if (seenDeclarationIds.has(dec.declaration_id)) {
+        return { ok: false, reason: `pair_run.declarations duplicate declaration_id: ${dec.declaration_id}` };
+      }
+      seenDeclarationIds.add(dec.declaration_id);
+      if (dec.supersedes === dec.declaration_id) {
+        return { ok: false, reason: "pair_run.declarations[].supersedes must not name its own declaration" };
+      }
+      // A version this build cannot account for is refused rather than read as the
+      // version in hand. Reading it anyway would mean interpreting fields under rules
+      // that were not the ones it was written by.
+      if (dec.declaration_version !== DECLARATION_VERSION && dec.declaration_version !== DECLARATION_VERSION_LEGACY) {
+        return { ok: false, reason: `pair_run.declarations[].declaration_version unrecognized: ${dec.declaration_version}` };
+      }
+    }
+    // A correction must name something the record actually contains. Supersession only
+    // ever points backward, so the target of any correction in this pair was already
+    // recorded when the correction was made and belongs in the same array.
+    const byId = new Map(decs.map((d) => [d.declaration_id, d]));
+    for (const dec of decs) {
+      if (dec.supersedes !== "NO_SUPERSESSION" && !seenDeclarationIds.has(dec.supersedes)) {
+        return { ok: false, reason: `pair_run.declarations[].supersedes names a declaration not in the record: ${dec.supersedes}` };
+      }
+    }
+    // No cycle, direct or indirect. Barring self-supersession is not enough: A→B→A is
+    // expressible without either declaration naming itself, and a loop has no oldest
+    // declaration, so there is no history to read — only a ring that reads as one.
+    for (const dec of decs) {
+      const seen = new Set([dec.declaration_id]);
+      let walk = dec.supersedes;
+      while (walk && walk !== "NO_SUPERSESSION") {
+        if (seen.has(walk)) {
+          return { ok: false, reason: `pair_run.declarations supersession cycle at ${dec.declaration_id}` };
+        }
+        seen.add(walk);
+        const parent = byId.get(walk);
+        walk = parent ? parent.supersedes : "NO_SUPERSESSION";
+      }
+    }
+    // The array is the canonical order, not an arbitrary one: server receipt time,
+    // tie-broken by declaration id. A record whose array disagreed with that rule would
+    // hand every reader a different history depending on whether they re-sorted.
+    const ordered = orderDeclarations(decs);
+    for (let i = 0; i < decs.length; i++) {
+      if (decs[i].declaration_id !== ordered[i].declaration_id) {
+        return { ok: false, reason: "pair_run.declarations must be in canonical order (server receipt time, then declaration_id)" };
+      }
     }
     // v0.3.1 run provenance: initiator is one of the three named values, the
     // targeted_prompt_hash is a 64-char lowercase-hex sha256, and the chip fields

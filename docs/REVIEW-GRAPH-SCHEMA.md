@@ -1,6 +1,83 @@
-REVIEW GRAPH — SCHEMA v0.3.1 (FROZEN)
-Status: FROZEN. v0.3.1 issued 2026-07-21 as a DELIBERATE VERSIONED CHANGE
-(not an erratum): PairRun gains run provenance so a Review Record is
+REVIEW GRAPH — SCHEMA v0.3.3 (FROZEN)
+Status: FROZEN. v0.3.3 issued 2026-08-02 as a DELIBERATE VERSIONED CHANGE
+(not an erratum): PairRun's singular `declaration` becomes `declarations`, an
+ordered array, because a pair collects declarations at more than one moment.
+One replaced field —
+- declarations: an ordered array of decl.2 declaration artifacts, oldest first.
+  Present on EVERY PairRun; an empty array states that the record holds none.
+  Declarations are APPEND-ONLY and one row equals one declaration event. The
+  product surface discloses these questions progressively rather than
+  front-loading provenance intake, so the same pair can be declared about at
+  submission, at inspection, at review, and on a returning visit — and a
+  correction is a DIFFERENT FACT from the original, not a better version of it.
+  Earlier declarations are never updated, never overwritten, and never deleted.
+  A correction points BACKWARD through `supersedes` at the declaration it
+  replaces. No forward `superseded_by` pointer is ever written onto the earlier
+  declaration, because writing one would mutate a record that already stands.
+  Current state is DERIVED from the history every time it is needed and is
+  never a second stored value. Where the log branches — two people correcting
+  the same declaration, or two originals nobody reconciled — there is no single
+  current declaration, and the branch conflict is preserved and surfaced rather
+  than resolved by picking the newest. Naming a winner would report a history
+  nobody recorded.
+  Event sequence is governed by SERVER receipt order, tie-broken deterministically
+  by declaration_id. Client timestamps remain declared evidence — what the person
+  says about when they declared — and never order the log, because a clock the
+  record cannot check cannot be allowed to reorder it.
+  Receipts and shares are IMMUTABLE DATED RECORDS and are not updated when a later
+  declaration arrives. Each states the declarations that existed when it was made.
+  A share stores declaration IDENTITIES fixed at mint, never a snapshot of their
+  content and never a pointer to "the latest": projecting a later declaration back
+  onto an earlier share would claim the person had made it at an earlier time.
+  Reading forward through the log from those identities finds any later correction;
+  the earlier record stays as issued. So does an exported Review Record — it is a
+  dated export of a history, not a live view of one.
+  Storage lives outside this schema, in the Reader Run Declarations table, owned
+  by the paired Inspection through the value-based join (Open Run ID, Targeted
+  Answer Hash). No declaration state is stored on the paired-analysis row: two
+  stores would be two answers to "what did this person say", and the analysis row
+  would be the one that looked authoritative while holding a snapshot.
+  decl.2 is the current declaration version. decl.1 is LEGACY: it is readable
+  through a named compatibility adapter and is never written.
+  Each declaration artifact carries:
+  {declaration_version, declaration_id, declaration_source, status, status_label,
+  stage, actor, same_model, model_version, edits, declared_at_client,
+  received_at_server, supersedes}. status is one of two stable machine tokens:
+  DECLARED_NOT_VERIFIED or NOT_DECLARED. status_label is the display copy for
+  that token, carried inside the artifact so import-free render surfaces
+  (reader-receipt.js, inspection.js) cannot invent their own wording.
+  declaration_source is pair_capture_client_declaration — the vocabulary
+  reader-result.js already defined for this input, which classifies the
+  artifact as REPORTED_CLIENT_DECLARATION and therefore bars it from the
+  matched-conditions register.
+  The declaration is evidence of what the person REPORTED. It is not evidence
+  that the conditions matched. It does not replace `capture`, which stays and
+  stays derived: capture.conditions_matched is a CONCLUSION drawn from the
+  answers, and capture flattens distinct reports (a "no", a "not sure", and a
+  question never answered all reach the same boolean). declaration is the
+  disclosure itself, lossless, and carries no conclusion. The two live in
+  separate objects on the PairRun for exactly that reason and no validator
+  makes them agree — a rule forcing agreement would be deriving a conclusion
+  from a disclosure.
+  Absence is stated, never inferred. No declaration → status NOT_DECLARED,
+  which is NOT a negative declaration and NEVER renders as "unmatched". A
+  partial declaration preserves the fields supplied and marks the rest
+  undeclared field by field. If the form captured no client-side declaration
+  time, declared_at_client is NOT_CAPTURED — never backfilled from
+  received_at_server. A stage the surface did not record is
+  STAGE_NOT_RECORDED and an actor it did not identify is ACTOR_NOT_IDENTIFIED;
+  neither may be backfilled from the request location, the route, the receipt
+  type, a server assumption, or a session identity that was never captured as
+  the declaring actor. A declaration that corrects nothing carries
+  NO_SUPERSESSION.
+  Distinct from the cfp.1 family (inspector_run_conditions,
+  condition_fingerprint), which covers the INSPECTOR call's sampling
+  parameters, model version, and prompt version. Different subject, different
+  names, never merged on a surface that renders both.
+v0.3.2 (2026-08-02) added the singular PairRun `declaration`, superseded within
+the day by the v0.3.3 array above. Records exported under v0.3.2 remain valid
+under their own declared versions.schema.
+v0.3.1 (2026-07-21) added PairRun run provenance so a Review Record is
 self-contained about how each pair was created. Four additive fields —
 - initiator: inspection_followup | user_chip | legacy_unknown. The shipped
   inspection follow-up write stamps inspection_followup; the user-chip lane
@@ -31,9 +108,14 @@ Binding: a chip selection may not, by itself, create a finding, behavior
 classification, DetectorEvent, or any evidence-record (ResolutionEvidence)
 entry — user_chip PairRuns therefore carry no gap estimate and no
 signal-pattern classification (the Option B ceiling).
-Records exported under v0.2.x and v0.3.0 remain valid under their own declared
-versions.schema; no retroactive migration or reinterpretation.
-Chain: v0.3.1 ← v0.3.0 (deflection rename; paired-mode marker convention) ←
+Records exported under v0.2.x, v0.3.0, v0.3.1 and v0.3.2 remain valid under
+their own declared versions.schema; no retroactive migration or
+reinterpretation. A record is a dated statement of what was known when it was
+minted, and a later declaration is never projected backward onto it — doing so
+would claim the person had made the later declaration at an earlier time.
+Chain: v0.3.3 ← v0.3.2 (PairRun declaration, singular) ←
+v0.3.1 (PairRun run provenance) ←
+v0.3.0 (deflection rename; paired-mode marker convention) ←
 v0.2.3 (AT-14 timestamp rule + c14n pinning) ← v0.2.2 (demonstration shapes)
 ← v0.2.1 (verification optional, per-family rules) ← v0.2 (four freeze-pass
 corrections) ← v0.1 (PROPOSED).
@@ -67,6 +149,43 @@ PairRun   // run-the-pair; mode = paired
 - original_artifact_id, targeted_artifact_id
 - capture: {same_model_claimed: bool, model_version_user_reported?,
             user_edits_disclosed: bool, conditions_matched: true|false|unverified}
+  // DERIVED. conditions_matched is a conclusion drawn from the answers, and the
+  // booleans flatten distinct reports onto one value. Never treat it as the
+  // person's words; `declaration` below holds those.
+- declarations   // v0.3.3 (replaces the v0.3.2 singular `declaration`); what the
+  // person REPORTED about how the pair was run, preserved as reported, as an
+  // ORDERED ARRAY oldest first. Present on EVERY PairRun (never omitted — an
+  // empty array states that the record holds no declaration, because "they did
+  // not say" is itself the record). Append-only: one element per declaration
+  // EVENT, earlier elements never rewritten. Ordering is by server receipt time,
+  // tie-broken by declaration_id; array position alone is not the history.
+  // Each element:
+  //   declaration_version   // decl.2 (decl.1 is legacy, read-only)
+  //   declaration_id        // stable identity, chosen before the record exists
+  //                         // so a client retry re-uses it instead of appending
+  //                         // a second event
+  //   declaration_source    // pair_capture_client_declaration
+  //   status                // DECLARED_NOT_VERIFIED | NOT_DECLARED
+  //   status_label          // display copy for status, carried in-artifact so
+  //                         // import-free renderers cannot reword it
+  //   stage                 // submission | inspection | review | returning_visit,
+  //                         // or STAGE_NOT_RECORDED. Supplied by the surface that
+  //                         // asked; NEVER inferred from route or request shape
+  //   actor                 // who declared, or ACTOR_NOT_IDENTIFIED. NEVER
+  //                         // inferred from session identity
+  //   same_model, model_version, edits   // the declared values, or NOT_DECLARED
+  //                         // field by field when a partial declaration arrives
+  //   declared_at_client    // ISO instant, or NOT_CAPTURED if the form captured
+  //                         // none — NEVER backfilled from received_at_server
+  //   received_at_server    // ISO instant the server received the declaration
+  //   supersedes            // declaration_id this one corrects, or NO_SUPERSESSION.
+  //                         // Backward only; both declarations must belong to the
+  //                         // same paired Inspection. No self-reference, no cycle
+  // The declaration is evidence of what was reported, NOT evidence that the
+  // conditions matched. It never appears in the same field, object, or rendered
+  // element as capture.conditions_matched in a way that could read as one, and
+  // no validator makes the two agree — including no validator that makes a
+  // declaration agree with the derived conditions, in either direction.
 - initiator: inspection_followup | user_chip | legacy_unknown   // v0.3.1;
   // how this pair was created. inspection_followup = the shipped follow-up
   // write; user_chip = a bank instruction the reader selected; legacy_unknown
@@ -210,6 +329,13 @@ ReviewRecord   // the export; "Review Packet"
   probe text of every pair without re-fetching the live probe. initiator (and,
   for user_chip, chip_id + instruction_version) travels in the same PairRun,
   so the record states how each pair was created without any external lookup.
+- self-containment (v0.3.3): each embedded PairRun also carries `declarations`,
+  so the record states everything the person reported about the run conditions,
+  in order, including the corrections — or states that they reported nothing —
+  without any external lookup, and carries the display label for each status
+  alongside the machine token. The array holds the declarations that existed when
+  the record was minted. It is a dated statement and is never updated afterward:
+  later declarations appear in later records, never retroactively in this one.
 - integrity:
     algorithm: sha256
     canonicalization: review-record.c14n.v1
@@ -350,3 +476,34 @@ AT-15 Pair provenance (v0.3.1): every PairRun carries initiator ∈
       selection alone creates no finding, behavior classification,
       DetectorEvent, or ResolutionEvidence entry. Records exported under an
       earlier versions.schema remain valid unchanged.
+AT-16 Declaration history (v0.3.3): every PairRun carries `declarations`, an
+      ARRAY (possibly empty — an empty array is the stated absence, and never
+      normalizes to an unmatched or negative reading).
+      Each element must satisfy all of:
+      - declaration_version is a recognized version (decl.2 current, decl.1
+        legacy and readable only through the named compatibility adapter);
+      - declaration_id is present, well-formed, and UNIQUE within the array;
+      - status ∈ {DECLARED_NOT_VERIFIED, NOT_DECLARED} and status_label is the
+        display copy for that status;
+      - declaration_source, same_model, model_version, edits and
+        declared_at_client are each non-empty (stated absence counts as stated:
+        NOT_DECLARED / NOT_CAPTURED are values, blanks are not);
+      - received_at_server is present, or explicitly absent under NOT_CAPTURED —
+        and declared_at_client is NEVER manufactured from it;
+      - stage is a defined stage or the explicit STAGE_NOT_RECORDED token, and
+        actor is present or carries ACTOR_NOT_IDENTIFIED. Neither is inferred.
+      Across the array:
+      - every `supersedes` reference resolves to a declaration in the SAME paired
+        Inspection (cross-Inspection supersession is invalid);
+      - no declaration supersedes itself;
+      - the supersession graph contains no cycle, direct or indirect;
+      - the canonical ordering is deterministic: server receipt time, tie-broken
+        by declaration_id. Client timestamps never order the log;
+      - concurrent branches — two declarations superseding the same parent — are
+        DETECTABLE and preserved. A validator may not collapse a branch into a
+        single current declaration, and no surface may silently name a winner.
+      Declaration and derivation remain separate objects with separate
+      vocabularies: no validator checks a declaration against
+      capture.conditions_matched, in either direction, because a rule making them
+      agree would derive a conclusion from a disclosure. Records exported under
+      an earlier versions.schema remain valid unchanged.

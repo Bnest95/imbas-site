@@ -233,7 +233,30 @@ export function buildSingleReceipt({
 // "paired_gap") is retained as a legacy datum because api/inspection-share.js reads
 // it off this envelope. Nothing current renders it, labels it, or derives a claim
 // from it; the paired surface states a count of surfaced findings instead.
-export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
+//
+// THE SAME DECISION THE CHIP VARIANT RECORDS BELOW GOVERNS HERE, and is written out
+// because this variant sits under both of its constraints — a client-side capture and
+// a hashed artifact — while carrying no reasoning of its own. The derived
+// conditions state (deriveConditionsMatched / pairConditionsUnmatched) is NOT stored
+// in this envelope. It depends on a paste-back capture the server never sees, and
+// this artifact is hashed, so freezing the derivation here could contradict the
+// conditions actually disclosed. It stays derived at render.
+//
+// run_declarations is a different thing and is deliberately allowed in. It carries
+// what the person DECLARED — the paste-back values, unjudged, under an explicit
+// status — and never what was concluded from them. A record of what was said stays
+// true whatever the conditions turn out to have been, so it is safe to freeze and
+// safe to hash. The distinction is the whole point: a declaration is evidence of
+// what the person reported, not evidence that the conditions matched. It is a
+// top-level sibling of paired_analysis, not a member of it, so a reader can never
+// take it for part of the machine's read.
+//
+// An ARRAY, and dated. The same pair collects declarations at different moments, and a
+// correction is a new fact rather than an edit to an old one, so what a receipt freezes
+// is the history AS OF the instant it was minted. A declaration made afterward produces
+// a later receipt; it never reaches back into this one, because saying it did would
+// claim the person had spoken earlier than they did.
+export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis, declarations }) {
   const pa = pairedAnalysis || {};
   const deltaItems = Array.isArray(pa.delta_items)
     ? pa.delta_items.map((d) => ({
@@ -263,6 +286,7 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
       paired_method_version: pa.paired_method_version || "",
       unvalidated: true,
     },
+    run_declarations: Array.isArray(declarations) ? declarations : [],
     boundary: RECEIPT_BOUNDARY,
     integrity: {
       algorithm: RECEIPT_HASH_ALGORITHM,
@@ -292,7 +316,11 @@ export function buildPairedReceipt({ generatedAt, openRun, pairedAnalysis }) {
 // receipt where it could contradict the conditions actually disclosed. The caller
 // computes content_hash from canonicalizeForHash(envelope) exactly as in
 // single/paired mode; canonicalization_version is identical.
-export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis }) {
+//
+// run_declarations does not fall under that decision, for the reason set out at
+// buildPairedReceipt above: it records what the person declared, not what was derived
+// from it, so it is safe to freeze and hash — as of this receipt's own date.
+export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declarations }) {
   const ca = chipAnalysis || {};
   const deltaItems = Array.isArray(ca.delta_items)
     ? ca.delta_items.map((d) => ({
@@ -320,6 +348,7 @@ export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis }) {
       paired_method_version: ca.paired_method_version || "",
       unvalidated: true,
     },
+    run_declarations: Array.isArray(declarations) ? declarations : [],
     boundary: RECEIPT_BOUNDARY,
     integrity: {
       algorithm: RECEIPT_HASH_ALGORITHM,
@@ -424,6 +453,55 @@ function openRunBodyLines(run) {
   return L;
 }
 
+const DECLARATION_HEADING = "—— HOW THIS PAIR WAS RUN (declared by the person, not verified) ——";
+
+// One declaration, rendered as what the person said and nothing more. The heading and
+// the status label carry the whole claim: these are declared values, and Imbas did not
+// verify them. Each field prints its own absence rather than being skipped, so a reader
+// can tell "they said no" from "they were never asked" — the distinction the derived
+// booleans elsewhere cannot express.
+//
+// The derived conditions state is deliberately absent from this section and from this
+// artifact (see buildPairedReceipt). Nothing here says whether the conditions matched.
+function oneDeclarationLines(d) {
+  return [
+    `Status: ${d.status_label || ""} (${d.status || ""})`,
+    `Same AI for both answers: ${d.same_model || ""}`,
+    `Model as reported: ${d.model_version || ""}`,
+    `Either answer edited: ${d.edits || ""}`,
+    `Declared at (client): ${d.declared_at_client || ""}`,
+    `Received at (server): ${d.received_at_server || ""}`,
+    `Declared at stage: ${d.stage || ""}`,
+    `Declared by: ${d.actor || ""}`,
+    `Declaration ID: ${d.declaration_id || ""}`,
+    `Corrects declaration: ${d.supersedes || ""}`,
+    `Declaration schema: ${d.declaration_version || ""}`,
+    `Declaration source: ${d.declaration_source || ""}`,
+  ];
+}
+
+// The declaration history, in the order the server received it. Every declaration is
+// printed in full, including ones a later correction replaced — the earlier statement is
+// not a mistake to be tidied away, it is what the person said at that moment, and the
+// record's job is to hold both. Which one corrects which is stated by each entry's own
+// "Corrects declaration" line, not implied by where it sits in the list.
+//
+// A receipt is a DATED record. This section states the history as it stood when the
+// receipt was minted; a declaration added afterward produces a later receipt and never
+// alters this one. Answers change; this record does not.
+function runDeclarationLines(declarations) {
+  const list = Array.isArray(declarations) ? declarations.filter((d) => d && typeof d === "object") : [];
+  if (!list.length) return [DECLARATION_HEADING, "No declaration was recorded with this run."];
+  if (list.length === 1) return [DECLARATION_HEADING, ...oneDeclarationLines(list[0])];
+  const L = [DECLARATION_HEADING, `${list.length} declarations, oldest first, as received by the server.`];
+  list.forEach((d, i) => {
+    L.push("");
+    L.push(`Declaration ${i + 1} of ${list.length}`);
+    for (const line of oneDeclarationLines(d)) L.push(line);
+  });
+  return L;
+}
+
 function integrityLines(integ) {
   const i = integ || {};
   return [
@@ -497,6 +575,8 @@ export function formatPairedReceiptText(envelope) {
     "These are machine observations over a single answer pair, not validated classifications or evidence.",
   );
   L.push("");
+  for (const line of runDeclarationLines(e.run_declarations)) L.push(line);
+  L.push("");
   for (const line of integrityLines(e.integrity)) L.push(line);
   L.push("");
   L.push(RECEIPT_BOUNDARY);
@@ -561,6 +641,8 @@ export function formatChipPairedReceiptText(envelope) {
   L.push(
     "This is a user-directed follow-up, not an Imbas inspection finding. It shows what changed under the conditions you recorded; it does not establish that the second answer is correct, complete, or better supported.",
   );
+  L.push("");
+  for (const line of runDeclarationLines(e.run_declarations)) L.push(line);
   L.push("");
   for (const line of integrityLines(e.integrity)) L.push(line);
   L.push("");

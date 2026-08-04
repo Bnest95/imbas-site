@@ -37,6 +37,7 @@ import {
   CHECK_QUICK_COPY,
   CHECK_CLEANER_COPY,
   buildPairCapture,
+  DECLARATION_STAGE,
   pairConditionsUnmatched,
   PAIR_SAME_MODEL,
   PAIR_EDITS,
@@ -2153,11 +2154,17 @@ const READER_PAIRED_API = "/api/read-paired";
 // body rides along on err.info so the caller can tell a paste problem (too_long /
 // empty) from a service state (capacity / unavailable / analysis_failed) — every
 // paired failure leaves Act 1 untouched, so the caller never wipes the first read.
-async function runPairedReader(openReceipt, targetedAnswer) {
+// declaration carries the three paste-back values the person declared about HOW they
+// ran the pair, plus the stage they were at when they said it. The endpoint records
+// them as one entry in an append-only log; it makes no assessment of them, and a later
+// correction adds an entry rather than replacing this one. The DERIVED conditions state
+// is not sent and never will be — it is computed in this tab, off this capture, and
+// stays here.
+async function runPairedReader(openReceipt, targetedAnswer, declaration) {
   const res = await fetch(READER_PAIRED_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ open_receipt: openReceipt, targeted_answer: targetedAnswer }),
+    body: JSON.stringify({ open_receipt: openReceipt, targeted_answer: targetedAnswer, declaration }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -2216,7 +2223,7 @@ async function buildChipOpenReceipt(firstAnswer, generatedAt) {
 // user-chip provenance the server needs to look the instruction up in the FROZEN bank:
 // the server never trusts client-supplied instruction text, only chip_id +
 // instruction_version. Builds the open receipt on the way out.
-async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion }) {
+async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion, declaration }) {
   const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString());
   const res = await fetch(READER_PAIRED_API, {
     method: "POST",
@@ -2227,6 +2234,7 @@ async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instru
       initiator: PAIR_INITIATOR.USER_CHIP,
       chip_id: chipId,
       instruction_version: instructionVersion,
+      declaration,
     }),
   });
   const data = await res.json().catch(() => ({}));
@@ -4402,6 +4410,25 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
   // paired inspection ran on the production model under paired_method_version — a
   // populated pair_runs array is the schema's mode=paired marker.
   const capture = buildPairCapture({ same_model: sameModel, model_version: modelVersion, edits });
+  // What the person DECLARED, kept apart from what the capture above DERIVES from it.
+  //
+  // Loose values plus the stage they were given at, not a finished artifact. The tab
+  // says what the person reported and where in the flow they reported it; the server
+  // stamps identity, schema, and receipt time, because those are facts about the RECORD
+  // and this tab is not the record. The form collects no client-side declaration time,
+  // so declared_at_client resolves to NOT_CAPTURED rather than being backfilled from
+  // any other clock.
+  //
+  // No declaration_id is sent, deliberately. The server derives one from the declared
+  // content, which makes it stable across a retry: a browser that re-sends after a
+  // timeout produces the same id and gets the same row back. A client-minted random id
+  // would produce a twin and put a correction in the record that nobody made.
+  const declaration = {
+    same_model: sameModel,
+    model_version: modelVersion,
+    edits,
+    stage: DECLARATION_STAGE.SUBMISSION,
+  };
   const openRun = (openReceipt && openReceipt.open_run) || {};
   const readerModel = (openRun.provenance && openRun.provenance.reader_model_version) || "";
   const pair = {
@@ -4413,6 +4440,13 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
       (paired && paired.receipt && paired.receipt.paired_analysis && paired.receipt.paired_analysis.targeted_prompt_hash) ||
       "",
     capture,
+    // The declarations the SERVER has recorded for this pair, oldest first. Only the
+    // server's copies go into the record: they carry identity and receipt time, which
+    // this tab cannot know, and the record is a claim about what was stored rather than
+    // about what was typed. Before the run returns there is nothing stored, so the list
+    // is empty and the record says the pair carries no declaration — which is true at
+    // that moment.
+    declarations: (paired && paired.run_declarations) || [],
     targeted_source_model: {
       name: sameModel === PAIR_SAME_MODEL.YES ? (openRun.declared_model || "") : "",
       version: modelVersion.trim(),
@@ -4448,7 +4482,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     setBusy(true);
     emitReaderEvent(READER_EVENTS.LOOP_RETURNED, { run, check });
     try {
-      const data = await runPairedReader(openReceipt, targeted);
+      const data = await runPairedReader(openReceipt, targeted, declaration);
       setPaired(data);
       // The delta replaces this paste box, so the stage moves. It lands async but the
       // person's "Compare the two answers" click is what initiated it — one action, one
@@ -5113,6 +5147,15 @@ function ChipLane() {
 
   const entry = SECOND_QUESTION_BANK.find((e) => e.id === chipId) || null;
   const capture = buildPairCapture({ same_model: sameModel, model_version: modelVersion, edits });
+  // Same split as the inspection lane: capture is the derivation and stays in the tab,
+  // declaration is what the person said and travels, with the stage it was said at and
+  // no identity — the server stamps that from the content so a retry cannot fork.
+  const declaration = {
+    same_model: sameModel,
+    model_version: modelVersion,
+    edits,
+    stage: DECLARATION_STAGE.SUBMISSION,
+  };
   const canCompare = !!entry && !!firstAnswer.trim() && !!secondAnswer.trim();
 
   const clearErrors = () => {
@@ -5168,6 +5211,7 @@ function ChipLane() {
         targetedAnswer: secondAnswer,
         chipId: entry.id,
         instructionVersion: entry.instruction_version,
+        declaration,
       });
       setChipResult(data);
     } catch (err) {
