@@ -34,8 +34,8 @@
 // boundary below for why.
 
 import { createServer } from "node:http";
-import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { spawn, spawnSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -59,6 +59,7 @@ import {
   toDeviceBounds,
   comparePolicy,
   formatPolicyReport,
+  decodePng,
 } from "./raster-policy.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -188,6 +189,25 @@ export function writeArtifact(filePath, data, grant = null) {
   }
   fs.mkdirSync(path.dirname(resolved), { recursive: true });
   fs.writeFileSync(resolved, data);
+  return resolved;
+}
+
+// THE single rename function, and the reason it exists: a rename lands bytes at a path
+// just as a write does, so an unguarded one is a second door into the baseline directory.
+// It proves the same thing writeArtifact proves before it moves anything.
+export function renameArtifact(fromPath, toPath, grant = null) {
+  const resolved = path.resolve(toPath);
+  if (insideBaselineDir(resolved)) {
+    if (!grant) {
+      fail(
+        `Refusing to rename onto ${path.relative(REPO_ROOT, resolved)} — it is inside the committed ` +
+          `baseline directory and this run holds no acceptance. Baselines move only under ` +
+          `--update <scenario>, which prints the full diff before it writes.`
+      );
+    }
+    grant.assertAllows(path.basename(resolved));
+  }
+  fs.renameSync(fromPath, resolved);
   return resolved;
 }
 
@@ -1352,12 +1372,162 @@ async function main() {
   for (const r of results) r.path = path.join(outDir, r.filename);
 }
 
+// ── Evidence retention ───────────────────────────────────────────────────────
+// A comparison that finds a differing frame and then discards it cannot investigate
+// what it found. The frame that varied IS the artifact — for a nondeterministic raster
+// event it is the only one that will ever exist, because the next render is a fresh
+// observation rather than custody of the original. That is how 4219e938 became a hash
+// naming a file nobody can produce.
+//
+// So the bytes retained here are the bytes that were compared: the same buffer the
+// comparator read, never a re-render. Retained frames are working evidence and stay
+// untracked; a frame becomes a committed fixture only through the founder-ruling path,
+// pinning its extraction chain the way test/fixtures/ does.
+export const QUARANTINE_DIR = path.join(REPO_ROOT, ".qa-quarantine");
+
+// One identity per process, so frames retained by a single run are attributable to that
+// run rather than to "some diff, some time".
+const RUN_ID = `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
+
+// Same directory, so the rename is atomic: a reader either sees no file or sees the whole
+// frame, never a truncated one. Both steps go through the guarded pair, so the atomic
+// publish is not a way around the baseline check.
+function writeAtomic(filePath, data) {
+  const tmp = `${filePath}.tmp-${process.pid}-${randomUUID().slice(0, 8)}`;
+  writeArtifact(tmp, data);
+  renameArtifact(tmp, filePath);
+}
+
+// What separates a raster event from a real repaint is the shape of the difference, so
+// the sidecar carries it rather than leaving a reader to decode two PNGs to find out.
+export function pixelDifference(baselineBuf, candidateBuf) {
+  let base;
+  let cand;
+  try {
+    base = decodePng(baselineBuf);
+    cand = decodePng(candidateBuf);
+  } catch (e) {
+    return { measured: false, why: `an image did not decode: ${e.message}` };
+  }
+  const dims = { baseline: [base.width, base.height], candidate: [cand.width, cand.height] };
+  if (base.width !== cand.width || base.height !== cand.height) {
+    return { measured: false, why: "dimensions differ, so pixels do not correspond", dims };
+  }
+  let differing = 0;
+  let maxChannelDelta = 0;
+  for (let i = 0; i < cand.data.length; i += 4) {
+    let differs = false;
+    for (let c = 0; c < 4; c++) {
+      const d = Math.abs(cand.data[i + c] - base.data[i + c]);
+      if (d) {
+        differs = true;
+        if (d > maxChannelDelta) maxChannelDelta = d;
+      }
+    }
+    if (differs) differing++;
+  }
+  return { measured: true, dims, differing_pixels: differing, max_channel_delta: maxChannelDelta };
+}
+
+// The baseline is identified by what git knows about it, not by its path alone: a path
+// is a moving target and a blob OID is not.
+function baselineIdentity(baselinePath) {
+  const git = (args) => {
+    const r = spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8" });
+    return r.status === 0 ? r.stdout.trim() : null;
+  };
+  const rel = path.relative(REPO_ROOT, baselinePath);
+  return {
+    path: rel,
+    blob_oid: git(["hash-object", "--", baselinePath]),
+    committed_blob_oid: rel.startsWith("..") ? null : git(["rev-parse", `HEAD:${rel}`]),
+    head_commit: git(["rev-parse", "HEAD"]),
+  };
+}
+
+// Keyed by scenario ID and candidate sha256, so retaining the same observed frame twice
+// lands on the same path instead of accumulating near-duplicates nobody can tell apart.
+export function retainDifferingFrame({
+  scenarioId,
+  candidateBuf,
+  baselineBuf,
+  baselinePath,
+  quarantineRoot = QUARANTINE_DIR,
+  runId = RUN_ID,
+}) {
+  const candidateSha256 = sha256(candidateBuf);
+  const dir = path.join(quarantineRoot, scenarioId);
+  const framePath = path.join(dir, `${candidateSha256}.png`);
+  const sidecarPath = path.join(dir, `${candidateSha256}.json`);
+
+  // The frame lands first and alone. If the sidecar write fails, the irreplaceable bytes
+  // are already on disk; the other order trades the frame for its notes.
+  writeAtomic(framePath, candidateBuf);
+
+  const diff = pixelDifference(baselineBuf, candidateBuf);
+  writeAtomic(
+    sidecarPath,
+    JSON.stringify(
+      {
+        what:
+          "A candidate frame that differed from its accepted baseline, retained as the exact bytes " +
+          "the comparison read. Not a baseline, not a later render of the same scenario.",
+        scenario_id: scenarioId,
+        candidate: {
+          sha256: candidateSha256,
+          bytes: candidateBuf.length,
+          dimensions: diff.dims ? diff.dims.candidate : null,
+          retained_frame: path.relative(REPO_ROOT, framePath),
+        },
+        baseline: {
+          sha256: sha256(baselineBuf),
+          bytes: baselineBuf.length,
+          dimensions: diff.dims ? diff.dims.baseline : null,
+          ...baselineIdentity(baselinePath),
+        },
+        comparison: diff.measured
+          ? { differing_pixels: diff.differing_pixels, max_channel_delta: diff.max_channel_delta }
+          : { differing_pixels: null, max_channel_delta: null, not_measured: diff.why },
+        run: { id: runId, retained_at: new Date().toISOString() },
+        custody:
+          "Working evidence, untracked. Promotion to a committed fixture happens only through the " +
+          "founder-ruling path, with the same extraction-chain pinning test/fixtures/ uses.",
+      },
+      null,
+      1
+    ) + "\n"
+  );
+  return { framePath, sidecarPath, candidateSha256 };
+}
+
 // ── Diff mode ────────────────────────────────────────────────────────────────
-// Compares a fresh capture against the committed baseline. Writes NOTHING.
-function runDiff(outDir, results) {
+// Compares a fresh capture against the committed baseline. Writes no baseline and
+// accepts nothing; the only bytes it may lay down are quarantined evidence of a
+// difference it just observed.
+export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {}) {
   let changed = 0;
   let missing = 0;
+  let retained = 0;
   log("\n══ regression diff ══");
+
+  // Retention never changes the verdict. A difference already exits non-zero, so a
+  // failure to keep the frame is reported loudly and changes no count and no code —
+  // silently swallowing it would recreate the defect this exists to close.
+  const retain = (scenarioId, r, baselineImg, imgPath) => {
+    try {
+      const kept = retainDifferingFrame({
+        scenarioId,
+        candidateBuf: r.buf,
+        baselineBuf: baselineImg,
+        baselinePath: imgPath,
+        quarantineRoot,
+      });
+      log(`    ⤷ retained ${path.relative(REPO_ROOT, kept.framePath)}`);
+      retained++;
+    } catch (e) {
+      log(`    ! retention FAILED (${e.message}) — the frame that differed was NOT kept`);
+    }
+  };
 
   for (const r of results) {
     const snapPath = path.join(outDir, r.snapshotFilename);
@@ -1427,7 +1597,10 @@ function runDiff(outDir, results) {
           : `  ✗ image: raster policy FAILED`
       );
       log(formatPolicyReport(report));
-      if (report.result !== "pass") changed++;
+      if (report.result !== "pass") {
+        changed++;
+        retain(r.filename.replace(/\.png$/, ""), r, baselineImg, imgPath);
+      }
       continue;
     }
 
@@ -1439,13 +1612,20 @@ function runDiff(outDir, results) {
     } else {
       log(`  ✗ image: bytes differ (baseline ${img.baselineBytes}, fresh ${img.freshBytes})`);
       changed++;
+      retain(r.filename.replace(/\.png$/, ""), r, baselineImg, imgPath);
     }
   }
 
   log("");
   if (missing) log(`✗ ${missing} baseline(s) missing or unreadable.`);
   if (changed) {
-    log(`✗ ${changed} difference(s) found. Nothing was written.`);
+    log(`✗ ${changed} difference(s) found. No baseline was written and nothing was accepted.`);
+    if (retained) {
+      log(
+        `  ${retained} differing frame(s) retained under ${path.relative(REPO_ROOT, quarantineRoot)}/ — ` +
+          `the exact bytes compared, untracked, with a sidecar naming the baseline they differed from.`
+      );
+    }
     log(`  If a change is intended, accept it one scenario at a time: --update <scenario>`);
     process.exitCode = 1;
     return;
