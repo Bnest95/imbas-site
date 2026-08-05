@@ -42,13 +42,9 @@ That uncommitted working-tree state was subsequently committed as `d914e47d95921
 
 ## Comparison policy
 
-Every image on this board is compared byte-for-byte against its baseline, with one named exception.
+> UPDATE 2026-08-03 — founder ruling. `curated-readout-mobile-header-raster-v1` is retired. It observed a real browser-noise event against one specific accepted baseline; FD-1 lawfully repainted that baseline, and an observation does not follow a baseline it was not made against. The active registry is now empty. The observation is retained, unaltered and internally verified, in `scripts/qa/raster-policy.mjs` (`HISTORICAL_RASTER_OBSERVATIONS`) and `test/fixtures/curated-readout-mobile-alternate-raster.json`, against a pinned crop of the pixels it was seen on. Activating any new tolerance is a founder ruling. The paragraph below is what the generator now emits; this banner is not generated and a regeneration will drop it.
 
-**`curated-readout--mobile` uses a bounded renderer-noise comparison for the sticky backdrop-filter header, while the DOM snapshot and all pixels outside that region remain exact.** The region is the painted box of the element carrying the filter (`.site-header`), resolved from the live page at comparison time rather than written down as a rectangle. Inside it, at most 600 pixels may differ by at most 1 per channel, with alpha untouched. Outside it, one differing pixel is a failure.
-
-The reason is diagnosed, not assumed: Resource-sensitive Chromium software rasterization of blur(16px) saturate(120%) under the header's translucent gradient. Under load it produces a frame differing in 477 pixels of 2,740,500 that stops dead at the header's bottom edge. `scripts/qa/raster-policy.mjs` carries the full diagnosis and the evidence that ruled out timing, animation, fonts, browser reuse and every raster flag tried.
-
-This is not a tolerance setting. Policy `curated-readout-mobile-header-raster-v1` is hard-coded to one scenario at one viewport, no flag or environment variable reaches it, and `test/qa-raster-policy.test.mjs` holds each edge of it. Any second use, any bounds change and any ceiling change needs a new founder ruling.
+Every image on this board is compared byte-for-byte against its baseline. There is no exception: no scenario carries a bounded-comparison policy, so any difference of any size in any pixel fails the run.
 
 ## Pinned environment
 

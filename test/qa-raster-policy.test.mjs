@@ -2,13 +2,22 @@
 // state and nothing wider.
 // Run: node --test test/qa-raster-policy.test.mjs
 //
-// This policy is the only place in the harness where two different images can both be
-// accepted, so it is the only place where a mistake produces a green run over a real
-// regression. Every one of these tests exists to hold one edge of it: the real observed
-// frame passes, and each way of being worse than that frame fails — a bigger channel
-// delta, more pixels, a pixel outside the region, a touched alpha value, changed
-// dimensions, a region that grew, a region that could not be found, and a second
-// scenario trying to use the allowance.
+// No policy is active. The active registry is empty, every board state is compared
+// byte-for-byte, and these tests hold two separate things:
+//
+//   1. The current baseline carries no exception. Nothing resolves, no recorded delta
+//      is applied to it, and any differing pixel fails closed.
+//   2. The historical observation stays internally verifiable against the pixels it
+//      was actually observed on, which are pinned as a fixture asset rather than read
+//      from the live baseline. FD-1 repainted that baseline; an observation does not
+//      follow a baseline it was not made against.
+//
+// The comparator edge tests below stay, exercising the historical entry's numbers
+// against synthetic frames. They are what a future founder ruling would rely on: if a
+// bounded comparison is ever activated again it must accept exactly the diagnosed
+// state and nothing wider — a bigger channel delta, more pixels, a pixel outside the
+// region, a touched alpha value, changed dimensions, a region that grew, a region that
+// could not be found, all fail.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -20,6 +29,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   RASTER_POLICIES,
+  HISTORICAL_RASTER_OBSERVATIONS,
   POLICY_ERRORS,
   resolvePolicy,
   toDeviceBounds,
@@ -32,9 +42,12 @@ import { renderComparisonPolicySection } from "../scripts/qa/visual-acceptance.m
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, "..");
 
-const POLICY = resolvePolicy("curated-readout", "mobile");
-// The resolved region this tree actually produces. Tests that are not about bounds use
-// it so they exercise the same geometry a real run does.
+// Sourced from the historical record, not from `resolvePolicy`, because nothing
+// resolves any more. Reaching for it through the resolver is exactly the transfer this
+// ruling forbids, so the tests take it from the shelf it was retired to.
+const POLICY = HISTORICAL_RASTER_OBSERVATIONS[0];
+// The region that entry declared. Tests that are not about bounds use it so they
+// exercise the same geometry the observation was made under.
 const RESOLVED = { left: 0, top: 0, right: 1125, bottom: 236 };
 
 // ── A minimal PNG encoder, for fixtures only ─────────────────────────────────
@@ -121,27 +134,48 @@ const SMALL_POLICY = { ...POLICY, declaredBounds: REGION };
 
 // ── The policy block itself ──────────────────────────────────────────────────
 
-test("the policy registry holds exactly one entry, bound to one scenario and viewport", () => {
-  assert.equal(RASTER_POLICIES.length, 1);
-  const p = RASTER_POLICIES[0];
+test("the active policy registry is empty, so the current active tolerance count is zero", () => {
+  // The headline guarantee of the ruling, asserted as a number rather than described
+  // in a comment. If anything ever lands here again it fails this line first.
+  assert.equal(RASTER_POLICIES.length, 0);
+});
+
+test("the historical record keeps the retired entry with its bounds and ceilings unchanged", () => {
+  assert.equal(HISTORICAL_RASTER_OBSERVATIONS.length, 1);
+  const p = HISTORICAL_RASTER_OBSERVATIONS[0];
   assert.equal(p.id, "curated-readout-mobile-header-raster-v1");
+  assert.equal(p.status, "OBSERVED_AGAINST_SUPERSEDED_BASELINE");
+  assert.equal(p.applicability, "HISTORICAL_NOT_APPLICABLE");
   assert.equal(p.scenario, "curated-readout");
   assert.equal(p.viewport, "mobile");
   assert.equal(p.selector, ".site-header");
+  // Bounds unchanged since the observation. Ceilings never widened.
+  assert.deepEqual(p.declaredBounds, { left: 0, top: 0, right: 1125, bottom: 236 });
   assert.equal(p.maxRgbDelta, 1);
   assert.equal(p.maxDifferingPixels, 600);
+  assert.equal(p.observedDifferingPixels, 477);
+  // It names the commit that repainted the baseline beneath it, so the reason it is
+  // retired is readable from the entry rather than from a changelog.
+  assert.equal(p.supersededBy, "abe1914d516a4da2d8eb42ed9548719de1be7414");
 });
 
-test("another scenario cannot invoke the policy", () => {
-  // The allowance is not a tolerance the board can reach for. Every other board state
-  // — including the same scenario at the other captured viewport — resolves to null,
-  // which is what sends it down the byte-exact path.
+test("no scenario at any viewport can invoke a policy", () => {
+  // Every board state resolves to null, which is what sends it down the byte-exact
+  // path. The scenario the entry was written for resolves to null like all the rest:
+  // a retired observation must not become a live allowance by being findable.
+  assert.equal(resolvePolicy("curated-readout", "mobile"), null);
   assert.equal(resolvePolicy("curated-readout", "desktop"), null);
   assert.equal(resolvePolicy("single-findings", "mobile"), null);
   assert.equal(resolvePolicy("paired-matched", "mobile"), null);
   assert.equal(resolvePolicy("public-example", "mobile"), null);
   assert.equal(resolvePolicy("single-empty", "mobile"), null);
-  assert.ok(resolvePolicy("curated-readout", "mobile"));
+});
+
+test("the historical entry is not reachable through the resolver", () => {
+  // Belt and braces on the line above: resolving by the retired entry's own fields
+  // must still miss, so moving it back into reach has to be a deliberate edit.
+  const p = HISTORICAL_RASTER_OBSERVATIONS[0];
+  assert.equal(resolvePolicy(p.scenario, p.viewport), null);
 });
 
 test("device-pixel conversion floors left and top and ceils right and bottom", () => {
@@ -162,33 +196,82 @@ test("device-pixel conversion floors left and top and ceils right and bottom", (
 const FIXTURE = JSON.parse(
   fs.readFileSync(path.join(HERE, "fixtures/curated-readout-mobile-alternate-raster.json"), "utf8")
 );
-const BASELINE_PATH = path.join(REPO_ROOT, "docs/qa/visual-acceptance-harness/curated-readout--mobile.png");
+// The pixels the frame was observed against, pinned. NOT the live baseline: FD-1
+// repainted that, and reconstructing against today's pixels would be inventing a frame
+// nobody rendered. Only the declared region is committed, not the full page — enough to
+// reconstruct, and small enough that it is plainly test provenance rather than a second
+// baseline. It sits under test/fixtures/ so no board run and no manifest pass can reach it.
+const HISTORICAL_BAND_PATH = path.join(
+  REPO_ROOT,
+  "test/fixtures/curated-readout-mobile-header-band-superseded.png"
+);
+const LIVE_BASELINE_PATH = path.join(
+  REPO_ROOT,
+  "docs/qa/visual-acceptance-harness/curated-readout--mobile.png"
+);
 
-// The alternate frame is reconstructed from the accepted baseline plus the exact signed
-// deltas recorded when it was observed. It is rebuilt rather than committed because it
-// must never exist in this tree as a second full-frame image — it is an observation,
-// not a baseline. The pixel hash assertion below is what makes the reconstruction
-// worth trusting.
-function reconstructAlternate() {
-  const base = decodePng(fs.readFileSync(BASELINE_PATH));
-  const px = Buffer.from(base.data);
+function applyDeltas(frame, originX, originY) {
+  const px = Buffer.from(frame.data);
+  let clamped = 0;
   for (const [x, y, dr, dg, db] of FIXTURE.deltas) {
-    const p = (y * base.width + x) * 4;
-    px[p] = px[p] + dr;
-    px[p + 1] = px[p + 1] + dg;
-    px[p + 2] = px[p + 2] + db;
+    const p = ((y - originY) * frame.width + (x - originX)) * 4;
+    for (const [off, d] of [[0, dr], [1, dg], [2, db]]) {
+      const v = px[p + off] + d;
+      if (v < 0 || v > 255) clamped++;
+      px[p + off] = v;
+    }
   }
-  return { width: base.width, height: base.height, data: px };
+  return { width: frame.width, height: frame.height, data: px, clamped };
 }
 
-test("the observed alternate frame passes the policy", () => {
-  const base = fs.readFileSync(BASELINE_PATH);
-  const alt = reconstructAlternate();
+// The alternate frame is rebuilt from the pinned historical band plus the exact signed
+// deltas recorded when it was observed, rather than committed, because it must never
+// exist in this tree as a second full-frame image: it is an observation, not a baseline.
+// The pixel hash assertion below is what makes the reconstruction worth trusting.
+function reconstructAlternateBand() {
+  return applyDeltas(decodePng(fs.readFileSync(HISTORICAL_BAND_PATH)), 0, 0);
+}
+
+// ── 1. The historical observation, against the pixels it was observed on ─────
+
+test("the pinned historical asset is the exact crop the fixture says it is", () => {
+  const buf = fs.readFileSync(HISTORICAL_BAND_PATH);
+  const a = FIXTURE.historical_baseline_asset;
+  assert.equal(buf.length, a.bytes);
+  assert.equal(createHash("sha256").update(buf).digest("hex"), a.sha256);
+  const decoded = decodePng(buf);
+  assert.equal(decoded.width, a.width);
+  assert.equal(decoded.height, a.height);
+  assert.equal(createHash("sha256").update(decoded.data).digest("hex"), a.pixel_sha256);
+  // The crop is a derived artifact, so the fixture records what it was derived from.
+  // These are the coordinates the region was cut at, and they are the declared bounds.
+  const c = FIXTURE.extraction_chain.crop_bounds;
+  assert.deepEqual(c, POLICY.declaredBounds);
+  assert.equal(decoded.width, c.right - c.left);
+  assert.equal(decoded.height, c.bottom - c.top);
+  assert.equal(FIXTURE.extraction_chain.source_path, "docs/qa/visual-acceptance-harness/curated-readout--mobile.png");
+  assert.match(FIXTURE.extraction_chain.source_commit, /^[0-9a-f]{40}$/);
+  assert.match(FIXTURE.extraction_chain.source_blob_oid, /^[0-9a-f]{40}$/);
+});
+
+test("the observed alternate frame reconstructs from the historical asset", () => {
+  const alt = reconstructAlternateBand();
+  // Nothing saturates. If a channel clamped, the recorded delta would not be recoverable
+  // and the reconstruction would be a lossy guess wearing an exact hash.
+  assert.equal(alt.clamped, 0, "a channel clamped while reconstructing");
   assert.equal(
     createHash("sha256").update(alt.data).digest("hex"),
-    FIXTURE.reconstructed_pixel_sha256,
+    FIXTURE.reconstructed_band_pixel_sha256,
     "reconstruction does not reproduce the observed frame's pixels"
   );
+});
+
+test("the observed alternate frame passes the ceilings it was measured against", () => {
+  // What this shows is that the retired entry's numbers do describe the frame that was
+  // seen. It is a statement about the historical pair only. Neither image here is a
+  // baseline the board compares anything to.
+  const base = fs.readFileSync(HISTORICAL_BAND_PATH);
+  const alt = reconstructAlternateBand();
   const altPng = encodePng(alt.width, alt.height, alt.data, { colorType: 6 });
 
   const report = comparePolicy(POLICY, base, altPng, RESOLVED);
@@ -200,27 +283,67 @@ test("the observed alternate frame passes the policy", () => {
   assert.equal(report.alpha_differences, 0);
 });
 
-test("the observed frame's damage stops inside the header, which is why the region is drawn there", () => {
-  // If this ever stops being true the diagnosis is wrong and the policy is pointed at
-  // the wrong element — which is a bigger problem than a red run.
+test("the observed frame's damage stops inside the header, which is why the region was drawn there", () => {
+  // If this ever stops being true the diagnosis was wrong and the region was pointed at
+  // the wrong element, which matters more than a red run.
   assert.equal(FIXTURE.differing_pixels, 477);
+  assert.equal(FIXTURE.deltas.length, 477);
   assert.ok(FIXTURE.bbox.y1 < POLICY.declaredBounds.bottom, "damage extends past the declared region");
-  assert.equal(FIXTURE.source_frame_bytes, 297032);
-  assert.ok(FIXTURE.source_frame_sha256.startsWith("4219e938"));
+  // Every recorded delta, not just the bounding box corners, sits inside the region.
+  // The bbox is a summary; this is the thing the bbox summarises.
+  const d = POLICY.declaredBounds;
+  let outside = 0;
+  let maxAbs = 0;
+  for (const [x, y, dr, dg, db] of FIXTURE.deltas) {
+    if (x < d.left || x >= d.right || y < d.top || y >= d.bottom) outside++;
+    maxAbs = Math.max(maxAbs, Math.abs(dr), Math.abs(dg), Math.abs(db));
+  }
+  assert.equal(outside, 0);
+  assert.equal(maxAbs, FIXTURE.observed_ceilings.max_rgb_delta);
 });
 
-test("the real alternate frame file, when present, is the frame the fixture describes", () => {
-  // Optional because .qa-scratch is not committed. It is an extra binding, never the
-  // only proof: every assertion about the alternate frame above runs unconditionally.
-  const p = path.join(REPO_ROOT, ".qa-scratch/framedump-297032-4219e938.png");
-  if (!fs.existsSync(p)) return;
-  const buf = fs.readFileSync(p);
-  assert.equal(createHash("sha256").update(buf).digest("hex"), FIXTURE.source_frame_sha256);
-  const decoded = decodePng(buf);
-  assert.ok(decoded.data.equals(reconstructAlternate().data));
-  const report = comparePolicy(POLICY, fs.readFileSync(BASELINE_PATH), buf, RESOLVED);
-  assert.equal(report.result, "pass", formatPolicyReport(report));
-  assert.equal(report.different_pixels_inside, 477);
+test("the unretained source frame is marked as unretained rather than described as a file", () => {
+  // The frame itself was never committed, so this hash names something that cannot be
+  // produced. The marker says so. A future variance retains the frame file instead.
+  assert.equal(FIXTURE.source_frame_bytes, 297032);
+  assert.ok(FIXTURE.source_frame_sha256.startsWith("4219e938"));
+  assert.equal(FIXTURE.source_frame_sha256_marker, "HASH_OF_UNRETAINED_OBSERVATION");
+  assert.equal(FIXTURE.status, "OBSERVED_AGAINST_SUPERSEDED_BASELINE");
+  assert.equal(FIXTURE.applicability_to_current_baseline, "HISTORICAL_NOT_APPLICABLE");
+});
+
+// ── 2. The current baseline, which inherits none of it ───────────────────────
+
+test("the current baseline is not the frame the observation was made against", () => {
+  // The whole ruling in one assertion. The live baseline's masthead band is different
+  // pixels now, so the observation describes a picture the board no longer produces.
+  const live = decodePng(fs.readFileSync(LIVE_BASELINE_PATH));
+  const d = POLICY.declaredBounds;
+  const w = d.right - d.left;
+  const band = Buffer.alloc(w * (d.bottom - d.top) * 4);
+  for (let y = d.top; y < d.bottom; y++) {
+    const s = (y * live.width + d.left) * 4;
+    live.data.copy(band, (y - d.top) * w * 4, s, s + w * 4);
+  }
+  assert.notEqual(
+    createHash("sha256").update(band).digest("hex"),
+    FIXTURE.historical_baseline_asset.pixel_sha256,
+    "the live baseline matches the superseded asset; the supersession record is wrong"
+  );
+});
+
+test("the recorded deltas do not transfer to the current baseline", () => {
+  // Applying them still produces a bit pattern, and no channel clamps. That proves
+  // nothing: it is arithmetic on pixels nobody rendered. The frame it makes is not the
+  // frame that was observed, and this test exists to keep that visible rather than
+  // letting "the deltas still fit" read as "the observation still holds".
+  const live = decodePng(fs.readFileSync(LIVE_BASELINE_PATH));
+  const synthetic = applyDeltas(live, 0, 0);
+  assert.notEqual(
+    createHash("sha256").update(synthetic.data).digest("hex"),
+    FIXTURE.reconstructed_pixel_sha256,
+    "synthesising the observation onto the current baseline reproduced the observed hash"
+  );
 });
 
 // ── Each way of being worse than that frame ──────────────────────────────────
@@ -442,7 +565,9 @@ test("the decoder widens RGB and RGBA to the same canonical representation", () 
 });
 
 test("the real baseline decodes to the dimensions the board captures", () => {
-  const img = decodePng(fs.readFileSync(BASELINE_PATH));
+  // A decoder test, not a policy one: the fixtures above are all filter-type 0, and a
+  // real Chromium capture is not. This is the only place the decoder meets one.
+  const img = decodePng(fs.readFileSync(LIVE_BASELINE_PATH));
   assert.equal(img.width, 1125);
   assert.equal(img.height, 2436);
   assert.equal(img.data.length, 1125 * 2436 * 4);

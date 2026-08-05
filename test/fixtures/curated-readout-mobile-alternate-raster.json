@@ -1,8 +1,71 @@
 {
- "what": "The exact per-channel pixel deltas between the accepted curated-readout--mobile baseline and the alternate frame observed under raster pressure (file 297032 bytes, sha256 4219e938...). Stored as deltas, not as a second PNG, so the alternate state is recorded without a second full-frame image existing in the tree.",
+ "what": "The exact per-channel pixel deltas between the then-accepted curated-readout--mobile baseline and the alternate frame observed under raster pressure on 2026-07-30. Stored as deltas, not as a second PNG, so the alternate state is recorded without a second full-frame image existing in the tree.",
+
+ "status": "OBSERVED_AGAINST_SUPERSEDED_BASELINE",
+ "applicability_to_current_baseline": "HISTORICAL_NOT_APPLICABLE",
+ "why": "This observation was made against one specific accepted baseline. FD-1 lawfully repainted that baseline. No part of the observation transfers to the new pixels. Applying these deltas to the current baseline would produce a frame nobody ever rendered, and showing that the arithmetic does not clamp is arithmetic, not observation. The deltas are retained as a record of what was seen, against the pixels it was seen on, and nowhere else.",
+
+ "observation": {
+  "date": "2026-07-30",
+  "recorded_in_commit": "bb4bc09",
+  "browser_version": "HeadlessChrome/148.0.7778.96",
+  "browser_build": "playwright chromium_headless_shell-1223, chrome-headless-shell-mac-arm64",
+  "platform": "macOS arm64",
+  "frequency": "2 of 12 complete board runs; 16-31% under eight-way concurrency",
+  "cause": "Resource-sensitive Chromium software rasterization of blur(16px) saturate(120%) under the header's translucent gradient."
+ },
+
+ "historical_baseline_asset": {
+  "path": "test/fixtures/curated-readout-mobile-header-band-superseded.png",
+  "role": "Test provenance. Never an active baseline: it lives under the test fixture path, not in docs/qa/visual-acceptance-harness/, so no board run and no manifest pass can reach it.",
+  "contents": "The declared raster-policy region only, not the full page. No private or user-supplied content: the region is the site masthead of a curated demonstration scenario.",
+  "bytes": 35488,
+  "sha256": "f6b97c35d684d3bfd7b046df871885d527ec03ae433888e66f125e164e5ca8a4",
+  "width": 1125,
+  "height": 236,
+  "pixel_sha256": "2dc271f2e35efcf983a5b18ebef045f989df4b2b0af4fdcbea97b763920ea612"
+ },
+
+ "extraction_chain": {
+  "note": "The crop is itself a derived artifact, so what it was derived from is pinned here rather than remembered.",
+  "source_commit": "bb143950b080de0244ece6f9f40438394c0fb381",
+  "source_path": "docs/qa/visual-acceptance-harness/curated-readout--mobile.png",
+  "source_blob_oid": "1616b95794ba52fa10e4a7533cfe98baad483e1e",
+  "source_file_bytes": 297088,
+  "source_file_sha256": "35bbd380ebe8e14769fb25ff43d9aac8065ddac2ee67c8ed8fccee76e9b70144",
+  "source_pixel_sha256": "2fa89a4f2abca8e08ab29ce136a9402ccec32d9c9c671d4ffab7723e07431c2e",
+  "source_dimensions": [1125, 2436],
+  "crop_bounds": { "left": 0, "top": 0, "right": 1125, "bottom": 236 },
+  "crop_encoding": "8-bit RGBA, filter type 0 on every row, deflate level 9",
+  "verified": "Applying all 477 deltas to source_pixel_sha256 reproduces reconstructed_pixel_sha256 with zero clamped channels, which is what proves this asset is the baseline the frame was observed against."
+ },
+
+ "superseded_by": {
+  "baseline_repainted_in_commit": "abe1914d516a4da2d8eb42ed9548719de1be7414",
+  "baseline_repainted_subject": "Re-photograph the board against the ladder the product now uses",
+  "underlying_change": "3e778f01d534fb479ff71b99263f32a337825cc3 — Put every surface and every word of text on one measured warm ladder",
+  "note": "The current baseline's own hash is deliberately not pinned here. It moves whenever the board is lawfully re-accepted, and a recorded copy of it would go stale silently. What this fixture pins is the superseded asset, which never moves again."
+ },
+
  "source_frame_bytes": 297032,
  "source_frame_sha256": "4219e938bf158af1dd4264149c12dc6b95b14472f93dab212136e50f525ecca3",
+ "source_frame_sha256_marker": "HASH_OF_UNRETAINED_OBSERVATION",
+ "source_frame_marker_note": "The rendered frame itself was never committed, so this hash names a file that cannot be produced. The marker states what was always true rather than implying a retrievable artifact. Any future variance retains the frame file itself as evidence.",
+
  "reconstructed_pixel_sha256": "1d893a34bebeb1e61e83c669f9b923e25180e9322a6a8f12b4571d0482134241",
+ "reconstructed_pixel_scope": "Full 1125x2436 RGBA buffer, historical baseline plus deltas. Verified during extraction; not asserted at test time because the full-page asset is deliberately not committed.",
+ "reconstructed_band_pixel_sha256": "e50548871ff687d9a7bc90d19c137b66263a92260da7c3b9786057d3beb8690c",
+ "reconstructed_band_pixel_scope": "1125x236 RGBA buffer, historical band asset plus deltas. Byte-identical to rows 0-235 of the verified full reconstruction. This is the hash the suite asserts.",
+
+ "declared_bounds": { "left": 0, "top": 0, "right": 1125, "bottom": 236 },
+ "observed_ceilings": {
+  "max_rgb_delta": 1,
+  "differing_pixels": 477,
+  "alpha_differences": 0,
+  "clamped_channels": 0,
+  "deltas_outside_declared_bounds": 0
+ },
+
  "width": 1125,
  "height": 2436,
  "alpha_differences": 0,

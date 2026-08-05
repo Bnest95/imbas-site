@@ -1,6 +1,22 @@
 // ── Bounded renderer-noise comparison ────────────────────────────────────────
 //
-// WHAT THIS IS FOR, precisely. `curated-readout--mobile` failed byte comparison in
+// CURRENT STATE: no policy is active. `RASTER_POLICIES` is empty, so every scenario
+// at every viewport is compared byte-for-byte and any differing pixel fails the run.
+// The comparator below is complete, exported and fully tested, and nothing reaches
+// it from a board run. Activating a tolerance is a founder ruling, not a code change.
+//
+// WHY IT WAS DEACTIVATED (founder ruling, 2026-08-03). The single entry that used to
+// live in the registry observed a real browser-noise event against one specific
+// accepted baseline. FD-1 lawfully repainted that baseline, so the observation now
+// describes pixels the board no longer renders. An observation does not transfer to
+// a new baseline: showing that the recorded deltas still apply to the new pixels
+// without clamping is arithmetic, not observation. The entry is retained below as a
+// historical record with its bounds and ceilings unchanged, and it resolves for
+// nothing.
+//
+// The original diagnosis follows, unaltered, because a future ruling would need it.
+//
+// WHAT IT WAS FOR, precisely. `curated-readout--mobile` failed byte comparison in
 // 2 of 12 complete board runs. It was diagnosed, not guessed:
 //
 //   * The two frames differ in 477 pixels of 2,740,500 (0.017%), max per-channel
@@ -21,15 +37,15 @@
 //     wait for. `--disable-partial-raster`, `--num-raster-threads=1`,
 //     `--deterministic-mode` and `--disable-skia-runtime-opts` do not suppress it.
 //
-// So this is NOT a tolerance for "images that look close enough". It is a named
+// So this was NOT a tolerance for "images that look close enough". It was a named
 // exemption for one element's raster on one scenario at one viewport, with the
 // exempt area resolved from the live page rather than hard-coded, and with every
 // other guarantee left exact: the DOM snapshot, the image dimensions, and every
 // single pixel outside the filtered element's painted box.
 //
-// It is deliberately not a configuration option. There is no flag that turns it on
+// It was deliberately not a configuration option. There is no flag that turns it on
 // for anything else. Any second use, any bounds change and any ceiling change needs
-// a new founder ruling.
+// a new founder ruling — and so, now, does any use at all.
 
 import zlib from "node:zlib";
 
@@ -48,26 +64,45 @@ export const POLICY_ERRORS = {
   DECODE_FAILED: "POLICY_DECODE_FAILED",
 };
 
-// The registry. One entry. `declaredBounds` is this tree's resolved geometry,
-// recorded at implementation time under the same rounding rule the comparator
-// applies at run time (left/top floored, right/bottom ceiled).
-export const RASTER_POLICIES = [
+// The active registry. Empty. Every board state resolves to null and is compared
+// byte-for-byte. This is a list, not a flag, so "how many tolerances are active" is
+// answered by reading it rather than by tracing a condition.
+export const RASTER_POLICIES = [];
+
+// The historical registry. Not consulted by `resolvePolicy`, not consulted by the
+// board, not rendered into the manifest. It exists so the ruling that retired the
+// entry did not also delete what was measured: a later founder ruling that wanted to
+// reactivate a bounded comparison would start from these numbers, and would have to
+// re-observe against whatever baseline was current at that time.
+//
+// `declaredBounds` is the geometry recorded at implementation time under the same
+// rounding rule the comparator applies at run time (left/top floored, right/bottom
+// ceiled). Bounds unchanged since the observation. Ceilings never widened.
+export const HISTORICAL_RASTER_OBSERVATIONS = [
   {
     id: "curated-readout-mobile-header-raster-v1",
+    status: "OBSERVED_AGAINST_SUPERSEDED_BASELINE",
+    applicability: "HISTORICAL_NOT_APPLICABLE",
+    retiredOn: "2026-08-03",
+    supersededBy: "abe1914d516a4da2d8eb42ed9548719de1be7414",
+    evidence: "test/fixtures/curated-readout-mobile-alternate-raster.json",
     scenario: "curated-readout",
     viewport: "mobile",
     selector: ".site-header",
     declaredBounds: { left: 0, top: 0, right: 1125, bottom: 236 },
     maxRgbDelta: 1,
     maxDifferingPixels: 600,
+    observedDifferingPixels: 477,
     cause:
       "Resource-sensitive Chromium software rasterization of blur(16px) saturate(120%) " +
       "under the header's translucent gradient.",
   },
 ];
 
-// Hard-coded to one scenario at one viewport. A scenario that is not named here gets
-// byte-exact comparison, and there is no argument, flag or env var that changes that.
+// Reads the active registry only. The historical list is deliberately out of reach:
+// a retired observation must not become a live allowance by being findable. With the
+// active registry empty this returns null for everything, which is the byte-exact
+// path, and there is no argument, flag or env var that changes that.
 export function resolvePolicy(scenarioName, viewportName) {
   return (
     RASTER_POLICIES.find((p) => p.scenario === scenarioName && p.viewport === viewportName) || null

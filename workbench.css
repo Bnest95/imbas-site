@@ -172,7 +172,7 @@
 .wb-case-card__title {
   font-family: var(--font-display);
   font-size: 1rem;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   line-height: 1.3;
 }
 
@@ -186,7 +186,7 @@
   font-family: var(--font-display);
   font-size: clamp(1.375rem, 4vw, 1.875rem);
   line-height: 1.3;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   margin: 0.65rem 0 0.5rem;
 }
 .wb-active-case__probe {
@@ -368,13 +368,13 @@
   font-family: var(--font-display);
   font-size: clamp(1.375rem, 4vw, 1.875rem);
   line-height: 1.3;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   margin: 0 0 0.25rem;
   opacity: 0;
   transform: translateY(10px);
 }
 .wb-verdict-line.is-key-found {
-  color: #F2E8DC;
+  color: var(--ink-primary);
 }
 .wb-verdict-line.is-landed {
   animation: wb-verdict-land 0.42s ease forwards;
@@ -735,7 +735,7 @@
   font-family: var(--font-serif);
   font-size: 0.9375rem;
   line-height: 1.55;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   white-space: pre-wrap;
 }
 .wb-answer-row__bar.wb-answer-sweep.is-sweeping .wb-sweep-line {
@@ -750,7 +750,7 @@
 }
 
 .wb-verdict-line.is-landed {
-  color: #F2E8DC;
+  color: var(--ink-primary);
   opacity: 1;
 }
 
@@ -821,7 +821,7 @@
 .wb-btn--ghost:not(:disabled) {
   background: transparent !important;
   border-color: var(--wb-border-panel) !important;
-  color: #F2E8DC !important;
+  color: var(--ink-primary) !important;
 }
 .wb-btn--ghost:not(:disabled):hover {
   border-color: rgba(var(--ember-rgb), 0.42) !important;
@@ -1102,7 +1102,7 @@
   padding: 18px 16px 16px;
   font-family: var(--font-serif);
   font-size: 1rem;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   line-height: 1.5;
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.32);
 }
@@ -1164,7 +1164,7 @@
   font-weight: 600;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .wb-mode-btn {
     font-size: 0.875rem;
     padding: 0.5rem 0.65rem;
@@ -1188,7 +1188,7 @@
   display: none;
 }
 
-@media (min-width: 960px) {
+@media (min-width: 901px) {
   .wb-shell__frame {
     max-width: min(1040px, 94vw);
   }
@@ -1202,7 +1202,7 @@
 
   .wb-mode-btn.is-active {
     background: linear-gradient(180deg, rgba(42, 28, 22, 0.98) 0%, rgba(30, 20, 16, 0.98) 100%);
-    color: #F2E8DC;
+    color: var(--ink-primary);
     border-color: rgba(var(--ember-rgb), 0.38);
     box-shadow:
       inset 0 2px 0 rgba(var(--ember-rgb), 0.62),
@@ -1450,7 +1450,7 @@
   font-size: 1.125rem;
   letter-spacing: 0.01em;
   text-transform: none;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   margin: 0.15rem 0 0.35rem;
 }
 .wb-status-readout__body {
@@ -1549,7 +1549,7 @@
   margin: 0;
   font-family: var(--font-serif);
   font-size: 0.9375rem;
-  color: #F2E8DC;
+  color: var(--ink-primary);
   line-height: 1.5;
 }
 
@@ -1584,20 +1584,20 @@
 }
 
 /* BYO console — hide mode readout on finished step if cramped */
-@media (max-width: 959px) {
+@media (max-width: 900px) {
   .wb-readout-rail--byo {
     display: none;
   }
 }
 
-@media (min-width: 960px) {
+@media (min-width: 901px) {
   .wb-shell {
     padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
   }
 
   .wb-mode-btn.is-active {
     background: linear-gradient(180deg, rgba(38, 26, 20, 0.98) 0%, rgba(26, 17, 13, 0.98) 100%);
-    color: #F2E8DC;
+    color: var(--ink-primary);
     border-color: rgba(var(--ember-rgb), 0.32);
     box-shadow:
       inset 0 2px 0 rgba(var(--ember-rgb), 0.55),
@@ -1624,7 +1624,7 @@
    WORKBENCH — Result score readout mobile stack (≤480px)
    ============================================================= */
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .wb-result-inner.wb-output-module .wb-output-module__head {
     padding-bottom: 0.28rem;
     margin-bottom: 0.32rem;
@@ -1787,7 +1787,7 @@
   font-style: italic;
   font-weight: 400;
   font-size: 0.95rem;
-  color: rgba(180, 192, 210, 0.95);
+  color: var(--ink-soft);
   text-decoration: none;
   border: none;
 }
@@ -1893,7 +1893,7 @@
   margin: 0 0 var(--space-2);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .page--field-notes .fn-masthead {
     margin-bottom: var(--space-4);
   }
@@ -2080,7 +2080,7 @@
   --wb-reader-thin-glow: #e07050;
   --wb-reader-full: #9bae7e;
   --wb-reader-full-bone: #e8dcc8;
-  --wb-reader-bone: #f2e8dc;
+  --wb-reader-bone: var(--ink-primary);
   --wb-reader-surface: #1a1410;
   --wb-reader-surface-deep: #12100d;
   --wb-reader-ember-edge: rgba(222, 160, 110, 0.14);
@@ -2153,7 +2153,7 @@
   font-weight: 500;
   line-height: 1.12;
   margin: 0 0 0.75rem;
-  color: var(--ink, #f2e8dc);
+  color: var(--ink-primary);
 }
 
 .wb-reader-v2__subcopy {
@@ -2543,7 +2543,7 @@
   font-family: var(--font-display);
   font-size: 1.05rem;
   font-weight: 500;
-  color: var(--ink, #f2e8dc);
+  color: var(--ink-primary);
   margin-bottom: 0.28rem;
 }
 
@@ -4000,7 +4000,7 @@
   font-family: var(--font-display);
   font-size: clamp(1.12rem, 2.2vw, 1.28rem);
   line-height: 1.62;
-  color: #f2e8dc;
+  color: var(--ink-primary);
 }
 
 .wb-reader-result__section--read .wb-reader-result__read-body p:last-child {
@@ -4855,7 +4855,7 @@
 .wb-act2__capture-opt.is-active {
   border-color: rgba(222, 111, 56, 0.6);
   background: rgba(222, 111, 56, 0.1);
-  color: #f2e8dc;
+  color: var(--ink-primary);
 }
 
 .wb-act2__capture-input {
@@ -4863,15 +4863,14 @@
   padding: 0.5rem 0.7rem;
   font-family: var(--font-sans);
   font-size: 0.9rem;
-  color: #f2e8dc;
+  color: var(--ink-primary);
   border: 1px solid rgba(242, 232, 220, 0.16);
   border-radius: 6px;
   background: rgba(18, 16, 13, 0.5);
 }
 
 .wb-act2__capture-input:focus {
-  outline: none;
-  border-color: rgba(222, 111, 56, 0.55);
+  border-color: var(--ember);
 }
 
 .wb-act2__capture-input::placeholder {
@@ -4920,7 +4919,7 @@
   line-height: 1.32;
   font-weight: 600;
   letter-spacing: -0.005em;
-  color: #f2e8dc;
+  color: var(--ink-primary);
 }
 
 .wb-loop__panels {
@@ -5042,7 +5041,7 @@
 .wb-loop__chip.is-active {
   border-color: rgba(222, 111, 56, 0.6);
   background: rgba(222, 111, 56, 0.12);
-  color: #f2e8dc;
+  color: var(--ink-primary);
 }
 
 .wb-loop__smallprint {
@@ -5408,7 +5407,7 @@
   color: var(--ink-dim);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
   .wb-funnel__grid {
     grid-template-columns: 1fr;
     gap: 0 0;
@@ -6092,7 +6091,7 @@
   font-size: 1.3rem;
   font-weight: 500;
   line-height: 1.25;
-  color: #F2E8DC;
+  color: var(--ink-primary);
 }
 
 .wb-share-consent__line {
@@ -6218,7 +6217,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 699px) {
   .wb-reader-v2__modes {
     grid-template-columns: 1fr;
   }
@@ -6362,7 +6361,7 @@
 }
 
 /* MOBILE PRODUCT UX — header flow, form density, suggest subordination, share + result polish */
-@media (max-width: 680px) {
+@media (max-width: 699px) {
   .wb-shell--reader-v2 .wb-shell__frame > div:first-child {
     margin-bottom: 4px !important;
   }
@@ -6396,7 +6395,7 @@
 
   .wb-shell--reader-v2 .wb-reader-v2__context-links a:not(:first-child) {
     font-size: 0.82rem;
-    color: rgba(165, 152, 138, 0.78);
+    color: var(--ink-secondary);
     font-weight: 400;
   }
 

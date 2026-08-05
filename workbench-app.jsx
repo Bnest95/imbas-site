@@ -127,18 +127,13 @@ const { useState, useEffect, useRef } = React;
 
 // ---- THEME (local for preview; swap to site CSS vars at integration) ----
 const C = {
-  bg: "#1E1815",
-  bgRaise: "#352A24",
-  bgSunk: "#140E0C",
-  text: "#F2E8DC",
-  textDim: "#B9A893",
-  textFaint: "#8C7C6B",
-  accent: "#DE6F38",
-  accentDim: "#C85830",
-  accentSoft: "#F08F58",
-  line: "rgba(242, 232, 220, 0.15)",
-  lineControl: "rgba(248, 168, 102, 0.28)",
-  good: "#9BAE7E",
+  text: "var(--ink-primary)",
+  textDim: "var(--ink-secondary)",
+  textFaint: "var(--ink-muted)",
+  accent: "var(--ember)",
+  accentSoft: "var(--ember-soft)",
+  line: "var(--line-soft)",
+  lineControl: "rgba(var(--ember-rgb), 0.28)",
 };
 // Brand-locked fonts (Notion source of truth): Fraunces / Inter / JetBrains Mono.
 // At site integration these come from the homepage's loaded fonts; the @import
@@ -964,7 +959,7 @@ const WORKBENCH_FLOW_CSS = `
   font-size: max(0.625rem, var(--mono-min));
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(180, 106, 90, 0.9);
+  color: var(--ember-bright);
   margin: 0 0 0.5rem;
 }
 .wb-result-hero__estimate {
@@ -1021,8 +1016,8 @@ const WORKBENCH_FLOW_CSS = `
   align-items: center;
   justify-content: center;
   color: rgba(242, 232, 220, 0.95);
-  background: rgba(180, 106, 90, 0.22);
-  border: 1px solid rgba(180, 106, 90, 0.5);
+  background: rgba(var(--ember-rgb), 0.22);
+  border: 1px solid rgba(var(--ember-rgb), 0.5);
 }
 .wb-guided-copy,
 .wb-loop__actions {
@@ -1081,7 +1076,7 @@ const WORKBENCH_FLOW_CSS = `
 }
 .wb-reader-v2__privacy-full a,
 .wb-reader-v2__post-privacy a {
-  color: rgba(180, 106, 90, 0.95);
+  color: var(--ember-bright);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -1610,7 +1605,7 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
   );
 }
 
-const inputStyle = { width: "100%", boxSizing: "border-box", background: "rgba(20, 14, 12, 0.85)", color: C.text, border: `1px solid ${C.lineControl}`, borderRadius: 7, padding: "18px 18px 16px", fontFamily: SANS, fontSize: 16, lineHeight: 1.5, outline: "none", resize: "vertical", minHeight: 44 };
+const inputStyle = { width: "100%", boxSizing: "border-box", background: "var(--bg-deep)", color: C.text, border: `1px solid ${C.lineControl}`, borderRadius: 7, padding: "18px 18px 16px", fontFamily: SANS, fontSize: 16, lineHeight: 1.5, resize: "vertical", minHeight: 44 };
 
 function ModelSelect({ value, onChange }) {
   return (
