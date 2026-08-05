@@ -125,20 +125,40 @@ fonts at the wrong metrics — a misleading capture.
 - it asserts the target is present, has a non-zero box, has its text rendered, **and** falls inside the
   rectangle being photographed
 - it rejects any PNG under 5 KB, since a near-uniform image deflates to almost nothing
-- it compares checksums across a run and refuses to write a manifest if two supposedly distinct states
-  produced identical bytes
+- it compares checksums across a run and fails the run if two supposedly distinct states produced
+  identical bytes
 
 **Captures are viewport-sized, with the state scrolled into view.** Full-page capture was tried and
 rejected on evidence: `captureBeyondViewport` wedges `Page.captureScreenshot` in `chrome-headless-shell`,
 and resizing the viewport to full content height instead produced a 1440x7446 image whose lower two
 thirds were never painted — the panel passed every DOM assertion and still did not appear in the pixels.
 
-Output goes to `docs/qa/<pass-name>/`, which is tracked. Alongside the images the harness writes
-`manifest.md` recording, per image: filename, SHA-256, byte size, viewport, what was framed, the state
-captured, the expected behavior, and `captured_against_sha`. That field is the commit the working tree
-sat on top of — the manifest says plainly that images were captured against that SHA **plus the
-uncommitted working tree**, not against their own commit, which did not exist yet when the shutter fired.
-Scratch, diagnostic, retry, and rejected captures are gitignored; only accepted images are tracked.
+Output goes to `docs/qa/<pass-name>/`, which is tracked. Scratch, diagnostic, retry, and rejected
+captures are gitignored; only accepted images are tracked.
+
+### The manifest
+
+`docs/qa/visual-acceptance-harness/manifest.md` is the record of the committed board: one row per image
+carrying the SHA-256 and byte size of the image **and of its paired snapshot**, plus viewport, URL, what
+was framed, the browser build, the state captured, and the expected behavior. It governs both baseline
+layers and says so in its own Scope section.
+
+It is **derived, not captured**. `node scripts/qa/visual-acceptance.mjs --manifest` rebuilds it from the
+scenario registry and the bytes already committed beside it: no browser, no server, no capture, and no
+image or snapshot moved — the write guard hands it a grant that opens `manifest.md` and nothing else.
+`--update` regenerates it too, so accepting one scenario leaves the whole record correct. A capture run
+writes no manifest at all, because a scratch directory holding whichever scenarios that run named is not
+the board.
+
+Two rules keep it from rotting. **Nothing measured at generation time goes in it** — no timestamp, no
+HEAD, no working-tree flag, no machine path. It previously carried `captured_against_sha`, and that field
+is exactly why unrelated commits could stale the file; capture-time provenance now lives where it stays
+true, in each snapshot's `## environment` block. **And its freshness is asserted, not trusted:**
+`test/qa-manifest-freshness.test.mjs` regenerates the manifest in memory and fails the suite on one byte
+of difference, so a pass that moves a baseline regenerates the record in the same commit without being
+told to. The generator also refuses to emit a partial record — a registered baseline missing from disk
+fails, and a baseline on disk the registry does not register fails too. That is the defect it was built
+for: the file sat 34-of-48 stale while describing a registry that had grown to 62.
 
 ### Regression diff
 
