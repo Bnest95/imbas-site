@@ -1802,6 +1802,28 @@ export function renderManifest(model) {
       `fails, and a baseline on disk that the registry does not register fails too.`
   );
   lines.push("");
+  // The negative half, stated in the document rather than left to inference. The old
+  // manifest carried a capture timestamp, a browser path and a board-wide
+  // captured_against_sha, so a reader had every reason to read it as a record of the
+  // capture session. It was not one: that SHA was a single value stamped on every row,
+  // and it said nothing at all about the images the file did not list. A document that
+  // does not say where its authority stops gets read as authoritative everywhere.
+  lines.push(
+    `**What it does not attest.** This manifest is a statement about byte identity as the tree ` +
+      `stands, and nothing else. It does not attest the capture session that produced any image — ` +
+      `not when the shutter fired, not which working tree was checked out, not which commit the ` +
+      `capture ran against. It records no browser environment beyond the version string each ` +
+      `snapshot carries for its own image, and no machine, path or operating system. It attests no ` +
+      `review, approval or acceptance event, and no baseline-acceptance provenance: that an image ` +
+      `is listed here means its bytes are on disk and hash to the value shown, not that anyone ` +
+      `signed off on them. It carries no historical capture SHA and no history of any kind. Those ` +
+      `facts are real and are kept, elsewhere and deliberately — each snapshot's \`## environment\` ` +
+      `block holds the conditions its own capture ran under, \`git log\` on an image file holds when ` +
+      `those bytes last moved and which commit moved them, and \`docs/qa/HARNESS-HISTORY.md\` holds ` +
+      `the removed historical record of this document's own pre-generated era. None of them is this ` +
+      `file, and a reader needing any of them should not look here.`
+  );
+  lines.push("");
   lines.push(`## Portability`);
   lines.push("");
   lines.push(

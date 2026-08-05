@@ -149,6 +149,26 @@ test("the scope declaration names the layers it governs, and governs exactly tho
   assert.ok(text.includes("| snapshot sha256 |"), "snapshots are declared governed but not checksummed");
 });
 
+test("the scope declaration states what the manifest does NOT attest", () => {
+  // The byte-for-byte gate above cannot catch this one: delete the paragraph from the
+  // generator and the committed file regenerates without it, both sides agreeing. So the
+  // negative half is pinned here by clause. The old manifest carried a capture timestamp,
+  // a browser path and a board-wide captured_against_sha, which is why a reader had every
+  // reason to read it as a record of the capture session — and why saying it is not one
+  // has to be a requirement of the document rather than a courtesy.
+  const text = renderManifest(buildManifestModel());
+  for (const [what, pattern] of [
+    ["it governs byte identity as the tree stands", /byte identity as the tree stands/i],
+    ["it does not attest the capture session", /does not attest the capture session/i],
+    ["it does not attest a browser environment", /no browser environment beyond the version string/i],
+    ["it does not attest review or approval events", /attests no review, approval or acceptance event/i],
+    ["it does not attest baseline-acceptance provenance", /no baseline-acceptance provenance/i],
+    ["it carries no historical capture SHA", /no historical capture SHA/i],
+  ]) {
+    assert.match(text, pattern, `the scope section does not state that ${what}`);
+  }
+});
+
 // ── The read-only property ───────────────────────────────────────────────────
 
 test("regenerating the manifest touches no baseline byte", () => {

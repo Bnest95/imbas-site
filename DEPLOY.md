@@ -160,6 +160,13 @@ told to. The generator also refuses to emit a partial record — a registered ba
 fails, and a baseline on disk the registry does not register fails too. That is the defect it was built
 for: the file sat 34-of-48 stale while describing a registry that had grown to 62.
 
+The manifest's own Scope section states what it does **not** attest — no capture session, no browser
+environment, no review or acceptance event, no historical capture SHA. Those facts are kept elsewhere
+on purpose. `docs/qa/HARNESS-HISTORY.md` is the append-only record of the hand-written blocks that
+stood in the manifest before it became generated, including the retired `captured_against_sha` and the
+founder ruling of 2026-08-03. It is history, not authority: where it and `manifest.md` disagree about
+the board, `manifest.md` is right.
+
 ### Regression diff
 
 Attesting to an image is not the same as noticing it changed. `--diff` recaptures every selected
