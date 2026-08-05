@@ -27,13 +27,14 @@
 //   node scripts/qa/visual-acceptance.mjs --scenario single-findings --viewport mobile-tall --out docs/qa/my-pass
 //   node scripts/qa/visual-acceptance.mjs --all --diff              # compare, write nothing
 //   node scripts/qa/visual-acceptance.mjs --update single-findings  # accept ONE baseline
+//   node scripts/qa/visual-acceptance.mjs --manifest                # rewrite the record, no browser
 //
 // Capture mode requires --out and refuses to aim it at the committed baseline
 // directory. Baselines move only under --update <scenario>. See the baseline write
 // boundary below for why.
 
 import { createServer } from "node:http";
-import { spawn, execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
@@ -82,7 +83,7 @@ const fail = (msg) => {
 // --all walked past both. So the check here is on the resolved PATH rather than
 // on a flag. A flag check only covers the code paths someone remembered to check;
 // a path check covers the ones they did not.
-const BASELINE_DIR = path.resolve(REPO_ROOT, "docs/qa/visual-acceptance-harness");
+export const BASELINE_DIR = path.resolve(REPO_ROOT, "docs/qa/visual-acceptance-harness");
 
 const insideBaselineDir = (p) => {
   const resolved = path.resolve(p);
@@ -122,10 +123,10 @@ export class BaselineGrant {
         files.add(`${name}--${viewport}.snapshot.txt`);
       }
     }
-    // The manifest attests a sha256 per image, so accepting an image change has to
-    // be able to correct it. runUpdate independently refuses to rewrite it when
-    // this run did not re-capture every image already on disk.
-    files.add("manifest.md");
+    // manifest.md is deliberately NOT here. It is no longer written from a capture
+    // run at all — it is derived from the committed bytes by regenerateManifest,
+    // which mints its own narrower authorization. An acceptance grants pixels; it
+    // does not need, and must not carry, permission to rewrite the record of them.
     this.scenarios = [...scenarioNames];
     this.files = files;
   }
@@ -140,6 +141,31 @@ export class BaselineGrant {
         `Refusing to write ${filename} into the committed baseline directory. This run accepted ` +
           `${this.scenarios.map((s) => `"${s}"`).join(", ")}, and that file belongs to none of them. ` +
           `Accept one scenario at a time with --update <scenario>.`
+      );
+    }
+  }
+}
+
+// The authorization the manifest regeneration holds, and the only other one that
+// opens the baseline directory. It is strictly narrower than a BaselineGrant: it
+// permits exactly one filename and can never be widened by an argument, so no pixel
+// and no snapshot can ride into the baseline directory behind a manifest rewrite.
+// It takes no scenario names because it needs none — the manifest is derived from
+// whatever is already committed, so rewriting it destroys no accepted state.
+export class ManifestGrant {
+  constructor() {
+    this.scenarios = ["(manifest only — no scenario)"];
+  }
+
+  allows(filename) {
+    return filename === "manifest.md";
+  }
+
+  assertAllows(filename) {
+    if (!this.allows(filename)) {
+      fail(
+        `Refusing to write ${filename} into the committed baseline directory. A manifest grant ` +
+          `authorizes manifest.md and nothing else.`
       );
     }
   }
@@ -197,11 +223,18 @@ export function resolveDestination(args) {
 // mobile-tall exists because a 375x812 capture was reported to render blank at the
 // compositor while 375x1600 rendered correctly. Both are kept so the claim can be
 // re-tested rather than assumed; see docs for what this run actually measured.
-const VIEWPORTS = {
+export const VIEWPORTS = {
   desktop: { width: 1440, height: 900, dsf: 2, mobile: false },
   mobile: { width: 375, height: 812, dsf: 3, mobile: true },
   "mobile-tall": { width: 375, height: 1600, dsf: 3, mobile: true },
 };
+
+// The viewports the board is actually kept at. Declared once and read by both the
+// command line default and the manifest, because those two disagreeing is how a
+// registered baseline becomes one the manifest does not list: the run photographs a
+// viewport the record has never heard of, or the record demands one no run captures.
+// mobile-tall is declared above and deliberately absent here — see UNPHOTOGRAPHED.
+export const BOARD_VIEWPORTS = ["desktop", "mobile"];
 
 // ── What the board does not cover ────────────────────────────────────────────
 // Written into the manifest, because a board that lists only what it photographs
@@ -1067,16 +1100,18 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 export function parseArgs(argv) {
   const out = {
     scenarios: [],
-    viewports: ["desktop", "mobile"],
+    viewports: [...BOARD_VIEWPORTS],
     outDir: null,
     list: false,
     all: false,
     diff: false,
+    manifest: false,
     update: [],
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--list") out.list = true;
+    else if (a === "--manifest") out.manifest = true;
     else if (a === "--all") out.all = true;
     else if (a === "--diff") out.diff = true;
     else if (a === "--scenario") out.scenarios.push(argv[++i]);
@@ -1099,6 +1134,14 @@ export function parseArgs(argv) {
     } else fail(`Unknown argument: ${a}`);
   }
   if (out.diff && out.update.length) fail("--diff and --update are different modes; pass one.");
+  // --manifest photographs nothing, so a run that also asked for captures has asked for
+  // two different things and would silently get one. Named flags, not a precedence rule.
+  if (out.manifest && (out.diff || out.all || out.update.length || out.scenarios.length)) {
+    fail(
+      "--manifest regenerates the record from what is already committed and captures nothing. " +
+        "Run it on its own, then --diff or --update separately."
+    );
+  }
   return out;
 }
 
@@ -1111,6 +1154,15 @@ async function main() {
       log(`  ${s.state}`);
       log(`  expects: ${s.expected}\n`);
     }
+    return;
+  }
+
+  // Read-only mode, and it returns before anything below it can run: no destination to
+  // resolve, no browser, no server, no capture, no baseline moved. It is the one mode
+  // that needs neither a machine that can render this board nor an acceptance to hold.
+  if (args.manifest) {
+    const written = regenerateManifest();
+    log(`✓ manifest regenerated from committed bytes: ${path.relative(REPO_ROOT, written)}`);
     return;
   }
 
@@ -1283,15 +1335,21 @@ async function main() {
   // Every capture above SUCCEEDED — capture() throws on any failure and this line is
   // unreachable otherwise. Only now may anything touch a baseline.
   if (mode === "diff") return runDiff(outDir, results);
-  if (mode === "update") return runUpdate(outDir, results, { blocked, binary, browserVersion, grant });
+  if (mode === "update") return runUpdate(outDir, results, grant);
 
   // Capture mode. outDir is guaranteed non-baseline by resolveDestination, and the
   // null grant means the write guard would refuse it even if that ever stopped
   // being true.
+  //
+  // No manifest is written here. The manifest is a governance record of the committed
+  // board — it asserts a complete inventory against the registry — and a scratch
+  // directory holding whichever scenarios this run happened to name is not that board.
+  // Emitting one anyway is what produced a file that read as complete while describing
+  // a subset. Everything a scratch run needs is already on disk beside it: the snapshot
+  // carries the full environment block, and the checksum table printed above carries
+  // the bytes.
   commitResults(outDir, results);
   for (const r of results) r.path = path.join(outDir, r.filename);
-  writeManifest(outDir, results, blocked, binary, browserVersion);
-  log(`✓ manifest: ${path.relative(REPO_ROOT, path.join(outDir, "manifest.md"))}`);
 }
 
 // ── Diff mode ────────────────────────────────────────────────────────────────
@@ -1402,8 +1460,7 @@ function runDiff(outDir, results) {
 // ── Update mode ──────────────────────────────────────────────────────────────
 // Named scenarios only, and the diff is PRINTED BEFORE anything is written, so an
 // accepted baseline change is always read first.
-function runUpdate(outDir, results, updateCtx) {
-  const { grant } = updateCtx;
+function runUpdate(outDir, results, grant) {
   if (!grant) fail("Update mode reached the write path with no baseline grant. Refusing to write.");
   log("\n══ baseline update ══");
   for (const r of results) {
@@ -1437,34 +1494,41 @@ function runUpdate(outDir, results, updateCtx) {
     log(`  ✓ written: ${path.relative(REPO_ROOT, imgPath)}`);
   }
 
-  // The manifest attests a sha256 per image. Updating one scenario without
-  // regenerating it would leave the manifest asserting a checksum that no longer
-  // matches the file next to it, so either it is rewritten completely or it is
-  // reported as stale — never silently left wrong.
-  const onDisk = safeReaddir(outDir).filter((f) => f.endsWith(".png"));
-  const covered = new Set(results.map((r) => r.filename));
-  const uncovered = onDisk.filter((f) => !covered.has(f));
-  if (uncovered.length) {
-    log(
-      `\n! manifest.md NOT regenerated: this run did not re-capture ${uncovered.join(", ")}, ` +
-        `and rewriting it now would drop them. Its checksums for the updated image(s) are stale ` +
-        `until you run a full capture.`
-    );
-  } else {
-    writeManifest(outDir, results, updateCtx.blocked, updateCtx.binary, updateCtx.browserVersion, grant);
-    log(`\n✓ manifest regenerated: ${path.relative(REPO_ROOT, path.join(outDir, "manifest.md"))}`);
-  }
+  // The manifest attests a sha256 per image, so an acceptance that moved one has to
+  // correct it. It used to be rewritten from THIS RUN's captures, which meant a
+  // single-scenario acceptance could only either drop the 60 images it did not
+  // photograph or leave the record stale — and the protocol forbids the bulk run that
+  // would have satisfied it, so it went stale by design, four times. It is now derived
+  // from the committed bytes instead of from the run, so accepting one scenario
+  // regenerates the whole record correctly and there is no partial case left to refuse.
+  const written = regenerateManifest({ baselineDir: outDir });
+  log(`\n✓ manifest regenerated from committed bytes: ${path.relative(REPO_ROOT, written)}`);
 }
 
 // ── Manifest ─────────────────────────────────────────────────────────────────
-// The manifest has to state how images are compared, because "compared against the
-// baseline" means two different things on this board and a reader cannot tell which
-// applies to which image by looking at the pictures. Generated from the registry rather
-// than typed alongside it: a hand-written copy would keep asserting a ceiling or a
-// scenario name that the comparator had already stopped using, and the record would go
-// quietly wrong in the direction nobody checks. The numbers and names below come from
-// the registry; the diagnostic figures are observations recorded once and do not live
-// there.
+// The manifest is a DERIVED DOCUMENT. It reads no browser, starts no server, captures
+// no pixel and moves no baseline: it is built from the scenario registry and from the
+// bytes already committed next to it, so it can be regenerated at any commit by anyone
+// with a checkout and no acceptance in hand.
+//
+// That is the fix for how it rotted. It used to be a by-product of a capture run, which
+// tied regenerating it to re-photographing all 62 images — a run the acceptance protocol
+// forbids, because accepting baselines in bulk is how a real regression gets blessed in
+// unread. So the document that attests a checksum per image could only be kept current by
+// doing the one thing nobody is allowed to do, and it fell 34-of-48 stale while every
+// individual acceptance was correct.
+//
+// Nothing measured at generation time may enter this file. No timestamp, no HEAD, no
+// working-tree state, no machine path: any of those would make an unrelated commit stale
+// the manifest, and a document that goes stale on its own teaches its readers to ignore
+// it. Capture-time provenance is not lost, it is filed where it belongs — in each
+// snapshot's `## environment` block, and in the git history of the image files.
+//
+// The comparison policy is generated rather than typed for the same reason the rest is: a
+// hand-written copy would keep asserting a ceiling or a scenario name the comparator had
+// already stopped using, and the record would go quietly wrong in the direction nobody
+// checks. The diagnostic figures inside it are observations recorded once and do not live
+// in the registry.
 export function renderComparisonPolicySection(policies) {
   const lines = [`## Comparison policy`, ""];
 
@@ -1514,42 +1578,251 @@ export function renderComparisonPolicySection(policies) {
   return lines;
 }
 
-function writeManifest(outDir, results, blocked, binary, browserVersion, grant = null) {
-  const baseSha = execSync("git rev-parse HEAD", { cwd: REPO_ROOT }).toString().trim();
-  const dirty = execSync("git status --porcelain", { cwd: REPO_ROOT }).toString().trim();
+// The structured model the document is projected from. It is built whole and returned
+// before a line of markdown exists, because the inventory rules are set operations and a
+// generator that formats as it walks has no set to check them against. Every value here
+// comes from the registry or from a committed byte; nothing is measured now.
+export function buildManifestModel({
+  baselineDir = BASELINE_DIR,
+  scenarios = SCENARIOS,
+  viewports = BOARD_VIEWPORTS,
+  viewportSpecs = VIEWPORTS,
+  policies = RASTER_POLICIES,
+  pinned = PINNED,
+} = {}) {
+  const boardViewports = [...viewports].sort();
+  for (const name of boardViewports) {
+    if (!viewportSpecs[name]) {
+      fail(`Board viewport "${name}" is not declared in VIEWPORTS, so its geometry cannot be recorded.`);
+    }
+  }
+
+  // Registered = what the registry says the board holds, not what happens to be on disk.
+  // Reading the directory instead would make the manifest a description of whatever it
+  // found, which is how a deleted baseline becomes invisible rather than a failure.
+  const registeredScenarios = Object.keys(scenarios)
+    .filter((name) => scenarios[name].drivable)
+    .sort();
+  const registered = [];
+  for (const scenario of registeredScenarios) {
+    for (const viewport of boardViewports) registered.push({ scenario, viewport });
+  }
+
+  const inventory = assertBaselineInventory(baselineDir, registered);
+
+  const images = registered
+    .map(({ scenario: name, viewport: viewportName }) => {
+      const scenario = scenarios[name];
+      const vp = viewportSpecs[viewportName];
+      const nav = resolveNavigation(scenario, pinned);
+      // The same expression the capture path frames on. Derived here rather than read
+      // back from the snapshot so the registry stays the thing that governs, and a
+      // registry edit that never reached the pixels shows up as the mismatch below.
+      const focus = scenario.focus || scenario.assertSelector || "";
+
+      const filename = `${name}--${viewportName}.png`;
+      const snapshotFilename = `${name}--${viewportName}.snapshot.txt`;
+      const imageBytes = fs.readFileSync(path.join(baselineDir, filename));
+      const snapshotBytes = fs.readFileSync(path.join(baselineDir, snapshotFilename));
+      const env = parseSnapshot(snapshotBytes.toString("utf8")).env || {};
+
+      // What the registry declares must be what the committed capture ran under. These
+      // agree today for all 62; if a registry edit ever lands without a re-capture they
+      // stop agreeing, and the manifest refuses to record a URL, a frame or a viewport
+      // that the bytes beside it were not produced at.
+      const declared = {
+        url: nav.page,
+        query_parameters: nav.query_parameters,
+        framed_on: focus || "(page top)",
+        viewport: `${vp.width}x${vp.height}`,
+        device_scale_factor: String(vp.dsf),
+        mobile_emulation: String(vp.mobile),
+      };
+      for (const [key, want] of Object.entries(declared)) {
+        if (env[key] !== want) {
+          fail(
+            `${snapshotFilename} was captured with ${key}=${JSON.stringify(env[key])}, but the registry ` +
+              `now declares ${JSON.stringify(want)}. The registry and the committed pixels disagree, so ` +
+              `no manifest can describe both. Re-capture with --update ${name}, or put the registry back.`
+          );
+        }
+      }
+      // Not derivable from the registry and not cross-checkable: these are facts only the
+      // capture knew. They are read back rather than recomputed, and a snapshot that lost
+      // one stops generation instead of yielding an "undefined" in the record.
+      for (const key of ["scroll_offset", "browser_version"]) {
+        if (!env[key]) fail(`${snapshotFilename} carries no ${key}, so its image row cannot be written.`);
+      }
+
+      return {
+        filename,
+        scenario: name,
+        viewport: viewportName,
+        sha256: sha256(imageBytes),
+        bytes: imageBytes.length,
+        snapshot: {
+          filename: snapshotFilename,
+          sha256: sha256(snapshotBytes),
+          bytes: snapshotBytes.length,
+        },
+        viewportLabel: `${vp.width}x${vp.height}@${vp.dsf}x`,
+        url: nav.page,
+        query: nav.query_parameters,
+        framedOn: focus,
+        scrollOffset: env.scroll_offset,
+        browserVersion: env.browser_version,
+        state: scenario.state,
+        expected: scenario.expected,
+      };
+    })
+    .sort((a, b) => (a.filename < b.filename ? -1 : a.filename > b.filename ? 1 : 0));
+
+  // url and query_parameters are per-scenario, not pinned: the board photographs more
+  // than one page, so listing a single value here would state a setting the board does
+  // not share. Both are dropped from the pinned table and printed against each image.
+  const shared = { ...pinned };
+  delete shared.url;
+  delete shared.query_parameters;
+
+  return {
+    scope: {
+      baselineRoot: path.relative(REPO_ROOT, baselineDir),
+      registryPath: path.relative(REPO_ROOT, path.join(HERE, "scenarios.mjs")),
+      governs: ["png", "snapshot"],
+      scenarioCount: registeredScenarios.length,
+      viewports: boardViewports.map((name) => ({ name, ...viewportSpecs[name] })),
+      imageCount: images.length,
+      snapshotCount: images.length,
+      inventory,
+    },
+    pinned: shared,
+    policies,
+    coveredUnderAnotherName: COVERED_UNDER_ANOTHER_NAME,
+    unphotographed: UNPHOTOGRAPHED,
+    images,
+  };
+}
+
+// Both directions, every time. A registered file missing from disk is the obvious
+// failure; a file on disk that nothing registers is the one that made this document
+// wrong, because the old manifest simply did not mention the 14 images it had never
+// been regenerated to see and read as complete anyway.
+export function assertBaselineInventory(baselineDir, registered) {
+  const onDisk = safeReaddir(baselineDir);
+  const layers = [
+    { layer: "image", suffix: ".png", want: registered.map((r) => `${r.scenario}--${r.viewport}.png`) },
+    {
+      layer: "snapshot",
+      suffix: ".snapshot.txt",
+      want: registered.map((r) => `${r.scenario}--${r.viewport}.snapshot.txt`),
+    },
+  ];
+  const report = {};
+  const problems = [];
+  for (const { layer, suffix, want } of layers) {
+    // .snapshot.txt files also end in .txt and .png files in nothing else, but an image
+    // filter of "endsWith(.png)" would swallow a snapshot named .png. Partition once,
+    // explicitly, so neither layer can borrow a file from the other.
+    const present = onDisk.filter((f) => f.endsWith(suffix)).sort();
+    const registeredNames = [...want].sort();
+    const registeredSet = new Set(registeredNames);
+    const presentSet = new Set(present);
+    const missing = registeredNames.filter((f) => !presentSet.has(f));
+    const unregistered = present.filter((f) => !registeredSet.has(f));
+    report[layer] = { registered: registeredNames.length, present: present.length, missing, unregistered };
+    if (missing.length) {
+      problems.push(
+        `${missing.length} registered ${layer}(s) are not on disk: ${missing.join(", ")}. The registry ` +
+          `claims a baseline that does not exist; capture it with --update <scenario> or stop registering it.`
+      );
+    }
+    if (unregistered.length) {
+      problems.push(
+        `${unregistered.length} ${layer}(s) on disk are registered by nothing: ${unregistered.join(", ")}. ` +
+          `A file the registry does not know about is a baseline no run compares, so listing it would ` +
+          `assert governance this harness does not have. Register its scenario or delete the file.`
+      );
+    }
+  }
+  if (problems.length) {
+    fail(
+      `The committed baseline directory and the scenario registry do not describe the same board, so ` +
+        `no complete manifest can be generated:\n  - ${problems.join("\n  - ")}`
+    );
+  }
+  return report;
+}
+
+// The projection. Deterministic in the strict sense: same registry plus same committed
+// bytes gives the same string on any machine at any commit on any day. Ordering is by
+// filename, compared as UTF-16 code units, so it does not inherit the registry's
+// authoring order and cannot move when someone reorders that object.
+export function renderManifest(model) {
+  const { scope } = model;
+  const viewportList = scope.viewports
+    .map((v) => `\`${v.name}\` (${v.width}x${v.height} @ dsf ${v.dsf})`)
+    .join(" and ");
 
   const lines = [];
   lines.push(`# Visual acceptance manifest`);
   lines.push("");
-  lines.push(`captured_against_sha: \`${baseSha}\``);
-  lines.push("");
-  // Two different claims, and the manifest is only allowed to make the true one. A
-  // dirty tree means the images answer to no commit at all, and saying so is the whole
-  // point of the line. A clean tree means they answer to exactly this one, and carrying
-  // the dirty wording anyway would understate what the run actually proved.
-  //
-  // This header block is rewritten wholesale on every generation. Anything hand-added to
-  // it belongs to ONE capture set and does not survive the next one — including the
-  // current addendum naming `d914e47d95921d0c08335c13888487001c2919da` as where the
-  // capture-time working tree was committed. That is correct, not a bug to fix here: a
-  // new capture set answers to a different tree, so re-emitting the old note would make
-  // the manifest assert provenance for images it no longer describes. Whoever recaptures
-  // re-adds the note that fits the new set, or leaves it off.
   lines.push(
-    dirty
-      ? `**These images were captured against commit \`${baseSha}\` PLUS the uncommitted working tree of the pass that produced them.** They were not captured against their own commit — that commit did not exist yet when the shutter fired. Treat \`captured_against_sha\` as the base the working tree sat on top of, nothing stronger.`
-      : `**These images were captured against commit \`${baseSha}\` exactly.** The working tree was clean when the shutter fired: no uncommitted change stood between that commit and these bytes, so \`captured_against_sha\` names the tree that produced them and not merely the base it sat on. Re-checking out \`${baseSha}\` reproduces the state photographed here.`
+    `Generated, never hand-edited. \`node scripts/qa/visual-acceptance.mjs --manifest\` rewrites this ` +
+      `file from the scenario registry and the bytes committed beside it, and ` +
+      `\`test/qa-manifest-freshness.test.mjs\` regenerates it and fails the suite on one byte of ` +
+      `difference. Anything typed in here is deleted by the next regeneration, so a note worth keeping ` +
+      `belongs in the harness that emits it.`
   );
   lines.push("");
-  lines.push(`- working tree at capture time: **${dirty ? "dirty" : "clean"}**`);
-  lines.push(`- browser: \`${binary}\``);
-  lines.push(`- browser version: \`${browserVersion}\``);
-  lines.push(`- captured: ${new Date().toISOString()}`);
-  lines.push(`- fixtures: synthetic, from \`scripts/qa/scenarios.mjs\` — not captures, not evidence`);
-  lines.push(`- network: deny-by-default; no model API call is reachable from this harness`);
-  if (blocked.length) {
-    lines.push(`- denied origins: ${[...new Set(blocked.map((u) => safeHost(u)))].join(", ")}`);
-  }
+  lines.push(
+    `Generation reads no browser, starts no server, captures no pixel and moves no baseline, and it ` +
+      `records nothing measured at generation time — no timestamp, no HEAD, no working-tree state, no ` +
+      `machine path. That is deliberate: a manifest carrying any of those goes stale on commits that ` +
+      `never touched an image, and a document that rots on its own teaches its readers to stop trusting ` +
+      `it. Capture-time provenance is not lost, it is filed where it stays true — each snapshot's ` +
+      `\`## environment\` block records the conditions its own capture ran under, and \`git log\` on an ` +
+      `image file records when those bytes last moved.`
+  );
+  lines.push("");
+  lines.push(`## Scope`);
+  lines.push("");
+  lines.push(
+    `**This manifest governs both committed baseline layers: the \`.png\` images and the ` +
+      `\`.snapshot.txt\` files beside them.** Both are checksummed. There is one row per image, and it ` +
+      `carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in ` +
+      `\`${scope.baselineRoot}/\` is governed here.`
+  );
+  lines.push("");
+  lines.push(
+    `The inventory is complete by construction rather than by inspection. \`${scope.registryPath}\` ` +
+      `registers ${scope.scenarioCount} drivable scenarios and the board is kept at ` +
+      `${scope.viewports.length} viewports, ${viewportList} — so ${scope.imageCount} images and ` +
+      `${scope.snapshotCount} snapshots are registered, and every one of them is listed below. ` +
+      `Generation stops rather than emit a partial record: a registered baseline missing from disk ` +
+      `fails, and a baseline on disk that the registry does not register fails too.`
+  );
+  lines.push("");
+  // The negative half, stated in the document rather than left to inference. The old
+  // manifest carried a capture timestamp, a browser path and a board-wide
+  // captured_against_sha, so a reader had every reason to read it as a record of the
+  // capture session. It was not one: that SHA was a single value stamped on every row,
+  // and it said nothing at all about the images the file did not list. A document that
+  // does not say where its authority stops gets read as authoritative everywhere.
+  lines.push(
+    `**What it does not attest.** This manifest is a statement about byte identity as the tree ` +
+      `stands, and nothing else. It does not attest the capture session that produced any image — ` +
+      `not when the shutter fired, not which working tree was checked out, not which commit the ` +
+      `capture ran against. It records no browser environment beyond the version string each ` +
+      `snapshot carries for its own image, and no machine, path or operating system. It attests no ` +
+      `review, approval or acceptance event, and no baseline-acceptance provenance: that an image ` +
+      `is listed here means its bytes are on disk and hash to the value shown, not that anyone ` +
+      `signed off on them. It carries no historical capture SHA and no history of any kind. Those ` +
+      `facts are real and are kept, elsewhere and deliberately — each snapshot's \`## environment\` ` +
+      `block holds the conditions its own capture ran under, \`git log\` on an image file holds when ` +
+      `those bytes last moved and which commit moved them, and \`docs/qa/HARNESS-HISTORY.md\` holds ` +
+      `the removed historical record of this document's own pre-generated era. None of them is this ` +
+      `file, and a reader needing any of them should not look here.`
+  );
   lines.push("");
   lines.push(`## Portability`);
   lines.push("");
@@ -1563,7 +1836,7 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
       `portable; they are the layer to trust when the machine changes.`
   );
   lines.push("");
-  lines.push(...renderComparisonPolicySection(RASTER_POLICIES));
+  lines.push(...renderComparisonPolicySection(model.policies));
   lines.push("");
   lines.push(`## Pinned environment`);
   lines.push("");
@@ -1571,18 +1844,11 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
   lines.push("");
   lines.push(`| pinned value | setting |`);
   lines.push(`| --- | --- |`);
-  // url and query_parameters are per-scenario, not pinned. The board photographs more
-  // than one page, so listing a single value here would state a setting the board does
-  // not share. Both are dropped from the pinned table and printed against each image.
-  const shared = { ...PINNED, browser_version: browserVersion, browser_executable: binary };
-  delete shared.query_parameters;
-  delete shared.url;
-  for (const k of Object.keys(shared).sort()) lines.push(`| ${k} | \`${shared[k]}\` |`);
-  for (const r of results) {
-    lines.push(
-      `| viewport \`${r.viewport_name}\` | \`${r.env.viewport} @ dsf ${r.env.device_scale_factor}, ` +
-        `mobile=${r.env.mobile_emulation}, scroll offset ${r.env.scroll_offset}\` |`
-    );
+  for (const key of Object.keys(model.pinned).sort()) lines.push(`| ${key} | \`${model.pinned[key]}\` |`);
+  // One row per viewport, not one per image. The old generator walked its capture
+  // results here and emitted the same two geometries thirty-one times each.
+  for (const v of model.scope.viewports) {
+    lines.push(`| viewport \`${v.name}\` | \`${v.width}x${v.height} @ dsf ${v.dsf}, mobile=${v.mobile}\` |`);
   }
   lines.push("");
   lines.push(`## Photographed, under another name`);
@@ -1593,7 +1859,7 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
       `Nothing in this section is a gap.`
   );
   lines.push("");
-  for (const item of COVERED_UNDER_ANOTHER_NAME) {
+  for (const item of model.coveredUnderAnotherName) {
     lines.push(`- **${item.state}** — photographed by ${item.photographedBy}. ${item.why}`);
   }
   lines.push("");
@@ -1605,39 +1871,45 @@ function writeManifest(outDir, results, blocked, binary, browserVersion, grant =
       `scenario should check this list first — it is where the next one comes from.`
   );
   lines.push("");
-  for (const gap of UNPHOTOGRAPHED) {
+  for (const gap of model.unphotographed) {
     lines.push(`- **${gap.state}** — ${gap.why}`);
   }
   lines.push("");
   lines.push(`## Images`);
   lines.push("");
-  for (const r of results) {
-    lines.push(`### \`${r.filename}\``);
+  lines.push(
+    `${model.images.length} images, ${model.images.length} snapshots, ordered by filename. Every ` +
+      `checksum below is of the committed bytes as they stand in this tree.`
+  );
+  lines.push("");
+  for (const image of model.images) {
+    lines.push(`### \`${image.filename}\``);
     lines.push("");
     lines.push(`| field | value |`);
     lines.push(`| --- | --- |`);
-    lines.push(`| sha256 | \`${r.sha256}\` |`);
-    lines.push(`| bytes | ${r.bytes} |`);
-    lines.push(`| viewport | ${r.viewport} (${r.viewport_name}) |`);
-    lines.push(`| url | \`${r.env.url}\`, query \`${r.env.query_parameters}\` |`);
-    lines.push(`| snapshot | \`${r.snapshotFilename}\` |`);
-    lines.push(`| framed on | \`${r.focus || "(page top)"}\` at scroll offset ${r.scrollTarget} |`);
-    lines.push(`| state captured | ${r.state} |`);
-    lines.push(`| expected behaviour | ${r.expected} |`);
-    lines.push(
-      `| captured_against_sha | \`${baseSha}\`${dirty ? " + uncommitted working tree" : " (clean tree)"} |`
-    );
+    lines.push(`| sha256 | \`${image.sha256}\` |`);
+    lines.push(`| bytes | ${image.bytes} |`);
+    lines.push(`| snapshot | \`${image.snapshot.filename}\` |`);
+    lines.push(`| snapshot sha256 | \`${image.snapshot.sha256}\` |`);
+    lines.push(`| snapshot bytes | ${image.snapshot.bytes} |`);
+    lines.push(`| viewport | ${image.viewportLabel} (${image.viewport}) |`);
+    lines.push(`| url | \`${image.url}\`, query \`${image.query}\` |`);
+    lines.push(`| framed on | \`${image.framedOn || "(page top)"}\` at scroll offset ${image.scrollOffset} |`);
+    lines.push(`| browser | \`${image.browserVersion}\` |`);
+    lines.push(`| state captured | ${image.state} |`);
+    lines.push(`| expected behaviour | ${image.expected} |`);
     lines.push("");
   }
-  writeArtifact(path.join(outDir, "manifest.md"), lines.join("\n"), grant);
+  return lines.join("\n");
 }
 
-function safeHost(u) {
-  try {
-    return new URL(u).hostname;
-  } catch {
-    return u;
-  }
+// The whole regeneration, in the only order it is allowed to happen: derive, project,
+// then write through the one write function under an authorization that opens nothing
+// but manifest.md.
+export function regenerateManifest(options = {}) {
+  const { baselineDir = BASELINE_DIR, ...rest } = options;
+  const model = buildManifestModel({ baselineDir, ...rest });
+  return writeArtifact(path.join(baselineDir, "manifest.md"), renderManifest(model), new ManifestGrant());
 }
 
 // ── Capture-then-commit boundary ─────────────────────────────────────────────
