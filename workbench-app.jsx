@@ -65,6 +65,7 @@ import {
 import { selectInspectionMeaning } from "./reader-explain-panel.js";
 import { describeProvenance, describeClaimState, PROVENANCE_UI } from "./reader-provenance.js";
 import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "./reader-public-example.js";
+import { getExample, placementRoute, resolvePlacement } from "./product-example-registry.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -1206,6 +1207,13 @@ const WORKBENCH_TERMS_CSS = `
 }
 `;
 
+// The context row's pointer at whichever case the site currently features. Route and
+// visible label both resolve through the registry, so this link and the no-JavaScript
+// fallback in workbench.html — which the materializer already generates from the same
+// placement — cannot disagree about which case that is.
+const FEATURED = getExample(resolvePlacement("archiveFeatured").exampleIds[0]);
+const FEATURED_ROUTE = placementRoute("archiveFeatured");
+
 // ---- CURATED CASES ----
 // Public archive cases with published case pages (005, 018, 003, 021, 013).
 // Real scores, real observed patterns. Case 006 withheld until a public case page exists.
@@ -1379,19 +1387,6 @@ function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
 const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
 const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
-
-const TARGETED_EXAMPLES = [
-  {
-    label: "Stock buybacks (Case 005)",
-    open: "How do stock buybacks affect the economy and shareholders?",
-    targeted: "What is SEC Rule 10b-18, and how does it relate to stock buybacks?",
-  },
-  {
-    label: "FDA drug safety (Case 018)",
-    open: "How does the FDA ensure drug safety?",
-    targeted: "What are PDUFA user fees, and how much of FDA drug review do they fund?",
-  },
-];
 
 function caseCardLabel(c) {
   if (!c || !c.ready) return null;
@@ -6616,7 +6611,7 @@ function Workbench() {
             {/* §E puts nothing between the headline and the paste box. These two doors are
                 kept, not deleted — they move below the instrument they used to sit above. */}
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
-              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href={FEATURED_ROUTE}>View {FEATURED.shortLabel} <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
           </div>
@@ -6630,7 +6625,7 @@ function Workbench() {
             </p>
             <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 22, paddingTop: 0, borderTop: "none" }}>
               <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
-              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href={FEATURED_ROUTE}>View {FEATURED.shortLabel} <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
             <Curated />

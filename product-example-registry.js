@@ -55,9 +55,15 @@ export const EXAMPLE_STATUS = Object.freeze({
 // below does the assigning, and it may only assign a role the example already carries
 // here. Two gates, because the failure this guards against is a placement edit made
 // without reading the disposition that put the example where it is.
+//
+// READER_GUIDED is named for the Reader, not the Workbench. Founder ruling of
+// 2026-08-03: "Workbench" is reserved for a genuine professional workspace and the
+// Reader is the primary public product, so the guided rotation carries the Reader's
+// name. No alias was left behind, because an alias is how retired vocabulary survives
+// its own renaming.
 export const PRODUCT_ROLE = Object.freeze({
   SITE_FLAGSHIP: "SITE_FLAGSHIP",
-  WORKBENCH_GUIDED: "WORKBENCH_GUIDED",
+  READER_GUIDED: "READER_GUIDED",
   ARCHIVE_FEATURED: "ARCHIVE_FEATURED",
   HOW_IT_WORKS_PRIMARY: "HOW_IT_WORKS_PRIMARY",
 });
@@ -133,7 +139,7 @@ export const EXAMPLES = Object.freeze({
     status: EXAMPLE_STATUS.FLAGSHIP,
     productRoles: Object.freeze([
       PRODUCT_ROLE.SITE_FLAGSHIP,
-      PRODUCT_ROLE.WORKBENCH_GUIDED,
+      PRODUCT_ROLE.READER_GUIDED,
       PRODUCT_ROLE.HOW_IT_WORKS_PRIMARY,
     ]),
     routes: Object.freeze([]),
@@ -165,7 +171,7 @@ export const EXAMPLES = Object.freeze({
   "005": Object.freeze({
     caseId: "005",
     status: EXAMPLE_STATUS.SUPPORTING,
-    productRoles: Object.freeze([PRODUCT_ROLE.WORKBENCH_GUIDED, PRODUCT_ROLE.ARCHIVE_FEATURED]),
+    productRoles: Object.freeze([PRODUCT_ROLE.READER_GUIDED, PRODUCT_ROLE.ARCHIVE_FEATURED]),
     routes: Object.freeze(["/case/005.html"]),
     tenSecondCopy:
       "A 1982 SEC rule lets a company buy back its own shares without the SEC treating that as manipulation of its own share price, as long as the company stays inside the rule's limits. The rule is SEC Rule 10b-18. Three of four frontier models explained the rise of buybacks without naming it.",
@@ -181,7 +187,7 @@ export const EXAMPLES = Object.freeze({
   "021": Object.freeze({
     caseId: "021",
     status: EXAMPLE_STATUS.SUPPORTING,
-    productRoles: Object.freeze([PRODUCT_ROLE.WORKBENCH_GUIDED]),
+    productRoles: Object.freeze([PRODUCT_ROLE.READER_GUIDED]),
     routes: Object.freeze(["/case/021.html"]),
     tenSecondCopy:
       "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
@@ -264,9 +270,9 @@ export const PLACEMENTS = Object.freeze({
     exampleId: "montana-employment",
   }),
 
-  // The workbench's guided rotation, in display order. The flagship leads.
-  workbenchGuided: Object.freeze({
-    role: PRODUCT_ROLE.WORKBENCH_GUIDED,
+  // The Reader's guided rotation, in display order. The flagship leads.
+  readerGuided: Object.freeze({
+    role: PRODUCT_ROLE.READER_GUIDED,
     resolves: PLACEMENT_RESOLUTION.ORDERED,
     exampleIds: Object.freeze(["montana-employment", "005", "021"]),
   }),
@@ -316,38 +322,65 @@ export const PLACEMENTS = Object.freeze({
 
 // ── Phase 2 exceptions ───────────────────────────────────────────────────────
 //
-// Two files a concurrent conditions-provenance pass owns for the duration of Phase 1.
-// Neither may be modified here, so their references stay hard-coded and are recorded
-// as debts rather than left implicit.
+// Files a concurrent conditions-provenance pass owned for the duration of Phase 1.
+// Neither could be modified there, so their references stayed hard-coded and were
+// recorded as debts rather than left implicit.
+//
+// inspection.js came out in Phase 2 on the terms its own entry set: the Phase 1 brief
+// expected a product-example reference in it, inventory found none, and the entry said
+// no migration work was required and none could be invented to justify keeping it. It
+// was deleted rather than renewed.
 //
 // Every entry carries a removal requirement, and the ratchet enforces that this list
-// only ever shrinks. A third entry cannot be added without failing the suite. That is
+// only ever shrinks. A new entry cannot be added without failing the suite. That is
 // the rule that keeps "temporary exception" from becoming the way things are done.
 export const PHASE_2_EXCEPTIONS = Object.freeze([
   Object.freeze({
     file: "workbench-app.jsx",
     reason:
-      "A conditions-provenance pass owns this file for the duration of Phase 1. Phase 1 did not modify, stage or format it.",
+      "The conditions-provenance pass that reserved this file has landed. What remains is one constant, CURATED, and it is the guided rotation itself rather than a stray link.",
     // Cited by symbol, not by line: line numbers are evidence for one tree only.
     references: Object.freeze([
-      "CURATED — five entries selected by hard-coded id (005, 018, 003, 021, 013), each carrying its own observed / whyItMatters / reveal / readerProof / short / cardShort copy. Includes 018, 003 and 013, all dispositioned off the product surface.",
-      "SHARE_COPY — six hard-coded case keys (005, 018, 003, 021, 013, 006).",
-      "TARGETED_EXAMPLES — labels \"Stock buybacks (Case 005)\" and \"FDA drug safety (Case 018)\".",
-      "Two context links reading <a href=\"/case/005.html\">View Case 005</a>, one in each hero branch.",
-      "PUBLIC_EXAMPLE is consumed here and nowhere else, so the flagship currently renders from one file that Phase 1 cannot reach.",
+      Object.freeze({
+        symbol: "CURATED",
+        note: "Five entries selected by hard-coded id (005, 018, 003, 021, 013), each carrying its own observed / whyItMatters / reveal / readerProof / short / cardShort copy. Includes 018, 003 and 013, all dispositioned off the product surface.",
+      }),
     ]),
-    // caseId === "006" appears twice as a rendering conditional. That is case-specific
-    // content, not placement, and it is exempt in place rather than pending.
     removalRequirement:
-      "Phase 2 replaces each reference above with a read of PLACEMENTS.workbenchGuided and the resolved example's tenSecondCopy, drops the entries for 018, 003 and 013 from the guided surface, deletes the superseded 005 copy, and deletes this exception entry. The entry may not be renewed.",
+      "Route CURATED through PLACEMENTS.readerGuided so the rotation renders exactly the renderable examples that placement resolves to, then delete this entry. The entry may not be renewed.",
+  }),
+]);
+
+// ── Case-owned content, exempt by right ──────────────────────────────────────
+//
+// An exemption is not a small exception. An exception is a debt with a discharge
+// condition attached; an exemption is a standing right, and the two are listed apart so
+// that nothing drifts from the first list into the second by being ignored long enough.
+//
+// The registry governs which examples a product surface shows. It does not govern what a
+// case says about itself. The constants below key their copy by case id because the copy
+// is about that case, which is the same reason a case page, an archive record, a fixture
+// and a citation are all exempt. No exception is required for them and none may be
+// written. The ratchet reads this list: any case id appearing in a shipped consumer
+// outside a symbol named here is an unclassified reference and fails the suite.
+export const EXEMPT_CASE_CONTENT = Object.freeze([
+  Object.freeze({
+    file: "workbench-app.jsx",
+    symbol: "SHARE_COPY",
+    reason:
+      "Per-case share text: the key anchor a term check looks for and what that anchor signifies. Keyed by case id because each entry describes one case's finding. It selects nothing — the caller passes in whichever case the rotation already resolved.",
   }),
   Object.freeze({
-    file: "inspection.js",
+    file: "workbench-app.jsx",
+    symbol: "buildShareResultText",
     reason:
-      "Reserved by the same pass and untouched for the same reason. The Phase 1 brief expected a product-example reference here; inventory found none. The file selects nothing by case id and reads record.case_label from the record it was given.",
-    references: Object.freeze([]),
-    removalRequirement:
-      "Phase 2 deletes this entry once the reserving pass lands. No migration work is required, and none may be invented to justify keeping it.",
+      "Carries one caseId === \"006\" branch, because Case 006 is the single case where all four tested models left the anchor out and the measured sentence has to say four rather than three. That is a per-case fact, not a placement.",
+  }),
+  Object.freeze({
+    file: "workbench-app.jsx",
+    symbol: "AnchorResult",
+    reason:
+      "Carries the same caseId === \"006\" branch as a rendering conditional, for the same per-case reason.",
   }),
 ]);
 

@@ -46,6 +46,7 @@ import {
   PLACEMENTS,
   PLACEMENT_RESOLUTION,
   PHASE_2_EXCEPTIONS,
+  EXEMPT_CASE_CONTENT,
   getExample,
   resolvePlacement,
   placementRoute,
@@ -60,6 +61,7 @@ import {
   regionContext,
 } from "../scripts/materialize-placements.mjs";
 import { lintUserFacingStrings } from "../reader-check-vocab.js";
+import { DEAD_PROTOTYPES } from "./dead-prototypes.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -423,11 +425,54 @@ test("the archive's featured placement is the only surface that resolves to a sc
   assert.equal(placementRoute("archiveFeatured"), "/case/005.html");
 });
 
-// ── The two Phase 2 exceptions, and no third ─────────────────────────────────
+// ── Every remaining case id is classified, and no new one is ─────────────────
+//
+// The half above proves no shipped page hard-codes a case link. This half proves no
+// shipped module hard-codes a case id outside a symbol someone classified. Ownership
+// resolves to the nearest preceding top-level declaration, so a new constant carrying
+// case ids fails under its own name instead of hiding inside a file that already holds
+// an entry.
 
-const RESERVED = ["workbench-app.jsx", "inspection.js"];
+const CASE_ID = /(["'])0(03|05|06|13|18|21)\1|href="\/case\/\d{3}\.html"/;
+const TOP_LEVEL = /^(?:export\s+)?(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/;
 
-test("the exception list holds exactly the two reserved files", () => {
+function caseIdOwners(rel) {
+  const owners = new Map();
+  let owner = "(file scope)";
+  read(rel)
+    .split("\n")
+    .forEach((line, i) => {
+      const declared = TOP_LEVEL.exec(line);
+      if (declared) owner = declared[1];
+      if (!CASE_ID.test(line)) return;
+      if (!owners.has(owner)) owners.set(owner, []);
+      owners.get(owner).push(i + 1);
+    });
+  return owners;
+}
+
+// Tracked modules that reach a visitor. The registry itself is excluded because it is
+// where case ids are supposed to live; the bundle because it is generated from the JSX
+// this already reads; tests and scripts because they are fixtures and tooling, exempt
+// under the same rule that exempts case pages. Dead prototypes come out on the list
+// zero-score-language.test.mjs already keeps — they ship nothing.
+const shippedModules = () =>
+  execFileSync("git", ["ls-files", "*.js", "*.jsx", "*.mjs"], { cwd: ROOT, encoding: "utf8" })
+    .trim()
+    .split("\n")
+    .filter(
+      (f) =>
+        f &&
+        !f.startsWith("test/") &&
+        !f.startsWith("scripts/") &&
+        !f.endsWith(".bundle.js") &&
+        !DEAD_PROTOTYPES.has(f) &&
+        f !== "product-example-registry.js",
+    );
+
+const RESERVED = ["workbench-app.jsx"];
+
+test("the exception list holds exactly the reserved files", () => {
   assert.deepEqual(
     PHASE_2_EXCEPTIONS.map((e) => e.file).sort(),
     RESERVED.slice().sort(),
@@ -435,7 +480,24 @@ test("the exception list holds exactly the two reserved files", () => {
   );
 });
 
-test("every exception carries a removal requirement", () => {
+test("inspection.js holds no exception and hard-codes no case id", () => {
+  // The entry that used to sit here said no migration work was required and none could
+  // be invented to justify keeping it. This is what keeps that true: if inspection.js
+  // ever starts selecting by case id it fails as an unclassified consumer rather than
+  // quietly reacquiring an exception.
+  assert.equal(
+    PHASE_2_EXCEPTIONS.some((e) => e.file === "inspection.js"),
+    false,
+    "inspection.js reacquired an exception",
+  );
+  assert.equal(
+    CASE_ID.test(read("inspection.js")),
+    false,
+    "inspection.js now hard-codes a case id",
+  );
+});
+
+test("every exception carries a removal requirement and cites its references by symbol", () => {
   for (const exception of PHASE_2_EXCEPTIONS) {
     assert.ok(Object.isFrozen(exception), `${exception.file} exception is not frozen`);
     assert.ok(exception.reason.length > 0, `${exception.file} exception states no reason`);
@@ -443,16 +505,62 @@ test("every exception carries a removal requirement", () => {
       exception.removalRequirement.length > 0,
       `${exception.file} exception states no removal requirement`,
     );
-    assert.ok(Array.isArray(exception.references), `${exception.file} exception lists no references`);
+    assert.ok(exception.references.length > 0, `${exception.file} exception lists no references`);
+    for (const ref of exception.references) {
+      assert.ok(ref.symbol.length > 0, `${exception.file} cites a reference with no symbol`);
+      assert.ok(ref.note.length > 0, `${exception.file} cites ${ref.symbol} with no note`);
+    }
   }
 });
 
-test("the reserved files are still the only unmigrated product-example consumers", () => {
-  // If a reserved file stops hard-coding case ids, its exception is discharged and the
-  // entry comes out. If a third file starts, the list above fails first.
-  const hardCoded = (rel) => /(["'])0(03|05|13|18|21)\1|href="\/case\/\d{3}\.html"/.test(read(rel));
-  assert.equal(hardCoded("workbench-app.jsx"), true, "workbench-app.jsx no longer needs its exception");
-  assert.equal(hardCoded("inspection.js"), false, "inspection.js now hard-codes a case id");
+test("every exemption names a symbol and claims no symbol the exceptions claim", () => {
+  for (const exemption of EXEMPT_CASE_CONTENT) {
+    assert.ok(Object.isFrozen(exemption), `${exemption.symbol} exemption is not frozen`);
+    assert.ok(exemption.symbol.length > 0, "an exemption names no symbol");
+    assert.ok(exemption.reason.length > 0, `${exemption.symbol} exemption states no reason`);
+    assert.equal(
+      PHASE_2_EXCEPTIONS.some(
+        (e) => e.file === exemption.file && e.references.some((r) => r.symbol === exemption.symbol),
+      ),
+      false,
+      `${exemption.symbol} is claimed as both a debt and a right`,
+    );
+  }
+});
+
+test("every case id in a shipped module sits inside a classified symbol", () => {
+  const classified = new Set([
+    ...PHASE_2_EXCEPTIONS.flatMap((e) => e.references.map((r) => `${e.file}:${r.symbol}`)),
+    ...EXEMPT_CASE_CONTENT.map((x) => `${x.file}:${x.symbol}`),
+  ]);
+  const modules = shippedModules();
+  assert.ok(modules.length > 0, "no shipped modules were found to classify");
+  const unclassified = [];
+  for (const rel of modules) {
+    for (const [symbol, lines] of caseIdOwners(rel)) {
+      if (!classified.has(`${rel}:${symbol}`)) unclassified.push(`${rel}:${symbol} (line ${lines[0]})`);
+    }
+  }
+  assert.deepEqual(
+    unclassified,
+    [],
+    "a case id is used outside the registry without a recorded exception or exemption",
+  );
+});
+
+test("no classified symbol has been deleted out from under its record", () => {
+  // The other failure mode: the file stops carrying the reference and the record
+  // survives, so the debt reads larger than it is and the exemption list goes
+  // fictional. Both lists have to describe the tree as it stands.
+  for (const [file, symbol] of [
+    ...PHASE_2_EXCEPTIONS.flatMap((e) => e.references.map((r) => [e.file, r.symbol])),
+    ...EXEMPT_CASE_CONTENT.map((x) => [x.file, x.symbol]),
+  ]) {
+    assert.ok(
+      caseIdOwners(file).has(symbol),
+      `${file}:${symbol} is recorded but carries no case id; delete the record`,
+    );
+  }
 });
 
 // ── Materialization ──────────────────────────────────────────────────────────
@@ -681,11 +789,11 @@ test("the placements blocked on the flagship's missing Inspection URL are exactl
   const blocked = Object.keys(PLACEMENTS).filter((name) => placementLinkBlocker(name) !== null);
   assert.deepEqual(
     blocked.sort(),
-    ["howItWorksPrimary", "siteFlagship", "workbenchGuided"],
+    ["howItWorksPrimary", "readerGuided", "siteFlagship"],
     "the set of placements blocked on the Montana Inspection URL changed",
   );
   // All three for one reason and the same one: each leads with the flagship, and the
-  // flagship has no public URL. workbenchGuided is here because its rotation leads with
+  // flagship has no public URL. readerGuided is here because its rotation leads with
   // Montana; its other two entries have routes and are not what blocks it.
   for (const name of blocked) {
     assert.match(placementLinkBlocker(name), /has no public URL/);

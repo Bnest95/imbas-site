@@ -5,6 +5,10 @@ Governing doctrine: `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md` (ADOPTED 2026-07
 Base: `origin/master` at `43c045c287a56079f0f3a4bf2009853a55c204b1`.
 Status of this document: PROPOSED. **Top-level conclusion: NO FLAGSHIP CURRENTLY ADMISSIBLE FROM THE AUTHORIZED IN-REPO SOURCE SET.** This pass returns a provisional lead candidate plus a missing-evidence report, not an approved flagship. It recommends; the founder decides. It changes no product content.
 
+> **UPDATE 2026-08-05 — registry Phase 2.** Two things below are superseded, and the body is left as written because it is a dated record of one tree.
+> - **`TARGETED_EXAMPLES` no longer exists.** Phase 2 deleted it. It was declared in `workbench-app.jsx` and referenced by nothing, so the "2 (005, 018)" row in the count reconciliation and every paired-example citation in §§4–5 describe dead code, not a shipped surface. Nothing rendered from it at the stated base either.
+> - **Every `workbench-app.jsx:NNNN` citation is pinned to the stated base `43c045c2`** and does not resolve against current master. Cite the symbol, not the line.
+
 ---
 
 ## 0. Scope, method, and two findings that shape everything below
