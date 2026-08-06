@@ -24,6 +24,7 @@ import {
   runDiff,
   retainDifferingFrame,
   pixelDifference,
+  expectedInventory,
   QUARANTINE_DIR,
 } from "../scripts/qa/visual-acceptance.mjs";
 import { serializeSnapshot } from "../scripts/qa/snapshot.mjs";
@@ -132,6 +133,10 @@ function bench() {
   return { root, outDir, quarantineRoot: path.join(root, "quarantine") };
 }
 
+// The one-entry board these tests run against, taken from the scenario registry the way
+// the real board takes its 62 — so a comparison these tests skip is still counted.
+const EXPECTED = expectedInventory({ names: ["curated-readout"], viewports: ["mobile"] });
+
 // runDiff sets process.exitCode. Reading it without restoring would hand this suite's own
 // exit status to the scenario under test, so the previous value goes back on the way out.
 function diffRun(outDir, results, quarantineRoot) {
@@ -141,7 +146,7 @@ function diffRun(outDir, results, quarantineRoot) {
   console.log = (...a) => lines.push(a.join(" "));
   try {
     process.exitCode = undefined;
-    runDiff(outDir, results, { quarantineRoot });
+    runDiff(outDir, results, { quarantineRoot, expected: EXPECTED, resolvedBrowser: ENV.browser_version });
     return { exitCode: process.exitCode, output: lines.join("\n") };
   } finally {
     console.log = priorLog;
