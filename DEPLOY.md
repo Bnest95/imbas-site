@@ -503,7 +503,7 @@ the prompt changes. `test/reader-prompt-version.test.mjs` enforces this: it pins
 `READER_PROMPT_VERSION` to a SHA-256 fingerprint of `SYSTEM_PROMPT` (both now exported from
 `api/read.js`) through a `KNOWN_FINGERPRINTS` registry. Any edit to `SYSTEM_PROMPT` changes the
 fingerprint and fails `npm test` until someone deliberately (1) bumps `READER_PROMPT_VERSION`
-(e.g. `reader.v1` → `reader.v2`) and (2) registers the new version's fingerprint in that file. So a
+(e.g. `reader.v3` → `reader.v4`) and (2) registers the new version's fingerprint in that file. So a
 prompt change can't ship while silently mislabelling every capture with the old version tag. The
 test imports the two constants only — no model call, no Airtable, no spend — and never prints the
 prompt text.
