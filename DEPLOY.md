@@ -75,6 +75,35 @@ Flags: `--scenario <name>` (repeatable), `--all` (every drivable scenario), `--v
 `desktop` 1440x900@2x, `mobile` 375x812@3x, `mobile-tall` 375x1600@3x), `--out <dir>`, `--list`,
 `--diff`, `--update <scenario>`.
 
+### The renderer is pinned, so install it before capturing
+
+PNG bytes depend on the Chromium build that produced them, so the board declares one. `playwright-core`
+in `devDependencies` names a `chromium-headless-shell` revision, the harness resolves that revision to
+exactly one path, and it verifies the binary reports the version the pin declares before it captures
+anything. Set it up once per machine:
+
+```bash
+npm ci
+npx playwright-core install chromium-headless-shell
+```
+
+A run prints what it resolved and what governs it:
+
+```
+── governed renderer ──
+  playwright-core:     1.60.0
+  governs:             chromium-headless-shell r1223 (148.0.7778.96)
+  selected executable: …/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell
+  reports:             148.0.7778.96
+```
+
+There is no fallback. A renderer that is absent, half-downloaded, unexecutable or reporting any other
+version exits non-zero before capture and prints the install command. That is deliberate: the harness
+used to take the first browser it found in a cache listing, which on a machine holding both Chrome 147
+and Chrome 148 meant it rendered the whole board on 147, compared 0 of 62 images against baselines
+captured on 148, and exited 0. Bumping `playwright-core` moves the governed build, and every baseline
+must be re-accepted on the new one — treat that as its own pass, not a side effect of a dependency bump.
+
 **Capturing requires `--out`, and it may not point at the baselines.** `--out` used to default to
 `docs/qa/visual-acceptance-harness/`, the committed baseline directory, so a bare `--all` rewrote every
 accepted baseline without saying so. Capture mode now refuses to run without a destination and refuses a

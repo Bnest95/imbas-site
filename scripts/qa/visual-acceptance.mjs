@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // scripts/qa/visual-acceptance.mjs — committed visual acceptance harness.
 //
-// Drives the workbench into a named app state and writes a PNG to disk. Zero new
-// dependencies: it speaks Chrome DevTools Protocol over Node's global WebSocket
-// (Node >= 22) to a headless Chrome already installed on the machine.
+// Drives the workbench into a named app state and writes a PNG to disk. It speaks Chrome
+// DevTools Protocol over Node's global WebSocket (Node >= 22) to one specific headless
+// Chrome: the chromium-headless-shell build that this repository's pinned playwright-core
+// declares. Install it with `npx playwright-core install chromium-headless-shell` after
+// `npm ci`. See "Governed renderer resolution" below for why nothing else will do.
 //
 // WHY THIS EXISTS
 // Three passes in a row produced visual acceptance evidence and lost it — an ad hoc
@@ -425,45 +427,173 @@ export function resolveReadiness(page) {
   return rule;
 }
 
-// ── Browser resolution ───────────────────────────────────────────────────────
-// Priority order: purpose-built headless shells first (fastest, no profile), then
-// full Chrome installs. Nothing is installed — if none of these exist the run stops
-// and reports every path probed.
-const BROWSER_CANDIDATES = [
-  ...expandGlob(path.join(os.homedir(), ".cache/puppeteer/chrome-headless-shell"), "chrome-headless-shell"),
-  ...expandGlob(path.join(os.homedir(), "Library/Caches/ms-playwright"), "chromium_headless_shell"),
-  ...expandGlob(path.join(os.homedir(), "Library/Caches/ms-playwright"), "chromium-"),
-  ...expandGlob(path.join(os.homedir(), ".cache/puppeteer/chrome"), "chrome"),
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/Applications/Chromium.app/Contents/MacOS/Chromium",
-  "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-];
+// ── Governed renderer resolution ─────────────────────────────────────────────
+// The renderer is a property of this repository, not of this machine. It is the
+// chromium-headless-shell build that the pinned playwright-core declares, and it is
+// found by computing one path from that declaration — never by listing a cache and
+// taking what turns up first.
+//
+// The resolver this replaced enumerated four cache roots and accepted the first
+// executable it could run. Two of its four probes could never match, because it looked
+// for Puppeteer directories by a prefix Puppeteer does not use. The two that did match
+// listed ms-playwright, where "chromium_headless_shell-1217" sorts ahead of
+// "chromium_headless_shell-1223" — so a machine holding both the governed build and an
+// older one rendered the whole board on the older one, while the board's own baselines
+// went on recording a version no run was producing.
+//
+// Nothing here is a preference order, so there is nothing to fall back to. A renderer
+// that is absent, half-downloaded, unexecutable, or reporting any version other than the
+// one the pin declares stops the run before a pixel is captured, and names the command
+// that fixes it.
+export const GOVERNED_BROWSER = "chromium-headless-shell";
+export const GOVERNED_SETUP_COMMAND = `npx playwright-core install ${GOVERNED_BROWSER}`;
 
-function expandGlob(baseDir, prefix) {
-  // Cache layouts nest a version dir then a platform dir; walk two levels and take
-  // any executable whose name looks like a Chromium binary.
-  const found = [];
-  if (!fs.existsSync(baseDir)) return found;
-  for (const versionDir of safeReaddir(baseDir)) {
-    if (!versionDir.startsWith(prefix)) continue;
-    const vPath = path.join(baseDir, versionDir);
-    for (const inner of safeReaddir(vPath)) {
-      const iPath = path.join(vPath, inner);
-      for (const name of [
-        "chrome-headless-shell",
-        "headless_shell",
-        "Google Chrome for Testing",
-        "Chromium",
-        "chrome",
-      ]) {
-        const direct = path.join(iPath, name);
-        if (fs.existsSync(direct) && fs.statSync(direct).isFile()) found.push(direct);
-        const appBin = path.join(iPath, `${name}.app/Contents/MacOS/${name}`);
-        if (fs.existsSync(appBin)) found.push(appBin);
-      }
-    }
+// Keyed on platform and architecture together, because the cache root and the platform
+// directory inside a download both vary by them. An unmapped platform is a stop, not a
+// guess: guessing the directory name would resolve to a path that does not exist, and
+// the point of this module is that the renderer is declared rather than discovered.
+const PLATFORM_LAYOUT = {
+  "darwin:arm64": {
+    cache: "Library/Caches/ms-playwright",
+    platformDir: "chrome-headless-shell-mac-arm64",
+    binary: "chrome-headless-shell",
+  },
+  "darwin:x64": {
+    cache: "Library/Caches/ms-playwright",
+    platformDir: "chrome-headless-shell-mac-x64",
+    binary: "chrome-headless-shell",
+  },
+};
+
+export function platformLayout(platform = process.platform, arch = process.arch) {
+  const layout = PLATFORM_LAYOUT[`${platform}:${arch}`];
+  if (!layout) {
+    fail(
+      `No governed-renderer layout for ${platform}/${arch}. This board is captured on macOS.\n` +
+        `  Fix: add the cache root and platform directory names for ${platform}/${arch} to ` +
+        `PLATFORM_LAYOUT in ${path.relative(REPO_ROOT, fileURLToPath(import.meta.url))}, so the ` +
+        `renderer stays declared rather than guessed.`
+    );
   }
-  return found;
+  return layout;
+}
+
+// Resolved from this module, so it walks up to the repository's own node_modules and
+// reports the dependency this checkout declares rather than whatever a shell happens to
+// have on its path.
+export function locatePlaywrightCore(resolve = (spec) => import.meta.resolve(spec)) {
+  try {
+    return path.dirname(fileURLToPath(resolve("playwright-core/package.json")));
+  } catch {
+    return fail(
+      `playwright-core is not installed, so no renderer is governed and none may be chosen.\n` +
+        `  Fix: npm ci`
+    );
+  }
+}
+
+// playwright-core ships the browser registry it was built against. Reading the revision
+// from there is what ties the renderer to the dependency pin: bumping playwright-core
+// moves the governed build, and nothing else can.
+export function governedRendererSpec({ packageRoot = locatePlaywrightCore(), readJson = readJsonFile } = {}) {
+  const playwrightCoreVersion = readJson(path.join(packageRoot, "package.json")).version;
+  const registry = readJson(path.join(packageRoot, "browsers.json"));
+  const entry = (registry?.browsers ?? []).find((b) => b.name === GOVERNED_BROWSER);
+  if (!entry?.revision || !entry?.browserVersion) {
+    return fail(
+      `playwright-core ${playwrightCoreVersion} declares no usable "${GOVERNED_BROWSER}" entry in ` +
+        `browsers.json, so this pin governs no renderer and the board cannot be captured against one.`
+    );
+  }
+  return {
+    playwrightCoreVersion,
+    revision: String(entry.revision),
+    browserVersion: entry.browserVersion,
+    installDirName: `chromium_headless_shell-${entry.revision}`,
+  };
+}
+
+function readJsonFile(p) {
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf8"));
+  } catch (e) {
+    return fail(`Could not read ${p}: ${e.message}\n  Fix: npm ci`);
+  }
+}
+
+function probeBrowserVersion(binary) {
+  const res = spawnSync(binary, ["--version"], { encoding: "utf8", timeout: 30000 });
+  if (res.error) fail(`Could not execute the governed renderer at ${binary}: ${res.error.message}`);
+  if (res.status !== 0) fail(`The governed renderer at ${binary} exited ${res.status} for --version.`);
+  const reported = `${res.stdout ?? ""} ${res.stderr ?? ""}`.trim();
+  const version = /(\d+\.\d+\.\d+\.\d+)/.exec(reported)?.[1];
+  if (!version) fail(`The governed renderer at ${binary} reported no parseable version: ${reported || "(no output)"}`);
+  return version;
+}
+
+export function resolveBrowser({
+  spec = governedRendererSpec(),
+  layout = platformLayout(),
+  env = process.env,
+  home = os.homedir(),
+  exists = (p) => fs.existsSync(p),
+  isExecutable = (p) => {
+    try {
+      fs.accessSync(p, fs.constants.X_OK);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  probeVersion = probeBrowserVersion,
+} = {}) {
+  const registryDir = env.PLAYWRIGHT_BROWSERS_PATH
+    ? path.resolve(env.PLAYWRIGHT_BROWSERS_PATH)
+    : path.join(home, layout.cache);
+  const installDir = path.join(registryDir, spec.installDirName);
+  const binary = path.join(installDir, layout.platformDir, layout.binary);
+  const governs =
+    `playwright-core ${spec.playwrightCoreVersion} governs ${GOVERNED_BROWSER} ` +
+    `r${spec.revision} (${spec.browserVersion})`;
+  const fixIt = `  Fix: ${GOVERNED_SETUP_COMMAND}`;
+
+  if (!exists(installDir)) {
+    fail(`${governs}, which is not installed at ${installDir}.\n${fixIt}`);
+  }
+  // Written last by the downloader, so its absence means an interrupted or failed
+  // download left a directory that looks installed from the outside.
+  if (!exists(path.join(installDir, "INSTALLATION_COMPLETE"))) {
+    fail(`${governs}, and ${installDir} exists but the download never completed.\n${fixIt}`);
+  }
+  if (!exists(binary)) {
+    fail(`${governs}, and ${installDir} is present but holds no executable at ${binary}.\n${fixIt}`);
+  }
+  if (!isExecutable(binary)) {
+    fail(`${governs}, and ${binary} is present but not executable.\n${fixIt}`);
+  }
+
+  const actualBrowserVersion = probeVersion(binary);
+  if (actualBrowserVersion !== spec.browserVersion) {
+    fail(
+      `${governs}, but ${binary} reports ${actualBrowserVersion}.\n` +
+        `  A renderer that is not the governed one is not a renderer this board may be captured on.\n${fixIt}`
+    );
+  }
+
+  return { binary, installDir, registryDir, actualBrowserVersion, ...spec };
+}
+
+// Printed on every run that gets this far. The four facts appear together because the
+// failure this lane exists to close was legible only by holding them apart: the board
+// reported which executable it launched and never which one the repository governed.
+export function formatGovernedRenderer(r) {
+  return [
+    "── governed renderer ──",
+    `  playwright-core:     ${r.playwrightCoreVersion}`,
+    `  governs:             ${GOVERNED_BROWSER} r${r.revision} (${r.browserVersion})`,
+    `  selected executable: ${r.binary}`,
+    `  reports:             ${r.actualBrowserVersion}`,
+  ].join("\n");
 }
 
 function safeReaddir(p) {
@@ -472,23 +602,6 @@ function safeReaddir(p) {
   } catch {
     return [];
   }
-}
-
-function resolveBrowser() {
-  const probed = [];
-  for (const candidate of BROWSER_CANDIDATES) {
-    probed.push(candidate);
-    try {
-      fs.accessSync(candidate, fs.constants.X_OK);
-      return { binary: candidate, probed };
-    } catch {
-      /* keep probing */
-    }
-  }
-  fail(
-    "No usable headless browser found. Nothing was installed.\nProbed these paths:\n" +
-      probed.map((p) => `  - ${p}`).join("\n")
-  );
 }
 
 // ── Static server ────────────────────────────────────────────────────────────
@@ -1234,8 +1347,9 @@ async function main() {
   const expected = expectedInventory({ names, viewports: args.viewports });
   log(`✓ expected inventory: ${expected.length} image(s) and ${expected.length} snapshot(s) from the registry`);
 
-  const { binary, probed } = resolveBrowser();
-  log(`✓ browser: ${binary}\n  (probed ${probed.length} path(s))`);
+  const renderer = resolveBrowser();
+  const binary = renderer.binary;
+  log(formatGovernedRenderer(renderer));
 
   const { server, port, state } = await startStaticServer(REPO_ROOT);
   const origin = `http://127.0.0.1:${port}`;
@@ -1255,6 +1369,18 @@ async function main() {
   const { proc, userDataDir, port: cdpPort } = await launchBrowser(binary);
   const versionInfo = await (await fetch(`http://127.0.0.1:${cdpPort}/json/version`)).json();
   const browserVersion = versionInfo.Browser || "unknown";
+  // The --version probe proved the file on disk; this proves the process that is about
+  // to render. They can disagree — a binary swapped between the two, or a shell that
+  // execs something else — and only the second one draws the pixels.
+  if (browserVersion !== `HeadlessChrome/${renderer.browserVersion}`) {
+    proc.kill("SIGKILL");
+    server.close();
+    fail(
+      `The launched renderer identifies over CDP as "${browserVersion}", not ` +
+        `"HeadlessChrome/${renderer.browserVersion}" as ${renderer.binary} governs.\n` +
+        `  Fix: ${GOVERNED_SETUP_COMMAND}`
+    );
+  }
   // Stated up front and in full, on every mode. The 0-of-62 run reported this version in
   // one line and the version its baselines demanded in none, so the two never appeared
   // side by side and the mismatch was only visible to someone reading 62 skip lines.
