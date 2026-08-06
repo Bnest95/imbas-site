@@ -4595,7 +4595,23 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 
 @media (max-width: 768px) {
-  body { background-attachment: scroll; }
+  /* The ambient gradients render from a viewport-fixed layer here rather than from
+     the body background. Attached to the document box, they re-rasterised under the
+     sticky masthead's backdrop-filter whenever page length changed, so every content
+     edit forced a baseline re-acceptance. Same two gradients in the same order, and
+     the same slot in the paint order: above the canvas colour, below every element
+     background. Desktop keeps background-attachment: fixed and is unaffected. */
+  body { background-image: none; }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      radial-gradient(1200px 800px at 78% -10%, var(--slate-glow), transparent 60%),
+      radial-gradient(900px 600px at 12% 110%, var(--ember-trace), transparent 65%);
+  }
   .field-noise::before,
   .field-noise::after {
     filter: blur(72px);
