@@ -1228,6 +1228,12 @@ async function main() {
   }
   log(`✓ fixture integrity: ${names.length} scenario(s) consistent`);
 
+  // Fixed here, before a browser is launched or a pixel captured, from the registry and
+  // the viewport list. Taking it after the run would let a run that lost a scenario also
+  // lose the expectation that would have caught it.
+  const expected = expectedInventory({ names, viewports: args.viewports });
+  log(`✓ expected inventory: ${expected.length} image(s) and ${expected.length} snapshot(s) from the registry`);
+
   const { binary, probed } = resolveBrowser();
   log(`✓ browser: ${binary}\n  (probed ${probed.length} path(s))`);
 
@@ -1249,7 +1255,17 @@ async function main() {
   const { proc, userDataDir, port: cdpPort } = await launchBrowser(binary);
   const versionInfo = await (await fetch(`http://127.0.0.1:${cdpPort}/json/version`)).json();
   const browserVersion = versionInfo.Browser || "unknown";
-  log(`✓ browser version: ${browserVersion}`);
+  // Stated up front and in full, on every mode. The 0-of-62 run reported this version in
+  // one line and the version its baselines demanded in none, so the two never appeared
+  // side by side and the mismatch was only visible to someone reading 62 skip lines.
+  const launchIdentity = baselineBrowserIdentity(BASELINE_DIR, expected);
+  log(
+    formatBrowserIdentity({
+      resolved: browserVersion,
+      required: launchIdentity.required,
+      unreadable: launchIdentity.unreadable,
+    })
+  );
   const targets = await (await fetch(`http://127.0.0.1:${cdpPort}/json/list`)).json();
   const page = targets.find((t) => t.type === "page");
   if (!page) fail("No page target exposed by the browser.");
@@ -1354,7 +1370,7 @@ async function main() {
 
   // Every capture above SUCCEEDED — capture() throws on any failure and this line is
   // unreachable otherwise. Only now may anything touch a baseline.
-  if (mode === "diff") return runDiff(outDir, results);
+  if (mode === "diff") return runDiff(outDir, results, { expected, resolvedBrowser: browserVersion });
   if (mode === "update") return runUpdate(outDir, results, grant);
 
   // Capture mode. outDir is guaranteed non-baseline by resolveDestination, and the
@@ -1500,14 +1516,90 @@ export function retainDifferingFrame({
   return { framePath, sidecarPath, candidateSha256 };
 }
 
+// ── What the run was supposed to compare ─────────────────────────────────────
+// Derived from the scenario registry and the viewport list, never from the results a
+// run produced. That direction is the whole point: a count taken from the run can only
+// ever say "everything I attempted, I attempted", which is how 0 of 62 image
+// comparisons exited 0 and printed an all-clear. A scenario dropped before it ever
+// registered an attempt is still expected here, and therefore still uncompared.
+export function expectedInventory({ names, viewports, scenarios = SCENARIOS }) {
+  if (!Array.isArray(names) || !names.length) fail("expectedInventory needs at least one scenario name.");
+  if (!Array.isArray(viewports) || !viewports.length) fail("expectedInventory needs at least one viewport.");
+  const inventory = [];
+  for (const scenario of [...names].sort()) {
+    const registered = scenarios[scenario];
+    if (!registered) fail(`expectedInventory was given "${scenario}", which the scenario registry does not register.`);
+    if (!registered.drivable) {
+      fail(`expectedInventory was given "${scenario}", which is fixture-only and cannot be photographed.`);
+    }
+    for (const viewport of [...viewports].sort()) {
+      inventory.push({ scenario, viewport, id: `${scenario}--${viewport}` });
+    }
+  }
+  return inventory;
+}
+
+// ── Browser identity ─────────────────────────────────────────────────────────
+// The version the baselines were captured at, read back from the committed snapshots
+// rather than written down anywhere. It is reported on every run, passing or failing:
+// the 0-of-62 run was discoverable only by reading skip lines, and a fact that has to
+// be excavated from a log is a fact nobody checks.
+export function baselineBrowserIdentity(outDir, expected) {
+  const versions = new Map();
+  const unreadable = [];
+  for (const { id } of expected) {
+    const snapPath = path.join(outDir, `${id}.snapshot.txt`);
+    let version = null;
+    try {
+      version = parseSnapshot(fs.readFileSync(snapPath, "utf8")).env.browser_version || null;
+    } catch {
+      version = null;
+    }
+    if (!version) {
+      unreadable.push(id);
+      continue;
+    }
+    if (!versions.has(version)) versions.set(version, []);
+    versions.get(version).push(id);
+  }
+  return { required: [...versions.keys()].sort(), byVersion: versions, unreadable };
+}
+
+export function formatBrowserIdentity({ resolved, required, unreadable }) {
+  const lines = ["── browser identity ──"];
+  lines.push(`  resolved this run:   ${resolved || "(not resolved)"}`);
+  lines.push(`  baselines require:   ${required.length ? required.join(", ") : "(none recorded)"}`);
+  const agrees = required.length === 1 && required[0] === resolved;
+  lines.push(`  agreement:           ${agrees ? "match" : "MISMATCH"}`);
+  if (unreadable.length) {
+    lines.push(`  baselines with no recorded version: ${unreadable.length} (${unreadable.slice(0, 5).join(", ")}${unreadable.length > 5 ? ", …" : ""})`);
+  }
+  return lines.join("\n");
+}
+
 // ── Diff mode ────────────────────────────────────────────────────────────────
 // Compares a fresh capture against the committed baseline. Writes no baseline and
 // accepts nothing; the only bytes it may lay down are quarantined evidence of a
 // difference it just observed.
-export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {}) {
+//
+// A skipped comparison is not a passed comparison. Every layer is counted against the
+// registry-derived inventory, and a run that compared fewer than it was supposed to
+// exits non-zero and prints no all-clear — whatever the reason, including reasons this
+// code has never heard of.
+export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR, expected, resolvedBrowser = null } = {}) {
+  if (!Array.isArray(expected) || !expected.length) {
+    fail(
+      "runDiff was called with no expected inventory. The inventory is what makes a skipped " +
+        "comparison visible, so a run without one cannot report a verdict."
+    );
+  }
   let changed = 0;
   let missing = 0;
   let retained = 0;
+  const comparedImages = new Set();
+  const comparedSnapshots = new Set();
+  const uncompared = [];
+  const note = (id, layer, reason) => uncompared.push({ id, layer, reason });
   log("\n══ regression diff ══");
 
   // Retention never changes the verdict. A difference already exits non-zero, so a
@@ -1530,14 +1622,17 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
   };
 
   for (const r of results) {
+    const id = r.filename.replace(/\.png$/, "");
     const snapPath = path.join(outDir, r.snapshotFilename);
     const imgPath = path.join(outDir, r.filename);
-    log(`\n▶ ${r.filename.replace(/\.png$/, "")}`);
+    log(`\n▶ ${id}`);
 
     if (!fs.existsSync(snapPath)) {
       log(`  ✗ no baseline snapshot at ${path.relative(REPO_ROOT, snapPath)}`);
       log(`    create one with: --update ${r.filename.split("--")[0]}`);
       missing++;
+      note(id, "snapshot", "no baseline snapshot on disk");
+      note(id, "image", "no baseline snapshot on disk, so the image was never reached");
       continue;
     }
 
@@ -1547,9 +1642,12 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
     } catch (e) {
       log(`  ✗ baseline is unreadable: ${e.message}`);
       missing++;
+      note(id, "snapshot", `baseline is unreadable: ${e.message}`);
+      note(id, "image", "baseline snapshot is unreadable, so the image was never reached");
       continue;
     }
 
+    comparedSnapshots.add(id);
     if (d.identical) {
       log("  ✓ snapshot: no change");
     } else {
@@ -1571,7 +1669,8 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
     })();
     const cmp = imageComparability(baseEnv, r.env);
     if (!cmp.comparable) {
-      log(`  – image: skipped (${cmp.reason})`);
+      log(`  ✗ image: NOT COMPARED (${cmp.reason})`);
+      note(id, "image", cmp.reason);
       continue;
     }
 
@@ -1587,8 +1686,10 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
       if (!baselineImg) {
         log(`  ✗ image: no baseline on disk`);
         missing++;
+        note(id, "image", "no baseline image on disk");
         continue;
       }
+      comparedImages.add(id);
       const report = comparePolicy(r.policy, baselineImg, r.buf, r.rasterRegion);
       const bytesMatch = baselineImg.length === r.buf.length && baselineImg.equals(r.buf);
       log(
@@ -1599,27 +1700,81 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
       log(formatPolicyReport(report));
       if (report.result !== "pass") {
         changed++;
-        retain(r.filename.replace(/\.png$/, ""), r, baselineImg, imgPath);
+        retain(id, r, baselineImg, imgPath);
       }
       continue;
     }
 
     const img = diffImageBuffers(baselineImg, r.buf);
-    if (img.status === "identical") log(`  ✓ image: byte-identical (${img.baselineBytes} bytes)`);
-    else if (img.status === "missing-baseline") {
+    if (img.status === "identical") {
+      comparedImages.add(id);
+      log(`  ✓ image: byte-identical (${img.baselineBytes} bytes)`);
+    } else if (img.status === "missing-baseline") {
       log(`  ✗ image: no baseline on disk`);
       missing++;
+      note(id, "image", "no baseline image on disk");
     } else {
+      comparedImages.add(id);
       log(`  ✗ image: bytes differ (baseline ${img.baselineBytes}, fresh ${img.freshBytes})`);
       changed++;
-      retain(r.filename.replace(/\.png$/, ""), r, baselineImg, imgPath);
+      retain(id, r, baselineImg, imgPath);
     }
   }
 
+  // ── The counting gate ──────────────────────────────────────────────────────
+  // Everything above reports what it looked at. This reports what it never reached,
+  // and it reads the registry rather than the run to know the difference. Scenarios
+  // that produced no result at all land here too: they cannot have logged a skip
+  // line, because nothing ever ran to log one.
+  const expectedIds = expected.map((e) => e.id);
+  const producedIds = new Set(results.map((r) => r.filename.replace(/\.png$/, "")));
+  for (const id of expectedIds) {
+    if (producedIds.has(id)) continue;
+    note(id, "snapshot", "the run produced no capture for this scenario/viewport");
+    note(id, "image", "the run produced no capture for this scenario/viewport");
+  }
+  const unregistered = [...producedIds].filter((id) => !expectedIds.includes(id));
+
+  const identity = baselineBrowserIdentity(outDir, expected);
   log("");
-  if (missing) log(`✗ ${missing} baseline(s) missing or unreadable.`);
+  log(formatBrowserIdentity({ resolved: resolvedBrowser, required: identity.required, unreadable: identity.unreadable }));
+
+  const imagesShort = comparedImages.size !== expectedIds.length;
+  const snapshotsShort = comparedSnapshots.size !== expectedIds.length;
+
+  log("");
+  log("── coverage ──");
+  log(`  snapshots: ${comparedSnapshots.size} compared of ${expectedIds.length} expected`);
+  log(`  images:    ${comparedImages.size} compared of ${expectedIds.length} expected`);
+
+  const verdict = {
+    expected: expectedIds.length,
+    comparedSnapshots: comparedSnapshots.size,
+    comparedImages: comparedImages.size,
+    changed,
+    missing,
+    retained,
+    uncompared,
+    unregistered,
+    browser: { resolved: resolvedBrowser, required: identity.required, unreadable: identity.unreadable },
+    ok: false,
+  };
+
+  if (uncompared.length) {
+    log("");
+    log(`✗ ${uncompared.length} comparison(s) did not happen. A skipped comparison is not a passed comparison:`);
+    for (const u of uncompared) log(`   ${u.id}  [${u.layer}]  ${u.reason}`);
+  }
+  if (unregistered.length) {
+    log("");
+    log(
+      `✗ ${unregistered.length} capture(s) the scenario registry does not register: ${unregistered.join(", ")}. ` +
+        `A comparison nothing expected cannot count toward coverage.`
+    );
+  }
+  if (missing) log(`\n✗ ${missing} baseline(s) missing or unreadable.`);
   if (changed) {
-    log(`✗ ${changed} difference(s) found. No baseline was written and nothing was accepted.`);
+    log(`\n✗ ${changed} difference(s) found. No baseline was written and nothing was accepted.`);
     if (retained) {
       log(
         `  ${retained} differing frame(s) retained under ${path.relative(REPO_ROOT, quarantineRoot)}/ — ` +
@@ -1627,14 +1782,25 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR } = {
       );
     }
     log(`  If a change is intended, accept it one scenario at a time: --update <scenario>`);
-    process.exitCode = 1;
-    return;
   }
-  if (missing) {
+
+  if (changed || missing || imagesShort || snapshotsShort || unregistered.length) {
+    if (imagesShort || snapshotsShort) {
+      log(
+        `\n✗ The board did not compare what it is supposed to compare, so this run proves nothing about ` +
+          `the states it did not reach. Fix the cause above and re-run; there is no partial pass.`
+      );
+    }
     process.exitCode = 1;
-    return;
+    return verdict;
   }
-  log("✓ no regressions — every snapshot and image matches its baseline.");
+
+  verdict.ok = true;
+  log(
+    `\n✓ no regressions — all ${expectedIds.length} snapshots and all ${expectedIds.length} images were ` +
+      `compared against their baselines and match.`
+  );
+  return verdict;
 }
 
 // ── Update mode ──────────────────────────────────────────────────────────────
