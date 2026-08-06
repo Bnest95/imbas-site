@@ -60,6 +60,7 @@ import {
   normalizeClass,
 } from "../../reader-result.js";
 import { CLAIM_STATE, describeClaimState, describeProvenance } from "../../reader-provenance.js";
+import { renderableExamples } from "../../product-example-registry.js";
 import { buildCanonicalSingle } from "../../api/read.js";
 import { recordToPublic } from "../../api/inspection-share.js";
 import {
@@ -836,9 +837,16 @@ const DRIVE_PUBLIC_EXAMPLE = [
 // determination (4.1).
 // The curated console is the only board state that is not a Reader run, and the only
 // one that needs a query string: it renders when the Reader flag is off, and the flag
-// is read from the URL. Its first screen needs no click and no API — CURATED[0] is
-// selected on mount and step 0 is the readout — so the door opens on load.
+// is read from the URL. Its first screen needs no click and no API — the first case in
+// the rotation is selected on mount and step 0 is the readout — so the door opens on
+// load.
 const DRIVE_CURATED = [{ waitFor: ".wb-readout__run-strip" }];
+
+// Which case that is comes from the registry, the same read the picker itself makes, so
+// this scenario photographs whatever PLACEMENTS.readerGuided currently leads with. A
+// literal case id here would be the defect the registry exists to remove, one level up:
+// the board would keep asserting the old lead after a placement moved, and pass.
+const LEAD_GUIDED_CASE = renderableExamples("readerGuided")[0];
 
 // ── Failure and in-flight drive steps ────────────────────────────────────────
 //
@@ -1333,7 +1341,11 @@ export const SCENARIOS = {
     expected:
       "The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. This is the screen BEFORE a person pastes, so neither retired hero was ever in this frame: the scored gauge and the live verdict badge both sat on the result panel one step later, which the board does not photograph (see the manifest). No gauge and no scored figure of any kind appears here; the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself.",
     steps: DRIVE_CURATED,
-    assertText: ["CASE 005 · OMISSION", "4 frontier models tested", "observed May 2026"],
+    assertText: [
+      `CASE ${LEAD_GUIDED_CASE} · OMISSION`,
+      "4 frontier models tested",
+      "observed May 2026",
+    ],
     assertSelector: ".wb-flow-case-prov__case",
     focus: ".wb-readout",
   },

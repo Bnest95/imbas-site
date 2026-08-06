@@ -75,6 +75,7 @@ import { buildReviewRecord, REVIEW_RECORD_UI, METHOD_NOTE } from "../reader-revi
 import { buildCheckRegister } from "../reader-checks.js";
 import { buildPairCapture, PAIR_SAME_MODEL, PAIR_EDITS, PAIRED_METHOD_VERSION } from "../reader-paired.js";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
+import { DEAD_PROTOTYPES } from "./dead-prototypes.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const sha256Hex = (s) => createHash("sha256").update(s, "utf8").digest("hex");
@@ -143,10 +144,6 @@ const stripComments = (src) => scanText(src).out;
 const parsesCleanly = (src) => scanText(src).endState === "code";
 
 // ── What ships ────────────────────────────────────────────────────────────────
-// Superseded prototypes of workbench-app.jsx, referenced by no page and built by no
-// entry point (last touched June 2026). They are excluded because they ship nothing,
-// not because their contents are acceptable. Deleting them is its own cleanup.
-const DEAD_PROTOTYPES = new Set(["Workbench.jsx", "GapWorkbench.jsx", "Imbas_Workbench.jsx"]);
 const SKIP_DIRS = new Set(["node_modules", ".git", "test", "qa", ".claude", "case", "grant-engine", "lessons", "docs"]);
 const SCANNED_EXT = /\.(jsx|mjs|html|js)$/;
 

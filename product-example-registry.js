@@ -55,9 +55,15 @@ export const EXAMPLE_STATUS = Object.freeze({
 // below does the assigning, and it may only assign a role the example already carries
 // here. Two gates, because the failure this guards against is a placement edit made
 // without reading the disposition that put the example where it is.
+//
+// READER_GUIDED is named for the Reader, not the Workbench. Founder ruling of
+// 2026-08-03: "Workbench" is reserved for a genuine professional workspace and the
+// Reader is the primary public product, so the guided rotation carries the Reader's
+// name. No alias was left behind, because an alias is how retired vocabulary survives
+// its own renaming.
 export const PRODUCT_ROLE = Object.freeze({
   SITE_FLAGSHIP: "SITE_FLAGSHIP",
-  WORKBENCH_GUIDED: "WORKBENCH_GUIDED",
+  READER_GUIDED: "READER_GUIDED",
   ARCHIVE_FEATURED: "ARCHIVE_FEATURED",
   HOW_IT_WORKS_PRIMARY: "HOW_IT_WORKS_PRIMARY",
 });
@@ -133,7 +139,7 @@ export const EXAMPLES = Object.freeze({
     status: EXAMPLE_STATUS.FLAGSHIP,
     productRoles: Object.freeze([
       PRODUCT_ROLE.SITE_FLAGSHIP,
-      PRODUCT_ROLE.WORKBENCH_GUIDED,
+      PRODUCT_ROLE.READER_GUIDED,
       PRODUCT_ROLE.HOW_IT_WORKS_PRIMARY,
     ]),
     routes: Object.freeze([]),
@@ -165,7 +171,7 @@ export const EXAMPLES = Object.freeze({
   "005": Object.freeze({
     caseId: "005",
     status: EXAMPLE_STATUS.SUPPORTING,
-    productRoles: Object.freeze([PRODUCT_ROLE.WORKBENCH_GUIDED, PRODUCT_ROLE.ARCHIVE_FEATURED]),
+    productRoles: Object.freeze([PRODUCT_ROLE.READER_GUIDED, PRODUCT_ROLE.ARCHIVE_FEATURED]),
     routes: Object.freeze(["/case/005.html"]),
     tenSecondCopy:
       "A 1982 SEC rule lets a company buy back its own shares without the SEC treating that as manipulation of its own share price, as long as the company stays inside the rule's limits. The rule is SEC Rule 10b-18. Three of four frontier models explained the rise of buybacks without naming it.",
@@ -181,7 +187,7 @@ export const EXAMPLES = Object.freeze({
   "021": Object.freeze({
     caseId: "021",
     status: EXAMPLE_STATUS.SUPPORTING,
-    productRoles: Object.freeze([PRODUCT_ROLE.WORKBENCH_GUIDED]),
+    productRoles: Object.freeze([PRODUCT_ROLE.READER_GUIDED]),
     routes: Object.freeze(["/case/021.html"]),
     tenSecondCopy:
       "The health framework reaches the open prompt in full. What is missing is the named-actor layer: the companies that manufactured and knowingly distributed PFOA, and the litigation that exposed it.",
@@ -264,9 +270,9 @@ export const PLACEMENTS = Object.freeze({
     exampleId: "montana-employment",
   }),
 
-  // The workbench's guided rotation, in display order. The flagship leads.
-  workbenchGuided: Object.freeze({
-    role: PRODUCT_ROLE.WORKBENCH_GUIDED,
+  // The Reader's guided rotation, in display order. The flagship leads.
+  readerGuided: Object.freeze({
+    role: PRODUCT_ROLE.READER_GUIDED,
     resolves: PLACEMENT_RESOLUTION.ORDERED,
     exampleIds: Object.freeze(["montana-employment", "005", "021"]),
   }),
@@ -316,38 +322,58 @@ export const PLACEMENTS = Object.freeze({
 
 // ── Phase 2 exceptions ───────────────────────────────────────────────────────
 //
-// Two files a concurrent conditions-provenance pass owns for the duration of Phase 1.
-// Neither may be modified here, so their references stay hard-coded and are recorded
-// as debts rather than left implicit.
+// Empty, and the export stays so that emptiness is a thing a test can assert rather than
+// a fact about a file nobody looks at.
 //
-// Every entry carries a removal requirement, and the ratchet enforces that this list
-// only ever shrinks. A third entry cannot be added without failing the suite. That is
+// Phase 1 recorded two files a concurrent conditions-provenance pass owned, whose
+// references stayed hard-coded and were written down as debts rather than left implicit.
+// Both are discharged. inspection.js came out on the terms its own entry set: the brief
+// expected a product-example reference in it, inventory found none, and the entry said
+// no migration work was required and none could be invented to justify keeping it.
+// workbench-app.jsx came out when CURATED stopped being a list and became a read of
+// PLACEMENTS.readerGuided.
+//
+// Every entry carried a removal requirement, and the ratchet enforces that this list
+// only ever shrinks. A new entry cannot be added without failing the suite. That is
 // the rule that keeps "temporary exception" from becoming the way things are done.
-export const PHASE_2_EXCEPTIONS = Object.freeze([
+export const PHASE_2_EXCEPTIONS = Object.freeze([]);
+
+// ── Case-owned content, exempt by right ──────────────────────────────────────
+//
+// An exemption is not a small exception. An exception is a debt with a discharge
+// condition attached; an exemption is a standing right, and the two are listed apart so
+// that nothing drifts from the first list into the second by being ignored long enough.
+//
+// The registry governs which examples a product surface shows. It does not govern what a
+// case says about itself. The constants below key their copy by case id because the copy
+// is about that case, which is the same reason a case page, an archive record, a fixture
+// and a citation are all exempt. No exception is required for them and none may be
+// written. The ratchet reads this list: any case id appearing in a shipped consumer
+// outside a symbol named here is an unclassified reference and fails the suite.
+export const EXEMPT_CASE_CONTENT = Object.freeze([
   Object.freeze({
     file: "workbench-app.jsx",
+    symbol: "GUIDED_CASE_COPY",
     reason:
-      "A conditions-provenance pass owns this file for the duration of Phase 1. Phase 1 did not modify, stage or format it.",
-    // Cited by symbol, not by line: line numbers are evidence for one tree only.
-    references: Object.freeze([
-      "CURATED — five entries selected by hard-coded id (005, 018, 003, 021, 013), each carrying its own observed / whyItMatters / reveal / readerProof / short / cardShort copy. Includes 018, 003 and 013, all dispositioned off the product surface.",
-      "SHARE_COPY — six hard-coded case keys (005, 018, 003, 021, 013, 006).",
-      "TARGETED_EXAMPLES — labels \"Stock buybacks (Case 005)\" and \"FDA drug safety (Case 018)\".",
-      "Two context links reading <a href=\"/case/005.html\">View Case 005</a>, one in each hero branch.",
-      "PUBLIC_EXAMPLE is consumed here and nowhere else, so the flagship currently renders from one file that Phase 1 cannot reach.",
-    ]),
-    // caseId === "006" appears twice as a rendering conditional. That is case-specific
-    // content, not placement, and it is exempt in place rather than pending.
-    removalRequirement:
-      "Phase 2 replaces each reference above with a read of PLACEMENTS.workbenchGuided and the resolved example's tenSecondCopy, drops the entries for 018, 003 and 013 from the guided surface, deletes the superseded 005 copy, and deletes this exception entry. The entry may not be renewed.",
+      "The words the guided rotation renders, keyed by case id because each entry is one case's copy. It selects nothing: CURATED is built from PLACEMENTS.readerGuided and reads this for the ids that placement names. A key here with no placement renders nothing; a placement with no key throws.",
   }),
   Object.freeze({
-    file: "inspection.js",
+    file: "workbench-app.jsx",
+    symbol: "SHARE_COPY",
     reason:
-      "Reserved by the same pass and untouched for the same reason. The Phase 1 brief expected a product-example reference here; inventory found none. The file selects nothing by case id and reads record.case_label from the record it was given.",
-    references: Object.freeze([]),
-    removalRequirement:
-      "Phase 2 deletes this entry once the reserving pass lands. No migration work is required, and none may be invented to justify keeping it.",
+      "Per-case share text: the key anchor a term check looks for and what that anchor signifies. Keyed by case id because each entry describes one case's finding. It selects nothing — the caller passes in whichever case the rotation already resolved.",
+  }),
+  Object.freeze({
+    file: "workbench-app.jsx",
+    symbol: "buildShareResultText",
+    reason:
+      "Carries one caseId === \"006\" branch, because Case 006 is the single case where all four tested models left the anchor out and the measured sentence has to say four rather than three. That is a per-case fact, not a placement.",
+  }),
+  Object.freeze({
+    file: "workbench-app.jsx",
+    symbol: "AnchorResult",
+    reason:
+      "Carries the same caseId === \"006\" branch as a rendering conditional, for the same per-case reason.",
   }),
 ]);
 
@@ -416,8 +442,65 @@ function blockerIn(examples, placements, placementName) {
   return null;
 }
 
-// A registry over the given tables. Defaults to the shipped ones.
-export function makeRegistry({ examples = EXAMPLES, placements = PLACEMENTS } = {}) {
+// ── Render blockers ──────────────────────────────────────────────────────────
+//
+// A placement can be ruled and still not render, and those are different failures. A
+// link blocker above says the destination does not exist yet. A render blocker here says
+// the consumer cannot seat the record it was handed, because the two are different kinds
+// of record.
+//
+// This is the seam. The guided-case consumer was built around a measured case: it reads
+// a category to print result provenance, a detect and keyDetect list to run the term
+// check, and a numbered case id to label the card. Montana is not that. It is a
+// public-example packet — governed excerpts, provenance, and a verified delta narrative —
+// and it has none of those fields, because measuring it would have produced them and
+// nobody measured it.
+//
+// The one thing that must never happen here is the easy thing: adding category, detect
+// and keyDetect to Montana so the picker stops complaining. Those fields are measurement
+// output. Writing them by hand fabricates measurement data, and it would fabricate it in
+// the one record the whole product points at.
+//
+// So Montana is held out, in the open, with the discharge condition attached. Every role
+// it holds is listed, in the registry's own role vocabulary, because the seam is the
+// record type and Montana carries the same record type into all of them.
+export const RENDER_BLOCKERS = Object.freeze({
+  "montana-employment": Object.freeze({
+    code: "PUBLIC_EXAMPLE_RENDER_PATH_REQUIRED",
+    roles: Object.freeze([
+      PRODUCT_ROLE.SITE_FLAGSHIP,
+      PRODUCT_ROLE.READER_GUIDED,
+      PRODUCT_ROLE.HOW_IT_WORKS_PRIMARY,
+    ]),
+    blocker:
+      "The current Guided Case consumer assumes a measured-case record containing detector and result-provenance semantics. Montana is a public-example packet containing governed excerpts, provenance, and a verified delta narrative. These are different record types. Discharge requires either a shared presentation model or a dedicated public-example rendering path, owned by the Design Discovery composition build; it does not permit synthesizing measured-case fields.",
+    discharge:
+      "A shared presentation model both record types satisfy, or a dedicated public-example rendering path. Either one discharges this entry, and the entry is then deleted rather than narrowed. Adding measured-case fields to Montana does not discharge it.",
+  }),
+});
+
+function renderBlockerIn(blockers, exampleId) {
+  return Object.prototype.hasOwnProperty.call(blockers, exampleId) ? blockers[exampleId] : null;
+}
+
+// The examples a placement resolves to that a consumer can render today, in display
+// order. A consumer reads this rather than the raw resolution, so a blocked example is
+// held out at one place instead of at every call site — and so the rotation grows by
+// itself on the day the blocker is deleted.
+function renderableIn(blockers, placements, placementName) {
+  const resolved = resolveIn(placements, placementName);
+  return resolved ? resolved.exampleIds.filter((id) => !renderBlockerIn(blockers, id)) : [];
+}
+
+// A registry over the given tables. Defaults to the shipped ones. Blockers are a table
+// here for the same reason placements are: a test can hand over an empty one and prove
+// the rotation the blocker is currently shortening, which is how the lane knows the hold
+// is a hold and not a quiet removal.
+export function makeRegistry({
+  examples = EXAMPLES,
+  placements = PLACEMENTS,
+  blockers = RENDER_BLOCKERS,
+} = {}) {
   return {
     EXAMPLES: examples,
     PLACEMENTS: placements,
@@ -426,6 +509,8 @@ export function makeRegistry({ examples = EXAMPLES, placements = PLACEMENTS } = 
     placementLabel: (name) => labelIn(placements, name),
     placementRoute: (name) => routeIn(examples, placements, name),
     placementLinkBlocker: (name) => blockerIn(examples, placements, name),
+    renderBlocker: (id) => renderBlockerIn(blockers, id),
+    renderableExamples: (name) => renderableIn(blockers, placements, name),
     examplesForRoute: (route) =>
       Object.entries(examples)
         .filter(([, example]) => example.routes.includes(route))
@@ -440,4 +525,6 @@ export const resolvePlacement = SHIPPED.resolvePlacement;
 export const placementLabel = SHIPPED.placementLabel;
 export const placementRoute = SHIPPED.placementRoute;
 export const placementLinkBlocker = SHIPPED.placementLinkBlocker;
+export const renderBlocker = SHIPPED.renderBlocker;
+export const renderableExamples = SHIPPED.renderableExamples;
 export const examplesForRoute = SHIPPED.examplesForRoute;

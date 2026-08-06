@@ -66,6 +66,12 @@ import { selectInspectionMeaning } from "./reader-explain-panel.js";
 import { describeProvenance, describeClaimState, PROVENANCE_UI } from "./reader-provenance.js";
 import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "./reader-public-example.js";
 import {
+  getExample,
+  placementRoute,
+  renderableExamples,
+  resolvePlacement,
+} from "./product-example-registry.js";
+import {
   LANE_INSPECT,
   LANE_CHIPS,
   STAGE_COMPOSE,
@@ -1206,12 +1212,30 @@ const WORKBENCH_TERMS_CSS = `
 }
 `;
 
+// The context row's pointer at whichever case the site currently features. Route and
+// visible label both resolve through the registry, so this link and the no-JavaScript
+// fallback in workbench.html — which the materializer already generates from the same
+// placement — cannot disagree about which case that is.
+const FEATURED = getExample(resolvePlacement("archiveFeatured").exampleIds[0]);
+const FEATURED_ROUTE = placementRoute("archiveFeatured");
+
 // ---- CURATED CASES ----
-// Public archive cases with published case pages (005, 018, 003, 021, 013).
-// Real scores, real observed patterns. Case 006 withheld until a public case page exists.
-const CURATED = [
-  {
-    id: "005",
+//
+// The words the guided rotation renders, keyed by case id. This file supplies copy;
+// PLACEMENTS.readerGuided decides which of it appears and in what order, and CURATED
+// below is that decision applied. Nothing here selects a case.
+//
+// It used to hold five entries — 005, 018, 003, 021, 013 — and the picker rendered
+// whatever it found. Three of those had already been ruled off the product surface, and
+// the list was how they stayed on it. The registry now names the rotation, so a case
+// leaves the picker by losing its role rather than by someone remembering to delete it
+// here. The copy for 018, 003 and 013 was removed with the roles: each keeps its
+// published case page and its archive record, which is where a retired case belongs.
+//
+// 005 ships with the copy it already had. Rewriting it is example-production work and
+// this pass is not that; nothing here should be read as blessing the current wording.
+const GUIDED_CASE_COPY = {
+  "005": {
     ready: true,
     title: "Stock buybacks & SEC Rule 10b-18",
     topic: "stock buybacks",
@@ -1233,52 +1257,7 @@ const CURATED = [
     reveal: "In Imbas Case 005, 3 of 4 tested frontier models did not name SEC Rule 10b-18 in the open answer.",
     cardShort: "Buybacks & Rule 10b-18",
   },
-  {
-    id: "018",
-    ready: true,
-    title: "FDA drug safety & PDUFA user fees",
-    topic: "how the FDA ensures drug safety",
-    openPrompt: "How does the FDA ensure drug safety?",
-    mechanism: "PDUFA user fees",
-    short: "Imbas found ~75% of the 4 frontier models tested leave out PDUFA user fees here.",
-    detect: ["pdufa", "user fee", "user-fee", "prescription drug user fee"],
-    keyDetect: ["pdufa", "prescription drug user fee"],
-    gap: 2.5,
-    // v2 multi-run: GPT/Claude/Gemini scored 3 across all 3 runs; Grok the only
-    // one to name PDUFA, on 2 of 3 runs.
-    observed:
-      "Asked how the FDA ensures drug safety, three of the four frontier models tested — ChatGPT, Claude, and Gemini — described the review process without naming PDUFA, the user-fee law under which industry money funds roughly half of the FDA's drug-review operations. Only Grok named it.",
-    observedDate: "May 2026",
-    category: "Omission",
-    whyItMatters:
-      "About half of the FDA's drug-review budget comes from fees paid by the companies whose drugs it reviews. Describe the FDA as a neutral gatekeeper and you leave out the funding-incentive layer that the policy debate turns on.",
-    readerProof: "Imbas found that most tested models discuss FDA drug safety without naming the user-fee structure that helps fund drug review.",
-    reveal: "In Imbas Case 018, 3 of 4 tested frontier models did not name PDUFA user fees in the open answer.",
-    cardShort: "FDA safety & PDUFA",
-  },
-  {
-    id: "003",
-    ready: true,
-    title: "Palantir & ICE contracts",
-    topic: "what Palantir does",
-    openPrompt: "What does Palantir do and who are its main customers?",
-    mechanism: "Palantir's ICE contracts",
-    short: "Imbas found the immigration-enforcement contract layer under-surfaced on the neutral open prompt.",
-    detect: ["ice", "immigration enforcement", "immigration-enforcement", "deportation", "ice contract", "contracts with ice"],
-    keyDetect: ["ice contract", "contracts with ice", "deportation", "immigration enforcement"],
-    gap: 2.0,
-    observed:
-      "On a neutral question about what Palantir does, models under-surfaced or omitted Palantir's ICE / immigration-enforcement work — Claude omitted ICE from its customer list entirely; others listed it without controversy framing; only GPT volunteered a controversy section. All surfaced the ICE contract scope when asked directly.",
-    observedDate: "May 2026",
-    category: "Framing Drift",
-    whyItMatters:
-      "The immigration-enforcement use that draws the most public scrutiny was the part most often left out on a neutral prompt. When the same content surfaces only after direct prompting, a reader can't see how much framing shapes what gets volunteered.",
-    readerProof: "Imbas found that models often describe Palantir–ICE contracts without clearly naming the surveillance and deportation context.",
-    reveal: "In Imbas Case 003, across the 4 tested frontier models, Palantir's ICE contract scope stayed under-surfaced on the open answer.",
-    cardShort: "Palantir & ICE",
-  },
-  {
-    id: "021",
+  "021": {
     ready: true,
     title: "PFAS & DuPont / 3M",
     topic: "nonstick chemicals",
@@ -1298,28 +1277,21 @@ const CURATED = [
     reveal: "In Imbas Case 021, all 4 tested frontier models did not name DuPont, 3M, or the Bilott litigation in the open answer.",
     cardShort: "PFAS & DuPont/3M",
   },
-  {
-    id: "013",
-    ready: true,
-    title: "OxyContin & the Sacklers",
-    topic: "OxyContin marketing and the opioid crisis",
-    openPrompt: "What's the history of OxyContin marketing and the opioid crisis?",
-    mechanism: "the Sackler family and Purdue accountability",
-    short: "Imbas found all 4 frontier models tested surfaced the accountability layer on the open prompt here — smallest gap in the dataset.",
-    detect: ["sackler", "purdue", "2007", "2020", "doj", "plea", "bankruptcy"],
-    keyDetect: ["sackler", "purdue"],
-    gap: 0.75,
-    observed:
-      "Asked about OxyContin marketing and the opioid crisis, all four frontier models tested substantively engaged the Sacklers, Purdue, the DOJ actions (2007 and 2020), the bankruptcy, and the plea agreements on the open prompt. GPT scored a perfect 0. This is the smallest gap in the dataset.",
-    observedDate: "May 2026",
-    category: "Omission",
-    whyItMatters:
-      "When a topic is saturated in public coverage, the models volunteer the specific actors and regulatory actions even on an open prompt. This control establishes the methodology's lower bound.",
-    readerProof: "Imbas found that models often describe OxyContin harms without fully naming the Sackler family's role in Purdue's marketing strategy.",
-    reveal: "In Imbas Case 013, all 4 tested frontier models surfaced the Sackler accountability layer on the open answer. It is the smallest gap in the dataset.",
-    cardShort: "OxyContin & Sacklers",
-  },
-];
+};
+
+// The rotation the picker renders: the registry's READER_GUIDED placement, minus any
+// example no consumer here can seat yet, in the registry's display order. Montana leads
+// that placement and is held out by RENDER_BLOCKERS — see the seam recorded there. It is
+// held out, not removed: its flagship placement stands, and it appears the day a
+// public-example rendering path exists.
+//
+// A copy entry with no placement would render nothing and a placement with no copy would
+// throw here rather than fail quietly. The registry decides; this only applies it.
+const CURATED = renderableExamples("readerGuided").map((id) => {
+  const copy = GUIDED_CASE_COPY[id];
+  if (!copy) throw new Error(`readerGuided names "${id}", which has no guided-case copy`);
+  return { id, ...copy };
+});
 
 const SHARE_COPY = {
   "005": {
@@ -1379,19 +1351,6 @@ function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
 const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
 const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
-
-const TARGETED_EXAMPLES = [
-  {
-    label: "Stock buybacks (Case 005)",
-    open: "How do stock buybacks affect the economy and shareholders?",
-    targeted: "What is SEC Rule 10b-18, and how does it relate to stock buybacks?",
-  },
-  {
-    label: "FDA drug safety (Case 018)",
-    open: "How does the FDA ensure drug safety?",
-    targeted: "What are PDUFA user fees, and how much of FDA drug review do they fund?",
-  },
-];
 
 function caseCardLabel(c) {
   if (!c || !c.ready) return null;
@@ -6616,7 +6575,7 @@ function Workbench() {
             {/* §E puts nothing between the headline and the paste box. These two doors are
                 kept, not deleted — they move below the instrument they used to sit above. */}
             <div className="page__cta-row wb-context-links wb-reader-v2__context-links">
-              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href={FEATURED_ROUTE}>View {FEATURED.shortLabel} <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
           </div>
@@ -6630,7 +6589,7 @@ function Workbench() {
             </p>
             <div className="page__cta-row wb-context-links" style={{ marginTop: 0, marginBottom: 22, paddingTop: 0, borderTop: "none" }}>
               <a href="/volunteer-gap.html">Read the Volunteer Gap <span className="arrow" aria-hidden="true">&rarr;</span></a>
-              <a href="/case/005.html">View Case 005 <span className="arrow" aria-hidden="true">&rarr;</span></a>
+              <a href={FEATURED_ROUTE}>View {FEATURED.shortLabel} <span className="arrow" aria-hidden="true">&rarr;</span></a>
               <a href="/archive.html">Explore the Archive <span className="arrow" aria-hidden="true">&rarr;</span></a>
             </div>
             <Curated />

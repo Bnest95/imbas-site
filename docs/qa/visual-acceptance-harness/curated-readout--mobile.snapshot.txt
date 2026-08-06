@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: ?reader=0
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 819
+scroll_offset: 567
 timezone: UTC
 url: /workbench.html
 viewport: 375x812
@@ -26,11 +26,11 @@ a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
 button disabled=false
+div "CASE 005 · OMISSION"
+div "Stock buybacks & SEC Rule 10b-18"
+button disabled=false
 div "CASE 021 · OMISSION"
 div "PFAS & DuPont / 3M"
-button disabled=false
-div "CASE 013 · OMISSION"
-div "OxyContin & the Sacklers"
 p "CASE 005 · OMISSION · VERIFIED MAY 2026"
 div "What Imbas measured"
 div "Imbas found ~75% of the 4 frontier models tested leave out SEC Rule 10b-18 here."
