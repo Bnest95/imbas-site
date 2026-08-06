@@ -190,14 +190,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `6a5081bb15bfe8d8c28d9ffe11c6ae8230813a2bfc6e5ae0c7f814c01f06053f` |
-| bytes | 506321 |
+| sha256 | `1839d7a2f77cb7ef3465cae786bc26a4938347a5733f5eb82f524b6e8045cdbc` |
+| bytes | 467710 |
 | snapshot | `curated-readout--desktop.snapshot.txt` |
-| snapshot sha256 | `e0dc36e0251b3b71c6426559b00e631125b7b030689386dc8c40ad908f8d27d1` |
-| snapshot bytes | 2651 |
+| snapshot sha256 | `a21841e8ae22e3b27f9198d34d35fb6fe74294fe3e2111ae1fc277dba54a61a5` |
+| snapshot bytes | 2397 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/workbench.html`, query `?reader=0` |
-| framed on | `.wb-readout` at scroll offset 206 |
+| framed on | `.wb-readout` at scroll offset 205 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The curated case console, first screen — provenance and run strip with no score |
 | expected behaviour | The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. This is the screen BEFORE a person pastes, so neither retired hero was ever in this frame: the scored gauge and the live verdict badge both sat on the result panel one step later, which the board does not photograph (see the manifest). No gauge and no scored figure of any kind appears here; the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself. |
@@ -206,14 +206,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `4d28675bf0370c29d4c35010fe8d37f0f1d194398a3c60a52ea6688cf56d08de` |
-| bytes | 296643 |
+| sha256 | `3be27310118a65d213f5e14e00bb99306357c8ced18bb93915e02550e6b500a4` |
+| bytes | 318055 |
 | snapshot | `curated-readout--mobile.snapshot.txt` |
-| snapshot sha256 | `c230342da2da9f731857983afa2a1d4896fa4093023d60f50b87b2594e36c177` |
-| snapshot bytes | 1370 |
+| snapshot sha256 | `b531c67fc9b6029d34f592656926d8bc9b919b947217c00e1d72dfb8d0ceefbb` |
+| snapshot bytes | 1378 |
 | viewport | 375x812@3x (mobile) |
 | url | `/workbench.html`, query `?reader=0` |
-| framed on | `.wb-readout` at scroll offset 819 |
+| framed on | `.wb-readout` at scroll offset 567 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The curated case console, first screen — provenance and run strip with no score |
 | expected behaviour | The case provenance line carries the case id, its category and its observed date. The run strip names the category, the four models tested, and the observation date. This is the screen BEFORE a person pastes, so neither retired hero was ever in this frame: the scored gauge and the live verdict badge both sat on the result panel one step later, which the board does not photograph (see the manifest). No gauge and no scored figure of any kind appears here; the board's score scan is what holds that, and it cannot be written out longhand here without tripping itself. |
