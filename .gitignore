@@ -25,6 +25,14 @@ docs/qa/**/retry-*/
 docs/qa/**/diagnostic-*/
 docs/qa/**/*.rejected.png
 
+# .qa-quarantine/ is the one exception to "none of it is evidence" above: this IS
+# evidence. It holds frames that differed from their baseline, kept as the exact bytes
+# the comparison read, because a nondeterministic raster event cannot be re-observed —
+# a later render is a new observation, not custody of the original. Untracked because
+# it is working evidence rather than an accepted board state; a frame becomes a
+# committed fixture only through the founder-ruling path. Never clear one to go green.
+.qa-quarantine/
+
 # D1 import output. The report carries governed Wave 0 capture content, which
 # lives outside this repository and never becomes a tracked artifact inside it.
 # This repository is public; the record is not.

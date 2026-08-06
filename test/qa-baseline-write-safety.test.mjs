@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import {
   BaselineGrant,
   writeArtifact,
+  renameArtifact,
   resolveDestination,
   parseArgs,
 } from "../scripts/qa/visual-acceptance.mjs";
@@ -260,13 +261,43 @@ test("every disk write in the harness goes through writeArtifact", () => {
   // the baseline directory, which is this whole defect coming back.
   const src = fs.readFileSync(HARNESS, "utf8");
   const raw =
-    src.match(/fs\.(writeFileSync|appendFileSync|createWriteStream|copyFileSync|renameSync|cpSync)\s*\(/g) || [];
+    src.match(/fs\.(writeFileSync|appendFileSync|createWriteStream|copyFileSync|cpSync)\s*\(/g) || [];
   assert.deepEqual(raw, ["fs.writeFileSync("], `unexpected raw write call(s): ${raw.join(", ")}`);
 
   const start = src.indexOf("export function writeArtifact");
   assert.ok(start > 0, "writeArtifact is present");
   const body = src.slice(start, src.indexOf("\n}", start));
   assert.ok(body.includes("fs.writeFileSync("), "the one raw write lives inside writeArtifact");
+});
+
+test("every rename in the harness goes through renameArtifact", () => {
+  // A rename lands bytes at a path exactly as a write does, so it is the same door and
+  // gets the same lock. Evidence retention needs an atomic publish — write to a temp name,
+  // rename into place — and that rename is the only one the module may contain.
+  const src = fs.readFileSync(HARNESS, "utf8");
+  const raw = src.match(/fs\.renameSync\s*\(/g) || [];
+  assert.deepEqual(raw, ["fs.renameSync("], `unexpected raw rename call(s): ${raw.join(", ")}`);
+
+  const start = src.indexOf("export function renameArtifact");
+  assert.ok(start > 0, "renameArtifact is present");
+  const body = src.slice(start, src.indexOf("\n}", start));
+  assert.ok(body.includes("fs.renameSync("), "the one raw rename lives inside renameArtifact");
+  // The lock itself, not just the location: the guarded pair must both consult the same
+  // question before moving anything.
+  assert.ok(body.includes("insideBaselineDir("), "renameArtifact does not check the baseline dir");
+});
+
+test("renameArtifact refuses to move a file into the baseline directory without a grant", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "imbas-rename-"));
+  const from = path.join(dir, "candidate.png");
+  fs.writeFileSync(from, "bytes");
+  assert.throws(
+    () => renameArtifact(from, path.join(BASELINE_DIR, "curated-readout--mobile.png")),
+    /Refusing to rename onto/
+  );
+  // The refusal must leave the source where it was, or a blocked publish still destroys
+  // the thing it was trying to publish.
+  assert.equal(fs.existsSync(from), true);
 });
 
 test("a baseline grant is constructed in exactly one place, and only in update mode", () => {
