@@ -898,7 +898,7 @@ const PUBLIC_EXAMPLE_ASSERTIONS = [
   "Hash-supported artifact identity",
   "Matched-conditions determination",
   "It does not establish which model produced them",
-  "the whole of what this example carries on conditions",
+  "These condition entries are the whole of what this example carries on conditions",
   "MCA § 39-2-911",
 ];
 

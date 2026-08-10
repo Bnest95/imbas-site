@@ -606,11 +606,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `fd31796ab85dbaf4c20f113c99b134776899b56d53156fc349ca8e3b60e64945` |
-| bytes | 493080 |
+| sha256 | `3e82cfa887b5e7bc7aa1560a3c221827219b8e9de80d3016c8638b3be4bb997b` |
+| bytes | 494741 |
 | snapshot | `public-example-provenance--desktop.snapshot.txt` |
-| snapshot sha256 | `64ecd19ccd08afd31fb79037a531b48e8cba050a9e9e3aa8ccb40de84e5a43a5` |
-| snapshot bytes | 2951 |
+| snapshot sha256 | `a0f85c573266f62df877e538b9e02a35f146246cc131dd740a2d8866b717c476` |
+| snapshot bytes | 2963 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/workbench.html`, query `(none)` |
 | framed on | `.wb-demo__prov` at scroll offset 1744 |
@@ -622,11 +622,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `71115124c93a500e1c9de5d7d37a62875dfd0a44fc983bdb9070ae76f25c0296` |
-| bytes | 437579 |
+| sha256 | `308e69992f44a0b194266b72d5841000326c1f8303d78afd4595d581d2bf6273` |
+| bytes | 438388 |
 | snapshot | `public-example-provenance--mobile.snapshot.txt` |
-| snapshot sha256 | `89950afe6ed8ff2179d749f4bc0fb0e20daed31e4d973c184f1315ea0ec5b3fe` |
-| snapshot bytes | 1947 |
+| snapshot sha256 | `ab244e8a27c0a2cae6a41c8e9c527d5d34afa076d2750a4133507f84ff14daae` |
+| snapshot bytes | 1959 |
 | viewport | 375x812@3x (mobile) |
 | url | `/workbench.html`, query `(none)` |
 | framed on | `.wb-demo__prov` at scroll offset 2645 |

@@ -137,9 +137,14 @@ test("the matched-conditions row says the field does not exist", () => {
   // evaluated. The packet states that as "not satisfied and not failed"; the row
   // states it as what the example does carry, because naming an outcome the record
   // has no field for puts that outcome on the page.
+  //
+  // The extent claim binds to the set of entries, not to their presentation order
+  // or their count: "the three rows above" tied a governed claim to layout that a
+  // composition pass reorders by design, and hardcoded a number that goes silently
+  // false the day an entry is added.
   const { body } = PUBLIC_EXAMPLE_PROVENANCE[3];
   assert.match(body, /no authoritative matched-conditions field/i);
-  assert.match(body, /the whole of what this example carries on conditions/i);
+  assert.match(body, /these condition entries are the whole of what this example carries on conditions/i);
 });
 
 test("the door does not name the construct", () => {

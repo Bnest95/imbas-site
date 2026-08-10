@@ -34,7 +34,7 @@ dd "The page labeled both messages gpt-5-5-mini, read from its data-message-mode
 dt "Hash-supported artifact identity"
 dd "The browser hashed each answer before it was pasted, and the stored bytes hash to the same value. That fixes which bytes Imbas holds. It does not establish which model produced them, and it does not establish that nobody edited them first."
 dt "Matched-conditions determination"
-dd "Imbas produces no authoritative matched-conditions field and persists none. The three rows above are the whole of what this example carries on conditions, each on its own basis."
+dd "Imbas produces no authoritative matched-conditions field and persists none. These condition entries are the whole of what this example carries on conditions, each recorded on its own basis."
 p "Both statements this example rests on were read off MCA § 39-2-911, Montana Code Annotated 2025 edition, on <DATE>. That is a fact about <DATE>."
 button "Now try your own →" disabled=false
 button "Hide example" disabled=false
