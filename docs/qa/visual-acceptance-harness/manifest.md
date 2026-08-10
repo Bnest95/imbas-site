@@ -590,14 +590,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `f56a0f5464aefc77ae4d86722095e9adb3d46369e78966a3e213c5ad391900a9` |
-| bytes | 517387 |
+| sha256 | `b69ce983f964a8cd4b750fb46e59d3ddd6628ca2e755040b3f23e5bdef38956d` |
+| bytes | 512737 |
 | snapshot | `public-example--mobile.snapshot.txt` |
-| snapshot sha256 | `b2cd6ab931e3e3bf3ed3d80f5b281e003e8263ea7a07f4fbeb2b4469fa11c9fa` |
+| snapshot sha256 | `0ea9b963ead6e349a631d80eeb2a45be1489d632433f2d9ee84c2a173a076821` |
 | snapshot bytes | 1479 |
 | viewport | 375x812@3x (mobile) |
 | url | `/workbench.html`, query `(none)` |
-| framed on | `.wb-demo` at scroll offset 1801 |
+| framed on | `.wb-demo` at scroll offset 1811 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The public example door, opened from the paste box — the loop |
 | expected behaviour | The Montana example runs the loop end to end. The open side reads 'Didn't come up.' because delta 1's open side is empty. The count line names four Omission items and says one is shown, so a single quoted line cannot read as the whole difference. No score and no construct name. |
@@ -606,11 +606,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `beff28884ccce11c3752ac2f9ff9c4b0c4fd2c692acfba7b618b8d916d152c62` |
-| bytes | 491856 |
+| sha256 | `fd31796ab85dbaf4c20f113c99b134776899b56d53156fc349ca8e3b60e64945` |
+| bytes | 493080 |
 | snapshot | `public-example-provenance--desktop.snapshot.txt` |
-| snapshot sha256 | `30c653892a54c3685d591726e0327aef346ccb2823dbcd8b8517298ffdaaa52c` |
-| snapshot bytes | 2944 |
+| snapshot sha256 | `64ecd19ccd08afd31fb79037a531b48e8cba050a9e9e3aa8ccb40de84e5a43a5` |
+| snapshot bytes | 2951 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/workbench.html`, query `(none)` |
 | framed on | `.wb-demo__prov` at scroll offset 1744 |
@@ -622,14 +622,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7b51ed4eaac8ae21972dcc2f8063677de0795916245c8f058d567bfd6d2bc8d2` |
-| bytes | 433633 |
+| sha256 | `71115124c93a500e1c9de5d7d37a62875dfd0a44fc983bdb9070ae76f25c0296` |
+| bytes | 437579 |
 | snapshot | `public-example-provenance--mobile.snapshot.txt` |
-| snapshot sha256 | `09bd77811532dd1a7df3133f0fa9c96557e2f895d2e6c3a151a6e42331f05577` |
-| snapshot bytes | 1940 |
+| snapshot sha256 | `89950afe6ed8ff2179d749f4bc0fb0e20daed31e4d973c184f1315ea0ec5b3fe` |
+| snapshot bytes | 1947 |
 | viewport | 375x812@3x (mobile) |
 | url | `/workbench.html`, query `(none)` |
-| framed on | `.wb-demo__prov` at scroll offset 2636 |
+| framed on | `.wb-demo__prov` at scroll offset 2645 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The public example door — the four provenance facts, kept apart |
 | expected behaviour | Four labelled rows state four separate facts: what the person declared, what the page displayed plus the tier, what the hashes fix and what they do not, and the matched-conditions field that does not exist end to end. The statute line under them carries its retrieval date rather than a present tense. |

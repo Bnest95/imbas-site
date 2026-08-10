@@ -133,10 +133,13 @@ test("the hash row fixes bytes and disclaims everything else", () => {
 });
 
 test("the matched-conditions row says the field does not exist", () => {
-  // Packet 4.1 and 4.2(3): not satisfied, not failed, cannot be evaluated.
+  // Packet 4.1 and 4.2(3): the field does not exist end to end, so it cannot be
+  // evaluated. The packet states that as "not satisfied and not failed"; the row
+  // states it as what the example does carry, because naming an outcome the record
+  // has no field for puts that outcome on the page.
   const { body } = PUBLIC_EXAMPLE_PROVENANCE[3];
   assert.match(body, /no authoritative matched-conditions field/i);
-  assert.match(body, /satisfies one and nothing here fails one/i);
+  assert.match(body, /the whole of what this example carries on conditions/i);
 });
 
 test("the door does not name the construct", () => {
