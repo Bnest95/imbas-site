@@ -46,6 +46,39 @@
 // It was deliberately not a configuration option. There is no flag that turns it on
 // for anything else. Any second use, any bounds change and any ceiling change needs
 // a new founder ruling — and so, now, does any use at all.
+//
+// ── RECURRENCE, 2026-08-10 ───────────────────────────────────────────────────
+//
+// The same frame differed again on a full-board run against a tree at `47964b7`,
+// and it is the same shape in the same place: `curated-readout--mobile`, the
+// sticky header band, a case-card edge sitting under the most transparent part of
+// that bar. The diagnosis above records 477 differing pixels at max per-channel
+// delta 1. This event differs in 74,615 pixels of 2,740,500 at max delta 15, inside
+// a box that stops dead at device row 315 — same location, same element, the cause
+// attributed above, over 156 times the area and at 15 times the peak delta.
+//
+// A bounded diagnostic on 2026-08-11 ran 16 controlled sequences and kept its
+// custody record outside the harness write path, in the `imbas-site-qa-evidence`
+// tree beside this repository rather than inside it. It classified the difference
+// before explaining it: both byte-states land at the same scroll offset, report the
+// same bounding box on the moving element, produce byte-identical snapshot text,
+// and differ in no pixel below the band. The two states are one layout rastered
+// two ways, not two layouts.
+//
+// A cold-render raster mechanism was demonstrated, in which the first document
+// render in a fresh renderer process produces the candidate bytes, and it does not
+// explain the 2026-08-10 mid-board event, which remains unattributable because the
+// harness retained no renderer-process identity and no crash evidence.
+//
+// Write that sentence out in full whenever this event is described. Never compress
+// it to "the flicker was diagnosed." It carries two claims, one demonstrated and
+// one open, and a board run reaches this scenario at navigation 40 of 62 in a
+// renderer it has already reused 39 times — so the demonstrated mechanism cannot
+// reach the event that prompted the diagnostic unless something replaced that
+// renderer mid-run, which no retained evidence can confirm or rule out.
+//
+// Nothing was activated in response. `RASTER_POLICIES` is still empty, the entry
+// below is still retired, and this block grants no allowance of any kind.
 
 import zlib from "node:zlib";
 
