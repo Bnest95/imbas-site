@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import {
   runDiff,
   retainDifferingFrame,
+  observationsFor,
   pixelDifference,
   expectedInventory,
   QUARANTINE_DIR,
@@ -139,14 +140,19 @@ const EXPECTED = expectedInventory({ names: ["curated-readout"], viewports: ["mo
 
 // runDiff sets process.exitCode. Reading it without restoring would hand this suite's own
 // exit status to the scenario under test, so the previous value goes back on the way out.
-function diffRun(outDir, results, quarantineRoot) {
+function diffRun(outDir, results, quarantineRoot, runId) {
   const priorExit = process.exitCode;
   const priorLog = console.log;
   const lines = [];
   console.log = (...a) => lines.push(a.join(" "));
   try {
     process.exitCode = undefined;
-    runDiff(outDir, results, { quarantineRoot, expected: EXPECTED, resolvedBrowser: ENV.browser_version });
+    runDiff(outDir, results, {
+      quarantineRoot,
+      expected: EXPECTED,
+      resolvedBrowser: ENV.browser_version,
+      ...(runId ? { runId } : {}),
+    });
     return { exitCode: process.exitCode, output: lines.join("\n") };
   } finally {
     console.log = priorLog;
@@ -159,6 +165,13 @@ const framesIn = (quarantineRoot) => {
   return fs.existsSync(dir) ? fs.readdirSync(dir).sort() : [];
 };
 
+// The observation records for one candidate. Read through the harness's own reader rather
+// than by globbing here, so a test that passes proves the shipped reader finds them too.
+const observations = (quarantineRoot, buf) =>
+  observationsFor({ quarantineRoot, scenarioId: SCENARIO_ID, candidateSha256: sha256(buf) });
+
+const readObservation = (o) => JSON.parse(fs.readFileSync(o.path, "utf8"));
+
 // ── The difference case ──────────────────────────────────────────────────────
 
 test("a differing frame is retained as the exact bytes that were compared", () => {
@@ -170,13 +183,19 @@ test("a differing frame is retained as the exact bytes that were compared", () =
   assert.equal(exitCode, 1);
   assert.match(output, /image: bytes differ/);
 
+  // The frame is content-addressed; its observation record is not, so the directory holds
+  // one PNG named for the bytes and one JSON named for the run that saw them.
   const files = framesIn(quarantineRoot);
-  assert.deepEqual(files, [`${sha256(CANDIDATE_PNG)}.json`, `${sha256(CANDIDATE_PNG)}.png`]);
+  assert.equal(files.length, 2, files.join(", "));
+  assert.ok(files.includes(`${sha256(CANDIDATE_PNG)}.png`));
+  const obs = observations(quarantineRoot, CANDIDATE_PNG);
+  assert.equal(obs.length, 1);
+  assert.ok(files.includes(obs[0].file));
 
   // The whole point, asserted as bytes rather than described: what was retained hashes to
   // what was compared. A re-render would land here with a different hash — or the same
   // hash for the wrong reason — and this line is what tells the two apart.
-  const retained = fs.readFileSync(path.join(quarantineRoot, SCENARIO_ID, files[1]));
+  const retained = fs.readFileSync(path.join(quarantineRoot, SCENARIO_ID, `${sha256(CANDIDATE_PNG)}.png`));
   assert.equal(sha256(retained), sha256(candidate.buf));
   assert.ok(retained.equals(candidate.buf));
 });
@@ -190,14 +209,16 @@ test("the run says where it put the frame instead of saying nothing was written"
   assert.match(output, /No baseline was written and nothing was accepted/);
   assert.match(output, /1 differing frame\(s\) retained/);
   assert.match(output, new RegExp(`⤷ retained .*${sha256(CANDIDATE_PNG)}\\.png`));
+  // The run says where the circumstances went too, not only where the pixels went.
+  assert.match(output, /observation .*\.json/);
 });
 
-test("the sidecar names the baseline the frame differed from, and how it differed", () => {
+test("the observation record names the baseline the frame differed from, and how it differed", () => {
   const { outDir, quarantineRoot } = bench();
   diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot);
-  const car = JSON.parse(
-    fs.readFileSync(path.join(quarantineRoot, SCENARIO_ID, `${sha256(CANDIDATE_PNG)}.json`), "utf8")
-  );
+  const obs = observations(quarantineRoot, CANDIDATE_PNG);
+  assert.equal(obs.length, 1);
+  const car = readObservation(obs[0]);
 
   assert.equal(car.scenario_id, SCENARIO_ID);
   assert.equal(car.candidate.sha256, sha256(CANDIDATE_PNG));
@@ -216,8 +237,20 @@ test("the sidecar names the baseline the frame differed from, and how it differe
   assert.equal(car.comparison.differing_pixels, 1);
   assert.equal(car.comparison.max_channel_delta, 3);
 
-  assert.ok(car.run.id, "no run identity");
-  assert.match(car.run.retained_at, /^\d{4}-\d{2}-\d{2}T/);
+  // The observation block is what makes this one sighting rather than the sighting.
+  assert.ok(car.observation.run_id, "no run identity");
+  assert.match(car.observation.observed_at, /^\d{4}-\d{2}-\d{2}T/);
+  assert.equal(car.observation.id, `${sha256(CANDIDATE_PNG)}.${car.observation.run_id}`);
+  assert.equal(car.observation.prior_observations, 0, "the first sighting has no predecessor");
+  assert.deepEqual(car.observation.prior_records, []);
+  // One notion of a sidecar, not two: the superseded content-addressed key is gone rather
+  // than shadowed by the observation block.
+  assert.equal(car.run, undefined, "the old run block is still present alongside the new one");
+  assert.equal(
+    fs.existsSync(path.join(quarantineRoot, SCENARIO_ID, `${sha256(CANDIDATE_PNG)}.json`)),
+    false,
+    "a content-addressed sidecar was written; that is the path a recurrence overwrites",
+  );
 });
 
 // ── The clean case ───────────────────────────────────────────────────────────
@@ -244,12 +277,75 @@ test("a missing baseline is not a comparison, so nothing is retained for it", ()
 
 // ── Retention itself ─────────────────────────────────────────────────────────
 
-test("retaining the same observed frame twice lands on one path, not two", () => {
+// ── The negative control: a second sighting must not delete the first ────────
+// This is the fixture for a defect that actually destroyed evidence. On 2026-08-11 a board
+// run reproduced candidate 9dd34c00… and, because sidecars were keyed by candidate hash,
+// its record replaced the 2026-08-10 sighting's in the working tree. The earlier record
+// survives only because it had been archived out of the harness write path by hand.
+//
+// The test the old shape passed read "retaining the same observed frame twice lands on one
+// path, not two", with the reasoning "the same bytes are the same evidence". The bytes are
+// the same. The events are not, and the difference between them — which HEAD, which
+// renderer, whether any renderer identity existed at all — lives only in the record that
+// was being overwritten.
+
+test("a second observation of the same frame keeps the first observation's record", () => {
   const { outDir, quarantineRoot } = bench();
-  diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot);
-  diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot);
-  // Content-addressed by candidate hash: the same bytes are the same evidence.
-  assert.equal(framesIn(quarantineRoot).length, 2, "one frame and one sidecar, not four");
+  const first = "2026-08-10T17-43-54-825Z-aaaaaaaa";
+  const second = "2026-08-11T18-40-23-385Z-bbbbbbbb";
+
+  // Counted off the directory rather than through observationsFor, so this assertion holds
+  // the harness to keeping two records even if the shipped reader is the thing that broke.
+  const recordsOnDisk = () => framesIn(quarantineRoot).filter((f) => f.endsWith(".json"));
+
+  diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot, first);
+  assert.equal(recordsOnDisk().length, 1);
+  const firstFile = recordsOnDisk()[0];
+  const firstBytes = fs.readFileSync(path.join(quarantineRoot, SCENARIO_ID, firstFile));
+
+  diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot, second);
+
+  // The load-bearing line. Under the pre-fix content-addressed key this reads 1, and the
+  // one it kept is the second — the first sighting's circumstances are gone from disk.
+  assert.equal(
+    recordsOnDisk().length,
+    2,
+    `a second sighting of the same bytes destroyed the first sighting's record; on disk: ${recordsOnDisk()}`,
+  );
+  assert.ok(recordsOnDisk().includes(firstFile), `the first record ${firstFile} is no longer on disk`);
+
+  const afterSecond = observations(quarantineRoot, CANDIDATE_PNG);
+
+  // Two events, two records, oldest first — and the shipped reader finds both.
+  assert.equal(afterSecond.length, 2, `both sightings must survive; got: ${afterSecond.map((o) => o.file)}`);
+  assert.deepEqual(
+    afterSecond.map((o) => o.run_id),
+    [first, second],
+  );
+
+  // The first record is not merely still present — it is unchanged, byte for byte. A shape
+  // that rewrote it in place would keep the count and lose the circumstances anyway.
+  assert.ok(
+    fs.readFileSync(afterSecond[0].path).equals(firstBytes),
+    "the first observation's record was rewritten by the second sighting",
+  );
+
+  // The frame itself stays content-addressed: same bytes, one PNG, correct as is.
+  const pngs = framesIn(quarantineRoot).filter((f) => f.endsWith(".png"));
+  assert.deepEqual(pngs, [`${sha256(CANDIDATE_PNG)}.png`], "the frame should not be duplicated");
+
+  // The second record knows it is a recurrence, and names what it recurs on.
+  const car = readObservation(afterSecond[1]);
+  assert.equal(car.observation.prior_observations, 1);
+  assert.deepEqual(car.observation.prior_records, [afterSecond[0].file]);
+});
+
+test("a repeat sighting is announced by the run that makes it, not left to be discovered", () => {
+  const { outDir, quarantineRoot } = bench();
+  diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot, "2026-08-10T17-43-54-825Z-aaaaaaaa");
+  const { output } = diffRun(outDir, [resultFor(CANDIDATE_PNG)], quarantineRoot, "2026-08-11T18-40-23-385Z-bbbbbbbb");
+  assert.match(output, /these bytes have been observed before: 1 earlier record\(s\)/);
+  assert.match(output, /2026-08-10T17-43-54-825Z-aaaaaaaa/);
 });
 
 test("two different observed frames are both kept", () => {

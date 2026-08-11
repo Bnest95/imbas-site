@@ -1859,8 +1859,47 @@ export function formatRendererRun(watch) {
   return lines.join("\n");
 }
 
-// Keyed by scenario ID and candidate sha256, so retaining the same observed frame twice
-// lands on the same path instead of accumulating near-duplicates nobody can tell apart.
+// ── Frames are content-addressed; observations are not ───────────────────────
+// The frame is keyed by its own sha256, and that is correct: the same bytes are the same
+// picture, and a second sighting has nothing to add to the first one's pixels.
+//
+// The circumstances are the opposite case. Two runs that produce one byte-state are two
+// observations of it, and what distinguishes them — when, at which HEAD, against which
+// baseline blob, in which renderer process — is exactly what a content address cannot
+// hold. Keying the sidecar by candidate hash therefore made every recurrence delete the
+// record of the sighting before it. That is not hypothetical: on 2026-08-11 a board run
+// reproduced candidate 9dd34c00… and its sidecar replaced the 2026-08-10 sighting's in
+// the working tree. The earlier record survives only because it had been archived out of
+// the harness write path by hand, and it is the record that says the first event had no
+// renderer identity at all.
+//
+// So one record per observation, named for the run that made it, and written — never
+// merged. A writer that reads first can lose a concurrent observation, which is the
+// failure class this repairs; a write that reads nothing cannot.
+const OBSERVATION_SHA_LEN = 64;
+
+function observationRecordName(candidateSha256, runId) {
+  return `${candidateSha256}.${runId}.json`;
+}
+
+// Every observation of one candidate frame, oldest first. The reader for anything that
+// wants the circumstances rather than the pixels.
+export function observationsFor({ quarantineRoot = QUARANTINE_DIR, scenarioId, candidateSha256 }) {
+  const dir = path.join(quarantineRoot, scenarioId);
+  if (!fs.existsSync(dir)) return [];
+  const prefix = `${candidateSha256}.`;
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.startsWith(prefix) && f.endsWith(".json") && f.length > prefix.length + 5)
+    .map((f) => ({
+      file: f,
+      path: path.join(dir, f),
+      run_id: f.slice(OBSERVATION_SHA_LEN + 1, -".json".length),
+    }))
+    .sort((a, b) => (a.run_id < b.run_id ? -1 : a.run_id > b.run_id ? 1 : 0));
+}
+
+// The frame is keyed by its bytes; the sidecar is keyed by the observation that took them.
 export function retainDifferingFrame({
   scenarioId,
   candidateBuf,
@@ -1874,7 +1913,9 @@ export function retainDifferingFrame({
   const candidateSha256 = sha256(candidateBuf);
   const dir = path.join(quarantineRoot, scenarioId);
   const framePath = path.join(dir, `${candidateSha256}.png`);
-  const sidecarPath = path.join(dir, `${candidateSha256}.json`);
+  const sidecarPath = path.join(dir, observationRecordName(candidateSha256, runId));
+  // Counted before this run writes, so the number means "sightings before this one".
+  const priorObservations = observationsFor({ quarantineRoot, scenarioId, candidateSha256 });
 
   // The frame lands first and alone. If the sidecar write fails, the irreplaceable bytes
   // are already on disk; the other order trades the frame for its notes.
@@ -1886,8 +1927,11 @@ export function retainDifferingFrame({
     JSON.stringify(
       {
         what:
-          "A candidate frame that differed from its accepted baseline, retained as the exact bytes " +
-          "the comparison read. Not a baseline, not a later render of the same scenario.",
+          "One observation of a candidate frame that differed from its accepted baseline, retained " +
+          "as the exact bytes the comparison read. Not a baseline, not a later render of the same " +
+          "scenario. If another run produces these same bytes it writes its own record beside this " +
+          "one; nothing here is ever overwritten, because two sightings of one byte-state are two " +
+          "events and the circumstances are what tell them apart.",
         scenario_id: scenarioId,
         candidate: {
           sha256: candidateSha256,
@@ -1916,7 +1960,19 @@ export function retainDifferingFrame({
           frame: renderer || { attribution: "not recorded", why: "this run recorded no renderer identity" },
           run: rendererRun || { recorded: false },
         },
-        run: { id: runId, retained_at: new Date().toISOString() },
+        // What makes this record one sighting rather than the sighting. Everything above
+        // can repeat byte for byte; this block is what never does.
+        observation: {
+          what:
+            "This sighting of the frame above: which run took it, when, and how many runs had " +
+            "already seen these same bytes. The frame is content-addressed and this record is not.",
+          id: `${candidateSha256}.${runId}`,
+          run_id: runId,
+          observed_at: new Date().toISOString(),
+          record: path.relative(REPO_ROOT, sidecarPath),
+          prior_observations: priorObservations.length,
+          prior_records: priorObservations.map((o) => o.file),
+        },
         custody:
           "Working evidence, untracked. Promotion to a committed fixture happens only through the " +
           "founder-ruling path, with the same extraction-chain pinning test/fixtures/ uses.",
@@ -1925,7 +1981,7 @@ export function retainDifferingFrame({
       1
     ) + "\n"
   );
-  return { framePath, sidecarPath, candidateSha256 };
+  return { framePath, sidecarPath, candidateSha256, priorObservations };
 }
 
 // ── What the run was supposed to compare ─────────────────────────────────────
@@ -2001,7 +2057,9 @@ export function formatBrowserIdentity({ resolved, required, unreadable }) {
 export function runDiff(
   outDir,
   results,
-  { quarantineRoot = QUARANTINE_DIR, expected, resolvedBrowser = null, rendererRun = null } = {}
+  // runId is threaded rather than read off the module constant so a test can model two
+  // separate runs. In a real board run it is the process's own identity and never varies.
+  { quarantineRoot = QUARANTINE_DIR, expected, resolvedBrowser = null, rendererRun = null, runId = RUN_ID } = {}
 ) {
   if (!Array.isArray(expected) || !expected.length) {
     fail(
@@ -2029,10 +2087,20 @@ export function runDiff(
         baselineBuf: baselineImg,
         baselinePath: imgPath,
         quarantineRoot,
+        runId,
         renderer: r.renderer || null,
         rendererRun,
       });
       log(`    ⤷ retained ${path.relative(REPO_ROOT, kept.framePath)}`);
+      log(`      observation ${path.relative(REPO_ROOT, kept.sidecarPath)}`);
+      // A repeat sighting is the interesting case, so it is said at the moment it happens
+      // rather than left to be noticed later by someone listing a directory.
+      if (kept.priorObservations.length) {
+        log(
+          `      these bytes have been observed before: ${kept.priorObservations.length} earlier ` +
+            `record(s) kept alongside this one (${kept.priorObservations.map((o) => o.run_id).join(", ")})`
+        );
+      }
       if (r.renderer) log(`      drawn by renderer ${formatFrameAttribution(r.renderer)}`);
       retained++;
     } catch (e) {
@@ -2197,7 +2265,9 @@ export function runDiff(
     if (retained) {
       log(
         `  ${retained} differing frame(s) retained under ${path.relative(REPO_ROOT, quarantineRoot)}/ — ` +
-          `the exact bytes compared, untracked, with a sidecar naming the baseline they differed from.`
+          `the exact bytes compared, untracked, each with its own observation record naming the ` +
+          `baseline it differed from and the run that saw it. Re-observing a frame adds a record; ` +
+          `it never replaces one.`
       );
     }
     log(`  If a change is intended, accept it one scenario at a time: --update <scenario>`);
