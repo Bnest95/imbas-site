@@ -726,6 +726,147 @@ class CDP {
   }
 }
 
+// ── Renderer process identity ────────────────────────────────────────────────
+// A board run drives one page through 62 navigations, and every one of them lands in
+// the same renderer process — until it does not. The page session survives that process
+// being replaced: same target, same websocket, same CDP client, different renderer. All
+// of this was established by execution against the governed binary rather than from
+// memory. Page.crash kills the renderer; Inspector.targetCrashed arrives on the page
+// session; SystemInfo.getProcessInfo on the BROWSER endpoint then reports no renderer at
+// all; the next navigation brings up a new pid and the session carries on as though
+// nothing happened.
+//
+// Nothing in a captured PNG says which process drew it. So unless the run writes the pid
+// down as it goes, a renderer replaced mid-board leaves no trace, and a frame that
+// differed afterwards cannot be attributed either way — not to a replacement, and not to
+// anything else, because the one fact that would separate them was never recorded. That
+// is precisely the state the 2026-08-10 `curated-readout--mobile` event was observed in,
+// and the reason it remains unattributed rather than explained.
+//
+// This class records. It does not prevent, retry, warm, or excuse: a differing frame
+// still fails the run, whatever the pid turns out to be. What changes is that the next
+// such frame arrives with the one piece of evidence this one lacked.
+//
+// The pid query is a browser-domain call, so it needs the browser endpoint — the page
+// session cannot answer it. That is a second websocket to the same process, carrying no
+// page traffic and subject to none of the request interception.
+export class RendererWatch {
+  constructor(browser = null) {
+    this.browser = browser;
+    this.pidsSeen = []; // in order of first sight, so the list is a timeline
+    this.crashes = [];
+    this.readFailures = [];
+    this.current = null; // which capture is in flight, so a crash lands somewhere
+    this.completed = 0;
+    this.armed = false;
+  }
+
+  // Attaching can fail — an older build, a policy that withholds SystemInfo. That is
+  // recorded and the run continues: instrumentation that can take the board down is worse
+  // than instrumentation that is absent, and "not recorded" is an honest value where a
+  // fabricated pid would not be.
+  //
+  // connectBrowser is injectable so the instrument can be exercised without launching a
+  // browser. An instrument nobody can test is the thing this lane exists to stop shipping.
+  static async attach({ cdpPort, page, connectBrowser = null }) {
+    const watch = new RendererWatch();
+    const open =
+      connectBrowser ||
+      (async () => {
+        const info = await (await fetch(`http://127.0.0.1:${cdpPort}/json/version`)).json();
+        return CDP.connect(info.webSocketDebuggerUrl);
+      });
+    try {
+      watch.browser = await open();
+      await page.send("Inspector.enable");
+      page.on("Inspector.targetCrashed", () => {
+        watch.crashes.push({
+          at: new Date().toISOString(),
+          during_capture: watch.current,
+          captures_completed_before: watch.completed,
+        });
+      });
+      watch.armed = true;
+      // Prove the instrument works before the board depends on it. A watch that reports
+      // nothing looks identical to a board that never lost a renderer.
+      const first = await watch.sample("attach");
+      if (!first.read) watch.armed = false;
+    } catch (e) {
+      watch.readFailures.push({ at: new Date().toISOString(), during_capture: "attach", why: e.message });
+    }
+    return watch;
+  }
+
+  // Between a crash and the next navigation there is genuinely no renderer process, so an
+  // empty list is a real reading and not an error. Both are recorded as what they are.
+  async sample(label) {
+    if (!this.browser) return { read: false, pids: null, why: "no browser endpoint" };
+    try {
+      const r = await this.browser.send("SystemInfo.getProcessInfo", {}, 5000);
+      const pids = (r.processInfo || []).filter((p) => p.type === "renderer").map((p) => p.id).sort((a, b) => a - b);
+      for (const pid of pids) if (!this.pidsSeen.includes(pid)) this.pidsSeen.push(pid);
+      return { read: true, pids };
+    } catch (e) {
+      this.readFailures.push({ at: new Date().toISOString(), during_capture: label, why: e.message });
+      return { read: false, pids: null, why: e.message };
+    }
+  }
+
+  mark(label) {
+    this.current = label;
+  }
+
+  finishedCapture() {
+    this.completed += 1;
+  }
+
+  // A run is anomalous if the renderer crashed, if more than one renderer served the
+  // board, or if the instrument itself failed to read. The third belongs with the other
+  // two: an unread pid is not a stable pid, and treating it as one is how a gap becomes
+  // invisible a second time.
+  get anomalous() {
+    return this.crashes.length > 0 || this.pidsSeen.length > 1 || this.readFailures.length > 0;
+  }
+
+  summary() {
+    return {
+      recorded: this.armed,
+      pids_seen: this.pidsSeen.length ? [...this.pidsSeen] : null,
+      replacements: this.pidsSeen.length ? this.pidsSeen.length - 1 : null,
+      crashes: this.crashes,
+      read_failures: this.readFailures,
+    };
+  }
+}
+
+// One frame's answer to "which process drew these bytes". Sampled either side of the work
+// that produces the frame, because a single reading cannot tell a stable renderer from one
+// that was swapped halfway through — and that difference is the entire question.
+export function frameAttribution(before, after) {
+  if (!before || !after || !before.read || !after.read) {
+    return {
+      pid: null,
+      pid_before_capture: before && before.read ? (before.pids[0] ?? null) : null,
+      pid_at_capture: after && after.read ? (after.pids[0] ?? null) : null,
+      attribution: "not recorded",
+      why: (before && before.why) || (after && after.why) || "renderer identity was not sampled",
+    };
+  }
+  const b = before.pids;
+  const a = after.pids;
+  const same = b.length === a.length && b.every((p, i) => p === a[i]);
+  return {
+    pid: same && a.length === 1 ? a[0] : null,
+    pid_before_capture: b.length === 1 ? b[0] : b,
+    pid_at_capture: a.length === 1 ? a[0] : a,
+    attribution: same
+      ? a.length === 1
+        ? "one renderer, unchanged across this capture"
+        : "unchanged across this capture, but not a single renderer"
+      : "THE RENDERER CHANGED DURING THIS CAPTURE — these bytes are not attributable to one process",
+  };
+}
+
 // ── Browser launch ───────────────────────────────────────────────────────────
 async function launchBrowser(binary) {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "imbas-qa-"));
@@ -1000,9 +1141,18 @@ async function settle(cdp) {
 // ── Capture one scenario at one viewport ─────────────────────────────────────
 const MIN_PNG_BYTES = 5000; // A solid-colour page deflates to a few hundred bytes.
 
-async function capture({ cdp, scenario, viewportName, serverState, blocked, payloads, browserVersion }) {
+async function capture({ cdp, scenario, viewportName, serverState, blocked, payloads, browserVersion, rendererWatch }) {
   const vp = VIEWPORTS[viewportName];
   if (!vp) fail(`Unknown viewport "${viewportName}". Known: ${Object.keys(VIEWPORTS).join(", ")}`);
+
+  // Read the renderer before any of this capture's work, and again once the frame is in
+  // hand. Sampling here rather than tight against Page.navigate keeps the extra round
+  // trip clear of the navigate-to-raster sequence, and widens the window the pair covers
+  // — which is the conservative direction, since a wider window catches more of what it
+  // is looking for.
+  const rendererLabel = `${scenario.name}--${viewportName}`;
+  if (rendererWatch) rendererWatch.mark(rendererLabel);
+  const rendererBefore = rendererWatch ? await rendererWatch.sample(rendererLabel) : null;
 
   await cdp.send("Emulation.setDeviceMetricsOverride", {
     width: vp.width,
@@ -1183,6 +1333,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
 
   const shot = await cdp.send("Page.captureScreenshot", { format: "png" });
   const buf = Buffer.from(shot.data, "base64");
+  const rendererAfter = rendererWatch ? await rendererWatch.sample(rendererLabel) : null;
 
   if (buf.length < MIN_PNG_BYTES) {
     fail(
@@ -1205,6 +1356,12 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     framed_on: focus || "(page top)",
   };
 
+  // The renderer pid is deliberately NOT in `env`. `env` is serialized into the committed
+  // .snapshot.txt of every scenario, where it is compared byte for byte — and a process ID
+  // differs on every run by construction. Putting it there would rewrite all 62 committed
+  // snapshots and then fail the next comparison, every time, forever. Renderer identity is
+  // a property of the run that took the frame, not of the state the frame depicts, so it
+  // rides on the result and lands in the retention sidecar.
   const snapshotText = serializeSnapshot({ env, payload: payloads, lines: renderLines });
 
   // NOTHING is written here. The caller decides whether this run may touch a
@@ -1222,6 +1379,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
     focus,
     scrollTarget,
     env,
+    renderer: frameAttribution(rendererBefore, rendererAfter),
     state: scenario.state,
     expected: scenario.expected,
     policy,
@@ -1396,6 +1554,10 @@ async function main() {
   const page = targets.find((t) => t.type === "page");
   if (!page) fail("No page target exposed by the browser.");
   const cdp = await CDP.connect(page.webSocketDebuggerUrl);
+  // Armed before the first capture, so no frame in the run is taken by an unidentified
+  // process. It observes and records; it changes no behaviour and no verdict.
+  const rendererWatch = await RendererWatch.attach({ cdpPort, page: cdp });
+  log(formatRendererWatchArmed(rendererWatch));
 
   const results = [];
   const blocked = [];
@@ -1456,8 +1618,19 @@ async function main() {
 
       const captured = await captureAll(args.viewports, async (viewportName) => {
         log(`\n▶ ${name} @ ${viewportName}`);
-        const r = await capture({ cdp, scenario, viewportName, serverState, blocked, payloads, browserVersion });
+        const r = await capture({
+          cdp,
+          scenario,
+          viewportName,
+          serverState,
+          blocked,
+          payloads,
+          browserVersion,
+          rendererWatch,
+        });
+        rendererWatch.finishedCapture();
         log(`  ✓ ${r.filename}  ${r.bytes} bytes  sha256=${r.sha256.slice(0, 16)}…  scroll=${r.scrollTarget}`);
+        log(`    renderer: ${formatFrameAttribution(r.renderer)}`);
         return r;
       });
       results.push(...captured);
@@ -1465,6 +1638,11 @@ async function main() {
       await cdp.send("Page.removeScriptToEvaluateOnNewDocument", { identifier });
     }
   } finally {
+    // In the finally, and before the sockets close, because the run this most needs to
+    // report on is the one that fell over. A crash that took the board down with it would
+    // otherwise be the single case that persisted nothing.
+    persistRendererEvents(rendererWatch);
+    if (rendererWatch.browser) rendererWatch.browser.close();
     cdp.close();
     proc.kill("SIGKILL");
     server.close();
@@ -1474,6 +1652,7 @@ async function main() {
       /* best effort */
     }
   }
+  log(formatRendererRun(rendererWatch));
 
   // Identical checksums across distinct states means every capture failed the same
   // way. Report and refuse rather than emitting a manifest that looks complete.
@@ -1496,7 +1675,13 @@ async function main() {
 
   // Every capture above SUCCEEDED — capture() throws on any failure and this line is
   // unreachable otherwise. Only now may anything touch a baseline.
-  if (mode === "diff") return runDiff(outDir, results, { expected, resolvedBrowser: browserVersion });
+  if (mode === "diff") {
+    return runDiff(outDir, results, {
+      expected,
+      resolvedBrowser: browserVersion,
+      rendererRun: rendererWatch.summary(),
+    });
+  }
   if (mode === "update") return runUpdate(outDir, results, grant);
 
   // Capture mode. outDir is guaranteed non-baseline by resolveDestination, and the
@@ -1587,8 +1772,134 @@ function baselineIdentity(baselinePath) {
   };
 }
 
-// Keyed by scenario ID and candidate sha256, so retaining the same observed frame twice
-// lands on the same path instead of accumulating near-duplicates nobody can tell apart.
+// ── Renderer events, kept whether or not a frame differed ────────────────────
+// A crash that costs the board its renderer and changes no pixel is still the event that
+// makes a later difference unattributable, so it cannot be filed under a differing frame:
+// on the run where it matters most there may not be one. It gets its own artifact, in the
+// same custody, keyed by run rather than by scenario.
+//
+// A wholly ordinary run writes nothing here. One renderer, no crash, every reading taken
+// — there is no event, and inventing a file to say so would bury the runs that have one.
+const RENDERER_EVENTS_SUBDIR = "renderer-events";
+export const RENDERER_EVENTS_DIR = path.join(QUARANTINE_DIR, RENDERER_EVENTS_SUBDIR);
+
+export function persistRendererEvents(watch, { quarantineRoot = QUARANTINE_DIR, runId = RUN_ID } = {}) {
+  if (!watch || !watch.anomalous) return null;
+  const summary = watch.summary();
+  const filePath = path.join(quarantineRoot, RENDERER_EVENTS_SUBDIR, `${runId}.json`);
+  try {
+    writeAtomic(
+      filePath,
+      JSON.stringify(
+        {
+          what:
+            "Renderer-process events observed during one visual-acceptance run. Written only when " +
+            "something happened: the renderer crashed, more than one renderer served the board, or a " +
+            "pid reading failed. A run with one renderer and no crash writes no file here.",
+          why:
+            "A board run reuses one renderer across every capture, and the page session survives that " +
+            "process being replaced without any signal in the captured bytes. Without this record a " +
+            "mid-board replacement is invisible afterwards, and a frame that differed cannot be " +
+            "attributed to it or ruled out — which is the state the 2026-08-10 curated-readout--mobile " +
+            "event was observed in.",
+          run: { id: runId, written_at: new Date().toISOString() },
+          renderer: summary,
+          custody:
+            "Working evidence, untracked. It records what happened and authorizes nothing: a differing " +
+            "frame still fails the run whatever these events say.",
+        },
+        null,
+        1
+      ) + "\n"
+    );
+    log(`\n⤷ renderer events retained: ${path.relative(REPO_ROOT, filePath)}`);
+    return filePath;
+  } catch (e) {
+    log(`\n! renderer-event retention FAILED (${e.message}) — the events observed were NOT kept`);
+    return null;
+  }
+}
+
+export function formatRendererWatchArmed(watch) {
+  if (watch && watch.armed) {
+    const pids = watch.pidsSeen.length ? watch.pidsSeen.join(", ") : "(none reported)";
+    return `✓ renderer identity: recording (renderer pid at start: ${pids}); Inspector.targetCrashed handler registered`;
+  }
+  const why = watch && watch.readFailures.length ? watch.readFailures[0].why : "the pid reading did not succeed";
+  return (
+    `! renderer identity: NOT recording — ${why}\n` +
+    `  Captures from this run carry no renderer-process identity, so a renderer replaced mid-run\n` +
+    `  would be invisible in the evidence this run keeps. This does not stop the board.`
+  );
+}
+
+export function formatFrameAttribution(a) {
+  if (!a) return "not recorded";
+  if (a.attribution === "not recorded") return `not recorded (${a.why})`;
+  return `pid ${a.pid ?? JSON.stringify(a.pid_at_capture)} — ${a.attribution}`;
+}
+
+export function formatRendererRun(watch) {
+  if (!watch) return "";
+  const lines = ["── renderer identity ──"];
+  if (!watch.armed && !watch.pidsSeen.length) {
+    lines.push("  not recorded this run");
+    return lines.join("\n");
+  }
+  lines.push(`  renderer pids this run: ${watch.pidsSeen.length ? watch.pidsSeen.join(" → ") : "(none read)"}`);
+  lines.push(`  replacements:           ${watch.pidsSeen.length ? watch.pidsSeen.length - 1 : "(unknown)"}`);
+  lines.push(`  crashes observed:       ${watch.crashes.length}`);
+  if (watch.readFailures.length) lines.push(`  pid readings that failed: ${watch.readFailures.length}`);
+  if (watch.pidsSeen.length > 1) {
+    lines.push(
+      "  THE RENDERER WAS REPLACED DURING THIS RUN. Frames either side of the replacement were drawn\n" +
+        "  by different processes. This is recorded, not excused — it changes no verdict on its own."
+    );
+  }
+  return lines.join("\n");
+}
+
+// ── Frames are content-addressed; observations are not ───────────────────────
+// The frame is keyed by its own sha256, and that is correct: the same bytes are the same
+// picture, and a second sighting has nothing to add to the first one's pixels.
+//
+// The circumstances are the opposite case. Two runs that produce one byte-state are two
+// observations of it, and what distinguishes them — when, at which HEAD, against which
+// baseline blob, in which renderer process — is exactly what a content address cannot
+// hold. Keying the sidecar by candidate hash therefore made every recurrence delete the
+// record of the sighting before it. That is not hypothetical: on 2026-08-11 a board run
+// reproduced candidate 9dd34c00… and its sidecar replaced the 2026-08-10 sighting's in
+// the working tree. The earlier record survives only because it had been archived out of
+// the harness write path by hand, and it is the record that says the first event had no
+// renderer identity at all.
+//
+// So one record per observation, named for the run that made it, and written — never
+// merged. A writer that reads first can lose a concurrent observation, which is the
+// failure class this repairs; a write that reads nothing cannot.
+const OBSERVATION_SHA_LEN = 64;
+
+function observationRecordName(candidateSha256, runId) {
+  return `${candidateSha256}.${runId}.json`;
+}
+
+// Every observation of one candidate frame, oldest first. The reader for anything that
+// wants the circumstances rather than the pixels.
+export function observationsFor({ quarantineRoot = QUARANTINE_DIR, scenarioId, candidateSha256 }) {
+  const dir = path.join(quarantineRoot, scenarioId);
+  if (!fs.existsSync(dir)) return [];
+  const prefix = `${candidateSha256}.`;
+  return fs
+    .readdirSync(dir)
+    .filter((f) => f.startsWith(prefix) && f.endsWith(".json") && f.length > prefix.length + 5)
+    .map((f) => ({
+      file: f,
+      path: path.join(dir, f),
+      run_id: f.slice(OBSERVATION_SHA_LEN + 1, -".json".length),
+    }))
+    .sort((a, b) => (a.run_id < b.run_id ? -1 : a.run_id > b.run_id ? 1 : 0));
+}
+
+// The frame is keyed by its bytes; the sidecar is keyed by the observation that took them.
 export function retainDifferingFrame({
   scenarioId,
   candidateBuf,
@@ -1596,11 +1907,15 @@ export function retainDifferingFrame({
   baselinePath,
   quarantineRoot = QUARANTINE_DIR,
   runId = RUN_ID,
+  renderer = null,
+  rendererRun = null,
 }) {
   const candidateSha256 = sha256(candidateBuf);
   const dir = path.join(quarantineRoot, scenarioId);
   const framePath = path.join(dir, `${candidateSha256}.png`);
-  const sidecarPath = path.join(dir, `${candidateSha256}.json`);
+  const sidecarPath = path.join(dir, observationRecordName(candidateSha256, runId));
+  // Counted before this run writes, so the number means "sightings before this one".
+  const priorObservations = observationsFor({ quarantineRoot, scenarioId, candidateSha256 });
 
   // The frame lands first and alone. If the sidecar write fails, the irreplaceable bytes
   // are already on disk; the other order trades the frame for its notes.
@@ -1612,8 +1927,11 @@ export function retainDifferingFrame({
     JSON.stringify(
       {
         what:
-          "A candidate frame that differed from its accepted baseline, retained as the exact bytes " +
-          "the comparison read. Not a baseline, not a later render of the same scenario.",
+          "One observation of a candidate frame that differed from its accepted baseline, retained " +
+          "as the exact bytes the comparison read. Not a baseline, not a later render of the same " +
+          "scenario. If another run produces these same bytes it writes its own record beside this " +
+          "one; nothing here is ever overwritten, because two sightings of one byte-state are two " +
+          "events and the circumstances are what tell them apart.",
         scenario_id: scenarioId,
         candidate: {
           sha256: candidateSha256,
@@ -1630,7 +1948,31 @@ export function retainDifferingFrame({
         comparison: diff.measured
           ? { differing_pixels: diff.differing_pixels, max_channel_delta: diff.max_channel_delta }
           : { differing_pixels: null, max_channel_delta: null, not_measured: diff.why },
-        run: { id: runId, retained_at: new Date().toISOString() },
+        // Which process drew these bytes, and whether one process drew all of them. The
+        // frame-level pair answers this capture; the run-level list answers whether the
+        // board changed renderer at any point, which is the fact that separates "this
+        // frame differs" from "this frame differs and was drawn by a different process
+        // than the baseline was".
+        renderer: {
+          what:
+            "The renderer process that produced this candidate frame, sampled before the capture " +
+            "began and again once the frame was in hand. Recording only; it authorizes nothing.",
+          frame: renderer || { attribution: "not recorded", why: "this run recorded no renderer identity" },
+          run: rendererRun || { recorded: false },
+        },
+        // What makes this record one sighting rather than the sighting. Everything above
+        // can repeat byte for byte; this block is what never does.
+        observation: {
+          what:
+            "This sighting of the frame above: which run took it, when, and how many runs had " +
+            "already seen these same bytes. The frame is content-addressed and this record is not.",
+          id: `${candidateSha256}.${runId}`,
+          run_id: runId,
+          observed_at: new Date().toISOString(),
+          record: path.relative(REPO_ROOT, sidecarPath),
+          prior_observations: priorObservations.length,
+          prior_records: priorObservations.map((o) => o.file),
+        },
         custody:
           "Working evidence, untracked. Promotion to a committed fixture happens only through the " +
           "founder-ruling path, with the same extraction-chain pinning test/fixtures/ uses.",
@@ -1639,7 +1981,7 @@ export function retainDifferingFrame({
       1
     ) + "\n"
   );
-  return { framePath, sidecarPath, candidateSha256 };
+  return { framePath, sidecarPath, candidateSha256, priorObservations };
 }
 
 // ── What the run was supposed to compare ─────────────────────────────────────
@@ -1712,7 +2054,13 @@ export function formatBrowserIdentity({ resolved, required, unreadable }) {
 // registry-derived inventory, and a run that compared fewer than it was supposed to
 // exits non-zero and prints no all-clear — whatever the reason, including reasons this
 // code has never heard of.
-export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR, expected, resolvedBrowser = null } = {}) {
+export function runDiff(
+  outDir,
+  results,
+  // runId is threaded rather than read off the module constant so a test can model two
+  // separate runs. In a real board run it is the process's own identity and never varies.
+  { quarantineRoot = QUARANTINE_DIR, expected, resolvedBrowser = null, rendererRun = null, runId = RUN_ID } = {}
+) {
   if (!Array.isArray(expected) || !expected.length) {
     fail(
       "runDiff was called with no expected inventory. The inventory is what makes a skipped " +
@@ -1739,8 +2087,21 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR, expe
         baselineBuf: baselineImg,
         baselinePath: imgPath,
         quarantineRoot,
+        runId,
+        renderer: r.renderer || null,
+        rendererRun,
       });
       log(`    ⤷ retained ${path.relative(REPO_ROOT, kept.framePath)}`);
+      log(`      observation ${path.relative(REPO_ROOT, kept.sidecarPath)}`);
+      // A repeat sighting is the interesting case, so it is said at the moment it happens
+      // rather than left to be noticed later by someone listing a directory.
+      if (kept.priorObservations.length) {
+        log(
+          `      these bytes have been observed before: ${kept.priorObservations.length} earlier ` +
+            `record(s) kept alongside this one (${kept.priorObservations.map((o) => o.run_id).join(", ")})`
+        );
+      }
+      if (r.renderer) log(`      drawn by renderer ${formatFrameAttribution(r.renderer)}`);
       retained++;
     } catch (e) {
       log(`    ! retention FAILED (${e.message}) — the frame that differed was NOT kept`);
@@ -1904,7 +2265,9 @@ export function runDiff(outDir, results, { quarantineRoot = QUARANTINE_DIR, expe
     if (retained) {
       log(
         `  ${retained} differing frame(s) retained under ${path.relative(REPO_ROOT, quarantineRoot)}/ — ` +
-          `the exact bytes compared, untracked, with a sidecar naming the baseline they differed from.`
+          `the exact bytes compared, untracked, each with its own observation record naming the ` +
+          `baseline it differed from and the run that saw it. Re-observing a frame adds a record; ` +
+          `it never replaces one.`
       );
     }
     log(`  If a change is intended, accept it one scenario at a time: --update <scenario>`);
