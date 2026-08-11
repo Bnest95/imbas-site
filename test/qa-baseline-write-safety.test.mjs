@@ -94,15 +94,25 @@ test("capture mode aimed straight at the baseline directory is refused", () => {
 
 test("--all --diff leaves every committed baseline byte-identical", () => {
   const before = baselineHashes();
-  const { out } = runHarness(["--all", "--diff"]);
+  const { code, out } = runHarness(["--all", "--diff"]);
   assert.deepEqual(baselineHashes(), before, "diff mode wrote into the baseline directory");
 
-  // With a headless Chrome present this ran a real capture and compared it. Without
-  // one it stopped at browser resolution. The write-safety assertion above holds
-  // either way; this records which of the two happened rather than letting a
-  // no-browser run pass itself off as the full proof.
+  // With the governed renderer present this ran a real capture and compared it. Without
+  // it the run stopped at renderer resolution. The write-safety assertion above holds
+  // either way; this records which of the two happened rather than letting a run that
+  // rendered nothing pass itself off as the full proof.
+  //
+  // The second limb deliberately names no sentence. It used to require the exact words
+  // "No usable headless browser found", which belonged to the resolver that enumerated
+  // browser caches; the pin that replaced that resolver retired the phrase and left this
+  // line matching a string nothing emits, so the limb failed wherever the renderer was
+  // absent — CI, and equally a checkout that has not run the install command yet. A test
+  // holding a private copy of another module's wording is what went stale, so this holds
+  // to the two properties every refusal on that path actually has: it exits non-zero, and
+  // it says what this repository governs.
   if (!/regression diff/.test(out)) {
-    assert.match(out, /No usable headless browser found/, `diff neither compared nor said why:\n${out}`);
+    assert.equal(code, 1, `diff neither compared nor failed:\n${out}`);
+    assert.match(out, /govern(s|ed)/, `diff neither compared nor said why:\n${out}`);
   }
 });
 

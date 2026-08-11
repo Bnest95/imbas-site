@@ -259,8 +259,28 @@ test("the run asserts the launched process's CDP identity, not only the file on 
 });
 
 // ── This machine ─────────────────────────────────────────────────────────────
+// The test below reads the real cache and the real binary on the machine running it, so
+// its subject exists only where this board is captured. PLATFORM_LAYOUT declares macOS
+// and nothing else on purpose — the committed baselines are macOS bytes, and a layout
+// added for another platform would let the board render somewhere its baselines were not
+// captured, which is the cross-renderer comparison this whole lane exists to prevent. A
+// Linux CI runner therefore has no layout, and would have no binary either, because
+// playwright-core downloads no browser when it installs. Failing there reports the
+// environment rather than the pin, so it states the reason and skips.
+//
+// The gap that leaves is already closed from both ends, unconditionally and without
+// touching this machine's cache: the refusal to guess a layout is asserted above, and
+// the pin is checked against the committed baselines below.
+const notACaptureMachine = (() => {
+  try {
+    platformLayout();
+    return false;
+  } catch {
+    return `${process.platform}/${process.arch} is not a platform this board is captured on`;
+  }
+})();
 
-test("this checkout resolves to the build its own playwright-core declares", () => {
+test("this checkout resolves to the build its own playwright-core declares", { skip: notACaptureMachine }, () => {
   // Not a fake tree: the real dependency, the real cache, the real binary. This is the
   // test that would have caught the 147 board, because on this machine 1217 is still
   // present and still sorts first.

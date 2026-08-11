@@ -65,7 +65,7 @@ export const PUBLIC_EXAMPLE_PROVENANCE = Object.freeze([
   Object.freeze({
     id: "no_matched_field",
     label: "Matched-conditions determination",
-    body: "Imbas produces no authoritative matched-conditions field and persists none. Nothing here satisfies one and nothing here fails one. There is no such determination to read.",
+    body: "Imbas produces no authoritative matched-conditions field and persists none. These condition entries are the whole of what this example carries on conditions, each recorded on its own basis.",
   }),
 ]);
 
