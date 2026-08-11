@@ -32,24 +32,24 @@ export const CHECK_VOCAB_VERSION = "check-vocab.v2";
 // worded, and the Reader is not entitled to make it.
 //
 // The word list is a named constant rather than an inline pattern so the exact
-// reach of the rule is auditable at a glance and narrowable in one edit. The
-// governing ruling enumerated six forms — fail, fails, failed, pass, passes,
-// passed. The three inflections beyond them are a deliberate widening: the defect
-// this rule closes is a rule narrower than the law it enforces, which is how
-// "fails" shipped under a list that named "fail". Banning "failed" while
-// permitting "failing" rebuilds that gap one tense over. It costs nothing —
-// all nine forms produce zero hits across every governed surface.
-export const VERDICT_OUTCOME_WORDS = [
-  "fail",
-  "fails",
-  "failed",
-  "failing",
-  "failure",
-  "pass",
-  "passes",
-  "passed",
-  "passing",
-];
+// reach of the rule is auditable at a glance and narrowable in one edit.
+//
+// SIX forms, by ruling, and the boundary is deliberate. A draft of this rule
+// widened to nine by adding failing / failure / passing, reasoning that banning
+// "failed" while permitting "failing" rebuilds one tense over the same gap that
+// let "fails" ship. That reasoning was overruled on two grounds, recorded here so
+// the width is not re-argued from the same premise. First, the ruling's
+// enumeration was the whole of the verdict law it laid down, not a floor to build
+// adjacent morphology on. Second, the width is not free: "failure" is ordinary
+// technical vocabulary — "failure mode", "the named failure modes" — that governed
+// copy will legitimately need, so a nine-form rule books a false-positive tax due
+// later. Zero hits today measures the tax not yet come due, not its absence.
+//
+// If a widened form ever ships as an answer verdict, it enters check-vocab.v3 with
+// its own receipt. Append-only rule evolution; the list does not pre-empt.
+// test/check-vocab-lint.test.mjs holds a near-miss control per excluded form, so
+// this boundary is asserted rather than merely stated.
+export const VERDICT_OUTCOME_WORDS = ["fail", "fails", "failed", "pass", "passes", "passed"];
 
 // Each rule: { id (stable, versioned), category, pattern, reason }. Word-boundary
 // anchored so pointer-register copy ("worth verifying", "rests on", "check
