@@ -23,7 +23,33 @@
 // slice. Bump CHECK_VOCAB_VERSION (never edit a shipped rule id) when the list
 // changes so a lint result is traceable to the rules that produced it.
 
-export const CHECK_VOCAB_VERSION = "check-vocab.v1";
+export const CHECK_VOCAB_VERSION = "check-vocab.v2";
+
+// v2 adds `verdict-outcome`. The five original verdict words rule on whether a
+// claim is so; these rule on whether the answer came out well, which is the same
+// instrument-grade judgement wearing school-report clothes. "The answer failed on
+// the exemption date" is a verdict however carefully the sentence around it is
+// worded, and the Reader is not entitled to make it.
+//
+// The word list is a named constant rather than an inline pattern so the exact
+// reach of the rule is auditable at a glance and narrowable in one edit. The
+// governing ruling enumerated six forms — fail, fails, failed, pass, passes,
+// passed. The three inflections beyond them are a deliberate widening: the defect
+// this rule closes is a rule narrower than the law it enforces, which is how
+// "fails" shipped under a list that named "fail". Banning "failed" while
+// permitting "failing" rebuilds that gap one tense over. It costs nothing —
+// all nine forms produce zero hits across every governed surface.
+export const VERDICT_OUTCOME_WORDS = [
+  "fail",
+  "fails",
+  "failed",
+  "failing",
+  "failure",
+  "pass",
+  "passes",
+  "passed",
+  "passing",
+];
 
 // Each rule: { id (stable, versioned), category, pattern, reason }. Word-boundary
 // anchored so pointer-register copy ("worth verifying", "rests on", "check
@@ -72,12 +98,33 @@ export const BANNED_CONSTRUCTIONS = [
     pattern: /\badequate(?:ly)?[-\s]?review(?:ed|s)?\b/i,
     reason: "adequate-review claim — the Reader does not certify a review adequate.",
   },
+  {
+    id: "verdict-outcome",
+    // Its own category, not world_claim_verdict. The runtime gate keys on rule id
+    // today, but a later change that keyed on category instead would silently drag
+    // this rule into the runtime and start dropping cards. A separate category means
+    // that change cannot happen by accident.
+    category: "outcome_verdict",
+    pattern: new RegExp(`\\b(?:${VERDICT_OUTCOME_WORDS.join("|")})\\b`, "i"),
+    reason:
+      "pass/fail verdict word — the Reader marks nothing as having passed or failed; it says what a " +
+      "conclusion rests on and hands over a question worth asking.",
+  },
 ];
 
 // The rule ids that assert a world-claim verdict on the substance of an answer.
 // hasWorldClaimVerdict keys on this subset so the runtime gate drops a check
 // whose model-written copy rules the world true/false, without also dropping
 // copy that merely mentions reliance in a non-verdict way.
+//
+// `verdict-outcome` is deliberately NOT here, by ruling. This gate drops
+// model-generated card copy, and pass/fail are ordinary English about the world in
+// a way true/incorrect are not: "the bill passed the Senate in 2019" and "the trial
+// failed its primary endpoint" are facts a check may legitimately rest on. Dropping
+// those cards would be the Reader omitting a real finding on a false positive —
+// the behaviour class the instrument exists to measure, committed by the
+// instrument. Authored copy takes the strict rule because a human can rephrase;
+// model-written copy about the world does not.
 const WORLD_CLAIM_RULE_IDS = new Set(["world-claim-verdict"]);
 
 // Lint one string: return every banned construction it contains.

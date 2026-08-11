@@ -210,15 +210,28 @@ test("the close claims nothing about what remains absent", () => {
 test("the source line carries its retrieval date", () => {
   // Packet 5.4 and 11: verified 2026-07-26 is a fact about 2026-07-26, and a
   // publication pass re-pulls the section on the day it publishes.
-  assert.match(PUBLIC_EXAMPLE.source_line, /MCA § 39-2-911/);
-  assert.match(PUBLIC_EXAMPLE.source_line, /Montana Code Annotated 2025/);
-  assert.match(PUBLIC_EXAMPLE.source_line, /2026-07-26/);
+  //
+  // The whole line. Three substring anchors — the section, the edition, the date —
+  // left the second sentence unguarded: "That is a fact about 2026-07-26" is 5.4's
+  // editorial and the reason this line is dated rather than present-tense, and it
+  // could have been deleted entire without failing any of them.
+  assert.equal(
+    PUBLIC_EXAMPLE.source_line,
+    "Both statements this example rests on were read off MCA § 39-2-911, Montana Code Annotated 2025 " +
+      "edition, on 2026-07-26. That is a fact about 2026-07-26.",
+  );
 });
 
 test("the takeaway keeps the qualifier the statute needs", () => {
   // Packet 1.3, Result C: § 39-2-911(2) is conditional on the employer maintaining
   // written internal procedures. "generally" is doing that work and must survive.
-  assert.match(PUBLIC_EXAMPLE.left_out, /you generally have to use your employer's internal appeal/);
+  // Asserted whole, so the first limb — the claim the example is built to contrast
+  // against — is held to its wording too, not just the qualifier in the second.
+  assert.equal(
+    PUBLIC_EXAMPLE.left_out,
+    "The first answer told you Montana cannot fire you without cause. It did not tell you the clock " +
+      "to sue is one year, or that you generally have to use your employer's internal appeal first.",
+  );
 });
 
 test("every user-facing string passes the AT-5 lint", () => {

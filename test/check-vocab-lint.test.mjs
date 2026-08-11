@@ -71,29 +71,93 @@ test("AT-5: SECOND_QUESTION_BANK user-facing copy (six labels + six instruction 
   );
 });
 
-// ── AT-5: the list catches each banned family ───────────────────────────────────
+// ── AT-5: one paired fixture per banned form ────────────────────────────────────
+// Every banned form gets two strings: one that must trip its own rule, and one near-miss
+// in the register the Reader is allowed to speak, which must trip nothing at all. A rule
+// proved only by its positive can be too broad and still look green; a rule proved only by
+// its negative can be absent entirely and still look green. The pair is what closes both.
+//
+// The near-misses are the pointer register the copy actually uses, not invented phrases,
+// so a rule that starts eating real copy is caught here rather than in review.
 
-test("AT-5: world-claim verdict words are caught", () => {
-  for (const word of ["true", "false", "correct", "incorrect", "wrong"]) {
-    const hits = lintString(`The answer's claim is ${word}.`);
+const PAIRED_FIXTURES = [
+  // world-claim verdicts: ruling on whether a claim is so.
+  ["world-claim-verdict", "true", "The stated exemption is true.", "the exemption this conclusion rests on"],
+  ["world-claim-verdict", "false", "That figure is false.", "no source is given for that figure"],
+  ["world-claim-verdict", "correct", "The date given is correct.", "the date is worth checking against the register"],
+  ["world-claim-verdict", "incorrect", "The citation is incorrect.", "check the citation against the statute"],
+  ["world-claim-verdict", "wrong", "The model got the year wrong.", "the year the conclusion depends on"],
+
+  // reliance verdicts: rating whether the reader may lean on it.
+  ["safe-to-rely", "safe to rely", "This is safe to rely on.", "this is what the conclusion rests on"],
+  ["safe-to-rely", "unsafe to rely", "It is unsafe to rely on the summary.", "the summary names no source"],
+  ["can-rely-verdict", "can rely", "You can rely on the exemption.", "the exemption is the claim to check"],
+  ["can-rely-verdict", "cannot rely", "You cannot rely on this figure.", "no source is given for this figure"],
+  ["can-rely-verdict", "can't rely", "You can't rely on the date.", "the date is worth checking"],
+  ["can-rely-verdict", "could rely", "A reader could rely on that line.", "a reader can check that line"],
+  ["can-rely-verdict", "should rely", "You should rely on the statute.", "the statute is the source to check against"],
+  ["can-rely-verdict", "shouldn't rely", "You shouldn't rely on the summary.", "the summary omits the filing window"],
+  ["can-rely-verdict", "may rely", "A reader may rely on this.", "a reader can check this against the source"],
+  ["can-rely-verdict", "must rely", "You must rely on the register.", "the register is where to check"],
+  ["reliance-is-verdict", "reliance … verdict", "Reliance verdict: open.", "what reliance would rest on is unstated"],
+  ["reliance-is-verdict", "reliance … justified", "Reliance here is justified.", "reliance here would rest on one date"],
+  ["reliance-is-verdict", "reliance … warranted", "Reliance on the figure is warranted.", "reliance on the figure rests on a source not named"],
+  ["reliance-is-verdict", "reliance … established", "Reliance is established by the record.", "reliance rests on a record you can read"],
+  ["reliance-is-verdict", "reliance … proven", "Reliance is proven.", "reliance rests on the earlier claim"],
+  ["reliance-is-verdict", "reliance … confirmed", "Reliance is confirmed.", "reliance rests on what the source says"],
+
+  // defensibility: certifying the record rather than describing it.
+  ["defensible", "defensible", "This makes the record defensible.", "this is a record of what was examined"],
+  ["defensible", "defensibility", "a defensibility claim about the record", "a record of what this examined"],
+  ["compliance-proof", "compliance-proof", "A compliance-proof packet.", "a record for your own file"],
+  ["compliance-proof", "compliance proof", "compliance proof for the auditor", "a record you can hand to a colleague"],
+  ["adequate-review", "adequate review", "an adequate review of the record", "a record of what this review examined"],
+  ["adequate-review", "adequately reviewed", "The record was adequately reviewed.", "the record says what was reviewed"],
+  ["adequate-review", "adequate-review", "an adequate-review claim", "a claim about what was examined"],
+  ["adequate-review", "adequate reviews", "two adequate reviews of the file", "two questions worth asking about the file"],
+
+  // v2 — outcome verdicts: ruling on whether the answer came out well.
+  ["verdict-outcome", "fail", "The answer will fail on the exemption date.", "the exemption date the conclusion rests on"],
+  ["verdict-outcome", "fails", "The answer fails the second check.", "the second question worth asking"],
+  ["verdict-outcome", "failed", "The first answer failed.", "the first answer did not name a source"],
+  ["verdict-outcome", "failing", "The answer is failing this check.", "this check is worth running against the source"],
+  ["verdict-outcome", "failure", "This is a failure on the date.", "no date is given"],
+  ["verdict-outcome", "pass", "The answer gets a pass here.", "nothing here is marked either way"],
+  ["verdict-outcome", "passes", "The answer passes on completeness.", "completeness is not what this measures"],
+  ["verdict-outcome", "passed", "The answer passed the check.", "the check records the marks you set"],
+  ["verdict-outcome", "passing", "a passing grade for this answer", "a record of what was examined"],
+];
+
+test("AT-5: every banned form has a paired fixture, so no rule ships unproven", () => {
+  // The clause this enforces: a rule counts toward green only once its class is paired.
+  // A rule added without fixtures fails here rather than passing on an empty promise.
+  const covered = new Set(PAIRED_FIXTURES.map(([id]) => id));
+  for (const rule of BANNED_CONSTRUCTIONS) {
+    assert.ok(covered.has(rule.id), `banned rule "${rule.id}" has no paired fixture`);
+  }
+  // And no fixture names a rule that does not exist.
+  const known = new Set(BANNED_CONSTRUCTIONS.map((r) => r.id));
+  for (const id of covered) assert.ok(known.has(id), `fixture names unknown rule "${id}"`);
+});
+
+test("AT-5: each banned form is caught by its own rule", () => {
+  for (const [ruleId, form, positive] of PAIRED_FIXTURES) {
+    const hits = lintString(positive);
     assert.ok(
-      hits.some((h) => h.id === "world-claim-verdict"),
-      `expected "${word}" to trip world-claim-verdict`,
+      hits.some((h) => h.id === ruleId),
+      `"${form}" did not trip ${ruleId}: ${JSON.stringify(positive)} → ${JSON.stringify(hits.map((h) => h.id))}`,
     );
   }
 });
 
-test("AT-5: reliance verdicts are caught", () => {
-  assert.ok(lintString("This is safe to rely on.").some((h) => h.category === "reliance_verdict"));
-  assert.ok(lintString("You cannot rely on this figure.").some((h) => h.category === "reliance_verdict"));
-  assert.ok(lintString("You can rely on the exemption.").some((h) => h.category === "reliance_verdict"));
-});
-
-test("AT-5: defensibility / compliance / adequate-review claims are caught", () => {
-  assert.ok(lintString("This makes the record defensible.").some((h) => h.id === "defensible"));
-  assert.ok(lintString("A compliance-proof packet.").some((h) => h.id === "compliance-proof"));
-  assert.ok(lintString("an adequate review of the record").some((h) => h.id === "adequate-review"));
-  assert.ok(lintString("adequately reviewed").some((h) => h.id === "adequate-review"));
+test("AT-5: each banned form's near-miss control trips nothing", () => {
+  for (const [ruleId, form, , control] of PAIRED_FIXTURES) {
+    assert.deepEqual(
+      lintString(control),
+      [],
+      `the control for ${ruleId}/"${form}" tripped a rule — the lint is eating legitimate copy: ${JSON.stringify(control)}`,
+    );
+  }
 });
 
 // ── AT-5: pointer register is NOT tripped (no false positives) ───────────────────
@@ -112,6 +176,29 @@ test("AT-5: legitimate pointer-register phrasing passes clean", () => {
   for (const s of pointerCopy) {
     assert.deepEqual(lintString(s), [], `pointer-register copy tripped a rule: "${s}"`);
   }
+});
+
+// ── The v2 rule stays out of the runtime ────────────────────────────────────────
+
+test("AT-5 v2: verdict-outcome is a CI rule and never a runtime drop", () => {
+  // By ruling. This gate drops model-generated card copy, and pass/fail are ordinary
+  // English about the world: a check may legitimately rest on "the bill passed the Senate".
+  // Dropping that card would be the Reader omitting a real finding on a false positive.
+  assert.ok(lintString("The bill passed the Senate in 2019.").some((h) => h.id === "verdict-outcome"));
+  assert.equal(hasWorldClaimVerdict("The bill passed the Senate in 2019."), false);
+  assert.equal(hasWorldClaimVerdict("The trial failed its primary endpoint."), false);
+  // The world-claim gate is unchanged by v2.
+  assert.equal(hasWorldClaimVerdict("This shows the claim is false."), true);
+
+  // Keyed on rule id, and the rule carries its own category so a later change that keyed
+  // on category instead cannot drag it into the runtime by accident.
+  const rule = BANNED_CONSTRUCTIONS.find((r) => r.id === "verdict-outcome");
+  assert.equal(rule.category, "outcome_verdict");
+  assert.equal(
+    BANNED_CONSTRUCTIONS.filter((r) => r.category === "outcome_verdict").length,
+    1,
+    "another rule joined outcome_verdict; the runtime-gate isolation argument needs re-checking",
+  );
 });
 
 // ── The runtime gate keys only on world-claim verdicts ──────────────────────────

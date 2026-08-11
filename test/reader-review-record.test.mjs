@@ -820,6 +820,19 @@ function canonicalWithFindings(n) {
   return buildCanonicalResult({ surface: "single", findings });
 }
 
+// ── Why these assert the whole sentence and not a phrase inside it ────────────
+// describeReviewRecordContents is a governed string: authored copy, composed
+// deterministically from the record's own fields. A substring anchor on a governed
+// string only proves the phrase survived, and says nothing about the sentence that
+// carries it — a clause added, dropped, or reordered around the anchor passes.
+//
+// So the support-line tests below assert the full value. The one at "an empty run"
+// already did, and it is the model the rest now follow. Three other assertion shapes
+// in this file are deliberately NOT promoted, because promotion would weaken or
+// invert them: absence assertions (doesNotMatch — a full string cannot express "this
+// shape stays out"), format assertions (a 64-char digest, a filename — already
+// anchored, and the subject is a shape not a sentence), and validator reason strings
+// (internal contract diagnostics, not copy anyone reads).
 test("support line: a single-answer record names one answer, never a capture block", async () => {
   const base = buildResult().result;
   const result = { ...base, result: canonicalWithFindings(1) };
@@ -828,7 +841,11 @@ test("support line: a single-answer record names one answer, never a capture blo
 
   assert.equal(record.contents.pair_runs.length, 0, "no pair rode along");
   assert.equal(record.contents.artifacts.length, 1);
-  assert.match(line, /the answer as pasted/);
+  assert.equal(
+    line,
+    "A JSON file holding the answer as pasted, 1 recorded finding, 1 check with the marks you set, " +
+      "and the run's provenance. Every finding in it is unreviewed.",
+  );
   assert.doesNotMatch(line, /both answers/, "one artifact, so the line must not claim two");
   assert.doesNotMatch(line, /capture conditions/i, "an empty pair_runs array holds no capture block to name");
 });
@@ -842,8 +859,11 @@ test("support line: a paired record names both answers and the capture block, as
 
   assert.equal(record.contents.pair_runs.length, 1);
   assert.equal(record.contents.artifacts.length, 2);
-  assert.match(line, /both answers as pasted/);
-  assert.match(line, /the capture conditions you reported/);
+  assert.equal(
+    line,
+    "A JSON file holding both answers as pasted, 1 recorded finding, 1 check with the marks you set, " +
+      "the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed.",
+  );
 
   // The capture block is the person's own three answers (reader-paired.js
   // buildPairCapture, driven by PAIR_CAPTURE_UI). "you reported" is the whole claim.
@@ -864,7 +884,19 @@ test("support line: the checks clause appears exactly when the record carries ch
   assert.equal(recWith.contents.checks.length, 1);
   assert.equal(recNone.contents.checks.length, 0);
 
-  assert.match(describeReviewRecordContents({ result: withChecks }), /1 check with the marks you set/);
+  // Both whole sentences, so the clause's presence and its absence are each read in
+  // the context that carries them: the with-checks line differs from the without only
+  // by that clause, which a pair of substring probes could not have shown.
+  assert.equal(
+    describeReviewRecordContents({ result: withChecks }),
+    "A JSON file holding the answer as pasted, 1 recorded finding, 1 check with the marks you set, " +
+      "and the run's provenance. Every finding in it is unreviewed.",
+  );
+  assert.equal(
+    describeReviewRecordContents({ result: withNone }),
+    "A JSON file holding the answer as pasted, 1 recorded finding, and the run's provenance. " +
+      "Every finding in it is unreviewed.",
+  );
   assert.doesNotMatch(describeReviewRecordContents({ result: withNone }), /check/, "no checks written, none named");
 });
 
@@ -896,7 +928,11 @@ test("support line: a counted finding is stated as unreviewed, never as a verifi
     record.contents.canonical_result.findings.every((f) => f.disposition === DISPOSITION.UNREVIEWED),
     "the fixture matches the live shape — nothing in a Reader export is reviewed",
   );
-  assert.match(line, /Every finding in it is unreviewed\./);
+  assert.equal(
+    line,
+    "A JSON file holding the answer as pasted, 2 recorded findings, 1 check with the marks you set, " +
+      "and the run's provenance. Every finding in it is unreviewed.",
+  );
   assert.doesNotMatch(line, /verification status|review status|verified/i);
 });
 

@@ -146,7 +146,10 @@ test("every entry carries exactly the contracted field set, correctly typed", ()
 test("author is the org, never an automated session, and review is pending on every entry", () => {
   for (const e of SECOND_QUESTION_BANK) {
     assert.equal(e.author, "Imbas");
-    assert.match(e.review_status, /pending founder review and bounded testing/);
+    // The whole value, not the review clause inside it. "authored" is the word this
+    // test's own title turns on — it is the claim that a person wrote the instruction
+    // rather than a session — and a substring anchored past it proved nothing about it.
+    assert.equal(e.review_status, "authored, pending founder review and bounded testing", e.id);
   }
 });
 
