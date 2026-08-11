@@ -908,16 +908,23 @@ test("carry — share: a corrected run shows both entries, oldest first, and mar
   assert.ok(html.includes("claude-opus-4-8") && html.includes("gpt-5"), "both reported models survive");
 });
 
-test("carry — share: an undeclared run says so, and says what it does not mean", () => {
+test("carry — share: an undeclared run says so, and states the record's extent", () => {
   const declarationHtml = loadInspectionRenderer();
   const html = declarationHtml(
     shareRecord({ declaration_state: DECLARATION_HISTORY.NONE, run_declarations: [] }),
   );
   assert.match(html, /How this pair was run/);
   assert.match(html, /No declaration was recorded with this run\./);
-  // An absent declaration is not a negative one, and the page says that in words
-  // rather than leaving a reader to infer it from an empty section.
-  assert.match(html, /not that anything failed/);
+  // An absent declaration is a state of the record, and the page states it in words
+  // rather than leaving a reader to infer it from an empty section. It used to state it
+  // by naming the reading it was guarding against — "not that anything failed" — which
+  // put a verdict word on a published record in the record's own voice, and taught the
+  // frame it was trying to prevent. The extent claim does the same work positively.
+  assert.match(html, /That is the whole of what this record carries on how the pair was run\./);
+  // The cure is a positive statement of extent, so neither verdict word may return —
+  // this branch has no failure to report and no success to claim.
+  assert.doesNotMatch(html, /\bfail(ed|s|ure)?\b/i, "a verdict word is back on the undeclared share");
+  assert.doesNotMatch(html, /\bpass(ed|es)?\b/i, "a verdict word is back on the undeclared share");
   // The rows are withheld rather than printed as a column of absence tokens: NOT_DECLARED
   // beside five identical placeholders reads like five findings. The status carries it.
   assert.ok(!html.includes("NOT_DECLARED</p>"), "absence tokens are not paraded as values");
