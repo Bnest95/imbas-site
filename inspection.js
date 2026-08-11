@@ -384,7 +384,12 @@ function declarationHtml(record) {
   let note = "";
   let body = "";
   if (state === "NO_DECLARATIONS") {
-    note = "No declaration was recorded with this run. That means nothing was reported, not that anything failed.";
+    // An empty declaration set is a state of the record, so the note states the record's
+    // extent rather than ruling on the run. It speaks about what was recorded and not
+    // about what the person did or did not do: this state also covers every share minted
+    // before the Declaration IDs column existed, where the record's silence is the
+    // record's, and a sentence about the person would put words in their mouth.
+    note = "No declaration was recorded with this run. That is the whole of what this record carries on how the pair was run.";
   } else if (list.length) {
     note =
       list.length > 1
