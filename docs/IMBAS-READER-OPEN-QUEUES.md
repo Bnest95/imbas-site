@@ -481,12 +481,37 @@ calibration finding retracted both framings and that they must not return. The r
 neither word. Which of the two governs the vocabulary is a register-lane question, not a
 naming one.
 
-**6. An undeclared custom property is consumed 14 times.**
-workbench.css references --ink-dim 14 times. The custom property is declared nowhere in the
+**6. An undeclared custom property is consumed 14 times.** — **AUDITED AND PARTLY CLOSED,
+composition build lane 4, 2026-08-12.**
+workbench.css referenced --ink-dim 14 times. The custom property is declared nowhere in the
 repository, so each declaration using it becomes invalid at computed-value time and falls
 back through inheritance or the property's initial behavior. The exact visual consequence
 depends on the property consuming the unresolved variable and must be audited before
 choosing a replacement token.
+
+The audit ran. `unset` on an inherited property is `inherit`, so none of the fourteen dimmed
+anything — but the declaration still wins its cascade, which means it masks whatever would
+otherwise have set that element's color. Eight masked nothing and are deleted. Six were
+masking a live rule and are retained with the reading at each site: `.wb-return__dismiss`
+and `.wb-demo__close` (`<button>`, masking the UA's `color: buttontext`, unmasked value
+rgb(0, 0, 0)); `.wb-funnel__note`, `.wb-demo__context` and `.wb-demo__smallprint` (`<p>`,
+masking styles.css `p { color: var(--ink-soft) }`, unmasked value rgb(212, 207, 194)); and
+`.wb-loop__panel-body--muted` (masking `.wb-loop__panel-body`, unmasked value
+rgba(228, 216, 200, 0.92)). Held by `test/css-undeclared-token.test.mjs`.
+
+Two instruments were needed, and that is the transferable part. A full board run named three
+of the six. It stayed green over the other three because the board photographs a viewport:
+the return nudge and the funnel panel need app state no scenario drives, and
+`.wb-demo__context` sits above the scroll offset of the only frame that renders its panel.
+Those three were read by computed colour in the governed renderer with the state driven —
+seeded event log for the nudge, `?funnel=1` for the panel. A first pass at that reading
+returned a false NEUTRAL on `.wb-demo__close`, because three of these rules also carry
+`transition: color 0.15s ease` and `getComputedStyle` immediately after a CSSOM edit returns
+the transition's start value. Let the transition finish before reading.
+
+What stays open is the ruling, not the audit: whether those six surfaces should inherit,
+take a declared token, or keep the masked value they draw today. Nobody has decided, so the
+lines stand as they render.
 
 ---
 
