@@ -79,6 +79,7 @@ import {
   buildGuidedRotation,
   measuredCaseIds,
 } from "./reader-guided-record.js";
+import { resultActions } from "./reader-result-actions.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -3519,6 +3520,30 @@ function ReaderResultCopyActions({ result, context, shareUrl }) {
   );
 }
 
+// The next-step seam, seated below the read and above the controls that act on the run
+// itself. The list it renders is empty — see reader-result-actions.js for why that is
+// the launch state and not a placeholder — so this returns before it builds anything.
+//
+// The early return is the zero-footprint guarantee and it has to stay an early return.
+// An empty <nav> would still be an element: a flex or grid parent gives it a gap, a
+// landmark role puts it in the accessibility tree, and `hidden` or display:none is a
+// styled absence rather than an absence. Returning null emits no node at all, which is
+// why the board frames for every result state are byte-identical across the commit that
+// added this.
+function ReaderResultActions({ result, context }) {
+  const actions = resultActions({ result, context });
+  if (!actions.length) return null;
+  return (
+    <nav className="wb-reader-result__actions" aria-label="Where to go next">
+      {actions.map((action) => (
+        <a key={action.id} className="wb-reader-result__action wb-focus" href={action.href}>
+          {action.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 function ReaderResultBlock({ result, context, onRunAgain }) {
   const [shareUrl, setShareUrl] = useState("");
   const comp = result?.completeness || "partial";
@@ -3597,6 +3622,10 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
         ) : null}
         {!isFallback && isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
       </div>
+      {/* Outside the footer's condition on purpose. The footer only exists when the panel
+          was given a way to run again, and a next step is a property of the run rather
+          than of that control. */}
+      <ReaderResultActions result={result} context={context} />
       {onRunAgain ? (
         <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
           {isAgent ? (
