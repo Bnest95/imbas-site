@@ -349,6 +349,25 @@ export const ANCHOR_CHANNEL = deepFreeze({
 export const RECORD_LEVEL_ABSENCE_NOTE =
   "Recorded against this answer as a whole. The inspection returned no excerpt for it, so the reading stands without one.";
 
+// The line that teaches what a mark is. It ships from here, beside the two channels
+// it describes, because it is the prose statement of exactly what ANCHOR_CHANNEL
+// enumerates: a mark either points at words in the answer (QUOTED_SPAN) or at
+// something absent from it (RECORD_LEVEL_ABSENCE). Housing it anywhere else would
+// let the channels and the sentence that explains them drift apart.
+//
+// Every surface that renders marks renders THIS string. It is one sentence pair in
+// one place, so a reader who meets it on a run and again on a forwarded record meets
+// the same words, and no surface can quietly ship a more confident version.
+//
+// It states what a mark points at, positively, in both directions. It says "absent
+// from it" rather than "isn't in it" — a state, not a thwarted expectation — and it
+// closes on "records both" rather than enumerating what was and was not there. Both
+// choices are the copy law: state the extent, never deny a frame. Do not restore the
+// contracted negatives; the assertion in test/reader-orientation-line.test.mjs pins
+// this string whole and names the retired wording it must not carry.
+export const MARK_ORIENTATION_NOTE =
+  "Each mark points at something in this answer, or at something absent from it. Imbas records both.";
+
 // A quotation that resolves verbatim against the named artifact. Carries the span
 // so a reader can point at it without re-resolving.
 //

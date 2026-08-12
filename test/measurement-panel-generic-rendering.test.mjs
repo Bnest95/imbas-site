@@ -26,6 +26,7 @@ import {
   ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
   FINDING_CLASSES,
+  MARK_ORIENTATION_NOTE,
   RECORD_LEVEL_ABSENCE_NOTE,
   SHAPE_PAIRED_COMPARATIVE_CONTRAST,
   SHAPE_PAIRED_OBSERVED_DIFFERENCE,
@@ -50,6 +51,16 @@ function componentSource(text, name) {
   const rest = text.slice(start);
   const next = rest.indexOf("\nfunction ", 1);
   return next === -1 ? rest : rest.slice(0, next);
+}
+
+// A module-level string constant, read out of the source rather than restated here.
+// The panel's free identifiers are supplied by hand below, and a hand-written copy of
+// a UI string is a second place for it to live: this reads the shipped literal, so the
+// sandbox renders the words production renders.
+function stringConstant(text, name) {
+  const m = new RegExp(`^const ${name} = ("(?:[^"\\\\]|\\\\.)*");$`, "m").exec(text);
+  assert.ok(m, `workbench-app.jsx must define ${name} as a single-line string constant`);
+  return JSON.parse(m[1]);
 }
 
 const PANEL = componentSource(SRC, "MeasurementPanel");
@@ -226,6 +237,9 @@ async function renderPanel(findings) {
     "describeFinding",
     "ANCHOR_CHANNEL",
     "RECORD_LEVEL_ABSENCE_NOTE",
+    "MARK_ORIENTATION_NOTE",
+    "MEASURE_SECTION_LABEL",
+    "MEASURE_INSPECT_SUMMARY",
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
@@ -238,6 +252,9 @@ async function renderPanel(findings) {
     (f) => f,
     ANCHOR_CHANNEL,
     RECORD_LEVEL_ABSENCE_NOTE,
+    MARK_ORIENTATION_NOTE,
+    stringConstant(SRC, "MEASURE_SECTION_LABEL"),
+    stringConstant(SRC, "MEASURE_INSPECT_SUMMARY"),
     "boundary",
     stub,
     stub,

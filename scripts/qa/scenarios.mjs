@@ -908,7 +908,7 @@ export const SCENARIOS = {
     drivable: true,
     state: "Single mode, Reader result with measurement findings",
     expected:
-      "MEASUREMENT panel renders with the Candidate findings list non-empty: two finding rows, each with its own signal name and its verbatim anchor, and no tally above them.",
+      "The findings list renders non-empty under the count: two rows, each with its own signal name and its verbatim anchor, no tally above them, and no panel title or sub-title standing between the count and the first row.",
     routes: { "/api/read": singleReadPayload },
     steps: DRIVE_SINGLE,
     // Proof the captured pixels show the state, not just that a file was written.
@@ -917,9 +917,16 @@ export const SCENARIOS = {
     // that row carries. Anchors are deliberately NOT asserted — they are spans of the
     // pasted answer, which sits on the same page, so a passing anchor assertion would
     // prove the textarea rendered rather than the row.
+    //
+    // The composition pass retired the two headings this list used to be asserted
+    // under. What replaced them is asserted instead: the count that names the rows,
+    // and the disclosure summary that is the one line now standing between a reader
+    // and their marks. Both are innerText assertions, so the summary passing proves
+    // the disclosure is CLOSED at capture — an open one would put the provenance rows
+    // in this frame and the assertion below would be reading a different composition.
     assertText: [
-      "MEASUREMENT",
-      "Candidate findings",
+      "2 candidate items surfaced",
+      "What a mark points at, and the conditions this answer was read under",
       "Omission",
       "The deadline is set by state law and varies.",
       "Framing Drift",
@@ -1094,13 +1101,17 @@ export const SCENARIOS = {
     name: "single-empty",
     drivable: true,
     empty: "single",
-    state: "Single mode, a read with no candidate finding — the MEASUREMENT panel's empty state",
+    state: "Single mode, a read with no candidate finding — the findings list's empty state",
     expected:
       "The finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer, and no zeroed tally standing in for the rows that are not there.",
     routes: { "/api/read": () => singleReadPayload({ measurement: singleEmptyMeasurement(), read: SINGLE_EMPTY_READ }) },
     steps: DRIVE_SINGLE_EMPTY,
+    // The count is asserted alongside the empty line because the two have to agree.
+    // A count that said anything but zero over a list that renders the empty line
+    // would be the panel contradicting its own hero, and that disagreement is exactly
+    // what a single frame can catch and a unit test cannot.
     assertText: [
-      "MEASUREMENT",
+      "0 candidate items surfaced",
       "No candidate finding surfaced under the tested conditions.",
     ],
     assertSelector: ".wb-measure__findings .wb-reader-result__empty",
@@ -1458,20 +1469,33 @@ export const SCENARIOS = {
     query: SHARE_QUERY,
     state: "A published single-mode share, at the top of the record",
     expected:
-      "The anchor line names the capture date and the declared system and then says the record does not change. Below it the question, then the findings, each with its own signal name and the short excerpt it points to. No score, no rating and no tally appears anywhere — the retired figure is gone from the page, not merely from new rows.",
+      "The record opens on its identity and its count: how many marks are on it, then what a mark is. Below that the disclosure holding the record's address and its scope boundary, then the question, then the findings, each with its own signal name and the short excerpt it points to. No score, no rating and no tally appears anywhere — the retired figure is gone from the page, not merely from new rows.",
     routes: { [SHARE_ROUTE]: () => sharePayload() },
     steps: DRIVE_SHARE_RECORD,
+    // The anchor line used to be asserted and framed here. The composition pass moved
+    // it inside the record's INSPECT disclosure, so it is deliberately NOT asserted:
+    // hasText reads innerText, a closed disclosure contributes none, and an assertion
+    // that passed would mean the disclosure had come open. Its contents are covered by
+    // execution rather than by the camera, per the standing rule that below-fold and
+    // behind-disclosure surfaces need execution coverage — see
+    // test/share-record-composition.test.mjs.
+    //
+    // What IS asserted is the cold reader's opening: the class label, the status line,
+    // the count, and the line that teaches what a mark is. The orientation line is the
+    // one string on this page that must equal the run surface's word for word, so it
+    // being photographed here is also the board's half of that pin.
     assertText: [
-      "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't.",
       "Workbench inspection",
       "Unlisted · Unreviewed",
-      "Candidate findings",
+      "2 candidate items surfaced",
+      "Each mark points at something in this answer, or at something absent from it. Imbas records both.",
+      "What this record is, and what it establishes",
       "Omission",
       "Framing Drift",
       SHARE_BOUNDARY_SENTENCE,
     ],
-    assertSelector: ".insp-record__anchor",
-    focus: ".insp-record__anchor",
+    assertSelector: ".insp-glance__count",
+    focus: ".insp-glance__count",
   },
 
   // The same page, framed on the receipt. This is the part of the record that states

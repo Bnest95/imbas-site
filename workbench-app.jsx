@@ -14,6 +14,7 @@ import {
   ANCHOR_CHANNEL,
   ANCHOR_STATUS,
   RECORD_LEVEL_ABSENCE_NOTE,
+  MARK_ORIENTATION_NOTE,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
 } from "./reader-result.js";
@@ -962,14 +963,10 @@ const WORKBENCH_FLOW_CSS = `
   gap: 0.6rem;
   width: 100%;
 }
-.wb-result-hero__eyebrow {
-  font-family: ${MONO};
-  font-size: max(0.625rem, var(--mono-min));
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ember-bright);
-  margin: 0 0 0.5rem;
-}
+/* .wb-result-hero__eyebrow went with its only consumer in the composition pass: the
+   "Inspection result" line that named the surface to someone who had just pressed the
+   button on it. The record's identity is not gone — it renders inside the measurement
+   panel's INSPECT disclosure, which is where a runner who wants it will look. */
 .wb-result-hero__estimate {
   font-family: ${SERIF};
   font-weight: 500;
@@ -3832,16 +3829,28 @@ function PerceptionTap({ mode, receipt }) {
 // prose written to justify the 0-3 estimate, so with the estimate gone it argues for
 // a claim the surface no longer makes — and being unbounded model text about a score,
 // nothing can guarantee it does not restate the figure the hero just stopped showing.
+//
+// Composition pass (Lane 4): this section is GLANCE, and GLANCE is exactly two
+// rendered blocks — the count, then the sentence saying what the count counts. The
+// third and last block a reader passes before the marks is the INSPECT summary line
+// at the head of the panel below. Three, and then evidence.
+//
+// Two things that used to stand here are gone rather than restyled. An "Inspection
+// result" eyebrow named the surface to someone who had just pressed the button on it,
+// and a strip carrying the way back to the compose fields stood above the count. Each
+// was a rendered block between a reader and their own marks, and the record identity
+// they carried is not lost: it renders in full inside the panel's INSPECT disclosure,
+// and the way back now sits on the compose block it re-opens, where it is the action
+// row's own control instead of the result's first line.
 function ReaderResultHero({ result }) {
   const m = result?.measurement;
   if (!m) return null;
   const canonical = result.result;
   return (
     <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
-      <p className="wb-result-hero__eyebrow">Inspection result</p>
-      <p id="wb-result-hero-estimate" className="wb-result-hero__estimate">
+      <h2 id="wb-result-hero-estimate" className="wb-result-hero__estimate">
         {`${countLabel(canonical, "surfaced_candidate_items")} surfaced`}
-      </p>
+      </h2>
       <p className="wb-result-hero__summary">{readerCandidateSummary(canonical)}</p>
     </section>
   );
@@ -3896,6 +3905,22 @@ function ClaimStateRow({ canonical }) {
   );
 }
 
+// The panel's accessible name. It was a visible `MEASUREMENT` heading until the
+// composition pass, which is the one thing a reader arriving at their own marks does
+// not need told. Deleting the heading outright would have left the section unnamed to
+// anyone navigating by landmark, so the name moved to aria-label and stopped taking a
+// rendered block. Screen-reader users keep the landmark; nobody reads a title.
+const MEASURE_SECTION_LABEL = "Candidate findings";
+
+// The INSPECT summary — the third block a reader passes, and the one that lets the
+// other two be short. It states its contents rather than inviting a click, per the
+// disclosure rule: a reader decides whether to open it by knowing what is in it.
+//
+// It names exactly what is behind it and in that order — the orientation line, then
+// the provenance strip. If either moves out of the disclosure, this line is wrong and
+// has to change with it.
+const MEASURE_INSPECT_SUMMARY = "What a mark points at, and the conditions this answer was read under";
+
 // The panel lists surfaced_findings: the findings that satisfy their shape's
 // registered surfacing contract. recorded_findings holds more — legacy material and
 // findings whose supplied quotation did not resolve — and is the durable record, not
@@ -3919,18 +3944,37 @@ function MeasurementPanel({ result, context }) {
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
   return (
-    <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-labelledby="wb-measure-heading">
-      <div className="wb-reader-result__head">
-        <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
-      </div>
-      {/* Replaces the two-fact meta line that used to sit here ("Model: X · timestamp").
-          It said nothing about what did the inspecting, and it dropped the timestamp
-          silently when the receipt had none. */}
-      <ProvenanceStrip canonical={canonical} declaredModel={declaredModel} capturedAt={runTimestamp} />
+    <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
+      {/* Nothing stands between this line and the marks.
+          A visible `MEASUREMENT` title and a `Candidate findings` sub-title used to,
+          and the strip of seven provenance rows stood between those two and the first
+          excerpt. All three were the instrument describing itself in the one place a
+          reader is trying to reach their own words. The section is still named — the
+          count in GLANCE names it for a reader, aria-label names it for everyone else
+          — and the provenance renders whole inside the disclosure, one key away.
+
+          This is INSPECT, and it is the third and last block before evidence. It is a
+          native <details>, so it opens by keyboard with no script running and it
+          prints open. The summary says what is inside it rather than inviting a click,
+          which is why it names the two things it holds instead of saying "details". */}
+      <details className="wb-measure__inspect">
+        <summary className="wb-measure__inspect-summary">{MEASURE_INSPECT_SUMMARY}</summary>
+        <div className="wb-measure__inspect-body">
+          {/* Z2.3, the line that teaches what a mark is. A reader who pressed the
+              button already knows they are reading their own answer, so it files here;
+              a reader who was handed the record cold meets it in the open, on the
+              share surface. Same string either way — reader-result.js owns it. */}
+          <p className="wb-measure__orientation">{MARK_ORIENTATION_NOTE}</p>
+          <ProvenanceStrip
+            canonical={canonical}
+            declaredModel={declaredModel}
+            capturedAt={runTimestamp}
+          />
+        </div>
+      </details>
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
-          <h3 className="wb-reader-result__section-title">Candidate findings</h3>
           {/* A per-class tally stood here. It summed the rows below into a figure the
               class vocabulary owned rather than the run, and it went stale the moment
               a shape registered outside those three names. The rows are the account. */}
@@ -6362,7 +6406,24 @@ function ReaderWorkbench() {
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
                   </p>
                 </details>
-                {!readerResult ? (
+                {/* One row, two states, because the fields above have two states. While
+                    they are live it carries the button that runs the inspection. Once a
+                    result exists they go read-only, and it carries the way back that
+                    re-opens them.
+
+                    That control headed the result block until the composition pass, where
+                    it was a rendered block standing above the count — a reader met the way
+                    out before they met the finding. It belongs to the thing it re-opens,
+                    so it lives on the compose block now. It is still unconditional on a
+                    result existing, which is what InspectionMeaningPanel's `restart` flag
+                    asserts, and it still clears the result and emits nothing. */}
+                {readerResult ? (
+                  <div className="wb-action-row wb-reader-v2__cta-row wb-reader-v2__cta-row--edit">
+                    <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={editAnswer}>
+                      ← Edit the answer
+                    </button>
+                  </div>
+                ) : (
                   <div className="wb-action-row wb-reader-v2__cta-row">
                     <Btn
                       kind="primary"
@@ -6373,7 +6434,7 @@ function ReaderWorkbench() {
                       {busy ? "Inspecting…" : "See what might be missing"}
                     </Btn>
                   </div>
-                ) : null}
+                )}
               </div>
             </div>
           </div>
@@ -6426,17 +6487,30 @@ function ReaderWorkbench() {
             tabIndex={-1}
             className="wb-reader-v2__result wb-scroll-anchor"
           >
-            {/* The way back. The compose fields above go read-only once a result exists, so
-                without this the only route to a second answer is a page reload. It clears the
-                result and returns to compose, which is a backward move and emits nothing. */}
-            <div className="wb-reader-v2__result-nav">
-              <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={editAnswer}>
-                ← Edit the answer
-              </button>
-            </div>
+            {/* GLANCE, then READ, then INSPECT, and the order of these three mounts is
+                that rule made literal.
+
+                The hero is GLANCE: the count and what it counts. The measurement panel
+                is READ — the marks, which is the evidence a reader came for — and it
+                now stands directly under the count instead of below the Reader's prose.
+                The Reader's reading follows the marks rather than preceding them, which
+                is the whole move: an interpretation is worth more to someone who has
+                already seen what it interprets, and it was previously nine blocks of
+                explanation standing between a person and their own excerpts.
+
+                The way back to the compose fields used to head this block. It moved to
+                the compose action row above, which is the thing it re-opens. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--hero">
                 <ReaderResultHero result={readerResult} />
+              </div>
+            ) : null}
+            {readerResult.measurement ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
+                <MeasurementPanel
+                  result={readerResult}
+                  context={{ mode, sel, question, answer, model, topic }}
+                />
               </div>
             ) : null}
             <div className="wb-reader-v2__follow">
@@ -6446,14 +6520,6 @@ function ReaderWorkbench() {
                 onRunAgain={run}
               />
             </div>
-            {readerResult.measurement ? (
-              <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
-                <MeasurementPanel
-                  result={readerResult}
-                  context={{ mode, sel, question, answer, model, topic }}
-                />
-              </div>
-            ) : null}
             {checkRegisterVisible ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
                 <CheckRegisterPanel result={readerResult} />
@@ -6474,7 +6540,8 @@ function ReaderWorkbench() {
                     control. checks and reviewRecord share checkRegisterVisible because the
                     export lives inside the register; receipt rides the Measurement panel,
                     which renders on the same condition this mount does; restart is the Edit
-                    the answer control at the head of this block, which is unconditional. */}
+                    the answer control on the compose action row above, which renders on
+                    exactly `readerResult` and so is unconditional wherever this mounts. */}
                 <InspectionMeaningPanel
                   pairRuns={[]}
                   findings={countOf(readerResult.result, "surfaced_findings")}

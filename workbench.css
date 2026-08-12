@@ -4230,6 +4230,66 @@
   color: rgba(185, 172, 195, 0.7);
 }
 
+/* INSPECT. The last thing a reader passes before the marks, and the reason the two
+   lines above it can be short: everything that used to stand between a person and
+   their own excerpts is in here, whole, one key away.
+
+   The summary is a rendered block and is counted as one, so it is a single line of
+   normal flow with an inline marker — no flex, which would blockify its parts and
+   report three where a reader sees one. Closed by default on every viewport: entry
+   density is the same everywhere, because a phone reader and a desktop reader are
+   reading the same record and neither asked to be taught first.
+
+   Marker idiom is the site's existing one (the privacy line): native list marker off,
+   ⌄ / ⌃ set in ::after so it flips with [open] and never enters the text layer. */
+.wb-measure__inspect {
+  margin: 0 0 1rem;
+}
+
+.wb-measure__inspect-summary {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: rgba(180, 166, 150, 0.82);
+  cursor: pointer;
+  list-style: none;
+}
+
+.wb-measure__inspect-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wb-measure__inspect-summary::after {
+  content: " ⌄";
+  color: rgba(180, 166, 150, 0.62);
+}
+
+.wb-measure__inspect[open] .wb-measure__inspect-summary::after {
+  content: " ⌃";
+}
+
+.wb-measure__inspect-body {
+  margin-top: 0.7rem;
+}
+
+/* Z2.3. It leads the disclosure because it is the shortest useful thing in it: a
+   reader who opens this wants to know what a mark is before they read seven rows of
+   capture conditions. */
+.wb-measure__orientation {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(210, 196, 180, 0.88);
+  max-width: 60ch;
+}
+
+/* The strip trails the orientation line inside the disclosure now, so its old
+   pull-up against the panel head has nothing left to pull against. */
+.wb-measure__inspect-body .wb-prov {
+  margin: 0;
+}
+
 .wb-measure__list {
   list-style: none;
   margin: 0;

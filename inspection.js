@@ -42,6 +42,29 @@ const LEGACY_FORMAT_NOTICE =
 // template text because an apostrophe inside template HTML desyncs the scanner in
 // test/zero-score-language.test.mjs.
 const SINGLE_EMPTY = "No candidate finding surfaced under the tested conditions.";
+
+// Z2.3, the line that teaches what a mark is, mirrored from reader-result.js for the
+// same reason the empty-state lines above are mirrored: this page is a plain script and
+// cannot import the module, and a visitor who met these words on the run must not meet
+// different ones here. test/reader-orientation-line.test.mjs pins this copy equal to
+// MARK_ORIENTATION_NOTE and fails if either side moves alone.
+//
+// A cold reader meets it in the open, unlike a runner, who filed it into INSPECT: the
+// runner watched their own marks being made and this page is the first mark a stranger
+// has ever seen. That difference in placement is the whole reason the string is one
+// string — the surfaces disagree about where to put it and may never disagree about
+// what it says.
+const MARK_ORIENTATION_NOTE =
+  "Each mark points at something in this answer, or at something absent from it. Imbas records both.";
+
+// The count and the line that says what it counts, worded exactly as the run surface
+// words them (reader-result.js COUNT_DEFS.surfaced_candidate_items). A share row is a
+// projection and carries no canonical result to count, so the arithmetic happens here
+// over the same findings the page is about to render — which is what keeps Z2.1's
+// invariant true on this surface: the count equals the marks rendered beneath it.
+function surfacedCountLabel(n) {
+  return `${n} ${n === 1 ? "candidate item" : "candidate items"} surfaced`;
+}
 const PAIRED_EMPTY = "This probe surfaced nothing new. That doesn't mean either answer is complete.";
 const LEGACY_MISSING_EMPTY = "The Reader flagged nothing missing under the tested conditions.";
 const LEGACY_SHAPED_EMPTY = "The Reader recorded no shaping under the tested conditions.";
@@ -112,13 +135,26 @@ function formatShareCopy(record, url) {
 }
 
 // ── Shared page furniture (single + paired) ───────────────────────────────────
+//
+// The trust note is the record's scope boundary — what this document establishes and
+// what it does not. On the single record it moved into the INSPECT disclosure below,
+// because a stranger arriving cold meets three lines before the count and this was one
+// of them; it is a paragraph about what the page is not, standing where the finding
+// should be. It renders whole, one key away, and `mode` is what decides.
+//
+// Paired and legacy keep it in the masthead. This lane governs the single record's
+// anatomy; recomposing a surface it does not govern would be churn, and the legacy
+// render in particular is a dated record of a retired format that nothing here rewrites.
+const TRUST_NOTE =
+  "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.";
+
 function mastHtml(mode) {
   const eyebrow = mode === "paired" ? "Workbench two-question test" : "Workbench inspection";
   return `
     <header class="insp-record__mast">
       <p class="insp-record__eyebrow">${eyebrow}</p>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
-      <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
+      ${mode === "single" ? "" : `<p class="insp-record__trust-note">${escapeHtml(TRUST_NOTE)}</p>`}
     </header>`;
 }
 
@@ -253,17 +289,48 @@ function singleFindingHtml(f) {
   </li>`;
 }
 
+// GLANCE on the cold arrival. A stranger who was handed this link never saw the count
+// being made, so the record states it before anything else it holds: how many marks are
+// on it, then what a mark is. Both lines are also on the run surface, worded the same.
+//
+// This is the one place the two surfaces legitimately differ in placement rather than in
+// words. A runner already knows what a mark is by the time they get here and finds the
+// orientation line filed in INSPECT; a stranger does not, so it renders in the open.
+function singleGlanceHtml(record) {
+  const findings = Array.isArray(record.findings) ? record.findings : [];
+  return `
+    <div class="insp-glance">
+      <p class="insp-glance__count">${escapeHtml(surfacedCountLabel(findings.length))}</p>
+      <p class="insp-glance__orientation">${escapeHtml(MARK_ORIENTATION_NOTE)}</p>
+    </div>`;
+}
+
+// INSPECT on the cold arrival. It holds the two things that used to stand above the
+// count: the record's address — which answer, said by what, on what day — and the scope
+// boundary. Neither is deleted and neither is summarised; they render whole.
+//
+// Native <details>, so it opens by keyboard with no script running and prints open. The
+// summary names its contents instead of inviting a click.
+function singleInspectHtml(record) {
+  const anchor = record && record.receipt && record.receipt.anchor;
+  const address = anchor && (anchor.text || "").trim();
+  return `
+    <details class="insp-inspect">
+      <summary class="insp-inspect__summary">What this record is, and what it establishes</summary>
+      <div class="insp-inspect__body">
+        ${address ? `<p class="insp-record__anchor">${escapeHtml(address)}</p>` : ""}
+        <p class="insp-record__trust-note">${escapeHtml(TRUST_NOTE)}</p>
+      </div>
+    </details>`;
+}
+
 function singlePanelHtml(record) {
   const findings = Array.isArray(record.findings) ? record.findings : [];
   const boundary = (record.boundary || "").trim();
   return `
-    <section class="wb-reader-result is-agent wb-measure" aria-label="Inspection result">
-      <div class="wb-reader-result__head">
-        <h2 class="wb-reader-result__title">MEASUREMENT</h2>
-      </div>
+    <section class="wb-reader-result is-agent wb-measure" aria-label="Candidate findings">
       <div class="wb-reader-result__sections">
         <article class="wb-reader-result__section wb-measure__findings">
-          <h3 class="wb-reader-result__section-title">Candidate findings</h3>
           ${findings.length
             ? `<ul class="wb-measure__list">${findings.map(singleFindingHtml).join("")}</ul>`
             : `<p class="wb-reader-result__empty">${escapeHtml(SINGLE_EMPTY)}</p>`}
@@ -274,10 +341,18 @@ function singlePanelHtml(record) {
     </section>`;
 }
 
+// GLANCE, then READ, then INSPECT — and on this surface the order of these calls is
+// that rule. Identity, the count, what a mark is; then the question and the marks it
+// produced; then everything a reader may want and nobody needs first.
+//
+// The record's address and its scope boundary used to sit third and fourth, above the
+// question. They are inside the disclosure now, which is why the count could move up
+// to meet a reader instead of arriving after two paragraphs about what the page is not.
 function renderSingle(root, record) {
   root.innerHTML =
     mastHtml("single") +
-    anchorHtml(record) +
+    singleGlanceHtml(record) +
+    singleInspectHtml(record) +
     questionHtml(record) +
     singlePanelHtml(record) +
     receiptHtml(record) +
