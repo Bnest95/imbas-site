@@ -11,7 +11,9 @@ import {
   countOf,
   describeFinding,
   selectSubset,
+  ANCHOR_CHANNEL,
   ANCHOR_STATUS,
+  RECORD_LEVEL_ABSENCE_NOTE,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
 } from "./reader-result.js";
@@ -3934,26 +3936,17 @@ function MeasurementPanel({ result, context }) {
               a shape registered outside those three names. The rows are the account. */}
           {findings.length ? (
             <ul className="wb-measure__list">
-              {findings.map((f) => {
-                // Only a QUOTED anchor goes inside quotation marks. Text the source
-                // supplied that does not occur in the answer is recorded as
-                // UNRESOLVED and shown as nothing, because a blockquote asserts the
-                // words are in the artifact.
-                const quoted = f.anchors.find(
-                  (a) => a.role === ARTIFACT_ORIGINAL && a.status === ANCHOR_STATUS.QUOTED,
-                );
-                return (
-                  <li key={f.id} className="wb-measure__finding">
-                    <span className="wb-measure__finding-type">{f.class_display}</span>
-                    {(f.materiality || "").trim() ? (
-                      <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
-                    ) : null}
-                    {quoted ? (
-                      <blockquote className="wb-measure__anchor">{`"${quoted.quote}"`}</blockquote>
-                    ) : null}
-                  </li>
-                );
-              })}
+              {findings.map((f) => (
+                <li key={f.id} className="wb-measure__finding">
+                  <span className="wb-measure__finding-type">{f.class_display}</span>
+                  {(f.materiality || "").trim() ? (
+                    <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
+                  ) : null}
+                  {f.anchors.map((a, i) => (
+                    <FindingEvidence key={`${f.id}-${i}`} anchor={a} />
+                  ))}
+                </li>
+              ))}
             </ul>
           ) : (
             // The hero above carries the "not a verdict" line and the interpretation
@@ -3974,6 +3967,44 @@ function MeasurementPanel({ result, context }) {
       <ReaderReceiptActions receipt={receipt} />
     </section>
   );
+}
+
+// The evidence element under a finding row, dispatched on the anchor's channel and on
+// nothing else. reader-result.js decides the channel with the same function the
+// surfacing predicate reads, so this component cannot show an anchor the counts
+// exclude and cannot withhold one they include.
+//
+// Two channels, two elements, and the difference between them is the whole point. A
+// blockquote asserts that these words are in the answer, so only a resolved quotation
+// gets one. A record-level absence has no words and no position, so it renders as a
+// note about the record — outside any quotation, outside any span, and outside the
+// document body. A finding about something an answer never said has nowhere in that
+// answer to point, and a caret, an offset, or a nearest sentence supplied here would
+// be the renderer manufacturing evidence the record does not hold.
+//
+// A null channel renders nothing. That is an anchor no surface may show: a quotation
+// that did not resolve, or an absence on a role its shape does not surface.
+//
+// The dispatch is over the descriptor's own anchors, so a shape with one anchor and a
+// shape with two both render here with no edit. Nothing in this component names a
+// role, a status, a shape, or a class.
+function FindingEvidence({ anchor }) {
+  if (!anchor) return null;
+  if (anchor.channel === ANCHOR_CHANNEL.QUOTED_SPAN) {
+    return (
+      <blockquote className="wb-measure__anchor" data-anchor-channel={anchor.channel}>
+        {`"${anchor.quote}"`}
+      </blockquote>
+    );
+  }
+  if (anchor.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE) {
+    return (
+      <p className="wb-measure__absence" data-anchor-channel={anchor.channel}>
+        {RECORD_LEVEL_ABSENCE_NOTE}
+      </p>
+    );
+  }
+  return null;
 }
 
 // A proportional bar (the "Gap X-ray") stood here, with one segment per class, over a

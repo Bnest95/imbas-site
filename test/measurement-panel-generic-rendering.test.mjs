@@ -21,10 +21,12 @@ import { fileURLToPath } from "node:url";
 import { transform } from "esbuild";
 
 import {
+  ANCHOR_CHANNEL,
   ANCHOR_REQUIREMENT,
   ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
   FINDING_CLASSES,
+  RECORD_LEVEL_ABSENCE_NOTE,
   SHAPE_PAIRED_COMPARATIVE_CONTRAST,
   SHAPE_PAIRED_OBSERVED_DIFFERENCE,
   SHAPE_SINGLE_CANDIDATE,
@@ -40,17 +42,23 @@ const SRC = readFileSync(
   "utf8",
 );
 
-// From `function MeasurementPanel(` to the next top-level `function ` declaration, so an
-// assertion can never be satisfied by code in a neighbouring component.
-function measurementPanelSource(text) {
-  const start = text.indexOf("function MeasurementPanel(");
-  assert.notEqual(start, -1, "workbench-app.jsx must define MeasurementPanel");
+// From `function NAME(` to the next top-level `function ` declaration, so an assertion
+// can never be satisfied by code in a neighbouring component.
+function componentSource(text, name) {
+  const start = text.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `workbench-app.jsx must define ${name}`);
   const rest = text.slice(start);
   const next = rest.indexOf("\nfunction ", 1);
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-const PANEL = measurementPanelSource(SRC);
+const PANEL = componentSource(SRC, "MeasurementPanel");
+
+// The row's evidence element is its own component, so it is extracted on its own and
+// carries the same prohibitions. Keeping the two slices separate is deliberate: a
+// negative assertion about the panel must not be satisfiable by the evidence element's
+// source, or vice versa.
+const EVIDENCE = componentSource(SRC, "FindingEvidence");
 
 // The descriptor's real key set, from a real finding built through the real door.
 const DESCRIPTOR_KEYS = new Set(
@@ -114,8 +122,44 @@ test("every finding field the rows read is a key the descriptor publishes", () =
 test("the rows branch on no shape id, so a newly registered shape needs no edit here", () => {
   for (const id of [SHAPE_SINGLE_CANDIDATE, SHAPE_PAIRED_OBSERVED_DIFFERENCE, SHAPE_PAIRED_COMPARATIVE_CONTRAST]) {
     assert.equal(PANEL.includes(id), false, `MeasurementPanel must not name the shape ${id}`);
+    assert.equal(EVIDENCE.includes(id), false, `FindingEvidence must not name the shape ${id}`);
   }
   assert.equal(PANEL.includes("f.shape"), false, "MeasurementPanel must not switch on a finding's shape");
+});
+
+// The evidence element used to find its anchor by role and status: it asked for the
+// original answer's anchor and took it only if it was QUOTED. Both halves were a
+// renderer re-deriving a rule reader-result.js already owns, and the second half is
+// how absence findings were lost — "not QUOTED" swept up the truthful absences with
+// the failed quotations. The dispatch is now the channel and nothing else, so the
+// component cannot disagree with the surfacing predicate about what may be shown.
+test("the evidence element dispatches on the anchor channel, not on role or status", () => {
+  // QUOTED_SPAN contains QUOTED, so a bare substring search for the status would be
+  // tripped by the channel that is supposed to replace it. The channel names come out
+  // first, and what is left is searched for the statuses.
+  const withoutChannels = (src) =>
+    Object.values(ANCHOR_CHANNEL).reduce((acc, channel) => acc.split(channel).join(""), src);
+  for (const [name, src] of [["MeasurementPanel", PANEL], ["FindingEvidence", EVIDENCE]]) {
+    const bare = withoutChannels(src);
+    for (const status of Object.values(ANCHOR_STATUS)) {
+      assert.equal(bare.includes(status), false, `${name} must not name the anchor status ${status}`);
+    }
+    assert.equal(src.includes("ANCHOR_STATUS"), false, `${name} must not read the status vocabulary`);
+    assert.equal(src.includes("ARTIFACT_ORIGINAL"), false, `${name} must not single out an artifact role`);
+    assert.equal(src.includes("a.role"), false, `${name} must not select an anchor by role`);
+  }
+  assert.match(EVIDENCE, /anchor\.channel/, "the evidence element must read the channel");
+  for (const channel of Object.values(ANCHOR_CHANNEL)) {
+    assert.ok(EVIDENCE.includes(channel), `the evidence element must handle the ${channel} channel`);
+  }
+});
+
+// The rows hand every anchor the descriptor publishes to the evidence element, so a
+// shape with one anchor and a shape with two both render with no edit here. A row that
+// picked one anchor out of the list would go quiet the day a shape surfaced on a side
+// the picker did not name.
+test("the row renders every anchor the descriptor publishes", () => {
+  assert.match(PANEL, /f\.anchors\.map\(/, "the row must render over the descriptor's anchors");
 });
 
 // ── The extensibility proof (2B-C §2) ────────────────────────────────────────
@@ -161,20 +205,27 @@ const QUOTE = "ninety days after the notice is served";
 // rows. The free identifiers are supplied explicitly, so a new one added to the panel
 // makes this fail loudly rather than silently reading undefined.
 async function renderPanel(findings) {
-  const { code } = await transform(`${PANEL}\nreturn MeasurementPanel;`, {
+  const { code } = await transform(`${PANEL}\n${EVIDENCE}\nreturn MeasurementPanel;`, {
     loader: "jsx",
     jsxFactory: "h",
     jsxFragment: "Frag",
   });
-  const h = (type, props, ...children) => ({ type, props: props || {}, children });
+  const h = (type, props, ...children) => {
+    // The evidence element is a component, not a host tag, so a recording `h` would
+    // stop at its name and never see the blockquote or the absence note. Calling it
+    // here is what makes the assertions below read the real dispatch instead of a
+    // placeholder for it.
+    if (typeof type === "function") return type({ ...(props || {}), children });
+    return { type, props: props || {}, children };
+  };
   const stub = () => null;
   const make = new Function(
     "h",
     "Frag",
     "selectSubset",
     "describeFinding",
-    "ARTIFACT_ORIGINAL",
-    "ANCHOR_STATUS",
+    "ANCHOR_CHANNEL",
+    "RECORD_LEVEL_ABSENCE_NOTE",
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
@@ -185,8 +236,8 @@ async function renderPanel(findings) {
     "Frag",
     () => findings,
     (f) => f,
-    ARTIFACT_ORIGINAL,
-    ANCHOR_STATUS,
+    ANCHOR_CHANNEL,
+    RECORD_LEVEL_ABSENCE_NOTE,
     "boundary",
     stub,
     stub,

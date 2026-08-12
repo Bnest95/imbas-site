@@ -4271,6 +4271,19 @@
   color: rgba(205, 192, 176, 0.88);
 }
 
+/* A record-level absence. It sits where a quotation would sit and reads as plainly
+   unlike one: upright rather than italic, and with no left rule, because the rule on
+   .wb-measure__anchor is what marks an excerpt lifted out of the answer. Nothing here
+   indents, brackets, or otherwise dresses the note as text taken from the document,
+   since the record holds no such text. */
+.wb-measure__absence {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(190, 176, 196, 0.82);
+}
+
 .wb-measure__unvalidated {
   margin: 1.1rem 0 0;
   font-family: var(--font-sans);
