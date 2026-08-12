@@ -75,6 +75,11 @@ import {
   resolvePlacement,
 } from "./product-example-registry.js";
 import {
+  GUIDED_RECORD_KIND,
+  buildGuidedRotation,
+  measuredCaseIds,
+} from "./reader-guided-record.js";
+import {
   LANE_INSPECT,
   LANE_CHIPS,
   STAGE_COMPOSE,
@@ -1278,19 +1283,28 @@ const GUIDED_CASE_COPY = {
   },
 };
 
-// The rotation the picker renders: the registry's READER_GUIDED placement, minus any
-// example no consumer here can seat yet, in the registry's display order. Montana leads
-// that placement and is held out by RENDER_BLOCKERS — see the seam recorded there. It is
-// held out, not removed: its flagship placement stands, and it appears the day a
-// public-example rendering path exists.
+// The rotation the picker renders: the registry's READER_GUIDED placement, in the
+// registry's display order, projected onto the one shape a consumer reads. Montana leads
+// it. It used to be held out by RENDER_BLOCKERS because this consumer composed its card
+// label out of a case id and a category and Montana has neither; the projection in
+// reader-guided-record.js is what discharged that entry, and the consumers below now
+// read `cardLabel` and `metaLabel` rather than building them.
 //
-// A copy entry with no placement would render nothing and a placement with no copy would
-// throw here rather than fail quietly. The registry decides; this only applies it.
-const CURATED = renderableExamples("readerGuided").map((id) => {
-  const copy = GUIDED_CASE_COPY[id];
-  if (!copy) throw new Error(`readerGuided names "${id}", which has no guided-case copy`);
-  return { id, ...copy };
+// A copy entry with no placement renders nothing and a placement with no copy throws
+// there rather than failing quietly. The registry decides; this only applies it.
+const CURATED = buildGuidedRotation({
+  ids: renderableExamples("readerGuided"),
+  caseCopy: GUIDED_CASE_COPY,
 });
+
+// The subset the curated console can seat. That console is the measured-case consumer
+// end to end: it prints a category and an observation date in its run strip, states "4
+// frontier models tested", runs the archive's own term list over the paste, and closes
+// on a share card keyed by case id. A public example has none of those, and seating one
+// there would mean writing all four. So it takes the measured cases and says so, which
+// is a fact about that console rather than a hold on the example — Montana leads the
+// Reader's rotation on the same data.
+const MEASURED_CURATED = CURATED.filter((c) => c.kind === GUIDED_RECORD_KIND.MEASURED_CASE);
 
 const SHARE_COPY = {
   "005": {
@@ -1351,33 +1365,27 @@ const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
 const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
 
-function caseCardLabel(c) {
-  if (!c || !c.ready) return null;
-  return `CASE ${c.id} · ${c.category.toUpperCase()}`;
-}
-
-function readerCaseMeta(c) {
-  if (!c?.ready) return "";
-  const cat = (c.category || "").toUpperCase();
-  return `CASE ${c.id} · ${cat}`;
-}
-
-function readerCaseCardLabel(c) {
-  if (!c?.ready) return null;
-  return `CASE ${c.id}`;
-}
+// The three label helpers these replaced — caseCardLabel, readerCaseMeta and
+// readerCaseCardLabel — each composed a string out of a case id and a category, which is
+// why a record with neither could not be seated here at all. The labels are projected
+// per record kind in reader-guided-record.js now, so a consumer reads one and the record
+// says what it is.
 
 // The curated case's provenance line. It used to carry the archive's human-scored
 // 0-3 figure ("GAP 2.5/3") as part of the case's identity, which put a score on a
 // live surface — and next to a visitor's own freshly pasted answer, an archive figure
 // reads as a verdict on that answer. The figure is untouched in the CURATED record;
-// it is no longer presented. What remains identifies the case and when it was
+// it is no longer presented. What remains identifies the record and when it was
 // observed, which is what a provenance line is for.
+//
+// `verifiedLabel` travels with the date because the two record kinds date different
+// facts, and printing one word over both would merge them.
 function resultProvenance(c) {
   if (!c || !c.ready) return null;
   return {
-    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()}`,
-    verified: c.observedDate,
+    caseLine: c.metaLabel,
+    verifiedLabel: c.dateLabel,
+    verified: c.dateValue,
   };
 }
 
@@ -1390,8 +1398,12 @@ function resultProvenance(c) {
 //
 // `tier` carries what makes the sentence citable: which record it comes from, that a
 // human reviewed it, and when. A fact this old has to date itself.
+// The tier names the archive and a human review, so it belongs to an archive record and
+// only to one. A public example has no archive row and no reviewer, which is why the
+// kind is checked here rather than the presence of a reveal — the packet has a reveal.
 function archiveFact(c) {
   if (!c || !c.ready || !c.reveal) return null;
+  if (c.kind !== GUIDED_RECORD_KIND.MEASURED_CASE) return null;
   return {
     fact: c.reveal,
     tier: `Imbas archive · human-reviewed ${c.observedDate}`,
@@ -1400,10 +1412,16 @@ function archiveFact(c) {
 
 function FlowCaseProvenance({ c }) {
   const prov = c ? resultProvenance(c) : null;
-  if (!prov) return null;
+  if (!prov || !prov.verified) return null;
   return (
     <div className="wb-flow-case-prov">
-      <p className="wb-flow-case-prov__case">{prov.caseLine} · VERIFIED {prov.verified.toUpperCase()}</p>
+      {/* One expression carries the separator, the label and its trailing space, because
+          the text node boundaries are load-bearing here. Written the natural way —
+          {caseLine} · {label} {value} — this is five text nodes rather than three, the
+          label opens its own inline box, and its first glyph takes a different sub-pixel
+          phase: 96 pixels of the V in VERIFIED re-rasterize while every letter after it
+          lands identically. The string is the same either way. The frame is not. */}
+      <p className="wb-flow-case-prov__case">{prov.caseLine}{` · ${prov.verifiedLabel.toUpperCase()} `}{prov.verified.toUpperCase()}</p>
     </div>
   );
 }
@@ -2059,12 +2077,16 @@ function textcheckFromAnchors(anchors) {
 
 function buildReaderRequest({ mode, sel, question, answer, topic, model }) {
   if (mode === "guided") {
-    const anchors = detectAnchors((answer || "").trim(), sel.detect || [], sel.keyDetect || []);
+    // A record with no term list produces no tokens, so the textcheck below comes back
+    // {surfaced:false, found:[], missing:[]} — the same value paste-your-own sends, and
+    // the honest one: nothing was checked, so nothing was found. The fallbacks that used
+    // to sit on these three fields are the projection's job now.
+    const anchors = detectAnchors((answer || "").trim(), sel.detect, sel.keyDetect);
     return {
       case: {
-        topic: sel.topic || sel.title || "Guided case",
-        anchor: sel.mechanism || sel.anchor || "",
-        why_it_matters: sel.whyItMatters || "",
+        topic: sel.topic,
+        anchor: sel.anchor,
+        why_it_matters: sel.whyItMatters,
       },
       open_question: sel.openPrompt,
       answer: (answer || "").trim(),
@@ -2428,7 +2450,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cate
 }
 
 function Curated() {
-  const [sel, setSel] = useState(CURATED[0]);
+  const [sel, setSel] = useState(MEASURED_CURATED[0]);
   const [step, setStep] = useState(0); // 0 observe+copy, 1 paste, 2 result
   const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
   const [model, setModel] = useState("");
@@ -2512,7 +2534,9 @@ function Curated() {
       model,
       email,
       open_prompt: sel.openPrompt,
-      mechanism: sel.mechanism,
+      // The candidate field keeps its name; the record's is `anchor`, and for a measured
+      // case it holds that case's `mechanism` verbatim. Same value written, same column.
+      mechanism: sel.anchor,
       open_answer: answer,
       gap_held: gapHeld,
       detect_verdict: anchors.verdict,
@@ -2541,12 +2565,12 @@ function Curated() {
       <div ref={stepAnchorRef} className="wb-scroll-anchor" />
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
       <div className="wb-case-selector">
-        {CURATED.map((c) => {
+        {MEASURED_CURATED.map((c) => {
           const active = c.id === sel.id;
           return (
             <button key={c.id} type="button" className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${active ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`} onClick={() => pick(c)} disabled={!c.ready}>
               {c.ready ? (
-                <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div>
+                <div className="wb-specimen-plate__label">{c.metaLabel}</div>
               ) : (
                 <Label>To add</Label>
               )}
@@ -3113,7 +3137,9 @@ function readerFallbackReadBody() {
 function readerResultProvenanceLabel({ mode, sel, result }) {
   if (result?.source === "fallback") return "Fallback check";
   if (result?.source !== "agent") return "Reader";
-  if (mode === "guided" && sel?.id) return `Reader agent · Case ${sel.id}`;
+  // The record names itself. Composing "Case ${sel.id}" here printed "Case
+  // montana-employment" the moment the rotation held something that is not a case.
+  if (mode === "guided" && sel?.recordName) return `Reader agent · ${sel.recordName}`;
   return "Reader agent · Custom answer";
 }
 
@@ -5461,8 +5487,8 @@ function ReaderCaseEvidence({ sel }) {
     <div className="wb-run-plate wb-specimen-plate wb-measure-channel wb-reader-evidence">
       <div className="wb-readout">
         <p className="wb-reader-evidence__meta">
-          {readerCaseMeta(sel)}
-          {sel.observedDate ? ` · Verified ${sel.observedDate}` : ""}
+          {sel.metaLabel}
+          {sel.dateValue ? ` · ${sel.dateLabel} ${sel.dateValue}` : ""}
         </p>
         <div className="wb-readout__rule" aria-hidden="true" />
         <div className="wb-readout__signal wb-guided-trap">
@@ -6288,7 +6314,10 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("guided")}
               >
                 <span className="wb-reader-v2__mode-name">Guided Case</span>
-                <span className="wb-reader-v2__mode-desc">Start with a measured case.</span>
+                {/* "a measured case" described the rotation until the flagship joined it.
+                    The flagship is a Reader run on a public example, not a scored case,
+                    so the noun had to widen to what all three entries have in common. */}
+                <span className="wb-reader-v2__mode-desc">Start with an example Imbas has already run.</span>
               </button>
             </div>
 
@@ -6304,8 +6333,8 @@ function ReaderWorkbench() {
                       disabled={!c.ready}
                       title={c.title}
                     >
-                      {c.ready ? <div className="wb-specimen-plate__label wb-reader-case-card__label">{readerCaseCardLabel(c)}</div> : <Label>To add</Label>}
-                      <div className="wb-case-card__title">{c.cardShort || c.title}</div>
+                      {c.ready ? <div className="wb-specimen-plate__label wb-reader-case-card__label">{c.cardLabel}</div> : <Label>To add</Label>}
+                      <div className="wb-case-card__title">{c.cardTitle}</div>
                     </button>
                   ))}
                 </div>

@@ -806,37 +806,32 @@ test("the placements blocked on the flagship's missing Inspection URL are exactl
   }
 });
 
-// ── The render blocker, and the rotation it shortens ─────────────────────────
+// ── The render blocker, and the rotation it used to shorten ──────────────────
 //
-// A link blocker says the destination does not exist. A render blocker says the
-// consumer cannot seat the record. Montana is held by the second, and these tests exist
-// so it is held in the open: they assert the exact blocked set, name the discharge
-// condition, and fail the day someone fabricates the measured fields that would make
-// the guided picker accept it.
+// A link blocker says the destination does not exist. A render blocker says the consumer
+// cannot seat the record. Montana was held by the second until reader-guided-record.js
+// projected both record types onto one field set, which is the first of the two
+// discharges its entry named. The entry is deleted rather than narrowed.
+//
+// What the blocker was protecting is not deleted with it, and the tests below are where
+// that protection now lives on its own: the flagship still carries no measured fields,
+// the rotation still leads with it, and the mechanism that would hold a future example
+// out still works on a substituted table.
 
-test("Montana is the only example a consumer cannot render, and every role it holds is named", () => {
-  assert.deepEqual(Object.keys(RENDER_BLOCKERS), ["montana-employment"]);
-  const held = RENDER_BLOCKERS["montana-employment"];
-  assert.equal(held.code, "PUBLIC_EXAMPLE_RENDER_PATH_REQUIRED");
-  // Named in the registry's role vocabulary, and equal to the roles the example holds.
-  // An invented role token or a forgotten one both fail here.
-  assert.deepEqual(
-    held.roles.slice().sort(),
-    EXAMPLES["montana-employment"].productRoles.slice().sort(),
-    "the blocked roles and the roles Montana holds disagree",
-  );
-  for (const role of held.roles) {
-    assert.ok(Object.values(PRODUCT_ROLE).includes(role), `${role} is not a registry role`);
+test("no example is held out of a consumer today", () => {
+  assert.deepEqual(Object.keys(RENDER_BLOCKERS), [], "a render blocker came back");
+  for (const id of Object.keys(EXAMPLES)) {
+    assert.equal(renderBlocker(id), null, `${id} is held out of a consumer`);
   }
-  assert.ok(held.blocker.includes("different record types"));
-  assert.ok(held.discharge.length > 0, "a blocker with no discharge condition is permanent");
 });
 
-test("the blocked flagship carries no synthesized measurement fields", () => {
-  // The cheap discharge is to give Montana a category, a detect list and a keyDetect
-  // list so the guided picker stops refusing it. Those are measurement output. Writing
-  // them by hand fabricates measurement data in the one record the product points at,
-  // so this fails before that ships rather than after.
+test("the flagship carries no synthesized measurement fields", () => {
+  // This is the rule the deleted blocker existed to protect, and it outlives it. The
+  // cheap discharge was always to give Montana a category, a detect list and a keyDetect
+  // list so the guided picker stopped refusing it. Those are measurement output. Writing
+  // them by hand fabricates measurement data in the one record the product points at, so
+  // this fails before that ships rather than after. The real discharge added no field to
+  // this record at all — it changed what the consumer reads.
   const montana = EXAMPLES["montana-employment"];
   for (const field of ["category", "detect", "keyDetect", "gap", "observedDate"]) {
     assert.equal(
@@ -847,7 +842,7 @@ test("the blocked flagship carries no synthesized measurement fields", () => {
   }
 });
 
-test("the guided rotation is the placement minus what no consumer can render", () => {
+test("the guided rotation is the placement, whole, with the flagship leading", () => {
   const named = resolvePlacement("readerGuided").exampleIds;
   const renderable = renderableExamples("readerGuided");
   assert.deepEqual(
@@ -855,19 +850,15 @@ test("the guided rotation is the placement minus what no consumer can render", (
     named.filter((id) => renderBlocker(id) === null),
     "renderableExamples disagrees with the blockers it is supposed to apply",
   );
-  // Order is the placement's, not a re-sort, so the rotation reads as configured.
-  assert.deepEqual(renderable, named.filter((id) => renderable.includes(id)));
-  // The held-out set, stated rather than implied: this is what the picker is missing
-  // and why, and it empties itself when RENDER_BLOCKERS does.
-  assert.deepEqual(
-    named.filter((id) => renderBlocker(id) !== null),
-    ["montana-employment"],
-  );
+  // Nothing is held out, so the rotation is the placement — in the placement's order,
+  // not a re-sort, and led by the flagship the ruling put there.
+  assert.deepEqual(renderable, named);
+  assert.equal(renderable[0], "montana-employment");
 });
 
 test("a placement whose examples are all renderable loses nothing", () => {
-  // The blocker applies to one example, not to the idea of a rotation. Every other
-  // placement resolves to exactly what it names.
+  // A blocker applies to one example, not to the idea of a rotation. Every placement
+  // resolves to exactly what it names.
   for (const name of Object.keys(PLACEMENTS)) {
     const named = resolvePlacement(name).exampleIds;
     if (named.some((id) => renderBlocker(id))) continue;
@@ -875,16 +866,17 @@ test("a placement whose examples are all renderable loses nothing", () => {
   }
 });
 
-test("deleting the blocker restores Montana to the rotation without touching the placement", () => {
-  // The proof that this is a hold and not a removal, run through the same resolver
-  // production uses with one substituted table. Same examples, same placements, no
-  // blockers: the flagship leads the rotation again, and nothing in
-  // PLACEMENTS.readerGuided had to change for it to.
-  const unblocked = makeRegistry({ blockers: {} });
+test("a blocker still shortens a rotation, and still without touching the placement", () => {
+  // The mechanism outlives the entry that used it. Run through the same resolver
+  // production uses with one substituted table: a held example leaves the rotation, the
+  // placement is unchanged, and deleting the hold restores it. This is what makes the
+  // shipped empty table a statement rather than a dead export.
+  const held = makeRegistry({ blockers: { "montana-employment": { code: "TEST_ONLY" } } });
+  assert.deepEqual(held.renderableExamples("readerGuided"), ["005", "021"]);
   assert.deepEqual(
-    unblocked.renderableExamples("readerGuided"),
     resolvePlacement("readerGuided").exampleIds,
+    ["montana-employment", "005", "021"],
+    "the placement changed when only the blocker table was substituted",
   );
-  assert.equal(unblocked.renderableExamples("readerGuided")[0], "montana-employment");
-  assert.equal(unblocked.renderBlocker("montana-employment"), null);
+  assert.equal(renderableExamples("readerGuided")[0], "montana-employment");
 });

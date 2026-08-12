@@ -61,6 +61,7 @@ import {
 } from "../../reader-result.js";
 import { CLAIM_STATE, describeClaimState, describeProvenance } from "../../reader-provenance.js";
 import { renderableExamples } from "../../product-example-registry.js";
+import { measuredCaseIds } from "../../reader-guided-record.js";
 import { buildCanonicalSingle } from "../../api/read.js";
 import { recordToPublic } from "../../api/inspection-share.js";
 import {
@@ -842,11 +843,18 @@ const DRIVE_PUBLIC_EXAMPLE = [
 // load.
 const DRIVE_CURATED = [{ waitFor: ".wb-readout__run-strip" }];
 
-// Which case that is comes from the registry, the same read the picker itself makes, so
-// this scenario photographs whatever PLACEMENTS.readerGuided currently leads with. A
-// literal case id here would be the defect the registry exists to remove, one level up:
-// the board would keep asserting the old lead after a placement moved, and pass.
-const LEAD_GUIDED_CASE = renderableExamples("readerGuided")[0];
+// Which case that is comes from the registry, through the same filter the console
+// itself applies, so this scenario photographs whatever that console currently leads
+// with. A literal case id here would be the defect the registry exists to remove, one
+// level up: the board would keep asserting the old lead after a placement moved, and
+// pass.
+//
+// The filter is the console's, not the rotation's. PLACEMENTS.readerGuided leads with
+// the flagship, which is a Reader run on a public example; the curated console seats
+// measured cases only, because it prints a category, a term list and an observation date
+// that a public example does not have. Reading the raw lead here would assert
+// "CASE montana-employment · OMISSION" against a screen showing Case 005.
+const LEAD_GUIDED_CASE = measuredCaseIds(renderableExamples("readerGuided"))[0];
 
 // ── Failure and in-flight drive steps ────────────────────────────────────────
 //
