@@ -3732,12 +3732,17 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
 // verbatim against the pasted answer, so the sentence states that predicate in plain
 // words and every row carries the quotation that earned it a place.
 //
-// The empty branch keeps its second sentence. "It read clean" was a verdict on the
-// answer, which is the one thing a null result cannot support: the Reader can report
-// what it surfaced, and surfacing nothing is not a finding of completeness.
+// The empty branch keeps its second sentence, because a null result is the state most
+// likely to be read as a verdict and the line has to say what it is instead. It used to
+// say so by denial — "not a verdict on the answer" — which was cured with the routed
+// four: this line renders directly under the count, on the same run where the Inspection
+// Meaning panel's S1 state renders, and that panel's line carried the same denial in
+// nearly the same words. Curing one and leaving the other would have put two registers
+// for one proposition on a single screen. The conditions clause is untouched, which is
+// what test/reader-empty-states.test.mjs requires of a null-result line.
 function readerCandidateSummary(canonical) {
   if (!countOf(canonical, "surfaced_candidate_items")) {
-    return "Reader surfaced nothing to list here under the tested conditions. That records what this inspection found, not a verdict on the answer.";
+    return "Reader surfaced nothing to list here under the tested conditions. That records the extent of this inspection.";
   }
   return "Each one is a candidate the Reader could quote from your answer.";
 }

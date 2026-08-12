@@ -108,8 +108,15 @@ export const EXPLAIN_PANEL_UI = {
     [EXPLAIN_STATE_S1]: {
       what:
         "The Reader inspected this answer and didn't surface anything that met its bar for a check under the tested conditions.",
+      // Cured on the standing rule against denial-by-naming. This line used to read
+      // "not a verdict on the answer" and close on "not a clean bill of health" — two
+      // denials, the second of which supplies the exact reading it exists to prevent
+      // and is the phrase a person carries away. Both propositions survive: what the
+      // panel holds is the extent of one inspection, and a null result is a fact about
+      // that inspection rather than about the answer. Stated as extent and as what a
+      // further run can still do, which is the same information pointing forward.
       why:
-        "That's a record of what was inspected, not a verdict on the answer. An inspection that surfaces nothing is not a clean bill of health.",
+        "That's a record of what was inspected under these conditions, and the extent of that inspection is the whole of what it establishes. A different question, a different model, or a closer reading can still surface what this one did not.",
       // A null single read is exactly where the second answer earns its keep, so the
       // two-question test leads. The Check Register cannot render here — S1 means no
       // finding surfaced, and a card is derived from a finding — so it is not listed.
@@ -137,8 +144,14 @@ export const EXPLAIN_PANEL_UI = {
     [EXPLAIN_STATE_S3]: {
       what:
         "The open and targeted answers were materially similar. This inspection did not surface a meaningful difference under the tested conditions.",
+      // Cured on the standing rule against denial-by-naming. The scope proposition here
+      // was always legitimate — a similarity result establishes nothing about what
+      // either answer omitted — but it was stated by naming what the comparison does
+      // not establish, which puts the completeness question in the reader's head in the
+      // Reader's own voice. The proposition is preserved by bounding the comparison to
+      // what it did measure and naming the other question as a separate one.
       why:
-        "That's a comparison recorded under these conditions. It does not establish that nothing was left out.",
+        "That's a comparison recorded under these conditions, and how the two answers compared is the whole of what it establishes. What either one left out is a separate question.",
       next_options: [
         { requires: "restart", clause: "test another answer with a different question or another model" },
         { requires: "reviewRecord", clause: "export the review record" },

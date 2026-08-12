@@ -53,7 +53,7 @@ const EMPTY_STATES = [
   {
     site: "readerCandidateSummary — the line under the hero count",
     kind: "null_result",
-    text: "Reader surfaced nothing to list here under the tested conditions. That records what this inspection found, not a verdict on the answer.",
+    text: "Reader surfaced nothing to list here under the tested conditions. That records the extent of this inspection.",
   },
   {
     site: "MeasurementPanel — the Candidate findings list",
@@ -152,9 +152,12 @@ test("a null-result empty state names its conditions or states what it does not 
 
 test("no empty state pronounces on the answer", () => {
   for (const state of EMPTY_STATES) {
-    // "clean" in any form is a verdict on the answer. The negated construction the
-    // interpretation panel uses ("not a clean bill of health") lives there, not here:
-    // an empty state that has to disclaim the word is better off not using it.
+    // "clean" in any form is a verdict on the answer, and an empty state that has to
+    // disclaim the word is better off not using it. The interpretation panel used to
+    // carry the negated construction ("not a clean bill of health") and this comment
+    // used to point at it as the one place it legitimately lived; that line was retired
+    // under the rule against denial-by-naming, so the word is now nowhere and this test
+    // is one of the places that keeps it nowhere. See test/reader-copy-cures.test.mjs.
     assert.doesNotMatch(state.text, /\bclean\b/i, `${state.site}: pronounces the answer clean`);
     assert.deepEqual(affirmativeGrades(state.text), [], `${state.site}: grades the answer`);
     assert.deepEqual(lintUserFacingStrings(state.text), [], `${state.site}: AT-5`);
