@@ -10218,4 +10218,5 @@ main > .close::before {
 }
 
 
-/* Workbench-specific styles: /workbench.css (loaded only on workbench.html) */
+/* Reader styles live in /workbench.css, which reader.html AND inspection.html both load.
+   The filename is historical and stays: retiring it would break the share page too. */

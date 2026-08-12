@@ -360,7 +360,7 @@ const PINNED = {
   capture_region: "viewport (state scrolled into it)",
   // url and query_parameters are defaults, not pins: a scenario may name its own page
   // and its own query, and what it names is what gets recorded. See resolveNavigation.
-  url: "/workbench.html",
+  url: "/reader.html",
   query_parameters: "(none)",
   font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
 };
@@ -405,7 +405,7 @@ export function resolveNavigation(scenario, pinned = PINNED) {
 // point: a Workbench scenario cannot opt out of the check it most needs, and a share
 // scenario is not failed by a check its page was never built to satisfy.
 const PAGE_READINESS = {
-  "/workbench.html": {
+  "/reader.html": {
     react: true,
     rendered: "#root, [data-reactroot], main",
   },
@@ -1516,8 +1516,8 @@ async function main() {
   // Verify the server actually serves before capturing anything. Every capture in
   // one earlier run was byte-identical because the server had died and each image
   // was the browser's connection-error page.
-  const probe = await fetch(`${origin}/workbench.html`);
-  if (!probe.ok) fail(`Static server preflight failed: ${probe.status} for ${origin}/workbench.html`);
+  const probe = await fetch(`${origin}/reader.html`);
+  if (!probe.ok) fail(`Static server preflight failed: ${probe.status} for ${origin}/reader.html`);
   const probeBody = await probe.text();
   if (!probeBody.includes("workbench.bundle.js")) {
     fail("Static server preflight served a page without workbench.bundle.js — wrong root?");

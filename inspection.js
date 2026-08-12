@@ -243,7 +243,7 @@ function questionHtml(record) {
 // record with its own date, and this page is the same page afterwards as before.
 function rerunHref(record) {
   const id = (record && record.share_id) || "";
-  return id ? `/workbench.html?rerun=${encodeURIComponent(id)}` : "";
+  return id ? `/reader.html?rerun=${encodeURIComponent(id)}` : "";
 }
 
 function actionsHtml(record) {
@@ -252,7 +252,7 @@ function actionsHtml(record) {
     <div class="insp-actions">
       ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--ghost" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--ghost" href="/reader.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
     </div>
     ${rerun ? `<p class="insp-actions__note">Running it again starts a new record with its own date. This one does not change.</p>` : ""}`;
@@ -580,7 +580,7 @@ function renderLegacy(root, record) {
     <div class="insp-actions">
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-full">Copy full receipt</button>
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--primary" href="/reader.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
     </div>
     ${reportSeamHtml()}`;
@@ -658,7 +658,7 @@ function renderError(root, message) {
       <p class="insp-error__body">This link may be incorrect, or the share was removed.</p>
       <p class="insp-error__hint">${escapeHtml(message || "")}</p>
       <div class="insp-actions">
-        <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+        <a class="insp-btn insp-btn--primary" href="/reader.html?reader=1">Test another answer</a>
         <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
       </div>
     </div>`;

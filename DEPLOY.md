@@ -51,7 +51,7 @@ npm install
 npm run build:workbench
 ```
 
-Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `workbench.html`). Do not edit `Workbench.jsx` unless diffed against `workbench-app.jsx` first — it may be stale.
+Source of truth: `workbench-app.jsx` (extracted from the former inline JSX in `reader.html`). Do not edit `Workbench.jsx` unless diffed against `workbench-app.jsx` first — it may be stale.
 
 Build script: `scripts/build-workbench.mjs` (esbuild; React and ReactDOM remain CDN externals).
 
@@ -950,11 +950,35 @@ Still needed:
 - og-image.png
 - apple-touch-icon.png
 
+## Routing — the Reader page
+
+The Reader is served from `reader.html`. Its advertised URL is `/reader`; every
+internal link, the canonical tag, and the sitemap point at `/reader.html`, which is
+the site's convention for every other page.
+
+Three redirects in `vercel.json` carry the old name, and their order of resolution is
+the thing to hold onto:
+
+```
+/workbench       → /reader → /reader.html
+/workbench.html  → /reader → /reader.html
+```
+
+Both legacy URLs terminate in two hops. Nothing redirects `/reader.html`, so no loop
+is constructible from this table — check that before adding a fourth entry.
+
+The CSP block below is keyed on `/reader.html` and not on `/reader`, because Vercel
+matches `headers` against the **incoming** request path. `/reader` never reaches the
+header phase as `/reader.html`; it 301s first, and the browser's second request is
+the one that gets the cdnjs policy. Keying the block on a path that only ever exists
+after a rewrite would leave React blocked by the catch-all policy — which is why the
+Reader uses a redirect here rather than a rewrite.
+
 ## Hosting headers
 
 Platform: Vercel. Headers ship in `vercel.json` (repo root). CSP is per-route: a
-near-strict policy on every page, plus a workbench-specific block scoped to
-`/workbench.html` (allows cdnjs for React/ReactDOM CDN scripts).
+near-strict policy on every page, plus a Reader-specific block scoped to
+`/reader.html` (allows cdnjs for React/ReactDOM CDN scripts).
 
 Note: the site embeds an inline `<script>` on every page (nav menu; index also has
 scroll-reveal) and a few inline `style="..."` attributes, so the shipped policy

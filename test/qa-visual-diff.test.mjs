@@ -182,17 +182,17 @@ test("whitespace and line endings are canonicalized", () => {
 });
 
 test("hrefs normalize to repository-relative and absolute local paths are tokenized", () => {
-  assert.equal(normalizeHref("http://127.0.0.1:52341/workbench.html"), "/workbench.html");
+  assert.equal(normalizeHref("http://127.0.0.1:52341/reader.html"), "/reader.html");
   assert.equal(normalizeHref("http://localhost:8080/archive.html"), "/archive.html");
   assert.equal(normalizeHref("http://127.0.0.1:9/x.html", "http://127.0.0.1:9"), "/x.html");
-  assert.equal(normalizeHref("file:///Users/someone/imbas-site/workbench.html"), "<ABSPATH>");
+  assert.equal(normalizeHref("file:///Users/someone/imbas-site/reader.html"), "<ABSPATH>");
   assert.equal(normalizeHref("/how-it-works.html"), "/how-it-works.html");
 });
 
 test("a port change alone does not move the snapshot", () => {
   // The static server binds port 0, so the port differs on every single run.
-  const a = normalizeEntries([{ tag: "a", text: "Workbench", href: "http://127.0.0.1:1111/workbench.html" }]);
-  const b = normalizeEntries([{ tag: "a", text: "Workbench", href: "http://127.0.0.1:65000/workbench.html" }]);
+  const a = normalizeEntries([{ tag: "a", text: "Reader", href: "http://127.0.0.1:1111/reader.html" }]);
+  const b = normalizeEntries([{ tag: "a", text: "Reader", href: "http://127.0.0.1:65000/reader.html" }]);
   assert.deepEqual(a, b);
 });
 
@@ -318,22 +318,22 @@ test("every committed scenario passes its own shape check", () => {
 
 test("a scenario without a query is navigated to the bare pinned page", () => {
   const nav = resolveNavigation({ name: "x" });
-  assert.equal(nav.path, "/workbench.html");
+  assert.equal(nav.path, "/reader.html");
   assert.equal(nav.query_parameters, "(none)");
   // Same for the empty and absent cases: neither invents a dangling "?".
-  assert.equal(resolveNavigation({ name: "x", query: "" }).path, "/workbench.html");
-  assert.equal(resolveNavigation({}).path, "/workbench.html");
+  assert.equal(resolveNavigation({ name: "x", query: "" }).path, "/reader.html");
+  assert.equal(resolveNavigation({}).path, "/reader.html");
 });
 
 test("a scenario's query reaches the URL and the recorded environment together", () => {
   const nav = resolveNavigation({ name: "curated-readout", query: "reader=0" });
-  assert.equal(nav.path, "/workbench.html?reader=0");
+  assert.equal(nav.path, "/reader.html?reader=0");
   assert.equal(nav.query_parameters, "?reader=0");
 
   // A leading "?" is tolerated and never doubled, because writing it either way in a
   // scenario is a reasonable thing to do and getting "??reader=0" is not.
-  assert.equal(resolveNavigation({ query: "?reader=0" }).path, "/workbench.html?reader=0");
-  assert.equal(resolveNavigation({ query: "??reader=0" }).path, "/workbench.html?reader=0");
+  assert.equal(resolveNavigation({ query: "?reader=0" }).path, "/reader.html?reader=0");
+  assert.equal(resolveNavigation({ query: "??reader=0" }).path, "/reader.html?reader=0");
 });
 
 test("every scenario carrying a query is named here, and its query is recorded", () => {
@@ -390,7 +390,7 @@ test("a scenario may name its own page, and the page it names is recorded", () =
   // driving the Workbench would be a picture of the wrong thing filed under the right
   // name, so the page is per-scenario and travels into the baseline's env block beside
   // the query — for the same reason the query does.
-  assert.equal(resolveNavigation({ name: "x" }).page, "/workbench.html");
+  assert.equal(resolveNavigation({ name: "x" }).page, "/reader.html");
   assert.equal(
     resolveNavigation({ name: "x", page: "/inspection.html", query: "share=abc" }).path,
     "/inspection.html?share=abc",
@@ -406,7 +406,7 @@ test("every page a scenario names has a readiness rule", () => {
     assert.equal(typeof ready.react, "boolean");
     assert.ok(ready.rendered, "a readiness rule names what rendered means on that page");
   }
-  assert.equal(resolveReadiness("/workbench.html").react, true);
+  assert.equal(resolveReadiness("/reader.html").react, true);
   assert.equal(resolveReadiness("/inspection.html").react, false);
 });
 

@@ -1219,7 +1219,7 @@ const WORKBENCH_TERMS_CSS = `
 
 // The context row's pointer at whichever case the site currently features. Route and
 // visible label both resolve through the registry, so this link and the no-JavaScript
-// fallback in workbench.html — which the materializer already generates from the same
+// fallback in reader.html — which the materializer already generates from the same
 // placement — cannot disagree about which case that is.
 const FEATURED = getExample(resolvePlacement("archiveFeatured").exampleIds[0]);
 const FEATURED_ROUTE = placementRoute("archiveFeatured");

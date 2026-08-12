@@ -294,7 +294,7 @@ export const PLACEMENTS = Object.freeze({
   //      routes list is empty. All five then fail with "needs route … does not supply
   //      it". The regions are archiveFeaturedReadLink, archiveFeaturedCtaLink,
   //      homeFeaturedReadLink, workbenchNoscriptCaseLink and methodologyRubricLink,
-  //      across archive.html, index.html, workbench.html and methodology.html.
+  //      across archive.html, index.html, reader.html and methodology.html.
   // Neither gate is discharged by a rendering path. The first needs the block to stop
   // printing a score; the second needs the Inspection URL, which is a published record
   // and not a string anyone may write here.
