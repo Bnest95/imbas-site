@@ -1128,8 +1128,24 @@
    and 6.39:1 in the lightest case the umber system can put behind it. Both clear the
    4.5:1 floor. Read-only text is still text a person reads.
 
-   --ink-dim is deliberately NOT used: it is declared nowhere in the repo, so its 14 uses
-   in this file compute to `inherit` and carry no dimming at all. */
+   --ink-dim is deliberately NOT used: it is declared nowhere in the repo. An undeclared
+   custom property does not drop its declaration from the cascade. The declaration wins,
+   then resolves to `unset`, which on an inherited property like color means `inherit`. So
+   it carries no dimming — and it masks whatever color declaration would otherwise have won
+   on that element, which is the part that made deleting these harder than it looked.
+
+   Eight of the fourteen uses masked nothing and are gone. Six mask a live rule, draw the
+   page today, and stay, each marked at its own site: .wb-return__dismiss, .wb-funnel__note,
+   .wb-demo__context, .wb-loop__panel-body--muted, .wb-demo__smallprint, .wb-demo__close.
+   Three sit on a <button> or a <p>, where the UA's `color: buttontext` or styles.css
+   `p { color: var(--ink-soft) }` takes over the moment the line comes out.
+
+   Two readings governed which was which, and the board was only one of them. The board
+   photographs a viewport: it caught .wb-demo__close and two others, and it stayed green
+   over .wb-return__dismiss, .wb-funnel__note and .wb-demo__context, which are behind app
+   state or above a scroll offset. Those three were read instead by computed colour in the
+   governed renderer with the state driven. A frame that does not contain an element is not
+   evidence about it. */
 .wb-input[readonly],
 .wb-input[readonly][style] {
   border-color: var(--wb-border-passive) !important;
@@ -1685,7 +1701,6 @@
 
 .page--field-notes .page__intro {
   max-width: var(--fn-read);
-  color: var(--ink-dim);
 }
 
 .fn-prepared {
@@ -1711,7 +1726,6 @@
   font-family: var(--font-display);
   font-size: max(0.9375rem, var(--text-min));
   line-height: 1.55;
-  color: var(--ink-dim);
   margin: 0;
 }
 
@@ -1872,7 +1886,6 @@
   font-family: var(--font-display);
   font-size: max(0.9375rem, var(--text-min));
   line-height: 1.58;
-  color: var(--ink-dim);
   margin: 0 0 var(--space-3);
 }
 
@@ -5272,6 +5285,12 @@
   color: var(--ink-soft);
 }
 
+/* Retained. The note above .wb-input[readonly] gives the mechanism; what this one masks is
+   the UA's own `color: buttontext`, because it is a <button>. Take the line out and the ×
+   goes rgb(0, 0, 0) on the umber ground. Measured, not predicted — and not by the board,
+   which never photographs the return nudge. That reading came from loading the page in the
+   governed renderer with this browser's event log seeded to a copied question and no
+   completed loop, which is the state the nudge renders in. */
 .wb-return__dismiss {
   flex: 0 0 auto;
   margin: -0.15rem -0.2rem 0 0;
@@ -5310,7 +5329,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.7rem;
   padding-right: 1.4rem;
 }
@@ -5357,7 +5375,6 @@
   font-family: var(--font-mono);
   font-size: 1.1rem;
   line-height: 1;
-  color: var(--ink-dim);
   transition: color 0.15s ease;
 }
 
@@ -5385,7 +5402,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.5rem;
 }
 
@@ -5450,7 +5466,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.35rem;
 }
 
@@ -5472,6 +5487,9 @@
   color: var(--ink-soft);
 }
 
+/* Retained. A <p>, so what this masks is styles.css `p { color: var(--ink-soft) }` —
+   #D4CFC2 = rgb(212, 207, 194). Read under ?funnel=1 in the governed renderer, which is the
+   only way to see this panel at all; the board has no funnel scenario. */
 .wb-funnel__note {
   margin: 0;
   font-family: var(--font-mono);
@@ -5547,6 +5565,10 @@
   color: var(--ink);
 }
 
+/* Retained, masking the same styles.css `p` rule as .wb-demo__smallprint below. This one is
+   the reason a board run is not sufficient evidence here: the demo panel is photographed,
+   but only from a scroll offset that puts this line above the captured viewport, so the
+   frames came back identical while the colour moved. */
 .wb-demo__context {
   margin: 0;
   font-family: var(--font-mono);
@@ -5566,7 +5588,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.4rem;
 }
 
@@ -5610,6 +5631,15 @@
   margin-top: 1rem;
 }
 
+/* This --ink-dim draws the page, which is the opposite of how it reads. The property is
+   undeclared — see the note above .wb-input[readonly] — so this declaration is invalid at
+   computed-value time, wins anyway, and resolves to `inherit`. What it masks is
+   .wb-loop__panel-body's own `color: rgba(228, 216, 200, 0.92)` above: workbench-app.jsx
+   writes both classes onto one <p>, the two selectors carry equal specificity, and this one
+   comes later. Delete the line and that rule takes the colour back: rgb(242, 232, 220)
+   becomes rgba(228, 216, 200, 0.92), and both public-example frames move. Whether this body
+   should inherit or take a token of its own is a ruling nobody has made. Until someone makes
+   it, the line stays, because the frames say it is drawing. */
 .wb-loop__panel-body--muted {
   color: var(--ink-dim);
   font-style: italic;
@@ -5656,6 +5686,11 @@
   font-size: 0.8rem;
 }
 
+/* The second one that draws the page, by the same mechanism. Here the masked rule is in the
+   other stylesheet: styles.css `p { color: var(--ink-soft) }`, and --ink-soft is #D4CFC2 =
+   rgb(212, 207, 194) — exactly the colour the board photographed on this line when the
+   declaration came out. A class selector beats a bare element selector, so the invalid
+   declaration wins and the <p> inherits instead. Same standing question as above. */
 .wb-demo__smallprint {
   margin: 0.55rem 0 0;
   font-family: var(--font-mono);
@@ -5671,6 +5706,9 @@
   margin-top: 1rem;
 }
 
+/* Retained, same as .wb-return__dismiss: a <button>, masking the UA's `color: buttontext`.
+   The board caught this one directly — deleting the line turned "Hide example" rgb(0, 0, 0)
+   across both public-example-provenance frames. */
 .wb-demo__close {
   background: none;
   border: none;
