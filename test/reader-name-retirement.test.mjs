@@ -221,6 +221,30 @@ test("a label the map has never seen prints itself rather than vanishing", () =>
   assert.equal(sourceLabel(undefined), "Reader inspection");
 });
 
+test("no board scenario expects the retired name on screen", () => {
+  // Found by the board rather than by this file, which is why it is now in this file.
+  // share-single asserted the text "<retired> inspection" because that was the page's
+  // eyebrow; the rename moved the eyebrow and left the assertion behind, and the board
+  // failed at capture time — correctly, and one commit later than it needed to.
+  //
+  // A scenario's assertText and waitForText are claims about what a visitor reads. They
+  // are the only strings in the harness that are, so they are the only ones checked here:
+  // a comment in the harness naming the old product is a comment, and this does not reach
+  // for it.
+  const scenarios = read("scripts/qa/scenarios.mjs");
+  const claims = [
+    ...scenarios.matchAll(/(?:assertText|waitForText|assertScenarioText)\s*:\s*(\[[\s\S]*?\]|"(?:[^"\\]|\\.)*")/g),
+  ].map((m) => m[1]);
+  assert.ok(claims.length > 0, "no rendered-text expectations were found, so this test checks nothing");
+  const offenders = claims.filter((c) => c.includes(RETIRED));
+  assert.deepEqual(
+    offenders,
+    [],
+    `a board scenario expects the retired name in rendered text: ${offenders.join(" | ")}. ` +
+      "Either the page still prints it, or the scenario is asserting against a page that no longer exists.",
+  );
+});
+
 test("nothing written from today forward stores the retired name", () => {
   // The resolution above is for rows that already exist. New rows must not need it.
   const writer = read("api/inspection-share.js");

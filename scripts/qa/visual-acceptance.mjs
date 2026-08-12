@@ -996,10 +996,31 @@ function buildStubScript(payloads) {
     el.dispatchEvent(new Event("change", { bubbles: true }));
   };
 
-  const boxed = (el) => {
+  // Whether a reader could see this element, which is not the same question as whether it
+  // has a box — and the difference is measurable in the renderer this board pins.
+  //
+  // A non-zero client rect used to be the whole test. Measured in chromium-headless-shell
+  // r1223 (148.0.7778.96), four ways of hiding an element leave its rect at a full
+  // 760x24: a closed <details> (collapsed by skipping ::details-content, so every
+  // descendant still reports a plausible box), content-visibility: hidden,
+  // visibility: hidden, and opacity: 0. Only display: none zeroes the rect. So the old
+  // test answered true for content nobody could see, and a scenario whose assertSelector
+  // pointed inside a closed disclosure would have photographed a frame without it and
+  // passed. The board photographs pixels; this is the check that has to agree with them.
+  //
+  // checkVisibility is the browser's own answer to exactly this question, and it is not a
+  // rule about disclosures — a summary line inside a closed <details> IS visible and does
+  // return true. The box test stays in front of it because checkVisibility answers true
+  // for a rendered element of zero area, which the camera cannot see either.
+  const seen = (el) => {
     if (!el) return false;
     const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
+    if (!(r.width > 0 && r.height > 0)) return false;
+    return el.checkVisibility({
+      contentVisibilityAuto: true,
+      opacityProperty: true,
+      visibilityProperty: true,
+    });
   };
 
   window.__qa = {
@@ -1023,7 +1044,7 @@ function buildStubScript(payloads) {
       el.click();
       return { ok: true };
     },
-    visible(sel) { return boxed(document.querySelector(sel)); },
+    visible(sel) { return seen(document.querySelector(sel)); },
     // innerText, not textContent, so this asserts against text the user can
     // actually see. Case-folded and whitespace-collapsed because Chrome applies
     // text-transform to innerText — an uppercased heading would otherwise never

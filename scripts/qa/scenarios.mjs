@@ -659,7 +659,7 @@ export const isInjectedResponse = (v) =>
 
 // ── The published share, as the server would publish it ──────────────────────
 //
-// A share page is not the Workbench. It renders from a stored Airtable row projected
+// A share page is not the Reader. It renders from a stored Airtable row projected
 // by recordToPublic, and the projection is where the interesting decisions live: what
 // a P4 share carries, what it deliberately does not, and what the dated receipt says
 // about each. So the fixture here is the ROW, and the projection is the real one —
@@ -766,7 +766,10 @@ const LEGACY_SHARE_ROW = {
 //   { fill: selector, text }        set a React-controlled input (native setter + input event)
 //   { click: selector }             click the first match
 //   { clickText: selector, text }   click the first match whose textContent contains text
-//   { waitFor: selector }           wait until the selector matches and has a non-zero box
+//   { waitFor: selector }           wait until the selector matches and a reader could see it
+//                                   (non-zero box AND checkVisibility — see `seen` in
+//                                   visual-acceptance.mjs; a non-zero box alone is true of
+//                                   content inside a closed <details>)
 //   { waitForText: text }           wait until body text contains this string
 const DRIVE_SINGLE_SUBMIT = [
   { fill: ".wb-reader-v2__field--answer textarea", text: SYNTHETIC_ANSWER },
@@ -1464,7 +1467,7 @@ export const SCENARIOS = {
   // what the Reader is, and it is the surface whose promise is hardest to keep — the
   // record does not change — so it is the one that most needs a picture on file.
   //
-  // These are the first board scenarios that are not the Workbench. The page is named
+  // These are the first board scenarios that are not the Reader. The page is named
   // per scenario and the readiness rule is the page's, not React's; see PAGE_READINESS
   // in visual-acceptance.mjs.
 
@@ -1493,7 +1496,7 @@ export const SCENARIOS = {
     // one string on this page that must equal the run surface's word for word, so it
     // being photographed here is also the board's half of that pin.
     assertText: [
-      "Workbench inspection",
+      "Reader inspection",
       "Unlisted · Unreviewed",
       "2 candidate items surfaced",
       "Each mark points at something in this answer, or at something absent from it. Imbas records both.",
@@ -1583,7 +1586,7 @@ export const SCENARIOS = {
     steps: DRIVE_SHARE_RECORD,
     assertText: [
       "Captured 9 July 2026. The answering system was not recorded. Answers change; this record doesn't.",
-      "Workbench two-question test",
+      "Reader two-question test",
       "What the second answer added",
       SHARE_BOUNDARY_SENTENCE,
     ],
