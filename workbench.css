@@ -4243,7 +4243,89 @@
   color: rgba(185, 172, 195, 0.7);
 }
 
-/* INSPECT. The last thing a reader passes before the marks, and the reason the two
+/* READ. The answer, whole, with the marks standing in it.
+
+   `pre-wrap` is load-bearing rather than stylistic: the body renders the artifact the
+   spans were resolved against, so every line break and run of spaces a person pasted
+   has to survive to the screen. Collapsing whitespace would still put each mark at the
+   right offset and would show the reader a document that is not the one measured.
+
+   Serif, at the answer's own size, because this is the text under inspection and not
+   the instrument's commentary on it. The panel's own voice — the class labels, the
+   readings, the boundary lines — stays sans, so a reader can tell at a glance which
+   words are theirs.
+
+   No max-height and no overflow. A scroll box here would put a person's own evidence
+   behind a gesture and hide marks below the fold of a box inside a page. */
+.wb-measure__source {
+  margin: 0 0 1.1rem;
+}
+
+.wb-source__body {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-left: 2px solid rgba(242, 232, 220, 0.14);
+  background: rgba(242, 232, 220, 0.03);
+  border-radius: 0 4px 4px 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1rem;
+  line-height: 1.62;
+  color: rgba(232, 221, 206, 0.94);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* A marked run. The tint carries it rather than a background block with hard edges,
+   so a mark that spans a line break reads as one continuous passage instead of two
+   rectangles. `color: inherit` because the browser default for <mark> is black on
+   yellow, which on this ground would be the loudest thing on the page. */
+.wb-source__mark {
+  background: rgba(222, 111, 56, 0.16);
+  color: inherit;
+  box-shadow: inset 0 -1px 0 rgba(222, 111, 56, 0.45);
+  border-radius: 2px;
+  padding: 0.05em 0;
+}
+
+/* THE MARK NUMBER. One element, one look, wherever a mark is named — over the words
+   in the body and beside the quotation in the list — because it is the same mark and
+   the number is the whole of what ties the two views together.
+
+   The label inside it is read and not seen: a bare numeral announced mid-sentence is
+   noise, and "mark 1" is the tie stated. Absolutely positioned and clipped, so it
+   takes no space in a `pre-wrap` flow. */
+.wb-mark-n {
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(222, 111, 56, 0.92);
+  vertical-align: super;
+  line-height: 0;
+  margin-right: 0.12em;
+  white-space: nowrap;
+}
+
+.wb-mark-n__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* In the list the number leads the row's evidence rather than a run of prose, so it
+   sits on the baseline instead of riding above it. */
+.wb-measure__anchor .wb-mark-n,
+.wb-measure__absence .wb-mark-n {
+  vertical-align: baseline;
+  line-height: inherit;
+  margin-right: 0.45em;
+}
+
+/* INSPECT. The last thing a reader passes before the list, and the reason the two
    lines above it can be short: everything that used to stand between a person and
    their own excerpts is in here, whole, one key away.
 

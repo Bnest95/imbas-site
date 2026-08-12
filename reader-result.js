@@ -1033,15 +1033,34 @@ export function describeFinding(finding) {
     class_display: FINDING_CLASSES[finding.class_label],
     statement: finding.statement,
     materiality: finding.materiality,
-    anchors: finding.anchors.map((a) => ({
-      role: a.role,
-      status: a.status,
-      quote: a.quote,
-      absent_reason: a.absent_reason,
-      // The channel travels with the anchor into the view, so a renderer never
-      // infers position from status. An anchor with no span carries no span here.
-      channel: anchorChannelFor(finding, a.role),
-    })),
+    anchors: finding.anchors.map((a) => {
+      const described = {
+        role: a.role,
+        status: a.status,
+        quote: a.quote,
+        absent_reason: a.absent_reason,
+        // The channel travels with the anchor into the view, so a renderer never
+        // infers position from status. An anchor with no span carries no span here.
+        channel: anchorChannelFor(finding, a.role),
+      };
+      // The span travels too, where there is one. Only quotedAnchor mints a span, and
+      // it mints it against the artifact it proved the quotation from, so a view that
+      // positions a mark from this field can only position a quotation and only in the
+      // document that quotation came from. That is the in-document rule made
+      // structural rather than enforced.
+      //
+      // ATTACHED, NOT NULLED. An absence descriptor carries no `span` key at all —
+      // not a null one — because the law it answers to is that nothing in it may read
+      // as a position, and `"span": null` is a position field with nothing in it.
+      // test/absence-surfacing.test.mjs holds this by name and by JSON scan.
+      //
+      // Copied rather than passed through, because the descriptor is what a view holds
+      // and the descriptor should not hand out a reference into the record.
+      if (a.span) {
+        described.span = { artifact_id: a.span.artifact_id, start: a.span.start, end: a.span.end };
+      }
+      return described;
+    }),
     directional: shape.directional,
     comparison_direction: finding.comparison_direction,
     claim_register: finding.claim_register,
@@ -1049,6 +1068,152 @@ export function describeFinding(finding) {
     conditions_status: finding.conditions_status,
     reader_state: finding.reader_state,
     disposition: finding.disposition,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// THE SOURCE READING — the answer with its marks positioned in it.
+//
+// A list of excerpts is not the answer. It tells a reader what the Reader found
+// and leaves them to locate it themselves, in their own text, from a quotation
+// they have to scan for. The spans to avoid that were always there: every QUOTED
+// anchor carries the offsets the server resolved it at. Nothing consumed them.
+// This is the function that does.
+//
+// It takes DESCRIBED findings, not records, because the channel is what decides
+// whether a mark may be positioned and only a descriptor carries it. It returns
+// three things and computes nothing else:
+//
+//   marks     — every mark the record holds, numbered, in the record's own order.
+//   segments  — an exact, ordered cover of the artifact text, each segment naming
+//               the marks that span it.
+//   marks_by_finding — the numbering again, keyed by finding id and aligned index
+//               for index with that finding's anchors, so a list and a body can
+//               agree on which mark is which without either one re-deriving it.
+//
+// NUMBERING IS THE RECORD'S ORDER, not the document's. The same numbers key the
+// body and the list, and the list renders in record order, so numbering by
+// position in the text would make one of the two surfaces count out of sequence.
+// A mark low in the answer may therefore carry a low number. That is the record
+// being the authority on its own order.
+//
+// WHAT IS NOT POSITIONED. A mark whose channel is RECORD_LEVEL_ABSENCE has no
+// span and gets none here. A mark whose span names a different artifact is not in
+// THIS document and is not placed in it. Both are still numbered, because both are
+// marks the record holds; they simply have no place in the body, and the surface
+// that shows them says so in its own words. An anchor with no channel is not a
+// mark at all and is not numbered — that is the unresolved quotation, and it does
+// not surface anywhere.
+//
+// THE INVARIANT IS ENFORCED HERE, LOUDLY. Every positioned span is re-derived from
+// the artifact text before it is used: artifactText.slice(start, end) === quote,
+// exactly, no normalization on either side, which is the coordinate convention
+// declared at the top of this file. A span that does not reproduce is a defect in
+// the record or in the text it was handed, and either way a mark drawn from it
+// would sit over the wrong words. So it throws. A misplaced mark is worse than no
+// mark: it is the instrument pointing confidently at something it did not measure.
+// ---------------------------------------------------------------------------
+
+function assertSpanReproduces(text, span, quote, artifactId) {
+  if (!Number.isInteger(span.start) || !Number.isInteger(span.end)) {
+    reject(`a span on ${artifactId} is not a pair of integer offsets`);
+  }
+  if (span.start < 0 || span.end <= span.start || span.end > text.length) {
+    reject(
+      `a span on ${artifactId} falls outside the artifact: [${span.start}, ${span.end}) against ${text.length} code units`,
+    );
+  }
+  if (text.slice(span.start, span.end) !== quote) {
+    reject(
+      `a span on ${artifactId} does not reproduce its quotation at [${span.start}, ${span.end}); ` +
+        "the text the marks are positioned against is not the text they were resolved against",
+    );
+  }
+}
+
+// Cut the text at every span boundary and hand each piece the marks that cover it.
+// Splitting at boundaries rather than walking marks one at a time is what makes
+// overlap and nesting exact instead of a policy: two marks that share words produce
+// a segment carrying both numbers, and no mark is shortened, dropped, or reordered
+// to make room for another. The pieces concatenate back to the artifact exactly.
+function cutIntoSegments(text, positioned) {
+  if (!text) return deepFreeze([]);
+  if (!positioned.length) {
+    return deepFreeze([deepFreeze({ text, start: 0, end: text.length, marks: deepFreeze([]), starts: deepFreeze([]) })]);
+  }
+  const cuts = new Set([0, text.length]);
+  for (const m of positioned) {
+    cuts.add(m.span.start);
+    cuts.add(m.span.end);
+  }
+  const bounds = [...cuts].sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < bounds.length - 1; i++) {
+    const start = bounds[i];
+    const end = bounds[i + 1];
+    out.push(
+      deepFreeze({
+        text: text.slice(start, end),
+        start,
+        end,
+        marks: deepFreeze(positioned.filter((m) => m.span.start <= start && m.span.end >= end).map((m) => m.n)),
+        // Where a mark BEGINS, so a surface can label it once instead of once per
+        // piece. A mark that starts here also covers here, because the next cut is
+        // never past its end.
+        starts: deepFreeze(positioned.filter((m) => m.span.start === start).map((m) => m.n)),
+      }),
+    );
+  }
+  return deepFreeze(out);
+}
+
+export function buildSourceReading({ artifactText, findings = [], artifactId = ARTIFACT_ORIGINAL }) {
+  const text = str(artifactText);
+  const marks = [];
+  const byFinding = {};
+  for (const f of findings) {
+    const anchors = (f && f.anchors) || [];
+    const numbering = [];
+    for (const a of anchors) {
+      if (!a || !a.channel) {
+        numbering.push(null);
+        continue;
+      }
+      const n = marks.length + 1;
+      // NO DOCUMENT, NO POSITIONS. A caller that holds the record but not the answer
+      // it was made against gets the numbering and no body — every mark unpositioned,
+      // no segment, nothing for a surface to draw. That is not the check being relaxed:
+      // a span cannot be verified against a document nobody handed over, and the rule
+      // is that no mark is placed without verifying it. The list below the body is
+      // unaffected; it quotes, and quoting needs no offsets.
+      const inThisDocument =
+        text.length > 0 &&
+        a.channel === ANCHOR_CHANNEL.QUOTED_SPAN &&
+        a.span != null &&
+        a.span.artifact_id === artifactId;
+      if (inThisDocument) assertSpanReproduces(text, a.span, a.quote, artifactId);
+      marks.push(
+        deepFreeze({
+          n,
+          finding_id: f.id,
+          channel: a.channel,
+          quote: a.quote,
+          span: inThisDocument ? deepFreeze({ start: a.span.start, end: a.span.end }) : null,
+          in_document: inThisDocument,
+        }),
+      );
+      numbering.push(n);
+    }
+    if (f && f.id) byFinding[f.id] = deepFreeze(numbering);
+  }
+  return deepFreeze({
+    artifact_id: artifactId,
+    marks: deepFreeze(marks),
+    marks_by_finding: deepFreeze(byFinding),
+    segments: cutIntoSegments(
+      text,
+      marks.filter((m) => m.in_document),
+    ),
   });
 }
 

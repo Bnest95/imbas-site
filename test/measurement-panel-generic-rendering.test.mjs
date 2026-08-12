@@ -33,6 +33,7 @@ import {
   SHAPE_SINGLE_CANDIDATE,
   buildCanonicalResult,
   buildFinding,
+  buildSourceReading,
   describeFinding,
   registerFindingShape,
   selectSubset,
@@ -70,6 +71,12 @@ const PANEL = componentSource(SRC, "MeasurementPanel");
 // negative assertion about the panel must not be satisfiable by the evidence element's
 // source, or vice versa.
 const EVIDENCE = componentSource(SRC, "FindingEvidence");
+
+// READ's two elements, sliced the same way and for the same reason. They are named
+// separately so a negative assertion about the panel cannot be satisfied by their
+// source, and so this file can say which component each claim is about.
+const SOURCE_READING = componentSource(SRC, "SourceReading");
+const MARK_NUMBER = componentSource(SRC, "MarkNumber");
 
 // The descriptor's real key set, from a real finding built through the real door.
 const DESCRIPTOR_KEYS = new Set(
@@ -215,12 +222,20 @@ const QUOTE = "ninety days after the notice is served";
 // stub stands in for each child component, since this is a test of THIS component's
 // rows. The free identifiers are supplied explicitly, so a new one added to the panel
 // makes this fail loudly rather than silently reading undefined.
+// SourceReading and MarkNumber come along because the panel mounts one and the evidence
+// element renders the other. Both are lifted from the shipped file, not stubbed: a stub
+// would let the panel pass this test while the READ stratum it now leads with was
+// broken. buildSourceReading is imported rather than lifted — it is model code in
+// reader-result.js, and the panel gets the real one.
 async function renderPanel(findings) {
-  const { code } = await transform(`${PANEL}\n${EVIDENCE}\nreturn MeasurementPanel;`, {
-    loader: "jsx",
-    jsxFactory: "h",
-    jsxFragment: "Frag",
-  });
+  const { code } = await transform(
+    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
+    {
+      loader: "jsx",
+      jsxFactory: "h",
+      jsxFragment: "Frag",
+    },
+  );
   const h = (type, props, ...children) => {
     // The evidence element is a component, not a host tag, so a recording `h` would
     // stop at its name and never see the blockquote or the absence note. Calling it
@@ -235,11 +250,13 @@ async function renderPanel(findings) {
     "Frag",
     "selectSubset",
     "describeFinding",
+    "buildSourceReading",
     "ANCHOR_CHANNEL",
     "RECORD_LEVEL_ABSENCE_NOTE",
     "MARK_ORIENTATION_NOTE",
     "MEASURE_SECTION_LABEL",
     "MEASURE_INSPECT_SUMMARY",
+    "MEASURE_SOURCE_LABEL",
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
@@ -250,16 +267,24 @@ async function renderPanel(findings) {
     "Frag",
     () => findings,
     (f) => f,
+    buildSourceReading,
     ANCHOR_CHANNEL,
     RECORD_LEVEL_ABSENCE_NOTE,
     MARK_ORIENTATION_NOTE,
     stringConstant(SRC, "MEASURE_SECTION_LABEL"),
     stringConstant(SRC, "MEASURE_INSPECT_SUMMARY"),
+    stringConstant(SRC, "MEASURE_SOURCE_LABEL"),
     "boundary",
     stub,
     stub,
   );
-  return Panel({ result: { measurement: {}, result: {} }, context: {} });
+  // The receipt carries the artifact the spans were resolved against, so the panel is
+  // handed one here. A panel with no receipt renders the list and no body, which is a
+  // real state and not the one these assertions are about.
+  return Panel({
+    result: { measurement: {}, result: {}, receipt: { open_run: { answer: ANSWER } } },
+    context: {},
+  });
 }
 
 function textOf(node, out = []) {

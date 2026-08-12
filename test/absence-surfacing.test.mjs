@@ -377,12 +377,19 @@ function componentSource(text, name) {
 // The shipped evidence element, compiled out of workbench-app.jsx with the same JSX
 // settings the bundle uses and handed the descriptors the run above produced. Nothing
 // is reimplemented here — that is what makes this the render end of the receipt.
+// MarkNumber comes along because the evidence element renders one. It is lifted from
+// the shipped file like everything else here rather than stubbed, so the number these
+// assertions see is the number a reader sees. Handed no mark, it renders nothing —
+// which is why the absence note below still reads as the governed string alone.
 async function renderEvidence(anchors) {
-  const { code } = await transform(`${componentSource(SRC, "FindingEvidence")}\nreturn FindingEvidence;`, {
-    loader: "jsx",
-    jsxFactory: "h",
-    jsxFragment: "Frag",
-  });
+  const { code } = await transform(
+    `${componentSource(SRC, "FindingEvidence")}\n${componentSource(SRC, "MarkNumber")}\nreturn FindingEvidence;`,
+    {
+      loader: "jsx",
+      jsxFactory: "h",
+      jsxFragment: "Frag",
+    },
+  );
   const h = (type, props, ...children) => ({ type, props: props || {}, children });
   const make = new Function("h", "Frag", "ANCHOR_CHANNEL", "RECORD_LEVEL_ABSENCE_NOTE", code);
   const Evidence = make(h, "Frag", ANCHOR_CHANNEL, RECORD_LEVEL_ABSENCE_NOTE);

@@ -7,6 +7,7 @@ import {
   canonicalizeForHash,
 } from "./reader-receipt.js";
 import {
+  buildSourceReading,
   countLabel,
   countOf,
   describeFinding,
@@ -3981,6 +3982,60 @@ const MEASURE_SECTION_LABEL = "Candidate findings";
 // has to change with it.
 const MEASURE_INSPECT_SUMMARY = "What a mark points at, and the conditions this answer was read under";
 
+// READ's accessible name, on the same rule as the panel's: named for a landmark,
+// unrendered as a heading. A reader looking at their own answer with numbers in it
+// does not need a title telling them it is their answer.
+const MEASURE_SOURCE_LABEL = "The answer, marked";
+
+// READ — the answer with its marks positioned in it.
+//
+// This is what the spans were resolved for. Every QUOTED anchor has carried exact
+// offsets into the artifact since the day the server started resolving them, and
+// until now the interface rendered the excerpt beside the finding and left the
+// reader to find it in their own text themselves. The excerpt was the evidence and
+// the position was thrown away. Here the position is the evidence: the words are in
+// the answer, at the place they occupy, and a reader can see how much of the answer
+// is marked and how much is not without reading a single quotation twice.
+//
+// EVERYTHING POSITIONED HERE IS A QUOTATION, and that is structural rather than
+// enforced: buildSourceReading positions a mark only from a span, only quotedAnchor
+// mints a span, and it mints it against the artifact it proved the quotation from.
+// A record-level absence has no offsets, so it cannot appear in this body and does
+// not — it renders in the list below, outside the document, where it belongs. An
+// unresolved quotation is not a mark at all and appears nowhere.
+//
+// The text is `pre-wrap` and it is the whole artifact, uncut. Any truncation would
+// hide marks, and a scroll box would put the reader's own evidence behind a gesture;
+// both would be the surface deciding how much of an answer is worth showing. The
+// segmentation cuts at span boundaries only, so the pieces concatenate back to the
+// artifact exactly and no character is inserted into, dropped from, or reordered
+// within the answer a person pasted. The one thing added is the mark number, and it
+// sits outside the text run it labels.
+//
+// No caret, no strikethrough, no suggested replacement, no "this should have said".
+// A mark is an observation about words that are there. It is never a requested edit.
+function SourceReading({ reading }) {
+  if (!reading || !reading.segments.length) return null;
+  return (
+    <div className="wb-measure__source" role="group" aria-label={MEASURE_SOURCE_LABEL}>
+      <p className="wb-source__body">
+        {reading.segments.map((seg) =>
+          seg.marks.length ? (
+            <mark key={seg.start} className="wb-source__mark" data-mark={seg.marks.join(" ")}>
+              {seg.starts.map((n) => (
+                <MarkNumber key={n} n={n} />
+              ))}
+              {seg.text}
+            </mark>
+          ) : (
+            <span key={seg.start}>{seg.text}</span>
+          ),
+        )}
+      </p>
+    </div>
+  );
+}
+
 // The panel lists surfaced_findings: the findings that satisfy their shape's
 // registered surfacing contract. recorded_findings holds more — legacy material and
 // findings whose supplied quotation did not resolve — and is the durable record, not
@@ -4003,9 +4058,20 @@ function MeasurementPanel({ result, context }) {
   const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
+  // The artifact comes off the receipt, not off the compose field. api/read.js hands
+  // the same `input.answer` expression to the canonical builder and to the receipt
+  // builder in the same scope, so receipt.open_run.answer is byte-identical to the
+  // text the spans were resolved against. The compose field is not: the client trims
+  // on the way out, so React state can be one leading newline out of register with
+  // the coordinates, which is exactly enough to put every mark over the wrong words.
+  const reading = buildSourceReading({ artifactText: receipt?.open_run?.answer || "", findings });
   return (
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
-      {/* Nothing stands between this line and the marks.
+      {/* READ leads the panel, because the answer with the marks in it is the thing a
+          reader came for and everything else here is about it. */}
+      <SourceReading reading={reading} />
+
+      {/* Nothing stands between the answer and the account of it.
           A visible `MEASUREMENT` title and a `Candidate findings` sub-title used to,
           and the strip of seven provenance rows stood between those two and the first
           excerpt. All three were the instrument describing itself in the one place a
@@ -4013,10 +4079,10 @@ function MeasurementPanel({ result, context }) {
           count in GLANCE names it for a reader, aria-label names it for everyone else
           — and the provenance renders whole inside the disclosure, one key away.
 
-          This is INSPECT, and it is the third and last block before evidence. It is a
-          native <details>, so it opens by keyboard with no script running and it
-          prints open. The summary says what is inside it rather than inviting a click,
-          which is why it names the two things it holds instead of saying "details". */}
+          This is INSPECT, and it is the last block before the list. It is a native
+          <details>, so it opens by keyboard with no script running and it prints open.
+          The summary says what is inside it rather than inviting a click, which is why
+          it names the two things it holds instead of saying "details". */}
       <details className="wb-measure__inspect">
         <summary className="wb-measure__inspect-summary">{MEASURE_INSPECT_SUMMARY}</summary>
         <div className="wb-measure__inspect-body">
@@ -4046,8 +4112,19 @@ function MeasurementPanel({ result, context }) {
                   {(f.materiality || "").trim() ? (
                     <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
                   ) : null}
+                  {/* The numbering comes from the reading, keyed by finding and aligned
+                      index for index with the anchors, so the number beside a quotation
+                      here is the number standing over it in the body above. Neither
+                      surface counts for itself; there is one numbering and two views of
+                      it. A mark with no number is an anchor the reading did not number,
+                      which is an anchor no surface may show, and the evidence element
+                      renders nothing for it either way. */}
                   {f.anchors.map((a, i) => (
-                    <FindingEvidence key={`${f.id}-${i}`} anchor={a} />
+                    <FindingEvidence
+                      key={`${f.id}-${i}`}
+                      anchor={a}
+                      mark={(reading.marks_by_finding[f.id] || [])[i]}
+                    />
                   ))}
                 </li>
               ))}
@@ -4092,23 +4169,42 @@ function MeasurementPanel({ result, context }) {
 // The dispatch is over the descriptor's own anchors, so a shape with one anchor and a
 // shape with two both render here with no edit. Nothing in this component names a
 // role, a status, a shape, or a class.
-function FindingEvidence({ anchor }) {
+// The mark number rides both elements, because both are marks. It is the same number
+// the body prints over the same words, and on the channel that has no position in the
+// body it is the only place the number appears — which is what keeps a record-level
+// absence a numbered part of the account rather than a footnote to the marks that
+// happened to land in the text.
+function FindingEvidence({ anchor, mark }) {
   if (!anchor) return null;
   if (anchor.channel === ANCHOR_CHANNEL.QUOTED_SPAN) {
     return (
-      <blockquote className="wb-measure__anchor" data-anchor-channel={anchor.channel}>
+      <blockquote className="wb-measure__anchor" data-anchor-channel={anchor.channel} data-mark={mark}>
+        <MarkNumber n={mark} />
         {`"${anchor.quote}"`}
       </blockquote>
     );
   }
   if (anchor.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE) {
     return (
-      <p className="wb-measure__absence" data-anchor-channel={anchor.channel}>
+      <p className="wb-measure__absence" data-anchor-channel={anchor.channel} data-mark={mark}>
+        <MarkNumber n={mark} />
         {RECORD_LEVEL_ABSENCE_NOTE}
       </p>
     );
   }
   return null;
+}
+
+// One number, one element, everywhere a mark is named. The label is read and not
+// seen, so a bare numeral never reaches a screen reader on its own.
+function MarkNumber({ n }) {
+  if (!n) return null;
+  return (
+    <span className="wb-mark-n">
+      <span className="wb-mark-n__label">mark </span>
+      {n}
+    </span>
+  );
 }
 
 // A proportional bar (the "Gap X-ray") stood here, with one segment per class, over a
