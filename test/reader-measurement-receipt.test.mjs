@@ -299,11 +299,20 @@ test("buildChipPairedReceipt carries the human label beside the stable id + vers
   assert.ok(!("signal_pattern" in (pa.delta_items[0] || {})));
 });
 
+// The chip receipt is assembled a line at a time (reader-receipt.js pushes onto a line
+// array and joins with newlines), so a governed line in it is asserted as a whole line
+// and not as a substring of the artifact. "Chip ID: sq.sources" as a substring also
+// passes on "Chip ID: sq.sources.v2"; as a line it does not. The artifact as a whole is
+// not assertable — it carries a content hash and a generated-at stamp — so the line is
+// the largest fixed unit here, and it is the unit used.
+const receiptLines = (txt) => txt.split("\n");
+
 test("formatChipPairedReceiptText renders the human label prominently, id + version as explicit provenance", () => {
   const txt = formatChipPairedReceiptText(buildSampleChipReceipt());
-  assert.ok(txt.includes("Doesn't show where its claims came from"), "human label present");
-  assert.ok(txt.includes("Chip ID: sq.sources"), "stable chip id retained (not replaced)");
-  assert.ok(txt.includes("Instruction version: v1"), "instruction version retained");
+  const L = receiptLines(txt);
+  assert.ok(L.includes("Doesn't show where its claims came from"), "human label present, as its own line");
+  assert.ok(L.includes("Chip ID: sq.sources"), "stable chip id retained (not replaced), as its own line");
+  assert.ok(L.includes("Instruction version: v1"), "instruction version retained, as its own line");
   // The label leads the follow-up section, above the id/version provenance lines.
   const labelAt = txt.indexOf("Doesn't show where its claims came from");
   const idAt = txt.indexOf("Chip ID: sq.sources");
@@ -329,15 +338,23 @@ test("formatChipPairedReceiptText omits every inspection-only heading and field 
     assert.ok(!txt.includes(banned), `chip receipt must not carry inspection scaffolding: "${banned}"`);
   }
   // It uses the neutral first-answer heading and carries the answer itself.
-  assert.ok(txt.includes("—— THE FIRST ANSWER ——"));
+  assert.ok(receiptLines(txt).includes("—— THE FIRST ANSWER ——"), "the heading is its own whole line");
   assert.ok(txt.includes(CHIP_FIRST_ANSWER));
 });
 
 test("formatChipPairedReceiptText keeps the user-directed disclaimer and frames the artifact in the boundary", () => {
   const txt = formatChipPairedReceiptText(buildSampleChipReceipt());
+  // The whole disclaimer line. The first sentence says what the artifact is not; the
+  // rest says what it does and does not establish, and that half — the clause carrying
+  // "correct, complete, or better supported" — went unasserted while only the opening
+  // sentence was anchored. Both halves are mandated copy.
   assert.ok(
-    txt.includes("This is a user-directed follow-up, not an Imbas inspection finding."),
-    "user-directed disclaimer retained",
+    receiptLines(txt).includes(
+      "This is a user-directed follow-up, not an Imbas inspection finding. It shows what changed " +
+        "under the conditions you recorded; it does not establish that the second answer is correct, " +
+        "complete, or better supported.",
+    ),
+    "user-directed disclaimer retained in full",
   );
   assert.ok(txt.startsWith("IMBAS READER — USER-DIRECTED FOLLOW-UP RECEIPT"));
   assert.ok(txt.trimEnd().endsWith(RECEIPT_BOUNDARY), "boundary closes the artifact");

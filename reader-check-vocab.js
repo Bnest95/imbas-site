@@ -23,7 +23,33 @@
 // slice. Bump CHECK_VOCAB_VERSION (never edit a shipped rule id) when the list
 // changes so a lint result is traceable to the rules that produced it.
 
-export const CHECK_VOCAB_VERSION = "check-vocab.v1";
+export const CHECK_VOCAB_VERSION = "check-vocab.v2";
+
+// v2 adds `verdict-outcome`. The five original verdict words rule on whether a
+// claim is so; these rule on whether the answer came out well, which is the same
+// instrument-grade judgement wearing school-report clothes. "The answer failed on
+// the exemption date" is a verdict however carefully the sentence around it is
+// worded, and the Reader is not entitled to make it.
+//
+// The word list is a named constant rather than an inline pattern so the exact
+// reach of the rule is auditable at a glance and narrowable in one edit.
+//
+// SIX forms, by ruling, and the boundary is deliberate. A draft of this rule
+// widened to nine by adding failing / failure / passing, reasoning that banning
+// "failed" while permitting "failing" rebuilds one tense over the same gap that
+// let "fails" ship. That reasoning was overruled on two grounds, recorded here so
+// the width is not re-argued from the same premise. First, the ruling's
+// enumeration was the whole of the verdict law it laid down, not a floor to build
+// adjacent morphology on. Second, the width is not free: "failure" is ordinary
+// technical vocabulary — "failure mode", "the named failure modes" — that governed
+// copy will legitimately need, so a nine-form rule books a false-positive tax due
+// later. Zero hits today measures the tax not yet come due, not its absence.
+//
+// If a widened form ever ships as an answer verdict, it enters check-vocab.v3 with
+// its own receipt. Append-only rule evolution; the list does not pre-empt.
+// test/check-vocab-lint.test.mjs holds a near-miss control per excluded form, so
+// this boundary is asserted rather than merely stated.
+export const VERDICT_OUTCOME_WORDS = ["fail", "fails", "failed", "pass", "passes", "passed"];
 
 // Each rule: { id (stable, versioned), category, pattern, reason }. Word-boundary
 // anchored so pointer-register copy ("worth verifying", "rests on", "check
@@ -72,12 +98,33 @@ export const BANNED_CONSTRUCTIONS = [
     pattern: /\badequate(?:ly)?[-\s]?review(?:ed|s)?\b/i,
     reason: "adequate-review claim — the Reader does not certify a review adequate.",
   },
+  {
+    id: "verdict-outcome",
+    // Its own category, not world_claim_verdict. The runtime gate keys on rule id
+    // today, but a later change that keyed on category instead would silently drag
+    // this rule into the runtime and start dropping cards. A separate category means
+    // that change cannot happen by accident.
+    category: "outcome_verdict",
+    pattern: new RegExp(`\\b(?:${VERDICT_OUTCOME_WORDS.join("|")})\\b`, "i"),
+    reason:
+      "pass/fail verdict word — the Reader marks nothing as having passed or failed; it says what a " +
+      "conclusion rests on and hands over a question worth asking.",
+  },
 ];
 
 // The rule ids that assert a world-claim verdict on the substance of an answer.
 // hasWorldClaimVerdict keys on this subset so the runtime gate drops a check
 // whose model-written copy rules the world true/false, without also dropping
 // copy that merely mentions reliance in a non-verdict way.
+//
+// `verdict-outcome` is deliberately NOT here, by ruling. This gate drops
+// model-generated card copy, and pass/fail are ordinary English about the world in
+// a way true/incorrect are not: "the bill passed the Senate in 2019" and "the trial
+// failed its primary endpoint" are facts a check may legitimately rest on. Dropping
+// those cards would be the Reader omitting a real finding on a false positive —
+// the behaviour class the instrument exists to measure, committed by the
+// instrument. Authored copy takes the strict rule because a human can rephrase;
+// model-written copy about the world does not.
 const WORLD_CLAIM_RULE_IDS = new Set(["world-claim-verdict"]);
 
 // Lint one string: return every banned construction it contains.

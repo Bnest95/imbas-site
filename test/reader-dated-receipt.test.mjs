@@ -178,9 +178,14 @@ test("a section with nothing to show says it observed nothing, never an empty ob
   assert.equal(sources.state, OBSERVATION.NOT_CAPTURED);
   assert.deepEqual(sources.items, []);
   assert.ok(sources.note, "an unobserved section must state why it is empty");
-  assert.match(sources.note, /did not capture/);
-  // And it must not let the reader conclude the answer had none.
-  assert.match(sources.note, /says nothing about whether the answer named any/);
+  // Whole note. Anchoring the opening clause and the closing one left the middle —
+  // "a limit of what was recorded here" — unguarded, and that clause is the epistemics:
+  // it is what makes the silence a fact about the record rather than about the answer.
+  assert.equal(
+    sources.note,
+    "Imbas did not capture the sources behind this answer. That is a limit of what was recorded " +
+      "here, and says nothing about whether the answer named any.",
+  );
 
   const said = section(describeReceipt(singleRecord({ findings: [], delta_items: [] })), "said");
   assert.equal(said.state, OBSERVATION.NOT_CAPTURED);
@@ -204,7 +209,11 @@ test("what the system said is the preserved spans, and says so rather than passi
   const said = section(describeReceipt(singleRecord()), "said");
   assert.equal(said.state, OBSERVATION.OBSERVED);
   assert.deepEqual(said.items.map((i) => i.text), ["within 30 days", "nothing to worry about"]);
-  assert.match(said.note, /pieces of the answer, not the whole of it/);
+  assert.equal(
+    said.note,
+    "These are the passages this record preserved word for word. They are pieces of the answer, " +
+      "not the whole of it.",
+  );
 
   // Paired keeps both sides distinguishable, because an unlabelled pair of quotes on a
   // permanent record is two claims a stranger cannot tell apart.
@@ -277,7 +286,14 @@ test("the declared model is never presented as something Imbas watched", () => {
   const notObserved = section(describeReceipt(singleRecord()), "not_observed");
   const line = notObserved.items.find((i) => /Which system produced this answer/.test(i.text));
   assert.ok(line, "the standing declared-not-observed limit is on every receipt");
-  assert.match(line.text, /records it and does not watch it/);
+  // Whole line. The clause this test is named for is the second half; the first half
+  // is the attribution that earns it — the name came from the person, not from Imbas —
+  // and a substring anchored on the disclaimer never held the attribution to anything.
+  assert.equal(
+    line.text,
+    "Which system produced this answer. The name on this record is the one the person running the " +
+      "inspection gave; Imbas records it and does not watch it.",
+  );
 });
 
 // ── The closing block and the boundary ───────────────────────────────────────
@@ -292,18 +308,31 @@ test("the closing block has fixed shape and fixed placement on every receipt", (
 });
 
 test("the closing block refuses causation, intent, completeness, and authorship", () => {
-  const joined = RECEIPT_CLOSING.items.join(" ");
-  assert.match(joined, /not what produced it/, "no causation");
-  assert.match(joined, /behavior does not carry motive/, "no intent");
-  assert.match(joined, /How much the answer left out/, "no completeness");
-  assert.match(joined, /the person running the inspection reported/, "attribution per its source");
+  // The four refusals in full, in order. Joining the items and probing for a phrase in
+  // each proved only that four fragments existed somewhere in the concatenation — it
+  // could not see a fifth item added, an item dropped, or the sentence around any
+  // fragment rewritten. Each refusal is two sentences: the thing not established, then
+  // why the record cannot establish it. Both halves are the claim.
+  assert.deepEqual(RECEIPT_CLOSING.items, [
+    "Why the system answered this way. The record holds what was said, not what produced it.",
+    "What anyone intended. Imbas measures behavior, and behavior does not carry motive.",
+    "How much the answer left out. Nothing here counts what a fuller answer would have held.",
+    "Who wrote the answer. The system named here is the one the person running the inspection reported.",
+  ]);
 });
 
 test("the boundary line rides every receipt, verbatim", () => {
   for (const record of [singleRecord(), pairedRecord()]) {
     assert.equal(describeReceipt(record).boundary, RECEIPT_BOUNDARY);
   }
-  assert.match(RECEIPT_BOUNDARY, /^Reader inspections are discovery, not evidence\./);
+  // Both sentences. The module calls this line verbatim across three surfaces with zero
+  // drift, and a prefix match held only the first sentence to that — the second, which
+  // is the one that says what it takes to enter the record, was free to drift.
+  assert.equal(
+    RECEIPT_BOUNDARY,
+    "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without " +
+      "protocol capture and a recorded human review.",
+  );
 });
 
 // ── Standing copy rules ──────────────────────────────────────────────────────
