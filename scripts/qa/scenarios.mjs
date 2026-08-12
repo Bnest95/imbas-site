@@ -1547,9 +1547,21 @@ export const SCENARIOS = {
       "The findings panel carries the same empty sentence the run surface used, word for word, so a visitor who read it on the run does not meet a differently-confident version of it here. In the receipt, the section that would hold preserved excerpts states that none were preserved instead of standing empty.",
     routes: { [SHARE_ROUTE]: () => sharePayload({ "Findings JSON": "[]" }) },
     steps: DRIVE_SHARE_RECORD,
+    // The anchor line was asserted here too, and for the same reason it came out of
+    // share-single it comes out here: the composition pass moved it inside the record's
+    // INSPECT disclosure, hasText reads innerText, and a closed disclosure contributes
+    // none. This scenario is where that omission was caught — share-single was updated
+    // when the anchor moved and its empty sibling was not, and only a full board run
+    // reads a scenario's own assertions, so the unit suite stayed green throughout. The
+    // anchor's contents are covered by execution: test/share-record-composition.test.mjs
+    // "4) the disclosure holds the record's address and its scope boundary, in full".
+    //
+    // What replaces it is this record's own headline fact. An empty share is the state
+    // where a count is most load-bearing, because zero is a finding about the run and
+    // not an error, and the count is the first thing the record says.
     assertText: [
+      "0 candidate items surfaced",
       "No candidate finding surfaced under the tested conditions.",
-      "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't.",
       SHARE_BOUNDARY_SENTENCE,
     ],
     assertSelector: ".wb-measure__findings .wb-reader-result__empty",
