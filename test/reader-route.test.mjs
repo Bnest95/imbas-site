@@ -83,6 +83,41 @@ test("nothing redirects reader.html, which is the only reason no loop is constru
   );
 });
 
+test("the share route survives the move, and no redirect can get in front of it", () => {
+  // Every published share link on the internet is /inspection/<id>, and it resolves
+  // through a rewrite. Vercel runs redirects FIRST — before the filesystem, before any
+  // rewrite — so a redirect whose source matched a share path would take the request
+  // before the rewrite ever ran, and every share published to date would 301 somewhere
+  // else. Nothing in this move touched that route; this is what keeps the next one from
+  // touching it either.
+  const share = VERCEL.rewrites.find((r) => r.source === "/inspection/:shareId");
+  assert.ok(share, "the /inspection/:shareId rewrite is gone. Every published share link 404s.");
+  assert.equal(share.destination, "/api/inspection-view?shareId=:shareId");
+
+  // Compile each redirect source the way Vercel reads it — `:param` matches one segment —
+  // and run real share paths at the whole table.
+  const matches = (source, url) => {
+    const pattern = source
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/:[A-Za-z0-9_]+\*/g, ".*")
+      .replace(/:[A-Za-z0-9_]+/g, "[^/]+");
+    return new RegExp(`^${pattern}/?$`).test(url);
+  };
+  for (const url of [
+    "/inspection/Ab3xQ7zK9mNpR2sTuV4w",
+    "/inspection/abc123",
+    "/api/inspection-view",
+    "/api/inspection-share",
+  ]) {
+    const caught = VERCEL.redirects.filter((r) => matches(r.source, url));
+    assert.deepEqual(
+      caught.map((r) => r.source),
+      [],
+      `${url} is caught by a redirect (${caught.map((r) => r.source).join(", ")}), which runs before the rewrite that serves it.`,
+    );
+  }
+});
+
 test("the cdnjs policy is keyed on the path the browser actually requests", () => {
   // Vercel matches headers against the incoming request path. /reader 301s before any
   // header lookup resolves it, so the block has to name /reader.html. Keying it on a
