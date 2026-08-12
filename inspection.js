@@ -1,4 +1,4 @@
-// inspection.js — Load and render an unlisted Workbench inspection share.
+// inspection.js — Load and render an unlisted Reader inspection share.
 //
 // Mode-aware (Reader v2 P4). The GET /api/inspection/:shareId projection carries a
 // `mode`: "single" (candidate findings), "paired" (the two-question delta), or
@@ -27,6 +27,21 @@ const MEASURE_FINDING_LABEL = {
   "candidate framing issue": "Framing Drift",
   "candidate deflection": "Deflection",
 };
+
+// The Reader was called the Workbench until 2026-08-12, and every share row written
+// before then stored that name in its Source Label. The rows are not rewritten — a
+// published share is a dated record — but the product it names has one current name,
+// so the stored string resolves to it here, the same way the finding classes above do.
+// This is a rename, not a change of fact: nothing about what those runs found moves.
+const SOURCE_LABEL = {
+  "Workbench inspection": "Reader inspection",
+  "Workbench two-question test": "Reader two-question test",
+};
+
+function sourceLabel(stored) {
+  const value = stored || "Reader inspection";
+  return SOURCE_LABEL[value] || value;
+}
 
 // Pre-P4 rows were published under an earlier Reader format that printed a
 // completeness label over the answer. That label is retired. A published share is a
@@ -104,13 +119,13 @@ function formatShareCopy(record, url) {
   const leftOut = Array.isArray(record.what_was_left_out) ? record.what_was_left_out.filter(Boolean) : [];
   const lines = [
     "Inspection receipt",
-    "Unlisted Workbench inspection",
+    "Unlisted Reader inspection",
     url,
     "",
     LEGACY_FORMAT_NOTICE,
     "",
     `Status: Unlisted · Unreviewed`,
-    `Source: ${record.source_label || "Workbench inspection"}${record.case_label ? ` · ${record.case_label}` : ""}`,
+    `Source: ${sourceLabel(record.source_label)}${record.case_label ? ` · ${record.case_label}` : ""}`,
     "",
     `Question: ${(record.question || "").trim()}`,
   ];
@@ -149,7 +164,7 @@ const TRUST_NOTE =
   "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.";
 
 function mastHtml(mode) {
-  const eyebrow = mode === "paired" ? "Workbench two-question test" : "Workbench inspection";
+  const eyebrow = mode === "paired" ? "Reader two-question test" : "Reader inspection";
   return `
     <header class="insp-record__mast">
       <p class="insp-record__eyebrow">${eyebrow}</p>
@@ -510,12 +525,14 @@ function renderLegacy(root, record) {
   const shaped = (record.how_it_was_shaped || "").trim();
   const inspectionNote = (record.inspection_note || "").trim();
   const paragraphs = (record.the_read || "").split(/\n\n+/).filter(Boolean);
-  const provenance = [record.source_label, record.case_label].filter(Boolean).join(" · ");
+  const provenance = [record.source_label && sourceLabel(record.source_label), record.case_label]
+    .filter(Boolean)
+    .join(" · ");
   const boundary = (record.boundary || "").trim();
 
   root.innerHTML = `
     <header class="insp-record__mast">
-      <p class="insp-record__eyebrow">Workbench inspection</p>
+      <p class="insp-record__eyebrow">Reader inspection</p>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
       <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
     </header>

@@ -186,7 +186,7 @@ test("recordToPublic paired: delta items, no score, no single findings", () => {
   assert.ok(!("gap_estimate_label" in pub), "and neither does a label rendered from it");
   assert.deepEqual(pub.delta_items, [{ point: "p", signal_pattern: "Deflection", open_side: "a", targeted_side: "b" }]);
   assert.deepEqual(pub.findings, []);
-  assert.equal(pub.source, "Workbench two-question test");
+  assert.equal(pub.source, "Reader two-question test");
 });
 
 test("recordToPublic legacy (G3): Mode absent → full-answer render preserved", () => {

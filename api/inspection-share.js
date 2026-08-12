@@ -386,7 +386,7 @@ function p4RecordToPublic(fields, shareId, mode, resolved) {
     boundary: RECEIPT_BOUNDARY,
     reviewed_status: fields["Reviewed Status"] || "Unreviewed",
     visibility: fields.Visibility || "unlisted",
-    source: mode === "paired" ? "Workbench two-question test" : "Workbench inspection",
+    source: mode === "paired" ? "Reader two-question test" : "Reader inspection",
   };
 }
 
@@ -420,12 +420,12 @@ function legacyRecordToPublic(fields, shareId) {
     what_was_left_out: leftOut,
     how_it_was_shaped: fields["How It Was Shaped"] || "",
     inspection_note: fields["Inspection Note"] || "",
-    source_label: fields["Source Label"] || "Workbench inspection",
+    source_label: fields["Source Label"] || "Reader inspection",
     case_label: fields["Case Label"] || "",
     boundary: RECEIPT_BOUNDARY,
     reviewed_status: fields["Reviewed Status"] || "Unreviewed",
     visibility: fields.Visibility || "unlisted",
-    source: "Workbench inspection",
+    source: "Reader inspection",
   };
 }
 

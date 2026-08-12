@@ -1358,7 +1358,7 @@ function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
     finding,
     `Case context: ${significance}.`,
     measured,
-    "Run it yourself: imbaslabs.com/workbench",
+    "Run it yourself: imbaslabs.com/reader",
   ].join("\n");
 }
 
@@ -6324,7 +6324,7 @@ function ReaderWorkbench() {
         {view.pasteBox ? (
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
-            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
+            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Reader mode">
               <button
                 type="button"
                 role="tab"
@@ -6713,13 +6713,13 @@ function Workbench() {
       <div className="wb-shell__frame">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
-          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Workbench</div>
+          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Reader</div>
         </div>
         <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
 
         {readerOn ? (
           <div className="wb-reader-v2__flow">
-            <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
+            <p className="wb-reader-v2__eyebrow">READER</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
               Check your AI answer.
             </h1>
