@@ -737,6 +737,11 @@
   line-height: 1.55;
   color: var(--ink-primary);
   white-space: pre-wrap;
+  /* Pasted answers carry URLs, hashes and IDs that no space breaks, and pre-wrap alone
+     lets one of those run past the panel. Same pairing .wb-source__body already uses
+     over the same content: break-word breaks only a token that would otherwise
+     overflow, so ordinary prose wraps exactly as it did. */
+  overflow-wrap: break-word;
 }
 .wb-answer-row__bar.wb-answer-sweep.is-sweeping .wb-sweep-line {
   opacity: 0.88;
