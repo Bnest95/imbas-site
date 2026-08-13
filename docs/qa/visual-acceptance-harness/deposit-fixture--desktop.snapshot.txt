@@ -1,0 +1,1047 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-measure__source mark.wb-source__mark
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1326
+timezone: UTC
+url: /reader.html
+viewport: 1440x900
+
+## payload
+{
+  "/api/read": {
+    "act2": {
+      "available": true,
+      "degraded_reason": null,
+      "eligible": true,
+      "paired_method_version": "2.0",
+      "targeted_prompt": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+      "targeted_prompt_hash": "<HASH64>"
+    },
+    "checks": {
+      "cards": [],
+      "checks": [],
+      "default_top_n": 3,
+      "detector_events": [],
+      "inspector": {
+        "model": "claude-opus-4-8",
+        "model_version": "claude-opus-4-8",
+        "prompt_version": "reader.v3"
+      },
+      "mode": "single",
+      "status": "provisional",
+      "top": [],
+      "ui": {
+        "collapse_label": "Show fewer",
+        "copied_affordance": "Copied",
+        "copy_affordance": "Copy the question",
+        "expand_label": "Show the full register",
+        "finding_labels": {
+          "deflection": "Deflection",
+          "framing_drift": "Framing Drift",
+          "omission": "Omission"
+        },
+        "labels": {
+          "dependency": "How they connect",
+          "dependent": "Which carries",
+          "evidence": "Quoted from the answer",
+          "proposition": "Rests on",
+          "resolver": "Where to check",
+          "status": "Status",
+          "trigger": "Trigger",
+          "verification": "Worth asking"
+        },
+        "provisional_label": "Provisional — a pointer",
+        "register_heading": "Questions worth asking",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
+        "resolver_labels": {
+          "authority": "Check against an authority",
+          "calculation": "Re-run the calculation",
+          "direct_question": "Ask the question directly",
+          "document": "Check against the document"
+        },
+        "status_labels": {
+          "dismissed": "Set aside",
+          "open": "Open",
+          "resolved": "Resolved"
+        },
+        "top_label": "Worth asking first"
+      },
+      "version": "check-register.v1"
+    },
+    "completeness": "partial",
+    "how_it_was_shaped": "It states a range as what usually holds and turns it into a consequence, and it hands back the cost question at the point it reached a number.",
+    "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+    "measurement": {
+      "candidate_method_version": "1.0",
+      "estimate_rationale": "Nine candidate observations on one answer, three of them terms the answer never reaches. Unvalidated.",
+      "estimate_scale_version": "1.0",
+      "estimate_type": "candidate_gap",
+      "finding_counts": {
+        "candidate deflection": 2,
+        "candidate framing issue": 3,
+        "candidate missing item": 4
+      },
+      "findings": [
+        {
+          "anchor": "The window usually falls somewhere between 14 and 45 days.",
+          "materiality": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+          "type": "candidate framing issue"
+        },
+        {
+          "anchor": "Once it has passed without an itemization, your position is much stronger.",
+          "materiality": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+          "type": "candidate framing issue"
+        },
+        {
+          "anchor": "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live.",
+          "materiality": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+          "type": "candidate deflection"
+        },
+        {
+          "anchor": "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+          "materiality": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+          "type": "candidate framing issue"
+        },
+        {
+          "anchor": "Whether that is worth your time is a judgment only you can make.",
+          "materiality": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+          "type": "candidate deflection"
+        },
+        {
+          "anchor": "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+          "materiality": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "",
+          "materiality": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "",
+          "materiality": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "",
+          "materiality": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+          "type": "candidate missing item"
+        }
+      ],
+      "gap_estimate": 4,
+      "unvalidated": true
+    },
+    "receipt": {
+      "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
+      "generated_at": "<TIMESTAMP>",
+      "integrity": {
+        "algorithm": "sha256",
+        "canonicalization_version": "1.0",
+        "content_hash": "<HASH64>"
+      },
+      "open_run": {
+        "answer": "If your landlord kept your entire security deposit, you have options. Start by reviewing your lease and any move-out paperwork you kept, then write to the landlord and ask for an itemized statement of every deduction.\n\nMost states give a landlord a set number of days after move-out to return the deposit or send that itemization. The window usually falls somewhere between 14 and 45 days. Once it has passed without an itemization, your position is much stronger.\n\nNormal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.\n\nI'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live. Your best move is to look up your state's landlord-tenant statute or talk to a local attorney.\n\nIf the landlord still will not pay after a written demand, small claims court is the usual next step. The filing fee is modest and you generally do not need a lawyer to appear. Whether that is worth your time is a judgment only you can make.\n\nKeep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+        "canonical": {
+          "counts": {
+            "probe_surfaced_differences": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 0
+              },
+              "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+              "unit_many": "differences",
+              "unit_one": "difference",
+              "value": 0
+            },
+            "recorded_findings": {
+              "class_breakdown": {
+                "deflection": 2,
+                "framing_drift": 3,
+                "omission": 4
+              },
+              "predicate_id": "every_canonical_finding",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 9
+            },
+            "surfaced_candidate_items": {
+              "class_breakdown": {
+                "deflection": 2,
+                "framing_drift": 3,
+                "omission": 4
+              },
+              "predicate_id": "single_surface_satisfying_anchor_contract",
+              "unit_many": "candidate items",
+              "unit_one": "candidate item",
+              "value": 9
+            },
+            "surfaced_findings": {
+              "class_breakdown": {
+                "deflection": 2,
+                "framing_drift": 3,
+                "omission": 4
+              },
+              "predicate_id": "satisfies_registered_anchor_contract",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 9
+            }
+          },
+          "findings": [
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "The window usually falls somewhere between 14 and 45 days.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 389,
+                    "start": 331
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.0",
+              "materiality": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Once it has passed without an itemization, your position is much stronger.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 464,
+                    "start": 390
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.1",
+              "materiality": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 856,
+                    "start": 722
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "deflection",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.2",
+              "materiality": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 720,
+                    "start": 466
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.3",
+              "materiality": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Whether that is worth your time is a judgment only you can make.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 1194,
+                    "start": 1130
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "deflection",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.4",
+              "materiality": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 1356,
+                    "start": 1196
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.5",
+              "materiality": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+                  "quote": "",
+                  "role": "original_answer",
+                  "span": null,
+                  "status": "ABSENT"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.6",
+              "materiality": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+                  "quote": "",
+                  "role": "original_answer",
+                  "span": null,
+                  "status": "ABSENT"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.7",
+              "materiality": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+                  "quote": "",
+                  "role": "original_answer",
+                  "span": null,
+                  "status": "ABSENT"
+                }
+              ],
+              "check_register": {
+                "card_id": null,
+                "status": "SUPPRESSED",
+                "suppression_reasons": [
+                  "NO_CHECK_BLOCK"
+                ]
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.8",
+              "materiality": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+              "surface": "single"
+            }
+          ],
+          "inspection_method_version": "reader.v3",
+          "legacy": {
+            "candidate_method_version": "1.0",
+            "estimate_scale_version": "1.0",
+            "estimate_type": "candidate_gap",
+            "gap_estimate": 4,
+            "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+          },
+          "model": "claude-opus-4-8",
+          "model_snapshot_or_build": "",
+          "provider": "anthropic",
+          "result_schema_version": "reader-result.v1",
+          "snippet_resolution": {
+            "snippets_proposed": 0,
+            "snippets_rejected_ambiguous": 0,
+            "snippets_rejected_unlocatable": 0,
+            "snippets_resolved_unique": 0
+          },
+          "surface": "single",
+          "verification_tasks": []
+        },
+        "declared_model": "",
+        "inspection": {
+          "completeness": "partial",
+          "how_it_was_shaped": "It states a range as what usually holds and turns it into a consequence, and it hands back the cost question at the point it reached a number.",
+          "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+          "the_read": "The answer gives a range of days, a wear-and-tear line, and a small claims step, and it declines the jurisdiction question in the middle of them. The points it answers are as state-bound as the one it declines. It never separates the deposit from last month's rent, never names what a late itemization costs a landlord, and never mentions the inspection a tenant can ask for before moving out.",
+          "what_was_left_out": [
+            "Whether any part of the sum was collected as last month's rent, which several states hold under a different rule.",
+            "What the governing statute attaches to a late or missing itemization.",
+            "That several states give a departing tenant a right to a pre-move-out inspection."
+          ]
+        },
+        "measurement": {
+          "candidate_method_version": "1.0",
+          "estimate_rationale": "Nine candidate observations on one answer, three of them terms the answer never reaches. Unvalidated.",
+          "estimate_scale_version": "1.0",
+          "estimate_type": "candidate_gap",
+          "finding_counts": {
+            "candidate deflection": 2,
+            "candidate framing issue": 3,
+            "candidate missing item": 4
+          },
+          "findings": [
+            {
+              "anchor": "The window usually falls somewhere between 14 and 45 days.",
+              "materiality": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+              "type": "candidate framing issue"
+            },
+            {
+              "anchor": "Once it has passed without an itemization, your position is much stronger.",
+              "materiality": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+              "type": "candidate framing issue"
+            },
+            {
+              "anchor": "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live.",
+              "materiality": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+              "type": "candidate deflection"
+            },
+            {
+              "anchor": "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+              "materiality": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+              "type": "candidate framing issue"
+            },
+            {
+              "anchor": "Whether that is worth your time is a judgment only you can make.",
+              "materiality": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+              "type": "candidate deflection"
+            },
+            {
+              "anchor": "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+              "materiality": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "",
+              "materiality": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "",
+              "materiality": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "",
+              "materiality": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+              "type": "candidate missing item"
+            }
+          ],
+          "gap_estimate": 4,
+          "unvalidated": true
+        },
+        "provenance": {
+          "condition_fingerprint": "cfp.1|model=claude-opus-4-8|prompt=reader.v3|max_tokens=8192|temperature=default|thinking=adaptive",
+          "fingerprint_version": "cfp.1",
+          "inspector_prompt_version": "reader.v3",
+          "inspector_run_conditions": {
+            "max_tokens": 8192,
+            "temperature": "default",
+            "thinking": "adaptive"
+          },
+          "reader_model_version": "claude-opus-4-8",
+          "reader_output_hash": "<HASH64>",
+          "request_id": "<ID>",
+          "run_timestamp": "<TIMESTAMP>",
+          "source_content_hash": "<HASH64>"
+        },
+        "question": "My landlord kept my whole security deposit. What can I do?",
+        "topic": ""
+      },
+      "paired_analysis": null,
+      "receipt_type": "single",
+      "schema_version": "reader-receipt-1.2"
+    },
+    "result": {
+      "counts": {
+        "probe_surfaced_differences": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 0
+          },
+          "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+          "unit_many": "differences",
+          "unit_one": "difference",
+          "value": 0
+        },
+        "recorded_findings": {
+          "class_breakdown": {
+            "deflection": 2,
+            "framing_drift": 3,
+            "omission": 4
+          },
+          "predicate_id": "every_canonical_finding",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 9
+        },
+        "surfaced_candidate_items": {
+          "class_breakdown": {
+            "deflection": 2,
+            "framing_drift": 3,
+            "omission": 4
+          },
+          "predicate_id": "single_surface_satisfying_anchor_contract",
+          "unit_many": "candidate items",
+          "unit_one": "candidate item",
+          "value": 9
+        },
+        "surfaced_findings": {
+          "class_breakdown": {
+            "deflection": 2,
+            "framing_drift": 3,
+            "omission": 4
+          },
+          "predicate_id": "satisfies_registered_anchor_contract",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 9
+        }
+      },
+      "findings": [
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "The window usually falls somewhere between 14 and 45 days.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 389,
+                "start": 331
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.0",
+          "materiality": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Once it has passed without an itemization, your position is much stronger.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 464,
+                "start": 390
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.1",
+          "materiality": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 856,
+                "start": 722
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "deflection",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.2",
+          "materiality": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 720,
+                "start": 466
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.3",
+          "materiality": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Whether that is worth your time is a judgment only you can make.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 1194,
+                "start": 1130
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "deflection",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.4",
+          "materiality": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 1356,
+                "start": 1196
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.5",
+          "materiality": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+              "quote": "",
+              "role": "original_answer",
+              "span": null,
+              "status": "ABSENT"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.6",
+          "materiality": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+              "quote": "",
+              "role": "original_answer",
+              "span": null,
+              "status": "ABSENT"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.7",
+          "materiality": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": "SOURCE_SUPPLIED_NO_QUOTATION",
+              "quote": "",
+              "role": "original_answer",
+              "span": null,
+              "status": "ABSENT"
+            }
+          ],
+          "check_register": {
+            "card_id": null,
+            "status": "SUPPRESSED",
+            "suppression_reasons": [
+              "NO_CHECK_BLOCK"
+            ]
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.8",
+          "materiality": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+          "surface": "single"
+        }
+      ],
+      "inspection_method_version": "reader.v3",
+      "legacy": {
+        "candidate_method_version": "1.0",
+        "estimate_scale_version": "1.0",
+        "estimate_type": "candidate_gap",
+        "gap_estimate": 4,
+        "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+      },
+      "model": "claude-opus-4-8",
+      "model_snapshot_or_build": "",
+      "provider": "anthropic",
+      "result_schema_version": "reader-result.v1",
+      "snippet_resolution": {
+        "snippets_proposed": 0,
+        "snippets_rejected_ambiguous": 0,
+        "snippets_rejected_unlocatable": 0,
+        "snippets_resolved_unique": 0
+      },
+      "surface": "single",
+      "verification_tasks": []
+    },
+    "source": "agent",
+    "the_read": "The answer gives a range of days, a wear-and-tear line, and a small claims step, and it declines the jurisdiction question in the middle of them. The points it answers are as state-bound as the one it declines. It never separates the deposit from last month's rent, never names what a late itemization costs a landlord, and never mentions the inspection a tenant can ask for before moving out.",
+    "what_was_left_out": [
+      "Whether any part of the sum was collected as last month's rent, which several states hold under a different rule.",
+      "What the governing statute attaches to a late or missing itemization.",
+      "That several states give a departing tenant a right to a pre-move-out inspection."
+    ]
+  }
+}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+button "More" disabled=false expanded=false
+span "▾"
+details expanded=false
+summary "How it works"
+span "1"
+span "Paste an AI answer to see what it might be missing."
+span "2"
+span "Copy the one question Imbas builds, then ask your own AI."
+span "3"
+span "Paste its reply back and watch what surfaces."
+h2 "9 candidate items surfaced"
+p "Each one is a candidate the Reader could quote from your answer."
+span "If your landlord kept your entire security deposit, you have options. Start by reviewing your lease and any move-out paperwork you kept, then write to the landlord and ask for an itemized statement of every deduction. Most states give a landlord a set number of days after move-out to return the deposit or send that itemization."
+mark "The window usually falls somewhere between 14 and 45 days."
+span "1"
+span "mark"
+mark "Once it has passed without an itemization, your position is much stronger."
+span "2"
+span "mark"
+mark "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side."
+span "4"
+span "mark"
+mark "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live."
+span "3"
+span "mark"
+span "Your best move is to look up your state's landlord-tenant statute or talk to a local attorney. If the landlord still will not pay after a written demand, small claims court is the usual next step. The filing fee is modest and you generally do not need a lawyer to appear."
+mark "Whether that is worth your time is a judgment only you can make."
+span "5"
+span "mark"
+mark "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on."
+span "6"
+span "mark"

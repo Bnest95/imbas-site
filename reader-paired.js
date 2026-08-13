@@ -1105,7 +1105,13 @@ export function suggestChipState({ delta_count, conditions_matched } = {}) {
 export const CHIP_LOOP_STATE_COPY = {
   [CHIP_LOOP_STATE_VISIBLE]: {
     headline: "The change you asked for shows up in the second answer.",
-    note: "That's under the conditions you recorded. It doesn't mean the second answer is correct or complete.",
+    // Cured on the standing rule against denial-by-naming: this used to close "It
+    // doesn't mean the second answer is correct or complete," which hands the reader
+    // both words to weigh and then asks them not to. The propositions it carried are
+    // both kept — the reading is scoped to the recorded conditions, and it says nothing
+    // about the second answer beyond the change appearing — and they are now stated as
+    // the extent of the comparison rather than as a pair of things it is not.
+    note: "That's under the conditions you recorded. The change showing up is the whole of what this comparison establishes about the second answer.",
     chip: "The change shows up",
   },
   [CHIP_LOOP_STATE_NOT_VISIBLE]: {

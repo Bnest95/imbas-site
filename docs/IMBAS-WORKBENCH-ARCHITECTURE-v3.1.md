@@ -128,7 +128,7 @@ The five sessions test exactly these; each has a force-change pattern:
 ## N. FINAL ADOPTED ARCHITECTURE — ONE PAGE
 
 **Promise:** paste an AI answer and see what it may have left out — then run one follow-up and compare, side by side, what changed.
-**Default route:** /workbench.html — one route, one spine.
+**Default route:** /reader (served from /reader.html) — one route, one spine.
 **First action:** one paste box under "Check your AI answer"; one quiet secondary ("see it work on a ready example" → the Section P flagship).
 **First payoff:** the Reader read — what may be missing, how it was shaped — measurement collapsed, receipt prompted ("Keep this").
 **Deep payoff:** the revealed comparison loop — inspection-generated question primary, user chips secondary with a permanent one-tap door — verbatim first/second quotes, matched/unmatched label, locked boundary, receipt as the primary next action.

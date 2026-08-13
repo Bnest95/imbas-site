@@ -1128,8 +1128,24 @@
    and 6.39:1 in the lightest case the umber system can put behind it. Both clear the
    4.5:1 floor. Read-only text is still text a person reads.
 
-   --ink-dim is deliberately NOT used: it is declared nowhere in the repo, so its 14 uses
-   in this file compute to `inherit` and carry no dimming at all. */
+   --ink-dim is deliberately NOT used: it is declared nowhere in the repo. An undeclared
+   custom property does not drop its declaration from the cascade. The declaration wins,
+   then resolves to `unset`, which on an inherited property like color means `inherit`. So
+   it carries no dimming — and it masks whatever color declaration would otherwise have won
+   on that element, which is the part that made deleting these harder than it looked.
+
+   Eight of the fourteen uses masked nothing and are gone. Six mask a live rule, draw the
+   page today, and stay, each marked at its own site: .wb-return__dismiss, .wb-funnel__note,
+   .wb-demo__context, .wb-loop__panel-body--muted, .wb-demo__smallprint, .wb-demo__close.
+   Three sit on a <button> or a <p>, where the UA's `color: buttontext` or styles.css
+   `p { color: var(--ink-soft) }` takes over the moment the line comes out.
+
+   Two readings governed which was which, and the board was only one of them. The board
+   photographs a viewport: it caught .wb-demo__close and two others, and it stayed green
+   over .wb-return__dismiss, .wb-funnel__note and .wb-demo__context, which are behind app
+   state or above a scroll offset. Those three were read instead by computed colour in the
+   governed renderer with the state driven. A frame that does not contain an element is not
+   evidence about it. */
 .wb-input[readonly],
 .wb-input[readonly][style] {
   border-color: var(--wb-border-passive) !important;
@@ -1685,7 +1701,6 @@
 
 .page--field-notes .page__intro {
   max-width: var(--fn-read);
-  color: var(--ink-dim);
 }
 
 .fn-prepared {
@@ -1711,7 +1726,6 @@
   font-family: var(--font-display);
   font-size: max(0.9375rem, var(--text-min));
   line-height: 1.55;
-  color: var(--ink-dim);
   margin: 0;
 }
 
@@ -1872,7 +1886,6 @@
   font-family: var(--font-display);
   font-size: max(0.9375rem, var(--text-min));
   line-height: 1.58;
-  color: var(--ink-dim);
   margin: 0 0 var(--space-3);
 }
 
@@ -4230,6 +4243,148 @@
   color: rgba(185, 172, 195, 0.7);
 }
 
+/* READ. The answer, whole, with the marks standing in it.
+
+   `pre-wrap` is load-bearing rather than stylistic: the body renders the artifact the
+   spans were resolved against, so every line break and run of spaces a person pasted
+   has to survive to the screen. Collapsing whitespace would still put each mark at the
+   right offset and would show the reader a document that is not the one measured.
+
+   Serif, at the answer's own size, because this is the text under inspection and not
+   the instrument's commentary on it. The panel's own voice — the class labels, the
+   readings, the boundary lines — stays sans, so a reader can tell at a glance which
+   words are theirs.
+
+   No max-height and no overflow. A scroll box here would put a person's own evidence
+   behind a gesture and hide marks below the fold of a box inside a page. */
+.wb-measure__source {
+  margin: 0 0 1.1rem;
+}
+
+.wb-source__body {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-left: 2px solid rgba(242, 232, 220, 0.14);
+  background: rgba(242, 232, 220, 0.03);
+  border-radius: 0 4px 4px 0;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1rem;
+  line-height: 1.62;
+  color: rgba(232, 221, 206, 0.94);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* A marked run. The tint carries it rather than a background block with hard edges,
+   so a mark that spans a line break reads as one continuous passage instead of two
+   rectangles. `color: inherit` because the browser default for <mark> is black on
+   yellow, which on this ground would be the loudest thing on the page. */
+.wb-source__mark {
+  background: rgba(222, 111, 56, 0.16);
+  color: inherit;
+  box-shadow: inset 0 -1px 0 rgba(222, 111, 56, 0.45);
+  border-radius: 2px;
+  padding: 0.05em 0;
+}
+
+/* THE MARK NUMBER. One element, one look, wherever a mark is named — over the words
+   in the body and beside the quotation in the list — because it is the same mark and
+   the number is the whole of what ties the two views together.
+
+   The label inside it is read and not seen: a bare numeral announced mid-sentence is
+   noise, and "mark 1" is the tie stated. Absolutely positioned and clipped, so it
+   takes no space in a `pre-wrap` flow. */
+.wb-mark-n {
+  font-family: var(--font-mono);
+  font-size: max(0.58rem, var(--mono-min));
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(222, 111, 56, 0.92);
+  vertical-align: super;
+  line-height: 0;
+  margin-right: 0.12em;
+  white-space: nowrap;
+}
+
+.wb-mark-n__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* In the list the number leads the row's evidence rather than a run of prose, so it
+   sits on the baseline instead of riding above it. */
+.wb-measure__anchor .wb-mark-n,
+.wb-measure__absence .wb-mark-n {
+  vertical-align: baseline;
+  line-height: inherit;
+  margin-right: 0.45em;
+}
+
+/* INSPECT. The last thing a reader passes before the list, and the reason the two
+   lines above it can be short: everything that used to stand between a person and
+   their own excerpts is in here, whole, one key away.
+
+   The summary is a rendered block and is counted as one, so it is a single line of
+   normal flow with an inline marker — no flex, which would blockify its parts and
+   report three where a reader sees one. Closed by default on every viewport: entry
+   density is the same everywhere, because a phone reader and a desktop reader are
+   reading the same record and neither asked to be taught first.
+
+   Marker idiom is the site's existing one (the privacy line): native list marker off,
+   ⌄ / ⌃ set in ::after so it flips with [open] and never enters the text layer. */
+.wb-measure__inspect {
+  margin: 0 0 1rem;
+}
+
+.wb-measure__inspect-summary {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: rgba(180, 166, 150, 0.82);
+  cursor: pointer;
+  list-style: none;
+}
+
+.wb-measure__inspect-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wb-measure__inspect-summary::after {
+  content: " ⌄";
+  color: rgba(180, 166, 150, 0.62);
+}
+
+.wb-measure__inspect[open] .wb-measure__inspect-summary::after {
+  content: " ⌃";
+}
+
+.wb-measure__inspect-body {
+  margin-top: 0.7rem;
+}
+
+/* Z2.3. It leads the disclosure because it is the shortest useful thing in it: a
+   reader who opens this wants to know what a mark is before they read seven rows of
+   capture conditions. */
+.wb-measure__orientation {
+  margin: 0 0 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(210, 196, 180, 0.88);
+  max-width: 60ch;
+}
+
+/* The strip trails the orientation line inside the disclosure now, so its old
+   pull-up against the panel head has nothing left to pull against. */
+.wb-measure__inspect-body .wb-prov {
+  margin: 0;
+}
+
 .wb-measure__list {
   list-style: none;
   margin: 0;
@@ -4269,6 +4424,19 @@
   font-size: 0.92rem;
   line-height: 1.55;
   color: rgba(205, 192, 176, 0.88);
+}
+
+/* A record-level absence. It sits where a quotation would sit and reads as plainly
+   unlike one: upright rather than italic, and with no left rule, because the rule on
+   .wb-measure__anchor is what marks an excerpt lifted out of the answer. Nothing here
+   indents, brackets, or otherwise dresses the note as text taken from the document,
+   since the record holds no such text. */
+.wb-measure__absence {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(190, 176, 196, 0.82);
 }
 
 .wb-measure__unvalidated {
@@ -5199,6 +5367,12 @@
   color: var(--ink-soft);
 }
 
+/* Retained. The note above .wb-input[readonly] gives the mechanism; what this one masks is
+   the UA's own `color: buttontext`, because it is a <button>. Take the line out and the ×
+   goes rgb(0, 0, 0) on the umber ground. Measured, not predicted — and not by the board,
+   which never photographs the return nudge. That reading came from loading the page in the
+   governed renderer with this browser's event log seeded to a copied question and no
+   completed loop, which is the state the nudge renders in. */
 .wb-return__dismiss {
   flex: 0 0 auto;
   margin: -0.15rem -0.2rem 0 0;
@@ -5237,7 +5411,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.7rem;
   padding-right: 1.4rem;
 }
@@ -5284,7 +5457,6 @@
   font-family: var(--font-mono);
   font-size: 1.1rem;
   line-height: 1;
-  color: var(--ink-dim);
   transition: color 0.15s ease;
 }
 
@@ -5312,7 +5484,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.5rem;
 }
 
@@ -5377,7 +5548,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.35rem;
 }
 
@@ -5399,6 +5569,9 @@
   color: var(--ink-soft);
 }
 
+/* Retained. A <p>, so what this masks is styles.css `p { color: var(--ink-soft) }` —
+   #D4CFC2 = rgb(212, 207, 194). Read under ?funnel=1 in the governed renderer, which is the
+   only way to see this panel at all; the board has no funnel scenario. */
 .wb-funnel__note {
   margin: 0;
   font-family: var(--font-mono);
@@ -5474,6 +5647,10 @@
   color: var(--ink);
 }
 
+/* Retained, masking the same styles.css `p` rule as .wb-demo__smallprint below. This one is
+   the reason a board run is not sufficient evidence here: the demo panel is photographed,
+   but only from a scroll offset that puts this line above the captured viewport, so the
+   frames came back identical while the colour moved. */
 .wb-demo__context {
   margin: 0;
   font-family: var(--font-mono);
@@ -5493,7 +5670,6 @@
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--ink-dim);
   margin-bottom: 0.4rem;
 }
 
@@ -5537,6 +5713,15 @@
   margin-top: 1rem;
 }
 
+/* This --ink-dim draws the page, which is the opposite of how it reads. The property is
+   undeclared — see the note above .wb-input[readonly] — so this declaration is invalid at
+   computed-value time, wins anyway, and resolves to `inherit`. What it masks is
+   .wb-loop__panel-body's own `color: rgba(228, 216, 200, 0.92)` above: workbench-app.jsx
+   writes both classes onto one <p>, the two selectors carry equal specificity, and this one
+   comes later. Delete the line and that rule takes the colour back: rgb(242, 232, 220)
+   becomes rgba(228, 216, 200, 0.92), and both public-example frames move. Whether this body
+   should inherit or take a token of its own is a ruling nobody has made. Until someone makes
+   it, the line stays, because the frames say it is drawing. */
 .wb-loop__panel-body--muted {
   color: var(--ink-dim);
   font-style: italic;
@@ -5583,6 +5768,11 @@
   font-size: 0.8rem;
 }
 
+/* The second one that draws the page, by the same mechanism. Here the masked rule is in the
+   other stylesheet: styles.css `p { color: var(--ink-soft) }`, and --ink-soft is #D4CFC2 =
+   rgb(212, 207, 194) — exactly the colour the board photographed on this line when the
+   declaration came out. A class selector beats a bare element selector, so the invalid
+   declaration wins and the <p> inherits instead. Same standing question as above. */
 .wb-demo__smallprint {
   margin: 0.55rem 0 0;
   font-family: var(--font-mono);
@@ -5598,6 +5788,9 @@
   margin-top: 1rem;
 }
 
+/* Retained, same as .wb-return__dismiss: a <button>, masking the UA's `color: buttontext`.
+   The board caught this one directly — deleting the line turned "Hide example" rgb(0, 0, 0)
+   across both public-example-provenance frames. */
 .wb-demo__close {
   background: none;
   border: none;

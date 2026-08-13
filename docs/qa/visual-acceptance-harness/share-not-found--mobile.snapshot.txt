@@ -36,5 +36,5 @@ span "Imbas"
 button "Menu" disabled=false expanded=false
 h1 "Inspection not found."
 p "This link may be incorrect, or the share was removed."
-a "Test another answer" href="/workbench.html?reader=1"
+a "Test another answer" href="/reader.html?reader=1"
 a "Explore reviewed archive" href="/archive.html"

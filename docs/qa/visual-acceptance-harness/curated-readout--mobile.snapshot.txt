@@ -15,7 +15,7 @@ reduced_motion: reduce
 screenshot_format: png
 scroll_offset: 567
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 375x812
 
 ## payload

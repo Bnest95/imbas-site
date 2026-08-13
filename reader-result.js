@@ -314,6 +314,60 @@ export const ANCHOR_REQUIREMENT = deepFreeze({
   FORBIDDEN: "FORBIDDEN",
 });
 
+// The visual channel a surfaced finding is rendered through. Status is the fact
+// about the anchor; channel is what a renderer does with it. They are separate so
+// that a renderer dispatches on one enumerated value instead of re-deriving the
+// rule from status and shape at each call site.
+//
+// Two members, because two producers exist. QUOTED_SPAN attaches to words that
+// are present in the artifact and has quotedAnchor as its producer.
+// RECORD_LEVEL_ABSENCE claims no position in the document at all and has
+// absentAnchor as its producer, on a shape that declares the role may surface
+// absent and for the one absence reason that is a fact about the answer
+// (absenceMaySurface holds both gates). A finding on this channel renders OUTSIDE
+// the document body: there is no span to attach to, so any in-document position
+// would be invented.
+//
+// A third channel for a finding that associates with a region while claiming no
+// exact position is a coherent idea and has no producer in this pipeline. It is
+// deliberately not enumerated here. Nothing constructs it, so an enumerated
+// member would be a name with no fact behind it, and a renderer branch for it
+// would be untestable. It gets added the day something produces it.
+export const ANCHOR_CHANNEL = deepFreeze({
+  QUOTED_SPAN: "QUOTED_SPAN",
+  RECORD_LEVEL_ABSENCE: "RECORD_LEVEL_ABSENCE",
+});
+
+// The line a record-level absence carries in place of a quotation. It ships from
+// here, beside the channel it belongs to, so the channel and the words that explain
+// it cannot drift into different files and disagree.
+//
+// It states the level the record sits at and the extent of what it holds. It does
+// not deny a frame, and it does not describe the finding's subject: the same channel
+// carries an omission, a framing observation, and a deflection, and a line that said
+// "material the answer leaves out" would be wrong on two of the three.
+export const RECORD_LEVEL_ABSENCE_NOTE =
+  "Recorded against this answer as a whole. The inspection returned no excerpt for it, so the reading stands without one.";
+
+// The line that teaches what a mark is. It ships from here, beside the two channels
+// it describes, because it is the prose statement of exactly what ANCHOR_CHANNEL
+// enumerates: a mark either points at words in the answer (QUOTED_SPAN) or at
+// something absent from it (RECORD_LEVEL_ABSENCE). Housing it anywhere else would
+// let the channels and the sentence that explains them drift apart.
+//
+// Every surface that renders marks renders THIS string. It is one sentence pair in
+// one place, so a reader who meets it on a run and again on a forwarded record meets
+// the same words, and no surface can quietly ship a more confident version.
+//
+// It states what a mark points at, positively, in both directions. It says "absent
+// from it" rather than "isn't in it" — a state, not a thwarted expectation — and it
+// closes on "records both" rather than enumerating what was and was not there. Both
+// choices are the copy law: state the extent, never deny a frame. Do not restore the
+// contracted negatives; the assertion in test/reader-orientation-line.test.mjs pins
+// this string whole and names the retired wording it must not carry.
+export const MARK_ORIENTATION_NOTE =
+  "Each mark points at something in this answer, or at something absent from it. Imbas records both.";
+
 // A quotation that resolves verbatim against the named artifact. Carries the span
 // so a reader can point at it without re-resolving.
 //
@@ -696,6 +750,32 @@ export function registerFindingShape(def) {
       reject(`a REQUIRED anchor must also be required to surface for ${id}: ${role}`);
     }
   }
+  // The ABSENCE contract, and the reason there are now three and not two.
+  //
+  // `quoted_to_surface` alone cannot express the difference between a side with
+  // nothing to quote and a side whose quotation failed to resolve, because both
+  // arrive as "not QUOTED". Collapsing them is the defect this closes: an omission
+  // in a single answer has nothing to quote — that is what makes it an omission —
+  // and it was being dropped at the display door by the same rule that correctly
+  // drops a fabricated quotation.
+  //
+  // So a shape names, explicitly, the roles where an ABSENT anchor is the truthful
+  // record and surfaces as record-level absence. It is opt-in per shape rather than
+  // derived from ABSENT_ALLOWED, because the paired shapes permit an absent probe
+  // side at CONSTRUCTION while still requiring it to resolve before the finding may
+  // be shown. Deriving this from the construction contract would let a paired
+  // finding surface with no probe-side quotation, which is the opposite of the rule
+  // those shapes were written to hold.
+  const absence_surfaces = Array.isArray(def.absence_surfaces) ? def.absence_surfaces.slice() : [];
+  for (const role of absence_surfaces) {
+    if (!ARTIFACT_ROLES.includes(role)) reject(`absence_surfaces names an unenumerated role for ${id}: ${role}`);
+    if (!quoted_to_surface.includes(role)) {
+      reject(`absence_surfaces may only relax a role that must otherwise be quoted for ${id}: ${role}`);
+    }
+    if (anchors[role] === ANCHOR_REQUIREMENT.REQUIRED) {
+      reject(`a REQUIRED anchor cannot also surface absent for ${id}: ${role}`);
+    }
+  }
   // Every shape declares its standing relationship to the Check Register, so a
   // finding is never annotated with a reason inferred from its surface. Validated
   // here, at registration, through the same constructor the adapters use.
@@ -710,6 +790,7 @@ export function registerFindingShape(def) {
     surface,
     anchors,
     quoted_to_surface,
+    absence_surfaces,
     directional: !!def.directional,
     register_default,
     label: str(def.label) || id,
@@ -730,7 +811,7 @@ export const SHAPE_SINGLE_CANDIDATE = "single_candidate_item";
 export const SHAPE_PAIRED_OBSERVED_DIFFERENCE = "paired_observed_difference";
 export const SHAPE_PAIRED_COMPARATIVE_CONTRAST = "paired_comparative_contrast";
 
-// THE TWO CONTRACTS, AND WHY THEY DIFFER.
+// THE THREE CONTRACTS, AND WHY THEY DIFFER.
 //
 // `anchors` is the construction contract. The two open-ended shapes permit an
 // absent anchor so that an unanchored source finding is never dropped at the
@@ -741,14 +822,29 @@ export const SHAPE_PAIRED_COMPARATIVE_CONTRAST = "paired_comparative_contrast";
 // tally. recorded_findings preserves legacy and unresolved material; a finding
 // reaches a person only through surfaced_findings.
 //
-// The two are separate on purpose. Permissive construction plus strict surfacing
-// keeps the record complete without letting an unquotable finding inflate a count.
+// `absence_surfaces` is the third, and it names the roles where a truthful absence
+// is itself the record and may be shown as one. It relaxes the second contract on a
+// named role and never the first, because the two contracts answer different
+// questions: whether a finding may exist, and whether it may be displayed.
+//
+// The three are separate on purpose. Permissive construction plus strict surfacing
+// keeps the record complete without letting an unquotable finding inflate a count,
+// and the narrow relaxation keeps a genuine absence from being filed as an
+// unquotable one.
+
+// The single-answer shape, and the one that carried the defect. An item observed
+// about one answer may be about something the answer SAYS, which quotes, or about
+// something the answer never says, which cannot. Both are candidate items and both
+// are the product's subject matter. Before absence_surfaces the second kind was
+// built, recorded, and then dropped before display by the surfacing gate, so the
+// one thing the Reader exists to surface was the one thing it silently withheld.
 registerFindingShape({
   id: SHAPE_SINGLE_CANDIDATE,
   surface: "single",
   label: "Candidate item in one answer",
   anchors: { [ARTIFACT_ORIGINAL]: ANCHOR_REQUIREMENT.ABSENT_ALLOWED },
   quoted_to_surface: [ARTIFACT_ORIGINAL],
+  absence_surfaces: [ARTIFACT_ORIGINAL],
   directional: false,
   register_default: { status: REGISTER_STATUS.ELIGIBLE },
 });
@@ -937,12 +1033,34 @@ export function describeFinding(finding) {
     class_display: FINDING_CLASSES[finding.class_label],
     statement: finding.statement,
     materiality: finding.materiality,
-    anchors: finding.anchors.map((a) => ({
-      role: a.role,
-      status: a.status,
-      quote: a.quote,
-      absent_reason: a.absent_reason,
-    })),
+    anchors: finding.anchors.map((a) => {
+      const described = {
+        role: a.role,
+        status: a.status,
+        quote: a.quote,
+        absent_reason: a.absent_reason,
+        // The channel travels with the anchor into the view, so a renderer never
+        // infers position from status. An anchor with no span carries no span here.
+        channel: anchorChannelFor(finding, a.role),
+      };
+      // The span travels too, where there is one. Only quotedAnchor mints a span, and
+      // it mints it against the artifact it proved the quotation from, so a view that
+      // positions a mark from this field can only position a quotation and only in the
+      // document that quotation came from. That is the in-document rule made
+      // structural rather than enforced.
+      //
+      // ATTACHED, NOT NULLED. An absence descriptor carries no `span` key at all —
+      // not a null one — because the law it answers to is that nothing in it may read
+      // as a position, and `"span": null` is a position field with nothing in it.
+      // test/absence-surfacing.test.mjs holds this by name and by JSON scan.
+      //
+      // Copied rather than passed through, because the descriptor is what a view holds
+      // and the descriptor should not hand out a reference into the record.
+      if (a.span) {
+        described.span = { artifact_id: a.span.artifact_id, start: a.span.start, end: a.span.end };
+      }
+      return described;
+    }),
     directional: shape.directional,
     comparison_direction: finding.comparison_direction,
     claim_register: finding.claim_register,
@@ -950,6 +1068,152 @@ export function describeFinding(finding) {
     conditions_status: finding.conditions_status,
     reader_state: finding.reader_state,
     disposition: finding.disposition,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// THE SOURCE READING — the answer with its marks positioned in it.
+//
+// A list of excerpts is not the answer. It tells a reader what the Reader found
+// and leaves them to locate it themselves, in their own text, from a quotation
+// they have to scan for. The spans to avoid that were always there: every QUOTED
+// anchor carries the offsets the server resolved it at. Nothing consumed them.
+// This is the function that does.
+//
+// It takes DESCRIBED findings, not records, because the channel is what decides
+// whether a mark may be positioned and only a descriptor carries it. It returns
+// three things and computes nothing else:
+//
+//   marks     — every mark the record holds, numbered, in the record's own order.
+//   segments  — an exact, ordered cover of the artifact text, each segment naming
+//               the marks that span it.
+//   marks_by_finding — the numbering again, keyed by finding id and aligned index
+//               for index with that finding's anchors, so a list and a body can
+//               agree on which mark is which without either one re-deriving it.
+//
+// NUMBERING IS THE RECORD'S ORDER, not the document's. The same numbers key the
+// body and the list, and the list renders in record order, so numbering by
+// position in the text would make one of the two surfaces count out of sequence.
+// A mark low in the answer may therefore carry a low number. That is the record
+// being the authority on its own order.
+//
+// WHAT IS NOT POSITIONED. A mark whose channel is RECORD_LEVEL_ABSENCE has no
+// span and gets none here. A mark whose span names a different artifact is not in
+// THIS document and is not placed in it. Both are still numbered, because both are
+// marks the record holds; they simply have no place in the body, and the surface
+// that shows them says so in its own words. An anchor with no channel is not a
+// mark at all and is not numbered — that is the unresolved quotation, and it does
+// not surface anywhere.
+//
+// THE INVARIANT IS ENFORCED HERE, LOUDLY. Every positioned span is re-derived from
+// the artifact text before it is used: artifactText.slice(start, end) === quote,
+// exactly, no normalization on either side, which is the coordinate convention
+// declared at the top of this file. A span that does not reproduce is a defect in
+// the record or in the text it was handed, and either way a mark drawn from it
+// would sit over the wrong words. So it throws. A misplaced mark is worse than no
+// mark: it is the instrument pointing confidently at something it did not measure.
+// ---------------------------------------------------------------------------
+
+function assertSpanReproduces(text, span, quote, artifactId) {
+  if (!Number.isInteger(span.start) || !Number.isInteger(span.end)) {
+    reject(`a span on ${artifactId} is not a pair of integer offsets`);
+  }
+  if (span.start < 0 || span.end <= span.start || span.end > text.length) {
+    reject(
+      `a span on ${artifactId} falls outside the artifact: [${span.start}, ${span.end}) against ${text.length} code units`,
+    );
+  }
+  if (text.slice(span.start, span.end) !== quote) {
+    reject(
+      `a span on ${artifactId} does not reproduce its quotation at [${span.start}, ${span.end}); ` +
+        "the text the marks are positioned against is not the text they were resolved against",
+    );
+  }
+}
+
+// Cut the text at every span boundary and hand each piece the marks that cover it.
+// Splitting at boundaries rather than walking marks one at a time is what makes
+// overlap and nesting exact instead of a policy: two marks that share words produce
+// a segment carrying both numbers, and no mark is shortened, dropped, or reordered
+// to make room for another. The pieces concatenate back to the artifact exactly.
+function cutIntoSegments(text, positioned) {
+  if (!text) return deepFreeze([]);
+  if (!positioned.length) {
+    return deepFreeze([deepFreeze({ text, start: 0, end: text.length, marks: deepFreeze([]), starts: deepFreeze([]) })]);
+  }
+  const cuts = new Set([0, text.length]);
+  for (const m of positioned) {
+    cuts.add(m.span.start);
+    cuts.add(m.span.end);
+  }
+  const bounds = [...cuts].sort((a, b) => a - b);
+  const out = [];
+  for (let i = 0; i < bounds.length - 1; i++) {
+    const start = bounds[i];
+    const end = bounds[i + 1];
+    out.push(
+      deepFreeze({
+        text: text.slice(start, end),
+        start,
+        end,
+        marks: deepFreeze(positioned.filter((m) => m.span.start <= start && m.span.end >= end).map((m) => m.n)),
+        // Where a mark BEGINS, so a surface can label it once instead of once per
+        // piece. A mark that starts here also covers here, because the next cut is
+        // never past its end.
+        starts: deepFreeze(positioned.filter((m) => m.span.start === start).map((m) => m.n)),
+      }),
+    );
+  }
+  return deepFreeze(out);
+}
+
+export function buildSourceReading({ artifactText, findings = [], artifactId = ARTIFACT_ORIGINAL }) {
+  const text = str(artifactText);
+  const marks = [];
+  const byFinding = {};
+  for (const f of findings) {
+    const anchors = (f && f.anchors) || [];
+    const numbering = [];
+    for (const a of anchors) {
+      if (!a || !a.channel) {
+        numbering.push(null);
+        continue;
+      }
+      const n = marks.length + 1;
+      // NO DOCUMENT, NO POSITIONS. A caller that holds the record but not the answer
+      // it was made against gets the numbering and no body — every mark unpositioned,
+      // no segment, nothing for a surface to draw. That is not the check being relaxed:
+      // a span cannot be verified against a document nobody handed over, and the rule
+      // is that no mark is placed without verifying it. The list below the body is
+      // unaffected; it quotes, and quoting needs no offsets.
+      const inThisDocument =
+        text.length > 0 &&
+        a.channel === ANCHOR_CHANNEL.QUOTED_SPAN &&
+        a.span != null &&
+        a.span.artifact_id === artifactId;
+      if (inThisDocument) assertSpanReproduces(text, a.span, a.quote, artifactId);
+      marks.push(
+        deepFreeze({
+          n,
+          finding_id: f.id,
+          channel: a.channel,
+          quote: a.quote,
+          span: inThisDocument ? deepFreeze({ start: a.span.start, end: a.span.end }) : null,
+          in_document: inThisDocument,
+        }),
+      );
+      numbering.push(n);
+    }
+    if (f && f.id) byFinding[f.id] = deepFreeze(numbering);
+  }
+  return deepFreeze({
+    artifact_id: artifactId,
+    marks: deepFreeze(marks),
+    marks_by_finding: deepFreeze(byFinding),
+    segments: cutIntoSegments(
+      text,
+      marks.filter((m) => m.in_document),
+    ),
   });
 }
 
@@ -969,7 +1233,7 @@ export const COUNT_DEFS = deepFreeze({
     unit_many: "findings",
     predicate_id: "satisfies_registered_anchor_contract",
     predicate_note:
-      "Findings whose shape's quoted_to_surface roles all resolve verbatim against their artifact. An unresolved required anchor is excluded.",
+      "Findings whose shape's quoted_to_surface roles each either resolve verbatim against their artifact or are truthfully absent on a role the shape declares may surface absent. A supplied quotation that did not resolve is excluded.",
   },
   surfaced_candidate_items: {
     id: "surfaced_candidate_items",
@@ -1004,13 +1268,72 @@ export const COUNT_DEFS = deepFreeze({
 // The surfacing rule, in one place. Every surfaced quantity delegates here, so the
 // hero, the panel, and any later surface cannot each decide "surfaced" their own way.
 // That divergence is what produced a hero count that disagreed with the rows beneath it.
+// The three statuses are decided by name here, not by "is it QUOTED". That
+// distinction is the doctrine and not an implementation detail:
+//
+//   QUOTED     — the quotation resolved verbatim. Surfaces, on the quoted-span channel.
+//   ABSENT     — no quotation was supplied, and for this role on this shape that is
+//                the truthful record of a thing the answer never said. Surfaces, on
+//                the record-level-absence channel, where the shape declares it.
+//   UNRESOLVED — a quotation WAS supplied and does not occur in the artifact. That is
+//                an evidence failure, not an absence. It stays recorded and unsurfaced.
+//
+// UNRESOLVED is written as its own arm rather than falling through a default, so
+// that widening absence can never widen it by accident. The two arrive at this
+// function looking alike — both are "not QUOTED" — and telling them apart is the
+// entire job.
 export function satisfiesAnchorContract(finding) {
   const shape = getFindingShape(finding && finding.shape);
   if (!shape) return false;
   return shape.quoted_to_surface.every((role) => {
     const anchor = finding.anchors.find((a) => a.role === role);
-    return !!anchor && anchor.status === ANCHOR_STATUS.QUOTED;
+    if (!anchor) return false;
+    if (anchor.status === ANCHOR_STATUS.QUOTED) return true;
+    if (anchor.status === ANCHOR_STATUS.ABSENT) return absenceMaySurface(shape, anchor);
+    if (anchor.status === ANCHOR_STATUS.UNRESOLVED) return false;
+    return false;
   });
+}
+
+// Whether an ABSENT anchor is one a surface may show. Both the surfacing predicate
+// and the channel deriver read this single function, so a role can never be judged
+// showable by one and unshowable by the other — the divergence that would put a row
+// on screen the counts do not include.
+//
+// Two gates, and the second is why the enumerated reasons are read by name here.
+//
+//   SOURCE_SUPPLIED_NO_QUOTATION — the inspection returned no words for this side.
+//   On a shape that declares the role, that is a record about the answer and it
+//   surfaces.
+//
+//   ARTIFACT_NOT_AVAILABLE_TO_SURFACE — the document was not here to quote from.
+//   That supports no claim about what the document contains, so it stays recorded
+//   and unsurfaced. Surfacing it would print a statement about an answer this
+//   record never read, which is the same overstatement the UNRESOLVED arm exists
+//   to prevent, arriving through the other door.
+function absenceMaySurface(shape, anchor) {
+  if (!shape || !anchor) return false;
+  if (anchor.status !== ANCHOR_STATUS.ABSENT) return false;
+  if (!shape.absence_surfaces.includes(anchor.role)) return false;
+  return anchor.absent_reason === ANCHOR_ABSENT_REASONS.SOURCE_SUPPLIED_NO_QUOTATION;
+}
+
+// The channel a surfaced finding renders through, derived once from the anchor the
+// shape surfaces on. A renderer reads this instead of re-deriving the rule, which
+// is what keeps absence from acquiring a position: there is no branch here that can
+// hand back a span for a finding that has none.
+//
+// null is the third outcome and it means "this anchor is not a display channel".
+// An UNRESOLVED anchor gets it, and so does an ABSENT anchor on a role the shape
+// does not surface — a paired finding's open side, for instance, which may be
+// absent at construction and still must not be shown as an absence record.
+export function anchorChannelFor(finding, role) {
+  const shape = getFindingShape(finding && finding.shape);
+  const anchor = finding && finding.anchors ? finding.anchors.find((a) => a.role === role) : null;
+  if (!anchor) return null;
+  if (anchor.status === ANCHOR_STATUS.QUOTED) return ANCHOR_CHANNEL.QUOTED_SPAN;
+  if (absenceMaySurface(shape, anchor)) return ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE;
+  return null;
 }
 
 const PREDICATES = {

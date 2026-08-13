@@ -13,9 +13,9 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1811
+scroll_offset: 1826
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 375x812
 
 ## payload

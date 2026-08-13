@@ -731,8 +731,17 @@ test("H: NON-REGRESSION — every committed anchor still resolves against the ar
   }
 
   assert.deepEqual(failures, [], failures.slice(0, 10).join("\n"));
-  assert.equal(records, 32, "the audit counted 32 records carrying anchors");
-  assert.equal(anchors, 680, "the audit counted 680 anchors");
+  // These two counts moved 32→34 and 680→704 when the dense acceptance record was
+  // registered as a board scenario. Two more snapshots carry anchors, 12 spans each:
+  // six under result.findings[].anchors[] and the same six under
+  // receipt.open_run.canonical.findings[].anchors[], which is the receipt's own copy of
+  // what was read rather than a second set of marks. Six and not nine because the
+  // fixture's other three findings are record-level absences, and an absence carries no
+  // span to resolve — that is the whole point of them. Every one of the 24 resolved on
+  // the first run against the artifact it names, so what moved here is the size of the
+  // corpus and not its health.
+  assert.equal(records, 34, "the audit counted 34 records carrying anchors");
+  assert.equal(anchors, 704, "the audit counted 704 anchors");
   assert.ok(shapeB > 0, "a collector that finds no Shape B anchor is skipping the paired surface");
   assert.deepEqual([...roles].sort(), [ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
 });

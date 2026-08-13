@@ -21,15 +21,19 @@ import { fileURLToPath } from "node:url";
 import { transform } from "esbuild";
 
 import {
+  ANCHOR_CHANNEL,
   ANCHOR_REQUIREMENT,
   ANCHOR_STATUS,
   ARTIFACT_ORIGINAL,
   FINDING_CLASSES,
+  MARK_ORIENTATION_NOTE,
+  RECORD_LEVEL_ABSENCE_NOTE,
   SHAPE_PAIRED_COMPARATIVE_CONTRAST,
   SHAPE_PAIRED_OBSERVED_DIFFERENCE,
   SHAPE_SINGLE_CANDIDATE,
   buildCanonicalResult,
   buildFinding,
+  buildSourceReading,
   describeFinding,
   registerFindingShape,
   selectSubset,
@@ -40,17 +44,39 @@ const SRC = readFileSync(
   "utf8",
 );
 
-// From `function MeasurementPanel(` to the next top-level `function ` declaration, so an
-// assertion can never be satisfied by code in a neighbouring component.
-function measurementPanelSource(text) {
-  const start = text.indexOf("function MeasurementPanel(");
-  assert.notEqual(start, -1, "workbench-app.jsx must define MeasurementPanel");
+// From `function NAME(` to the next top-level `function ` declaration, so an assertion
+// can never be satisfied by code in a neighbouring component.
+function componentSource(text, name) {
+  const start = text.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `workbench-app.jsx must define ${name}`);
   const rest = text.slice(start);
   const next = rest.indexOf("\nfunction ", 1);
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-const PANEL = measurementPanelSource(SRC);
+// A module-level string constant, read out of the source rather than restated here.
+// The panel's free identifiers are supplied by hand below, and a hand-written copy of
+// a UI string is a second place for it to live: this reads the shipped literal, so the
+// sandbox renders the words production renders.
+function stringConstant(text, name) {
+  const m = new RegExp(`^const ${name} = ("(?:[^"\\\\]|\\\\.)*");$`, "m").exec(text);
+  assert.ok(m, `workbench-app.jsx must define ${name} as a single-line string constant`);
+  return JSON.parse(m[1]);
+}
+
+const PANEL = componentSource(SRC, "MeasurementPanel");
+
+// The row's evidence element is its own component, so it is extracted on its own and
+// carries the same prohibitions. Keeping the two slices separate is deliberate: a
+// negative assertion about the panel must not be satisfiable by the evidence element's
+// source, or vice versa.
+const EVIDENCE = componentSource(SRC, "FindingEvidence");
+
+// READ's two elements, sliced the same way and for the same reason. They are named
+// separately so a negative assertion about the panel cannot be satisfied by their
+// source, and so this file can say which component each claim is about.
+const SOURCE_READING = componentSource(SRC, "SourceReading");
+const MARK_NUMBER = componentSource(SRC, "MarkNumber");
 
 // The descriptor's real key set, from a real finding built through the real door.
 const DESCRIPTOR_KEYS = new Set(
@@ -114,8 +140,44 @@ test("every finding field the rows read is a key the descriptor publishes", () =
 test("the rows branch on no shape id, so a newly registered shape needs no edit here", () => {
   for (const id of [SHAPE_SINGLE_CANDIDATE, SHAPE_PAIRED_OBSERVED_DIFFERENCE, SHAPE_PAIRED_COMPARATIVE_CONTRAST]) {
     assert.equal(PANEL.includes(id), false, `MeasurementPanel must not name the shape ${id}`);
+    assert.equal(EVIDENCE.includes(id), false, `FindingEvidence must not name the shape ${id}`);
   }
   assert.equal(PANEL.includes("f.shape"), false, "MeasurementPanel must not switch on a finding's shape");
+});
+
+// The evidence element used to find its anchor by role and status: it asked for the
+// original answer's anchor and took it only if it was QUOTED. Both halves were a
+// renderer re-deriving a rule reader-result.js already owns, and the second half is
+// how absence findings were lost — "not QUOTED" swept up the truthful absences with
+// the failed quotations. The dispatch is now the channel and nothing else, so the
+// component cannot disagree with the surfacing predicate about what may be shown.
+test("the evidence element dispatches on the anchor channel, not on role or status", () => {
+  // QUOTED_SPAN contains QUOTED, so a bare substring search for the status would be
+  // tripped by the channel that is supposed to replace it. The channel names come out
+  // first, and what is left is searched for the statuses.
+  const withoutChannels = (src) =>
+    Object.values(ANCHOR_CHANNEL).reduce((acc, channel) => acc.split(channel).join(""), src);
+  for (const [name, src] of [["MeasurementPanel", PANEL], ["FindingEvidence", EVIDENCE]]) {
+    const bare = withoutChannels(src);
+    for (const status of Object.values(ANCHOR_STATUS)) {
+      assert.equal(bare.includes(status), false, `${name} must not name the anchor status ${status}`);
+    }
+    assert.equal(src.includes("ANCHOR_STATUS"), false, `${name} must not read the status vocabulary`);
+    assert.equal(src.includes("ARTIFACT_ORIGINAL"), false, `${name} must not single out an artifact role`);
+    assert.equal(src.includes("a.role"), false, `${name} must not select an anchor by role`);
+  }
+  assert.match(EVIDENCE, /anchor\.channel/, "the evidence element must read the channel");
+  for (const channel of Object.values(ANCHOR_CHANNEL)) {
+    assert.ok(EVIDENCE.includes(channel), `the evidence element must handle the ${channel} channel`);
+  }
+});
+
+// The rows hand every anchor the descriptor publishes to the evidence element, so a
+// shape with one anchor and a shape with two both render with no edit here. A row that
+// picked one anchor out of the list would go quiet the day a shape surfaced on a side
+// the picker did not name.
+test("the row renders every anchor the descriptor publishes", () => {
+  assert.match(PANEL, /f\.anchors\.map\(/, "the row must render over the descriptor's anchors");
 });
 
 // ── The extensibility proof (2B-C §2) ────────────────────────────────────────
@@ -160,21 +222,41 @@ const QUOTE = "ninety days after the notice is served";
 // stub stands in for each child component, since this is a test of THIS component's
 // rows. The free identifiers are supplied explicitly, so a new one added to the panel
 // makes this fail loudly rather than silently reading undefined.
+// SourceReading and MarkNumber come along because the panel mounts one and the evidence
+// element renders the other. Both are lifted from the shipped file, not stubbed: a stub
+// would let the panel pass this test while the READ stratum it now leads with was
+// broken. buildSourceReading is imported rather than lifted — it is model code in
+// reader-result.js, and the panel gets the real one.
 async function renderPanel(findings) {
-  const { code } = await transform(`${PANEL}\nreturn MeasurementPanel;`, {
-    loader: "jsx",
-    jsxFactory: "h",
-    jsxFragment: "Frag",
-  });
-  const h = (type, props, ...children) => ({ type, props: props || {}, children });
+  const { code } = await transform(
+    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
+    {
+      loader: "jsx",
+      jsxFactory: "h",
+      jsxFragment: "Frag",
+    },
+  );
+  const h = (type, props, ...children) => {
+    // The evidence element is a component, not a host tag, so a recording `h` would
+    // stop at its name and never see the blockquote or the absence note. Calling it
+    // here is what makes the assertions below read the real dispatch instead of a
+    // placeholder for it.
+    if (typeof type === "function") return type({ ...(props || {}), children });
+    return { type, props: props || {}, children };
+  };
   const stub = () => null;
   const make = new Function(
     "h",
     "Frag",
     "selectSubset",
     "describeFinding",
-    "ARTIFACT_ORIGINAL",
-    "ANCHOR_STATUS",
+    "buildSourceReading",
+    "ANCHOR_CHANNEL",
+    "RECORD_LEVEL_ABSENCE_NOTE",
+    "MARK_ORIENTATION_NOTE",
+    "MEASURE_SECTION_LABEL",
+    "MEASURE_INSPECT_SUMMARY",
+    "MEASURE_SOURCE_LABEL",
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
@@ -185,13 +267,24 @@ async function renderPanel(findings) {
     "Frag",
     () => findings,
     (f) => f,
-    ARTIFACT_ORIGINAL,
-    ANCHOR_STATUS,
+    buildSourceReading,
+    ANCHOR_CHANNEL,
+    RECORD_LEVEL_ABSENCE_NOTE,
+    MARK_ORIENTATION_NOTE,
+    stringConstant(SRC, "MEASURE_SECTION_LABEL"),
+    stringConstant(SRC, "MEASURE_INSPECT_SUMMARY"),
+    stringConstant(SRC, "MEASURE_SOURCE_LABEL"),
     "boundary",
     stub,
     stub,
   );
-  return Panel({ result: { measurement: {}, result: {} }, context: {} });
+  // The receipt carries the artifact the spans were resolved against, so the panel is
+  // handed one here. A panel with no receipt renders the list and no body, which is a
+  // real state and not the one these assertions are about.
+  return Panel({
+    result: { measurement: {}, result: {}, receipt: { open_run: { answer: ANSWER } } },
+    context: {},
+  });
 }
 
 function textOf(node, out = []) {

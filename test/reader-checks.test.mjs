@@ -389,7 +389,12 @@ test("AT-6: a card carries family + detector_id + provisional, and survives isol
   assert.equal(card.family, "comparative");
   assert.equal(card.detector_id, "vg.omission");
   assert.equal(card.provisional, true);
+  // Two assertions, because one of them cannot fail on its own. Comparing the card to the
+  // constant proves the card carries the constant rather than a copy — but both sides move
+  // together, so an edit to the constant passes here unnoticed, and this label renders under
+  // every card on 36 of the 62 photographed frames. The literal is what an edit has to meet.
   assert.equal(card.provisional_label, CHECK_UI.provisional_label);
+  assert.equal(card.provisional_label, "Provisional — a pointer");
   assert.equal(card.finding_label, "Omission");
   // Isolation: destructuring only the card (no register, no event) preserves them.
   const alone = JSON.parse(JSON.stringify(card));

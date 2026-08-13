@@ -282,6 +282,22 @@ export const PLACEMENTS = Object.freeze({
   // block's composition assumes a scored case, and the flagship is not one. It
   // resolves to 005, which keeps its score, its date and its two prompts. When the
   // redesign restructures the block, this line flips and the ruling completes.
+  //
+  // Two independent gates stand in the way of flipping it today, and each was run
+  // against the shipped materializer rather than reasoned about. Grant Montana the role
+  // and the second still fires:
+  //   1. montana-employment does not carry ARCHIVE_FEATURED, for the reason recorded on
+  //      the example itself — the block prints a Volunteer Gap score and this run has
+  //      none. All five regions fail generation with "does not carry role
+  //      ARCHIVE_FEATURED".
+  //   2. Every one of those five regions declares `needs: ["route", …]`, and Montana's
+  //      routes list is empty. All five then fail with "needs route … does not supply
+  //      it". The regions are archiveFeaturedReadLink, archiveFeaturedCtaLink,
+  //      homeFeaturedReadLink, workbenchNoscriptCaseLink and methodologyRubricLink,
+  //      across archive.html, index.html, reader.html and methodology.html.
+  // Neither gate is discharged by a rendering path. The first needs the block to stop
+  // printing a score; the second needs the Inspection URL, which is a published record
+  // and not a string anyone may write here.
   archiveFeatured: Object.freeze({
     role: PRODUCT_ROLE.ARCHIVE_FEATURED,
     resolves: PLACEMENT_RESOLUTION.EXAMPLE,
@@ -449,35 +465,30 @@ function blockerIn(examples, placements, placementName) {
 // the consumer cannot seat the record it was handed, because the two are different kinds
 // of record.
 //
-// This is the seam. The guided-case consumer was built around a measured case: it reads
+// Empty, and the export stays for the same reason PHASE_2_EXCEPTIONS does: emptiness is
+// then a thing a test asserts rather than a fact about a file nobody looks at.
+//
+// It held one entry. The guided-case consumer was built around a measured case — it read
 // a category to print result provenance, a detect and keyDetect list to run the term
-// check, and a numbered case id to label the card. Montana is not that. It is a
-// public-example packet — governed excerpts, provenance, and a verified delta narrative —
-// and it has none of those fields, because measuring it would have produced them and
-// nobody measured it.
+// check, and a numbered case id to label the card — and Montana is a public-example
+// packet with none of those fields, because measuring it would have produced them and
+// nobody measured it. Its entry named two ways out and barred a third:
 //
-// The one thing that must never happen here is the easy thing: adding category, detect
-// and keyDetect to Montana so the picker stops complaining. Those fields are measurement
-// output. Writing them by hand fabricates measurement data, and it would fabricate it in
-// the one record the whole product points at.
+//   "A shared presentation model both record types satisfy, or a dedicated
+//    public-example rendering path. Either one discharges this entry, and the entry is
+//    then deleted rather than narrowed. Adding measured-case fields to Montana does not
+//    discharge it."
 //
-// So Montana is held out, in the open, with the discharge condition attached. Every role
-// it holds is listed, in the registry's own role vocabulary, because the seam is the
-// record type and Montana carries the same record type into all of them.
-export const RENDER_BLOCKERS = Object.freeze({
-  "montana-employment": Object.freeze({
-    code: "PUBLIC_EXAMPLE_RENDER_PATH_REQUIRED",
-    roles: Object.freeze([
-      PRODUCT_ROLE.SITE_FLAGSHIP,
-      PRODUCT_ROLE.READER_GUIDED,
-      PRODUCT_ROLE.HOW_IT_WORKS_PRIMARY,
-    ]),
-    blocker:
-      "The current Guided Case consumer assumes a measured-case record containing detector and result-provenance semantics. Montana is a public-example packet containing governed excerpts, provenance, and a verified delta narrative. These are different record types. Discharge requires either a shared presentation model or a dedicated public-example rendering path, owned by the Design Discovery composition build; it does not permit synthesizing measured-case fields.",
-    discharge:
-      "A shared presentation model both record types satisfy, or a dedicated public-example rendering path. Either one discharges this entry, and the entry is then deleted rather than narrowed. Adding measured-case fields to Montana does not discharge it.",
-  }),
-});
+// reader-guided-record.js is the first of the two. It projects both record types onto
+// one field set, so the consumer reads a card label rather than composing one out of a
+// case id and a category, and reads a dated line that says what its own date is a fact
+// about. The entry is deleted rather than narrowed, and Montana leads its own rotation.
+//
+// The barred third way stays barred, and by the test that always held it: "the flagship
+// carries no synthesized measurement fields" in test/product-example-registry.test.mjs
+// fails the moment category, detect, keyDetect, gap or observedDate is typed onto this
+// record. Deleting a blocker does not retire the reason it existed.
+export const RENDER_BLOCKERS = Object.freeze({});
 
 function renderBlockerIn(blockers, exampleId) {
   return Object.prototype.hasOwnProperty.call(blockers, exampleId) ? blockers[exampleId] : null;

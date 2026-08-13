@@ -23,7 +23,7 @@ export function buildOptions(overrides = {}) {
     minify: true,
     legalComments: "none",
     banner: {
-      js: "/* Imbas Workbench — precompiled; requires global React + ReactDOM */",
+      js: "/* Imbas Reader — precompiled; requires global React + ReactDOM */",
     },
     ...overrides,
   };

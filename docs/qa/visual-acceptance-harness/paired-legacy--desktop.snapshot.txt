@@ -13,9 +13,9 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 4975
+scroll_offset: 4849
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 1440x900
 
 ## payload
@@ -86,7 +86,7 @@ viewport: 1440x900
             "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
           },
           "provisional": true,
-          "provisional_label": "Provisional — a pointer, not a verdict",
+          "provisional_label": "Provisional — a pointer",
           "ranking": {
             "demonstrability": "comparative",
             "independent_conflict_count": 0,
@@ -233,7 +233,7 @@ viewport: 1440x900
             "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
           },
           "provisional": true,
-          "provisional_label": "Provisional — a pointer, not a verdict",
+          "provisional_label": "Provisional — a pointer",
           "ranking": {
             "demonstrability": "comparative",
             "independent_conflict_count": 0,
@@ -265,9 +265,9 @@ viewport: 1440x900
           "trigger": "Trigger",
           "verification": "Worth asking"
         },
-        "provisional_label": "Provisional — a pointer, not a verdict",
+        "provisional_label": "Provisional — a pointer",
         "register_heading": "Questions worth asking",
-        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers, not verdicts — copy a question and check it against a source.",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
         "resolver_labels": {
           "authority": "Check against an authority",
           "calculation": "Re-run the calculation",
@@ -947,7 +947,7 @@ a "The Volunteer Gap" href="/volunteer-gap.html"
 a "How It Works" href="/how-it-works.html"
 a "Whitepaper" href="/whitepaper.html"
 a "Case Archive" href="/archive.html"
-a "Workbench" href="/workbench.html"
+a "The Reader" href="/reader.html"
 a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false

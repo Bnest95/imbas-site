@@ -7,11 +7,15 @@ import {
   canonicalizeForHash,
 } from "./reader-receipt.js";
 import {
+  buildSourceReading,
   countLabel,
   countOf,
   describeFinding,
   selectSubset,
+  ANCHOR_CHANNEL,
   ANCHOR_STATUS,
+  RECORD_LEVEL_ABSENCE_NOTE,
+  MARK_ORIENTATION_NOTE,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
 } from "./reader-result.js";
@@ -71,6 +75,12 @@ import {
   renderableExamples,
   resolvePlacement,
 } from "./product-example-registry.js";
+import {
+  GUIDED_RECORD_KIND,
+  buildGuidedRotation,
+  measuredCaseIds,
+} from "./reader-guided-record.js";
+import { resultActions } from "./reader-result-actions.js";
 import {
   LANE_INSPECT,
   LANE_CHIPS,
@@ -960,14 +970,10 @@ const WORKBENCH_FLOW_CSS = `
   gap: 0.6rem;
   width: 100%;
 }
-.wb-result-hero__eyebrow {
-  font-family: ${MONO};
-  font-size: max(0.625rem, var(--mono-min));
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ember-bright);
-  margin: 0 0 0.5rem;
-}
+/* .wb-result-hero__eyebrow went with its only consumer in the composition pass: the
+   "Inspection result" line that named the surface to someone who had just pressed the
+   button on it. The record's identity is not gone — it renders inside the measurement
+   panel's INSPECT disclosure, which is where a runner who wants it will look. */
 .wb-result-hero__estimate {
   font-family: ${SERIF};
   font-weight: 500;
@@ -1214,7 +1220,7 @@ const WORKBENCH_TERMS_CSS = `
 
 // The context row's pointer at whichever case the site currently features. Route and
 // visible label both resolve through the registry, so this link and the no-JavaScript
-// fallback in workbench.html — which the materializer already generates from the same
+// fallback in reader.html — which the materializer already generates from the same
 // placement — cannot disagree about which case that is.
 const FEATURED = getExample(resolvePlacement("archiveFeatured").exampleIds[0]);
 const FEATURED_ROUTE = placementRoute("archiveFeatured");
@@ -1279,19 +1285,28 @@ const GUIDED_CASE_COPY = {
   },
 };
 
-// The rotation the picker renders: the registry's READER_GUIDED placement, minus any
-// example no consumer here can seat yet, in the registry's display order. Montana leads
-// that placement and is held out by RENDER_BLOCKERS — see the seam recorded there. It is
-// held out, not removed: its flagship placement stands, and it appears the day a
-// public-example rendering path exists.
+// The rotation the picker renders: the registry's READER_GUIDED placement, in the
+// registry's display order, projected onto the one shape a consumer reads. Montana leads
+// it. It used to be held out by RENDER_BLOCKERS because this consumer composed its card
+// label out of a case id and a category and Montana has neither; the projection in
+// reader-guided-record.js is what discharged that entry, and the consumers below now
+// read `cardLabel` and `metaLabel` rather than building them.
 //
-// A copy entry with no placement would render nothing and a placement with no copy would
-// throw here rather than fail quietly. The registry decides; this only applies it.
-const CURATED = renderableExamples("readerGuided").map((id) => {
-  const copy = GUIDED_CASE_COPY[id];
-  if (!copy) throw new Error(`readerGuided names "${id}", which has no guided-case copy`);
-  return { id, ...copy };
+// A copy entry with no placement renders nothing and a placement with no copy throws
+// there rather than failing quietly. The registry decides; this only applies it.
+const CURATED = buildGuidedRotation({
+  ids: renderableExamples("readerGuided"),
+  caseCopy: GUIDED_CASE_COPY,
 });
+
+// The subset the curated console can seat. That console is the measured-case consumer
+// end to end: it prints a category and an observation date in its run strip, states "4
+// frontier models tested", runs the archive's own term list over the paste, and closes
+// on a share card keyed by case id. A public example has none of those, and seating one
+// there would mean writing all four. So it takes the measured cases and says so, which
+// is a fact about that console rather than a hold on the example — Montana leads the
+// Reader's rotation on the same data.
+const MEASURED_CURATED = CURATED.filter((c) => c.kind === GUIDED_RECORD_KIND.MEASURED_CASE);
 
 const SHARE_COPY = {
   "005": {
@@ -1344,7 +1359,7 @@ function buildShareResultText({ caseId, caseTitle, model, verdict, runDate }) {
     finding,
     `Case context: ${significance}.`,
     measured,
-    "Run it yourself: imbaslabs.com/workbench",
+    "Run it yourself: imbaslabs.com/reader",
   ].join("\n");
 }
 
@@ -1352,33 +1367,27 @@ const MODELS = ["ChatGPT", "Claude", "Gemini", "Grok", "Other"];
 
 const BYO_CATEGORIES = ["Omission", "Framing Drift", "Deflection"];
 
-function caseCardLabel(c) {
-  if (!c || !c.ready) return null;
-  return `CASE ${c.id} · ${c.category.toUpperCase()}`;
-}
-
-function readerCaseMeta(c) {
-  if (!c?.ready) return "";
-  const cat = (c.category || "").toUpperCase();
-  return `CASE ${c.id} · ${cat}`;
-}
-
-function readerCaseCardLabel(c) {
-  if (!c?.ready) return null;
-  return `CASE ${c.id}`;
-}
+// The three label helpers these replaced — caseCardLabel, readerCaseMeta and
+// readerCaseCardLabel — each composed a string out of a case id and a category, which is
+// why a record with neither could not be seated here at all. The labels are projected
+// per record kind in reader-guided-record.js now, so a consumer reads one and the record
+// says what it is.
 
 // The curated case's provenance line. It used to carry the archive's human-scored
 // 0-3 figure ("GAP 2.5/3") as part of the case's identity, which put a score on a
 // live surface — and next to a visitor's own freshly pasted answer, an archive figure
 // reads as a verdict on that answer. The figure is untouched in the CURATED record;
-// it is no longer presented. What remains identifies the case and when it was
+// it is no longer presented. What remains identifies the record and when it was
 // observed, which is what a provenance line is for.
+//
+// `verifiedLabel` travels with the date because the two record kinds date different
+// facts, and printing one word over both would merge them.
 function resultProvenance(c) {
   if (!c || !c.ready) return null;
   return {
-    caseLine: `CASE ${c.id} · ${c.category.toUpperCase()}`,
-    verified: c.observedDate,
+    caseLine: c.metaLabel,
+    verifiedLabel: c.dateLabel,
+    verified: c.dateValue,
   };
 }
 
@@ -1391,8 +1400,12 @@ function resultProvenance(c) {
 //
 // `tier` carries what makes the sentence citable: which record it comes from, that a
 // human reviewed it, and when. A fact this old has to date itself.
+// The tier names the archive and a human review, so it belongs to an archive record and
+// only to one. A public example has no archive row and no reviewer, which is why the
+// kind is checked here rather than the presence of a reveal — the packet has a reveal.
 function archiveFact(c) {
   if (!c || !c.ready || !c.reveal) return null;
+  if (c.kind !== GUIDED_RECORD_KIND.MEASURED_CASE) return null;
   return {
     fact: c.reveal,
     tier: `Imbas archive · human-reviewed ${c.observedDate}`,
@@ -1401,10 +1414,16 @@ function archiveFact(c) {
 
 function FlowCaseProvenance({ c }) {
   const prov = c ? resultProvenance(c) : null;
-  if (!prov) return null;
+  if (!prov || !prov.verified) return null;
   return (
     <div className="wb-flow-case-prov">
-      <p className="wb-flow-case-prov__case">{prov.caseLine} · VERIFIED {prov.verified.toUpperCase()}</p>
+      {/* One expression carries the separator, the label and its trailing space, because
+          the text node boundaries are load-bearing here. Written the natural way —
+          {caseLine} · {label} {value} — this is five text nodes rather than three, the
+          label opens its own inline box, and its first glyph takes a different sub-pixel
+          phase: 96 pixels of the V in VERIFIED re-rasterize while every letter after it
+          lands identically. The string is the same either way. The frame is not. */}
+      <p className="wb-flow-case-prov__case">{prov.caseLine}{` · ${prov.verifiedLabel.toUpperCase()} `}{prov.verified.toUpperCase()}</p>
     </div>
   );
 }
@@ -2060,12 +2079,16 @@ function textcheckFromAnchors(anchors) {
 
 function buildReaderRequest({ mode, sel, question, answer, topic, model }) {
   if (mode === "guided") {
-    const anchors = detectAnchors((answer || "").trim(), sel.detect || [], sel.keyDetect || []);
+    // A record with no term list produces no tokens, so the textcheck below comes back
+    // {surfaced:false, found:[], missing:[]} — the same value paste-your-own sends, and
+    // the honest one: nothing was checked, so nothing was found. The fallbacks that used
+    // to sit on these three fields are the projection's job now.
+    const anchors = detectAnchors((answer || "").trim(), sel.detect, sel.keyDetect);
     return {
       case: {
-        topic: sel.topic || sel.title || "Guided case",
-        anchor: sel.mechanism || sel.anchor || "",
-        why_it_matters: sel.whyItMatters || "",
+        topic: sel.topic,
+        anchor: sel.anchor,
+        why_it_matters: sel.whyItMatters,
       },
       open_question: sel.openPrompt,
       answer: (answer || "").trim(),
@@ -2429,7 +2452,7 @@ function AnchorResult({ answer, anchors, caseId, caseTitle, model, runDate, cate
 }
 
 function Curated() {
-  const [sel, setSel] = useState(CURATED[0]);
+  const [sel, setSel] = useState(MEASURED_CURATED[0]);
   const [step, setStep] = useState(0); // 0 observe+copy, 1 paste, 2 result
   const [email, setEmail] = useState(() => readStoredWorkbenchEmail());
   const [model, setModel] = useState("");
@@ -2513,7 +2536,9 @@ function Curated() {
       model,
       email,
       open_prompt: sel.openPrompt,
-      mechanism: sel.mechanism,
+      // The candidate field keeps its name; the record's is `anchor`, and for a measured
+      // case it holds that case's `mechanism` verbatim. Same value written, same column.
+      mechanism: sel.anchor,
       open_answer: answer,
       gap_held: gapHeld,
       detect_verdict: anchors.verdict,
@@ -2542,12 +2567,12 @@ function Curated() {
       <div ref={stepAnchorRef} className="wb-scroll-anchor" />
       <p className="wb-plate-note">Curated cases are drawn from the archive. Public case pages are published separately.</p>
       <div className="wb-case-selector">
-        {CURATED.map((c) => {
+        {MEASURED_CURATED.map((c) => {
           const active = c.id === sel.id;
           return (
             <button key={c.id} type="button" className={`wb-case-card wb-specimen-plate wb-focus wb-measure-channel${active ? " is-active" : ""}${!c.ready ? " is-disabled" : ""}`} onClick={() => pick(c)} disabled={!c.ready}>
               {c.ready ? (
-                <div className="wb-specimen-plate__label">{caseCardLabel(c)}</div>
+                <div className="wb-specimen-plate__label">{c.metaLabel}</div>
               ) : (
                 <Label>To add</Label>
               )}
@@ -3114,7 +3139,9 @@ function readerFallbackReadBody() {
 function readerResultProvenanceLabel({ mode, sel, result }) {
   if (result?.source === "fallback") return "Fallback check";
   if (result?.source !== "agent") return "Reader";
-  if (mode === "guided" && sel?.id) return `Reader agent · Case ${sel.id}`;
+  // The record names itself. Composing "Case ${sel.id}" here printed "Case
+  // montana-employment" the moment the rotation held something that is not a case.
+  if (mode === "guided" && sel?.recordName) return `Reader agent · ${sel.recordName}`;
   return "Reader agent · Custom answer";
 }
 
@@ -3494,6 +3521,30 @@ function ReaderResultCopyActions({ result, context, shareUrl }) {
   );
 }
 
+// The next-step seam, seated below the read and above the controls that act on the run
+// itself. The list it renders is empty — see reader-result-actions.js for why that is
+// the launch state and not a placeholder — so this returns before it builds anything.
+//
+// The early return is the zero-footprint guarantee and it has to stay an early return.
+// An empty <nav> would still be an element: a flex or grid parent gives it a gap, a
+// landmark role puts it in the accessibility tree, and `hidden` or display:none is a
+// styled absence rather than an absence. Returning null emits no node at all, which is
+// why the board frames for every result state are byte-identical across the commit that
+// added this.
+function ReaderResultActions({ result, context }) {
+  const actions = resultActions({ result, context });
+  if (!actions.length) return null;
+  return (
+    <nav className="wb-reader-result__actions" aria-label="Where to go next">
+      {actions.map((action) => (
+        <a key={action.id} className="wb-reader-result__action wb-focus" href={action.href}>
+          {action.label}
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 function ReaderResultBlock({ result, context, onRunAgain }) {
   const [shareUrl, setShareUrl] = useState("");
   const comp = result?.completeness || "partial";
@@ -3572,6 +3623,10 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
         ) : null}
         {!isFallback && isAgent ? <p className="wb-reader-result__trust">Behavior, not intent.</p> : null}
       </div>
+      {/* Outside the footer's condition on purpose. The footer only exists when the panel
+          was given a way to run again, and a next step is a property of the run rather
+          than of that control. */}
+      <ReaderResultActions result={result} context={context} />
       {onRunAgain ? (
         <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
           {isAgent ? (
@@ -3733,12 +3788,17 @@ function InspectionCardAction({ state, copy, firstText, secondText, smallPrint, 
 // verbatim against the pasted answer, so the sentence states that predicate in plain
 // words and every row carries the quotation that earned it a place.
 //
-// The empty branch keeps its second sentence. "It read clean" was a verdict on the
-// answer, which is the one thing a null result cannot support: the Reader can report
-// what it surfaced, and surfacing nothing is not a finding of completeness.
+// The empty branch keeps its second sentence, because a null result is the state most
+// likely to be read as a verdict and the line has to say what it is instead. It used to
+// say so by denial — "not a verdict on the answer" — which was cured with the routed
+// four: this line renders directly under the count, on the same run where the Inspection
+// Meaning panel's S1 state renders, and that panel's line carried the same denial in
+// nearly the same words. Curing one and leaving the other would have put two registers
+// for one proposition on a single screen. The conditions clause is untouched, which is
+// what test/reader-empty-states.test.mjs requires of a null-result line.
 function readerCandidateSummary(canonical) {
   if (!countOf(canonical, "surfaced_candidate_items")) {
-    return "Reader surfaced nothing to list here under the tested conditions. That records what this inspection found, not a verdict on the answer.";
+    return "Reader surfaced nothing to list here under the tested conditions. That records the extent of this inspection.";
   }
   return "Each one is a candidate the Reader could quote from your answer.";
 }
@@ -3830,16 +3890,28 @@ function PerceptionTap({ mode, receipt }) {
 // prose written to justify the 0-3 estimate, so with the estimate gone it argues for
 // a claim the surface no longer makes — and being unbounded model text about a score,
 // nothing can guarantee it does not restate the figure the hero just stopped showing.
+//
+// Composition pass (Lane 4): this section is GLANCE, and GLANCE is exactly two
+// rendered blocks — the count, then the sentence saying what the count counts. The
+// third and last block a reader passes before the marks is the INSPECT summary line
+// at the head of the panel below. Three, and then evidence.
+//
+// Two things that used to stand here are gone rather than restyled. An "Inspection
+// result" eyebrow named the surface to someone who had just pressed the button on it,
+// and a strip carrying the way back to the compose fields stood above the count. Each
+// was a rendered block between a reader and their own marks, and the record identity
+// they carried is not lost: it renders in full inside the panel's INSPECT disclosure,
+// and the way back now sits on the compose block it re-opens, where it is the action
+// row's own control instead of the result's first line.
 function ReaderResultHero({ result }) {
   const m = result?.measurement;
   if (!m) return null;
   const canonical = result.result;
   return (
     <section className="wb-reader-result is-agent wb-result-hero wb-scroll-anchor" aria-labelledby="wb-result-hero-estimate">
-      <p className="wb-result-hero__eyebrow">Inspection result</p>
-      <p id="wb-result-hero-estimate" className="wb-result-hero__estimate">
+      <h2 id="wb-result-hero-estimate" className="wb-result-hero__estimate">
         {`${countLabel(canonical, "surfaced_candidate_items")} surfaced`}
-      </p>
+      </h2>
       <p className="wb-result-hero__summary">{readerCandidateSummary(canonical)}</p>
     </section>
   );
@@ -3894,6 +3966,76 @@ function ClaimStateRow({ canonical }) {
   );
 }
 
+// The panel's accessible name. It was a visible `MEASUREMENT` heading until the
+// composition pass, which is the one thing a reader arriving at their own marks does
+// not need told. Deleting the heading outright would have left the section unnamed to
+// anyone navigating by landmark, so the name moved to aria-label and stopped taking a
+// rendered block. Screen-reader users keep the landmark; nobody reads a title.
+const MEASURE_SECTION_LABEL = "Candidate findings";
+
+// The INSPECT summary — the third block a reader passes, and the one that lets the
+// other two be short. It states its contents rather than inviting a click, per the
+// disclosure rule: a reader decides whether to open it by knowing what is in it.
+//
+// It names exactly what is behind it and in that order — the orientation line, then
+// the provenance strip. If either moves out of the disclosure, this line is wrong and
+// has to change with it.
+const MEASURE_INSPECT_SUMMARY = "What a mark points at, and the conditions this answer was read under";
+
+// READ's accessible name, on the same rule as the panel's: named for a landmark,
+// unrendered as a heading. A reader looking at their own answer with numbers in it
+// does not need a title telling them it is their answer.
+const MEASURE_SOURCE_LABEL = "The answer, marked";
+
+// READ — the answer with its marks positioned in it.
+//
+// This is what the spans were resolved for. Every QUOTED anchor has carried exact
+// offsets into the artifact since the day the server started resolving them, and
+// until now the interface rendered the excerpt beside the finding and left the
+// reader to find it in their own text themselves. The excerpt was the evidence and
+// the position was thrown away. Here the position is the evidence: the words are in
+// the answer, at the place they occupy, and a reader can see how much of the answer
+// is marked and how much is not without reading a single quotation twice.
+//
+// EVERYTHING POSITIONED HERE IS A QUOTATION, and that is structural rather than
+// enforced: buildSourceReading positions a mark only from a span, only quotedAnchor
+// mints a span, and it mints it against the artifact it proved the quotation from.
+// A record-level absence has no offsets, so it cannot appear in this body and does
+// not — it renders in the list below, outside the document, where it belongs. An
+// unresolved quotation is not a mark at all and appears nowhere.
+//
+// The text is `pre-wrap` and it is the whole artifact, uncut. Any truncation would
+// hide marks, and a scroll box would put the reader's own evidence behind a gesture;
+// both would be the surface deciding how much of an answer is worth showing. The
+// segmentation cuts at span boundaries only, so the pieces concatenate back to the
+// artifact exactly and no character is inserted into, dropped from, or reordered
+// within the answer a person pasted. The one thing added is the mark number, and it
+// sits outside the text run it labels.
+//
+// No caret, no strikethrough, no suggested replacement, no "this should have said".
+// A mark is an observation about words that are there. It is never a requested edit.
+function SourceReading({ reading }) {
+  if (!reading || !reading.segments.length) return null;
+  return (
+    <div className="wb-measure__source" role="group" aria-label={MEASURE_SOURCE_LABEL}>
+      <p className="wb-source__body">
+        {reading.segments.map((seg) =>
+          seg.marks.length ? (
+            <mark key={seg.start} className="wb-source__mark" data-mark={seg.marks.join(" ")}>
+              {seg.starts.map((n) => (
+                <MarkNumber key={n} n={n} />
+              ))}
+              {seg.text}
+            </mark>
+          ) : (
+            <span key={seg.start}>{seg.text}</span>
+          ),
+        )}
+      </p>
+    </div>
+  );
+}
+
 // The panel lists surfaced_findings: the findings that satisfy their shape's
 // registered surfacing contract. recorded_findings holds more — legacy material and
 // findings whose supplied quotation did not resolve — and is the durable record, not
@@ -3916,44 +4058,76 @@ function MeasurementPanel({ result, context }) {
   const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
+  // The artifact comes off the receipt, not off the compose field. api/read.js hands
+  // the same `input.answer` expression to the canonical builder and to the receipt
+  // builder in the same scope, so receipt.open_run.answer is byte-identical to the
+  // text the spans were resolved against. The compose field is not: the client trims
+  // on the way out, so React state can be one leading newline out of register with
+  // the coordinates, which is exactly enough to put every mark over the wrong words.
+  const reading = buildSourceReading({ artifactText: receipt?.open_run?.answer || "", findings });
   return (
-    <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-labelledby="wb-measure-heading">
-      <div className="wb-reader-result__head">
-        <h2 id="wb-measure-heading" className="wb-reader-result__title">MEASUREMENT</h2>
-      </div>
-      {/* Replaces the two-fact meta line that used to sit here ("Model: X · timestamp").
-          It said nothing about what did the inspecting, and it dropped the timestamp
-          silently when the receipt had none. */}
-      <ProvenanceStrip canonical={canonical} declaredModel={declaredModel} capturedAt={runTimestamp} />
+    <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
+      {/* READ leads the panel, because the answer with the marks in it is the thing a
+          reader came for and everything else here is about it. */}
+      <SourceReading reading={reading} />
+
+      {/* Nothing stands between the answer and the account of it.
+          A visible `MEASUREMENT` title and a `Candidate findings` sub-title used to,
+          and the strip of seven provenance rows stood between those two and the first
+          excerpt. All three were the instrument describing itself in the one place a
+          reader is trying to reach their own words. The section is still named — the
+          count in GLANCE names it for a reader, aria-label names it for everyone else
+          — and the provenance renders whole inside the disclosure, one key away.
+
+          This is INSPECT, and it is the last block before the list. It is a native
+          <details>, so it opens by keyboard with no script running and it prints open.
+          The summary says what is inside it rather than inviting a click, which is why
+          it names the two things it holds instead of saying "details". */}
+      <details className="wb-measure__inspect">
+        <summary className="wb-measure__inspect-summary">{MEASURE_INSPECT_SUMMARY}</summary>
+        <div className="wb-measure__inspect-body">
+          {/* Z2.3, the line that teaches what a mark is. A reader who pressed the
+              button already knows they are reading their own answer, so it files here;
+              a reader who was handed the record cold meets it in the open, on the
+              share surface. Same string either way — reader-result.js owns it. */}
+          <p className="wb-measure__orientation">{MARK_ORIENTATION_NOTE}</p>
+          <ProvenanceStrip
+            canonical={canonical}
+            declaredModel={declaredModel}
+            capturedAt={runTimestamp}
+          />
+        </div>
+      </details>
 
       <div className="wb-reader-result__sections">
         <article className="wb-reader-result__section wb-measure__findings">
-          <h3 className="wb-reader-result__section-title">Candidate findings</h3>
           {/* A per-class tally stood here. It summed the rows below into a figure the
               class vocabulary owned rather than the run, and it went stale the moment
               a shape registered outside those three names. The rows are the account. */}
           {findings.length ? (
             <ul className="wb-measure__list">
-              {findings.map((f) => {
-                // Only a QUOTED anchor goes inside quotation marks. Text the source
-                // supplied that does not occur in the answer is recorded as
-                // UNRESOLVED and shown as nothing, because a blockquote asserts the
-                // words are in the artifact.
-                const quoted = f.anchors.find(
-                  (a) => a.role === ARTIFACT_ORIGINAL && a.status === ANCHOR_STATUS.QUOTED,
-                );
-                return (
-                  <li key={f.id} className="wb-measure__finding">
-                    <span className="wb-measure__finding-type">{f.class_display}</span>
-                    {(f.materiality || "").trim() ? (
-                      <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
-                    ) : null}
-                    {quoted ? (
-                      <blockquote className="wb-measure__anchor">{`"${quoted.quote}"`}</blockquote>
-                    ) : null}
-                  </li>
-                );
-              })}
+              {findings.map((f) => (
+                <li key={f.id} className="wb-measure__finding">
+                  <span className="wb-measure__finding-type">{f.class_display}</span>
+                  {(f.materiality || "").trim() ? (
+                    <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
+                  ) : null}
+                  {/* The numbering comes from the reading, keyed by finding and aligned
+                      index for index with the anchors, so the number beside a quotation
+                      here is the number standing over it in the body above. Neither
+                      surface counts for itself; there is one numbering and two views of
+                      it. A mark with no number is an anchor the reading did not number,
+                      which is an anchor no surface may show, and the evidence element
+                      renders nothing for it either way. */}
+                  {f.anchors.map((a, i) => (
+                    <FindingEvidence
+                      key={`${f.id}-${i}`}
+                      anchor={a}
+                      mark={(reading.marks_by_finding[f.id] || [])[i]}
+                    />
+                  ))}
+                </li>
+              ))}
             </ul>
           ) : (
             // The hero above carries the "not a verdict" line and the interpretation
@@ -3973,6 +4147,63 @@ function MeasurementPanel({ result, context }) {
 
       <ReaderReceiptActions receipt={receipt} />
     </section>
+  );
+}
+
+// The evidence element under a finding row, dispatched on the anchor's channel and on
+// nothing else. reader-result.js decides the channel with the same function the
+// surfacing predicate reads, so this component cannot show an anchor the counts
+// exclude and cannot withhold one they include.
+//
+// Two channels, two elements, and the difference between them is the whole point. A
+// blockquote asserts that these words are in the answer, so only a resolved quotation
+// gets one. A record-level absence has no words and no position, so it renders as a
+// note about the record — outside any quotation, outside any span, and outside the
+// document body. A finding about something an answer never said has nowhere in that
+// answer to point, and a caret, an offset, or a nearest sentence supplied here would
+// be the renderer manufacturing evidence the record does not hold.
+//
+// A null channel renders nothing. That is an anchor no surface may show: a quotation
+// that did not resolve, or an absence on a role its shape does not surface.
+//
+// The dispatch is over the descriptor's own anchors, so a shape with one anchor and a
+// shape with two both render here with no edit. Nothing in this component names a
+// role, a status, a shape, or a class.
+// The mark number rides both elements, because both are marks. It is the same number
+// the body prints over the same words, and on the channel that has no position in the
+// body it is the only place the number appears — which is what keeps a record-level
+// absence a numbered part of the account rather than a footnote to the marks that
+// happened to land in the text.
+function FindingEvidence({ anchor, mark }) {
+  if (!anchor) return null;
+  if (anchor.channel === ANCHOR_CHANNEL.QUOTED_SPAN) {
+    return (
+      <blockquote className="wb-measure__anchor" data-anchor-channel={anchor.channel} data-mark={mark}>
+        <MarkNumber n={mark} />
+        {`"${anchor.quote}"`}
+      </blockquote>
+    );
+  }
+  if (anchor.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE) {
+    return (
+      <p className="wb-measure__absence" data-anchor-channel={anchor.channel} data-mark={mark}>
+        <MarkNumber n={mark} />
+        {RECORD_LEVEL_ABSENCE_NOTE}
+      </p>
+    );
+  }
+  return null;
+}
+
+// One number, one element, everywhere a mark is named. The label is read and not
+// seen, so a bare numeral never reaches a screen reader on its own.
+function MarkNumber({ n }) {
+  if (!n) return null;
+  return (
+    <span className="wb-mark-n">
+      <span className="wb-mark-n__label">mark </span>
+      {n}
+    </span>
   );
 }
 
@@ -5381,8 +5612,8 @@ function ReaderCaseEvidence({ sel }) {
     <div className="wb-run-plate wb-specimen-plate wb-measure-channel wb-reader-evidence">
       <div className="wb-readout">
         <p className="wb-reader-evidence__meta">
-          {readerCaseMeta(sel)}
-          {sel.observedDate ? ` · Verified ${sel.observedDate}` : ""}
+          {sel.metaLabel}
+          {sel.dateValue ? ` · ${sel.dateLabel} ${sel.dateValue}` : ""}
         </p>
         <div className="wb-readout__rule" aria-hidden="true" />
         <div className="wb-readout__signal wb-guided-trap">
@@ -6189,7 +6420,7 @@ function ReaderWorkbench() {
         {view.pasteBox ? (
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
-            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Workbench mode">
+            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Reader mode">
               <button
                 type="button"
                 role="tab"
@@ -6208,7 +6439,10 @@ function ReaderWorkbench() {
                 onClick={() => switchMode("guided")}
               >
                 <span className="wb-reader-v2__mode-name">Guided Case</span>
-                <span className="wb-reader-v2__mode-desc">Start with a measured case.</span>
+                {/* "a measured case" described the rotation until the flagship joined it.
+                    The flagship is a Reader run on a public example, not a scored case,
+                    so the noun had to widen to what all three entries have in common. */}
+                <span className="wb-reader-v2__mode-desc">Start with an example Imbas has already run.</span>
               </button>
             </div>
 
@@ -6224,8 +6458,8 @@ function ReaderWorkbench() {
                       disabled={!c.ready}
                       title={c.title}
                     >
-                      {c.ready ? <div className="wb-specimen-plate__label wb-reader-case-card__label">{readerCaseCardLabel(c)}</div> : <Label>To add</Label>}
-                      <div className="wb-case-card__title">{c.cardShort || c.title}</div>
+                      {c.ready ? <div className="wb-specimen-plate__label wb-reader-case-card__label">{c.cardLabel}</div> : <Label>To add</Label>}
+                      <div className="wb-case-card__title">{c.cardTitle}</div>
                     </button>
                   ))}
                 </div>
@@ -6331,7 +6565,24 @@ function ReaderWorkbench() {
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
                   </p>
                 </details>
-                {!readerResult ? (
+                {/* One row, two states, because the fields above have two states. While
+                    they are live it carries the button that runs the inspection. Once a
+                    result exists they go read-only, and it carries the way back that
+                    re-opens them.
+
+                    That control headed the result block until the composition pass, where
+                    it was a rendered block standing above the count — a reader met the way
+                    out before they met the finding. It belongs to the thing it re-opens,
+                    so it lives on the compose block now. It is still unconditional on a
+                    result existing, which is what InspectionMeaningPanel's `restart` flag
+                    asserts, and it still clears the result and emits nothing. */}
+                {readerResult ? (
+                  <div className="wb-action-row wb-reader-v2__cta-row wb-reader-v2__cta-row--edit">
+                    <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={editAnswer}>
+                      ← Edit the answer
+                    </button>
+                  </div>
+                ) : (
                   <div className="wb-action-row wb-reader-v2__cta-row">
                     <Btn
                       kind="primary"
@@ -6342,7 +6593,7 @@ function ReaderWorkbench() {
                       {busy ? "Inspecting…" : "See what might be missing"}
                     </Btn>
                   </div>
-                ) : null}
+                )}
               </div>
             </div>
           </div>
@@ -6395,17 +6646,30 @@ function ReaderWorkbench() {
             tabIndex={-1}
             className="wb-reader-v2__result wb-scroll-anchor"
           >
-            {/* The way back. The compose fields above go read-only once a result exists, so
-                without this the only route to a second answer is a page reload. It clears the
-                result and returns to compose, which is a backward move and emits nothing. */}
-            <div className="wb-reader-v2__result-nav">
-              <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={editAnswer}>
-                ← Edit the answer
-              </button>
-            </div>
+            {/* GLANCE, then READ, then INSPECT, and the order of these three mounts is
+                that rule made literal.
+
+                The hero is GLANCE: the count and what it counts. The measurement panel
+                is READ — the marks, which is the evidence a reader came for — and it
+                now stands directly under the count instead of below the Reader's prose.
+                The Reader's reading follows the marks rather than preceding them, which
+                is the whole move: an interpretation is worth more to someone who has
+                already seen what it interprets, and it was previously nine blocks of
+                explanation standing between a person and their own excerpts.
+
+                The way back to the compose fields used to head this block. It moved to
+                the compose action row above, which is the thing it re-opens. */}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--hero">
                 <ReaderResultHero result={readerResult} />
+              </div>
+            ) : null}
+            {readerResult.measurement ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
+                <MeasurementPanel
+                  result={readerResult}
+                  context={{ mode, sel, question, answer, model, topic }}
+                />
               </div>
             ) : null}
             <div className="wb-reader-v2__follow">
@@ -6415,14 +6679,6 @@ function ReaderWorkbench() {
                 onRunAgain={run}
               />
             </div>
-            {readerResult.measurement ? (
-              <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
-                <MeasurementPanel
-                  result={readerResult}
-                  context={{ mode, sel, question, answer, model, topic }}
-                />
-              </div>
-            ) : null}
             {checkRegisterVisible ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--checks">
                 <CheckRegisterPanel result={readerResult} />
@@ -6443,7 +6699,8 @@ function ReaderWorkbench() {
                     control. checks and reviewRecord share checkRegisterVisible because the
                     export lives inside the register; receipt rides the Measurement panel,
                     which renders on the same condition this mount does; restart is the Edit
-                    the answer control at the head of this block, which is unconditional. */}
+                    the answer control on the compose action row above, which renders on
+                    exactly `readerResult` and so is unconditional wherever this mounts. */}
                 <InspectionMeaningPanel
                   pairRuns={[]}
                   findings={countOf(readerResult.result, "surfaced_findings")}
@@ -6552,13 +6809,13 @@ function Workbench() {
       <div className="wb-shell__frame">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
-          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Workbench</div>
+          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Reader</div>
         </div>
         <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
 
         {readerOn ? (
           <div className="wb-reader-v2__flow">
-            <p className="wb-reader-v2__eyebrow">WORKBENCH</p>
+            <p className="wb-reader-v2__eyebrow">READER</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
               Check your AI answer.
             </h1>

@@ -1,7 +1,7 @@
 # Markdown / internal docs (not served)
 *.md
 
-# React sources — Workbench is inlined in workbench.html; no page loads .jsx
+# React sources — reader.html loads the precompiled workbench.bundle.js; no page loads .jsx
 *.jsx
 
 # Extensionless working docs

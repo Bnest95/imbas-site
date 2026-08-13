@@ -75,8 +75,14 @@ export const PROPAGATION_RANK = {
 // ---------------------------------------------------------------------------
 export const CHECK_UI = {
   register_heading: "Questions worth asking",
+  // Cured with provisional_label below, and not separable from it. This note and that
+  // label render on the same panel — the note once at its head, the label once under
+  // every card — so they appear together on 36 of the 62 photographed board frames.
+  // Retiring ", not a verdict" from the label while this line still said "not verdicts"
+  // two inches above would have left the retired construction on screen in the plural,
+  // where the label's own absence pin could not reach it.
   register_note:
-    "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers, not verdicts — copy a question and check it against a source.",
+    "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
   top_label: "Worth asking first",
   expand_label: "Show the full register",
   collapse_label: "Show fewer",
@@ -90,7 +96,12 @@ export const CHECK_UI = {
     resolver: "Where to check",
     status: "Status",
   },
-  provisional_label: "Provisional — a pointer, not a verdict",
+  // Cured on the standing rule against denial-by-naming: the tail read ", not a
+  // verdict". "Provisional — a pointer" already carries the whole proposition, and the
+  // tail spent the label's last three words naming the reading it was there to prevent
+  // — on a chip that repeats under every card, so a reader met the word "verdict" once
+  // per card and the word "pointer" once per card.
+  provisional_label: "Provisional — a pointer",
   copy_affordance: "Copy the question",
   copied_affordance: "Copied",
   finding_labels: {

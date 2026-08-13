@@ -360,7 +360,7 @@ const PINNED = {
   capture_region: "viewport (state scrolled into it)",
   // url and query_parameters are defaults, not pins: a scenario may name its own page
   // and its own query, and what it names is what gets recorded. See resolveNavigation.
-  url: "/workbench.html",
+  url: "/reader.html",
   query_parameters: "(none)",
   font_strategy: "webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited",
 };
@@ -405,7 +405,7 @@ export function resolveNavigation(scenario, pinned = PINNED) {
 // point: a Workbench scenario cannot opt out of the check it most needs, and a share
 // scenario is not failed by a check its page was never built to satisfy.
 const PAGE_READINESS = {
-  "/workbench.html": {
+  "/reader.html": {
     react: true,
     rendered: "#root, [data-reactroot], main",
   },
@@ -620,7 +620,7 @@ const MIME = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-function startStaticServer(root) {
+export function startStaticServer(root) {
   const state = { apiLeaks: [] };
   const server = createServer((req, res) => {
     const url = new URL(req.url, "http://127.0.0.1");
@@ -664,7 +664,7 @@ function startStaticServer(root) {
 }
 
 // ── CDP client over the global WebSocket ─────────────────────────────────────
-class CDP {
+export class CDP {
   constructor(ws) {
     this.ws = ws;
     this.nextId = 1;
@@ -868,7 +868,7 @@ export function frameAttribution(before, after) {
 }
 
 // ── Browser launch ───────────────────────────────────────────────────────────
-async function launchBrowser(binary) {
+export async function launchBrowser(binary) {
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), "imbas-qa-"));
   const args = [
     "--headless=new",
@@ -950,7 +950,7 @@ async function fetchThroughCache(url) {
 // ── In-page stub + drive helpers ─────────────────────────────────────────────
 // Installed via Page.addScriptToEvaluateOnNewDocument so it is in place before
 // workbench.bundle.js runs, not racing it.
-function buildStubScript(payloads) {
+export function buildStubScript(payloads) {
   return `
 (() => {
   const PAYLOADS = ${JSON.stringify(payloads)};
@@ -996,10 +996,31 @@ function buildStubScript(payloads) {
     el.dispatchEvent(new Event("change", { bubbles: true }));
   };
 
-  const boxed = (el) => {
+  // Whether a reader could see this element, which is not the same question as whether it
+  // has a box — and the difference is measurable in the renderer this board pins.
+  //
+  // A non-zero client rect used to be the whole test. Measured in chromium-headless-shell
+  // r1223 (148.0.7778.96), four ways of hiding an element leave its rect at a full
+  // 760x24: a closed <details> (collapsed by skipping ::details-content, so every
+  // descendant still reports a plausible box), content-visibility: hidden,
+  // visibility: hidden, and opacity: 0. Only display: none zeroes the rect. So the old
+  // test answered true for content nobody could see, and a scenario whose assertSelector
+  // pointed inside a closed disclosure would have photographed a frame without it and
+  // passed. The board photographs pixels; this is the check that has to agree with them.
+  //
+  // checkVisibility is the browser's own answer to exactly this question, and it is not a
+  // rule about disclosures — a summary line inside a closed <details> IS visible and does
+  // return true. The box test stays in front of it because checkVisibility answers true
+  // for a rendered element of zero area, which the camera cannot see either.
+  const seen = (el) => {
     if (!el) return false;
     const r = el.getBoundingClientRect();
-    return r.width > 0 && r.height > 0;
+    if (!(r.width > 0 && r.height > 0)) return false;
+    return el.checkVisibility({
+      contentVisibilityAuto: true,
+      opacityProperty: true,
+      visibilityProperty: true,
+    });
   };
 
   window.__qa = {
@@ -1023,7 +1044,7 @@ function buildStubScript(payloads) {
       el.click();
       return { ok: true };
     },
-    visible(sel) { return boxed(document.querySelector(sel)); },
+    visible(sel) { return seen(document.querySelector(sel)); },
     // innerText, not textContent, so this asserts against text the user can
     // actually see. Case-folded and whitespace-collapsed because Chrome applies
     // text-transform to innerText — an uppercased heading would otherwise never
@@ -1104,7 +1125,7 @@ function buildStubScript(payloads) {
 }
 
 // ── Evaluate helpers ─────────────────────────────────────────────────────────
-async function evaluate(cdp, expression) {
+export async function evaluate(cdp, expression) {
   const r = await cdp.send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true });
   if (r.exceptionDetails) {
     fail(`In-page error: ${r.exceptionDetails.text} ${r.exceptionDetails.exception?.description || ""}`);
@@ -1112,7 +1133,7 @@ async function evaluate(cdp, expression) {
   return r.result.value;
 }
 
-async function waitUntil(cdp, expression, { timeout = 15000, label = expression } = {}) {
+export async function waitUntil(cdp, expression, { timeout = 15000, label = expression } = {}) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
     if (await evaluate(cdp, expression)) return true;
@@ -1123,7 +1144,7 @@ async function waitUntil(cdp, expression, { timeout = 15000, label = expression 
 
 // Layout settle. A capture taken before this produced mis-framed images — the
 // framing transform ran against a height that was still growing.
-async function settle(cdp) {
+export async function settle(cdp) {
   // Both waits are raced against a timer IN THE PAGE, so a promise that never
   // settles degrades to a slightly-early capture instead of a wedged run.
   await evaluate(cdp, "__qa.fontsReady(4000)");
@@ -1136,6 +1157,82 @@ async function settle(cdp) {
     await sleep(50);
   }
   await evaluate(cdp, "__qa.framesSettled(2000)");
+}
+
+// ── Domains, and the deny-by-default gate on all of them ─────────────────────
+// Lifted out of run() for the same reason runSteps was: the comprehension probe needs
+// the identical asset policy, and a probe that let the typefaces fall back to system
+// fonts would measure a different set of line boxes and report them against the board's
+// numbers as though they were comparable.
+export async function installInterception(cdp, blocked) {
+  await cdp.send("Page.enable");
+  await cdp.send("Runtime.enable");
+  await cdp.send("Network.enable");
+
+  await cdp.send("Fetch.enable", { patterns: [{ urlPattern: "*", requestStage: "Request" }] });
+  cdp.on("Fetch.requestPaused", async (params) => {
+    const { requestId, request } = params;
+    let host;
+    try {
+      host = new URL(request.url).hostname;
+    } catch {
+      host = "";
+    }
+    try {
+      if (host === "127.0.0.1") {
+        await cdp.send("Fetch.continueRequest", { requestId });
+      } else if (ALLOWED_ORIGINS.has(host)) {
+        const asset = await fetchThroughCache(request.url);
+        await cdp.send("Fetch.fulfillRequest", {
+          requestId,
+          responseCode: asset.status,
+          responseHeaders: [
+            { name: "content-type", value: asset.contentType },
+            { name: "access-control-allow-origin", value: "*" },
+          ],
+          body: asset.body.toString("base64"),
+        });
+      } else {
+        blocked.push(request.url);
+        await cdp.send("Fetch.failRequest", { requestId, errorReason: "BlockedByClient" });
+      }
+    } catch (e) {
+      // A paused request left unanswered hangs the page; fail it so the run
+      // surfaces a real error instead of a timeout.
+      try {
+        await cdp.send("Fetch.failRequest", { requestId, errorReason: "Failed" });
+      } catch {
+        /* request already gone */
+      }
+      log(`    interception error for ${request.url}: ${e.message}`);
+    }
+  });
+}
+
+// ── Drive a scenario's steps ─────────────────────────────────────────────────
+// Lifted out of capture() so the comprehension probe drives a scenario through this
+// implementation rather than a second copy of it. Two copies of drive semantics is
+// how a probe ends up measuring a state the board never photographs: the same
+// scenario, driven two slightly different ways, is two states.
+export async function runSteps(cdp, steps) {
+  for (const step of steps) {
+    if (step.waitFor) {
+      await waitUntil(cdp, `__qa.visible(${JSON.stringify(step.waitFor)})`, { label: `visible ${step.waitFor}` });
+    } else if (step.waitForText) {
+      await waitUntil(cdp, `__qa.hasText(${JSON.stringify(step.waitForText)})`, { label: `text ${step.waitForText}` });
+    } else if (step.fill) {
+      const r = await evaluate(cdp, `__qa.fill(${JSON.stringify(step.fill)}, ${JSON.stringify(step.text)})`);
+      if (!r.ok) fail(`Drive step failed (fill): ${r.why}`);
+    } else if (step.click) {
+      const r = await evaluate(cdp, `__qa.click(${JSON.stringify(step.click)})`);
+      if (!r.ok) fail(`Drive step failed (click): ${r.why}`);
+    } else if (step.clickText) {
+      const r = await evaluate(cdp, `__qa.clickText(${JSON.stringify(step.clickText)}, ${JSON.stringify(step.text)})`);
+      if (!r.ok) fail(`Drive step failed (clickText): ${r.why}`);
+    } else {
+      fail(`Unrecognised drive step: ${JSON.stringify(step)}`);
+    }
+  }
 }
 
 // ── Capture one scenario at one viewport ─────────────────────────────────────
@@ -1184,24 +1281,7 @@ async function capture({ cdp, scenario, viewportName, serverState, blocked, payl
   }
   await waitUntil(cdp, `__qa.mounted(${JSON.stringify(ready.rendered)})`, { label: `rendered ${nav.page}` });
 
-  for (const step of scenario.steps) {
-    if (step.waitFor) {
-      await waitUntil(cdp, `__qa.visible(${JSON.stringify(step.waitFor)})`, { label: `visible ${step.waitFor}` });
-    } else if (step.waitForText) {
-      await waitUntil(cdp, `__qa.hasText(${JSON.stringify(step.waitForText)})`, { label: `text ${step.waitForText}` });
-    } else if (step.fill) {
-      const r = await evaluate(cdp, `__qa.fill(${JSON.stringify(step.fill)}, ${JSON.stringify(step.text)})`);
-      if (!r.ok) fail(`Drive step failed (fill): ${r.why}`);
-    } else if (step.click) {
-      const r = await evaluate(cdp, `__qa.click(${JSON.stringify(step.click)})`);
-      if (!r.ok) fail(`Drive step failed (click): ${r.why}`);
-    } else if (step.clickText) {
-      const r = await evaluate(cdp, `__qa.clickText(${JSON.stringify(step.clickText)}, ${JSON.stringify(step.text)})`);
-      if (!r.ok) fail(`Drive step failed (clickText): ${r.why}`);
-    } else {
-      fail(`Unrecognised drive step: ${JSON.stringify(step)}`);
-    }
-  }
+  await runSteps(cdp, scenario.steps);
 
   // The stub must have actually served the route. If the app never called it, the
   // state on screen is not the state we think we captured.
@@ -1516,8 +1596,8 @@ async function main() {
   // Verify the server actually serves before capturing anything. Every capture in
   // one earlier run was byte-identical because the server had died and each image
   // was the browser's connection-error page.
-  const probe = await fetch(`${origin}/workbench.html`);
-  if (!probe.ok) fail(`Static server preflight failed: ${probe.status} for ${origin}/workbench.html`);
+  const probe = await fetch(`${origin}/reader.html`);
+  if (!probe.ok) fail(`Static server preflight failed: ${probe.status} for ${origin}/reader.html`);
   const probeBody = await probe.text();
   if (!probeBody.includes("workbench.bundle.js")) {
     fail("Static server preflight served a page without workbench.bundle.js — wrong root?");
@@ -1562,49 +1642,7 @@ async function main() {
   const results = [];
   const blocked = [];
   try {
-    await cdp.send("Page.enable");
-    await cdp.send("Runtime.enable");
-    await cdp.send("Network.enable");
-
-    // Deny-by-default interception.
-    await cdp.send("Fetch.enable", { patterns: [{ urlPattern: "*", requestStage: "Request" }] });
-    cdp.on("Fetch.requestPaused", async (params) => {
-      const { requestId, request } = params;
-      let host;
-      try {
-        host = new URL(request.url).hostname;
-      } catch {
-        host = "";
-      }
-      try {
-        if (host === "127.0.0.1") {
-          await cdp.send("Fetch.continueRequest", { requestId });
-        } else if (ALLOWED_ORIGINS.has(host)) {
-          const asset = await fetchThroughCache(request.url);
-          await cdp.send("Fetch.fulfillRequest", {
-            requestId,
-            responseCode: asset.status,
-            responseHeaders: [
-              { name: "content-type", value: asset.contentType },
-              { name: "access-control-allow-origin", value: "*" },
-            ],
-            body: asset.body.toString("base64"),
-          });
-        } else {
-          blocked.push(request.url);
-          await cdp.send("Fetch.failRequest", { requestId, errorReason: "BlockedByClient" });
-        }
-      } catch (e) {
-        // A paused request left unanswered hangs the page; fail it so the run
-        // surfaces a real error instead of a timeout.
-        try {
-          await cdp.send("Fetch.failRequest", { requestId, errorReason: "Failed" });
-        } catch {
-          /* request already gone */
-        }
-        log(`    interception error for ${request.url}: ${e.message}`);
-      }
-    });
+    await installInterception(cdp, blocked);
 
     for (const name of names) {
       const scenario = SCENARIOS[name];

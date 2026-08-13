@@ -1,4 +1,4 @@
-// inspection.js — Load and render an unlisted Workbench inspection share.
+// inspection.js — Load and render an unlisted Reader inspection share.
 //
 // Mode-aware (Reader v2 P4). The GET /api/inspection/:shareId projection carries a
 // `mode`: "single" (candidate findings), "paired" (the two-question delta), or
@@ -28,6 +28,21 @@ const MEASURE_FINDING_LABEL = {
   "candidate deflection": "Deflection",
 };
 
+// The Reader was called the Workbench until 2026-08-12, and every share row written
+// before then stored that name in its Source Label. The rows are not rewritten — a
+// published share is a dated record — but the product it names has one current name,
+// so the stored string resolves to it here, the same way the finding classes above do.
+// This is a rename, not a change of fact: nothing about what those runs found moves.
+const SOURCE_LABEL = {
+  "Workbench inspection": "Reader inspection",
+  "Workbench two-question test": "Reader two-question test",
+};
+
+function sourceLabel(stored) {
+  const value = stored || "Reader inspection";
+  return SOURCE_LABEL[value] || value;
+}
+
 // Pre-P4 rows were published under an earlier Reader format that printed a
 // completeness label over the answer. That label is retired. A published share is a
 // dated record of what was published, so nothing preserved on the row is rewritten
@@ -42,6 +57,29 @@ const LEGACY_FORMAT_NOTICE =
 // template text because an apostrophe inside template HTML desyncs the scanner in
 // test/zero-score-language.test.mjs.
 const SINGLE_EMPTY = "No candidate finding surfaced under the tested conditions.";
+
+// Z2.3, the line that teaches what a mark is, mirrored from reader-result.js for the
+// same reason the empty-state lines above are mirrored: this page is a plain script and
+// cannot import the module, and a visitor who met these words on the run must not meet
+// different ones here. test/reader-orientation-line.test.mjs pins this copy equal to
+// MARK_ORIENTATION_NOTE and fails if either side moves alone.
+//
+// A cold reader meets it in the open, unlike a runner, who filed it into INSPECT: the
+// runner watched their own marks being made and this page is the first mark a stranger
+// has ever seen. That difference in placement is the whole reason the string is one
+// string — the surfaces disagree about where to put it and may never disagree about
+// what it says.
+const MARK_ORIENTATION_NOTE =
+  "Each mark points at something in this answer, or at something absent from it. Imbas records both.";
+
+// The count and the line that says what it counts, worded exactly as the run surface
+// words them (reader-result.js COUNT_DEFS.surfaced_candidate_items). A share row is a
+// projection and carries no canonical result to count, so the arithmetic happens here
+// over the same findings the page is about to render — which is what keeps Z2.1's
+// invariant true on this surface: the count equals the marks rendered beneath it.
+function surfacedCountLabel(n) {
+  return `${n} ${n === 1 ? "candidate item" : "candidate items"} surfaced`;
+}
 const PAIRED_EMPTY = "This probe surfaced nothing new. That doesn't mean either answer is complete.";
 const LEGACY_MISSING_EMPTY = "The Reader flagged nothing missing under the tested conditions.";
 const LEGACY_SHAPED_EMPTY = "The Reader recorded no shaping under the tested conditions.";
@@ -81,13 +119,13 @@ function formatShareCopy(record, url) {
   const leftOut = Array.isArray(record.what_was_left_out) ? record.what_was_left_out.filter(Boolean) : [];
   const lines = [
     "Inspection receipt",
-    "Unlisted Workbench inspection",
+    "Unlisted Reader inspection",
     url,
     "",
     LEGACY_FORMAT_NOTICE,
     "",
     `Status: Unlisted · Unreviewed`,
-    `Source: ${record.source_label || "Workbench inspection"}${record.case_label ? ` · ${record.case_label}` : ""}`,
+    `Source: ${sourceLabel(record.source_label)}${record.case_label ? ` · ${record.case_label}` : ""}`,
     "",
     `Question: ${(record.question || "").trim()}`,
   ];
@@ -112,13 +150,26 @@ function formatShareCopy(record, url) {
 }
 
 // ── Shared page furniture (single + paired) ───────────────────────────────────
+//
+// The trust note is the record's scope boundary — what this document establishes and
+// what it does not. On the single record it moved into the INSPECT disclosure below,
+// because a stranger arriving cold meets three lines before the count and this was one
+// of them; it is a paragraph about what the page is not, standing where the finding
+// should be. It renders whole, one key away, and `mode` is what decides.
+//
+// Paired and legacy keep it in the masthead. This lane governs the single record's
+// anatomy; recomposing a surface it does not govern would be churn, and the legacy
+// render in particular is a dated record of a retired format that nothing here rewrites.
+const TRUST_NOTE =
+  "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.";
+
 function mastHtml(mode) {
-  const eyebrow = mode === "paired" ? "Workbench two-question test" : "Workbench inspection";
+  const eyebrow = mode === "paired" ? "Reader two-question test" : "Reader inspection";
   return `
     <header class="insp-record__mast">
       <p class="insp-record__eyebrow">${eyebrow}</p>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
-      <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
+      ${mode === "single" ? "" : `<p class="insp-record__trust-note">${escapeHtml(TRUST_NOTE)}</p>`}
     </header>`;
 }
 
@@ -207,7 +258,7 @@ function questionHtml(record) {
 // record with its own date, and this page is the same page afterwards as before.
 function rerunHref(record) {
   const id = (record && record.share_id) || "";
-  return id ? `/workbench.html?rerun=${encodeURIComponent(id)}` : "";
+  return id ? `/reader.html?rerun=${encodeURIComponent(id)}` : "";
 }
 
 function actionsHtml(record) {
@@ -216,7 +267,7 @@ function actionsHtml(record) {
     <div class="insp-actions">
       ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--ghost" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--ghost" href="/reader.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
     </div>
     ${rerun ? `<p class="insp-actions__note">Running it again starts a new record with its own date. This one does not change.</p>` : ""}`;
@@ -253,17 +304,48 @@ function singleFindingHtml(f) {
   </li>`;
 }
 
+// GLANCE on the cold arrival. A stranger who was handed this link never saw the count
+// being made, so the record states it before anything else it holds: how many marks are
+// on it, then what a mark is. Both lines are also on the run surface, worded the same.
+//
+// This is the one place the two surfaces legitimately differ in placement rather than in
+// words. A runner already knows what a mark is by the time they get here and finds the
+// orientation line filed in INSPECT; a stranger does not, so it renders in the open.
+function singleGlanceHtml(record) {
+  const findings = Array.isArray(record.findings) ? record.findings : [];
+  return `
+    <div class="insp-glance">
+      <p class="insp-glance__count">${escapeHtml(surfacedCountLabel(findings.length))}</p>
+      <p class="insp-glance__orientation">${escapeHtml(MARK_ORIENTATION_NOTE)}</p>
+    </div>`;
+}
+
+// INSPECT on the cold arrival. It holds the two things that used to stand above the
+// count: the record's address — which answer, said by what, on what day — and the scope
+// boundary. Neither is deleted and neither is summarised; they render whole.
+//
+// Native <details>, so it opens by keyboard with no script running and prints open. The
+// summary names its contents instead of inviting a click.
+function singleInspectHtml(record) {
+  const anchor = record && record.receipt && record.receipt.anchor;
+  const address = anchor && (anchor.text || "").trim();
+  return `
+    <details class="insp-inspect">
+      <summary class="insp-inspect__summary">What this record is, and what it establishes</summary>
+      <div class="insp-inspect__body">
+        ${address ? `<p class="insp-record__anchor">${escapeHtml(address)}</p>` : ""}
+        <p class="insp-record__trust-note">${escapeHtml(TRUST_NOTE)}</p>
+      </div>
+    </details>`;
+}
+
 function singlePanelHtml(record) {
   const findings = Array.isArray(record.findings) ? record.findings : [];
   const boundary = (record.boundary || "").trim();
   return `
-    <section class="wb-reader-result is-agent wb-measure" aria-label="Inspection result">
-      <div class="wb-reader-result__head">
-        <h2 class="wb-reader-result__title">MEASUREMENT</h2>
-      </div>
+    <section class="wb-reader-result is-agent wb-measure" aria-label="Candidate findings">
       <div class="wb-reader-result__sections">
         <article class="wb-reader-result__section wb-measure__findings">
-          <h3 class="wb-reader-result__section-title">Candidate findings</h3>
           ${findings.length
             ? `<ul class="wb-measure__list">${findings.map(singleFindingHtml).join("")}</ul>`
             : `<p class="wb-reader-result__empty">${escapeHtml(SINGLE_EMPTY)}</p>`}
@@ -274,10 +356,18 @@ function singlePanelHtml(record) {
     </section>`;
 }
 
+// GLANCE, then READ, then INSPECT — and on this surface the order of these calls is
+// that rule. Identity, the count, what a mark is; then the question and the marks it
+// produced; then everything a reader may want and nobody needs first.
+//
+// The record's address and its scope boundary used to sit third and fourth, above the
+// question. They are inside the disclosure now, which is why the count could move up
+// to meet a reader instead of arriving after two paragraphs about what the page is not.
 function renderSingle(root, record) {
   root.innerHTML =
     mastHtml("single") +
-    anchorHtml(record) +
+    singleGlanceHtml(record) +
+    singleInspectHtml(record) +
     questionHtml(record) +
     singlePanelHtml(record) +
     receiptHtml(record) +
@@ -435,12 +525,14 @@ function renderLegacy(root, record) {
   const shaped = (record.how_it_was_shaped || "").trim();
   const inspectionNote = (record.inspection_note || "").trim();
   const paragraphs = (record.the_read || "").split(/\n\n+/).filter(Boolean);
-  const provenance = [record.source_label, record.case_label].filter(Boolean).join(" · ");
+  const provenance = [record.source_label && sourceLabel(record.source_label), record.case_label]
+    .filter(Boolean)
+    .join(" · ");
   const boundary = (record.boundary || "").trim();
 
   root.innerHTML = `
     <header class="insp-record__mast">
-      <p class="insp-record__eyebrow">Workbench inspection</p>
+      <p class="insp-record__eyebrow">Reader inspection</p>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
       <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
     </header>
@@ -505,7 +597,7 @@ function renderLegacy(root, record) {
     <div class="insp-actions">
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-full">Copy full receipt</button>
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
-      <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+      <a class="insp-btn insp-btn--primary" href="/reader.html?reader=1">Test another answer</a>
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
     </div>
     ${reportSeamHtml()}`;
@@ -583,7 +675,7 @@ function renderError(root, message) {
       <p class="insp-error__body">This link may be incorrect, or the share was removed.</p>
       <p class="insp-error__hint">${escapeHtml(message || "")}</p>
       <div class="insp-actions">
-        <a class="insp-btn insp-btn--primary" href="/workbench.html?reader=1">Test another answer</a>
+        <a class="insp-btn insp-btn--primary" href="/reader.html?reader=1">Test another answer</a>
         <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
       </div>
     </div>`;
