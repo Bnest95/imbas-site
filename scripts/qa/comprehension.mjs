@@ -185,11 +185,16 @@ export const STATES = [
     sel: SHARE_LEGACY,
     substitution:
       "No dense-record share scenario exists, and registering one would fill none of " +
-      "the cells that are empty here: the forwarded composition renders no positioned " +
-      "mark at any mark load, so first mark px is null by composition rather than by " +
-      "record. share-legacy is measured instead because it is the one forwarded " +
-      "composition that carries a raw answer at all (pre-P4 rows, api/inspection-share.js " +
-      "legacyRecordToPublic), which is what makes the answer columns resolvable.",
+      "the cells that are empty here, because the cause is the composition and the " +
+      "projection rather than the density of the record. Per branch: share-single (P4, " +
+      "api/inspection-share.js p4RecordToPublic) carries no answer onto the published " +
+      "record, so that path receives no source body at all and a positioned mark has " +
+      "nothing to be positioned in. share-legacy (pre-P4, legacyRecordToPublic) does " +
+      "carry the answer under G3, and inspection.js renders it at " +
+      ".insp-context__text--answer as escaped plain text in a single paragraph — a body " +
+      "with no span structure a positioned mark could sit in either. [data-mark] occurs " +
+      "zero times across inspection.js. share-legacy is measured because that carried " +
+      "answer is what makes the answer columns resolvable.",
   },
   { floor: "deposit 390 forwarded cold", scenario: "share-legacy", view: 390, sel: SHARE_LEGACY, substitution: "As above." },
 ];

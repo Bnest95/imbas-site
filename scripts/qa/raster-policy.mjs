@@ -79,6 +79,62 @@
 //
 // Nothing was activated in response. `RASTER_POLICIES` is still empty, the entry
 // below is still retired, and this block grants no allowance of any kind.
+//
+// ── INSTRUMENTED RECURRENCE, 2026-08-13 ──────────────────────────────────────
+//
+// The harness now records which renderer process took each frame, armed before the
+// first capture of a run. Three full boards were captured on a tree at `7d2d5c2`
+// with that instrumentation live, and the same frame differed again on one of them:
+// `curated-readout--mobile`, run 2 of 3, producing the same alternate byte-state
+// already retained from the event above. This time the run kept the identity the
+// 2026-08-10 run did not.
+//
+// What the three runs recorded: one renderer pid held across all 64 captures in each
+// run — 93328, 93436, 93471 — with zero replacements and zero crashes. Stated in the
+// two-halves form, and never to be compressed to one:
+//
+//   FIRST HALF. Renderer-process replacement is falsified for these three
+//   instrumented runs only. That closes the conditional above for them and for
+//   nothing else: the demonstrated cold-render mechanism could only reach a
+//   mid-board event if something replaced the renderer mid-run, and in these three
+//   runs nothing did.
+//
+//   SECOND HALF. The 2026-08-10 event remains unattributed. Its renderer identity
+//   was never retained, so nothing in the evidence that run kept can confirm or rule
+//   out a mid-board replacement. These runs say nothing about it.
+//
+// Write both halves out whenever this is described. Never compress them to "the
+// flicker was diagnosed", and never to "renderer replacement is ruled out." One
+// claim is falsified in an instrumented sequence, the other is still open, and one
+// can stand while the other stays open.
+//
+// The classification held. The DOM snapshot hashed identically in all three runs and
+// the scroll offset read 567 in all three, so the two byte-states are still one
+// layout rastered two ways. The difference sits inside x[0..1124] y[1..314] of the
+// 1125 × 2436 frame, stopping dead at device row 315: 74,615 differing pixels of
+// 2,740,500, 62,089 of them at channel delta 1, tapering to 6 pixels at delta 15.
+//
+// `backdrop-filter` and compositor raster timing are recorded here as a mechanism
+// class consistent with that spatial pattern, and never as a demonstrated cause. No
+// run on 2026-08-13 demonstrated a cause for any observed difference.
+//
+// One figure above has moved and is left as written: the board reached 62 captures
+// when that paragraph was composed and now reaches 64, across 32 scenarios at two
+// viewports. The argument it carries is unaffected — this scenario is still reached
+// deep into a run, in a renderer already reused many times over.
+//
+// WHY THIS IS NOT APPENDED TO `HISTORICAL_RASTER_OBSERVATIONS`. That array holds
+// retired *policies*: entries carrying `declaredBounds`, `maxRgbDelta` and
+// `maxDifferingPixels` that a founder ruling once set and a later ruling retired,
+// each pinned to a committed fixture. This observation has no ruling behind it, no
+// bounds, no ceilings, and its frames are untracked working evidence. Writing it in
+// that shape would mint numbers no ruling authorized and hand a tolerance somewhere
+// to be found. It is recorded here, in prose, where it grants nothing.
+//
+// Nothing was activated in response, again. `RASTER_POLICIES` is still empty, every
+// scenario at every viewport is still compared byte-for-byte, and this block still
+// grants no allowance of any kind. The frame remains a standing STOP for founder
+// ruling. Full record: `docs/qa/LANE4-ACCEPTANCE-RECORD-2026-08-12.md` §2.3–§2.4.
 
 import zlib from "node:zlib";
 
