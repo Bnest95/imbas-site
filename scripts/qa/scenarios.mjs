@@ -218,7 +218,147 @@ const SINGLE_EMPTY_READ = {
   inspection_note: SINGLE_READ.inspection_note,
 };
 
-function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_READ, declaredModel = "" } = {}) {
+// ── The dense acceptance record ──────────────────────────────────────────────
+// Nine marks on one answer: six positioned in it, three recorded against it as a
+// whole. Every other fixture here carries one to three. This one exists because a
+// composition that reads well at two marks can still fail at nine, and the failure
+// modes only appear at density — marks crowding each other, one span opening inside
+// another's paragraph, the record-level items losing their footing at the end of a
+// long list.
+//
+// PROVENANCE. The content is ported verbatim from the visual-direction review lane
+// at /Users/brendan/Documents/Claude/scratch/imbas-visual-directions/shared/fixture.data.js,
+// sha256 a80f88963b195bea4dc504444ec4bd5949ecf21123e0acef260e0bd16c380533, record
+// id "deposit". Six paragraphs, nine marks, unchanged. It is authorized as a QA
+// acceptance fixture and nothing else: not production evidence, not a public
+// example, not an archive record, and it never enters Imbas custody or reaches a
+// consumer surface. Like every fixture in this file the answer is written by hand.
+//
+// WHAT THE PORT SETTLED. The review lane drew two of its nine marks as a bracketed
+// REGION rather than a line, under a presentation vocabulary that called them
+// "in-document-region" against the other four's "in-document-span". That reads like
+// a second positioning mechanism and is not one. The lane's own record gives both
+// of them anchor_status QUOTED against original_answer, and both regions turn out
+// to be single contiguous paragraphs. So a region is a quotation that runs longer,
+// and it resolves through the ordinary path: the model proposes the passage, the
+// server locates it, buildSourceReading cuts at its boundaries like any other. No
+// new enum member, no new producer, no branch.
+const DEPOSIT_QUESTION = "My landlord kept my whole security deposit. What can I do?";
+
+const DEPOSIT_ANSWER = [
+  "If your landlord kept your entire security deposit, you have options. Start by reviewing your lease and any move-out paperwork you kept, then write to the landlord and ask for an itemized statement of every deduction.",
+  "Most states give a landlord a set number of days after move-out to return the deposit or send that itemization. The window usually falls somewhere between 14 and 45 days. Once it has passed without an itemization, your position is much stronger.",
+  "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+  "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live. Your best move is to look up your state's landlord-tenant statute or talk to a local attorney.",
+  "If the landlord still will not pay after a written demand, small claims court is the usual next step. The filing fee is modest and you generally do not need a lawyer to appear. Whether that is worth your time is a judgment only you can make.",
+  "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+].join("\n\n");
+
+// The nine, in the record's order, which is the order the lane numbered them in and
+// NOT the order they occur in the answer — mark 4 opens before mark 3 does. That is
+// the numbering buildSourceReading publishes, so the body and the list agree on
+// which mark is which even where the body runs out of order.
+//
+// The last three carry no anchor. They are the items the answer never reaches, and
+// an empty anchor is how a finding says so: the production path resolves it to
+// ABSENT and the panel states it as record-level absence with no position. Giving
+// them a quotation to point at is the one thing that would falsify this fixture.
+function depositMeasurement() {
+  const findings = [
+    {
+      type: "candidate framing issue",
+      anchor: "The window usually falls somewhere between 14 and 45 days.",
+      materiality: "A numeric range is given with no jurisdiction and no source. The next sentence turns the range into a consequence, so a reader who takes it as their own deadline is reading a general figure as a specific one.",
+    },
+    {
+      type: "candidate framing issue",
+      anchor: "Once it has passed without an itemization, your position is much stronger.",
+      materiality: "A conditional legal consequence is stated as a general result. What a lapsed window provides depends on which statute applies, and the sentence records the result without the condition it runs on.",
+    },
+    {
+      type: "candidate deflection",
+      anchor: "I'm not able to tell you what your particular state requires, because deposit rules vary a great deal and I don't know where you live.",
+      materiality: "The jurisdiction question is turned back after jurisdiction-bound points were already answered. The window in paragraph two and the wear-and-tear line in paragraph three are both state-bound, and both were answered.",
+    },
+    {
+      // The first of the two the review lane bracketed. The whole paragraph is the
+      // quotation because the reading is the sorting, not any one example in it.
+      type: "candidate framing issue",
+      anchor: "Normal wear and tear is not a deductible item in most places. Faded paint, carpet worn along a walking path, and small nail holes sit on the wear side of that line. A broken door, a burn in the countertop, or a hole in the drywall sit on the damage side.",
+      materiality: "The paragraph sorts six examples onto two sides of a line and names nobody who draws it. It is legible as a standard without stating one.",
+    },
+    {
+      type: "candidate deflection",
+      anchor: "Whether that is worth your time is a judgment only you can make.",
+      materiality: "The cost question is handed back at the point the answer reached a number. The preceding sentence calls the filing fee modest without giving it, so the judgment handed back is the one the missing figure would inform.",
+    },
+    {
+      // The second bracketed one, and the second whole paragraph.
+      type: "candidate missing item",
+      anchor: "Keep every message in writing. A dated letter or email creates a record you can bring with you, and in some states it also starts the clock the statute runs on.",
+      materiality: "The paragraph describes a clock a statute runs on and records no term for it. The clock is named here and nowhere else in the answer.",
+    },
+    {
+      type: "candidate missing item",
+      anchor: "",
+      materiality: "The answer treats the sum as a security deposit throughout. Many leases collect last month's rent alongside a deposit, and several states hold the two under different rules with different return windows. The answer records no distinction between them.",
+    },
+    {
+      type: "candidate missing item",
+      anchor: "",
+      materiality: "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or missing itemization, up to a multiple of the sum withheld. The answer names no such term.",
+    },
+    {
+      type: "candidate missing item",
+      anchor: "",
+      materiality: "The answer begins at the point the deposit was already withheld. Several states give a departing tenant a right to request an inspection before move-out and to be told what would be deducted, which is the step that produces the documentation the first paragraph asks for. The answer records no such right.",
+    },
+  ];
+
+  const finding_counts = {};
+  for (const t of CANDIDATE_FINDING_TYPES) finding_counts[t] = 0;
+  for (const f of findings) finding_counts[f.type]++;
+
+  return {
+    findings,
+    finding_counts,
+    gap_estimate: 4,
+    estimate_rationale:
+      "Nine candidate observations on one answer, three of them terms the answer never reaches. Unvalidated.",
+    estimate_type: ESTIMATE_TYPE_SINGLE,
+    estimate_scale_version: ESTIMATE_SCALE_VERSION,
+    candidate_method_version: CANDIDATE_METHOD_VERSION,
+    unvalidated: true,
+  };
+}
+
+const DEPOSIT_READ = {
+  completeness: "partial",
+  the_read:
+    "The answer gives a range of days, a wear-and-tear line, and a small claims step, and it declines the jurisdiction question in the middle of them. The points it answers are as state-bound as the one it declines. It never separates the deposit from last month's rent, never names what a late itemization costs a landlord, and never mentions the inspection a tenant can ask for before moving out.",
+  what_was_left_out: [
+    "Whether any part of the sum was collected as last month's rent, which several states hold under a different rule.",
+    "What the governing statute attaches to a late or missing itemization.",
+    "That several states give a departing tenant a right to a pre-move-out inspection.",
+  ],
+  how_it_was_shaped:
+    "It states a range as what usually holds and turns it into a consequence, and it hands back the cost question at the point it reached a number.",
+  inspection_note: SINGLE_READ.inspection_note,
+};
+
+// The question and answer are parameters rather than constants because the dense
+// acceptance record is read on its own text, and a payload that resolved its nine
+// anchors against a different answer would resolve none of them. Every caller that
+// does not pass them gets the synthetic pair, so nothing else in this file changes
+// shape. Both travel together: the receipt's source_content_hash covers the pair,
+// and the canonical result's spans are offsets into the answer alone.
+function singleReadPayload({
+  measurement = singleMeasurement(),
+  read = SINGLE_READ,
+  declaredModel = "",
+  question = SYNTHETIC_QUESTION,
+  answer = SYNTHETIC_ANSWER,
+} = {}) {
   const payload = {
     completeness: read.completeness,
     the_read: read.the_read,
@@ -231,7 +371,7 @@ function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_RE
 
   // Check Register — real assembler, real span resolution against the answer.
   const checks = buildCheckRegister({
-    artifacts: { original_answer: SYNTHETIC_ANSWER },
+    artifacts: { original_answer: answer },
     artifactId: "original_answer",
     findings: measurement.findings
       .filter((f) => f.check)
@@ -242,16 +382,16 @@ function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_RE
   // Canonical result — the endpoint's OWN adapter, not a copy of it. This is what the
   // interface renders from, so a fixture without it captures a state the endpoint
   // cannot emit. Built before the receipt because the receipt carries it (schema 1.1).
-  const canonical = buildCanonicalSingle(measurement, SYNTHETIC_ANSWER, checks);
+  const canonical = buildCanonicalSingle(measurement, answer, checks);
 
   // Receipt: built by the real builder, hashed by the real canonicalizer, so the
   // fixture carries a genuinely valid content_hash instead of an invented one.
   const receipt = buildSingleReceipt({
     generatedAt: FROZEN_TIMESTAMP,
-    question: SYNTHETIC_QUESTION,
+    question: question,
     topic: "",
     declaredModel,
-    answer: SYNTHETIC_ANSWER,
+    answer: answer,
     inspection: {
       completeness: payload.completeness,
       the_read: payload.the_read,
@@ -265,7 +405,7 @@ function singleReadPayload({ measurement = singleMeasurement(), read = SINGLE_RE
       reader_model_version: MODEL,
       inspector_prompt_version: READER_PROMPT_VERSION,
       inspector_run_conditions: INSPECTOR_RUN_CONDITIONS,
-      source_content_hash: sha256Hex(`${SYNTHETIC_QUESTION}\n${SYNTHETIC_ANSWER}`),
+      source_content_hash: sha256Hex(`${question}\n${answer}`),
       reader_output_hash: sha256Hex(JSON.stringify(payload)),
       run_timestamp: FROZEN_TIMESTAMP,
       request_id: FROZEN_REQUEST_ID,
@@ -781,6 +921,19 @@ const DRIVE_SINGLE_SUBMIT = [
 
 const DRIVE_SINGLE = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-measure__list li.wb-measure__finding" }];
 
+// The dense record is typed in the same two fields by the same two steps. What it
+// waits on is a mark in the body, not a row in the list: the rows would render from
+// the payload even if every span had failed to position, and this fixture exists to
+// photograph the positions.
+const DRIVE_DEPOSIT = [
+  { fill: ".wb-reader-v2__field--answer textarea", text: DEPOSIT_ANSWER },
+  { waitFor: ".wb-reader-v2__reveal textarea" },
+  { fill: ".wb-reader-v2__reveal textarea", text: DEPOSIT_QUESTION },
+  { waitFor: "button.wb-reader-cta:not([disabled])" },
+  { click: "button.wb-reader-cta" },
+  { waitFor: ".wb-measure__source mark.wb-source__mark" },
+];
+
 // The empty read cannot wait on a finding row, because the whole point is that no row
 // exists. It waits on the panel's empty line instead. Waiting on the finding list
 // would hang until the timeout and report a harness fault for a state the product
@@ -944,6 +1097,49 @@ export const SCENARIOS = {
       "The closing line lowers the stakes of a question the person asked",
     ],
     assertSelector: ".wb-measure__list li.wb-measure__finding",
+  },
+
+  // The density case. Every other single-mode frame carries one to three marks, and a
+  // composition can read well at that count and still fail at nine. This one puts six
+  // marks in one body — two of them whole paragraphs, one of them opening before a
+  // mark numbered lower — and three record-level items under a list long enough to
+  // lose them.
+  //
+  // It is also the ported acceptance record, and porting it settled a question. The
+  // review lane drew two of its nine as bracketed regions rather than lines, which
+  // looked like a second positioning mechanism the production path did not have. It
+  // is not one: a region is a longer quotation, and both of these resolve through the
+  // ordinary path with no branch, no new enum member, and no fixture-only behavior.
+  // The frame is the proof — the renderer consuming it is the same renderer that
+  // consumes single-findings, reached by the same drive steps.
+  "deposit-fixture": {
+    name: "deposit-fixture",
+    drivable: true,
+    state: "Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it",
+    expected:
+      "The answer renders with six marks positioned in it, numbered in the record's order rather than the document's, so mark 4 opens before mark 3 does. Two of the six cover whole paragraphs. Below it the list carries nine rows, and the last three state record-level absence with no quotation and no position. The count reads '9 candidate items surfaced'.",
+    routes: {
+      "/api/read": () =>
+        singleReadPayload({
+          measurement: depositMeasurement(),
+          read: DEPOSIT_READ,
+          question: DEPOSIT_QUESTION,
+          answer: DEPOSIT_ANSWER,
+        }),
+    },
+    steps: DRIVE_DEPOSIT,
+    // The count, one mark from each end of the body, and the absence line the last
+    // three rows share. The two bracketed passages are asserted by their opening
+    // words: they are the marks that would be missing if a region needed a mechanism
+    // this path does not have.
+    assertText: [
+      "9 candidate items surfaced",
+      "The window usually falls somewhere between 14 and 45 days.",
+      "Normal wear and tear is not a deductible item in most places.",
+      "Keep every message in writing.",
+      "Recorded against this answer as a whole. The inspection returned no excerpt for it, so the reading stands without one.",
+    ],
+    assertSelector: ".wb-measure__source mark.wb-source__mark",
   },
 
   // The paired scenarios were fixture-only until Pass 2B-A2: their payloads were
