@@ -990,13 +990,9 @@ const WORKBENCH_FLOW_CSS = `
   color: rgba(226, 212, 196, 0.92);
   margin: 0;
 }
-.wb-result-hero__why {
-  font-family: ${SANS};
-  font-size: 0.9375rem;
-  line-height: 1.5;
-  color: rgba(196, 182, 166, 0.82);
-  margin: 0.45rem 0 0;
-}
+/* .wb-result-hero__why followed __eyebrow out for the same reason and by the same
+   rule: it styled a line the composition pass stopped rendering, and a rule with no
+   consumer left in the tree only asks the next reader to hunt for one. */
 .wb-guided-reveal {
   margin-top: 0.75rem;
 }
@@ -1892,12 +1888,27 @@ function validateCuratedPaste(text, sel) {
   return "";
 }
 
+// Both returns share ANSWER_BODY_STYLE because both render the same pasted answer into
+// the same slot; a wrap rule that reached only one of them would leave the overflow in
+// place for every answer that happened to take the other branch.
+const ANSWER_BODY_STYLE = {
+  whiteSpace: "pre-wrap",
+  fontFamily: SERIF,
+  fontSize: 15,
+  lineHeight: 1.55,
+  color: C.text,
+  // Matches .wb-answer-row__text and .wb-source__body over the same content: a URL,
+  // hash or ID with no space in it wraps instead of running past the panel, and
+  // ordinary prose is untouched because break-word breaks nothing that already fits.
+  overflowWrap: "break-word",
+};
+
 function HighlightedAnswer({ text, terms, litTerms }) {
   const litSet = litTerms || new Set(terms.filter((t) => t.found).map((t) => t.term));
   const foundTerms = terms.filter((t) => t.found && litSet.has(t.term)).map((t) => t.term);
   const spans = anchorSpans(text, foundTerms);
   if (!spans.length) {
-    return <div style={{ whiteSpace: "pre-wrap", fontFamily: SERIF, fontSize: 15, lineHeight: 1.55, color: C.text }}>{text}</div>;
+    return <div style={ANSWER_BODY_STYLE}>{text}</div>;
   }
   const nodes = [];
   let cursor = 0;
@@ -1911,7 +1922,7 @@ function HighlightedAnswer({ text, terms, litTerms }) {
     cursor = end;
   });
   if (cursor < text.length) nodes.push(<span key="tail">{text.slice(cursor)}</span>);
-  return <div style={{ whiteSpace: "pre-wrap", fontFamily: SERIF, fontSize: 15, lineHeight: 1.55, color: C.text }}>{nodes}</div>;
+  return <div style={ANSWER_BODY_STYLE}>{nodes}</div>;
 }
 
 // ---- CANDIDATE RECORD → REPOSITORY (captured pool) ----

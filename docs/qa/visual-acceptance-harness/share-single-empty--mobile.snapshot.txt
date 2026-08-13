@@ -111,7 +111,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Reader inspection"
+h1 "Reader inspection"
 p "Unlisted · Unreviewed"
 p "0 candidate items surfaced"
 p "Each mark points at something in this answer, or at something absent from it. Imbas records both."

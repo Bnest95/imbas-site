@@ -9281,7 +9281,7 @@ main > .close::before {
     margin-bottom: 0.75rem;
   }
 
-  /* — Your Experience: Workbench primary, suggest secondary — */
+  /* — Your Experience: Reader primary, suggest secondary — */
   main .your-experience__layout {
     gap: 1.35rem;
   }

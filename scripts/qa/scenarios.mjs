@@ -1554,6 +1554,14 @@ export const SCENARIOS = {
     drivable: true,
     canned: true,
     routes: {},
+    // RETAINED BY RULING, not by inertia. `reader=0` reaches the curated-cases-lead
+    // branch that §E superseded, so the product reason for keeping it is gone and the
+    // question of deleting it has been asked. It stays because this scenario is the
+    // standing reproducer of the instrumented nondeterministic frame: the §2.3/§2.4
+    // evidence program runs through curated-readout--mobile, and every `npm test`
+    // accumulates more of it passively. Deleting the branch deletes the only known
+    // observation platform for an anomaly that is still open.
+    // Revisit when either is true: the anomaly closes, or a second reproducer exists.
     query: "reader=0",
     state: "The curated case console, first screen — provenance and run strip with no score",
     expected:
