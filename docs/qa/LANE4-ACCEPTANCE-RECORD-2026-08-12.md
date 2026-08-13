@@ -13,8 +13,9 @@ wrote it used.
 
 Where a pushed commit message on this branch states a claim in a broader form than the form
 recorded here, **the form recorded here governs.** This lane rewrites no pushed commit
-message, so both forms stay readable and the narrower one rules. Section 2.4 names the one
-place that applies.
+message, so both forms stay readable and the narrower one rules. Two places apply, and both
+are in the pushed message at `7d2d5c2`: §2.4 for the renderer-identity claim, §2.6 for the
+count of frames that moved.
 
 ---
 
@@ -264,11 +265,19 @@ first.** Captures write to `--out`; a clean diff writes nothing. The evidence al
 was preserved through the whole acceptance.
 
 One file arrived later, during the founder gate: a second retention sidecar for the
-already-quarantined alternate byte-state, `…2026-08-13T02-45-11-446Z-5962bef2.json`. It is a
-sidecar only. It added no directory, it overwrote nothing, and it did not touch the retained
-PNG, because sidecars are keyed to the observation rather than to the frame and the record
-says so in its own text. The file count reads 1,508 and the scenario-directory count still
-reads 61.
+already-quarantined alternate byte-state, `…2026-08-13T02-45-11-446Z-5962bef2.json`. One file
+is all that is new. It added no directory and it destroyed nothing. The earlier sidecar for
+the same frame, `…2026-08-12T23-23-28-500Z-5cf469fc.json`, still stands beside it at its
+original mtime, because sidecars are keyed to the observation rather than to the frame and
+the record says so in its own text. The file count reads 1,508 and the scenario-directory
+count still reads 61.
+
+**Stated precisely, because "nothing was touched" would be wrong.** `retainDifferingFrame`
+writes the frame unconditionally — `writeAtomic(framePath, candidateBuf)` — at a path keyed
+by the frame's own sha256. So the retained PNG *was* rewritten at 02:46:52Z and its mtime
+moved. Its bytes could not move, because the path is the hash of the bytes written to it.
+Every quarantine comparison in this record hashes content, so a moved mtime is invisible to
+them and they remain exactly true as stated.
 
 **That sidecar's writer is not identified, and this record says so rather than assign one.**
 What the evidence establishes:
@@ -284,8 +293,10 @@ What the evidence establishes:
   318,422 candidate bytes against 318,055 baseline bytes, `head_commit` `7d2d5c2`, and
   `renderer.run.recorded: true` with one pid, zero replacements, zero crashes.
 - A second `npm test` at 02:56:56Z, on the same tree, wrote nothing to quarantine at all —
-  the directory hashed byte-for-byte identical before and after. Both suite runs passed
-  identically at 1382/0/13. So whatever wrote it does not write on every run.
+  the directory hashed byte-for-byte identical before and after. Every later full suite run,
+  including the ones with this document present, added no file either: the count held at
+  1,508 and the newest mtime anywhere in the tree stayed 02:46:52Z. Every suite run at the
+  gate passed identically at 1382/0/13. So whatever wrote it does not write on every run.
 - No test in this repository photographs a board scenario: `runSteps`,
   `installInterception`, `captureFrame`, `screenshotBeyondViewport` and
   `Page.captureScreenshot` occur zero times across `test/*.test.mjs`. Every test call site of
@@ -294,6 +305,35 @@ What the evidence establishes:
 Those last two points do not sit comfortably together, and this record leaves the tension
 visible instead of resolving it with a guess. Nothing was deleted, no capture was re-run to
 tidy it, and the observation stands as written.
+
+### 2.6 What changed against master — the governing form
+
+This is a different axis from §2.2. §2.2 counts agreement *across the three board runs*. This
+counts the committed baselines *against master*, and the two questions have different answers.
+
+```
+tracked files under docs/qa/visual-acceptance-harness/ : 129   (64 png + 64 snapshot + manifest.md)
+changed against 4f7b239                                : 127
+frames (png) changed                                   :  62  of 64
+snapshots changed                                      :  64  of 64
+manifest.md changed                                    :   1
+frames carrying master's exact bytes                   :   2
+```
+
+**Two frames did not move.** Both are named, and neither is an anomaly:
+
+- **`curated-readout--mobile.png`**, blob `d889f874`, sha256 `3be27310…`. Its baseline is
+  retained unchanged, as §2.3 records. The acceptance wrote the bytes master already had.
+- **`share-not-found--mobile.png`**, blob `b4dd2998`, sha256 `b1a71bda…`. Its DOM snapshot
+  *did* change (`7543ede5` → `4148e599`) — the nav label moved `"Workbench" → "The Reader"`
+  and two hrefs moved `/workbench.html → /reader.html`. Neither is visible inside the
+  photographed mobile viewport: the nav is collapsed there, and an href is not rendered text.
+  The desktop frame for the same scenario did move. A snapshot that changes while its frame
+  does not is the board working as specified — it photographs the viewport.
+
+**This section governs.** The pushed commit message at `7d2d5c2` opens "Every frame on the
+board moved." Sixty-two of sixty-four moved. That message stays as written, because this lane
+rewrites no pushed history, and the count above is the governing one.
 
 ---
 
