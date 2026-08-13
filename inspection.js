@@ -167,7 +167,7 @@ function mastHtml(mode) {
   const eyebrow = mode === "paired" ? "Reader two-question test" : "Reader inspection";
   return `
     <header class="insp-record__mast">
-      <p class="insp-record__eyebrow">${eyebrow}</p>
+      <h1 class="insp-record__eyebrow">${eyebrow}</h1>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
       ${mode === "single" ? "" : `<p class="insp-record__trust-note">${escapeHtml(TRUST_NOTE)}</p>`}
     </header>`;
@@ -532,7 +532,7 @@ function renderLegacy(root, record) {
 
   root.innerHTML = `
     <header class="insp-record__mast">
-      <p class="insp-record__eyebrow">Reader inspection</p>
+      <h1 class="insp-record__eyebrow">Reader inspection</h1>
       <p class="insp-record__status">Unlisted · Unreviewed</p>
       <p class="insp-record__trust-note">This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation.</p>
     </header>
@@ -668,12 +668,60 @@ function wireReport(shareId) {
   });
 }
 
-function renderError(root, message) {
+// ── The four states this page can fail in ────────────────────────────────────
+//
+// One title used to serve all of them, so a visitor whose connection dropped, or whose
+// server failed, was told their record does not exist. Each state names itself now, and
+// "Inspection not found." is reserved for the one condition where the API says exactly
+// that. No state is described by what it is not.
+//
+// The hint paragraph stays in every state, empty, because it carries the bottom margin
+// that sets the gap above the actions. Dropping it would move a photographed frame for
+// a change that is only about wording.
+const ERROR_STATES = {
+  // Reached only when the API answers `not_found`. Byte-identical to what this page has
+  // always rendered there, which is why the board's share-not-found frames do not move.
+  not_found: {
+    title: "Inspection not found.",
+    body: "This link may be incorrect, or the share was removed.",
+  },
+  // No share id in the URL, or an id the API rejects as malformed. The link is the
+  // problem, and it is the one failure a visitor can act on.
+  incomplete_link: {
+    title: "This inspection link is incomplete.",
+    body: "",
+  },
+  // The service could not serve a record it may well hold: sharing unconfigured (503),
+  // the store unreachable (502), or a response this page does not recognise. None of
+  // those means the record is missing, and the old title claimed it did.
+  unavailable: {
+    title: "Inspections aren't available right now.",
+    body: "",
+  },
+  // The fetch never completed, so the service was never reached and said nothing.
+  unreachable: {
+    title: "Couldn't reach this inspection. Check your connection and try again.",
+    body: "",
+  },
+};
+
+// The API's own vocabulary, read straight: `not_found` and `invalid` are the only two
+// answers that say something about the request. Everything else that lands here —
+// `unconfigured`, `airtable`, an unrecognised error, or a body that failed to parse —
+// is the service failing, so it defaults to unavailable rather than to not-found.
+function errorStateFor(data) {
+  if (data && data.error === "not_found") return "not_found";
+  if (data && data.error === "invalid") return "incomplete_link";
+  return "unavailable";
+}
+
+function renderError(root, state) {
+  const copy = ERROR_STATES[state] || ERROR_STATES.unavailable;
   root.innerHTML = `
     <div class="insp-error" role="status">
-      <h1 class="insp-error__title">Inspection not found.</h1>
-      <p class="insp-error__body">This link may be incorrect, or the share was removed.</p>
-      <p class="insp-error__hint">${escapeHtml(message || "")}</p>
+      <h1 class="insp-error__title">${copy.title}</h1>
+      <p class="insp-error__body">${copy.body}</p>
+      <p class="insp-error__hint"></p>
       <div class="insp-actions">
         <a class="insp-btn insp-btn--primary" href="/reader.html?reader=1">Test another answer</a>
         <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
@@ -692,7 +740,7 @@ async function main() {
   const root = document.getElementById("insp-record-root");
   const shareId = parseShareId();
   if (!shareId) {
-    renderError(root, "");
+    renderError(root, "incomplete_link");
     return;
   }
   root.innerHTML = `<p class="insp-loading" role="status">Loading inspection…</p>`;
@@ -700,12 +748,12 @@ async function main() {
     const res = await fetch(`/api/inspection/${encodeURIComponent(shareId)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok || !data.record) {
-      renderError(root, data.error === "unconfigured" ? "Sharing is not configured on this deployment." : "");
+      renderError(root, errorStateFor(data));
       return;
     }
     renderRecord(root, data.record);
   } catch {
-    renderError(root, "Network error while loading this inspection.");
+    renderError(root, "unreachable");
   }
 }
 

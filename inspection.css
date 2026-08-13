@@ -21,6 +21,29 @@
   color: rgba(230, 175, 130, 0.9);
 }
 
+/* The eyebrow is the line that names a successful record, so it is the h1. Putting the
+   record into the outline is the whole change, and it must not cost a pixel.
+   Two rules otherwise reach an h1 sitting here: the global `h1` block, and `.page h1`
+   at (0,1,1) — which is why the class alone at (0,1,0) is not enough, and is exactly
+   what moved ten frames on the first attempt. This selector is (0,2,1), so it wins,
+   and it restates every property either of those two would land on: font-family,
+   font-size, letter-spacing, color and margin from `.page h1`, plus line-height and
+   font-weight from the global block. Those last two are what the element already
+   computed as a <p> — 1.6 inherited from body, 400 from the paragraph default — and
+   they are written down because as an h1 nothing else supplies them.
+   The declarations are a copy of the rule above, not a revision of it. Change one and
+   change both, or the tag starts deciding how the line looks. */
+.insp-record__mast h1.insp-record__eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, var(--mono-min));
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(230, 175, 130, 0.9);
+}
+
 .insp-record__status {
   margin: 0 0 0.55rem;
   font-family: var(--font-mono);

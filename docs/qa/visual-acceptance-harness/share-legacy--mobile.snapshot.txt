@@ -124,7 +124,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Reader inspection"
+h1 "Reader inspection"
 p "Unlisted · Unreviewed"
 p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
 p "This inspection was published under an earlier Reader format that rated how complete an answer was. That rating is retired and is not shown. Everything else below is preserved exactly as it was published."

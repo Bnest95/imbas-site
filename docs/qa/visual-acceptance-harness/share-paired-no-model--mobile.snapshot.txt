@@ -129,7 +129,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Reader two-question test"
+h1 "Reader two-question test"
 p "Unlisted · Unreviewed"
 p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
 p "Captured 9 July 2026. The answering system was not recorded. Answers change; this record doesn't."
