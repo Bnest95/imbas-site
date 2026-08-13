@@ -6,7 +6,7 @@ capture_region: viewport (state scrolled into it)
 color_scheme: light
 device_scale_factor: 3
 font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
-framed_on: .insp-record__anchor
+framed_on: .insp-glance__count
 image_diff: enabled
 locale: en-US
 mobile_emulation: true
@@ -123,7 +123,7 @@ viewport: 375x812
       "reviewed_status": "Unreviewed",
       "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
-      "source": "Workbench inspection",
+      "source": "Reader inspection",
       "visibility": "unlisted"
     }
   }
@@ -133,17 +133,20 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Workbench inspection"
+p "Reader inspection"
 p "Unlisted · Unreviewed"
-p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
+p "2 candidate items surfaced"
+p "Each mark points at something in this answer, or at something absent from it. Imbas records both."
+details expanded=false
+summary "What this record is, and what it establishes"
 p "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't."
+p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
 h3 "Question"
 p "My landlord still has my security deposit. How long do they have to return it?"
-h2 "MEASUREMENT"
-h3 "Candidate findings"
 span "Omission"
 span "The deadline is set by state law and varies."
 blockquote "\"A landlord must return a security deposit within 30 days of the tenant moving out.\""
 span "Framing Drift"
 span "The closing line lowers the stakes of a question the person asked."
 blockquote "\"so there is usually nothing to worry about\""
+p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."

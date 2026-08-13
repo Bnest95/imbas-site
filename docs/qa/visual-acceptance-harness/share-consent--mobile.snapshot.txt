@@ -13,9 +13,9 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1248
+scroll_offset: 1316
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 375x812
 
 ## payload
@@ -86,7 +86,7 @@ viewport: 375x812
             "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
           },
           "provisional": true,
-          "provisional_label": "Provisional — a pointer, not a verdict",
+          "provisional_label": "Provisional — a pointer",
           "ranking": {
             "demonstrability": "comparative",
             "independent_conflict_count": 0,
@@ -233,7 +233,7 @@ viewport: 375x812
             "text": "A landlord must return a security deposit within 30 days of the tenant moving out."
           },
           "provisional": true,
-          "provisional_label": "Provisional — a pointer, not a verdict",
+          "provisional_label": "Provisional — a pointer",
           "ranking": {
             "demonstrability": "comparative",
             "independent_conflict_count": 0,
@@ -265,9 +265,9 @@ viewport: 375x812
           "trigger": "Trigger",
           "verification": "Worth asking"
         },
-        "provisional_label": "Provisional — a pointer, not a verdict",
+        "provisional_label": "Provisional — a pointer",
         "register_heading": "Questions worth asking",
-        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers, not verdicts — copy a question and check it against a source.",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
         "resolver_labels": {
           "authority": "Check against an authority",
           "calculation": "Re-run the calculation",
@@ -688,16 +688,32 @@ span "2"
 span "Copy the one question Imbas builds, then ask your own AI."
 span "3"
 span "Paste its reply back and watch what surfaces."
-button "← Edit the answer" disabled=false
-p "Inspection result"
-p "2 candidate items surfaced"
+h2 "2 candidate items surfaced"
 p "Each one is a candidate the Reader could quote from your answer."
-div "SOMETHING TO CHECK"
-p "This inspection surfaced candidates. They are listed below."
-h2 "THE READER"
-p "Reader agent · Custom answer"
-h3 "The read"
-p "The answer gives one deadline as if it were the only one. Security deposit deadlines are set state by state, and the answer never says which state it is describing, so a reader in the wrong state gets a confident number that does not apply to them. It then closes by lowering the stakes of the question that was actually asked."
+mark "A landlord must return a security deposit within 30 days of the tenant moving out."
+span "1"
+span "mark"
+span "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions."
+mark "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about."
+span "2"
+span "mark"
+details expanded=false
+summary "What a mark points at, and the conditions this answer was read under"
+p "Each mark points at something in this answer, or at something absent from it. Imbas records both."
+span "What produced this"
+dt "Answer model (as declared)"
+dd "none given"
+dt "Inspection provider"
+dd "anthropic"
+dt "Inspection model"
+dd "claude-opus-4-8"
+dt "Inspection model build"
+dd "not pinned"
+span "Omission"
+span "The deadline is set by state law and varies. The answer gives one number without naming which jurisdiction it applies to."
+blockquote "\"A landlord must return a security deposit within 30 days of the tenant moving out.\""
+span "1"
+span "mark"
 h3 "Share this inspection"
 p "This creates an unlisted public page containing the question and the evidence shown below. Anyone with the link can view it."
 p "The page will show: your question · the date this answer was captured and the AI system you named · the candidate gaps this inspection flagged, each with the short quoted excerpt from your answer it points to · the boundary line (“Reader inspections are discovery, not evidence…”)."

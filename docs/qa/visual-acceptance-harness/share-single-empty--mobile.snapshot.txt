@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: ?share=Ab3xQ7zK9mNpR2sTuV4w
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 142
+scroll_offset: 72
 timezone: UTC
 url: /inspection.html
 viewport: 375x812
@@ -101,7 +101,7 @@ viewport: 375x812
       "reviewed_status": "Unreviewed",
       "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
-      "source": "Workbench inspection",
+      "source": "Reader inspection",
       "visibility": "unlisted"
     }
   }
@@ -111,15 +111,19 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
+p "Reader inspection"
 p "Unlisted · Unreviewed"
-p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
+p "0 candidate items surfaced"
+p "Each mark points at something in this answer, or at something absent from it. Imbas records both."
+details expanded=false
+summary "What this record is, and what it establishes"
 p "Captured 9 July 2026, ChatGPT. Answers change; this record doesn't."
+p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
 h3 "Question"
 p "My landlord still has my security deposit. How long do they have to return it?"
-h2 "MEASUREMENT"
-h3 "Candidate findings"
 p "No candidate finding surfaced under the tested conditions."
 p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
 h3 "What the AI system said"
 p "This record preserved no quoted words from the answer."
+h3 "What sources appeared"

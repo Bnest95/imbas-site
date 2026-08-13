@@ -13,9 +13,9 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1633
+scroll_offset: 2367
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 375x812
 
 ## payload
@@ -62,9 +62,9 @@ viewport: 375x812
           "trigger": "Trigger",
           "verification": "Worth asking"
         },
-        "provisional_label": "Provisional — a pointer, not a verdict",
+        "provisional_label": "Provisional — a pointer",
         "register_heading": "Questions worth asking",
-        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers, not verdicts — copy a question and check it against a source.",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
         "resolver_labels": {
           "authority": "Check against an authority",
           "calculation": "Re-run the calculation",

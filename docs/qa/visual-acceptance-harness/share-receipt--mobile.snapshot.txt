@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: ?share=Ab3xQ7zK9mNpR2sTuV4w
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1202
+scroll_offset: 1120
 timezone: UTC
 url: /inspection.html
 viewport: 375x812
@@ -123,7 +123,7 @@ viewport: 375x812
       "reviewed_status": "Unreviewed",
       "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
-      "source": "Workbench inspection",
+      "source": "Reader inspection",
       "visibility": "unlisted"
     }
   }

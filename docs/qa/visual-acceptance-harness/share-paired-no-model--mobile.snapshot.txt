@@ -119,7 +119,7 @@ viewport: 375x812
       "reviewed_status": "Unreviewed",
       "run_declarations": [],
       "share_id": "Ab3xQ7zK9mNpR2sTuV4w",
-      "source": "Workbench two-question test",
+      "source": "Reader two-question test",
       "visibility": "unlisted"
     }
   }
@@ -129,7 +129,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Workbench two-question test"
+p "Reader two-question test"
 p "Unlisted · Unreviewed"
 p "This is a Reader inspection of answer behavior, not a reviewed archive case. Reader outputs are not professional advice. Factual claims should be independently verified before citation."
 p "Captured 9 July 2026. The answering system was not recorded. Answers change; this record doesn't."

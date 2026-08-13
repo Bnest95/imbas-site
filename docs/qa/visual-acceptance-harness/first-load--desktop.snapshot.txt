@@ -15,7 +15,7 @@ reduced_motion: reduce
 screenshot_format: png
 scroll_offset: 141
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 1440x900
 
 ## payload
@@ -28,12 +28,12 @@ a "The Volunteer Gap" href="/volunteer-gap.html"
 a "How It Works" href="/how-it-works.html"
 a "Whitepaper" href="/whitepaper.html"
 a "Case Archive" href="/archive.html"
-a "Workbench" href="/workbench.html"
+a "The Reader" href="/reader.html"
 a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "WORKBENCH"
+p "READER"
 h1 "Check your AI answer."
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
 button[tab] disabled=false selected=true
@@ -41,7 +41,7 @@ span "Paste Your Own"
 span "Bring any AI answer."
 button[tab] disabled=false selected=false
 span "Guided Case"
-span "Start with a measured case."
+span "Start with an example Imbas has already run."
 p "Paste an AI answer below. The Reader inspects what it might be missing."
 div "AI answer received"
 textarea disabled=false readonly=false value_len=0

@@ -13,9 +13,9 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 159
+scroll_offset: 174
 timezone: UTC
-url: /workbench.html
+url: /reader.html
 viewport: 375x812
 
 ## payload
@@ -25,7 +25,6 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "WORKBENCH"
 h1 "Check your AI answer."
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
 button[tab] disabled=false selected=true
@@ -33,7 +32,7 @@ span "Paste Your Own"
 span "Bring any AI answer."
 button[tab] disabled=false selected=false
 span "Guided Case"
-span "Start with a measured case."
+span "Start with an example Imbas has already run."
 p "Paste an AI answer below. The Reader inspects what it might be missing."
 div "AI answer received"
 textarea disabled=false readonly=false value_len=0
