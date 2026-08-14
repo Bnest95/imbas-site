@@ -82,6 +82,15 @@
   --font-display:   "Fraunces", Georgia, "Times New Roman", serif;
   --font-body:      "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-mono:      "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* The reading serif, for quoted answers and the passages measured out of them.
+     Georgia, not Fraunces: Fraunces is the display face and sets headings, and running
+     a reader through a screenful of it is not what it is for. Seven rules already spelt
+     this stack inline as var(--font-serif, Georgia, serif) and rendered from that
+     fallback, because the token they name was never declared anywhere. The other ten
+     said var(--font-serif) with nothing behind it, which does not drop the declaration
+     — it wins, computes to inherit, and quietly serves Inter where a serif was asked
+     for. Declaring it here is what makes both groups mean the same thing. */
+  --font-serif:     Georgia, "Times New Roman", serif;
 
   /* Type scale — four display steps, fluid from 375px to 1440px. The middle term
      is rem + vw rather than vw alone so the scale keeps climbing through the

@@ -91,7 +91,7 @@
       <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
       <span>Imbas</span>
     </a>
-    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <button class="nav__menu-btn" data-shared-nav aria-expanded="false" aria-controls="primary-nav">Menu</button>
     <nav class="nav" id="primary-nav" aria-label="Primary">
       <a href="/volunteer-gap.html">The Volunteer Gap</a>
       <a href="/how-it-works.html">How It Works</a>
@@ -169,22 +169,6 @@
 
 <script>
   (function () {
-    var btn = document.querySelector('.nav__menu-btn');
-    var nav = document.getElementById('primary-nav');
-    if (btn && nav) {
-      btn.addEventListener('click', function () {
-        var open = nav.classList.toggle('is-open');
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && nav.classList.contains('is-open')) {
-          nav.classList.remove('is-open');
-          btn.setAttribute('aria-expanded', 'false');
-          btn.focus();
-        }
-      });
-    }
-
     var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!prefersReducedMotion && !(window.matchMedia && window.matchMedia('(max-width: 900px)').matches)) {
       var dust = document.querySelector('.wb-stage__dust');

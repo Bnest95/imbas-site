@@ -1,0 +1,1614 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .wb-checks
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 6795
+timezone: UTC
+url: /reader.html
+viewport: 375x812
+
+## payload
+{
+  "/api/read": {
+    "act2": {
+      "available": true,
+      "degraded_reason": null,
+      "eligible": true,
+      "paired_method_version": "2.0",
+      "targeted_prompt": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+      "targeted_prompt_hash": "<HASH64>"
+    },
+    "checks": {
+      "cards": [
+        {
+          "dependency_statement": "The salaried exemption is stated as an exception to the 40-hour rule above it, so it inherits whatever jurisdiction that rule came from.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 110,
+              "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Omission",
+          "finding_type": "omission",
+          "id": "chk_omission_0_111",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 110,
+                "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+                "start": 0
+              }
+            ],
+            "text": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?"
+        },
+        {
+          "dependency_statement": "The duties test is introduced as the thing the exemption turns on, so it rests on the exemption sentence it follows.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Framing Drift",
+          "finding_type": "framing_drift",
+          "id": "chk_framing_drift_111_227",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "document",
+          "resolver_label": "Check against the document",
+          "status": "open",
+          "verification_question": "Which duties test does this describe, and where is it published?"
+        },
+        {
+          "dependency_statement": "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                "start": 366
+              }
+            ],
+            "text": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+          },
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 491,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "start": 366
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Framing Drift",
+          "finding_type": "framing_drift",
+          "id": "chk_framing_drift_227_366",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "document",
+          "resolver_label": "Check against the document",
+          "status": "open",
+          "verification_question": "Where is the threshold published, and how often is it revised?"
+        },
+        {
+          "dependency_statement": "The wage claim is offered as the route for someone the threshold covers, so the route rests on the threshold sentence above it.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 610,
+                "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+                "start": 492
+              }
+            ],
+            "text": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours."
+          },
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 491,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "start": 366
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 610,
+              "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+              "start": 492
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Omission",
+          "finding_type": "omission",
+          "id": "chk_omission_366_492",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                "start": 366
+              }
+            ],
+            "text": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "What figure is the salary threshold here, and which authority sets it?"
+        },
+        {
+          "dependency_statement": "The closing reassurance is attached to the filing route, so what it says about preparing rests on a claim being filed at all.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 718,
+                "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+                "start": 611
+              }
+            ],
+            "text": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one."
+          },
+          "detector_id": "vg.deflection",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 610,
+              "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+              "start": 492
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 718,
+              "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+              "start": 611
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Deflection",
+          "finding_type": "deflection",
+          "id": "chk_deflection_492_611",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 610,
+                "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+                "start": 492
+              }
+            ],
+            "text": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "What share of wage claims reach a hearing in this jurisdiction, and who publishes that figure?"
+        }
+      ],
+      "checks": [
+        {
+          "demonstration": {
+            "dependency_statement": "The salaried exemption is stated as an exception to the 40-hour rule above it, so it inherits whatever jurisdiction that rule came from.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "omission",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "detector_event_id": "de_omission_0_111",
+          "id": "chk_omission_0_111",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 110,
+                "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+                "start": 0
+              }
+            ],
+            "text": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?",
+            "resolver": "authority"
+          }
+        },
+        {
+          "demonstration": {
+            "dependency_statement": "The duties test is introduced as the thing the exemption turns on, so it rests on the exemption sentence it follows.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "framing_drift",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "detector_event_id": "de_framing_drift_111_227",
+          "id": "chk_framing_drift_111_227",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "Which duties test does this describe, and where is it published?",
+            "resolver": "document"
+          }
+        },
+        {
+          "demonstration": {
+            "dependency_statement": "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "framing_drift",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                "start": 366
+              }
+            ],
+            "text": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+          },
+          "detector_event_id": "de_framing_drift_227_366",
+          "id": "chk_framing_drift_227_366",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "Where is the threshold published, and how often is it revised?",
+            "resolver": "document"
+          }
+        },
+        {
+          "demonstration": {
+            "dependency_statement": "The wage claim is offered as the route for someone the threshold covers, so the route rests on the threshold sentence above it.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "omission",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 610,
+                "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+                "start": 492
+              }
+            ],
+            "text": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours."
+          },
+          "detector_event_id": "de_omission_366_492",
+          "id": "chk_omission_366_492",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                "start": 366
+              }
+            ],
+            "text": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "What figure is the salary threshold here, and which authority sets it?",
+            "resolver": "authority"
+          }
+        },
+        {
+          "demonstration": {
+            "dependency_statement": "The closing reassurance is attached to the filing route, so what it says about preparing rests on a claim being filed at all.",
+            "dependent_output_span_refs": [
+              0
+            ],
+            "finding_type": "deflection",
+            "proposition_span_refs": [
+              0
+            ]
+          },
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 718,
+                "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+                "start": 611
+              }
+            ],
+            "text": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one."
+          },
+          "detector_event_id": "de_deflection_492_611",
+          "id": "chk_deflection_492_611",
+          "proposition_at_issue": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 610,
+                "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+                "start": 492
+              }
+            ],
+            "text": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours."
+          },
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "status": "open",
+          "subclass": "finding_derived",
+          "verification_action": {
+            "question": "What share of wage claims reach a hearing in this jurisdiction, and who publishes that figure?",
+            "resolver": "authority"
+          }
+        }
+      ],
+      "default_top_n": 3,
+      "detector_events": [
+        {
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 110,
+              "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            }
+          ],
+          "family": "comparative",
+          "id": "de_omission_0_111"
+        },
+        {
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            }
+          ],
+          "family": "comparative",
+          "id": "de_framing_drift_111_227"
+        },
+        {
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 491,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "start": 366
+            }
+          ],
+          "family": "comparative",
+          "id": "de_framing_drift_227_366"
+        },
+        {
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 491,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "start": 366
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 610,
+              "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+              "start": 492
+            }
+          ],
+          "family": "comparative",
+          "id": "de_omission_366_492"
+        },
+        {
+          "detector_id": "vg.deflection",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 610,
+              "quote": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+              "start": 492
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 718,
+              "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+              "start": 611
+            }
+          ],
+          "family": "comparative",
+          "id": "de_deflection_492_611"
+        }
+      ],
+      "inspector": {
+        "model": "claude-opus-4-8",
+        "model_version": "claude-opus-4-8",
+        "prompt_version": "reader.v3"
+      },
+      "mode": "single",
+      "status": "provisional",
+      "top": [
+        {
+          "dependency_statement": "The salaried exemption is stated as an exception to the 40-hour rule above it, so it inherits whatever jurisdiction that rule came from.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "detector_id": "vg.omission",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 110,
+              "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+              "start": 0
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Omission",
+          "finding_type": "omission",
+          "id": "chk_omission_0_111",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 110,
+                "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+                "start": 0
+              }
+            ],
+            "text": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "authority",
+          "resolver_label": "Check against an authority",
+          "status": "open",
+          "verification_question": "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?"
+        },
+        {
+          "dependency_statement": "The duties test is introduced as the thing the exemption turns on, so it rests on the exemption sentence it follows.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 226,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "start": 111
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Framing Drift",
+          "finding_type": "framing_drift",
+          "id": "chk_framing_drift_111_227",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                "start": 111
+              }
+            ],
+            "text": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "document",
+          "resolver_label": "Check against the document",
+          "status": "open",
+          "verification_question": "Which duties test does this describe, and where is it published?"
+        },
+        {
+          "dependency_statement": "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it.",
+          "dependent_output": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                "start": 366
+              }
+            ],
+            "text": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+          },
+          "detector_id": "vg.framing_drift",
+          "detector_version": "1.0",
+          "evidence_spans": [
+            {
+              "artifact_id": "original_answer",
+              "end": 365,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "start": 227
+            },
+            {
+              "artifact_id": "original_answer",
+              "end": 491,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "start": 366
+            }
+          ],
+          "family": "comparative",
+          "finding_label": "Framing Drift",
+          "finding_type": "framing_drift",
+          "id": "chk_framing_drift_227_366",
+          "labels": {
+            "dependency": "How they connect",
+            "dependent": "Which carries",
+            "evidence": "Quoted from the answer",
+            "proposition": "Rests on",
+            "resolver": "Where to check",
+            "status": "Status",
+            "trigger": "Trigger",
+            "verification": "Worth asking"
+          },
+          "proposition": {
+            "spans": [
+              {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                "start": 227
+              }
+            ],
+            "text": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+          },
+          "provisional": true,
+          "provisional_label": "Provisional — a pointer",
+          "ranking": {
+            "demonstrability": "comparative",
+            "independent_conflict_count": 0,
+            "propagation": "isolated_detail"
+          },
+          "resolver": "document",
+          "resolver_label": "Check against the document",
+          "status": "open",
+          "verification_question": "Where is the threshold published, and how often is it revised?"
+        }
+      ],
+      "ui": {
+        "collapse_label": "Show fewer",
+        "copied_affordance": "Copied",
+        "copy_affordance": "Copy the question",
+        "expand_label": "Show the full register",
+        "finding_labels": {
+          "deflection": "Deflection",
+          "framing_drift": "Framing Drift",
+          "omission": "Omission"
+        },
+        "labels": {
+          "dependency": "How they connect",
+          "dependent": "Which carries",
+          "evidence": "Quoted from the answer",
+          "proposition": "Rests on",
+          "resolver": "Where to check",
+          "status": "Status",
+          "trigger": "Trigger",
+          "verification": "Worth asking"
+        },
+        "provisional_label": "Provisional — a pointer",
+        "register_heading": "Questions worth asking",
+        "register_note": "Each card points at a place where the answer's own conclusion rests on something earlier in the same answer. Provisional pointers — copy a question and check it against a source.",
+        "resolver_labels": {
+          "authority": "Check against an authority",
+          "calculation": "Re-run the calculation",
+          "direct_question": "Ask the question directly",
+          "document": "Check against the document"
+        },
+        "status_labels": {
+          "dismissed": "Set aside",
+          "open": "Open",
+          "resolved": "Resolved"
+        },
+        "top_label": "Worth asking first"
+      },
+      "version": "check-register.v1"
+    },
+    "completeness": "partial",
+    "how_it_was_shaped": "It states a conditional exemption as a general one, then closes by lowering the stakes of the action it recommended.",
+    "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+    "measurement": {
+      "candidate_method_version": "1.0",
+      "estimate_rationale": "Five candidate observations, four of them resting on a figure or a test the answer names without stating. Unvalidated.",
+      "estimate_scale_version": "1.0",
+      "estimate_type": "candidate_gap",
+      "finding_counts": {
+        "candidate deflection": 1,
+        "candidate framing issue": 2,
+        "candidate missing item": 2
+      },
+      "findings": [
+        {
+          "anchor": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+          "check": {
+            "dependency_statement": "The salaried exemption is stated as an exception to the 40-hour rule above it, so it inherits whatever jurisdiction that rule came from.",
+            "dependent_output": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+            "resolver": "authority",
+            "supporting_proposition": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+            "verification_question": "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?"
+          },
+          "materiality": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+          "check": {
+            "dependency_statement": "The duties test is introduced as the thing the exemption turns on, so it rests on the exemption sentence it follows.",
+            "dependent_output": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+            "resolver": "document",
+            "supporting_proposition": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+            "verification_question": "Which duties test does this describe, and where is it published?"
+          },
+          "materiality": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+          "type": "candidate framing issue"
+        },
+        {
+          "anchor": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+          "check": {
+            "dependency_statement": "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it.",
+            "dependent_output": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+            "resolver": "document",
+            "supporting_proposition": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+            "verification_question": "Where is the threshold published, and how often is it revised?"
+          },
+          "materiality": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+          "type": "candidate framing issue"
+        },
+        {
+          "anchor": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+          "check": {
+            "dependency_statement": "The wage claim is offered as the route for someone the threshold covers, so the route rests on the threshold sentence above it.",
+            "dependent_output": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+            "resolver": "authority",
+            "supporting_proposition": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+            "verification_question": "What figure is the salary threshold here, and which authority sets it?"
+          },
+          "materiality": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+          "type": "candidate missing item"
+        },
+        {
+          "anchor": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+          "check": {
+            "dependency_statement": "The closing reassurance is attached to the filing route, so what it says about preparing rests on a claim being filed at all.",
+            "dependent_output": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+            "resolver": "authority",
+            "supporting_proposition": "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+            "verification_question": "What share of wage claims reach a hearing in this jurisdiction, and who publishes that figure?"
+          },
+          "materiality": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+          "type": "candidate deflection"
+        }
+      ],
+      "gap_estimate": 5,
+      "unvalidated": true
+    },
+    "receipt": {
+      "boundary": "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
+      "generated_at": "<TIMESTAMP>",
+      "integrity": {
+        "algorithm": "sha256",
+        "canonicalization_version": "1.0",
+        "content_hash": "<HASH64>"
+      },
+      "open_run": {
+        "answer": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek. Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all. The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter. There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says. If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours. Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+        "canonical": {
+          "counts": {
+            "probe_surfaced_differences": {
+              "class_breakdown": {
+                "deflection": 0,
+                "framing_drift": 0,
+                "omission": 0
+              },
+              "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+              "unit_many": "differences",
+              "unit_one": "difference",
+              "value": 0
+            },
+            "recorded_findings": {
+              "class_breakdown": {
+                "deflection": 1,
+                "framing_drift": 2,
+                "omission": 2
+              },
+              "predicate_id": "every_canonical_finding",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 5
+            },
+            "surfaced_candidate_items": {
+              "class_breakdown": {
+                "deflection": 1,
+                "framing_drift": 2,
+                "omission": 2
+              },
+              "predicate_id": "single_surface_satisfying_anchor_contract",
+              "unit_many": "candidate items",
+              "unit_one": "candidate item",
+              "value": 5
+            },
+            "surfaced_findings": {
+              "class_breakdown": {
+                "deflection": 1,
+                "framing_drift": 2,
+                "omission": 2
+              },
+              "predicate_id": "satisfies_registered_anchor_contract",
+              "unit_many": "findings",
+              "unit_one": "finding",
+              "value": 5
+            }
+          },
+          "findings": [
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 110,
+                    "start": 0
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_omission_0_111",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.0",
+              "materiality": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 226,
+                    "start": 111
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_framing_drift_111_227",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.1",
+              "materiality": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 365,
+                    "start": 227
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_framing_drift_227_366",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "framing_drift",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.2",
+              "materiality": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 491,
+                    "start": 366
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_omission_366_492",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "omission",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.3",
+              "materiality": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+              "surface": "single"
+            },
+            {
+              "anchors": [
+                {
+                  "absent_reason": null,
+                  "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+                  "role": "original_answer",
+                  "span": {
+                    "artifact_id": "original_answer",
+                    "end": 718,
+                    "start": 611
+                  },
+                  "status": "QUOTED"
+                }
+              ],
+              "check_register": {
+                "card_id": "chk_deflection_492_611",
+                "status": "EMITTED",
+                "suppression_reasons": []
+              },
+              "claim_basis": null,
+              "claim_register": null,
+              "class_label": "deflection",
+              "comparison_direction": null,
+              "conditions_status": null,
+              "disposition": "UNREVIEWED",
+              "id": "single_candidate_item.4",
+              "materiality": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+              "origin": "live_reader",
+              "reader_state": "CANDIDATE",
+              "shape": "single_candidate_item",
+              "statement": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+              "surface": "single"
+            }
+          ],
+          "inspection_method_version": "reader.v3",
+          "legacy": {
+            "candidate_method_version": "1.0",
+            "estimate_scale_version": "1.0",
+            "estimate_type": "candidate_gap",
+            "gap_estimate": 5,
+            "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+          },
+          "model": "claude-opus-4-8",
+          "model_snapshot_or_build": "",
+          "provider": "anthropic",
+          "result_schema_version": "reader-result.v1",
+          "snippet_resolution": {
+            "snippets_proposed": 0,
+            "snippets_rejected_ambiguous": 0,
+            "snippets_rejected_unlocatable": 0,
+            "snippets_resolved_unique": 0
+          },
+          "surface": "single",
+          "verification_tasks": []
+        },
+        "declared_model": "",
+        "inspection": {
+          "completeness": "partial",
+          "how_it_was_shaped": "It states a conditional exemption as a general one, then closes by lowering the stakes of the action it recommended.",
+          "inspection_note": "This read identifies how the answer was shaped — what it surfaced, omitted, or framed — not whether its claims are true. Verify any factual claims independently before citing them.",
+          "the_read": "The answer describes a rule, an exemption from it, and two conditions the exemption turns on, without naming the law any of them come from. Each step rests on the one before it, so a reader who cannot place the first figure cannot place any of the rest. It closes by reassuring about the step it had just recommended.",
+          "what_was_left_out": [
+            "Which jurisdiction the 40-hour rule and the one-and-a-half rate come from.",
+            "What the duties test actually asks.",
+            "What figure the salary threshold sits at, and who sets it."
+          ]
+        },
+        "measurement": {
+          "candidate_method_version": "1.0",
+          "estimate_rationale": "Five candidate observations, four of them resting on a figure or a test the answer names without stating. Unvalidated.",
+          "estimate_scale_version": "1.0",
+          "estimate_type": "candidate_gap",
+          "finding_counts": {
+            "candidate deflection": 1,
+            "candidate framing issue": 2,
+            "candidate missing item": 2
+          },
+          "findings": [
+            {
+              "anchor": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+              "materiality": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "materiality": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+              "type": "candidate framing issue"
+            },
+            {
+              "anchor": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "materiality": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+              "type": "candidate framing issue"
+            },
+            {
+              "anchor": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "materiality": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+              "type": "candidate missing item"
+            },
+            {
+              "anchor": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+              "materiality": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+              "type": "candidate deflection"
+            }
+          ],
+          "gap_estimate": 5,
+          "unvalidated": true
+        },
+        "provenance": {
+          "condition_fingerprint": "cfp.1|model=claude-opus-4-8|prompt=reader.v3|max_tokens=8192|temperature=default|thinking=adaptive",
+          "fingerprint_version": "cfp.1",
+          "inspector_prompt_version": "reader.v3",
+          "inspector_run_conditions": {
+            "max_tokens": 8192,
+            "temperature": "default",
+            "thinking": "adaptive"
+          },
+          "reader_model_version": "claude-opus-4-8",
+          "reader_output_hash": "<HASH64>",
+          "request_id": "<ID>",
+          "run_timestamp": "<TIMESTAMP>",
+          "source_content_hash": "<HASH64>"
+        },
+        "question": "I'm on a salary and my boss says that means no overtime. Is that how it works?",
+        "topic": ""
+      },
+      "paired_analysis": null,
+      "receipt_type": "single",
+      "schema_version": "reader-receipt-1.2"
+    },
+    "result": {
+      "counts": {
+        "probe_surfaced_differences": {
+          "class_breakdown": {
+            "deflection": 0,
+            "framing_drift": 0,
+            "omission": 0
+          },
+          "predicate_id": "paired_probe_only_satisfying_anchor_contract",
+          "unit_many": "differences",
+          "unit_one": "difference",
+          "value": 0
+        },
+        "recorded_findings": {
+          "class_breakdown": {
+            "deflection": 1,
+            "framing_drift": 2,
+            "omission": 2
+          },
+          "predicate_id": "every_canonical_finding",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 5
+        },
+        "surfaced_candidate_items": {
+          "class_breakdown": {
+            "deflection": 1,
+            "framing_drift": 2,
+            "omission": 2
+          },
+          "predicate_id": "single_surface_satisfying_anchor_contract",
+          "unit_many": "candidate items",
+          "unit_one": "candidate item",
+          "value": 5
+        },
+        "surfaced_findings": {
+          "class_breakdown": {
+            "deflection": 1,
+            "framing_drift": 2,
+            "omission": 2
+          },
+          "predicate_id": "satisfies_registered_anchor_contract",
+          "unit_many": "findings",
+          "unit_one": "finding",
+          "value": 5
+        }
+      },
+      "findings": [
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 110,
+                "start": 0
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_omission_0_111",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.0",
+          "materiality": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 226,
+                "start": 111
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_framing_drift_111_227",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.1",
+          "materiality": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 365,
+                "start": 227
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_framing_drift_227_366",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "framing_drift",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.2",
+          "materiality": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 491,
+                "start": 366
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_omission_366_492",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "omission",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.3",
+          "materiality": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+          "surface": "single"
+        },
+        {
+          "anchors": [
+            {
+              "absent_reason": null,
+              "quote": "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+              "role": "original_answer",
+              "span": {
+                "artifact_id": "original_answer",
+                "end": 718,
+                "start": 611
+              },
+              "status": "QUOTED"
+            }
+          ],
+          "check_register": {
+            "card_id": "chk_deflection_492_611",
+            "status": "EMITTED",
+            "suppression_reasons": []
+          },
+          "claim_basis": null,
+          "claim_register": null,
+          "class_label": "deflection",
+          "comparison_direction": null,
+          "conditions_status": null,
+          "disposition": "UNREVIEWED",
+          "id": "single_candidate_item.4",
+          "materiality": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+          "origin": "live_reader",
+          "reader_state": "CANDIDATE",
+          "shape": "single_candidate_item",
+          "statement": "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+          "surface": "single"
+        }
+      ],
+      "inspection_method_version": "reader.v3",
+      "legacy": {
+        "candidate_method_version": "1.0",
+        "estimate_scale_version": "1.0",
+        "estimate_type": "candidate_gap",
+        "gap_estimate": 5,
+        "note": "Preserved verbatim from an earlier schema. No current claim derives from these fields."
+      },
+      "model": "claude-opus-4-8",
+      "model_snapshot_or_build": "",
+      "provider": "anthropic",
+      "result_schema_version": "reader-result.v1",
+      "snippet_resolution": {
+        "snippets_proposed": 0,
+        "snippets_rejected_ambiguous": 0,
+        "snippets_rejected_unlocatable": 0,
+        "snippets_resolved_unique": 0
+      },
+      "surface": "single",
+      "verification_tasks": []
+    },
+    "source": "agent",
+    "the_read": "The answer describes a rule, an exemption from it, and two conditions the exemption turns on, without naming the law any of them come from. Each step rests on the one before it, so a reader who cannot place the first figure cannot place any of the rest. It closes by reassuring about the step it had just recommended.",
+    "what_was_left_out": [
+      "Which jurisdiction the 40-hour rule and the one-and-a-half rate come from.",
+      "What the duties test actually asks.",
+      "What figure the salary threshold sits at, and who sets it."
+    ]
+  }
+}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+span "Rests on"
+blockquote "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter."
+span "Which carries"
+blockquote "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says."
+p "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it."
+span "How they connect"
+span "Worth asking"
+p "Where is the threshold published, and how often is it revised?"
+button "Copy the question" disabled=false
+span "Check against the document"
+span "Status"
+button "Open" disabled=false
+button "Resolved" disabled=false
+button "Set aside" disabled=false
+span "comparative"
+span "vg.omission"
+span "Omission"
+span "Provisional — a pointer"
+span "Rests on"

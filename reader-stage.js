@@ -50,9 +50,25 @@ export const ENTRY_CHIP_ANSWER = "chip-answer";
 // WHY the stage moved, kept strictly separate from WHETHER the stage was entered. An
 // earlier cut fused the two and gated the emit on ADVANCE alone, so no stage a person
 // does not click their way into was recorded at all — whichever stage a settling fetch
-// lands on, and STAGE_RESULT in particular, which is the derived stage for every run
-// that returns a read with no follow-up offer. That is the whole degraded population.
-// The funnel could not see its own middle.
+// lands on, and STAGE_RESULT in particular. That is the whole degraded population, and
+// the funnel could not see its own middle.
+//
+// AMENDED — what STAGE_RESULT actually is. The line above used to describe it as the
+// stage for every run "that returns a read with no follow-up offer", which reads wider
+// than the truth and was cited as if it covered ordinary successful reads. It does not.
+// `deriveStage` branches on `hasAct2`, which the workbench sets from the truthiness of
+// `payload.act2`, and `buildAct2` (api/read.js) returns null on exactly one condition:
+// `measurement` is null. So:
+//
+//   successful read (a measurement exists) → act2 is an OBJECT → STAGE_FOLLOWUP,
+//     including when that object carries eligible:false or available:false. A read with
+//     no follow-up on offer still lands on FOLLOWUP, because the offer's absence is a
+//     field inside act2 rather than the absence of act2.
+//   fallback / degraded read (no measurement) → act2 is null → STAGE_RESULT.
+//
+// STAGE_RESULT is therefore the degraded path and nothing else. The original intent above
+// stands and is why the causes exist: the degraded population is entered without a click
+// and had to become visible to the funnel.
 export const CAUSE_ADVANCE = "advance"; // the stage's primary action, clicked
 export const CAUSE_ASYNC = "async"; // a run settled and moved the stage on its own
 export const CAUSE_DEGRADED = "degraded"; // a fallback body arrived instead of a read

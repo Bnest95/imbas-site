@@ -27,10 +27,10 @@ span "Imbas"
 button "Menu" disabled=false expanded=false
 h1 "Check your AI answer."
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
-button[tab] disabled=false selected=true
+button disabled=false
 span "Paste Your Own"
 span "Bring any AI answer."
-button[tab] disabled=false selected=false
+button disabled=false
 span "Guided Case"
 span "Start with an example Imbas has already run."
 p "Paste an AI answer below. The Reader inspects what it might be missing."

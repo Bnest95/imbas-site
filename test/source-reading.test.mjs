@@ -294,7 +294,7 @@ test("an absence is numbered, and is in no segment anywhere in the body", () => 
   const absence = reading.marks.find((m) => m.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE);
 
   assert.ok(absence, "an absence is a mark the record holds and is counted as one");
-  assert.equal(absence.n, 2, "and it takes its number in the record's own order");
+  assert.equal(absence.n, 2, "and it is numbered behind the passage the document places");
   assert.equal(absence.in_document, false);
   assert.equal(absence.span, null, "with no position, because the record holds none");
   assert.equal(absence.quote, "", "and no words, because there are none");
@@ -304,6 +304,27 @@ test("an absence is numbered, and is in no segment anywhere in the body", () => 
     assert.equal(seg.starts.includes(absence.n), false);
   }
   assert.equal(JSON.stringify(reading.segments).includes(`"${absence.n}"`), false);
+});
+
+test("an absence stays behind the document's marks however early the record lists it", () => {
+  // The record puts the absence FIRST here. Under the numbering this replaced it would
+  // have taken mark 1 and pushed the quotation to 2; a reader would have opened the
+  // answer at mark 2 with mark 1 nowhere in it. Numbering by document order cannot do
+  // that, because an absence has no position to sort by and is dealt its numeral after
+  // everything that has one. Non-positional and last, in that order and for that reason.
+  const reading = readingOf([absentFinding(0), quotedFinding(1, FIRST_SENTENCE)]);
+  const absence = reading.marks.find((m) => m.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE);
+  const quoted = reading.marks.find((m) => m.in_document);
+
+  assert.equal(quoted.n, 1, "the passage a reader can see is the one they see numbered first");
+  assert.equal(absence.n, 2, "and the absence follows it, though the record listed it first");
+
+  // The record's own order is untouched: `marks` still arrives absence-first.
+  assert.deepEqual(
+    reading.marks.map((m) => m.in_document),
+    [false, true],
+    "renumbering must not reorder the record",
+  );
 });
 
 test("NEGATIVE CONTROL — an unresolved quotation is not a mark and is numbered nowhere", () => {
@@ -343,7 +364,13 @@ test("the number over the words in the body is the number beside the quotation i
 
   // The list renders f.anchors in order and reads marks_by_finding[f.id][i]. That index
   // alignment is the whole tie, so it is asserted rather than assumed.
-  let expected = 0;
+  // This walked a counter down the record and asserted the numbering matched it. R4
+  // moved the count to the document, so the counter is gone and what it was standing in
+  // for is asserted directly: each numeral names this exact anchor, no numeral names
+  // two, and the numerals are 1..N with nothing missing. That is the bijection between
+  // canonical identity and displayed numeral, which is the property the counter was
+  // only ever a proxy for.
+  const seen = new Set();
   for (const f of findings) {
     const numbering = reading.marks_by_finding[f.id];
     assert.equal(numbering.length, f.anchors.length, "the numbering must align index for index with the anchors");
@@ -352,15 +379,74 @@ test("the number over the words in the body is the number beside the quotation i
         assert.equal(numbering[i], null);
         return;
       }
-      expected += 1;
-      assert.equal(numbering[i], expected, "numbering runs in the record's order, across findings");
       const mark = reading.marks.find((m) => m.n === numbering[i]);
+      assert.ok(mark, `the list shows mark ${numbering[i]} and the body holds no such mark`);
       assert.equal(mark.finding_id, f.id);
       assert.equal(mark.quote, a.quote);
       assert.equal(mark.channel, a.channel);
+      assert.equal(seen.has(numbering[i]), false, `two anchors were handed mark ${numbering[i]}`);
+      seen.add(numbering[i]);
     });
   }
-  assert.equal(expected, reading.marks.length, "every mark belongs to exactly one anchor");
+  assert.equal(seen.size, reading.marks.length, "every mark belongs to exactly one anchor");
+  assert.deepEqual(
+    [...seen].sort((a, b) => a - b),
+    reading.marks.map((_, i) => i + 1),
+    "the numerals run 1..N with no gap and no repeat",
+  );
+});
+
+test("the numbering is a function of the record and the text, and of nothing else", () => {
+  // Determinism, stated as the property rather than hoped for. Same record, same
+  // answer, same numerals — every time, in any process. A comparator that fell through
+  // to the sort implementation for equal keys would not give this, which is why
+  // byReadingOrder ends on the record index and never returns 0 for two distinct marks.
+  const build = () =>
+    readingOf([
+      quotedFinding(0, LAST_SENTENCE),
+      absentFinding(1),
+      quotedFinding(2, FIRST_SENTENCE),
+      unresolvedFinding(3),
+    ]);
+  const a = build();
+  const b = build();
+  assert.deepEqual(a, b, "two builds of one record disagreed about the numbering");
+
+  // And the reorder is real on this record: the document reverses the record's two
+  // quotations, so a numbering that ignored the document would come out differently.
+  assert.deepEqual(
+    a.marks.map((m) => m.n),
+    [2, 3, 1],
+    "last sentence recorded first, first sentence recorded last, absence numbered behind both",
+  );
+});
+
+test("renumbering moves the numeral and touches nothing that identifies a mark", () => {
+  // The line A1 draws: the numeral is a display key, so it may move; identity is the
+  // finding id and the offsets the server resolved, so those may not. Asserted against
+  // the descriptors themselves rather than against a second copy of the expectation.
+  const findings = [quotedFinding(0, LAST_SENTENCE), quotedFinding(1, FIRST_SENTENCE)].map(describeFinding);
+  const reading = buildSourceReading({ artifactText: ANSWER, findings });
+
+  // `marks` is the record's order, still, mark for mark and field for field.
+  const recorded = findings.flatMap((f) => f.anchors.map((a) => ({ f, a })));
+  assert.equal(reading.marks.length, recorded.length);
+  reading.marks.forEach((m, i) => {
+    assert.equal(m.finding_id, recorded[i].f.id, "the record's order was rearranged");
+    assert.equal(m.quote, recorded[i].a.quote, "a mark was given words the record did not give it");
+    assert.equal(m.channel, recorded[i].a.channel);
+    assert.deepEqual(
+      m.span,
+      { start: recorded[i].a.span.start, end: recorded[i].a.span.end },
+      "an offset moved, so a mark now stands over words it was not resolved against",
+    );
+    // The offsets still cut the answer where they say they do. This is the check that
+    // would catch a renumbering that had reached the spans by way of the sort.
+    assert.equal(ANSWER.slice(m.span.start, m.span.end), m.quote);
+  });
+
+  // Only the numerals came out in the other order.
+  assert.deepEqual(reading.marks.map((m) => m.n), [2, 1]);
 });
 
 // ── The shipped renderer, executed ───────────────────────────────────────────
@@ -386,7 +472,8 @@ function stringConstant(text, name) {
 
 async function renderBody(reading) {
   const { code } = await transform(
-    `${componentSource(SRC, "SourceReading")}\n${componentSource(SRC, "MarkNumber")}\nreturn SourceReading;`,
+    `${componentSource(SRC, "SourceReading")}\n${componentSource(SRC, "MarkNumber")}\n` +
+      `${componentSource(SRC, "findingExplanationId")}\nreturn SourceReading;`,
     { loader: "jsx", jsxFactory: "h", jsxFragment: "Frag" },
   );
   const h = (type, props, ...children) => {
@@ -497,4 +584,141 @@ test("the panel reads its artifact off the receipt, never off the compose field"
     false,
     "the compose field is not the artifact the spans were resolved against",
   );
+});
+
+// ── The mark reaches its explanation (R21) ───────────────────────────────────
+//
+// The mark stood over the words and the explanation sat far below it, and the only
+// thing joining the two was a numeral. A sighted reader could carry the number down
+// the page. A screen reader user was handed "mark 3" and no way to find what 3 meant.
+//
+// The join is aria-details, pointing at the list item that explains the finding, and
+// it is keyed on the CANONICAL FINDING ID rather than on the numeral — so renumbering
+// the display cannot move it, and the body and the list arrive at the same string
+// without either being told what the other used.
+//
+// The two negatives are the point as much as the positive. An absence has no position
+// in the body and an unresolved quotation is not a mark at all, so neither reaches the
+// element that carries the relationship. Those are asserted, not assumed.
+
+function markDetails(tree) {
+  return nodesOfType(tree, "mark").map((m) => ({
+    marks: m.props["data-mark"],
+    details: m.props["aria-details"],
+  }));
+}
+
+test("every mark in the body points at the explanation of its own finding", async () => {
+  const findings = [quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)];
+  const reading = readingOf(findings);
+  const rows = markDetails(await renderBody(reading));
+
+  assert.equal(rows.length, 2);
+  for (const row of rows) {
+    const n = Number(row.marks);
+    const mark = reading.marks.find((m) => m.n === n);
+    assert.equal(
+      row.details,
+      `wb-finding-${mark.finding_id.replace(/[^A-Za-z0-9_-]/g, "-")}`,
+      `mark ${n} must point at the finding it belongs to, not at whatever is nearby`,
+    );
+  }
+  assert.notEqual(rows[0].details, rows[1].details, "two findings, two explanations");
+});
+
+test("the id the body points at is the id the list emits", () => {
+  // Two components, one string. If either side computes it any other way the
+  // relationship dangles and nothing on screen says so.
+  const panel = componentSource(SRC, "MeasurementPanel");
+  assert.match(
+    panel,
+    /<li key=\{f\.id\} id=\{findingExplanationId\(f\.id\)\}/,
+    "the finding's list item must carry the explanation id",
+  );
+  const body = componentSource(SRC, "SourceReading");
+  assert.match(body, /aria-details=/, "the body's marks must carry the relationship");
+  assert.match(
+    body,
+    /findingExplanationId\(findingByMark\.get\(n\)\)/,
+    "and must resolve it through the finding, not through the numeral",
+  );
+});
+
+test("the relationship is keyed on finding identity, so renumbering cannot move it", async () => {
+  // ONE finding, held at the same canonical index in both readings, drawing a different
+  // numeral in each because of what sits in front of it IN THE DOCUMENT. The last
+  // sentence is preceded by another marked passage in the first reading and by nothing
+  // in the second, so it is mark 2 and then mark 1 — the same finding, two numerals.
+  //
+  // The control used to put an absence in front instead, which worked while the count
+  // was the record's. It cannot now: an absence has no position, so it is numbered
+  // behind everything the document places and can never push a quotation along.
+  const forward = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const reverse = readingOf([quotedFinding(1, LAST_SENTENCE)]);
+
+  const detailsForLastSentence = async (reading) => {
+    const tree = await renderBody(reading);
+    const marks = nodesOfType(tree, "mark");
+    const hit = marks.find((m) => answerTextOf(m).join("") === LAST_SENTENCE);
+    assert.ok(hit, "the last sentence must be marked in both readings");
+    return { n: hit.props["data-mark"], details: hit.props["aria-details"] };
+  };
+
+  const a = await detailsForLastSentence(forward);
+  const b = await detailsForLastSentence(reverse);
+  assert.notEqual(a.n, b.n, "the control is only meaningful if the numeral actually moved");
+  assert.equal(
+    a.details,
+    b.details,
+    "the same finding keeps the same explanation id no matter which numeral it drew",
+  );
+});
+
+test("NEGATIVE CONTROL — an absence emits no relationship, because it reaches no mark", async () => {
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), absentFinding(1)]);
+  const absence = reading.marks.find((m) => m.channel === ANCHOR_CHANNEL.RECORD_LEVEL_ABSENCE);
+  const rows = markDetails(await renderBody(reading));
+
+  assert.equal(rows.length, 1, "the absence is not positioned, so it is not a mark in the body");
+  assert.equal(rows[0].marks, "1");
+  const absenceId = `wb-finding-${absence.finding_id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+  for (const row of rows) {
+    assert.equal(
+      String(row.details).split(" ").includes(absenceId),
+      false,
+      "nothing in the body may claim to point at an absence",
+    );
+  }
+});
+
+test("NEGATIVE CONTROL — an unresolved quotation emits no relationship", async () => {
+  const findings = [quotedFinding(0, FIRST_SENTENCE), unresolvedFinding(1)].map(describeFinding);
+  const reading = buildSourceReading({ artifactText: ANSWER, findings });
+  const rows = markDetails(await renderBody(reading));
+
+  assert.equal(rows.length, 1, "an unresolved quotation is not a mark at all");
+  const unresolvedId = `wb-finding-${findings[1].id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+  assert.equal(
+    String(rows[0].details).includes(unresolvedId),
+    false,
+    "a finding whose evidence failed must not be reachable from the answer's words",
+  );
+});
+
+test("the relationship adds no tab stop and no focusable node", async () => {
+  // aria-details rather than a link or a button: a reader passing forty marked words
+  // must not collect forty tab stops on the way to the next control.
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const tree = await renderBody(reading);
+  const focusable = [];
+  (function walk(node) {
+    if (node == null || node === false) return;
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (typeof node !== "object") return;
+    const p = node.props || {};
+    if (["a", "button", "input", "select", "textarea"].includes(node.type)) focusable.push(node.type);
+    if (p.tabIndex != null || p.href != null || p.onClick != null) focusable.push(node.type);
+    if (node.children) walk(node.children);
+  })(tree);
+  assert.deepEqual(focusable, [], "READ stays a document to read, not a field of controls");
 });

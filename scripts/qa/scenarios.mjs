@@ -218,6 +218,179 @@ const SINGLE_EMPTY_READ = {
   inspection_note: SINGLE_READ.inspection_note,
 };
 
+// ── A Check Register with more cards than it shows ───────────────────────────
+// The register shows DEFAULT_TOP_N cards and puts the rest behind a control. Nothing
+// on the board reached that control: every fixture here resolves at most one check, so
+// the eyebrow, the count in the button label and the two states of the disclosure had
+// never been rendered by a driven run. This answer carries five findings whose check
+// blocks all resolve, so the register overflows and the control appears.
+//
+// The five are chained deliberately: each check rests its proposition on one sentence
+// and its dependent output on the next, which is the shape assembleComparativeCheck
+// requires (both ends quoted, both resolvable) and also the shape a real chained answer
+// has. Card identity is derived from the two span offsets, so five distinct sentence
+// pairs give five distinct cards and none of them dedup away.
+const OVERFLOW_QUESTION = "I'm on a salary and my boss says that means no overtime. Is that how it works?";
+
+const OVERFLOW_SENTENCES = [
+  "An employer has to pay overtime at one and a half times the regular rate for every hour over 40 in a workweek.",
+  "Salaried employees are generally exempt from that rule, so most people paid a salary do not accrue overtime at all.",
+  "The exemption turns on a duties test, which looks at the work a person actually performs rather than the title printed on an offer letter.",
+  "There is also a salary threshold, and an employee earning below it stays eligible for overtime whatever the duties test says.",
+  "If you think you were misclassified, you can file a wage claim with the labor department and ask for the unpaid hours.",
+  "Claims like this are usually settled well before a hearing, so there is rarely any need to prepare for one.",
+];
+const OVERFLOW_ANSWER = OVERFLOW_SENTENCES.join(" ");
+
+function overflowMeasurement() {
+  const [S1, S2, S3, S4, S5, S6] = OVERFLOW_SENTENCES;
+  const findings = [
+    {
+      type: "candidate missing item",
+      anchor: S1,
+      materiality:
+        "The threshold and the rate are given with no statute and no jurisdiction. Both figures are set in law and both vary by where the employer is.",
+      check: {
+        supporting_proposition: S1,
+        dependent_output: S2,
+        dependency_statement:
+          "The salaried exemption is stated as an exception to the 40-hour rule above it, so it inherits whatever jurisdiction that rule came from.",
+        verification_question:
+          "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?",
+        resolver: "authority",
+      },
+    },
+    {
+      type: "candidate framing issue",
+      anchor: S2,
+      materiality:
+        "A conditional exemption is stated as a general one. The sentence records the outcome for most salaried people and not the conditions that decide it.",
+      check: {
+        supporting_proposition: S2,
+        dependent_output: S3,
+        dependency_statement:
+          "The duties test is introduced as the thing the exemption turns on, so it rests on the exemption sentence it follows.",
+        verification_question: "Which duties test does this describe, and where is it published?",
+        resolver: "document",
+      },
+    },
+    {
+      type: "candidate framing issue",
+      anchor: S3,
+      materiality:
+        "The test is named and its terms are not. A reader is told what the test looks at without being told what it looks for.",
+      check: {
+        supporting_proposition: S3,
+        dependent_output: S4,
+        dependency_statement:
+          "The salary threshold is set beside the duties test as a second condition, so it is read against the test stated before it.",
+        verification_question: "Where is the threshold published, and how often is it revised?",
+        resolver: "document",
+      },
+    },
+    {
+      type: "candidate missing item",
+      anchor: S4,
+      materiality:
+        "The threshold decides who the rest of the answer applies to and the answer never states its figure. The person asking cannot place themselves on either side of it.",
+      check: {
+        supporting_proposition: S4,
+        dependent_output: S5,
+        dependency_statement:
+          "The wage claim is offered as the route for someone the threshold covers, so the route rests on the threshold sentence above it.",
+        verification_question: "What figure is the salary threshold here, and which authority sets it?",
+        resolver: "authority",
+      },
+    },
+    {
+      type: "candidate deflection",
+      anchor: S6,
+      materiality:
+        "The closing line lowers the stakes of the step it just recommended, at the point the answer would otherwise have to say what filing involves.",
+      check: {
+        supporting_proposition: S5,
+        dependent_output: S6,
+        dependency_statement:
+          "The closing reassurance is attached to the filing route, so what it says about preparing rests on a claim being filed at all.",
+        verification_question:
+          "What share of wage claims reach a hearing in this jurisdiction, and who publishes that figure?",
+        resolver: "authority",
+      },
+    },
+  ];
+
+  const finding_counts = {};
+  for (const t of CANDIDATE_FINDING_TYPES) finding_counts[t] = 0;
+  for (const f of findings) finding_counts[f.type]++;
+
+  return {
+    findings,
+    finding_counts,
+    gap_estimate: 5,
+    estimate_rationale:
+      "Five candidate observations, four of them resting on a figure or a test the answer names without stating. Unvalidated.",
+    estimate_type: ESTIMATE_TYPE_SINGLE,
+    estimate_scale_version: ESTIMATE_SCALE_VERSION,
+    candidate_method_version: CANDIDATE_METHOD_VERSION,
+    unvalidated: true,
+  };
+}
+
+const OVERFLOW_READ = {
+  completeness: "partial",
+  the_read:
+    "The answer describes a rule, an exemption from it, and two conditions the exemption turns on, without naming the law any of them come from. Each step rests on the one before it, so a reader who cannot place the first figure cannot place any of the rest. It closes by reassuring about the step it had just recommended.",
+  what_was_left_out: [
+    "Which jurisdiction the 40-hour rule and the one-and-a-half rate come from.",
+    "What the duties test actually asks.",
+    "What figure the salary threshold sits at, and who sets it.",
+  ],
+  how_it_was_shaped:
+    "It states a conditional exemption as a general one, then closes by lowering the stakes of the action it recommended.",
+  inspection_note: SINGLE_READ.inspection_note,
+};
+
+// The fixture proves its own premise, because assembleComparativeCheck answers a failed
+// gate by returning null. Nothing logs, the payload still builds, the register still
+// renders — it renders four cards instead of five, or three, and at three the disclosure
+// control stops existing. Two scenarios named for the overflow would then photograph a
+// register that does not overflow, and the frames would look correct.
+//
+// Editing a sentence is not how that happens here: the check blocks and the answer both
+// destructure OVERFLOW_SENTENCES, so a quote cannot drift away from the sentence it
+// quotes. The gates that can fire sit in the assembler, and they move when the product
+// moves — reader-check-vocab.js learning a word that one of these verification questions
+// already contains (the demonstrated case), a candidate type leaving
+// FINDING_TYPE_TO_DETECTOR, resolveSpans changing how it normalizes a quote before
+// locating it, DEFAULT_TOP_N rising to meet the card count. So the guard runs at build
+// time and refuses to hand back a payload that contradicts the name it is built under.
+export function assertRegisterOverflows(payload, label) {
+  const cards = payload && payload.checks && Array.isArray(payload.checks.cards) ? payload.checks.cards.length : 0;
+  const topN = payload && payload.checks ? payload.checks.default_top_n : 0;
+  if (cards <= topN) {
+    throw new Error(
+      `${label} assembled ${cards} card(s) against default_top_n ${topN}. The disclosure control only ` +
+        `renders above the top-N line, so this payload shows a register that does not overflow. ` +
+        `assembleComparativeCheck returns null on a failed gate and says nothing, so look there first: ` +
+        `a verification_question or dependency_statement that now trips hasWorldClaimVerdict, a candidate ` +
+        `type missing from FINDING_TYPE_TO_DETECTOR, or a quote resolveSpans no longer locates.`
+    );
+  }
+  return payload;
+}
+
+function overflowReadPayload() {
+  return assertRegisterOverflows(
+    singleReadPayload({
+      measurement: overflowMeasurement(),
+      read: OVERFLOW_READ,
+      question: OVERFLOW_QUESTION,
+      answer: OVERFLOW_ANSWER,
+    }),
+    "register-overflow"
+  );
+}
+
 // ── The dense acceptance record ──────────────────────────────────────────────
 // Nine marks on one answer: six positioned in it, three recorded against it as a
 // whole. Every other fixture here carries one to three. This one exists because a
@@ -944,6 +1117,32 @@ const DRIVE_SINGLE_EMPTY = [...DRIVE_SINGLE_SUBMIT, { waitFor: ".wb-measure__fin
 // a check resolved. Waiting on the control itself is what proves the panel is there.
 const DRIVE_SINGLE_EXPORT = [...DRIVE_SINGLE, { waitFor: ".wb-checks__export--single" }];
 
+// The overflowing register. It waits on the disclosure control rather than on a card:
+// cards render at any count, and the control is the thing that only exists above the
+// top-N line. The expanded variant presses it and waits for the fifth card, so what
+// proves the press is a card that was not in the document a moment earlier.
+const DRIVE_REGISTER_OVERFLOW = [
+  { fill: ".wb-reader-v2__field--answer textarea", text: OVERFLOW_ANSWER },
+  { waitFor: ".wb-reader-v2__reveal textarea" },
+  { fill: ".wb-reader-v2__reveal textarea", text: OVERFLOW_QUESTION },
+  { waitFor: "button.wb-reader-cta:not([disabled])" },
+  { click: "button.wb-reader-cta" },
+  { waitFor: ".wb-checks__more" },
+];
+
+const DRIVE_REGISTER_OVERFLOW_EXPANDED = [
+  ...DRIVE_REGISTER_OVERFLOW,
+  { click: ".wb-checks__more" },
+  { waitFor: ".wb-checks__list li:nth-child(5)" },
+];
+
+// The chip lane reached through its own front door. `?start=chips` is the shipped
+// arrival contract — reader-stage.js parseArrival reads it, deriveStage returns the
+// chip stage, and the lane mounts with no prior run because it is self-contained. The
+// wait is on a chip rather than on the lane's container: the container renders whether
+// or not the bank produced anything, and the chips are the arrival.
+const DRIVE_CHIP_ARRIVAL = [{ waitFor: "#wb-chip-lane .wb-chip__row .wb-chip__pick" }];
+
 // The Act 2 paste-back flow, appended to the single-mode read that produces the
 // receipt it needs. Written now because Pass 2B-A2 changed what the paired surface
 // renders from, and a change to a surface nobody can photograph is a change nobody
@@ -1117,7 +1316,7 @@ export const SCENARIOS = {
     drivable: true,
     state: "Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it",
     expected:
-      "The answer renders with six marks positioned in it, numbered in the record's order rather than the document's, so mark 4 opens before mark 3 does. Two of the six cover whole paragraphs. Below it the list carries nine rows, and the last three state record-level absence with no quotation and no position. The count reads '9 candidate items surfaced'.",
+      "The answer renders with six marks positioned in it, numbered in the document's order rather than the record's, so they count 1 to 6 down the answer. This record lists its third and fourth marks in the reverse of the order they appear in and the body no longer inherits that, which is what the fixture is here to catch. Two of the six cover whole paragraphs. Below it the list carries nine rows in the record's own order, so the numerals beside them do not ascend; the last three state record-level absence with no quotation and no position, and hold the last three numbers because nothing places them in the answer. The count reads '9 candidate items surfaced'.",
     routes: {
       "/api/read": () =>
         singleReadPayload({
@@ -1863,7 +2062,110 @@ export const SCENARIOS = {
     assertSelector: ".wb-share-consent__panel",
     focus: ".wb-share-consent__panel",
   },
+
+  // ── Promoted from PENDING_SCENARIOS, and what that cost ────────────────────
+  //
+  // These three waited off the board for one reason: membership here obliges a committed
+  // image and snapshot, and the surface-finish lane held every baseline until the founder
+  // ruled. That ruling came, so they moved. The move is a move and not a copy — the
+  // registry they came from is empty, and a test proves a promoted name cannot sit in both
+  // places at once.
+
+  // The Check Register above its own top-N line. Every other fixture on the board resolves
+  // at most one check, so the eyebrow, the count inside the button label and the two states
+  // of the disclosure had never been driven — including the aria-expanded/aria-controls
+  // pair this lane put on that button.
+  //
+  // The payload is built through assertRegisterOverflows, which refuses at build time to
+  // hand back a register that does not overflow. That guard is why this scenario cannot
+  // quietly photograph a three-card register under a name that says five: the gates that
+  // would cause it sit in the assembler, and they move when the product moves.
+  "register-overflow": {
+    name: "register-overflow",
+    drivable: true,
+    state: "Single mode, a Check Register carrying more cards than it shows — disclosure closed",
+    expected:
+      "Three cards render under the eyebrow that qualifies them, and one control below them names the full count of five. The control reports itself closed. The other two cards exist in the register and are not on screen, which is the state the eyebrow describes.",
+    routes: { "/api/read": overflowReadPayload },
+    steps: DRIVE_REGISTER_OVERFLOW,
+    assertText: [
+      "5 candidate items surfaced",
+      "Questions worth asking",
+      "Worth asking first",
+      "Show the full register (5)",
+    ],
+    assertSelector: ".wb-checks__more",
+    focus: ".wb-checks",
+  },
+
+  // The same register with the control pressed. Two frames rather than one because the
+  // closed state is not the open state with rows added: the eyebrow that qualified the
+  // three leaves, and the control changes what it says and what it reports.
+  "register-overflow-expanded": {
+    name: "register-overflow-expanded",
+    drivable: true,
+    state: "Single mode, the same Check Register with its disclosure open",
+    expected:
+      "All five cards render. The eyebrow that qualified the first three is gone, because nothing is being qualified. The control reports itself open and offers the way back.",
+    routes: { "/api/read": overflowReadPayload },
+    steps: DRIVE_REGISTER_OVERFLOW_EXPANDED,
+    assertText: ["5 candidate items surfaced", "Questions worth asking", "Show fewer"],
+    assertSelector: ".wb-checks__list li:nth-child(5)",
+    focus: ".wb-checks",
+  },
+
+  // Arrival through the chip lane's own door. The lane is reachable from the Reader by a
+  // button, and separately by `?start=chips` — the shipped contract, not a new one. A
+  // person arriving this way has run no inspection, so the frame is of the lane standing
+  // on its own: no result above it, no marks, nothing of the instrument's own reading.
+  // Canned in the strict sense — nothing on this screen comes from an API, and a run that
+  // reached one would not be showing this state.
+  "chip-arrival": {
+    name: "chip-arrival",
+    drivable: true,
+    page: "/reader.html",
+    query: "?start=chips",
+    state: "The chip lane entered through ?start=chips, with no inspection under it",
+    expected:
+      "The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing.",
+    routes: {},
+    canned: true,
+    steps: DRIVE_CHIP_ARRIVAL,
+    assertText: [
+      "Tell your AI exactly what to do next.",
+      "What would you like the next answer to do differently?",
+      "These are optional follow-ups you choose. Imbas has not determined that any of these problems are present.",
+    ],
+    assertSelector: "#wb-chip-lane .wb-chip__row .wb-chip__pick",
+    focus: "#wb-chip-lane",
+  },
 };
+
+// ── The waiting room, now empty ──────────────────────────────────────────────
+//
+// This held three scenarios that were complete in every way a scenario can be — real
+// payloads through the real assemblers, drive steps, DOM assertions, a state and an
+// expectation — and were kept off the board for one reason only: membership in SCENARIOS
+// obliges a committed image and snapshot, assertBaselineInventory fails in both
+// directions, and the first capture of a new scenario writes a new baseline. The
+// surface-finish lane held every baseline until the founder ruled, so adding them to the
+// board before that ruling would have meant accepting three baselines under a ruling that
+// withheld them. The ruling came and register-overflow, register-overflow-expanded and
+// chip-arrival are now board members with committed baselines of their own.
+//
+// The registry stays, empty, and so do the tests that iterate it. It is the place a
+// finished-but-unphotographed scenario goes, and the next one needs somewhere to wait.
+// Emptiness is the correct state when nothing is waiting, not a sign the mechanism is
+// unused — the tests that guard it (no overlap with SCENARIOS, no committed baseline
+// while pending, board-ready by the board's own shape check) are what make a promotion a
+// move rather than a copy, and they cost nothing while the room is empty.
+//
+// This was never the fixture-only lane and must not be confused with it. `drivable: false`
+// means a scenario has no drive steps and so cannot be photographed at all; anything
+// waiting here has steps and can be photographed the moment it is allowed to be.
+// Promotion is one move — cut an entry into SCENARIOS, run `--update <name>` — and the
+// board tests then hold it exactly as they hold every other state.
+export const PENDING_SCENARIOS = {};
 
 // Resolve a scenario's route table to concrete payloads.
 export function resolvePayloads(scenario) {

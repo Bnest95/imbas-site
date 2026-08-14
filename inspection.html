@@ -30,7 +30,7 @@
       <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
       <span>Imbas</span>
     </a>
-    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <button class="nav__menu-btn" data-shared-nav aria-expanded="false" aria-controls="primary-nav">Menu</button>
     <nav class="nav" id="primary-nav" aria-label="Primary">
       <a href="/volunteer-gap.html">The Volunteer Gap</a>
       <a href="/how-it-works.html">How It Works</a>
@@ -45,30 +45,48 @@
 
 <main id="main-content" class="page page--inspection">
   <div class="page__inner page__inner--narrow">
-    <div id="insp-record-root" aria-live="polite"></div>
+    <!-- No aria-live here. inspection.js renders the whole record into this node, so a live
+         region on it announced every heading, quote and finding of a static document as if it
+         had just changed, and swallowed the nested role="status" regions inside it. The three
+         things that are genuinely dynamic — loading, error, report status — carry their own
+         role="status" in inspection.js and announce on their own. -->
+    <div id="insp-record-root"></div>
   </div>
 </main>
 
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/reader.html">The Reader</a>
+      <!--imbas:placement footerDefaultPublicExample--><a href="/archive.html#archive-featured-title" data-example-placement="defaultPublicExample">Featured case</a><!--/imbas:placement-->
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/challenge.html">Challenge</a>
+      <a href="/independence.html">Independence</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/field-notes/">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+      <span><a href="https://creativecommons.org/licenses/by/4.0/">Public record licensed CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
 <script src="/inspection.js?v=p4-v1" defer></script>
 
-<script>
-  (function () {
-    var btn = document.querySelector('.nav__menu-btn');
-    var nav = document.getElementById('primary-nav');
-    if (btn && nav) {
-      btn.addEventListener('click', function () {
-        var open = nav.classList.toggle('is-open');
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && nav.classList.contains('is-open')) {
-          nav.classList.remove('is-open');
-          btn.setAttribute('aria-expanded', 'false');
-          btn.focus();
-        }
-      });
-    }
-  })();
-</script>
 </body>
 </html>

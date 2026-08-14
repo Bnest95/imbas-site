@@ -317,12 +317,15 @@ test("expected is the registry projection, so it does not move when a run does",
     EXPECTED.map((e) => e.id),
     [`curated-readout--${VIEWPORT}`, `single-findings--${VIEWPORT}`]
   );
-  // And it is the same source the board uses to establish that there are 64. The
+  // And it is the same source the board uses to establish that there are 70. The
   // literal is written down rather than derived because deriving it from SCENARIOS
   // would make this assertion agree with any registry, including one that lost half
-  // its scenarios. It moved from 62 when the dense acceptance record registered.
+  // its scenarios. It moved from 62 when the dense acceptance record registered, and
+  // from 64 to 70 when register-overflow, register-overflow-expanded and chip-arrival
+  // were promoted off the pending registry — three scenarios at two viewports, and the
+  // pending registry is empty behind them.
   const drivable = Object.keys(SCENARIOS).filter((n) => SCENARIOS[n].drivable);
-  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 64);
+  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 70);
 });
 
 test("the inventory refuses a name the registry does not register", () => {

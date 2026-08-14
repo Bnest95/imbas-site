@@ -30,6 +30,45 @@
     }
   }
 
+  // The full contract for the mobile menu button, opposite closeMobileNav.
+  //
+  // Opt-in by attribute, because every page still carries its own inline nav script and
+  // this file is deferred: the inline one registers first, so an unconditional listener
+  // here would fire second and toggle is-open straight back closed. A page opts in by
+  // deleting its inline block and marking the button, which is the only signal available
+  // that does not depend on script order.
+  function initMobileNav() {
+    var btn = document.querySelector('.nav__menu-btn[data-shared-nav]');
+    var nav = document.getElementById('primary-nav');
+    if (!btn || !nav) return;
+
+    btn.addEventListener('click', function () {
+      if (nav.classList.contains('is-open')) {
+        closeMobileNav();
+        return;
+      }
+      nav.classList.add('is-open');
+      btn.setAttribute('aria-expanded', 'true');
+      btn.textContent = 'Close';
+      // #primary-nav.is-open is fixed, inset 0, 100dvh. Without this the document keeps
+      // scrolling behind the panel and the reader loses their place in it.
+      document.body.classList.add('nav-open');
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+        closeMobileNav();
+        btn.focus();
+      }
+    });
+
+    // Only the links the page shipped. ensureNavMore and ensureMobileFieldNotesNav bind
+    // closeMobileNav to the ones they inject, so this runs before them.
+    nav.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeMobileNav);
+    });
+  }
+
   function normalizePath(pathname) {
     var path = pathname.replace(/\/$/, '') || '/';
     if (path.endsWith('/index.html')) {
@@ -210,6 +249,7 @@
   }
 
   function init() {
+    initMobileNav();
     ensureNavMore();
     ensureMobileFieldNotesNav();
     syncHeaderOffset();
