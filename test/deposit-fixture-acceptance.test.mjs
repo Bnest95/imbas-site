@@ -82,7 +82,11 @@ test("nine marks, and the six that sit in the answer are the six the record posi
 
   const inDocument = READING.marks.filter((m) => m.in_document).map((m) => m.n);
   const recordLevel = READING.marks.filter((m) => !m.in_document).map((m) => m.n);
-  assert.deepEqual(inDocument, [1, 2, 3, 4, 5, 6]);
+  // Read down the record these arrive 1,2,4,3,5,6: the record's order carrying the
+  // document's numbering, which is the point. As sets they are still the first six and
+  // the last three, because everything the answer can place is numbered before
+  // anything it cannot — an absence has no position to sort it by.
+  assert.deepEqual([...inDocument].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6]);
   assert.deepEqual(recordLevel, [7, 8, 9]);
 
   // The channel is what decides it, not the ordinal. Six quotations resolved and three
@@ -100,7 +104,11 @@ test("nine marks, and the six that sit in the answer are the six the record posi
 test("a bracketed region is a longer quotation, and it needs no mechanism of its own", () => {
   // The two the lane drew as regions. Both are whole paragraphs, and both resolve as
   // ordinary quoted spans — same channel, same span shape, same everything as mark 1.
-  const regions = [4, 6].map((n) => READING.marks.find((m) => m.n === n));
+  // Picked by what makes them regions, not by numeral. The numerals moved when the body
+  // started counting in document order, and a test that pinned them would be asserting
+  // the display key instead of the thing the display key names.
+  const regions = READING.marks.filter((m) => m.span && m.span.end - m.span.start > 140);
+  assert.equal(regions.length, 2, "the lane drew two bracketed regions and no more");
   for (const m of regions) {
     assert.equal(m.channel, ANCHOR_CHANNEL.QUOTED_SPAN, `mark ${m.n} resolves on the quoted-span channel`);
     assert.ok(m.span, `mark ${m.n} carries a span`);
@@ -114,18 +122,35 @@ test("a bracketed region is a longer quotation, and it needs no mechanism of its
   // And they are genuinely long: each covers a whole paragraph, which is what made
   // them look like a different kind of thing in the first place.
   for (const m of regions) {
-    assert.ok(m.span.end - m.span.start > 140, `mark ${m.n} covers a passage, not a line`);
     assert.equal(ANSWER.includes(`\n\n${m.quote}`), true, `mark ${m.n} starts a paragraph`);
   }
 });
 
-test("the record's numbering is not the document's, and the body still reassembles", () => {
-  // Mark 4 opens before mark 3 does. That is the lane's numbering and the record's
-  // order, kept so the body and the list agree on which mark is which — a body that
-  // renumbered itself left to right would disagree with every row below it.
-  const three = READING.marks.find((m) => m.n === 3);
-  const four = READING.marks.find((m) => m.n === 4);
-  assert.ok(four.span.start < three.span.start, "mark 4 opens before mark 3 in the document");
+test("the numbering is the document's, and the body still reassembles", () => {
+  // This asserted the opposite until R4, and this fixture is why it could: its third
+  // and fourth marks are recorded in the reverse of the order they appear in, so the
+  // body used to open mark 4 before mark 3. The count has moved to the document. The
+  // same two marks now arrive as 3 then 4, and a reader meeting a passage first meets
+  // the lower number.
+  //
+  // What did NOT move is the agreement the old note credited record order for. Body and
+  // list agree because there is ONE numbering and two views of it, which was never a
+  // consequence of which order that numbering ran in. `marks` is still the record's
+  // order — only `n` is laid over it differently.
+  const positioned = READING.marks.filter((m) => m.in_document);
+  assert.deepEqual(
+    [...positioned].sort((a, b) => a.span.start - b.span.start).map((m) => m.n),
+    [1, 2, 3, 4, 5, 6],
+    "read the answer from the top and the marks count up",
+  );
+
+  // The record's order is untouched and still disagrees with the document's, which is
+  // what keeps this fixture a real test of the renumbering rather than a no-op on it.
+  assert.notDeepEqual(
+    positioned.map((m) => m.n),
+    [1, 2, 3, 4, 5, 6],
+    "the fixture no longer disagrees with the document, so it cannot prove the reorder",
+  );
 
   // Whatever the order, the segments are still the answer.
   assert.equal(READING.segments.map((s) => s.text).join(""), ANSWER);
@@ -157,12 +182,16 @@ const EVIDENCE = componentSource(SRC, "FindingEvidence");
 const SOURCE_READING = componentSource(SRC, "SourceReading");
 const MARK_NUMBER = componentSource(SRC, "MarkNumber");
 
+// Not a component. The body and the list both call it to name the same finding, so it
+// belongs to neither slice and has to be in scope for both.
+const EXPLANATION_ID = componentSource(SRC, "findingExplanationId");
+
 // Every component here is the shipped one, and every model function handed in is the
 // real one. Nothing is stubbed except the two sub-panels this file makes no claim
 // about, so a pass means the real dispatch ran over the real descriptors.
 async function renderPanel() {
   const { code } = await transform(
-    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
+    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\n${EXPLANATION_ID}\nreturn MeasurementPanel;`,
     { loader: "jsx", jsxFactory: "h", jsxFragment: "Frag" },
   );
   const h = (type, props, ...children) => {
@@ -303,6 +332,7 @@ test("no part of the path knows this record exists", () => {
     ["FindingEvidence", EVIDENCE],
     ["SourceReading", SOURCE_READING],
     ["MarkNumber", MARK_NUMBER],
+    ["findingExplanationId", EXPLANATION_ID],
   ]) {
     for (const forbidden of ["deposit", "PASSAGE_CONTEXT", "region", "fixture", "in-document-region"]) {
       assert.equal(

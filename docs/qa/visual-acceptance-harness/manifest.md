@@ -8,7 +8,7 @@ Generation reads no browser, starts no server, captures no pixel and moves no ba
 
 **This manifest governs both committed baseline layers: the `.png` images and the `.snapshot.txt` files beside them.** Both are checksummed. There is one row per image, and it carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in `docs/qa/visual-acceptance-harness/` is governed here.
 
-The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 32 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 64 images and 64 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
+The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 35 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 70 images and 70 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
 
 **What it does not attest.** This manifest is a statement about byte identity as the tree stands, and nothing else. It does not attest the capture session that produced any image — not when the shutter fired, not which working tree was checked out, not which commit the capture ran against. It records no browser environment beyond the version string each snapshot carries for its own image, and no machine, path or operating system. It attests no review, approval or acceptance event, and no baseline-acceptance provenance: that an image is listed here means its bytes are on disk and hash to the value shown, not that anyone signed off on them. It carries no historical capture SHA and no history of any kind. Those facts are real and are kept, elsewhere and deliberately — each snapshot's `## environment` block holds the conditions its own capture ran under, `git log` on an image file holds when those bytes last moved and which commit moved them, and `docs/qa/HARNESS-HISTORY.md` holds the removed historical record of this document's own pre-generated era. None of them is this file, and a reader needing any of them should not look here.
 
@@ -52,11 +52,44 @@ A board that lists only what it covers reads as complete. These are the result s
 - **A route that returns an unparseable body** — The harness can now inject failures — `httpFailure` and `neverResolves` in `scripts/qa/scenarios.mjs` — and `read-error`, `read-capacity` and `read-in-flight` photograph the three states that matter. A malformed body is the one failure left unphotographed: the client maps it to `bad_json`, which renders the same banner as the `no_key` and `disabled` configuration states already covered in wording by `read-error`'s frame. Injecting it is one line whenever a reviewer wants the image.
 - **The curated case result panel, after a visitor pastes** — The board photographs the curated console at its first screen (`curated-readout`), which is one step before this. The panel is where the retired score gauge and the retired CLOSED GAP / PARTIALLY SURFACED / GAP HELD badge both sat, so it is the frame a reviewer most wants. It is not photographed because `runDate` is built from `new Date()` at run time and reaches the share text inside the panel, which would make the baseline change every day and turn a real regression into noise nobody reads. Pinning the clock is a harness capability, and the removal is held meanwhile by `test/reader-no-allclear-vocabulary.test.mjs`, which asserts at source level that no badge builder, verdict label table or tone class survives, and that the one sentence standing there is read off the stored case rather than computed from the paste.
 - **The correction chips after a person has corrected the reading** — Every board state captures the default reading. The two corrected states change a headline and add a call to action (`LOOP_STATE_STILL_MISSING`, `LOOP_STATE_NOT_CLEAR` in `workbench-app.jsx`). They are reachable by one more drive step and are the most obvious next scenarios to add.
+- **The Check Register above its top-N line, and the chip lane's own front door** — `register-overflow`, `register-overflow-expanded` and `chip-arrival` are written and complete — real payloads through the real assemblers, drive steps, DOM assertions, a state and an expectation — and they pass the same shape check the board runs over its own members. They sit in `PENDING_SCENARIOS` in `scripts/qa/scenarios.mjs` rather than in `SCENARIOS`, because membership in `SCENARIOS` is what obliges a committed baseline and the surface-finish lane holds every baseline until the founder gives the go-ahead after its mid-lane checkpoint. This is not the fixture-only lane: fixture-only means a scenario has no drive steps and cannot be photographed at all, and these can be photographed the moment they are allowed to be. Promotion is one move — cut the entry into `SCENARIOS`, run `--update <name>` — and the board tests then hold it like any other state. Until then the states are held by execution coverage in `test/register-overflow-contract.test.mjs`.
 - **The mobile-tall viewport** — Declared in VIEWPORTS and not part of the default board. It exists to re-test a reported blank-compositor claim at 375x812, not to double every baseline; running it by default would triple the image set to re-photograph the same states.
 
 ## Images
 
-64 images, 64 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+70 images, 70 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+
+### `chip-arrival--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `e19dfc486f6a5bbbffe4c1e01d61cea972a85570dd08c74db9478ab22a0b9f09` |
+| bytes | 577686 |
+| snapshot | `chip-arrival--desktop.snapshot.txt` |
+| snapshot sha256 | `571d3080a698d39ac147d2a6068773f8581c03bb344b930fad201c841beb186a` |
+| snapshot bytes | 1991 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/reader.html`, query `?start=chips` |
+| framed on | `#wb-chip-lane` at scroll offset 277 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane entered through ?start=chips, with no inspection under it |
+| expected behaviour | The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing. |
+
+### `chip-arrival--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `b86131abb2aca0ffd29eddf34a095055a3e2f597ae310b4a4839523892860c3e` |
+| bytes | 312395 |
+| snapshot | `chip-arrival--mobile.snapshot.txt` |
+| snapshot sha256 | `a34a300b885e992ab1e4f87d801d4732b0c40afe84749dafefb8211914da1cc8` |
+| snapshot bytes | 1245 |
+| viewport | 375x812@3x (mobile) |
+| url | `/reader.html`, query `?start=chips` |
+| framed on | `#wb-chip-lane` at scroll offset 479 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane entered through ?start=chips, with no inspection under it |
+| expected behaviour | The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing. |
 
 ### `claim-authorized-match--desktop.png`
 
@@ -190,8 +223,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `8132e54aeb744c1d55253bbf3b918526c67e5c56b578a56c593558137f3f119c` |
-| bytes | 467149 |
+| sha256 | `a40ba739185d3571f5575402a9593da4c11d808692724784cd99f8aae45d097b` |
+| bytes | 468511 |
 | snapshot | `curated-readout--desktop.snapshot.txt` |
 | snapshot sha256 | `2019115be83191405a6361bfbdb1512584491941d32aa97512be8eb4e9a5270d` |
 | snapshot bytes | 2392 |
@@ -206,8 +239,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3be27310118a65d213f5e14e00bb99306357c8ced18bb93915e02550e6b500a4` |
-| bytes | 318055 |
+| sha256 | `9afe748b5a56fb424d06ef920cc6ac072c01d935e027ed81bc2a7fa1f7e5d314` |
+| bytes | 319073 |
 | snapshot | `curated-readout--mobile.snapshot.txt` |
 | snapshot sha256 | `387d1515c63039dbcbfb7c3cf0f54817e13fec9d409dc5afcf6113a4296838e7` |
 | snapshot bytes | 1375 |
@@ -222,33 +255,33 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `81fbc3ee0d7cc90aedb8cf870e67a9b78df7b1e237a53c0758cb28c2ef578076` |
-| bytes | 1388271 |
+| sha256 | `7630233511112fe0f8ad204016e06c78df0833871af1efdefd5f9b2465204480` |
+| bytes | 1388368 |
 | snapshot | `deposit-fixture--desktop.snapshot.txt` |
-| snapshot sha256 | `9f6118a153505e36bdb9b7ff684a47f137b12304aa95293082c75b26283ae582` |
+| snapshot sha256 | `b69d6a967096ce4179acad191422c21d8fe16055a29aa93fb6ce41474aa4e369` |
 | snapshot bytes | 51653 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1326 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it |
-| expected behaviour | The answer renders with six marks positioned in it, numbered in the record's order rather than the document's, so mark 4 opens before mark 3 does. Two of the six cover whole paragraphs. Below it the list carries nine rows, and the last three state record-level absence with no quotation and no position. The count reads '9 candidate items surfaced'. |
+| expected behaviour | The answer renders with six marks positioned in it, numbered in the document's order rather than the record's, so they count 1 to 6 down the answer. This record lists its third and fourth marks in the reverse of the order they appear in and the body no longer inherits that, which is what the fixture is here to catch. Two of the six cover whole paragraphs. Below it the list carries nine rows in the record's own order, so the numerals beside them do not ascend; the last three state record-level absence with no quotation and no position, and hold the last three numbers because nothing places them in the answer. The count reads '9 candidate items surfaced'. |
 
 ### `deposit-fixture--mobile.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `d8106936c03a97d7287ebe240009192bbf0f0d28e3a3242d7108518da6a112bd` |
-| bytes | 1347999 |
+| sha256 | `e3c312e808a8a2d26f26f9cb7bc7803b0efc30488630e95cf4cce742eb4d89b7` |
+| bytes | 1347668 |
 | snapshot | `deposit-fixture--mobile.snapshot.txt` |
-| snapshot sha256 | `55a89300b58a611758095da91ca5956a930850501a8ec0e4d487899b5ac511e7` |
+| snapshot sha256 | `91ac0a409d852129ac2c3d36a5fbdf3151c5af46703a6c7d78bfc15e9310cdeb` |
 | snapshot bytes | 50846 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1481 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it |
-| expected behaviour | The answer renders with six marks positioned in it, numbered in the record's order rather than the document's, so mark 4 opens before mark 3 does. Two of the six cover whole paragraphs. Below it the list carries nine rows, and the last three state record-level absence with no quotation and no position. The count reads '9 candidate items surfaced'. |
+| expected behaviour | The answer renders with six marks positioned in it, numbered in the document's order rather than the record's, so they count 1 to 6 down the answer. This record lists its third and fourth marks in the reverse of the order they appear in and the body no longer inherits that, which is what the fixture is here to catch. Two of the six cover whole paragraphs. Below it the list carries nine rows in the record's own order, so the numerals beside them do not ascend; the last three state record-level absence with no quotation and no position, and hold the last three numbers because nothing places them in the answer. The count reads '9 candidate items surfaced'. |
 
 ### `export-paired--desktop.png`
 
@@ -286,8 +319,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `52c21177e3208fcc2a1879cb88b884b93162d81980aaef6d2a43b0094679abcc` |
-| bytes | 626327 |
+| sha256 | `18a0993dbbe7593ea2e476b95c38543961c40ea809d5d47d63746983b14e63f0` |
+| bytes | 626077 |
 | snapshot | `export-single--desktop.snapshot.txt` |
 | snapshot sha256 | `a6f7a66d4893965413f6f21f029599519d39250888204cecad0463c688bdb0a1` |
 | snapshot bytes | 29472 |
@@ -302,8 +335,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5d3e741c56efd8f8d7255c03d52524c169cc397b5e8918afdcba73a26e3e313c` |
-| bytes | 482247 |
+| sha256 | `d29d6499482d466265f236e8fcefc38050d64c4579ebcadb7506598663630fa2` |
+| bytes | 482251 |
 | snapshot | `export-single--mobile.snapshot.txt` |
 | snapshot sha256 | `44db327761dc1807cb1aad540cfa7862ad82a18499da1f604fb9135bdfe8c9de` |
 | snapshot bytes | 28410 |
@@ -321,8 +354,8 @@ A board that lists only what it covers reads as complete. These are the result s
 | sha256 | `b08103c659daacf8f453f8eed9375035be86a12802e5618e0fdee3bc8205ed85` |
 | bytes | 421395 |
 | snapshot | `first-load--desktop.snapshot.txt` |
-| snapshot sha256 | `98955610a0bcea7a4a713f113e18e673bdfd53055c33387f256b4923797317c9` |
-| snapshot bytes | 2353 |
+| snapshot sha256 | `72c60f2478d192b291d39c1d50135f68953ade384887f5ec51e9993de44638c3` |
+| snapshot bytes | 2314 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__fields` at scroll offset 141 |
@@ -337,8 +370,8 @@ A board that lists only what it covers reads as complete. These are the result s
 | sha256 | `b980a9540d03c40fab8868349942917c977aadd49d6080e7d92efd2a796ea5c4` |
 | bytes | 362372 |
 | snapshot | `first-load--mobile.snapshot.txt` |
-| snapshot sha256 | `dea02ab0083296340d5e36a3a8dedd34fe26f3f383d099b5e58b30b575aa0479` |
-| snapshot bytes | 1834 |
+| snapshot sha256 | `19b14860fb322be01754aaff9e54f313247e7c1a50e83474d02eef2002d5d187` |
+| snapshot bytes | 1795 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__fields` at scroll offset 174 |
@@ -762,12 +795,76 @@ A board that lists only what it covers reads as complete. These are the result s
 | state captured | Mid-inspection — the request is open and the status line has reached its last words |
 | expected behaviour | The run button reads 'Inspecting…' and is disabled. The status line has clamped on its terminal narration, which reports the instrument and the wait — still reading, long answers take longer — and claims nothing about what was found. The line it replaced said 'Found something to check…', which announced a finding before any response existed and is the line a slow request left on screen longest. No result panel and no count is rendered, because none has been returned. |
 
+### `register-overflow--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `e32f5801581e4c934db6804f604bb8b1a7add9182223acb902e55018ec835390` |
+| bytes | 783415 |
+| snapshot | `register-overflow--desktop.snapshot.txt` |
+| snapshot sha256 | `42b80da2a403acc686e7a4ad40cfbb269879f717256ec204393c91e7d4335562` |
+| snapshot bytes | 73464 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `.wb-checks` at scroll offset 4533 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Single mode, a Check Register carrying more cards than it shows — disclosure closed |
+| expected behaviour | Three cards render under the eyebrow that qualifies them, and one control below them names the full count of five. The control reports itself closed. The other two cards exist in the register and are not on screen, which is the state the eyebrow describes. |
+
+### `register-overflow--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `6d22c9d9e8add1a8c3d4f2905db55388570e3efeade8c8e39b8fec19900f46db` |
+| bytes | 735214 |
+| snapshot | `register-overflow--mobile.snapshot.txt` |
+| snapshot sha256 | `b7a0110a49728f916aa381831f73600b26399903b2b761207ca1d6fe61fc6276` |
+| snapshot bytes | 72511 |
+| viewport | 375x812@3x (mobile) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `.wb-checks` at scroll offset 6034 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Single mode, a Check Register carrying more cards than it shows — disclosure closed |
+| expected behaviour | Three cards render under the eyebrow that qualifies them, and one control below them names the full count of five. The control reports itself closed. The other two cards exist in the register and are not on screen, which is the state the eyebrow describes. |
+
+### `register-overflow-expanded--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `9872d5a5c15f46310981f07125548c963cab24fbd4952de1b2d3e975b8092a0d` |
+| bytes | 817367 |
+| snapshot | `register-overflow-expanded--desktop.snapshot.txt` |
+| snapshot sha256 | `2663ce1a4de8193143202fbb998d49f67417be90abd18f5bfc25f904c499400a` |
+| snapshot bytes | 73497 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `.wb-checks` at scroll offset 5044 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Single mode, the same Check Register with its disclosure open |
+| expected behaviour | All five cards render. The eyebrow that qualified the first three is gone, because nothing is being qualified. The control reports itself open and offers the way back. |
+
+### `register-overflow-expanded--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `44154da65d000dd2b69cc1244e30815dba2c2774a293b1091d7e1a184542a832` |
+| bytes | 725043 |
+| snapshot | `register-overflow-expanded--mobile.snapshot.txt` |
+| snapshot sha256 | `5f71076388f02ef94b2657ca3eb6621f98f8b81da0dcd0822fc2a3338bda471d` |
+| snapshot bytes | 72461 |
+| viewport | 375x812@3x (mobile) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `.wb-checks` at scroll offset 6795 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Single mode, the same Check Register with its disclosure open |
+| expected behaviour | All five cards render. The eyebrow that qualified the first three is gone, because nothing is being qualified. The control reports itself open and offers the way back. |
+
 ### `share-consent--desktop.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `70709362ee66dbe0f4da1306c84469eeca77cdf00cc0e82956de503a8270e7dc` |
-| bytes | 498736 |
+| sha256 | `21e5e37921c8e2ada8fe295ba2f58488d5e0817bf44da47db8c61f0c5cdc9930` |
+| bytes | 498669 |
 | snapshot | `share-consent--desktop.snapshot.txt` |
 | snapshot sha256 | `6dbc4f7657f2f11a82bff7f825cff3933424f9e2d86b84f629c890f87cc8ea5e` |
 | snapshot bytes | 30609 |
@@ -782,8 +879,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5d03e6bac207d78d58c91bfca371ff5a2484a83eac6f5f71f5a8156f45f31c60` |
-| bytes | 369938 |
+| sha256 | `270f43909a05a79203b3729d5e909941a115d9602b9409c39af6d0eb19f6c22f` |
+| bytes | 369921 |
 | snapshot | `share-consent--mobile.snapshot.txt` |
 | snapshot sha256 | `a5b47f0489d523d2615ebf0e9eef2fe0a2999f126c56b304586f3932f7c3e23c` |
 | snapshot bytes | 30022 |
@@ -798,8 +895,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `52620926e5f4c014c44dd916f1fb68216251640be394c4491606bb02f6e31077` |
-| bytes | 335468 |
+| sha256 | `3f19c95d050d2904ed3de1e697c7ef5eaef932b51de207343751928e8b53d313` |
+| bytes | 335537 |
 | snapshot | `share-legacy--desktop.snapshot.txt` |
 | snapshot sha256 | `75c27898fc6d737bfed438b0d4f12b536a80ed488f4e3346a1a2f01896f99306` |
 | snapshot bytes | 6581 |
@@ -814,8 +911,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `484d41bccaa7b097e79ea19d512c508d7ac647624c9fe9543df6e182e178c5d2` |
-| bytes | 319746 |
+| sha256 | `a3dfb3d7494ea93886b70494bf9351c5b94b3888136b941f36fa51134261d917` |
+| bytes | 319778 |
 | snapshot | `share-legacy--mobile.snapshot.txt` |
 | snapshot sha256 | `cbb9d1ca9f14e9a01884293e9b616ee42b27c4623a590b383b83bbefd5def93d` |
 | snapshot bytes | 6151 |
@@ -830,11 +927,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `380d9e6402397f4593c370179c33a19427912a05af424f2f9b2fca46129d265c` |
-| bytes | 1134851 |
+| sha256 | `3d0f9600263aab61d6644aeabadfc84c67d1875db10e99246b219c290df9130e` |
+| bytes | 435918 |
 | snapshot | `share-not-found--desktop.snapshot.txt` |
-| snapshot sha256 | `f9a04acfe7b27f49f8ee514ce2c1f3c30acf8fe5380c86c305d40bbbc4af144b` |
-| snapshot bytes | 1278 |
+| snapshot sha256 | `09c503f3e81e4fce22ae44178138f840e3010f8e4541f1c28480c3b4b94bac60` |
+| snapshot bytes | 2239 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-error` at scroll offset 0 |
@@ -846,11 +943,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b1a71bda14537e92216056d4064a6638e94d89e4b4fac385196776cd30090f58` |
-| bytes | 921041 |
+| sha256 | `0774c4d7a878c6850adfbc662a9e7bc66e5e7a2033cfe7bf0275ac8c3b93e6db` |
+| bytes | 190568 |
 | snapshot | `share-not-found--mobile.snapshot.txt` |
-| snapshot sha256 | `c0e75d5f09259e77b085c0d56b031e1b42aea592634c37b0f3c7fa6d6448c2e8` |
-| snapshot bytes | 973 |
+| snapshot sha256 | `e106f9d962d4a8027f382235f07cf0bd06d191a5643e30d63c091542093bae46` |
+| snapshot bytes | 1536 |
 | viewport | 375x812@3x (mobile) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-error` at scroll offset 0 |
@@ -990,8 +1087,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b27e2edc523dda9d280b97c723ddba79a81f188a17303843fa1d942555ebd45c` |
-| bytes | 795598 |
+| sha256 | `cca13a3ff11811ea419e4ec6bf24a5e4dcf75c2343aaaa86fd9a8d21777a3f2a` |
+| bytes | 795325 |
 | snapshot | `single-empty--desktop.snapshot.txt` |
 | snapshot sha256 | `9c929ca433254690288c479c17b9c5fd6b6310dd4f4e27805bc525f1119095df` |
 | snapshot bytes | 12925 |
@@ -1006,8 +1103,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `db2bac3803b0851ee369f89a75abc9432ef864a016cd43810b163fb79aa63cb8` |
-| bytes | 593091 |
+| sha256 | `4aa3c8f784a5fdcae9973b9ffd2e907bd700ccdf725400640a9771375775ed76` |
+| bytes | 592870 |
 | snapshot | `single-empty--mobile.snapshot.txt` |
 | snapshot sha256 | `db52c211e8e42405ef6c03d8343a5aab17cd70d586435ccf095c991d4e0f0556` |
 | snapshot bytes | 12145 |
@@ -1022,8 +1119,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `265989b643205cc23f18c0405acd9d565e73a75d3274605c8642e44a9d442fc4` |
-| bytes | 642430 |
+| sha256 | `66583a498fb610773a30ae11d2e5e5bc393ed3aa5ce1c2c3cefb88f0cc493e35` |
+| bytes | 642953 |
 | snapshot | `single-empty-read--desktop.snapshot.txt` |
 | snapshot sha256 | `7c0d22ab528dec2f22d9570dff328e776765e8e6400f9590c1bc8f6182059e6d` |
 | snapshot bytes | 12289 |
@@ -1038,8 +1135,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3ce018023a99b2a3d840182420f2e4e5a44a5db30098bcdc215989014c91a018` |
-| bytes | 552290 |
+| sha256 | `a8d67fd9da06b435868f3f14f6eada004495a6c46d21699cfe6fcead90951df5` |
+| bytes | 552378 |
 | snapshot | `single-empty-read--mobile.snapshot.txt` |
 | snapshot sha256 | `d878f3d5bf29915398f8c9589275d4ddc8b784f0398300aee9a98f8db388314c` |
 | snapshot bytes | 11667 |
@@ -1054,8 +1151,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `21d8752f3a0d3224c84e72f88813525022c5149ff8f7e4add62df4138e720acc` |
-| bytes | 781668 |
+| sha256 | `9365b07bc8d15773c98ea8270385b09fae4712ddde1359d613e3ea5c36f17658` |
+| bytes | 781462 |
 | snapshot | `single-findings--desktop.snapshot.txt` |
 | snapshot sha256 | `180d27ec6a20a196c1ff02a6a94e86b52839cb20108921fa1452a729eaf9f37e` |
 | snapshot bytes | 29989 |
@@ -1070,8 +1167,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `ea326f8cda9a0001e51adff669854a8109c7401383bb64995be4bfd68f970528` |
-| bytes | 592814 |
+| sha256 | `e763edbdb55d72e73d03db6e1691852558bf6aeedae59b589f44756a8823e36c` |
+| bytes | 592765 |
 | snapshot | `single-findings--mobile.snapshot.txt` |
 | snapshot sha256 | `dde78fa0dea0c0f1edae05902d0a7de8cc45116fd1e42a612faed95570434f59` |
 | snapshot bytes | 29351 |

@@ -442,11 +442,24 @@
   background: rgba(18, 14, 12, 0.92);
 }
 
-.insp-error__title {
+/* The same collision the eyebrow hit, and the same answer. This is an h1, so `.page h1`
+   at (0,1,1) reaches it and the class alone at (0,1,0) never did: every line below that
+   `.page h1` also sets has been losing since it was written, and the error has been
+   rendering as a page heading in Fraunces at --type-h1 rather than as the title of a
+   small card. (0,2,1) wins, and the rule now restates every property either of the two
+   losing selectors would land on — font-family, font-size, letter-spacing, color and
+   margin from `.page h1`, line-height and font-weight from the global `h1` block.
+   letter-spacing and line-height are written down for that reason alone: nothing else
+   here supplies them, and the display tracking and 1.08 leading that arrive with the
+   tag belong to a page heading, not to this. 1.25 is what .insp-glance__count uses for
+   the same job — one large serif line in a panel. */
+.insp-error h1.insp-error__title {
   margin: 0 0 0.55rem;
   font-family: var(--font-serif);
   font-size: 1.35rem;
+  line-height: 1.25;
   font-weight: 500;
+  letter-spacing: normal;
   color: rgba(242, 232, 220, 0.95);
 }
 

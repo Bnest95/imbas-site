@@ -315,6 +315,22 @@ const UNPHOTOGRAPHED = [
       "obvious next scenarios to add.",
   },
   {
+    state: "The Check Register above its top-N line, and the chip lane's own front door",
+    why:
+      "`register-overflow`, `register-overflow-expanded` and `chip-arrival` are written and " +
+      "complete — real payloads through the real assemblers, drive steps, DOM assertions, a " +
+      "state and an expectation — and they pass the same shape check the board runs over its " +
+      "own members. They sit in `PENDING_SCENARIOS` in `scripts/qa/scenarios.mjs` rather than " +
+      "in `SCENARIOS`, because membership in `SCENARIOS` is what obliges a committed baseline " +
+      "and the surface-finish lane holds every baseline until the founder gives the go-ahead " +
+      "after its mid-lane checkpoint. This is not the fixture-only lane: fixture-only means a " +
+      "scenario has no drive steps and cannot be photographed at all, and these can be " +
+      "photographed the moment they are allowed to be. Promotion is one move — cut the entry " +
+      "into `SCENARIOS`, run `--update <name>` — and the board tests then hold it like any " +
+      "other state. Until then the states are held by execution coverage in " +
+      "`test/register-overflow-contract.test.mjs`.",
+  },
+  {
     state: "The mobile-tall viewport",
     why:
       "Declared in VIEWPORTS and not part of the default board. It exists to re-test a " +

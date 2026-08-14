@@ -2090,23 +2090,15 @@
    WORKBENCH — Reader V2 / V2A chamber (feature-flagged via ?reader=1)
    ============================================================= */
 
+/* This block declared a second ember ramp — amber, amber-soft, rust, thin-glow — that
+   restated values styles.css already owns under --ember, and nothing read any of them.
+   The tokens left are the ones something references. */
 .wb-shell--reader-v2 {
-  --wb-reader-amber: #de6f38;
-  --wb-reader-amber-soft: #f0a060;
-  --wb-reader-rust: #b85a28;
+  /* No consumer, and kept regardless: the value belongs to the alert/thin-result
+     family, a separate design system this work does not touch. */
   --wb-reader-thin: #c44a28;
-  --wb-reader-thin-glow: #e07050;
-  --wb-reader-full: #9bae7e;
-  --wb-reader-full-bone: #e8dcc8;
-  --wb-reader-bone: var(--ink-primary);
-  --wb-reader-surface: #1a1410;
-  --wb-reader-surface-deep: #12100d;
   --wb-reader-ember-edge: rgba(222, 160, 110, 0.14);
-  --wb-reader-ember-soft: rgba(222, 111, 56, 0.18);
-  --wb-reader-violet: rgba(100, 80, 160, 0.55);
   --wb-reader-violet-soft: rgba(100, 80, 150, 0.08);
-  --wb-reader-chamber: #0a0706;
-  --wb-reader-chamber-edge: rgba(100, 80, 150, 0.22);
   --wb-reader-label: rgba(210, 195, 175, 0.86);
   --wb-reader-label-quiet: rgba(175, 162, 148, 0.78);
 }
@@ -3780,10 +3772,6 @@
   letter-spacing: 0.12em;
 }
 
-.wb-reader-result.is-agent .wb-reader-result__section--read .wb-reader-result__section-title {
-  color: rgba(220, 175, 130, 0.85);
-}
-
 .wb-reader-result.is-agent .wb-reader-result__list {
   color: rgba(235, 222, 205, 0.94);
   line-height: 1.58;
@@ -3999,19 +3987,10 @@
   text-transform: uppercase;
 }
 
-.wb-reader-result__section--read .wb-reader-result__section-title {
-  color: rgba(240, 200, 160, 0.88);
-}
-
-.wb-reader-result__section:nth-child(2) .wb-reader-result__section-title,
-.wb-reader-result__section--left-out .wb-reader-result__section-title {
-  color: rgba(224, 112, 80, 0.88);
-}
-
-.wb-reader-result__section:nth-child(3) .wb-reader-result__section-title,
-.wb-reader-result__section--shaped .wb-reader-result__section-title {
-  color: rgba(160, 140, 200, 0.88);
-}
+/* These titles used to carry three colours — warm, ember, violet — and two of the three
+   were selected by position, so a section's tint tracked where it sat rather than what
+   it said. The accent registry authorizes no heading role, so the titles take one ink
+   and the accent stays on the findings below them. */
 
 .wb-reader-result__section--read .wb-reader-result__read-body p {
   margin: 0 0 0.95rem;

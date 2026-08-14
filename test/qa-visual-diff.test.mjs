@@ -339,11 +339,14 @@ test("a scenario's query reaches the URL and the recorded environment together",
 test("every scenario carrying a query is named here, and its query is recorded", () => {
   // Named rather than discovered: a query exists to reach a specific surface, and a
   // scenario needing one is a decision to make on purpose, not a default to drift into.
-  // Two reasons appear in this list and they are different. The curated console needs a
-  // FLAG — it renders when the Reader flag is off, and the flag is read from the URL.
+  // Three reasons appear in this list and they are different. The curated console needs
+  // a FLAG — it renders when the Reader flag is off, and the flag is read from the URL.
   // Every share scenario needs an IDENTITY — the page resolves one published record and
   // the id is the only thing that names it, so a share page with no query is not a
-  // degraded share page, it is a different screen entirely.
+  // degraded share page, it is a different screen entirely. chip-arrival needs an
+  // ARRIVAL — ?start=chips is the real entrance a person is handed, and it is in this
+  // list rather than faked with a hash fragment or a stage parameter precisely because
+  // the route under test is the route that ships.
   const withQuery = Object.entries(SCENARIOS).filter(([, s]) => s.query);
   assert.deepEqual(withQuery.map(([n]) => n), [
     "curated-readout",
@@ -353,10 +356,19 @@ test("every scenario carrying a query is named here, and its query is recorded",
     "share-paired-no-model",
     "share-legacy",
     "share-not-found",
+    "chip-arrival",
   ]);
   assert.equal(resolveNavigation(SCENARIOS["curated-readout"]).query_parameters, "?reader=0");
+
+  // The arrival scenario is asserted here rather than exempted below, because "not a
+  // share scenario" is not a description of anything. It lands on the Reader itself.
+  const arrival = resolveNavigation(SCENARIOS["chip-arrival"]);
+  assert.equal(arrival.page, "/reader.html");
+  assert.equal(arrival.query_parameters, "?start=chips");
+  assert.equal(arrival.path, "/reader.html?start=chips");
+
   for (const [name, s] of withQuery) {
-    if (name === "curated-readout") continue;
+    if (name === "curated-readout" || name === "chip-arrival") continue;
     const nav = resolveNavigation(s);
     assert.equal(nav.page, "/inspection.html", `${name} is a share scenario and belongs on the share page`);
     // The id in the URL and the id in the stubbed route are the same string, or the

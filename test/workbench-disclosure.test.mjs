@@ -183,9 +183,27 @@ test("both doors into the compare stage exist, and both go through one handler",
 // ── The chip lane ──────────────────────────────────────────────────────────────
 
 test("the chip lane renders behind the view's own door, never unconditionally", () => {
+  // `view.chipDoor` is still the stage decision that governs the door, and the reason it
+  // exists is unchanged: it goes false at compare, where a paired answer box is already
+  // live, so the lane's own answer box can never turn up beside it.
+  //
+  // The door now has two mount points and this is the late one, so the condition reads
+  // with the follow-up stand-down attached. That subtracts one stage, and only because the
+  // follow-up stage mounts the same control earlier, inside the result block. It adds no
+  // stage: nothing here can put the door on a stage `stageView` withheld it from. See
+  // test/chip-door-contract.test.mjs for the two mount points and the shared control.
+  //
+  // CORRECTED — the stand-down stage. It read STAGE_RESULT for one pass. STAGE_RESULT is
+  // the degraded fallback path (act2 is null only when there is no measurement), so that
+  // cut moved the door on error and capacity surfaces and left the successful read — which
+  // is where the buried door was measured — alone. RESULT now keeps its late door.
   assert.ok(
-    /\{view\.chipDoor \? \(/.test(SRC),
+    /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/.test(SRC),
     "the door is a stage decision: it closes where a paired input is live",
+  );
+  assert.ok(
+    /\{stage === STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/.test(SRC),
+    "and the stage it stands down for must be the one that mounts the same control earlier",
   );
   const at = SRC.indexOf("<ChipLane />");
   assert.notEqual(at, -1, "the lane must still exist");

@@ -78,6 +78,10 @@ const EVIDENCE = componentSource(SRC, "FindingEvidence");
 const SOURCE_READING = componentSource(SRC, "SourceReading");
 const MARK_NUMBER = componentSource(SRC, "MarkNumber");
 
+// Not a component. Both the body and the list call it to name the same finding, so
+// neither slice above can hold it and both need it in scope.
+const EXPLANATION_ID = componentSource(SRC, "findingExplanationId");
+
 // The descriptor's real key set, from a real finding built through the real door.
 const DESCRIPTOR_KEYS = new Set(
   Object.keys(
@@ -229,7 +233,7 @@ const QUOTE = "ninety days after the notice is served";
 // reader-result.js, and the panel gets the real one.
 async function renderPanel(findings) {
   const { code } = await transform(
-    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
+    `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\n${EXPLANATION_ID}\nreturn MeasurementPanel;`,
     {
       loader: "jsx",
       jsxFactory: "h",

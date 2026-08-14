@@ -87,6 +87,7 @@ import {
   STAGE_COMPOSE,
   STAGE_COMPARE,
   STAGE_CHIPS,
+  STAGE_FOLLOWUP,
   CAUSE_ADVANCE,
   CAUSE_ASYNC,
   CAUSE_DEGRADED,
@@ -4025,23 +4026,52 @@ const MEASURE_SOURCE_LABEL = "The answer, marked";
 //
 // No caret, no strikethrough, no suggested replacement, no "this should have said".
 // A mark is an observation about words that are there. It is never a requested edit.
+// The DOM id of the list item that explains one finding. Derived from the canonical
+// finding id and nothing else, so the body and the list arrive at the same string
+// without either being told what the other used, and so renumbering the marks cannot
+// move it — the numeral is a display join key, the finding id is the identity.
+function findingExplanationId(findingId) {
+  const id = String(findingId || "").trim();
+  return id ? `wb-finding-${id.replace(/[^A-Za-z0-9_-]/g, "-")}` : "";
+}
+
 function SourceReading({ reading }) {
   if (!reading || !reading.segments.length) return null;
+  // mark number → the finding it belongs to, read off the reading's own mark table.
+  // Nothing here recomputes the numbering; buildSourceReading published it already.
+  const findingByMark = new Map((reading.marks || []).map((m) => [m.n, m.finding_id]));
+  // A mark stood over the words and the explanation sat hundreds of pixels below it,
+  // and the only thing joining them was a numeral a screen reader had no way to
+  // follow. aria-details rather than aria-describedby: describedby would flatten the
+  // whole explanation into a string and read it out every time the reader crossed the
+  // marked words. This offers the relationship and lets the reader take it.
+  //
+  // Only marks in the body carry it, which is the whole reason ABSENT and UNRESOLVED
+  // get none: an unresolved quotation is never numbered, and a record-level absence
+  // is never positioned, so neither one reaches this element to be linked from.
   return (
     <div className="wb-measure__source" role="group" aria-label={MEASURE_SOURCE_LABEL}>
       <p className="wb-source__body">
-        {reading.segments.map((seg) =>
-          seg.marks.length ? (
-            <mark key={seg.start} className="wb-source__mark" data-mark={seg.marks.join(" ")}>
+        {reading.segments.map((seg) => {
+          if (!seg.marks.length) return <span key={seg.start}>{seg.text}</span>;
+          const details = seg.marks
+            .map((n) => findingExplanationId(findingByMark.get(n)))
+            .filter(Boolean)
+            .join(" ");
+          return (
+            <mark
+              key={seg.start}
+              className="wb-source__mark"
+              data-mark={seg.marks.join(" ")}
+              aria-details={details || undefined}
+            >
               {seg.starts.map((n) => (
                 <MarkNumber key={n} n={n} />
               ))}
               {seg.text}
             </mark>
-          ) : (
-            <span key={seg.start}>{seg.text}</span>
-          ),
-        )}
+          );
+        })}
       </p>
     </div>
   );
@@ -4118,7 +4148,7 @@ function MeasurementPanel({ result, context }) {
           {findings.length ? (
             <ul className="wb-measure__list">
               {findings.map((f) => (
-                <li key={f.id} className="wb-measure__finding">
+                <li key={f.id} id={findingExplanationId(f.id)} className="wb-measure__finding">
                   <span className="wb-measure__finding-type">{f.class_display}</span>
                   {(f.materiality || "").trim() ? (
                     <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
@@ -4899,6 +4929,8 @@ function CheckCard({ card, run, status, onStatus }) {
 // The Check Register panel: the top few cards by default, expandable to the full
 // register. Renders nothing when the register carries no cards (the both-ends rule
 // leaves most answers with none — silence, not an empty ceremony).
+const CHECKS_LIST_ID = "wb-checks-list";
+
 function CheckRegisterPanel({ result }) {
   const reg = result?.checks;
   const run = result?.receipt?.open_run?.provenance?.request_id || "";
@@ -4920,7 +4952,7 @@ function CheckRegisterPanel({ result }) {
       </div>
       <p className="wb-checks__note">{CHECK_UI.register_note}</p>
       {hasMore && !showAll ? <p className="wb-checks__eyebrow">{CHECK_UI.top_label}</p> : null}
-      <ul className="wb-checks__list">
+      <ul id={CHECKS_LIST_ID} className="wb-checks__list">
         {cards.map((card) => (
           <CheckCard
             key={card.id}
@@ -4931,8 +4963,18 @@ function CheckRegisterPanel({ result }) {
           />
         ))}
       </ul>
+      {/* The list is what this button lengthens and shortens, so it names it and reports
+          its own state. Without aria-expanded a screen reader heard "Show the full
+          register (5)" and had no way to learn that pressing it had worked, or that the
+          five were already showing. The same pattern the chip-lane toggle uses. */}
       {hasMore ? (
-        <button type="button" className="wb-checks__more wb-focus" onClick={() => setShowAll((v) => !v)}>
+        <button
+          type="button"
+          className="wb-checks__more wb-focus"
+          aria-expanded={showAll}
+          aria-controls={CHECKS_LIST_ID}
+          onClick={() => setShowAll((v) => !v)}
+        >
           {showAll ? CHECK_UI.collapse_label : `${CHECK_UI.expand_label} (${reg.cards.length})`}
         </button>
       ) : null}
@@ -6240,6 +6282,40 @@ function ReaderWorkbench() {
   };
   const closeChipLane = () => setLane(LANE_INSPECT);
 
+  // ONE door, rendered at one of two places. The door was measured at ~90% of the page
+  // on every viewport, and the depth was never the door's own position — it is already
+  // the first node after the result block. What sits above it is the result block's
+  // height. So the door does not move: a second mount point for the SAME control opens
+  // inside the result block, in the continuation zone below the earned actions, and the
+  // late mount stands down there and only there. That place is the follow-up stage —
+  // where a measurement exists and the act-2 offer is on the page — because that is the
+  // stage the ~90% figure was measured on.
+  //
+  // This is a mount point, not a second door. The function below is the only place the
+  // control is written, so both sites carry the same two labels, the same disclosure
+  // pair and the same handlers, and neither can drift from the other. There is no second
+  // lane, no second piece of state, and no reparenting: `chipMounted` still holds the
+  // one ChipLane where it has always been, and `lane` is still the only thing either
+  // mount toggles. That matters more than the placement does — the lane is hidden rather
+  // than unmounted precisely so a half-typed answer survives a close, and moving it
+  // under a new parent would unmount it and throw that answer away.
+  const chipDoorControl = () => (
+    <div className="wb-reader-v2__follow wb-reader-v2__follow--chip-door">
+      <button
+        type="button"
+        className="wb-demo-trigger wb-chip-door"
+        onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
+        aria-expanded={lane === LANE_CHIPS}
+        aria-controls="wb-chip-lane"
+      >
+        {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
+            keeps whatever was typed in it, so "close" would describe the wrong
+            thing. The value statement is not lost — it heads the lane itself. */}
+        {lane === LANE_CHIPS ? "Hide follow-up checks" : "Show follow-up checks"}
+      </button>
+    </div>
+  );
+
   // Both doors into the compare stage land here: the copy action and the explicit
   // "Paste what came back" control. Either one is the person's own forward move.
   const openFollowUp = () => {
@@ -6431,11 +6507,18 @@ function ReaderWorkbench() {
         {view.pasteBox ? (
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
-            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="tablist" aria-label="Reader mode">
+            {/* Not tabs, and the half-built tablist that used to sit here said they were.
+                A tab controls one panel and swaps a view losslessly. These two control four
+                disjoint regions — the case grid, the confirm block's heading, the field set,
+                and the confirm block's own class — and switchMode discards the result, the
+                errors and the pasted answer on the way through. There is no single element
+                that could honestly take aria-controls, and inventing a wrapper to hold one
+                would be building interaction architecture to satisfy a pattern the UI does
+                not implement. They are what they look like: two buttons, one of them on. */}
+            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="group" aria-label="Reader mode">
               <button
                 type="button"
-                role="tab"
-                aria-selected={mode === "own"}
+                aria-pressed={mode === "own"}
                 className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
                 onClick={() => switchMode("own")}
               >
@@ -6444,8 +6527,7 @@ function ReaderWorkbench() {
               </button>
               <button
                 type="button"
-                role="tab"
-                aria-selected={mode === "guided"}
+                aria-pressed={mode === "guided"}
                 className={`wb-reader-v2__mode wb-focus${mode === "guided" ? " is-active" : ""}`}
                 onClick={() => switchMode("guided")}
               >
@@ -6741,6 +6823,22 @@ function ReaderWorkbench() {
                 />
               </div>
             ) : null}
+            {/* The door's early mount point, inside the result block, on the follow-up
+                stage. It sits after the act-2 offer on purpose: the offer is the action the
+                inspection earned, and the door stays secondary to it — the person meets the
+                measured question first and the menu of other questions second.
+
+                CORRECTED. An earlier cut of this mount stood on the result stage, on the
+                reasoning that an available act-2 moves the stage to FOLLOWUP and so the
+                result stage was the one left holding a buried door. The tree says otherwise
+                and the stage is the wrong one: `buildAct2` (api/read.js) returns null only
+                when `measurement` is null, so in production STAGE_RESULT is the degraded
+                fallback path alone. The buried door was measured on a page with a real
+                measurement on it, which is this stage. Moving it at RESULT repositioned the
+                door on error and capacity surfaces — states reached when something has
+                already gone wrong — and left the page the measurement was taken on
+                untouched. */}
+            {stage === STAGE_FOLLOWUP ? chipDoorControl() : null}
             {view.loop ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--loop">
                 <SecondRunLoop mode={mode} sel={sel} onAnother={startAnother} />
@@ -6757,23 +6855,20 @@ function ReaderWorkbench() {
             part of the inspection flow. The lane owns an answer-entry textarea, so it renders
             behind a door instead of unconditionally: two answer boxes on first load competed
             for the same first keystroke. The door closes at the compare stage, where a
-            stage-specific paired-answer input is already live. */}
-        {view.chipDoor ? (
-          <div className="wb-reader-v2__follow wb-reader-v2__follow--chip-door">
-            <button
-              type="button"
-              className="wb-demo-trigger wb-chip-door"
-              onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
-              aria-expanded={lane === LANE_CHIPS}
-              aria-controls="wb-chip-lane"
-            >
-              {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
-                  keeps whatever was typed in it, so "close" would describe the wrong
-                  thing. The value statement is not lost — it heads the lane itself. */}
-              {lane === LANE_CHIPS ? "Hide follow-up checks" : "Show follow-up checks"}
-            </button>
-          </div>
-        ) : null}
+            stage-specific paired-answer input is already live.
+
+            This is the door's late mount point, and it stands down on one stage only.
+            At the follow-up stage the door is mounted earlier, inside the result block, so
+            rendering it here too would put the same control on the page twice; every other
+            stage this door renders on — compose, result, delta, chips — is untouched and
+            still reaches it here, at the depth it has always had. `stageView` is unchanged:
+            the stand-down is written at this mount point, not in the stage machine.
+
+            The stage named here was RESULT for one pass and is now FOLLOWUP. That is the
+            whole correction: the result stage is the degraded fallback path, so standing
+            down there moved the door on error and capacity surfaces and nowhere a
+            measurement had been taken. Its prior late-door behaviour is restored. */}
+        {view.chipDoor && stage !== STAGE_FOLLOWUP ? chipDoorControl() : null}
         {/* Mounted on first open and never unmounted after: `hidden` takes the lane out of
             the layout, the tab order and the accessibility tree, so the one-live-input
             invariant holds while a half-typed answer survives a close and reopen. */}

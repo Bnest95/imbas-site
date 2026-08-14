@@ -1084,18 +1084,32 @@ export function describeFinding(finding) {
 // whether a mark may be positioned and only a descriptor carries it. It returns
 // three things and computes nothing else:
 //
-//   marks     — every mark the record holds, numbered, in the record's own order.
+//   marks     — every mark the record holds, in the record's own order, numbered.
 //   segments  — an exact, ordered cover of the artifact text, each segment naming
 //               the marks that span it.
 //   marks_by_finding — the numbering again, keyed by finding id and aligned index
 //               for index with that finding's anchors, so a list and a body can
 //               agree on which mark is which without either one re-deriving it.
 //
-// NUMBERING IS THE RECORD'S ORDER, not the document's. The same numbers key the
-// body and the list, and the list renders in record order, so numbering by
-// position in the text would make one of the two surfaces count out of sequence.
-// A mark low in the answer may therefore carry a low number. That is the record
-// being the authority on its own order.
+// NUMBERING IS THE DOCUMENT'S ORDER. A reader meets the marks by reading the answer,
+// one after another, and a body that opened with mark 4 was asking them to accept
+// that the count they could see was not a count. So the numerals ascend down the
+// answer: first passage marked is mark 1.
+//
+// This reverses what stood here, and the argument it reverses was not wrong about
+// its own risk — numbering by position does make the list beneath the body count out
+// of sequence, because the list renders in record order and always did. What that
+// argument got wrong was the cause of the agreement it was protecting. Body and list
+// agree because there is ONE numbering and two views of it, not because that
+// numbering happened to be the record's. Renumber it and they still agree; the list
+// simply shows its numbers unsorted, which costs nothing, because the list is a set
+// of explanations reached through a numeral rather than a sequence anybody counts.
+// The body is the surface that is read in order, so the body is the surface the
+// order belongs to.
+//
+// The numeral is therefore a DISPLAY key: it names which mark, it does not identify
+// one. Identity is finding_id and the anchor's own offsets, neither of which this
+// function touches, and the record's order is preserved in `marks` exactly as given.
 //
 // WHAT IS NOT POSITIONED. A mark whose channel is RECORD_LEVEL_ABSENCE has no
 // span and gets none here. A mark whose span names a different artifact is not in
@@ -1167,19 +1181,42 @@ function cutIntoSegments(text, positioned) {
   return deepFreeze(out);
 }
 
+// The order the numerals are handed out in. Marks the document can place come first,
+// in the order a person reads them; marks it cannot place keep the record's order
+// behind them, because there is no position to sort them by and inventing one would be
+// the surface claiming to know where an absence lives.
+//
+// Two marks opening at the same offset are ordered longer first, so a bracket that
+// contains another is numbered before the one inside it — the outer opens first when
+// you read it aloud. Ties past that fall back to the record's order, which makes the
+// comparator total: every pair has an answer, so the numbering is one deterministic
+// function of the record and the text, not a property of the sort algorithm.
+function byReadingOrder(a, b) {
+  if (a.in_document !== b.in_document) return a.in_document ? -1 : 1;
+  if (a.in_document) {
+    if (a.span.start !== b.span.start) return a.span.start - b.span.start;
+    if (a.span.end !== b.span.end) return b.span.end - a.span.end;
+  }
+  return a.record_index - b.record_index;
+}
+
 export function buildSourceReading({ artifactText, findings = [], artifactId = ARTIFACT_ORIGINAL }) {
   const text = str(artifactText);
-  const marks = [];
-  const byFinding = {};
+
+  // PASS ONE — every mark the record holds, in the record's own order, not yet
+  // numbered. The number cannot be assigned while walking the record any more, because
+  // it depends on where the mark falls in the document, and that is not settled until
+  // every mark has been resolved against the text.
+  const drafted = [];
+  const slots = [];
   for (const f of findings) {
     const anchors = (f && f.anchors) || [];
-    const numbering = [];
-    for (const a of anchors) {
-      if (!a || !a.channel) {
-        numbering.push(null);
-        continue;
-      }
-      const n = marks.length + 1;
+    // One slot per anchor, index for index, so an anchor that is never numbered leaves
+    // a null in place rather than shifting the ones after it.
+    const numbering = anchors.map(() => null);
+    if (f && f.id) slots.push({ id: f.id, numbering });
+    anchors.forEach((a, i) => {
+      if (!a || !a.channel) return;
       // NO DOCUMENT, NO POSITIONS. A caller that holds the record but not the answer
       // it was made against gets the numbering and no body — every mark unpositioned,
       // no segment, nothing for a surface to draw. That is not the check being relaxed:
@@ -1192,28 +1229,51 @@ export function buildSourceReading({ artifactText, findings = [], artifactId = A
         a.span != null &&
         a.span.artifact_id === artifactId;
       if (inThisDocument) assertSpanReproduces(text, a.span, a.quote, artifactId);
-      marks.push(
-        deepFreeze({
-          n,
-          finding_id: f.id,
-          channel: a.channel,
-          quote: a.quote,
-          span: inThisDocument ? deepFreeze({ start: a.span.start, end: a.span.end }) : null,
-          in_document: inThisDocument,
-        }),
-      );
-      numbering.push(n);
-    }
-    if (f && f.id) byFinding[f.id] = deepFreeze(numbering);
+      drafted.push({
+        record_index: drafted.length,
+        finding_id: f.id,
+        channel: a.channel,
+        quote: a.quote,
+        span: inThisDocument ? { start: a.span.start, end: a.span.end } : null,
+        in_document: inThisDocument,
+        numbering,
+        slot: i,
+      });
+    });
   }
+
+  // PASS TWO — hand out the numerals. Every mark gets exactly one and every numeral
+  // goes to exactly one mark, so 1..N is a bijection onto the marks the record holds
+  // however the record was ordered.
+  const reading = [...drafted].sort(byReadingOrder);
+  reading.forEach((d, i) => {
+    d.n = i + 1;
+    d.numbering[d.slot] = d.n;
+  });
+
+  const byFinding = {};
+  for (const s of slots) byFinding[s.id] = deepFreeze(s.numbering);
+
+  const mark = (d) =>
+    deepFreeze({
+      n: d.n,
+      finding_id: d.finding_id,
+      channel: d.channel,
+      quote: d.quote,
+      span: d.span ? deepFreeze(d.span) : null,
+      in_document: d.in_document,
+    });
+
   return deepFreeze({
     artifact_id: artifactId,
-    marks: deepFreeze(marks),
+    // Record order, still. The record is the authority on its own order and this array
+    // is that order; the numeral is the display key laid over it, so `n` ascends down
+    // the document rather than down this list.
+    marks: deepFreeze(drafted.map(mark)),
     marks_by_finding: deepFreeze(byFinding),
-    segments: cutIntoSegments(
-      text,
-      marks.filter((m) => m.in_document),
-    ),
+    // Ranked, so the numbers a segment reports already ascend and no surface has to
+    // sort them to print them in order.
+    segments: cutIntoSegments(text, reading.filter((d) => d.in_document).map(mark)),
   });
 }
 

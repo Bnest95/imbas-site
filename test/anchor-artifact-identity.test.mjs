@@ -740,8 +740,18 @@ test("H: NON-REGRESSION — every committed anchor still resolves against the ar
   // span to resolve — that is the whole point of them. Every one of the 24 resolved on
   // the first run against the artifact it names, so what moved here is the size of the
   // corpus and not its health.
-  assert.equal(records, 34, "the audit counted 34 records carrying anchors");
-  assert.equal(anchors, 704, "the audit counted 704 anchors");
+  //
+  // They moved again, 34→38 and 704→952, when register-overflow, its expanded twin and
+  // chip-arrival were promoted off the pending registry onto the board. Four of those
+  // six new snapshots carry anchors, 62 apiece: the two overflow scenarios share one
+  // assembled payload and photograph it collapsed and expanded, at two viewports. The
+  // third scenario contributes nothing to either count, and that is the correct result
+  // rather than a gap — chip-arrival routes through ?start=chips with no /api/read call
+  // at all, so its payload holds no findings and therefore no spans. The health
+  // assertion above this one is the one that guards the boundary, and all 952 resolved
+  // against the artifact each of them names on the first run.
+  assert.equal(records, 38, "the audit counted 38 records carrying anchors");
+  assert.equal(anchors, 952, "the audit counted 952 anchors");
   assert.ok(shapeB > 0, "a collector that finds no Shape B anchor is skipping the paired surface");
   assert.deepEqual([...roles].sort(), [ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
 });
