@@ -46,6 +46,7 @@ import {
   selectSubset,
 } from "../reader-result.js";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
+import { findingCheckAction } from "../reader-checks.js";
 
 const SRC = readFileSync(
   process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
@@ -158,8 +159,15 @@ const SOURCE_READING = componentSource(SRC, "SourceReading");
 const MARK_NUMBER = componentSource(SRC, "MarkNumber");
 
 // Every component here is the shipped one, and every model function handed in is the
-// real one. Nothing is stubbed except the two sub-panels this file makes no claim
-// about, so a pass means the real dispatch ran over the real descriptors.
+// real one. Nothing is stubbed except the sub-panels this file makes no claim about, so
+// a pass means the real dispatch ran over the real descriptors.
+//
+// FindingCheckAction is one of those sub-panels. This file's claims are the marks in the
+// body and the rows beneath it — how many, which are absences, which carry numbers — and
+// the action element takes no part in any of them. findingCheckAction itself is handed in
+// real, because the panel calls it to build the row's action map and a stub there would
+// mean the map was never built the way production builds it. Its rendering is proven in
+// test/reader-checks-actions.test.mjs.
 async function renderPanel() {
   const { code } = await transform(
     `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
@@ -176,6 +184,8 @@ async function renderPanel() {
     "selectSubset",
     "describeFinding",
     "buildSourceReading",
+    "findingCheckAction",
+    "FindingCheckAction",
     "ANCHOR_CHANNEL",
     "RECORD_LEVEL_ABSENCE_NOTE",
     "MARK_ORIENTATION_NOTE",
@@ -193,6 +203,8 @@ async function renderPanel() {
     selectSubset,
     describeFinding,
     buildSourceReading,
+    findingCheckAction,
+    stub,
     ANCHOR_CHANNEL,
     RECORD_LEVEL_ABSENCE_NOTE,
     MARK_ORIENTATION_NOTE,

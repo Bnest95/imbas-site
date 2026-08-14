@@ -38,6 +38,7 @@ import {
   registerFindingShape,
   selectSubset,
 } from "../reader-result.js";
+import { findingCheckAction } from "../reader-checks.js";
 
 const SRC = readFileSync(
   process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
@@ -227,6 +228,16 @@ const QUOTE = "ninety days after the notice is served";
 // would let the panel pass this test while the READ stratum it now leads with was
 // broken. buildSourceReading is imported rather than lifted — it is model code in
 // reader-result.js, and the panel gets the real one.
+//
+// findingCheckAction is imported for the same reason as buildSourceReading: it is model
+// code in reader-checks.js, so the panel gets the real one and the row's action map is
+// built by the real join. FindingCheckAction itself IS stubbed, and the difference from
+// SourceReading is the claim each file makes. This file's claim is that a row is built
+// from the render descriptor alone, and the action element takes no descriptor field —
+// it takes a check-register join keyed by finding id. Rendering it here would prove
+// nothing about descriptor-genericity and would drag React state, Btn and the telemetry
+// vocabulary into a sandbox that exists to isolate the row. It renders for real in
+// test/reader-checks-actions.test.mjs, which is where its own claims live.
 async function renderPanel(findings) {
   const { code } = await transform(
     `${PANEL}\n${EVIDENCE}\n${SOURCE_READING}\n${MARK_NUMBER}\nreturn MeasurementPanel;`,
@@ -251,6 +262,8 @@ async function renderPanel(findings) {
     "selectSubset",
     "describeFinding",
     "buildSourceReading",
+    "findingCheckAction",
+    "FindingCheckAction",
     "ANCHOR_CHANNEL",
     "RECORD_LEVEL_ABSENCE_NOTE",
     "MARK_ORIENTATION_NOTE",
@@ -268,6 +281,8 @@ async function renderPanel(findings) {
     () => findings,
     (f) => f,
     buildSourceReading,
+    findingCheckAction,
+    stub,
     ANCHOR_CHANNEL,
     RECORD_LEVEL_ABSENCE_NOTE,
     MARK_ORIENTATION_NOTE,

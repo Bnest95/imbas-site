@@ -4444,6 +4444,59 @@
   color: rgba(190, 176, 196, 0.82);
 }
 
+/* The question a finding produced, sitting under that finding. It is the register's
+   own idiom — same label scale, same question scale, same wrapping action row — because
+   it is the register's own question and reading it twice should feel like reading one
+   thing twice, not like meeting a second feature.
+
+   The rule above it is the only separator: the finding's class, reason and evidence run
+   together as one account, and the question is a turn away from that account toward the
+   reader. There is no rule, no box and no accent on the block itself, so the ember mark
+   on .wb-measure__anchor stays the one thing in this list that means "lifted from the
+   answer" — a question is nobody's quotation.
+
+   Every rule here is scoped under .wb-measure__next, and .wb-measure__next only renders
+   where a check emitted. A finding without one produces no element for any of this to
+   apply to. */
+.wb-measure__next {
+  margin-top: 0.5rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(242, 232, 220, 0.08);
+}
+
+.wb-measure__next-label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: max(0.6rem, var(--mono-min));
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(200, 168, 150, 0.8);
+}
+
+.wb-measure__next-question {
+  margin: 0.25rem 0 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: rgba(232, 220, 204, 0.95);
+}
+
+/* Wraps rather than compresses. At 390px the button and the resolver line stack, which
+   is why the resolver is a sibling in the flex row and not a tail on the button. */
+.wb-measure__next-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.wb-measure__next-resolver {
+  font-family: var(--font-mono);
+  font-size: max(0.68rem, var(--mono-min));
+  letter-spacing: 0.05em;
+  color: rgba(200, 168, 150, 0.8);
+}
+
 .wb-measure__unvalidated {
   margin: 1.1rem 0 0;
   font-family: var(--font-sans);

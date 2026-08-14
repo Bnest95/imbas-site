@@ -264,8 +264,15 @@ function extractExpr(text, prefix) {
 // vocabulary owns rather than the run, and a figure a person cannot check by looking at
 // the screen. What it was really protecting survives and is asserted here — the number
 // the hero states is the number of rows a person can count beneath it.
+//
+// The panel names the subset before it maps it, because the per-finding action is built
+// over the same set the rows are. So both expressions are lifted and run in sequence, and
+// the assertion still lands on the rows: `surfaced` is where the subset law is enforced,
+// and `findings` is what the list renders from. Running the pair keeps this test on the
+// real chain rather than on a single line that happens to hold both today.
 test("the hero's number is the number of rows the panel puts on the screen", () => {
   const PANEL = componentSource("MeasurementPanel");
+  const subsetExpr = extractExpr(PANEL, "const surfaced = ");
   const listExpr = extractExpr(PANEL, "const findings = ");
 
   const result = buildCanonicalResult({
@@ -277,7 +284,12 @@ test("the hero's number is the number of rows the panel puts on the screen", () 
     ],
   });
 
-  const runList = new Function("canonical", "selectSubset", "describeFinding", `return (${listExpr});`);
+  const runList = new Function(
+    "canonical",
+    "selectSubset",
+    "describeFinding",
+    `const surfaced = ${subsetExpr};\nreturn (${listExpr});`,
+  );
   const rows = runList(result, selectSubset, (f) => f);
 
   assert.equal(rows.length, 2, "the unresolved finding must not be a row");

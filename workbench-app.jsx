@@ -59,7 +59,7 @@ import { SECOND_QUESTION_BANK } from "./reader-second-question-bank.js";
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
-import { CHECK_UI } from "./reader-checks.js";
+import { CHECK_UI, findingCheckAction } from "./reader-checks.js";
 import {
   buildReviewRecord,
   reviewRecordFilename,
@@ -4066,7 +4066,35 @@ function MeasurementPanel({ result, context }) {
   if (!m) return null;
   const receipt = result?.receipt || null;
   const canonical = result.result;
-  const findings = selectSubset(canonical, "surfaced_findings").map(describeFinding);
+  const surfaced = selectSubset(canonical, "surfaced_findings");
+  const findings = surfaced.map(describeFinding);
+  // The question a finding produced, keyed by the finding that produced it.
+  //
+  // Built from the raw canonical findings rather than the descriptors, because the
+  // join lives on `check_register` and describeFinding does not carry it. Nothing is
+  // computed here: buildCanonicalSingle already stamped each finding with its register
+  // disposition, and findingCheckAction reports that stamp. A finding whose check
+  // never emitted is simply absent from this map.
+  //
+  // IT MAPS `surfaced`, AND THAT IS THE SURFACING GATE. It is the same subset the rows
+  // are drawn from, so an action can only ever appear on a finding already on screen.
+  // The subset is load-bearing rather than convenient: check_register is stamped on
+  // every finding, including ones whose anchor never resolved, so an unsurfaced finding
+  // can carry an emitted card and findingCheckAction would return a descriptor for it.
+  // reader-result.js decides what surfaces; this reads that decision instead of
+  // re-deriving it. Anything but surfaced_findings here puts a question on screen about
+  // a finding no one was shown.
+  //
+  // The cards come off the same `result` the register panel reads, so a row can only
+  // hold a question the register itself holds. That makes this strictly downstream of
+  // checkRegisterVisible — no cards, no map, no rows with actions — and the visibility
+  // gate is neither read nor widened here.
+  const actionsByFinding = {};
+  for (const raw of surfaced) {
+    const action = findingCheckAction({ finding: raw, cards: result?.checks?.cards || [] });
+    if (action) actionsByFinding[action.finding_id] = action;
+  }
+  const checkRun = receipt?.open_run?.provenance?.request_id || "";
   const declaredModel = (context?.model || "").trim() || (receipt?.open_run?.declared_model || "").trim();
   const runTimestamp = receipt?.generated_at || receipt?.open_run?.provenance?.run_timestamp || "";
   // The artifact comes off the receipt, not off the compose field. api/read.js hands
@@ -4137,6 +4165,10 @@ function MeasurementPanel({ result, context }) {
                       mark={(reading.marks_by_finding[f.id] || [])[i]}
                     />
                   ))}
+                  {/* Last in the row, after the class, the reason and every piece of
+                      evidence, because a question about a finding is only useful to
+                      someone who has read the finding. */}
+                  <FindingCheckAction action={actionsByFinding[f.id]} run={checkRun} />
                 </li>
               ))}
             </ul>
@@ -4204,6 +4236,64 @@ function FindingEvidence({ anchor, mark }) {
     );
   }
   return null;
+}
+
+// The question this finding produced, on the finding that produced it.
+//
+// The register already writes one question per emitted check and already offers it for
+// copying, but it does so in a panel further down the page with most cards behind an
+// expander. A reader who has just read a finding had no path from it to its question.
+// This is that path and nothing more: same question, same words, same copy affordance,
+// same event. Nothing new is generated and nothing is sent anywhere.
+//
+// Imbas stays on the question side. The words here are the model's, written under the
+// endpoint's non-leading instruction and already past the register's world-claim gate;
+// no improved answer is produced, and the resolver line says where a person might take
+// the question rather than what they will find.
+//
+// The question is shown, not just offered. A bare copy button hands over words a reader
+// cannot see, and a control whose effect is invisible is not a control anyone can judge.
+//
+// NO POSITIONAL LANGUAGE, and none is available to add: the descriptor from
+// findingCheckAction carries no quote and no span. So this element reads the same under
+// a finding about words the answer contains and under a finding about something it never
+// said. A reader is never asked to learn which is which.
+//
+// EMPTY IS EMPTY. A finding with no emitted check renders no node — no wrapper, no
+// spacing, no disabled control, no focus stop, nothing in the accessibility tree.
+function FindingCheckAction({ action, run }) {
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  if (!action) return null;
+
+  const copyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(action.question);
+      setCopied(true);
+      setCopyFail("");
+      // The same event the register card fires. Copying the question is one act,
+      // reachable from two places; a second event name would double-count it.
+      emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check: action.finding_type });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+
+  return (
+    <div className="wb-measure__next">
+      <span className="wb-measure__next-label">{CHECK_UI.labels.verification}</span>
+      <p className="wb-measure__next-question">{action.question}</p>
+      <div className="wb-measure__next-actions">
+        <Btn kind="ghost" small className={copied ? "is-copied" : ""} onClick={copyQuestion}>
+          {copied ? action.copied_label : action.label}
+        </Btn>
+        <span className="wb-measure__next-resolver">{action.resolver_label}</span>
+        {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
+      </div>
+    </div>
+  );
 }
 
 // One number, one element, everywhere a mark is named. The label is read and not

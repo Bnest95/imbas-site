@@ -488,6 +488,75 @@ export function buildCard(check, event) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// The per-finding action.
+//
+// A surfaced finding and the question the register wrote from it are ALREADY
+// joined in the data. buildCanonicalSingle stamps every finding with
+// classifyRegisterOutcome, and an EMITTED disposition carries the id of the card
+// that question lives on. Nothing rendered that join, so a person reading a
+// finding had no way to reach the question it produced: the questions sit in a
+// separate panel, ranked, most of them behind an expander.
+//
+// This reports the existing join and produces nothing. The question is the
+// model's, written under the endpoint's non-leading instruction; the card is the
+// register's, already both-ends-quotable and already past the world-claim gate.
+// A finding whose check never emitted gets null, so the action inherits the
+// both-ends law rather than relaxing it.
+//
+// THAT IS HALF THE ELIGIBILITY RULE, AND THIS FUNCTION ONLY OWNS THAT HALF. The
+// other half is surfacing, and the two are orthogonal in the data: buildCanonicalSingle
+// stamps check_register onto EVERY finding it builds, including findings whose anchor
+// never resolved. An UNRESOLVED finding really can carry status EMITTED and a real
+// card_id — the register resolves the check block's own two quotations against the
+// answer, which has nothing to do with whether the finding's anchor resolved. Call
+// this on one and it will hand back a descriptor.
+//
+// So THE CALLER MUST PASS SURFACED FINDINGS ONLY, and the caller is the one that can:
+// reader-result.js owns satisfiesAnchorContract and publishes the answer as the
+// surfaced_findings subset. Re-deriving that predicate here is the one thing this must
+// never do — a module second-guessing reader-result.js about what may be shown is how
+// absence findings were lost once already — and importing it is not available either,
+// because reader-result.js imports this file and the import would close a cycle.
+// The gate therefore lives at the call site, on the subset, where it is a read of the
+// authoritative answer rather than a copy of the rule. test/reader-checks-actions.test.mjs
+// pins all three parts: that the panel builds its map from surfaced_findings, that an
+// UNRESOLVED finding with an EMITTED card renders no action through the real panel, and
+// that this function alone would have returned one for it.
+//
+// NO POSITIONAL FIELD, for either grammar. The descriptor carries no quote and no
+// span. So an action on a record-level absence cannot imply a passage exists, and
+// an action on a quoted finding cannot re-state a position its mark already
+// holds. The absence grammar is structural here, not a branch that could be
+// mis-taken later.
+//
+// "EMITTED" is a literal because REGISTER_STATUS lives in reader-result.js, which
+// imports this module; naming it here would close an import cycle.
+// test/reader-checks-actions.test.mjs imports both and pins them equal, so the
+// literal cannot drift from the enum it mirrors.
+export const REGISTER_EMITTED = "EMITTED";
+
+export function findingCheckAction({ finding, cards = [] } = {}) {
+  const disposition = finding && finding.check_register;
+  if (!disposition || disposition.status !== REGISTER_EMITTED) return null;
+  const cardId = asString(disposition.card_id).trim();
+  if (!cardId) return null;
+  const card = (cards || []).find((c) => c && c.id === cardId);
+  if (!card) return null;
+  const question = asString(card.verification_question).trim();
+  if (!question) return null;
+  return {
+    finding_id: asString(finding.id),
+    card_id: cardId,
+    finding_type: card.finding_type,
+    question,
+    resolver: card.resolver,
+    resolver_label: card.resolver_label,
+    label: CHECK_UI.copy_affordance,
+    copied_label: CHECK_UI.copied_affordance,
+  };
+}
+
 // Build the whole Check Register for one inspection: assemble every qualifying
 // finding, validate it (defense in depth — an invalid object is dropped, not
 // rendered), rank, and denormalize into render cards. status is the constant
