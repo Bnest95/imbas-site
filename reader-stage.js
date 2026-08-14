@@ -348,17 +348,7 @@ export function parseArrival({ search = "", hash = "" } = {}) {
   const m = /(?:^|&)stage=([a-z-]+)/.exec(raw);
   const stage = m && ALL_STAGES.includes(m[1]) ? m[1] : null;
   const rerun = String(params.get("rerun") || "");
-  // Two facts, not one. `rerunRequested` is that a carry-over was asked for at all;
-  // `rerunShareId` is the part of that ask which is shaped like a share id. They differ
-  // on exactly one input — a rerun param present and malformed — and that is the case
-  // the Reader used to drop without saying anything, because an empty id is
-  // indistinguishable from no id at all once the shape test has run.
-  return {
-    lane,
-    stage,
-    rerunRequested: rerun !== "",
-    rerunShareId: RERUN_SHARE_ID_RE.test(rerun) ? rerun : "",
-  };
+  return { lane, stage, rerunShareId: RERUN_SHARE_ID_RE.test(rerun) ? rerun : "" };
 }
 
 /**

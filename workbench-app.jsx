@@ -5930,17 +5930,6 @@ function ReaderDemo({ onTryOwn, onClose }) {
   );
 }
 
-// Said when a carry-over was asked for and did not arrive. Two sentences, and the
-// second is the whole recovery: the ordinary Reader is untouched and still below.
-//
-// It names no cause, because the branch that renders it cannot tell one. A malformed
-// id, a record that no longer resolves, a store that could not be reached and a row
-// holding no question all land here, and the only fact common to them is that the
-// question is not in the box. Guessing between them would put a reason on the screen
-// the code does not hold.
-const RERUN_UNRESOLVED_NOTICE =
-  "The question didn't carry over. You can start a new inspection below.";
-
 function ReaderWorkbench() {
   const [mode, setMode] = useState("own");
   const [sel, setSel] = useState(CURATED[0]);
@@ -5974,10 +5963,6 @@ function ReaderWorkbench() {
   // because the point is the answer you get today, and Imbas asks nothing on anyone's
   // behalf. Nothing is written back to the record named in the URL.
   const [rerunSeeded, setRerunSeeded] = useState(false);
-  // The other outcome of the same arrival. A carry-over was asked for and the question
-  // is not in the box, so the Reader says so instead of presenting itself as an
-  // ordinary blank arrival the person never requested.
-  const [rerunUnresolved, setRerunUnresolved] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [hasDelta, setHasDelta] = useState(false);
   const stageRef = useRef(null);
@@ -6112,39 +6097,18 @@ function ReaderWorkbench() {
   // the person can type the question, and a rerun that quietly seeded the wrong text
   // would be worse than one that seeded none.
   useEffect(() => {
-    const { rerunShareId, rerunRequested } = parseArrival(window.location);
-    if (!rerunShareId) {
-      // Asked for, in a shape this Reader cannot read. Every other arrival passes
-      // through here too, so the acknowledgement is gated on the ask having been made.
-      if (rerunRequested) setRerunUnresolved(true);
-      return undefined;
-    }
+    const { rerunShareId } = parseArrival(window.location);
+    if (!rerunShareId) return undefined;
     let live = true;
     fetch(`/api/inspection/${encodeURIComponent(rerunShareId)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        const record = data && data.ok && data.record ? data.record : null;
-        const q = record ? String(record.question || "").trim() : "";
-        if (!live) return;
-        if (!q) {
-          setRerunUnresolved(true);
-          return;
-        }
+        const q = data && data.ok && data.record ? String(data.record.question || "").trim() : "";
+        if (!live || !q) return;
         setQuestion(q);
-        // The declared system travels with the question. A rerun exists to be held
-        // against the run it came from, and the system asked is the variable that
-        // comparison turns on, so dropping it silently costs the continuity the link
-        // was offered for. Only a value the selector can already represent is taken —
-        // no normalization is invented here — it stays editable and unlocked, and a
-        // record holding no usable model leaves the selector exactly as it was. What
-        // the new row records is whatever the person leaves selected, never this.
-        const carried = String(record.ai_model || "").trim();
-        if (MODELS.includes(carried)) setModel(carried);
         setRerunSeeded(true);
       })
-      .catch(() => {
-        if (live) setRerunUnresolved(true);
-      });
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -6342,12 +6306,7 @@ function ReaderWorkbench() {
         className="wb-demo-trigger wb-chip-door"
         onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
         aria-expanded={lane === LANE_CHIPS}
-        /* The lane is not in the DOM until the door is first opened, so naming it
-           unconditionally points assistive technology at an id that does not exist on
-           an ordinary first visit. The name is carried once the lane is real and
-           withheld before that. `hidden` is not absence: a closed-but-mounted lane is
-           still a real element, so it is still named. aria-expanded stands either way. */
-        aria-controls={chipMounted ? "wb-chip-lane" : undefined}
+        aria-controls="wb-chip-lane"
       >
         {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
             keeps whatever was typed in it, so "close" would describe the wrong
@@ -6606,22 +6565,9 @@ function ReaderWorkbench() {
                     You carried this question over from a record you were reading. Ask your AI again and paste what it says today. Imbas asks nothing on your behalf. What comes back becomes its own record with its own date, and the one you came from does not change.
                   </p>
                 ) : (
-                  <>
-                    {/* The notice stands ABOVE the standing intro rather than replacing
-                        it. Replacing it would answer the failed carry-over by taking
-                        away the instruction the person now needs, which is the opposite
-                        of leaving the ordinary Reader intact. It borrows the rerun
-                        line's treatment because it is the same kind of thing — arrival
-                        context, not instruction — and so adds no rule of its own. */}
-                    {rerunUnresolved ? (
-                      <p className="wb-reader-v2__own-intro wb-reader-v2__own-intro--rerun" role="status">
-                        {RERUN_UNRESOLVED_NOTICE}
-                      </p>
-                    ) : null}
-                    <p className="wb-reader-v2__own-intro">
-                      Paste an AI answer below. The Reader inspects what it might be missing.
-                    </p>
-                  </>
+                  <p className="wb-reader-v2__own-intro">
+                    Paste an AI answer below. The Reader inspects what it might be missing.
+                  </p>
                 )}
               </div>
             )}
