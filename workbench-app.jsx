@@ -6131,15 +6131,6 @@ function ReaderWorkbench() {
           return;
         }
         setQuestion(q);
-        // The declared system travels with the question. A rerun exists to be held
-        // against the run it came from, and the system asked is the variable that
-        // comparison turns on, so dropping it silently costs the continuity the link
-        // was offered for. Only a value the selector can already represent is taken —
-        // no normalization is invented here — it stays editable and unlocked, and a
-        // record holding no usable model leaves the selector exactly as it was. What
-        // the new row records is whatever the person leaves selected, never this.
-        const carried = String(record.ai_model || "").trim();
-        if (MODELS.includes(carried)) setModel(carried);
         setRerunSeeded(true);
       })
       .catch(() => {
