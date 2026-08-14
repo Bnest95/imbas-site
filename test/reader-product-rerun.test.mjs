@@ -171,27 +171,39 @@ test("the receipt page says plainly that running it again does not revise this r
   assert.match(js, /Running it again starts a new record with its own date\. This one does not change\./);
 });
 
-// AMENDED — the declared system now travels with the question; the captured answer
-// still does not. The prior rule banned both in one line, and the two are not the same
-// kind of thing.
+// CHALLENGED, EXAMINED, REAFFIRMED — both bans stand. This rule was overturned once and
+// put back by founder ruling, so the argument that overturned it is kept here rather than
+// deleted. A rule whose counter-argument has been erased invites the same reversal again.
 //
-// The ANSWER is the captured artifact. Restoring it would rebuild a capture taken on a
-// different day and stand it up as today's, which is the failure that prohibition
-// exists to prevent. It is untouched and it stays.
+// The ANSWER was never in dispute. It is the captured artifact, and restoring it would
+// rebuild a capture taken on a different day and stand it up as today's, which is the
+// failure this prohibition exists to prevent.
 //
-// The MODEL is a declaration about the run the person is about to make, not a captured
-// value. A rerun is offered so two runs can be held against each other, and the system
-// asked is the variable that comparison turns on — dropping it made the person re-enter
-// the comparison variable from memory, or lose it. It is prefilled from the source
-// record, never locked, and the row that results records whatever is left selected. The
-// section "the system asked travels with the question" below holds all of that.
-test("the workbench carries the question and the declared system, and no captured artifact", () => {
+// THE ARGUMENT FOR CARRYING THE MODEL, as made and briefly adopted: the model is a
+// declaration about the run the person is about to make, not a captured value. A rerun is
+// offered so two runs can be held against each other, and the system asked is the variable
+// that comparison turns on, so dropping it made the person re-enter the comparison variable
+// from memory or lose it. Prefill it, leave it editable, never lock it, and let the new row
+// record whatever is left selected.
+//
+// WHY THAT IS WRONG, and the ruling: "editable" is not the safeguard it sounds like. The
+// carried question is safe because the person explicitly asked for this exact question
+// again — they chose it, so seeing it is confirmation. Nobody chose the model. Prefilling
+// it means a person can rerun against a different AI, never notice the selector arrived
+// already populated, and produce a governed record naming a system that was never asked.
+// That is a false statement in a record, and no amount of continuity buys it back. The
+// value cannot be inferred from a record of a different run, so it is not offered at all —
+// no prefill, no default, no suggestion, no hidden field. Record honesty outranks
+// convenience. The selector stays unselected on a rerun and the person declares the system
+// themselves, which is the only way the row can be true.
+test("the workbench carries the question over and nothing else", () => {
   const jsx = src("workbench-app.jsx");
   const effect = /const \{ rerunShareId, rerunRequested \} = parseArrival\(window\.location\);([\s\S]*?)\n  \}, \[\]\);/.exec(jsx);
   assert.ok(effect, "workbench-app.jsx must read the rerun arrival in one named effect");
   const body = effect[1];
   assert.match(body, /setQuestion\(/, "the question is seeded");
   assert.doesNotMatch(body, /setAnswer\(/, "the old answer must not be restored");
+  assert.doesNotMatch(body, /setModel\(/, "the declared system must not be restored");
   assert.doesNotMatch(body, /method:\s*["']POST["']/, "the rerun read is a GET");
 });
 
@@ -348,69 +360,67 @@ test("the notice adds no rule of its own; it borrows the arrival treatment alrea
   assert.doesNotMatch(css, /own-intro--rerun-unresolved/, "no new rule may be introduced for the notice");
 });
 
-// ── The system asked travels with the question ───────────────────────────────
+// ── The system asked does not travel, and the omission is deliberate ─────────
 //
-// A rerun exists to be compared with the run it came from. The question and the system
-// asked are the two variables that comparison turns on, and only one of them used to
-// survive the trip. The record already carried the other, so this is a read of data
-// that was already on the wire — no new request, no new field, no new endpoint.
+// The model is available and is declined anyway, which is the part worth pinning. A
+// future reader who finds the question carrying over will notice the model does not,
+// read it as an oversight, and fix it. It is not an oversight. Founder ruling on
+// record-honesty grounds: a rerun can be run against a different AI, and a prefilled
+// selector the person never looks at produces a record naming a system nobody asked.
+// The question is safe to carry because the person chose it; nobody chose the model.
+//
+// These tests fail if the carry comes back in any form, including the partial ones —
+// a default, a suggestion, a hidden field, a value parked somewhere for later.
 
 const MODELS_IN_SOURCE = JSON.parse(/const MODELS = (\[[^\]]*\]);/.exec(JSX)[1]);
 
-test("the record a rerun already reads carries the system that was asked", async () => {
-  // The proof that this needed no new data dependency: the same GET the rerun path has
-  // always made returns the model, on the projection it has always returned.
+test("the model is on the record the rerun reads, and is declined anyway", async () => {
+  // Availability is the whole point of this test. Nothing here is blocked by missing
+  // data, so the absence downstream can only be a choice.
   const res = await withFetch(airtableStub([shareRow()]), () => getShare(SHARE_ID));
   assert.equal(res.statusCode, 200);
-  assert.equal(res.body.record.ai_model, "ChatGPT", "the model is on the record the rerun path already fetches");
-  assert.ok(
-    MODELS_IN_SOURCE.includes(res.body.record.ai_model),
-    "and it is a value the shipped selector can already represent, so no normalization is invented",
-  );
-});
+  assert.equal(res.body.record.ai_model, "ChatGPT", "the model is on the record the rerun path fetches");
+  assert.ok(MODELS_IN_SOURCE.includes(res.body.record.ai_model), "and the selector could represent it");
 
-test("a model the selector can represent is carried into it, and one it cannot is not", () => {
   const body = rerunEffectBody();
-  assert.match(body, /const carried = String\(record\.ai_model \|\| ""\)\.trim\(\);/, "the model is read off the record already in hand");
-  assert.match(
-    body,
-    /if \(MODELS\.includes\(carried\)\) setModel\(carried\);/,
-    "the selector is set only from a value it already offers; anything else leaves it alone",
-  );
-  // The withheld case, proved against the real list rather than asserted about it.
-  for (const unrepresentable of ["", "GPT-4o mini", "Llama 3", "some in-house build"]) {
-    assert.equal(
-      MODELS_IN_SOURCE.includes(unrepresentable),
-      false,
-      `"${unrepresentable}" is not offered by the selector, so the gate above withholds it`,
-    );
-  }
+  assert.doesNotMatch(body, /ai_model/, "yet the rerun effect never reads it");
+  assert.doesNotMatch(body, /setModel\(/, "and never sets the selector from it");
 });
 
-test("the carried selection stays editable and is never locked", () => {
+test("no partial form of the carry survives anywhere in the rerun path", () => {
+  const body = rerunEffectBody();
+  // A prefill is the obvious form. These are the quiet ones: a remembered value, a
+  // suggested one, a default, or the model parked in state under another name.
+  for (const shape of [/MODELS\.includes/, /carried/, /previousModel|priorModel|lastModel|sourceModel/i, /defaultModel|suggestedModel/i]) {
+    assert.doesNotMatch(body, shape, `the rerun effect must hold no form of the model carry (${shape})`);
+  }
+  // And no hidden field carries it around the selector instead.
+  assert.doesNotMatch(JSX, /type="hidden"[^>]*model/i, "no hidden input may carry the model");
+});
+
+test("the selector arrives unselected on a rerun, exactly as on any other arrival", () => {
+  // One initial state, no rerun-aware branch on it. The placeholder is what a person
+  // sees until they choose, so an unmade declaration stays visibly unmade.
+  assert.match(JSX, /const \[model, setModel\] = useState\(""\);/, "the model state starts empty");
   const select = /function ModelSelect\(\{ value, onChange \}\) \{([\s\S]*?)\n\}/.exec(JSX);
   assert.ok(select, "ModelSelect must be readable");
-  const body = select[1];
-  assert.doesNotMatch(body, /\bdisabled=\{(?!)/, "the selector must not be disabled");
-  assert.doesNotMatch(body, /\breadOnly\b/, "the selector must not be read-only");
-  assert.match(body, /onChange=\{\(e\) => onChange\(e\.target\.value\)\}/, "it still reports every change the person makes");
-  // And the own-mode field still hands it the live setter, so a prefilled value is
-  // changed by the same path an unfilled one is.
+  assert.match(select[1], /<option value="" disabled>Choose the AI you used…<\/option>/, "and renders a placeholder until the person chooses");
   assert.match(
     JSX,
     /<Field label="Which AI did you ask\? \(optional\)"><ModelSelect value=\{model\} onChange=\{setModel\} \/><\/Field>/,
-    "the own-mode field wires the selector to the live model state",
+    "the own-mode field is wired to that state and nothing else writes it on arrival",
   );
-  const effect = rerunEffectBody();
-  assert.doesNotMatch(effect, /setModelLocked|lockModel|readOnly|disabled/, "the rerun path must not lock what it prefills");
 });
 
-test("the row a rerun produces records what the person left selected, not the source record", () => {
-  // The seam that makes prefilling safe: the request is built from the live `model`
-  // state, so an edited selection is what travels, and the value the rerun arrived with
-  // has no separate path to the record.
+test("the row a rerun produces records only what the person declared", () => {
   const request = /const request = buildReaderRequest\(\{([\s\S]*?)\}\);/.exec(JSX);
   assert.ok(request, "the reader request must be built in one place");
   assert.match(request[1], /^\s*model,\s*$/m, "the request takes the live model state");
   assert.doesNotMatch(request[1], /ai_model|record\./, "no value from the source record reaches the new row");
+});
+
+test("no rerun copy offers the previous model, because that is a separate question", () => {
+  // Replacing the prefill with a "you asked X last time" line would reintroduce the same
+  // suggestion in prose. It is not authorized here and is not present.
+  assert.doesNotMatch(JSX, /previously asked|asked last time|last time you asked|previous model/i, "no copy may suggest the earlier system");
 });
