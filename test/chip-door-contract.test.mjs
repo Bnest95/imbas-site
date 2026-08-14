@@ -121,7 +121,16 @@ function mountPoints() {
 test("the door tells assistive technology what it controls, and names the lane by id", () => {
   const door = doorMarkup();
   assert.match(door, /aria-expanded=\{lane === LANE_CHIPS\}/, "aria-expanded must track the live lane state, not a separate flag that can drift from it");
-  assert.match(door, new RegExp(`aria-controls="${LANE_ID}"`), `the door must name the lane it opens`);
+  // AMENDED — the name is now conditional, and the condition is the point. The door
+  // named the lane on every render while the lane itself mounts only after the first
+  // open, so on an ordinary first visit the control pointed at an id that was not in
+  // the document. The name is carried when the lane is real and withheld before that;
+  // the section at the end of this file proves the two gates are the same gate.
+  assert.match(
+    door,
+    new RegExp(`aria-controls=\\{chipMounted \\? "${LANE_ID}" : undefined\\}`),
+    "the door must name the lane it opens, and only once that lane is in the document",
+  );
   assert.match(JSX, new RegExp(`id="${LANE_ID}"`), "the id the door points at must exist on the lane");
 });
 
@@ -353,5 +362,137 @@ test("the door is a text trigger, so it cannot outrank the offer it sits below",
     /\.wb-chip-door\s*\{/.test(stripComments(WORKBENCH_CSS)),
     false,
     "a rule of its own is how a secondary door starts competing with the earned action above it",
+  );
+});
+
+// ── Programmatic relationships: no control names an element that is not there ──
+//
+// The defect this section exists to catch, stated as it shipped: the door carried
+// `aria-controls="wb-chip-lane"` on every render, while the lane it names mounts only
+// after the door is first opened. On an ordinary first visit — no ?start=chips, no
+// click yet — the page therefore offered assistive technology a control whose named
+// target was not in the document.
+//
+// The check is written over the whole render tree rather than over the door alone,
+// because "the id exists somewhere in the file" is only half the question. An id that
+// exists behind a mount gate is absent exactly as often as that gate is shut. So every
+// reference is resolved to a target, every target to the gate that mounts it, and a
+// gated target demands an equally gated reference. The gates must be the same
+// identifier, which is what stops a second flag drifting away from the mount.
+//
+// Analysis runs on comment-stripped source so prose about aria-controls cannot be
+// mistaken for a rendered one.
+
+const ARIA_SRC = stripComments(JSX);
+
+// `const NAME = "literal";` pairs, so a reference written as {SOME_ID} resolves.
+function idConstants(src) {
+  const out = new Map();
+  for (const m of src.matchAll(/const\s+(\w+)\s*=\s*"([\w-]+)"\s*;/g)) out.set(m[1], m[2]);
+  return out;
+}
+
+// Every aria-controls in the tree as { id, gate }. `gate` is the identifier the
+// attribute is conditional on, or null when the attribute is always emitted.
+function ariaControlsRefs(src) {
+  const consts = idConstants(src);
+  const refs = [];
+  for (const m of src.matchAll(/aria-controls=(?:"([\w-]+)"|\{([^}]*)\})/g)) {
+    if (m[1]) {
+      refs.push({ id: m[1], gate: null, raw: m[0] });
+      continue;
+    }
+    const expr = m[2].trim();
+    const ternary = /^(\w+)\s*\?\s*"([\w-]+)"\s*:\s*undefined$/.exec(expr);
+    if (ternary) {
+      refs.push({ id: ternary[2], gate: ternary[1], raw: m[0] });
+      continue;
+    }
+    if (/^\w+$/.test(expr) && consts.has(expr)) {
+      refs.push({ id: consts.get(expr), gate: null, raw: m[0] });
+      continue;
+    }
+    // Deliberate: an unresolvable form is a failure, not a skip. A reference this
+    // check cannot read is a reference it cannot vouch for.
+    assert.fail(`aria-controls={${expr}} cannot be resolved to an id; keep the reference readable by this check`);
+  }
+  return refs;
+}
+
+// Every id the tree renders, mapped to the mount gate above it, or null if ungated.
+function idTargets(src) {
+  const consts = idConstants(src);
+  const out = new Map();
+  for (const m of src.matchAll(/\{(\w+)\s*\?\s*\(\s*<\w+[^>]*?\sid="([\w-]+)"/g)) out.set(m[2], m[1]);
+  for (const m of src.matchAll(/\sid="([\w-]+)"/g)) if (!out.has(m[1])) out.set(m[1], null);
+  for (const m of src.matchAll(/\sid=\{(\w+)\}/g)) {
+    const lit = consts.get(m[1]);
+    if (lit && !out.has(lit)) out.set(lit, null);
+  }
+  return out;
+}
+
+// Throws on the first violation. Written as a function so the negative controls below
+// can run the identical check against a deliberately broken tree.
+function checkAriaControls(src) {
+  const refs = ariaControlsRefs(src);
+  assert.ok(refs.length >= 2, "the tree must still carry the controls this check was written for");
+  const targets = idTargets(src);
+  for (const ref of refs) {
+    assert.ok(
+      targets.has(ref.id),
+      `aria-controls names "${ref.id}", which no element in this tree renders`,
+    );
+    const gate = targets.get(ref.id);
+    if (gate) {
+      assert.equal(
+        ref.gate,
+        gate,
+        `"${ref.id}" mounts behind ${gate}, so the control naming it must be withheld behind ${gate} too`,
+      );
+    }
+  }
+  return refs;
+}
+
+test("every aria-controls names an element the same render actually mounts", () => {
+  const refs = checkAriaControls(ARIA_SRC);
+  // Both governed references, named, so a future deletion of either is visible here
+  // rather than silently shrinking the population this test walks.
+  const byId = new Map(refs.map((r) => [r.id, r.gate]));
+  assert.equal(byId.get(LANE_ID), "chipMounted", "the chip door's reference is withheld until the lane mounts");
+  assert.ok(byId.has("wb-checks-list"), "the check register's more-button reference must still be covered");
+  assert.equal(
+    byId.get("wb-checks-list"),
+    null,
+    "the register list is mounted unconditionally beside its button, so that reference is rightly unconditional",
+  );
+});
+
+test("negative control: the unconditional reference this pass removed is caught if it returns", () => {
+  const broken = ARIA_SRC.replace(
+    `aria-controls={chipMounted ? "${LANE_ID}" : undefined}`,
+    `aria-controls="${LANE_ID}"`,
+  );
+  assert.notEqual(broken, ARIA_SRC, "the mutation must actually change the source, or this control proves nothing");
+  assert.throws(
+    () => checkAriaControls(broken),
+    /mounts behind chipMounted/,
+    "restoring the dangling reference must fail this check",
+  );
+});
+
+test("negative control: a reference to an id nothing renders is caught", () => {
+  // The other half of the check. Without this, a version that only compared gates
+  // could pass while pointing at a lane that was renamed out from under it.
+  const broken = ARIA_SRC.replace(
+    `aria-controls={chipMounted ? "${LANE_ID}" : undefined}`,
+    `aria-controls={chipMounted ? "wb-chip-lane-renamed" : undefined}`,
+  );
+  assert.notEqual(broken, ARIA_SRC, "the mutation must actually change the source");
+  assert.throws(
+    () => checkAriaControls(broken),
+    /which no element in this tree renders/,
+    "a reference to an unrendered id must fail this check",
   );
 });
