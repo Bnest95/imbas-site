@@ -11,6 +11,14 @@
 // `--all` walked past all of it. So these drive the REAL CLI, not only the helpers — the
 // defect lived in the entry point's own argument handling, not in anything it called.
 //
+// QUARANTINE, AND WHY IT IS NOT A BREACH OF THE ABOVE. `npm test` runs the real
+// `--all --diff` board; a differing nondeterministic frame can therefore write quarantine
+// evidence. That is accepted-as-designed retention behavior, founder-ruled 2026-08-13 —
+// the opposite of the defect these tests hold down. A baseline is committed state and may
+// only change under a named acceptance; quarantine is the differing frame itself, written
+// once, because a nondeterministic difference is a one-shot observation that re-running
+// destroys. Nothing here treats a quarantine write as a baseline write.
+//
 // Run: node --test test/qa-baseline-write-safety.test.mjs
 
 import { test } from "node:test";
