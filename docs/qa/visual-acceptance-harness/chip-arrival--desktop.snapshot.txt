@@ -34,7 +34,7 @@ a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
-button "Hide follow-up checks" disabled=false expanded=true
+button "Hide your own follow-up" disabled=false expanded=true
 h2 "Tell your AI exactly what to do next."
 p "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back."
 div "The answer or draft you started with"
