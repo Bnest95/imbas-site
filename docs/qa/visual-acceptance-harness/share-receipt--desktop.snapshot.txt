@@ -157,6 +157,4 @@ li "Why the system answered this way. The record holds what was said, not what p
 li "What anyone intended. Imbas measures behavior, and behavior does not carry motive."
 li "How much the answer left out. Nothing here counts what a fuller answer would have held."
 li "Who wrote the answer. The system named here is the one the person running the inspection reported."
-a "Run this exact question again" href="/reader.html?rerun=Ab3xQ7zK9mNpR2sTuV4w"
-button "Copy share link" disabled=false
-a "Test another answer" href="/reader.html?reader=1"
+p "This record came from a Reader inspection. The Reader hands over questions worth asking about an AI answer and sets a second answer beside the first. Once a person works through those questions, the Reader can produce a Review Record."

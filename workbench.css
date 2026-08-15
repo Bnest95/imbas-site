@@ -2393,6 +2393,59 @@
   margin-top: 0.75rem;
 }
 
+/* =============================================================
+   WORKBENCH — Result capability strip
+   An index of the page, standing between the count and the marks. Plain text links,
+   no card, no fill, no accent role: it has to be findable without becoming a second
+   thing to look at. Both lists wrap, so the strip is one row on a wide viewport and a
+   short stack at 390 with nothing running past the edge.
+   ============================================================= */
+.wb-capstrip {
+  margin: 0 0 0.85rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.7rem;
+}
+
+.wb-capstrip__label {
+  font-family: var(--font-mono);
+  font-size: max(0.62rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.wb-capstrip__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  min-width: 0;
+}
+
+.wb-capstrip__item {
+  margin: 0;
+  min-width: 0;
+}
+
+.wb-capstrip__link {
+  color: var(--ink-primary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: rgba(242, 232, 220, 0.45);
+  overflow-wrap: anywhere;
+}
+
+.wb-capstrip__link:hover {
+  text-decoration-color: var(--ink-primary);
+}
+
 .wb-shell--reader-v2 .wb-reader-v2__follow .wb-suggest-module {
   margin-top: 0;
   max-width: 100%;
@@ -4113,12 +4166,15 @@
   display: contents;
 }
 
+/* 4.40:1 composited over the provenance ground, under AA at this mono size. The ink token,
+   opaque, measures 8.64:1, and the label stays subordinate to the value beside it by size and
+   letterspacing rather than by being faded toward the background. */
 .wb-prov__label {
   margin: 0;
   font-family: var(--font-mono);
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.04em;
-  color: rgba(220, 208, 192, 0.55);
+  color: var(--ink-secondary);
   white-space: nowrap;
 }
 
@@ -4131,9 +4187,12 @@
   overflow-wrap: anywhere;
 }
 
+/* 3.87:1 composited, on the values that state what provenance is not known. The ink token,
+   opaque, measures 8.64:1. The italic already carries the not-known distinction; the fade was
+   doing the same work a second time, at the cost of legibility. */
 .wb-prov__row[data-known="no"] .wb-prov__value {
   font-style: italic;
-  color: rgba(220, 208, 192, 0.5);
+  color: var(--ink-secondary);
 }
 
 .wb-prov__note {
@@ -4277,14 +4336,20 @@
 
    The label inside it is read and not seen: a bare numeral announced mid-sentence is
    noise, and "mark 1" is the tie stated. Absolutely positioned and clipped, so it
-   takes no space in a `pre-wrap` flow. */
+   takes no space in a `pre-wrap` flow.
+
+   The mark is the one style here whose ground is not the page gradient: it sits on its own
+   ember-tinted chip (#40281c–#4a2e1e), which is a far tighter contrast budget than the rest.
+   Solid --ember reaches only 3.78:1 there and --ember-deep 2.88:1; --ember-soft, opaque,
+   reaches 5.16:1. The accent role is unchanged — this is the lightest ember already in the
+   token set, not a new one. */
 .wb-mark-n {
   font-family: var(--font-mono);
   font-size: max(0.58rem, var(--mono-min));
   font-style: normal;
   font-weight: 500;
   letter-spacing: 0.04em;
-  color: rgba(222, 111, 56, 0.92);
+  color: var(--ember-soft);
   vertical-align: super;
   line-height: 0;
   margin-right: 0.12em;
@@ -4826,7 +4891,10 @@
 
 /* The Reader's reading sits in the same mono label idiom as the two answer labels,
    so a row reads as three labelled parts — but it carries no quote-mark styling and
-   no anchor rule, because it is not a quotation. */
+   no anchor rule, because it is not a quotation.
+
+   3.49:1 composited, under AA at this mono size. Solid --ember measures 5.65:1 and holds the
+   label in the same accent the rest of the row reads it in. */
 .wb-act2__reading-label {
   display: block;
   margin-bottom: 0.15rem;
@@ -4834,7 +4902,7 @@
   font-size: max(0.58rem, var(--mono-min));
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(222, 111, 56, 0.72);
+  color: var(--ember);
 }
 
 .wb-act2__reading {
@@ -5196,13 +5264,15 @@
   color: var(--ink-primary);
 }
 
+/* 4.10:1 composited, under AA at this mono size. The ink token, opaque, measures 8.62:1.
+   Smallprint is still smallprint by size and placement; it does not need to be faint too. */
 .wb-loop__smallprint {
   margin: 0 0 0.6rem;
   font-family: var(--font-mono);
   font-size: max(0.6rem, var(--mono-min));
   letter-spacing: 0.02em;
   line-height: 1.5;
-  color: rgba(180, 168, 154, 0.66);
+  color: var(--ink-secondary);
 }
 
 .wb-loop__reveal .wb-measure__boundary {
@@ -5218,6 +5288,41 @@
    cue. Umber + amber tokens only — no new accent. */
 .wb-chip {
   margin-top: 0.35rem;
+}
+
+/* The way out of the lane, and the tie back to what it was opened over. Both sit in
+   the lane's head so they are the first things under the heading a person is sent to,
+   and both are quiet: a text control and two lines of read-only reference, no card and
+   no accent, so nothing here competes with the follow-up choices below. */
+.wb-chip__return {
+  margin-top: 0.5rem;
+}
+
+.wb-chip__origin {
+  margin-top: 0.7rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid rgba(242, 232, 220, 0.22);
+}
+
+.wb-chip__origin-line,
+.wb-chip__origin-note {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.wb-chip__origin-label {
+  color: var(--ink-soft);
+}
+
+.wb-chip__origin-question {
+  color: var(--ink-primary);
+}
+
+.wb-chip__origin-note {
+  margin-top: 0.25rem;
+  color: var(--ink-soft);
 }
 
 .wb-chip__choose {
@@ -6000,8 +6105,12 @@
   opacity: 0.9;
 }
 
+/* 3.00:1 composited, the worst reading on the page and on a label a person reads while
+   deciding what to submit. The ink token, opaque, measures 9.16:1. The 0.9 opacity on the
+   parent above compounds at paint time and is not folded into that figure; AA still clears
+   here down to alpha 0.66, well under 0.9, so the optional field keeps its recessive weight. */
 .wb-shell--reader-v2 .wb-reader-confirm .wb-reader-v2__field--optional .wb-field-label {
-  color: rgba(155, 142, 128, 0.62);
+  color: var(--ink-secondary);
   font-size: 0.76rem;
   letter-spacing: 0.03em;
 }

@@ -741,6 +741,13 @@ test("H: NON-REGRESSION — every committed anchor still resolves against the ar
   // the first run against the artifact it names, so what moved here is the size of the
   // corpus and not its health.
   //
+  // 38→40 and 952→984 when chips-from-inspection was promoted. Its two snapshots carry
+  // 16 apiece, and the check that they are the RIGHT 16 is that single-findings carries
+  // the same 16 at the same shape split, A=12 and B=4: the scenario drives the same
+  // singleReadPayload through the same steps and then presses the door, so the record
+  // under the lane is the record under the inspection. A different count here would have
+  // meant the composition altered the payload rather than the view of it.
+  //
   // They moved again, 34→38 and 704→952, when register-overflow, its expanded twin and
   // chip-arrival were promoted off the pending registry onto the board. Four of those
   // six new snapshots carry anchors, 62 apiece: the two overflow scenarios share one
@@ -750,8 +757,8 @@ test("H: NON-REGRESSION — every committed anchor still resolves against the ar
   // at all, so its payload holds no findings and therefore no spans. The health
   // assertion above this one is the one that guards the boundary, and all 952 resolved
   // against the artifact each of them names on the first run.
-  assert.equal(records, 38, "the audit counted 38 records carrying anchors");
-  assert.equal(anchors, 952, "the audit counted 952 anchors");
+  assert.equal(records, 40, "the audit counted 40 records carrying anchors");
+  assert.equal(anchors, 984, "the audit counted 984 anchors");
   assert.ok(shapeB > 0, "a collector that finds no Shape B anchor is skipping the paired surface");
   assert.deepEqual([...roles].sort(), [ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
 });

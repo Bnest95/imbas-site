@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: ?start=chips
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 479
+scroll_offset: 504
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -25,6 +25,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
+p "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back."
 div "The answer or draft you started with"
 textarea disabled=false readonly=false value_len=0
 p "What would you like the next answer to do differently?"
@@ -34,4 +35,3 @@ button "Doesn't show where its claims came from" disabled=false
 button "Doesn't say what date or version applies" disabled=false
 button "Didn't answer the question I actually asked" disabled=false
 button "Didn't give the number or range I asked for" disabled=false
-button "Mixes facts with assumptions" disabled=false

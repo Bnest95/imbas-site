@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: ?start=chips
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 277
+scroll_offset: 290
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -36,6 +36,7 @@ span "▾"
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
 button "Hide your own follow-up" disabled=false expanded=true
 h2 "Tell your AI exactly what to do next."
+button "← Back to the Reader" disabled=false
 p "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back."
 div "The answer or draft you started with"
 textarea disabled=false readonly=false value_len=0
@@ -49,4 +50,3 @@ button "Didn't give the number or range I asked for" disabled=false
 button "Mixes facts with assumptions" disabled=false
 p "User-directed follow-up. No Imbas inspection finding asserted."
 h2 "Suggest an Investigation"
-p "Have a case we should inspect? Send it."

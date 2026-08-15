@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1481
+scroll_offset: 1606
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -1007,9 +1007,8 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-span "3"
-span "Paste its reply back and watch what surfaces."
-p "Each one is a candidate the Reader could quote from your answer."
+a "A second answer beside this one" href="#wb-act2"
+a "A follow-up question of your own" href="#wb-chip-door"
 span "If your landlord kept your entire security deposit, you have options. Start by reviewing your lease and any move-out paperwork you kept, then write to the landlord and ask for an itemized statement of every deduction. Most states give a landlord a set number of days after move-out to return the deposit or send that itemization."
 mark "The window usually falls somewhere between 14 and 45 days."
 span "1"

@@ -205,15 +205,20 @@ test("the chip lane renders behind the view's own door, never unconditionally", 
     /\{stage === STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/.test(SRC),
     "and the stage it stands down for must be the one that mounts the same control earlier",
   );
-  const at = SRC.indexOf("<ChipLane />");
+  // Matched on the opening tag, not on a self-closing one: the lane now takes props
+  // (its heading ref, its return handler, the inspection it was opened from). The span
+  // read is the gate through to the component rather than a fixed character count, so
+  // prose written between them cannot push the guarantee out of the window.
+  const at = SRC.indexOf("<ChipLane");
   assert.notEqual(at, -1, "the lane must still exist");
-  const before = SRC.slice(Math.max(0, at - 400), at);
-  assert.ok(
-    /\{chipMounted \? \(/.test(before),
+  const gate = SRC.lastIndexOf("{chipMounted ? (", at);
+  assert.notEqual(
+    gate,
+    -1,
     "the lane must not mount until it is opened — mounting it on first load put two answer boxes on the page, and fired chip_row_rendered for visitors who never saw the row",
   );
   assert.ok(
-    /hidden=\{!view\.chipLane\}/.test(before),
+    /hidden=\{!view\.chipLane\}/.test(SRC.slice(gate, at)),
     "and its visibility must be the view's decision, so a live paired input is never joined by a second box",
   );
 });
@@ -272,7 +277,12 @@ test("focus moves on a stage change and never on first paint", () => {
   );
   const at = SRC.indexOf("focusStageRef.current = stage;");
   assert.notEqual(at, -1);
-  const after = SRC.slice(at, at + 300);
+  // Bounded by the effect's own dependency line rather than a character count. The body
+  // grew when the chip lane gave the fallback a second region to resolve to, and a fixed
+  // window silently stops covering the tail of what it is meant to read.
+  const ends = SRC.indexOf("}, [stage]);", at);
+  assert.notEqual(ends, -1, "the stage focus effect must still close on [stage]");
+  const after = SRC.slice(at, ends);
   assert.ok(
     /if \(prev === null \|\| prev === stage\) return;/.test(after),
     "no focus move on mount, and none when the stage did not move",

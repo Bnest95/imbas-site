@@ -271,9 +271,28 @@ function rerunHref(record) {
 // assert that Imbas found a problem in an inspection the visitor is only reading.
 const CHIP_LANE_DOOR = `<a class="insp-btn insp-btn--ghost" href="/reader.html?start=chips">Follow up on your own answer</a>`;
 
+// What a stranger is holding. The masthead names the record "Reader inspection" and the
+// page never says what the Reader is, so a recipient who was handed this link reads a
+// document produced by an instrument they have no description of.
+//
+// It states the three things the Reader does, and one clause carries the whole weight:
+// the Review Record arrives "once a person works through those questions". A shared
+// record has not necessarily been worked or triaged, and a line reading "produces a
+// Review Record" would tell a recipient this one was.
+//
+// It is prose, not a control — no href, no button, no insp-btn — so it adds no door and
+// cannot stand level with the rerun below it. It describes the Reader in general and
+// names nothing on this page: no problem found here, and nothing a recipient does
+// afterwards joins this record.
+const ORIENTATION_LINE =
+  "This record came from a Reader inspection. The Reader hands over questions worth asking about an " +
+  "AI answer and sets a second answer beside the first. Once a person works through those questions, " +
+  "the Reader can produce a Review Record.";
+
 function actionsHtml(record) {
   const rerun = rerunHref(record);
   return `
+    <p class="insp-actions__orientation">${escapeHtml(ORIENTATION_LINE)}</p>
     <div class="insp-actions">
       ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>

@@ -368,6 +368,78 @@ export const RECORD_LEVEL_ABSENCE_NOTE =
 export const MARK_ORIENTATION_NOTE =
   "Each mark points at something in this answer, or at something absent from it. Imbas records both.";
 
+// The capability strip that heads a finished result.
+//
+// A result runs to about seven thousand pixels. Two thousand of them in, a person has
+// met the count and the marks and has no evidence on screen that a register, a triage
+// control, a working copy, a comparison or a follow-up exist at all. The rest of the
+// page is a rumour to them. The strip states what is further down and links to it.
+//
+// Each label names what the capability does for the person, not what the feature is
+// called: nobody arrives wanting a "Review Record". They are noun phrases on purpose.
+// A verb phrase reads as an instruction, and an instruction carries a suggestion that
+// the thing is owed — that something here wants attending to. This strip states where
+// things are. It reports no state: not that Imbas found a problem in this answer, and
+// not that any of these was already used on this record.
+//
+// Order is document order, so a person who follows the strip downward meets the
+// sections in the order the page already puts them in.
+export const RESULT_CAPABILITY_UI = deepFreeze({
+  heading: "Further down this page",
+  checks: "The full list of what to check",
+  triage: "Where you stand on each mark",
+  reviewRecord: "A working copy to take with you",
+  comparison: "A second answer beside this one",
+  followUp: "A follow-up question of your own",
+});
+
+// The ids the strip links to, held beside the labels so a link and its target are one
+// edit apart. Each is written at the seam of the section it names — the register's own
+// <section>, the list that holds the per-mark controls, the single-mode export block,
+// the comparison offer's <section>, the follow-up door's wrapper — and every one of
+// those elements carries .wb-scroll-anchor, so a jump lands under the fixed header
+// rather than behind it.
+//
+// reviewRecord is variant-scoped because a paired screen mounts two export blocks and
+// only the single-mode one belongs to this strip; an unscoped id would resolve to
+// whichever came first in the document.
+export const RESULT_CAPABILITY_ANCHORS = deepFreeze({
+  checks: "wb-checks",
+  triage: "wb-checks-list",
+  reviewRecord: "wb-review-record--single",
+  comparison: "wb-act2",
+  followUp: "wb-chip-door",
+});
+
+// Which capability each link depends on being mounted. Three of the five live inside
+// the Check Register — the list of marks, the per-mark controls on each row, and the
+// export at the foot of the panel — so one gate carries all three, and when the
+// register drops out all three drop with it. This is the same collapse the Inspection
+// Meaning panel's `available` map already makes, stated once and shared.
+const CAPABILITY_GATES = deepFreeze({
+  checks: "checks",
+  triage: "checks",
+  reviewRecord: "checks",
+  comparison: "comparison",
+  followUp: "followUp",
+});
+
+// The strip's links for one state, in document order.
+//
+// A pure function of the gates, so the whole per-state behaviour is decidable without
+// a browser: an unmounted section contributes no link, and the strip cannot promise a
+// register to a result that carries none. The caller supplies each gate from the SAME
+// expression that mounts the section, which is the half of the guarantee that lives at
+// the mount points and cannot be moved here.
+//
+// Strict `=== true`, not truthiness. A gate arriving as undefined — the shape a
+// forgotten key takes — must read as "not on the page", never as "probably fine".
+export function resultCapabilityLinks(available = {}) {
+  return Object.keys(CAPABILITY_GATES)
+    .filter((key) => available[CAPABILITY_GATES[key]] === true)
+    .map((key) => ({ id: RESULT_CAPABILITY_ANCHORS[key], label: RESULT_CAPABILITY_UI[key] }));
+}
+
 // A quotation that resolves verbatim against the named artifact. Carries the span
 // so a reader can point at it without re-resolving.
 //

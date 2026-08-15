@@ -1168,6 +1168,35 @@ export const CHIP_UI = {
     // The way back out of the second paste box. Picking a follow-up opens a second answer
     // field, so the first one goes read-only; this returns the lane to a single live box.
     edit_first_answer: "Edit the first answer",
+    // The way back out of the LANE — a different journey from the one above, and the
+    // labels have to keep the two apart. Inside this lane "your answer" already means
+    // the lane's own first paste box, so the way out names what it returns TO.
+    //
+    // Two labels, because the lane opens from two places. Over a finished inspection it
+    // returns to that inspection. From the compose surface — the standing door, the
+    // ?start=chips arrival — there is no inspection to go back to, and a control that
+    // named one would point at a page that does not exist yet.
+    return_to_inspection: "Back to your inspection",
+    return_to_reader: "Back to the Reader",
+    // The lane's stated tie to the inspection it was opened from.
+    //
+    // Opening the lane drops both source paste boxes out of the stage, so the answer a
+    // person was reading leaves the screen. Nothing is lost — the text is held in the
+    // app and comes back with the boxes — but on screen it is gone, and the doubt that
+    // creates is the defect. These two lines are the answer: what this lane was opened
+    // from, named, and what happened to it, stated.
+    //
+    // The question identifies the inspection. The answer body never appears here: it is
+    // the thing a person is being reassured about, and reproducing it would put the very
+    // text this lane took off the screen back on it, in a second place, read-only.
+    //
+    // The note states what happened to the text, not where to look for it. "Still on
+    // this page" would send a person hunting for a paste box that genuinely is not
+    // rendered while the lane is open, and finding nothing is the doubt this line
+    // exists to end. So it names the two facts that hold on screen: the text is kept,
+    // and the way back brings it up unchanged.
+    opened_from_label: "Opened from your inspection of",
+    opened_from_note: "What you pasted is still here. Going back opens it as you left it.",
     compare_label: "Compare the two answers",
     comparing_label: "Comparing…",
     first_answer_missing: "Paste the answer or draft you started with.",

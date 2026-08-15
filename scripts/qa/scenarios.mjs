@@ -1143,6 +1143,26 @@ const DRIVE_REGISTER_OVERFLOW_EXPANDED = [
 // or not the bank produced anything, and the chips are the arrival.
 const DRIVE_CHIP_ARRIVAL = [{ waitFor: "#wb-chip-lane .wb-chip__row .wb-chip__pick" }];
 
+// The chip lane reached the other way: from an inspection, by pressing the door on the
+// result. The single-mode read runs first and its findings render, so there is a real
+// inspection to leave — which is the whole difference from the arrival above, and the
+// only condition under which the lane renders the way back and the origin reference at
+// all. The door is waited for before it is pressed because it mounts on the result, not
+// on the page.
+//
+// Three waits after the press, and each one is a different claim. The chip proves the
+// bank rendered; the origin question proves the lane knows what it was opened over; the
+// return control proves the way back is on screen. Waiting only on the chip would
+// photograph a lane that had mounted before its tie to the inspection resolved.
+const DRIVE_CHIPS_FROM_INSPECTION = [
+  ...DRIVE_SINGLE,
+  { waitFor: ".wb-chip-door" },
+  { click: ".wb-chip-door" },
+  { waitFor: "#wb-chip-lane .wb-chip__row .wb-chip__pick" },
+  { waitFor: ".wb-chip__origin-question" },
+  { waitFor: ".wb-chip__return-btn" },
+];
+
 // The Act 2 paste-back flow, appended to the single-mode read that produces the
 // receipt it needs. Written now because Pass 2B-A2 changed what the paired surface
 // renders from, and a change to a surface nobody can photograph is a change nobody
@@ -2139,19 +2159,78 @@ export const SCENARIOS = {
     assertSelector: "#wb-chip-lane .wb-chip__row .wb-chip__pick",
     focus: "#wb-chip-lane",
   },
+
+  // The chip lane opened FROM an inspection. This is the state the repair exists for and
+  // the one the board could not see.
+  //
+  // `chip-arrival` above photographs the lane standing on its own through `?start=chips`,
+  // with no inspection under it. That frame proves the lane renders; it says nothing about
+  // the transition, because the defect only exists when there IS an inspection to leave.
+  // Opening the lane drops both source paste boxes out of the stage, so the answer a
+  // person was reading goes off screen — and the way back and the origin reference are
+  // the answer to that. Neither renders in `chip-arrival`: `openedFrom` is empty there,
+  // so the origin block does not mount and the return control reads "Back to the Reader".
+  // Photographing this state is the only way a frame holds either of them.
+  //
+  // No new fixture and no synthetic surface. It is the findings payload `single-findings`
+  // already uses, driven through the same steps, and then one press of the shipped door.
+  // The state is composed by the product out of parts the board already carries, which is
+  // what makes it worth a frame: it is the composition that was never photographed.
+  //
+  // What the assertions hold, in the order the state is built:
+  //   the lane is open          — its headline and the sentence over the chip row
+  //   the way back exists       — in its from-an-inspection form, not the standing one
+  //   the origin block exists   — label, the question itself, and the note
+  //   the inspection survives   — the count and both marks are still in the document
+  // `assertText` reads the whole document rather than the captured rectangle, so the last
+  // group holds whether or not the result is still inside the photographed window. That
+  // is deliberate: it is an assertion about the page, and the frame is a separate record.
+  "chips-from-inspection": {
+    name: "chips-from-inspection",
+    drivable: true,
+    state: "The chip lane opened from a findings-bearing inspection by pressing the door on the result",
+    expected:
+      "The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it.",
+    routes: { "/api/read": singleReadPayload },
+    steps: DRIVE_CHIPS_FROM_INSPECTION,
+    assertText: [
+      // The lane is open.
+      "Tell your AI exactly what to do next.",
+      "What would you like the next answer to do differently?",
+      "These are optional follow-ups you choose. Imbas has not determined that any of these problems are present.",
+      // The way back, in the form that only exists over an inspection.
+      "Back to your inspection",
+      // The origin reference: what it was opened over, and what happened to the text.
+      "Opened from your inspection of",
+      SYNTHETIC_QUESTION,
+      "What you pasted is still here. Going back opens it as you left it.",
+      // The inspection underneath is intact. Its count and both marks are still here.
+      "2 candidate items surfaced",
+      "Omission",
+      "Framing Drift",
+    ],
+    assertSelector: ".wb-chip__origin-question",
+    // The head block, not the lane. Centring a 2000px lane at 375x812 puts its head above
+    // the captured rectangle; centring the head frames the three surfaces this scenario
+    // exists to photograph — the heading, the way back, and the origin reference.
+    focus: "#wb-chip-lane .wb-reader-result__head",
+  },
 };
 
-// ── The waiting room, now empty ──────────────────────────────────────────────
+// ── The waiting room, empty again ────────────────────────────────────────────
 //
-// This held three scenarios that were complete in every way a scenario can be — real
-// payloads through the real assemblers, drive steps, DOM assertions, a state and an
-// expectation — and were kept off the board for one reason only: membership in SCENARIOS
-// obliges a committed image and snapshot, assertBaselineInventory fails in both
-// directions, and the first capture of a new scenario writes a new baseline. The
-// surface-finish lane held every baseline until the founder ruled, so adding them to the
-// board before that ruling would have meant accepting three baselines under a ruling that
-// withheld them. The ruling came and register-overflow, register-overflow-expanded and
-// chip-arrival are now board members with committed baselines of their own.
+// This room has now filled and emptied twice, and both times for the same reason:
+// membership in SCENARIOS obliges a committed image and snapshot,
+// assertBaselineInventory fails in both directions, and the first capture of a new
+// scenario writes a new baseline. A lane that is holding every baseline for a founder
+// ruling therefore cannot add a board member without accepting a baseline under that
+// same hold. So a finished scenario waits here instead of being weakened to fit.
+//
+// The first three were register-overflow, register-overflow-expanded and chip-arrival.
+// The fourth was chips-from-inspection, which waited through the movement ruling and
+// moved into SCENARIOS above when the founder released the baselines. Its two frames are
+// first baselines of a newly governed state, not acceptances of a changed one, and they
+// are recorded that way.
 //
 // The registry stays, empty, and so do the tests that iterate it. It is the place a
 // finished-but-unphotographed scenario goes, and the next one needs somewhere to wait.

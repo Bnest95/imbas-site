@@ -16,6 +16,9 @@ import {
   ANCHOR_STATUS,
   RECORD_LEVEL_ABSENCE_NOTE,
   MARK_ORIENTATION_NOTE,
+  RESULT_CAPABILITY_UI,
+  RESULT_CAPABILITY_ANCHORS,
+  resultCapabilityLinks,
   ARTIFACT_ORIGINAL,
   ARTIFACT_TARGETED,
 } from "./reader-result.js";
@@ -4077,6 +4080,33 @@ function SourceReading({ reading }) {
   );
 }
 
+// The capability strip. Copy and anchor ids ship from reader-result.js; the reasoning
+// for the wording is there, beside the words. This component is the render alone.
+//
+// Links, not buttons, and no card around them: the strip is an index of the page, and
+// an index that competed with the count above it would have bought orientation at the
+// cost of the thing a person came for. It reorders nothing and moves no content —
+// every target is a section that was already mounted, in the order shown.
+//
+// `links` arrives pre-filtered. Rendering is unconditional on membership by design:
+// this component cannot invent a link for a section that is not on the page, because
+// it never tests for one. The caller holds every mount test, next to the mounts.
+function ResultCapabilityStrip({ links }) {
+  if (!links.length) return null;
+  return (
+    <nav className="wb-capstrip" aria-label={RESULT_CAPABILITY_UI.heading}>
+      <span className="wb-capstrip__label">{RESULT_CAPABILITY_UI.heading}</span>
+      <ul className="wb-capstrip__list">
+        {links.map((link) => (
+          <li key={link.id} className="wb-capstrip__item">
+            <a className="wb-capstrip__link" href={`#${link.id}`}>{link.label}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 // The panel lists surfaced_findings: the findings that satisfy their shape's
 // registered surfacing contract. recorded_findings holds more — legacy material and
 // findings whose supplied quotation did not resolve — and is the durable record, not
@@ -4929,6 +4959,12 @@ function CheckCard({ card, run, status, onStatus }) {
 // The Check Register panel: the top few cards by default, expandable to the full
 // register. Renders nothing when the register carries no cards (the both-ends rule
 // leaves most answers with none — silence, not an empty ceremony).
+// The list is both the expand/collapse target and the strip's per-mark triage anchor.
+// Written as a literal rather than read off RESULT_CAPABILITY_ANCHORS because the
+// aria-controls contract in test/chip-door-contract.test.mjs resolves `const NAME =
+// "literal";` and treats any form it cannot read as a failure — a reference it cannot
+// resolve is a reference it cannot vouch for. The strip test asserts this equals the
+// anchors map's triage entry, so the two still cannot drift apart.
 const CHECKS_LIST_ID = "wb-checks-list";
 
 function CheckRegisterPanel({ result }) {
@@ -4946,13 +4982,17 @@ function CheckRegisterPanel({ result }) {
   const hasMore = reg.cards.length > topN;
   const cards = showAll ? reg.cards : reg.cards.slice(0, topN);
   return (
-    <section className="wb-reader-result is-agent wb-checks wb-scroll-anchor" aria-labelledby="wb-checks-heading">
+    <section
+      id={RESULT_CAPABILITY_ANCHORS.checks}
+      className="wb-reader-result is-agent wb-checks wb-scroll-anchor"
+      aria-labelledby="wb-checks-heading"
+    >
       <div className="wb-reader-result__head">
         <h2 id="wb-checks-heading" className="wb-reader-result__title">{CHECK_UI.register_heading}</h2>
       </div>
       <p className="wb-checks__note">{CHECK_UI.register_note}</p>
       {hasMore && !showAll ? <p className="wb-checks__eyebrow">{CHECK_UI.top_label}</p> : null}
-      <ul id={CHECKS_LIST_ID} className="wb-checks__list">
+      <ul id={CHECKS_LIST_ID} className="wb-checks__list wb-scroll-anchor">
         {cards.map((card) => (
           <CheckCard
             key={card.id}
@@ -5029,7 +5069,13 @@ function ReviewRecordExport({ result, statuses, pair = null, variant = "" }) {
     }
   };
   return (
-    <div className={`wb-checks__export${variant ? ` wb-checks__export--${variant}` : ""}`}>
+    <div
+      /* Only the single-mode block is the strip's target; the paired one below the
+         delta is a different control saying a different thing, and sharing an id
+         would hand the jump to whichever rendered first. */
+      id={variant === "single" ? RESULT_CAPABILITY_ANCHORS.reviewRecord : undefined}
+      className={`wb-checks__export wb-scroll-anchor${variant ? ` wb-checks__export--${variant}` : ""}`}
+    >
       <Btn kind="ghost" small className={downloaded ? "is-copied" : ""} onClick={download}>
         {downloaded ? REVIEW_RECORD_UI.downloaded_label : REVIEW_RECORD_UI.action_label}
       </Btn>
@@ -5124,7 +5170,11 @@ function Act2Offer({ result, open = false, onOpen, onPairedChange, pairedInputRe
     }
   };
   return (
-    <section className="wb-reader-result is-agent wb-act2 wb-scroll-anchor" aria-labelledby="wb-act2-heading">
+    <section
+      id={RESULT_CAPABILITY_ANCHORS.comparison}
+      className="wb-reader-result is-agent wb-act2 wb-scroll-anchor"
+      aria-labelledby="wb-act2-heading"
+    >
       <div className="wb-reader-result__head">
         <h2 id="wb-act2-heading" className="wb-reader-result__title">THE TWO-QUESTION TEST</h2>
       </div>
@@ -5366,7 +5416,12 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
 // server derives the instruction text from the FROZEN bank by chip_id, never from the
 // client. No chip is preselected: Imbas has determined nothing about the answer until the
 // person chooses a follow-up.
-function ChipLane() {
+//
+// Three props, all about the way in and the way out, none about the flow itself.
+// headingRef is what the workbench focuses and scrolls to when the lane opens; onReturn
+// closes it; openedFrom is the question of the inspection the lane was opened over, and
+// is empty when there was no inspection to open it over.
+function ChipLane({ headingRef, onReturn, openedFrom }) {
   const [firstAnswer, setFirstAnswer] = useState("");
   const [chipId, setChipId] = useState("");
   const [secondAnswer, setSecondAnswer] = useState("");
@@ -5475,9 +5530,31 @@ function ChipLane() {
     }
   };
 
+  // Built once and rendered by both branches below, so the way out and the tie back to
+  // the inspection stand on the chip-choosing surface and on the comparison alike. The
+  // heading takes tabIndex -1 because it is a focus target and headings are not
+  // focusable on their own; it stays out of the tab order.
   const head = (
     <div className="wb-reader-result__head">
-      <h2 id="wb-chip-heading" className="wb-reader-result__title">{CHIP_UI.value_statement.headline}</h2>
+      <h2 id="wb-chip-heading" className="wb-reader-result__title" ref={headingRef} tabIndex={-1}>
+        {CHIP_UI.value_statement.headline}
+      </h2>
+      <div className="wb-chip__return">
+        <button type="button" className="wb-demo-trigger wb-chip__return-btn" onClick={onReturn}>
+          {`← ${openedFrom ? CHIP_UI.compose.return_to_inspection : CHIP_UI.compose.return_to_reader}`}
+        </button>
+      </div>
+      {/* The read-only tie to what the lane was opened over. The question only, never
+          the answer body — see the copy's own note in reader-paired.js. */}
+      {openedFrom ? (
+        <div className="wb-chip__origin">
+          <p className="wb-chip__origin-line">
+            <span className="wb-chip__origin-label">{CHIP_UI.compose.opened_from_label}</span>{" "}
+            <span className="wb-chip__origin-question">{openedFrom}</span>
+          </p>
+          <p className="wb-chip__origin-note">{CHIP_UI.compose.opened_from_note}</p>
+        </div>
+      ) : null}
     </div>
   );
 
@@ -6002,6 +6079,17 @@ function ReaderWorkbench() {
   const composeAnswerRef = useRef(null);
   const pairedAnswerRef = useRef(null);
   const resultHeadingRef = useRef(null);
+  // The chip lane's own heading and its door. Opening the lane drops the paste boxes
+  // from the stage, so the page above the door collapses and the door — with the lane
+  // under it — travels up past the top of the viewport while the scroll position holds.
+  // These two refs are what puts the person back on the thing they just opened, and
+  // back where they were when they close it: the heading is the top of the lane, the
+  // door is the control they pressed. laneRef skips the effect's first run, and
+  // laneReturnRef holds the scroll position the open was made from.
+  const chipHeadingRef = useRef(null);
+  const chipDoorRef = useRef(null);
+  const laneRef = useRef(null);
+  const laneReturnRef = useRef(null);
   // Both of these skip their own first run. The transition effect above already
   // consumed prevStageRef by the time these fire, so they cannot reuse it to detect
   // mount.
@@ -6048,6 +6136,28 @@ function ReaderWorkbench() {
     Array.isArray(readerResult.checks.cards) &&
     readerResult.checks.cards.length
   );
+
+  // The door is one control at one of two mount points, and the two conditions below
+  // are the complement of each other, so this is true exactly when the door is on the
+  // page and never counts it twice.
+  const chipDoorPresent = stage === STAGE_FOLLOWUP || view.chipDoor;
+
+  // What the capability strip may link to, in document order. Every entry is gated on
+  // the same expression that mounts the section itself, so a link cannot outlive its
+  // target: checkRegisterVisible is the register's own mount test and carries all three
+  // controls that live inside the register, and the comparison test is the early return
+  // inside Act2Offer written out. A strip that promised a register to a result carrying
+  // none would be a worse orientation than no strip at all.
+  //
+  // The follow-up link stands down while the lane is already open. The door does render
+  // there — as the hide control — so this is not a dead-anchor question; it is the copy
+  // law. Pointing a person at a follow-up they are standing in reports state, and this
+  // strip states where things are.
+  const capabilityLinks = resultCapabilityLinks({
+    checks: checkRegisterVisible,
+    comparison: !!(readerResult && readerResult.act2 && readerResult.act2.eligible),
+    followUp: chipDoorPresent && lane !== LANE_CHIPS,
+  });
 
   // Mark the next stage change as the person's own forward move. Called from the
   // primary action itself, immediately before the state setter that moves the stage.
@@ -6188,9 +6298,14 @@ function ReaderWorkbench() {
   // paint would take a visitor straight past the hero they arrived to read.
   //
   // The two stages whose target is a live input get that input. Every other stage names
-  // a heading or a status line, all of which sit inside the result region — and landing
-  // on the top of the region a person just opened is the point, since tabbing forward
-  // from there walks the new stage in order.
+  // a heading or a status line, and landing on the top of the region a person just
+  // opened is the point, since tabbing forward from there walks the new stage in order.
+  //
+  // Which region that is depends on the stage. Every inspect-lane stage names something
+  // inside the result region, so the result heading is the top of what they opened. The
+  // chip lane is not in the result region — it is a sibling below it — so the same rule
+  // resolves to a different element there, and sending the person to the result heading
+  // would have been sending them to the region they just left.
   const FOCUS_TARGETS = {
     "compose-answer": composeAnswerRef,
     "paired-answer": pairedAnswerRef,
@@ -6199,9 +6314,41 @@ function ReaderWorkbench() {
     const prev = focusStageRef.current;
     focusStageRef.current = stage;
     if (prev === null || prev === stage) return;
-    const target = (FOCUS_TARGETS[view.focus] || resultHeadingRef).current;
+    const regionTop = stage === STAGE_CHIPS ? chipHeadingRef : resultHeadingRef;
+    const target = (FOCUS_TARGETS[view.focus] || regionTop).current;
     if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
   }, [stage]);
+
+  // Focus alone is not orientation. Opening the lane collapses the paste boxes above it,
+  // so the lane can sit above the top of the viewport with the scroll position unmoved —
+  // a sighted person sees the page jump to content that is nowhere near what they
+  // pressed. Bring the lane's heading into view with the same anchor the rest of the
+  // workbench scrolls with, so it obeys the header offset and reduced motion already.
+  //
+  // Closing is the same collapse in reverse: the paste boxes come back, everything below
+  // them moves down by their height, and the person is left above the inspection they
+  // were reading. Restoring the scroll position the open was made from puts them back on
+  // it. Focus goes to the door, which is the control that governs the lane and sits at
+  // that restored position — and on the return control's path it is the only place
+  // focus can go, since the element it was on is about to be hidden.
+  useEffect(() => {
+    const prev = laneRef.current;
+    laneRef.current = lane;
+    if (prev === null || prev === lane) return undefined;
+    if (lane === LANE_CHIPS) {
+      const id = window.requestAnimationFrame(() => scrollWorkbenchAnchor(chipHeadingRef.current));
+      return () => window.cancelAnimationFrame(id);
+    }
+    const door = chipDoorRef.current;
+    if (door && typeof door.focus === "function") door.focus({ preventScroll: true });
+    if (laneReturnRef.current === null) return undefined;
+    const top = laneReturnRef.current;
+    laneReturnRef.current = null;
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [lane]);
 
   useEffect(() => {
     const goOwnFromHash = () => {
@@ -6303,6 +6450,9 @@ function ReaderWorkbench() {
   // event still means "the follow-up choices were shown".
   const openChipLane = () => {
     if (lane === LANE_CHIPS) return;
+    // Read before the state changes: this is the reading position the person opened
+    // from, and the only moment it is still on the page to read.
+    laneReturnRef.current = window.scrollY;
     advance();
     setChipMounted(true);
     setLane(LANE_CHIPS);
@@ -6327,9 +6477,16 @@ function ReaderWorkbench() {
   // than unmounted precisely so a half-typed answer survives a close, and moving it
   // under a new parent would unmount it and throw that answer away.
   const chipDoorControl = () => (
-    <div className="wb-reader-v2__follow wb-reader-v2__follow--chip-door">
+    /* One id across both mount points, which is safe because the two are mutually
+       exclusive by construction: the early mount is exactly STAGE_FOLLOWUP and the
+       late one is exactly its complement. The strip's follow-up link lands here. */
+    <div
+      id={RESULT_CAPABILITY_ANCHORS.followUp}
+      className="wb-reader-v2__follow wb-reader-v2__follow--chip-door wb-scroll-anchor"
+    >
       <button
         type="button"
+        ref={chipDoorRef}
         className="wb-demo-trigger wb-chip-door"
         onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
         aria-expanded={lane === LANE_CHIPS}
@@ -6810,6 +6967,21 @@ function ReaderWorkbench() {
                 <ReaderResultHero result={readerResult} />
               </div>
             ) : null}
+            {/* The strip sits between GLANCE and READ, and that is the only place it
+                works. Above the hero it would meet a person before the count they came
+                for; below the marks it would be another thing to scroll past on the way
+                to the thing it describes. Here it is the first thing after the number,
+                which is the moment a person has read the result and not yet learned that
+                the page continues.
+
+                Gated on `measurement`, the same test the hero carries, so it exists
+                exactly where the hero it follows exists — never heading a degraded or
+                fallback surface, where the sections it names are not on the page. */}
+            {readerResult.measurement && capabilityLinks.length ? (
+              <div className="wb-reader-v2__follow wb-reader-v2__follow--capabilities">
+                <ResultCapabilityStrip links={capabilityLinks} />
+              </div>
+            ) : null}
             {readerResult.measurement ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--measure">
                 <MeasurementPanel
@@ -6941,7 +7113,16 @@ function ReaderWorkbench() {
             className="wb-reader-v2__follow wb-reader-v2__follow--chips"
             hidden={!view.chipLane}
           >
-            <ChipLane />
+            {/* openedFrom is the inspection's own question, and it is empty unless an
+                inspection exists: the standing door and the ?start=chips arrival open
+                this lane over nothing, and naming an inspection there would name a
+                page the person never ran. It is the same expression the workbench
+                already reads a question from, so the two cannot drift. */}
+            <ChipLane
+              headingRef={chipHeadingRef}
+              onReturn={closeChipLane}
+              openedFrom={readerResult ? (mode === "guided" ? sel.openPrompt : question).trim() : ""}
+            />
           </div>
         ) : null}
 

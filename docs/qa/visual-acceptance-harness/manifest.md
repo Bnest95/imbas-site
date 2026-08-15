@@ -8,7 +8,7 @@ Generation reads no browser, starts no server, captures no pixel and moves no ba
 
 **This manifest governs both committed baseline layers: the `.png` images and the `.snapshot.txt` files beside them.** Both are checksummed. There is one row per image, and it carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in `docs/qa/visual-acceptance-harness/` is governed here.
 
-The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 35 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 70 images and 70 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
+The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 36 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 72 images and 72 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
 
 **What it does not attest.** This manifest is a statement about byte identity as the tree stands, and nothing else. It does not attest the capture session that produced any image — not when the shutter fired, not which working tree was checked out, not which commit the capture ran against. It records no browser environment beyond the version string each snapshot carries for its own image, and no machine, path or operating system. It attests no review, approval or acceptance event, and no baseline-acceptance provenance: that an image is listed here means its bytes are on disk and hash to the value shown, not that anyone signed off on them. It carries no historical capture SHA and no history of any kind. Those facts are real and are kept, elsewhere and deliberately — each snapshot's `## environment` block holds the conditions its own capture ran under, `git log` on an image file holds when those bytes last moved and which commit moved them, and `docs/qa/HARNESS-HISTORY.md` holds the removed historical record of this document's own pre-generated era. None of them is this file, and a reader needing any of them should not look here.
 
@@ -57,20 +57,20 @@ A board that lists only what it covers reads as complete. These are the result s
 
 ## Images
 
-70 images, 70 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+72 images, 72 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
 
 ### `chip-arrival--desktop.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `9f555c3ad0e5cf8bcc75409ecc3044fd87592937c726663d97a853b313ffd0c7` |
-| bytes | 577844 |
+| sha256 | `d244c87b9e2f9c9f4d98ae63ee47737180ac00dcc62311ae96801e81ccbdce6b` |
+| bytes | 591763 |
 | snapshot | `chip-arrival--desktop.snapshot.txt` |
-| snapshot sha256 | `e88b12e1ed51919e8e409b94d4bd194808a9a49a26fd22a5ea925b791241c037` |
-| snapshot bytes | 1993 |
+| snapshot sha256 | `1c79b44e84ffc3b9a080cb39781c447dd606c757972e6fbed02c8ff151a58d93` |
+| snapshot bytes | 1996 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `?start=chips` |
-| framed on | `#wb-chip-lane` at scroll offset 277 |
+| framed on | `#wb-chip-lane` at scroll offset 290 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The chip lane entered through ?start=chips, with no inspection under it |
 | expected behaviour | The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing. |
@@ -79,30 +79,62 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b86131abb2aca0ffd29eddf34a095055a3e2f597ae310b4a4839523892860c3e` |
-| bytes | 312395 |
+| sha256 | `65e550e898c2e89e768102865fe5ddb083a9fc2bbc42f24b2fae8686c2107a00` |
+| bytes | 316480 |
 | snapshot | `chip-arrival--mobile.snapshot.txt` |
-| snapshot sha256 | `a34a300b885e992ab1e4f87d801d4732b0c40afe84749dafefb8211914da1cc8` |
-| snapshot bytes | 1245 |
+| snapshot sha256 | `da71467d3ee9eca1b18ba40ef85c5981f959984f9ad09c81282f707506bb431c` |
+| snapshot bytes | 1287 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `?start=chips` |
-| framed on | `#wb-chip-lane` at scroll offset 479 |
+| framed on | `#wb-chip-lane` at scroll offset 504 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The chip lane entered through ?start=chips, with no inspection under it |
 | expected behaviour | The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing. |
+
+### `chips-from-inspection--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `6c5e7c5bdfab661609824181aef95cdec1a44b57c603d68ec369d2aa4f1bcd22` |
+| bytes | 616075 |
+| snapshot | `chips-from-inspection--desktop.snapshot.txt` |
+| snapshot sha256 | `79fb9a5932832d50140d948935732a7f0b01de5943d653c61e69344ef3cb4dae` |
+| snapshot bytes | 29326 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 3983 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
+
+### `chips-from-inspection--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `ce0f4c8ac707a9b5320acc3cb3c26db03499074062554ac7fa1c2009f7158c32` |
+| bytes | 664416 |
+| snapshot | `chips-from-inspection--mobile.snapshot.txt` |
+| snapshot sha256 | `e32419d1f13bd5315a5ebdbe87fa7f8d14e4646c64ab2a60b1f5ddf669c3505d` |
+| snapshot bytes | 28462 |
+| viewport | 375x812@3x (mobile) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 5610 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
 
 ### `claim-authorized-match--desktop.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `31fa69d013603f2fc8c5d0f30ffc8aa8f71698d8c6223f963c446ad10d778ee4` |
-| bytes | 1065397 |
+| sha256 | `64d3525efb3e9d9800af156c83732e21f0e4d748a6b0ea6662de783f81b05ab4` |
+| bytes | 1066441 |
 | snapshot | `claim-authorized-match--desktop.snapshot.txt` |
-| snapshot sha256 | `f1385a20ec548a06b66b2844624e2da5a52275a62264d106bbe55583f202ff64` |
+| snapshot sha256 | `83f7e99e2e4173a256c476492d2c3be78ea3b6528243335801a61671336652f8` |
 | snapshot bytes | 52840 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 4993 |
+| framed on | `.wb-claim` at scroll offset 5121 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose findings carry an authorized conditions record reading MATCHED |
 | expected behaviour | The claim row reads 'Conditions matched' and says an authorized record of the capture conditions places the two answers at like for like. This is the only state in which the surface asserts a matched-condition basis, and it is unreachable from any live endpoint today. |
@@ -111,14 +143,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `206a62ed8db70660e14a9ab790a3278030e00357c0bfe9266f13c7ea480068cc` |
-| bytes | 1044946 |
+| sha256 | `980c2ee67e7db6f68df65ff519edead50f78eb6e71a9f6e11999ef0b5ea23ddb` |
+| bytes | 1047536 |
 | snapshot | `claim-authorized-match--mobile.snapshot.txt` |
-| snapshot sha256 | `caacb5b2ffd62a55f4a7613a16c83c29a7175aab3d055418da2be9678fc8b468` |
+| snapshot sha256 | `6ef53348d0195133b13980963943a0d34eacc4f03691ece9c50dce24aadeeb4a` |
 | snapshot bytes | 51811 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 6651 |
+| framed on | `.wb-claim` at scroll offset 6877 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose findings carry an authorized conditions record reading MATCHED |
 | expected behaviour | The claim row reads 'Conditions matched' and says an authorized record of the capture conditions places the two answers at like for like. This is the only state in which the surface asserts a matched-condition basis, and it is unreachable from any live endpoint today. |
@@ -127,14 +159,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `6c1ad7c9c8860158e4c1f027558ca4ab9a41a964c0b35103245ccbdb80b3b38b` |
-| bytes | 1052438 |
+| sha256 | `418c33103262e6affd95cd19056ff97bfe9f1c4b97b495a355a00c81dda5f516` |
+| bytes | 1056786 |
 | snapshot | `claim-authorized-mismatch--desktop.snapshot.txt` |
-| snapshot sha256 | `ad58de6ee9eae10c1265ce3c99ddc1c879a9f1a4b517ae30f4065265d6c02871` |
+| snapshot sha256 | `ef1fca1b92c7d160723f24363c1adb64362ee647bcfc71f3c7fb4edb92453fc3` |
 | snapshot bytes | 52812 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 5004 |
+| framed on | `.wb-claim` at scroll offset 5132 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose authorized conditions record reads UNMATCHED, against a person who declared a match |
 | expected behaviour | The claim row reads 'Conditions differ' and says an authorized record exists and does NOT place the two answers at like for like. The person declared same model and no edits, so no client-derived unmatched callout is drawn — the record and the declaration disagree, and only the claim row carries that. |
@@ -143,14 +175,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `4149c592fe62c25fa6ff4d86609d45af1ae9f76515cb9b2f75ab4d69951b29e2` |
-| bytes | 985928 |
+| sha256 | `b3a9e6f459d636e30a8f418c2d82d59eb56c4a972d8f9b7d4ee7617c798dee22` |
+| bytes | 984559 |
 | snapshot | `claim-authorized-mismatch--mobile.snapshot.txt` |
-| snapshot sha256 | `99511640db5076d793fca7e20900831d6db31e66b46f33cc31a954fff33e6f51` |
+| snapshot sha256 | `fc38e697ec799ed5c283053753c6df6cc76c9e0e6dce00e6d7e0d5bf49b350e5` |
 | snapshot bytes | 51797 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 6651 |
+| framed on | `.wb-claim` at scroll offset 6877 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose authorized conditions record reads UNMATCHED, against a person who declared a match |
 | expected behaviour | The claim row reads 'Conditions differ' and says an authorized record exists and does NOT place the two answers at like for like. The person declared same model and no edits, so no client-derived unmatched callout is drawn — the record and the declaration disagree, and only the claim row carries that. |
@@ -159,14 +191,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `062a863a0391d6b2f84f4ffa296d86b1e5032a2056b65b21c68c0f82ef771273` |
-| bytes | 1058389 |
+| sha256 | `7f1638779851729ad39f0777a34df3963dc363048d9e770107005e715fbb69b3` |
+| bytes | 1059524 |
 | snapshot | `claim-client-declaration--desktop.snapshot.txt` |
-| snapshot sha256 | `c731452712fa9c8c540e5300bc16e308277b557c0b2a58f2b03aff4f81d48333` |
+| snapshot sha256 | `a52c321b55a50c5e525f7d7b3dc76db68e4f2525cb8fd449b815b49077533fd1` |
 | snapshot bytes | 52807 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 4993 |
+| framed on | `.wb-claim` at scroll offset 5121 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose conditions basis is the person's own declaration, carried through to the record |
 | expected behaviour | The claim row reads 'Conditions as you reported them' and says the conditions are the ones you told us and not ones Imbas watched. The distinction from the state below is the one the register exists to hold: reported is not the same as unrecorded. |
@@ -175,14 +207,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3a0599fff34bba0a696055b252fa2896fe270a90244182fb943d5ae279ed2afe` |
-| bytes | 986100 |
+| sha256 | `085903b7c61c717f2494598d28e627e4e538ac941dd1d9fc81fe008bb62d74be` |
+| bytes | 985263 |
 | snapshot | `claim-client-declaration--mobile.snapshot.txt` |
-| snapshot sha256 | `3be006a6fd31a2ae8fc3e9f971aaaa0040e0b3ee49308cce372d4a243c56c77b` |
+| snapshot sha256 | `a474c1c35a17cbb3aca412f4349b481526a9c747012e4318de93f8a1306c3081` |
 | snapshot bytes | 51792 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 6658 |
+| framed on | `.wb-claim` at scroll offset 6884 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result whose conditions basis is the person's own declaration, carried through to the record |
 | expected behaviour | The claim row reads 'Conditions as you reported them' and says the conditions are the ones you told us and not ones Imbas watched. The distinction from the state below is the one the register exists to hold: reported is not the same as unrecorded. |
@@ -191,14 +223,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `631e5a9a173fd45be0ebac0ff0b96500f41c47cc7b5e1567ba63c3b8e4b6bed5` |
-| bytes | 1059702 |
+| sha256 | `aef94d2783a32c4a2aa3728b3a94565c52f885c881fd34944ae7fb2d182a64fa` |
+| bytes | 1064084 |
 | snapshot | `claim-unrecognized-source--desktop.snapshot.txt` |
-| snapshot sha256 | `1199221b9ab180f6ef4ba0695f0f8fb35103478254ef87020a9345eff9b9b8b4` |
+| snapshot sha256 | `099f770f0696abe9cfa978185c98d294f974f17a214584e69a6aa344b1ac58ee` |
 | snapshot bytes | 52804 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 5004 |
+| framed on | `.wb-claim` at scroll offset 5132 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result naming a conditions source this build does not recognize, with status MATCHED |
 | expected behaviour | The claim row reads 'Conditions source not recognized' and says this build does not know the named source, so it treats it as nothing recorded. The stored status is MATCHED and the surface still refuses the matched-conditions claim, because the source is not in the authorized set. |
@@ -207,14 +239,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `bcd00e25daf48633f13044124e05ff03bba51e0b3213ea5270b6f5bcc43538e7` |
-| bytes | 937337 |
+| sha256 | `4dd6798f7083eee1d470281b5711fd7a4b9f3465b43177702264616171c26a7a` |
+| bytes | 938931 |
 | snapshot | `claim-unrecognized-source--mobile.snapshot.txt` |
-| snapshot sha256 | `5dadeb1e965b63bd1442c0877ff52312a54c13f9aa789f465b9fb7eec9b88a1e` |
+| snapshot sha256 | `29b775344a8dd5df258aa37f246cf6bbad7d87879a877866e94b9377fbabde50` |
 | snapshot bytes | 51789 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-claim` at scroll offset 6668 |
+| framed on | `.wb-claim` at scroll offset 6895 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired result naming a conditions source this build does not recognize, with status MATCHED |
 | expected behaviour | The claim row reads 'Conditions source not recognized' and says this build does not know the named source, so it treats it as nothing recorded. The stored status is MATCHED and the surface still refuses the matched-conditions claim, because the source is not in the authorized set. |
@@ -255,14 +287,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7630233511112fe0f8ad204016e06c78df0833871af1efdefd5f9b2465204480` |
-| bytes | 1388368 |
+| sha256 | `1377d9847904edfe4ac08ed031264f8708afa05083a6340b2e05dc82551363f8` |
+| bytes | 1400727 |
 | snapshot | `deposit-fixture--desktop.snapshot.txt` |
-| snapshot sha256 | `b69d6a967096ce4179acad191422c21d8fe16055a29aa93fb6ce41474aa4e369` |
-| snapshot bytes | 51653 |
+| snapshot sha256 | `bd8d38a6201ce0c8fa16f7a00b98c16cc2cf5f50eac7de4f72c44f45d73d24c7` |
+| snapshot bytes | 51679 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1326 |
+| framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1394 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it |
 | expected behaviour | The answer renders with six marks positioned in it, numbered in the document's order rather than the record's, so they count 1 to 6 down the answer. This record lists its third and fourth marks in the reverse of the order they appear in and the body no longer inherits that, which is what the fixture is here to catch. Two of the six cover whole paragraphs. Below it the list carries nine rows in the record's own order, so the numerals beside them do not ascend; the last three state record-level absence with no quotation and no position, and hold the last three numbers because nothing places them in the answer. The count reads '9 candidate items surfaced'. |
@@ -271,14 +303,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e3c312e808a8a2d26f26f9cb7bc7803b0efc30488630e95cf4cce742eb4d89b7` |
-| bytes | 1347668 |
+| sha256 | `4c1f68eaafe50315d3aa3663f56865ee3d998e09855b898f2dd025f0603ca695` |
+| bytes | 1352328 |
 | snapshot | `deposit-fixture--mobile.snapshot.txt` |
-| snapshot sha256 | `91ac0a409d852129ac2c3d36a5fbdf3151c5af46703a6c7d78bfc15e9310cdeb` |
-| snapshot bytes | 50846 |
+| snapshot sha256 | `f473c000f9d897a6adbc406bb6d8c54e4539e78c9d95ba8bc33a04d3c3350489` |
+| snapshot bytes | 50825 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1481 |
+| framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1606 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the dense acceptance record — nine marks, six positioned in the answer and three recorded against it |
 | expected behaviour | The answer renders with six marks positioned in it, numbered in the document's order rather than the record's, so they count 1 to 6 down the answer. This record lists its third and fourth marks in the reverse of the order they appear in and the body no longer inherits that, which is what the fixture is here to catch. Two of the six cover whole paragraphs. Below it the list carries nine rows in the record's own order, so the numerals beside them do not ascend; the last three state record-level absence with no quotation and no position, and hold the last three numbers because nothing places them in the answer. The count reads '9 candidate items surfaced'. |
@@ -287,14 +319,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `a9646b1dc97e9b1008f49f32abe93f461bf213531274307603f2121979563fa1` |
-| bytes | 763963 |
+| sha256 | `52ef8dd2332c26d8e024a9edab225d5d7ce12e3c9c3dfba3aa995ce032b7f878` |
+| bytes | 764257 |
 | snapshot | `export-paired--desktop.snapshot.txt` |
-| snapshot sha256 | `9efe3e1e22fbd5d0b3c9b5f7e4063c9fdfac761c75c43d01884859b333f57934` |
+| snapshot sha256 | `a45b95f8c8302e24c034142caaf485e4b7c2682adfbcb2ce625533a0826947bf` |
 | snapshot bytes | 52531 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks__export--paired` at scroll offset 6956 |
+| framed on | `.wb-checks__export--paired` at scroll offset 7084 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The Review Record export on a paired run — the control and its support line |
 | expected behaviour | Same control label. The line names both answers as pasted, the recorded findings, the capture conditions YOU REPORTED, and the run's provenance. It names no checks, because a paired inspection produces none, and it calls the conditions reported rather than matched. |
@@ -303,14 +335,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `4c175bb1abb07c64fff9e46cda3eb8f734878c6911e70e11a24f27a1a19296d9` |
-| bytes | 714457 |
+| sha256 | `5c7f004b5ae3f96632b936e60eba9bbf27a73c05a74e2b29eba1416680384b6a` |
+| bytes | 712946 |
 | snapshot | `export-paired--mobile.snapshot.txt` |
-| snapshot sha256 | `a4c6550659058deff5b0cd8c3c1f89479ba72b17fc2c531a524ad474e97360bd` |
-| snapshot bytes | 51848 |
+| snapshot sha256 | `bc972955d6fdfcee716419fbcf0769b17f3266ed127ec10b5bbc3b61202463a2` |
+| snapshot bytes | 51891 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks__export--paired` at scroll offset 9781 |
+| framed on | `.wb-checks__export--paired` at scroll offset 10008 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The Review Record export on a paired run — the control and its support line |
 | expected behaviour | Same control label. The line names both answers as pasted, the recorded findings, the capture conditions YOU REPORTED, and the run's provenance. It names no checks, because a paired inspection produces none, and it calls the conditions reported rather than matched. |
@@ -319,14 +351,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `18a0993dbbe7593ea2e476b95c38543961c40ea809d5d47d63746983b14e63f0` |
-| bytes | 626077 |
+| sha256 | `f96516c379c3f42192eb148a44385779387553fb68662bb9b85f9ec3600ca249` |
+| bytes | 623141 |
 | snapshot | `export-single--desktop.snapshot.txt` |
-| snapshot sha256 | `a6f7a66d4893965413f6f21f029599519d39250888204cecad0463c688bdb0a1` |
+| snapshot sha256 | `1beb60f6ba5adf3591fed9b56a9a3b98747c376f9399474fb2e2b2ac5c365a7f` |
 | snapshot bytes | 29472 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks__export--single` at scroll offset 3578 |
+| framed on | `.wb-checks__export--single` at scroll offset 3706 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The Review Record export on a single-answer run — the control and its support line |
 | expected behaviour | The control reads 'Export Review Record'. The line beside it names the answer as pasted, the recorded findings, the checks with the marks set, and the run's provenance, then states that every finding in it is unreviewed. It does not mention a paired capture, and it makes no verification claim. |
@@ -335,14 +367,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d29d6499482d466265f236e8fcefc38050d64c4579ebcadb7506598663630fa2` |
-| bytes | 482251 |
+| sha256 | `79711ebae346f46144821597578b139969829791463e235470414a060ee9387b` |
+| bytes | 480278 |
 | snapshot | `export-single--mobile.snapshot.txt` |
-| snapshot sha256 | `44db327761dc1807cb1aad540cfa7862ad82a18499da1f604fb9135bdfe8c9de` |
+| snapshot sha256 | `84bfce7960a61f93c1edef22639177c61034465849a2c58cc32829f8b6944be1` |
 | snapshot bytes | 28410 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks__export--single` at scroll offset 4608 |
+| framed on | `.wb-checks__export--single` at scroll offset 4834 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The Review Record export on a single-answer run — the control and its support line |
 | expected behaviour | The control reads 'Export Review Record'. The line beside it names the answer as pasted, the recorded findings, the checks with the marks set, and the run's provenance, then states that every finding in it is unreviewed. It does not mention a paired capture, and it makes no verification claim. |
@@ -383,14 +415,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b4916ef6dfe80d115c46975917bdc65b7395408b80659bb61be500e539390c7c` |
-| bytes | 735952 |
+| sha256 | `92008418626e58f5b445d3b780ed54f2c7ca8863dd1fdc7d9d94c708b9eac60c` |
+| bytes | 737216 |
 | snapshot | `paired-empty--desktop.snapshot.txt` |
-| snapshot sha256 | `ada71ab87db57735c9e22ac4c6ca898aa02d1dfee42aa07cf061073fa843841d` |
+| snapshot sha256 | `928c5d5fb741499ea3ed94a9ece22efa0e16c273ed2f942d931adfa694770e01` |
 | snapshot bytes | 44866 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta` at scroll offset 5749 |
+| framed on | `.wb-act2__delta` at scroll offset 5877 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 that surfaced nothing — the empty state, NO_CLAIM, and no value close |
 | expected behaviour | The count reads '0 differences surfaced'. Under 'What the second answer added' one line renders: this probe surfaced nothing new, and that does not mean either answer is complete. The absence is reported about the probe, not about the two answers. No value close appears anywhere on the page. |
@@ -399,14 +431,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `bca981cdce316f89d643233351abce1886c3086e98bcda8de8a674fbd36c8137` |
-| bytes | 659708 |
+| sha256 | `37e257f49fd7f8e5c211b68ec02c2c33b27d8e313945a275ac54e21fbc72f0d0` |
+| bytes | 660587 |
 | snapshot | `paired-empty--mobile.snapshot.txt` |
-| snapshot sha256 | `b2cff239fcb36b08bfb4528faeb3826dad28850e848f86a46b363792bcc4d6f3` |
+| snapshot sha256 | `a7ad838b8cb3936090ebaa6815b0304faddc2b8e5c2a41b785631b7033f88467` |
 | snapshot bytes | 43944 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta` at scroll offset 7850 |
+| framed on | `.wb-act2__delta` at scroll offset 8076 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 that surfaced nothing — the empty state, NO_CLAIM, and no value close |
 | expected behaviour | The count reads '0 differences surfaced'. Under 'What the second answer added' one line renders: this probe surfaced nothing new, and that does not mean either answer is complete. The absence is reported about the probe, not about the two answers. No value close appears anywhere on the page. |
@@ -415,14 +447,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `974dd8e86cfcf4231008937e04aa1a84cd174cf7563d65cc1560e323af4e24c0` |
-| bytes | 1043347 |
+| sha256 | `cba17b0180889d25058983cf4d21b2ae6db35405dadf82b02517e2ff75a0c48e` |
+| bytes | 1040937 |
 | snapshot | `paired-legacy--desktop.snapshot.txt` |
-| snapshot sha256 | `a3c2223e182fda4c9eb2b4dfe720c446405cf433d0ac7e9c8276584277d20957` |
+| snapshot sha256 | `c51bd68d3ac72c2a0934ac51f97dbda30dce6c6d8c38e8e22855107d20845ac5` |
 | snapshot bytes | 41810 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__notice--legacy` at scroll offset 4849 |
+| framed on | `.wb-act2__notice--legacy` at scroll offset 4977 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired record at method 1.1 — the version notice and the suppressed panels |
 | expected behaviour | A version-labelled notice names method 1.1 and says the excerpts are withheld. The headline follows it directly, with NO side-by-side answer panels between them — the surface that would normally carry the two quoted spans is simply absent. |
@@ -431,14 +463,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7a52ce3a51db5cf60409e98ede0ba126eb4beb758ca0f4d271b206d60d09b52d` |
-| bytes | 683844 |
+| sha256 | `8a5b5743dcab9cb9f34aa240c728ea019d22124fd65a482b4439c0de503083f2` |
+| bytes | 684555 |
 | snapshot | `paired-legacy--mobile.snapshot.txt` |
-| snapshot sha256 | `659c53f21655a0c3ce7979640760521b595d16e3fe8d6f3df431753dbb84f7fa` |
+| snapshot sha256 | `04be94f170343d81295f6537dce36a3b5166923f8089fdc125447b3fe3503056` |
 | snapshot bytes | 40902 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__notice--legacy` at scroll offset 6376 |
+| framed on | `.wb-act2__notice--legacy` at scroll offset 6603 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired record at method 1.1 — the version notice and the suppressed panels |
 | expected behaviour | A version-labelled notice names method 1.1 and says the excerpts are withheld. The headline follows it directly, with NO side-by-side answer panels between them — the surface that would normally carry the two quoted spans is simply absent. |
@@ -447,14 +479,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `f5c69e3c66c8f17a8b35c12b41256fd098c75be8f8051e5f6e3a3573412e3f4c` |
-| bytes | 784654 |
+| sha256 | `a36fe22799a171e69c4e2b80e9d89a7570c44c9ec699097414f60e2e68e5b7ca` |
+| bytes | 783668 |
 | snapshot | `paired-legacy-rows--desktop.snapshot.txt` |
-| snapshot sha256 | `0d97b6ced86d4e0ecf642aa76e450a55cef821e39b1408672ee8209b737789fa` |
+| snapshot sha256 | `a55d0fe3250ee37c8b4d4b4f0d69fe1f2c547587c09ba7a2f5df424fa08b767b` |
 | snapshot bytes | 41707 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5445 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5573 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired record at method 1.1 — the readings, rendered without excerpts |
 | expected behaviour | Both readings render, each labelled as the Reader's reading. NO quotation marks and no blockquotes appear beside them, and neither the gap x-ray nor the signal-count line is drawn. The card and share actions are not offered. |
@@ -463,14 +495,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b31b4f2fbfa280a15022a8fe21119ed2f5891c85dbd4e76446b64187164d777c` |
-| bytes | 554953 |
+| sha256 | `6e90454df580269c60eaacd5486a790c5ccb74aaa79dcd33cfd3446f5bdbac79` |
+| bytes | 548730 |
 | snapshot | `paired-legacy-rows--mobile.snapshot.txt` |
-| snapshot sha256 | `1b453b4add69bb0aee8ffc38ff20a7dea894f0f5e16f0faf7f82cf2d4759a3ee` |
+| snapshot sha256 | `2691657257b3d0d2d5c6faf73551417d9ac0bf62d0d94787cf4e5c897d8185ee` |
 | snapshot bytes | 40833 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7330 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 7556 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired record at method 1.1 — the readings, rendered without excerpts |
 | expected behaviour | Both readings render, each labelled as the Reader's reading. NO quotation marks and no blockquotes appear beside them, and neither the gap x-ray nor the signal-count line is drawn. The card and share actions are not offered. |
@@ -479,14 +511,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3a5e3d8f336eabfff20c7953237d39efbffbb193db5e021064045d06030cd2a8` |
-| bytes | 627235 |
+| sha256 | `7fa636b59684bc22b030805447f318d9b040ec648360e8122ef431d2a4a6b6d0` |
+| bytes | 627120 |
 | snapshot | `paired-matched--desktop.snapshot.txt` |
-| snapshot sha256 | `19f27f3d2f0ba6e4b1f8e0718da183943651fb5c4e4b5321fbe0702e19c5b117` |
+| snapshot sha256 | `719057b8c5d93bc0a5cc34cd7f7bcda951430ca17d00006f8b200a63efe1ce73` |
 | snapshot bytes | 52585 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5937 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 6065 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED |
 | expected behaviour | The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. The count above the section reads '2 differences surfaced' — a number a person checks by counting the rows, and the tally that used to break it down by class is gone. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits. |
@@ -495,14 +527,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3193c8d94caeb4a9f24303fbcb144df9854e2e8e19e157447dcd6b467658dcf5` |
-| bytes | 476561 |
+| sha256 | `c8f418595caee59b70508f347b8eec31bcad20f06f4a5886ea0b1ce4ebae3729` |
+| bytes | 475526 |
 | snapshot | `paired-matched--mobile.snapshot.txt` |
-| snapshot sha256 | `fb23ecd7b4bccdcf1920e0207437d53f2adc7fbf78f5a20647369c9c56be03d8` |
+| snapshot sha256 | `22598e94fd5013352fbcb93d6c582e65f2b1625be67cd065bd5b8e659f9655a6` |
 | snapshot bytes | 51856 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8342 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8569 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0, both sides server-resolved, conditions derived as MATCHED |
 | expected behaviour | The 'What the second answer added' section lists 2 rows. Row 1 quotes BOTH answers; both excerpts are spans the door resolved against the stored answers. Each row carries the Reader's reading in a labelled, unquoted register. The count above the section reads '2 differences surfaced' — a number a person checks by counting the rows, and the tally that used to break it down by class is gone. No unmatched-conditions warning: conditions_matched === true, derived client-side from same model + no edits. |
@@ -511,14 +543,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `81d51b40415111ee8ce55e1fd9a367c72826c23b6c9d896a4a33c82a65bd9118` |
-| bytes | 677801 |
+| sha256 | `5ece4504dc939a629eeb4b8bfd10300342cbefc3daf2258469569682ceb78c5c` |
+| bytes | 678088 |
 | snapshot | `paired-rejected-snippet--desktop.snapshot.txt` |
-| snapshot sha256 | `10b49fa9a2132c6b87a57c4d9674ff23a8b90c3af0688ebe35915a25653d1fd0` |
+| snapshot sha256 | `bfe35b6e04a23d6b6a14bd9e7986787aefdf6fb3ec760ac4491a1a21da707536` |
 | snapshot bytes | 52030 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5850 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5978 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced |
 | expected behaviour | The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The count reads '1 difference surfaced' against paired-matched's '2 differences surfaced'. |
@@ -527,14 +559,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `6c331ff897e714aeeb04d3b8c681cda1315e6d24bbb16bed89617de54c89f818` |
-| bytes | 544532 |
+| sha256 | `ecd076e64b6b0993ee89a9f409dff134b5e0234ab31fd0befb558830d60b80c6` |
+| bytes | 543000 |
 | snapshot | `paired-rejected-snippet--mobile.snapshot.txt` |
-| snapshot sha256 | `9545a6748fbe3e83613027256af8aa4264217b2af3f757a03a0196e1d695bb31` |
+| snapshot sha256 | `3468c55bc01385824f6f5ecf9eb68e3d234329a6266f6d8119858c0e000a1c63` |
 | snapshot bytes | 51162 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8220 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8447 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 where one proposed snippet did not resolve — recorded, not surfaced |
 | expected behaviour | The 'What the second answer added' section lists ONE row, from two proposed differences. The rejected one ('a tenant who waits too long forfeits the penalty entirely') appears NOWHERE on screen — not as a row, not as a quotation, not as a count. The count reads '1 difference surfaced' against paired-matched's '2 differences surfaced'. |
@@ -543,14 +575,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9bdc13b28d1f4ed1d2fe10c257dbde6942521ca7490db054382d4d9f3a3cc9d9` |
-| bytes | 612369 |
+| sha256 | `2f8b6d5fafdd0ba69e998ff779fe675c366b993acd1849c131dfd54fad5509d0` |
+| bytes | 611840 |
 | snapshot | `paired-unmatched--desktop.snapshot.txt` |
-| snapshot sha256 | `c7871c55d7bcfdc97362db916eeaaecb1e50b8001fb6d6c3ba2cd54a0a44886b` |
+| snapshot sha256 | `5befde5541116dcd047167d26591a2181f1cbd5a45e8e7c38b219d5dba763e05` |
 | snapshot bytes | 52585 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5991 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 6119 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED |
 | expected behaviour | The 'What the second answer added' section lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit. |
@@ -559,14 +591,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `8c44fb690ff437d7dc52c704145c7bc44cf213f88bf9e01dc1439a06d588ce31` |
-| bytes | 474821 |
+| sha256 | `7db40eeb562832e93561ec7464ca45a13f059048342c12f84f7169f48f82e3cb` |
+| bytes | 477756 |
 | snapshot | `paired-unmatched--mobile.snapshot.txt` |
-| snapshot sha256 | `4c05adade4b137653994c9b19e14296ec50c37a7ac27c02d17c65691865ffac1` |
+| snapshot sha256 | `0c682f32f32b32b12e6aaf81f20bc64be284013c721dc13ddf3d159202893f5d` |
 | snapshot bytes | 51856 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8462 |
+| framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 8689 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Paired comparison at method 2.0 with an ABSENT open side, conditions derived as UNMATCHED |
 | expected behaviour | The 'What the second answer added' section lists 2 rows. Row 2 shows ONLY the Second answer excerpt — its open side is ABSENT, so no First answer blockquote is rendered and no placeholder stands in for one. The unmatched-conditions warning is present: conditions_matched === false, derived client-side from a disclosed edit. |
@@ -575,14 +607,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7bf6c0322af07d780db42f8dd64c42bd8a9eb47d5930f59bd6c5d97b0d74846e` |
-| bytes | 795055 |
+| sha256 | `bf5f8ac01b58f3753f4c895edb955462ef03914ac3380681ff34c6a1c2149a31` |
+| bytes | 795623 |
 | snapshot | `provenance-complete--desktop.snapshot.txt` |
-| snapshot sha256 | `95054f8dc00dd1f59214193158dfd76cabe91c15620b8255a52f00aa79e0eec1` |
+| snapshot sha256 | `fd00a2c903553997ca57fb55782c4e2c50cc5443b7596427c01ba8dce2dace12` |
 | snapshot bytes | 52749 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5304 |
+| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5432 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The provenance strip with every field recorded — seven rows, none unknown |
 | expected behaviour | Seven labelled rows, every one carrying a recorded value: declared answer model, inspection provider, inspection model, pinned inspection build, inspection method, paired method, and capture time. The strip reports data-complete=yes. The note under it still says the answer model is declared and not observed. |
@@ -591,14 +623,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3860185f6012ccdfc60e9dd320005d82ec55385614c3f9228fc8363c32d7958c` |
-| bytes | 643995 |
+| sha256 | `cc4e52add2a4243f2e1f78172a4409b990d17f1cb7a49670d9c7bad1dbebcc56` |
+| bytes | 646662 |
 | snapshot | `provenance-complete--mobile.snapshot.txt` |
-| snapshot sha256 | `49f33be4fd024055a218484df5175a9a89744f40ba453d716183b2d9f0b3ffa5` |
+| snapshot sha256 | `7f0a0957568a0a75f32bcd5810f573882cd2ddf1b06f40fd01a9da5eb32800a6` |
 | snapshot bytes | 51726 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 7386 |
+| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 7612 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The provenance strip with every field recorded — seven rows, none unknown |
 | expected behaviour | Seven labelled rows, every one carrying a recorded value: declared answer model, inspection provider, inspection model, pinned inspection build, inspection method, paired method, and capture time. The strip reports data-complete=yes. The note under it still says the answer model is declared and not observed. |
@@ -607,14 +639,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `a223cad04ef1a8af085b40327b8e3b2bd7d7e71f15c06209c3b23a1a3ccc0a96` |
-| bytes | 776139 |
+| sha256 | `77fb2f02895fb4d6d7b33b035f5449f3440358c71ad38e7d52dc6c321fe9e10f` |
+| bytes | 776585 |
 | snapshot | `provenance-partial--desktop.snapshot.txt` |
-| snapshot sha256 | `80996c00882e87b2bd728ede10e61d6510fed13a16d68412588f983ff50b1de4` |
+| snapshot sha256 | `aedc13a28bb8751849803b377a2492f3f93bcc7b15de14ed34cc3e35f457ba5c` |
 | snapshot bytes | 52701 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5325 |
+| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5453 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The provenance strip on a live-shaped run — two fields unrecorded, both stated |
 | expected behaviour | Seven rows again, with 'none given' against the declared answer model and 'not pinned' against the inspection build. The strip reports data-complete=no. No row is hidden and no value is borrowed from a neighbouring field. |
@@ -623,14 +655,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `367be1abb76419e1c2ac10fb35248693e0ea8ac971f4dfefdb13897dd3571991` |
-| bytes | 653593 |
+| sha256 | `0ff7402dbe20f5ebb7679d62c01186c5b64bffc08496383fd5ae2e808ccc509b` |
+| bytes | 689511 |
 | snapshot | `provenance-partial--mobile.snapshot.txt` |
-| snapshot sha256 | `fbb5b1bb93de0b7b5d398ba0cafcb215ab4eaa8005744086af870e5884fa725d` |
+| snapshot sha256 | `1495c42f8439c9d65ec914d5fc3861bdfb4cd50e06aee30410073c139853b682` |
 | snapshot bytes | 51697 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 7359 |
+| framed on | `.wb-loop__reveal .wb-prov` at scroll offset 7585 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The provenance strip on a live-shaped run — two fields unrecorded, both stated |
 | expected behaviour | Seven rows again, with 'none given' against the declared answer model and 'not pinned' against the inspection build. The strip reports data-complete=no. No row is hidden and no value is borrowed from a neighbouring field. |
@@ -639,8 +671,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b338efdf31d4fe36bc580f613af73c0d02f79db9fcac5bad51103341887836f5` |
-| bytes | 662622 |
+| sha256 | `8712380418092da1a086b95edad3f2e44f45390ef1d89021f4025efa099be348` |
+| bytes | 662819 |
 | snapshot | `public-example--desktop.snapshot.txt` |
 | snapshot sha256 | `6e24ab36459dd28be30b439d18a201645dc17f5060484f04319e7d4aac7412e1` |
 | snapshot bytes | 2706 |
@@ -671,8 +703,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d0d6c17e7c676887439eacfe868575ae2058d7c85459bb8a8dbf45d143e61b74` |
-| bytes | 493157 |
+| sha256 | `8c6ac0270528cb2d20ada70ddabf3a500c49e33b46f83ec5030ceed7ac4f4970` |
+| bytes | 493559 |
 | snapshot | `public-example-provenance--desktop.snapshot.txt` |
 | snapshot sha256 | `4f1d5fbdc7e4928b6fc516a0ab2611fad90cae0fe31fce5d71ce8e2618fbd103` |
 | snapshot bytes | 2962 |
@@ -687,8 +719,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1ad60c6bf44f57873d3b43ce68fa47b7d07663ce17b0514f4e522700b1c83cbb` |
-| bytes | 437423 |
+| sha256 | `829a5c722404c8165aee67555616560333ce03022b1de91b101402e50fd88aac` |
+| bytes | 438309 |
 | snapshot | `public-example-provenance--mobile.snapshot.txt` |
 | snapshot sha256 | `a64405a97249dbd8c31b725211f2fd08d74d21bb5dd2d7d609db7fb68ca600f1` |
 | snapshot bytes | 1956 |
@@ -767,8 +799,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `2fa926f219368ee3b5f3ec6a0eeacafdf30e3473d8800e75bf1c919d6a9a110d` |
-| bytes | 306518 |
+| sha256 | `b1c6195e0bca5216aa13efc4596016c9358cd08e439a214a727b9be0a880a3b7` |
+| bytes | 308404 |
 | snapshot | `read-in-flight--desktop.snapshot.txt` |
 | snapshot sha256 | `ec575cdaefc93abee717af6d1c3963dc2d05d53d47845db5e71da0a875641459` |
 | snapshot bytes | 2553 |
@@ -783,8 +815,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `fc8b1e10179c08645c554e0e2222b41d336de2cfb2ccd21b8367ebf5f7d09a28` |
-| bytes | 277090 |
+| sha256 | `5b3da32fa4c06029e895c47da828397443ad9e934b0ffaf9e152b4b208442215` |
+| bytes | 279137 |
 | snapshot | `read-in-flight--mobile.snapshot.txt` |
 | snapshot sha256 | `addb0f4cfde1610a2f8708326de23a1dcefff340332f4a9a533d2adc4eaadfe3` |
 | snapshot bytes | 2017 |
@@ -799,14 +831,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e32f5801581e4c934db6804f604bb8b1a7add9182223acb902e55018ec835390` |
-| bytes | 783415 |
+| sha256 | `f507a69f8dccc43a30fca71d3c299b3ded7d034f7359a31c8b2a3dfbd65a37a1` |
+| bytes | 782424 |
 | snapshot | `register-overflow--desktop.snapshot.txt` |
-| snapshot sha256 | `42b80da2a403acc686e7a4ad40cfbb269879f717256ec204393c91e7d4335562` |
+| snapshot sha256 | `f134cfc40bdeffadb6d4b39a974367dd56415eac3fdc764f085ec5455904eb87` |
 | snapshot bytes | 73464 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks` at scroll offset 4533 |
+| framed on | `.wb-checks` at scroll offset 4661 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a Check Register carrying more cards than it shows — disclosure closed |
 | expected behaviour | Three cards render under the eyebrow that qualifies them, and one control below them names the full count of five. The control reports itself closed. The other two cards exist in the register and are not on screen, which is the state the eyebrow describes. |
@@ -815,14 +847,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `6d22c9d9e8add1a8c3d4f2905db55388570e3efeade8c8e39b8fec19900f46db` |
-| bytes | 735214 |
+| sha256 | `fb3c7345b052e3d39630bf43f13e5bd46570431a0740e5e859793b74d8fdab7c` |
+| bytes | 734939 |
 | snapshot | `register-overflow--mobile.snapshot.txt` |
-| snapshot sha256 | `b7a0110a49728f916aa381831f73600b26399903b2b761207ca1d6fe61fc6276` |
+| snapshot sha256 | `82c9ac1b4ce5c3c8d961cc0c6da00ffb44a1402e3958ebc89fc050420d2225bd` |
 | snapshot bytes | 72511 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks` at scroll offset 6034 |
+| framed on | `.wb-checks` at scroll offset 6260 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a Check Register carrying more cards than it shows — disclosure closed |
 | expected behaviour | Three cards render under the eyebrow that qualifies them, and one control below them names the full count of five. The control reports itself closed. The other two cards exist in the register and are not on screen, which is the state the eyebrow describes. |
@@ -831,14 +863,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9872d5a5c15f46310981f07125548c963cab24fbd4952de1b2d3e975b8092a0d` |
-| bytes | 817367 |
+| sha256 | `86fb19bf0e06c3452d3c974b405420a251711df32dd7b13109fe7c75961f2640` |
+| bytes | 817316 |
 | snapshot | `register-overflow-expanded--desktop.snapshot.txt` |
-| snapshot sha256 | `2663ce1a4de8193143202fbb998d49f67417be90abd18f5bfc25f904c499400a` |
+| snapshot sha256 | `424e7b626d1460dff77d46845b903c6aae5606e0e5dd00ac8c900b45bfc6d5c0` |
 | snapshot bytes | 73497 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks` at scroll offset 5044 |
+| framed on | `.wb-checks` at scroll offset 5172 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the same Check Register with its disclosure open |
 | expected behaviour | All five cards render. The eyebrow that qualified the first three is gone, because nothing is being qualified. The control reports itself open and offers the way back. |
@@ -847,14 +879,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `44154da65d000dd2b69cc1244e30815dba2c2774a293b1091d7e1a184542a832` |
-| bytes | 725043 |
+| sha256 | `2349baad113ab59e51b4872139db31de8dd4d7e756ae6569b22463468ca7fb98` |
+| bytes | 723584 |
 | snapshot | `register-overflow-expanded--mobile.snapshot.txt` |
-| snapshot sha256 | `5f71076388f02ef94b2657ca3eb6621f98f8b81da0dcd0822fc2a3338bda471d` |
+| snapshot sha256 | `33a4c1388564fa7ffce04936e658c63962dc3aabcfd6316fcbd03a8a7f86e586` |
 | snapshot bytes | 72461 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-checks` at scroll offset 6795 |
+| framed on | `.wb-checks` at scroll offset 7022 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, the same Check Register with its disclosure open |
 | expected behaviour | All five cards render. The eyebrow that qualified the first three is gone, because nothing is being qualified. The control reports itself open and offers the way back. |
@@ -863,11 +895,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `21e5e37921c8e2ada8fe295ba2f58488d5e0817bf44da47db8c61f0c5cdc9930` |
-| bytes | 498669 |
+| sha256 | `f60e4b75037b476ed0bd0225645daaf0d3b7430c921df3571f9af75bc5143d0d` |
+| bytes | 476256 |
 | snapshot | `share-consent--desktop.snapshot.txt` |
-| snapshot sha256 | `6dbc4f7657f2f11a82bff7f825cff3933424f9e2d86b84f629c890f87cc8ea5e` |
-| snapshot bytes | 30609 |
+| snapshot sha256 | `77f2043fcc321f329804540f538d756c578164ff5fbe5d2cf2680d0781c98e60` |
+| snapshot bytes | 30661 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-share-consent__panel` at scroll offset 1317 |
@@ -879,11 +911,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `270f43909a05a79203b3729d5e909941a115d9602b9409c39af6d0eb19f6c22f` |
-| bytes | 369921 |
+| sha256 | `5a15f716b03ab0a818e248132b495bb95c54f4b87a7d62abdcd6b44e69460926` |
+| bytes | 366723 |
 | snapshot | `share-consent--mobile.snapshot.txt` |
-| snapshot sha256 | `a5b47f0489d523d2615ebf0e9eef2fe0a2999f126c56b304586f3932f7c3e23c` |
-| snapshot bytes | 30022 |
+| snapshot sha256 | `3172233dc832b5faed2dd8d6a6fa4e818bb1119e198c5649eb3942f37e61ba72` |
+| snapshot bytes | 29873 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-share-consent__panel` at scroll offset 1316 |
@@ -991,11 +1023,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `2197f78843b0f4f944fc2ce011eefd5f8815982230aa97d4c5e58f5d94e0b017` |
-| bytes | 339149 |
+| sha256 | `c4caec0af6a6b05b87b0e403dda75d5aafa5c408bb56d736d8e4d2b435e13732` |
+| bytes | 347206 |
 | snapshot | `share-receipt--desktop.snapshot.txt` |
-| snapshot sha256 | `34f2dcc6dffda9db228044980480cb81a09994263c3400c04024e3cdb801733f` |
-| snapshot bytes | 7024 |
+| snapshot sha256 | `57896e57d74cbd9a4612a2fef63b5bbb6e3e0da8276999344528b97b2d74c21d` |
+| snapshot bytes | 7089 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-receipt` at scroll offset 812 |
@@ -1007,8 +1039,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `0c26ae57fe28c8b885dff7f13d307ef853632bb57b1ffa6375e1403ebf28629c` |
-| bytes | 352749 |
+| sha256 | `f18d7f44146862a7dcc9af3f98420c967c64e308d00df86c3a27dfb315554c5f` |
+| bytes | 355626 |
 | snapshot | `share-receipt--mobile.snapshot.txt` |
 | snapshot sha256 | `7508d6c1bfd894bb32ebf3a1a613131c270658a95198f8e768f14776cf9ca328` |
 | snapshot bytes | 6413 |
@@ -1055,8 +1087,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `f0bfe39f3fec602ba667275138f2f39cbf211cf873dd8dfa0a35940290d6a227` |
-| bytes | 314912 |
+| sha256 | `21f2aa8e8bc3d6f999febcbf85041612607dfc88edf4b6cc31ceab0f0ce17939` |
+| bytes | 317512 |
 | snapshot | `share-single-empty--desktop.snapshot.txt` |
 | snapshot sha256 | `4131fa1301d2c24d35fe337a6ef164ad03b88d21656eb79508e4047471bc388d` |
 | snapshot bytes | 5970 |
@@ -1071,8 +1103,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7c8bf777008de1cfbc9115153bd4a2ecee6916d61fed7c4c13342309fa56c39a` |
-| bytes | 277826 |
+| sha256 | `3c03795e8e8a80d06bf2c0639868684f361e32fb390963d24895e7f437e86bdf` |
+| bytes | 279375 |
 | snapshot | `share-single-empty--mobile.snapshot.txt` |
 | snapshot sha256 | `a877212e924c398d0557a3dcde1631624ebecef630989caf1c4065ff702ac9b0` |
 | snapshot bytes | 5324 |
@@ -1087,14 +1119,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `053a981aedc0d0d269ae26d89281335a572dca7258541f3e89c9690d776827ee` |
-| bytes | 794484 |
+| sha256 | `0c1dfce0e5b2be424477330ebc93ae756752f0542d1ffe6f768944b85df05535` |
+| bytes | 796291 |
 | snapshot | `single-empty--desktop.snapshot.txt` |
-| snapshot sha256 | `9c929ca433254690288c479c17b9c5fd6b6310dd4f4e27805bc525f1119095df` |
-| snapshot bytes | 12925 |
+| snapshot sha256 | `5082f9ea97f70fdb6ad646aa7b48356535dfa096a0daa1e0f3ee13700a0491c8` |
+| snapshot bytes | 12809 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__findings` at scroll offset 1388 |
+| framed on | `.wb-measure__findings` at scroll offset 1456 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a read with no candidate finding — the findings list's empty state |
 | expected behaviour | The finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer, and no zeroed tally standing in for the rows that are not there. |
@@ -1103,14 +1135,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `6efc39eeeef9a9a4cc73a92f26aa124edac77be72b26402adff4643846cf72a2` |
-| bytes | 594873 |
+| sha256 | `7610d43861e9751149d3bf225662f7f2371025384e9efde4a6b765f152e7f442` |
+| bytes | 594292 |
 | snapshot | `single-empty--mobile.snapshot.txt` |
-| snapshot sha256 | `db52c211e8e42405ef6c03d8343a5aab17cd70d586435ccf095c991d4e0f0556` |
+| snapshot sha256 | `c2830ecab07ae3059bd03e48deffa022010211a0f2bd0bf0a4a6b155fb4a6dc0` |
 | snapshot bytes | 12145 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__findings` at scroll offset 1568 |
+| framed on | `.wb-measure__findings` at scroll offset 1660 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a read with no candidate finding — the findings list's empty state |
 | expected behaviour | The finding list is replaced by one line naming the condition: 'No candidate finding surfaced under the tested conditions.' No score, no 'clean' verdict, no claim about the answer, and no zeroed tally standing in for the rows that are not there. |
@@ -1119,14 +1151,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `714a9dfcd0dc91c2f5b9a60c8bfb25b0c63b178e13d4be01eb381baf909a0a88` |
-| bytes | 641228 |
+| sha256 | `104866102453770adc80764326e003c2547c60c36e219524f37a36c94db2219f` |
+| bytes | 642003 |
 | snapshot | `single-empty-read--desktop.snapshot.txt` |
-| snapshot sha256 | `7c0d22ab528dec2f22d9570dff328e776765e8e6400f9590c1bc8f6182059e6d` |
+| snapshot sha256 | `47b73c7db393917757a679df1350be4a44dc74cfb8351347b3a83dab587e18ac` |
 | snapshot bytes | 12289 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-reader-result__section--left-out` at scroll offset 2029 |
+| framed on | `.wb-reader-result__section--left-out` at scroll offset 2097 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a read with nothing left out and no shaping — the read panel's two empty states |
 | expected behaviour | 'What may be missing' and 'How it was shaped' each render one line naming the run rather than grading the answer: the Reader flagged nothing missing, and recorded no shaping, under the tested conditions. Neither line says the answer was complete or clean. |
@@ -1135,14 +1167,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `27f19fe107ddca0dc02039b3118a6621e821d3c2764cc697038fbb13a81aef9c` |
-| bytes | 554026 |
+| sha256 | `f03b3ef1975b787de4b1ec8f5b00c92ac4d544b1513e0f815eeb4ba15ed31136` |
+| bytes | 554174 |
 | snapshot | `single-empty-read--mobile.snapshot.txt` |
-| snapshot sha256 | `d878f3d5bf29915398f8c9589275d4ddc8b784f0398300aee9a98f8db388314c` |
+| snapshot sha256 | `5114242f1e1c8a1b014e65975f4d6a534402517bf90c7d8faf7a2be3c790dd48` |
 | snapshot bytes | 11667 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-reader-result__section--left-out` at scroll offset 2367 |
+| framed on | `.wb-reader-result__section--left-out` at scroll offset 2459 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, a read with nothing left out and no shaping — the read panel's two empty states |
 | expected behaviour | 'What may be missing' and 'How it was shaped' each render one line naming the run rather than grading the answer: the Reader flagged nothing missing, and recorded no shaping, under the tested conditions. Neither line says the answer was complete or clean. |
@@ -1151,14 +1183,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9365b07bc8d15773c98ea8270385b09fae4712ddde1359d613e3ea5c36f17658` |
-| bytes | 781462 |
+| sha256 | `11a4db9b8371da42505061a94f3329ba1d463828f9adedafdb88b538f5c79f0d` |
+| bytes | 749627 |
 | snapshot | `single-findings--desktop.snapshot.txt` |
-| snapshot sha256 | `180d27ec6a20a196c1ff02a6a94e86b52839cb20108921fa1452a729eaf9f37e` |
-| snapshot bytes | 29989 |
+| snapshot sha256 | `edf04e6783579d0d5eb204836114bce78fcb1da062d4a864f6b237fc197335fd` |
+| snapshot bytes | 30070 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 1414 |
+| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 1542 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | The findings list renders non-empty under the count: two rows, each with its own signal name and its verbatim anchor, no tally above them, and no panel title or sub-title standing between the count and the first row. |
@@ -1167,14 +1199,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e763edbdb55d72e73d03db6e1691852558bf6aeedae59b589f44756a8823e36c` |
-| bytes | 592765 |
+| sha256 | `c3395480be7e18a63020a22c868ce0234303d6e5d6ed755f9af92a4406005ce4` |
+| bytes | 592044 |
 | snapshot | `single-findings--mobile.snapshot.txt` |
-| snapshot sha256 | `dde78fa0dea0c0f1edae05902d0a7de8cc45116fd1e42a612faed95570434f59` |
+| snapshot sha256 | `56e2133622a1579186e062437ad17e6947bf20135527c177b7a32b206932f14d` |
 | snapshot bytes | 29351 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
-| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 1634 |
+| framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 1860 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Single mode, Reader result with measurement findings |
 | expected behaviour | The findings list renders non-empty under the count: two rows, each with its own signal name and its verbatim anchor, no tally above them, and no panel title or sub-title standing between the count and the first row. |
