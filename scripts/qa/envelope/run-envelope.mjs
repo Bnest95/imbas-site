@@ -154,7 +154,10 @@ function record(run, res) {
     http_status: res.status,
     rejection_error: accepted ? null : p.error || null,
     rejection_limit_words: accepted ? null : p.limit_words ?? null,
-    request_id: p?.receipt?.provenance?.request_id || null,
+    // Under open_run, not at the receipt root — the 2026-08-15 run read the root and
+    // captured 0/15, losing every request id. source_content_hash still joins those
+    // rows, but the log-side identifier is gone for that run.
+    request_id: p?.receipt?.open_run?.provenance?.request_id || null,
     total_request_ms: res.ms,
     // Server-side inference duration and output token count live only in the runtime
     // log stream, which has no durable sink. Null here means unobservable, not zero.
