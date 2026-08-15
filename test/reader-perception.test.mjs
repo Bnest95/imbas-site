@@ -563,3 +563,75 @@ test("client and server agree: every value the client can emit, the server accep
   }
   assert.equal(ALL_PERCEPTION_VALUES.length, 5);
 });
+
+// ── The tap is not asked on a zero-findings result. ──────────────────────────────
+//
+// Founder ruling, 2026-08-14. The single-mode tap asks "Did this surface something you
+// hadn't considered?" and stores single_yes / single_no in one field. On a result where
+// nothing surfaced the question has no true answer, and either answer lands in the same
+// field as every other run — so a Yes there and a Yes after four findings become one
+// row that cannot be told apart afterwards. The ruling: do not ask it, and change no
+// enum, field, event type or schema to do so.
+//
+// This evaluates the SHIPPED mount condition — extracted from workbench-app.jsx, not
+// restated here — against the governed board payloads, so a future edit that widens the
+// gate fails this rather than passing a paraphrase of itself.
+test("the single-mode tap renders on a findings result and not on a zero-findings result", async () => {
+  const { SCENARIOS, resolvePayloads } = await import("../scripts/qa/scenarios.mjs");
+  const { countOf } = await import("../reader-result.js");
+  const jsx = readFileSync(join(ROOT, "workbench-app.jsx"), "utf8");
+
+  const mount = jsx.match(
+    /\{([^{}]*?)\s*\?\s*\(\s*\n\s*<div className="wb-reader-v2__follow wb-reader-v2__follow--perception">/,
+  );
+  assert.ok(mount, "the single-mode tap must still mount from one conditional in workbench-app.jsx");
+  const condition = mount[1];
+  assert.match(condition, /surfaced_findings/, "the gate reads the surfaced subset, not a recorded count");
+
+  const gate = new Function("readerResult", "countOf", `return Boolean(${condition});`);
+  const renders = (name) => gate(resolvePayloads(SCENARIOS[name])["/api/read"], countOf);
+
+  // The zero-findings result: hero "0 candidate items surfaced", no finding rows.
+  assert.equal(countOf(resolvePayloads(SCENARIOS["single-empty"])["/api/read"].result, "surfaced_findings"), 0);
+  assert.equal(renders("single-empty"), false, "nothing surfaced, so the tap is not asked");
+
+  // Everything that surfaced something keeps it.
+  for (const name of ["single-findings", "deposit-fixture", "paired-matched", "paired-empty"]) {
+    const n = countOf(resolvePayloads(SCENARIOS[name])["/api/read"].result, "surfaced_findings");
+    assert.ok(n > 0, `${name} surfaces findings`);
+    assert.equal(renders(name), true, `${name} surfaced ${n}, so the tap is still asked`);
+  }
+
+  // paired-empty names an empty DELTA, not a zero-findings read: its single-mode result
+  // surfaced two findings, so the single-mode tap belongs there and is untouched.
+  assert.equal(countOf(resolvePayloads(SCENARIOS["paired-empty"])["/api/read"].result, "surfaced_findings"), 2);
+
+  // The bundler renames locals and strips whitespace, so the gate is pinned by shape:
+  // the perception mount must be immediately preceded by a surfaced_findings count > 0.
+  const bundle = readFileSync(join(ROOT, "workbench.bundle.js"), "utf8");
+  assert.match(
+    bundle,
+    /\.result,"surfaced_findings"\)>0\?React\.createElement\("div",\{className:"wb-reader-v2__follow wb-reader-v2__follow--perception"/,
+    "the shipped bundle gates the perception mount on the same surfaced count",
+  );
+});
+
+test("suppressing the tap changed no telemetry shape", () => {
+  // The enums, and the single field they land in, are exactly what they were.
+  assert.deepEqual(SINGLE_PERCEPTION_VALUES, ["single_yes", "single_no"]);
+  assert.deepEqual(PAIRED_PERCEPTION_VALUES, ["paired_small", "paired_noticeable", "paired_large"]);
+  assert.equal(ALL_PERCEPTION_VALUES.length, 5);
+
+  // Neither prompt was reworded — the ruling was to ask nothing, not to ask differently.
+  assert.equal(perceptionTap("single").prompt, "Did this surface something you hadn't considered?");
+  assert.equal(perceptionTap("paired").prompt, "How big did the difference feel?");
+  assert.deepEqual(perceptionTap("single").options.map((o) => o.value), ["single_yes", "single_no"]);
+
+  // No zero-state enum, field, or event type was introduced anywhere.
+  const client = readFileSync(join(ROOT, "reader-perception-client.js"), "utf8");
+  const api = readFileSync(join(ROOT, "api", "reader-perception.js"), "utf8");
+  for (const [where, src] of [["client", client], ["api", api]]) {
+    assert.doesNotMatch(src, /single_(?:empty|zero|none)|zero_(?:state|findings)/i, `${where} gained no zero-state enum`);
+    assert.doesNotMatch(src, /useful/i, `${where} did not adopt a second question`);
+  }
+});

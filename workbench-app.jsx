@@ -6860,7 +6860,17 @@ function ReaderWorkbench() {
                 />
               </div>
             ) : null}
-            {readerResult.measurement && readerResult.receipt ? (
+            {/* The tap asks whether this surfaced something. With nothing surfaced the
+                question has no true answer, and both answers write the same two enums
+                into the same field as every other run, so a Yes here and a Yes after
+                four findings become one indistinguishable row. Telemetry that cannot be
+                read back is worse than telemetry that was never collected, so the tap is
+                not asked rather than reworded. The count is surfaced_findings, the subset
+                the panel above lists, so the tap and the rows cannot disagree about
+                whether anything surfaced; on a single-answer result it selects the same
+                set as the hero's surfaced_candidate_items. Paired keeps its own tap: an
+                empty delta still has a true answer to how big the difference felt. */}
+            {readerResult.measurement && readerResult.receipt && countOf(readerResult.result, "surfaced_findings") > 0 ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--perception">
                 <PerceptionTap mode="single" receipt={readerResult.receipt} />
               </div>
