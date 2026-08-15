@@ -191,6 +191,21 @@
   margin-bottom: 1rem;
 }
 
+/* Sits above the actions row and says what the Reader is, for a recipient who was handed
+   this link and has never seen one. Prose weight, not control weight: it reads at the same
+   size as the note under the row, so nothing here competes with the rerun between them. */
+/* No font-family here, unlike its neighbours. --font-sans is declared nowhere, so the
+   86 rules that name it all compute to inherit, and test/typography-tokens.test.mjs
+   counts them so the set cannot grow while the token waits for a ruling. An 87th would
+   render identically to inheriting and add one more site to un-pick later. */
+.insp-actions__orientation {
+  margin: 1.4rem 0 0;
+  max-width: 46rem;
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
 .insp-actions {
   display: flex;
   flex-wrap: wrap;
@@ -284,9 +299,16 @@
   color: rgba(200, 168, 150, 0.85);
 }
 
+/* The absent-state variants below took a translucent ink that composited to 3.61:1 and
+   4.43:1 over the share ground — under AA, on the two lines that state what this record
+   does NOT hold. They take the ink token instead, at full opacity, which measures 7.44:1.
+   Their distinction from the captured state is now hue and saturation rather than
+   brightness: the captured lines stay warm, these read cooler and greyer. That is the
+   right way round for these two in particular. They carry the record's honesty, and
+   honesty copy that a person cannot read is the worst thing on the page to lose. */
 .insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__section-title,
 .insp-receipt__section[data-state="NOT_DECLARED"] .insp-receipt__section-title {
-  color: rgba(185, 172, 158, 0.62);
+  color: var(--ink-secondary);
 }
 
 .insp-receipt__note {
@@ -299,7 +321,7 @@
 
 .insp-receipt__section[data-state="NOT_CAPTURED"] .insp-receipt__note,
 .insp-receipt__section[data-state="NOT_DECLARED"] .insp-receipt__note {
-  color: rgba(175, 162, 148, 0.78);
+  color: var(--ink-secondary);
 }
 
 .insp-receipt__items {
@@ -421,12 +443,14 @@
   margin: 0;
 }
 
+/* 3.61:1 composited, on the line that tells a person how to get their own content out of
+   a share. The ink token, opaque, measures 7.44:1 here. */
 .insp-report__privacy {
   margin: 0.6rem 0 0;
   font-family: var(--font-sans);
   font-size: max(0.75rem, 12px);
   line-height: 1.5;
-  color: rgba(165, 152, 138, 0.72);
+  color: var(--ink-secondary);
 }
 
 .insp-report__body a,

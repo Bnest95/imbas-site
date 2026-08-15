@@ -47,8 +47,10 @@ function slice(startMarker, endMarker) {
 }
 
 const { CHIP_LANE_DOOR, actionsHtml } = new Function(
-  `${slice("function rerunHref(record) {", "\n}")}
+  `${slice("function escapeHtml(", "\n}")}
+   ${slice("function rerunHref(record) {", "\n}")}
    ${slice("const CHIP_LANE_DOOR =", "\n")}
+   ${slice("const ORIENTATION_LINE =", ";\n")}
    ${slice("function actionsHtml(record) {", "\n}")}
    return { CHIP_LANE_DOOR, actionsHtml };`,
 )();
