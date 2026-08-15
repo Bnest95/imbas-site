@@ -39,11 +39,19 @@
 // The device scale factor is 1 so that one image pixel is one CSS pixel and a rect needs
 // no rescaling to be sampled.
 //
-// ── What it does not measure ─────────────────────────────────────────────────
+// ── What it does not measure, and what it says about that ────────────────────
 // Elements that paint no pixel a person can read: zero-area rects, `<option>` children of
 // a closed select, `<noscript>` content, and `aria-hidden` decoration. A ratio for an
 // element nobody can see is not a finding, and treating one as a finding is what produced
 // the 1.00:1 rows in the audit this instrument was written to answer.
+//
+// But an element that is unpainted RIGHT NOW is not the same as one nobody can see, and
+// the first run that counted its own exclusions found the difference: 144 instances of
+// .wb-prov__label and .wb-prov__value sat inside closed `<details>`, one press away from
+// any visitor and entirely unmeasured. So every `<details>` is opened before collection,
+// and every exclusion that remains is counted, named, and printed with the reason and
+// whether a person could bring it into view. "0 below AA" means nothing without the
+// number of registered elements the sweep declined to look at.
 
 import { SCENARIOS, resolvePayloads } from "./scenarios.mjs";
 import {
@@ -126,6 +134,20 @@ const CLICK_DOOR = `(() => {
   return { ok: true };
 })()`;
 
+// Every <details> on the page, opened, before anything is collected.
+//
+// Closed, a disclosure holds registered text that paints nothing, and an element that
+// paints nothing is skipped — which reported 144 instances of .wb-prov__label and
+// .wb-prov__value as unmeasured on the first run that counted its own exclusions. They
+// are one press away for any visitor, so "not painted right now" is not a reason to
+// leave their contrast unproven. Opened, they paint, and they get measured like the rest.
+const OPEN_DETAILS = `(() => {
+  const all = [...document.querySelectorAll("details")];
+  let opened = 0;
+  for (const d of all) if (!d.open) { d.open = true; opened++; }
+  return { total: all.length, opened };
+})()`;
+
 // The audit's viewports, not the board's. dsf 1 so image pixels are CSS pixels.
 export const VIEWS = {
   1440: { width: 1440, height: 1000, dsf: 1, mobile: false },
@@ -182,15 +204,44 @@ function collectExpression(styles) {
   const sx = window.scrollX, sy = window.scrollY;
   const out = [];
   let n = 0;
-  let unpainted = 0;
+  // Every element this pass declines to measure, by the reason it declined. An element
+  // that paints no glyphs has no contrast to measure and excluding it is correct — but a
+  // silent exclusion turns "0 below AA" into "0 below AA among however many I looked at",
+  // which is the shape of a pass that has not been earned. Counted here, printed per
+  // state, and totalled at the end.
+  let present = 0;
+  let notRendered = 0;
+  let noText = 0;
+  // Named, not just counted. "12 not rendered" cannot be acted on; "6 .wb-prov__label
+  // inside a closed <details>" can, because it says whether a person could ever open it.
+  const unmeasured = {};
+  const note = (sel, why, reachable) => {
+    const k = sel + " — " + why + (reachable ? " (a person can open it)" : "");
+    unmeasured[k] = (unmeasured[k] || 0) + 1;
+  };
   for (const sel of SEL) {
     for (const el of document.querySelectorAll(sel)) {
+      present++;
       const r = el.getBoundingClientRect();
       const visible = typeof el.checkVisibility === "function"
         ? el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })
         : true;
       const hidden = el.closest("[aria-hidden='true']") !== null;
-      if (!visible || hidden || r.width < 1 || r.height < 1 || !el.textContent.trim()) { unpainted++; continue; }
+      if (!visible || hidden || r.width < 1 || r.height < 1) {
+        // A closed <details> and a [hidden] lane are the two ways a registered style sits
+        // on the page unpainted but one interaction away. Those are reachable states and
+        // saying so is the difference between a gap and a non-gap.
+        const details = el.closest("details:not([open])");
+        const hiddenAncestor = el.closest("[hidden]");
+        notRendered++;
+        note(
+          sel,
+          details ? "inside a closed <details>" : hiddenAncestor ? "inside a [hidden] ancestor" : hidden ? "inside aria-hidden" : "no painted box",
+          Boolean(details || hiddenAncestor),
+        );
+        continue;
+      }
+      if (!el.textContent.trim()) { noText++; note(sel, "no text", false); continue; }
       // getComputedStyle returns a LIVE declaration. Read every value out of it BEFORE
       // blanking the element, or the colour reported is the transparent one this loop
       // just wrote and every ratio comes back 1.00:1.
@@ -225,7 +276,7 @@ function collectExpression(styles) {
       });
     }
   }
-  return { elements: out, unpainted, doc: {
+  return { elements: out, present, notRendered, noText, unmeasured, doc: {
     width: Math.ceil(document.documentElement.scrollWidth),
     height: Math.ceil(document.documentElement.scrollHeight),
   } };
@@ -314,6 +365,7 @@ export async function sweep({ states = STATES, views = Object.keys(VIEWS), style
   const cdp = await CDP.connect(targets.find((t) => t.type === "page").webSocketDebuggerUrl);
 
   const rows = [];
+  const skips = [];
   const blocked = [];
   try {
     await installInterception(cdp, blocked);
@@ -355,10 +407,16 @@ export async function sweep({ states = STATES, views = Object.keys(VIEWS), style
           if (!pressed.ok) throw new Error(`${stateId}: no chip door to press`);
           await waitUntil(cdp, `!document.querySelector("#wb-chip-lane").hidden`, { label: "lane visible" });
         }
+        const disclosures = await evaluate(cdp, OPEN_DETAILS);
         await settle(cdp);
 
         const collected = await evaluate(cdp, collectExpression(styles));
         let measured = 0;
+        // Collected, blanked, and then still not measurable: the rect fell outside the
+        // captured image, or no band survived the compositing. Neither is expected, so
+        // both are counted rather than passed over.
+        let offImage = 0;
+        let noBand = 0;
         if (collected.elements.length) {
           const shot = await cdp.send("Page.captureScreenshot", {
             format: "png",
@@ -368,9 +426,9 @@ export async function sweep({ states = STATES, views = Object.keys(VIEWS), style
           const img = decodePng(Buffer.from(shot.data, "base64"));
           for (const el of collected.elements) {
             const bands = sampleRect(img, el);
-            if (!bands) continue;
+            if (!bands) { offImage++; continue; }
             const m = measureInstance(el, bands);
-            if (!m) continue;
+            if (!m) { noBand++; continue; }
             rows.push({ state: stateId, view: viewKey, ...m });
             measured++;
           }
@@ -378,7 +436,24 @@ export async function sweep({ states = STATES, views = Object.keys(VIEWS), style
         await evaluate(cdp, RESTORE);
         await cdp.send("Page.removeScriptToEvaluateOnNewDocument", { identifier });
         const failing = rows.filter((r) => r.state === stateId && r.view === viewKey && !r.passes).length;
-        log(`  ${stateId.padEnd(20)} @ ${String(viewKey).padStart(4)}  ${String(measured).padStart(3)} measured  ${String(failing).padStart(3)} below AA`);
+        const skipped = { notRendered: collected.notRendered, noText: collected.noText, offImage, noBand };
+        skips.push({ state: stateId, view: viewKey, present: collected.present, measured, ...skipped, disclosures, unmeasured: collected.unmeasured });
+        const unmeasured = collected.notRendered + collected.noText + offImage + noBand;
+        log(
+          `  ${stateId.padEnd(20)} @ ${String(viewKey).padStart(4)}  ${String(measured).padStart(3)} measured  ` +
+            `${String(failing).padStart(3)} below AA  ` +
+            `${String(unmeasured).padStart(3)} of ${String(collected.present).padStart(3)} present not measured` +
+            (unmeasured
+              ? ` (${[
+                  collected.notRendered ? `${collected.notRendered} not rendered` : "",
+                  collected.noText ? `${collected.noText} no text` : "",
+                  offImage ? `${offImage} off-image` : "",
+                  noBand ? `${noBand} no band` : "",
+                ]
+                  .filter(Boolean)
+                  .join(", ")})`
+              : ""),
+        );
       }
     }
   } finally {
@@ -392,7 +467,7 @@ export async function sweep({ states = STATES, views = Object.keys(VIEWS), style
     }
   }
   if (blocked.length) log(`\n  (blocked ${blocked.length} off-allowlist request(s))`);
-  return { rows, browserVersion };
+  return { rows, skips, browserVersion };
 }
 
 // ── Report ───────────────────────────────────────────────────────────────────
@@ -448,7 +523,7 @@ function parseFlags(argv) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const flags = parseFlags(process.argv.slice(2));
   log("Contrast sweep — pixel sampling against the painted page\n");
-  const { rows, browserVersion } = await sweep(flags);
+  const { rows, skips, browserVersion } = await sweep(flags);
   const summary = summarize(rows);
   log(`\nRenderer: ${browserVersion}\n`);
   log(
@@ -458,9 +533,29 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     ),
   );
   const failing = rows.filter((r) => !r.passes);
+  const total = (key) => skips.reduce((a, s) => a + s[key], 0);
+  const present = total("present");
+  const notMeasured = total("notRendered") + total("noText") + total("offImage") + total("noBand");
   log(`\n${failing.length} failing instances of ${rows.length} measured.`);
+  // The denominator, stated. "0 below AA" is only worth reading beside the number of
+  // registered elements the sweep declined to measure and why it declined.
+  log(
+    `${present} registered elements were on the page; ${rows.length} were measured and ${notMeasured} were not — ` +
+      `${total("notRendered")} not rendered (no box, hidden, or aria-hidden), ${total("noText")} carrying no text, ` +
+      `${total("offImage")} outside the captured image, ${total("noBand")} yielding no background band.`,
+  );
+  if (total("offImage") || total("noBand")) {
+    log(`  ← off-image and no-band are not expected. Treat this sweep as incomplete until they are explained.`);
+  }
+  if (notMeasured) {
+    const byReason = new Map();
+    for (const s of skips) for (const [k, n] of Object.entries(s.unmeasured || {})) byReason.set(k, (byReason.get(k) || 0) + n);
+    log("");
+    log("  what went unmeasured, and whether a person could bring it into view:");
+    for (const [k, n] of [...byReason].sort((a, b) => b[1] - a[1])) log(`    ${String(n).padStart(4)}  ${k}`);
+  }
   if (flags.json) {
-    fs.writeFileSync(flags.json, JSON.stringify({ browserVersion, summary, rows }, null, 2));
+    fs.writeFileSync(flags.json, JSON.stringify({ browserVersion, summary, skips, rows }, null, 2));
     log(`\nwrote ${flags.json}`);
   }
   process.exit(failing.length ? 1 : 0);
