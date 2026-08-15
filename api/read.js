@@ -88,6 +88,7 @@ import {
 } from "../reader-receipt.js";
 import { PAIRED_METHOD_VERSION, targetedPromptOffer } from "../reader-paired.js";
 import { extractJson } from "../reader-json.js";
+import { ANSWER_WORD_MAX, countAnswerWords } from "../reader-input-envelope.js";
 import { buildCheckRegister } from "../reader-checks.js";
 import {
   ARTIFACT_ORIGINAL,
@@ -135,8 +136,10 @@ const QUESTION_MIN = 3;
 // that are really just past the cut — a false measurement. Better to refuse than to
 // measure a fragment. The ANSWER_MAX char clip above is the coarse abuse guard; this
 // is the semantic ceiling a real inspection should stay under.
-const ANSWER_WORD_MAX = 1200;
-const wordCount = (s) => (String(s).trim().match(/\S+/g) || []).length;
+//
+// The ceiling and its counter now live in reader-input-envelope.js, imported above, so
+// the client can preflight against the same number this gate enforces instead of
+// carrying its own copy. This endpoint stays canonical: it rejects regardless.
 
 // ── Read capture (Airtable) ──────────────────────────────────────────────────
 // Every read returned to a user — agent or fallback — is logged to the "Reader
@@ -925,7 +928,7 @@ export function createReadHandler(deps = {}) {
       return rejectValidation(res, ctx, "empty", 400, { error: "empty" });
     }
 
-    if (wordCount(input.answer) > ANSWER_WORD_MAX) {
+    if (countAnswerWords(input.answer) > ANSWER_WORD_MAX) {
       return rejectValidation(res, ctx, "answer_too_long", 400, {
         error: "too_long",
         limit_words: ANSWER_WORD_MAX,

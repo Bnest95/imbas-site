@@ -45,6 +45,7 @@ import {
   addGlobalSpend,
   estimateCostUsd,
 } from "../reader-security.js";
+import { ANSWER_WORD_MAX, countAnswerWords } from "../reader-input-envelope.js";
 import {
   createRuntimeContext,
   markPhase,
@@ -105,12 +106,12 @@ const PAIRED_MAX_BODY = 256 * 1024;
 const ANSWER_MAX = 50000;
 const ANSWER_MIN = 20;
 // Same reject-not-clip word ceiling as the single read: truncating a pasted answer
-// would make the analysis measure a fragment and report a false delta.
-const ANSWER_WORD_MAX = 1200;
+// would make the analysis measure a fragment and report a false delta. The ceiling and
+// its counter are imported from reader-input-envelope.js so this endpoint, the single
+// read, and the client preflight all read one number.
 const WHY_MAX = 1000;
 const ANCHOR_MAX = 500;
 const POINT_MAX = 1000;
-const wordCount = (s) => (String(s).trim().match(/\S+/g) || []).length;
 
 const AIRTABLE_BASE = "appfxHraqlcpP1AAP";
 // Reader Paired Analyses (created for P2). Separate from Reader Runs so a paired
@@ -1166,7 +1167,7 @@ export function createReadPairedHandler(deps = {}) {
     if (targetedAnswer.trim().length < ANSWER_MIN) {
       return rejectValidation(res, ctx, "empty", 400, { error: "empty" });
     }
-    if (wordCount(targetedAnswer) > ANSWER_WORD_MAX) {
+    if (countAnswerWords(targetedAnswer) > ANSWER_WORD_MAX) {
       return rejectValidation(res, ctx, "answer_too_long", 400, { error: "too_long", limit_words: ANSWER_WORD_MAX });
     }
 

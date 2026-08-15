@@ -59,6 +59,14 @@ import {
   suggestChipState,
 } from "./reader-paired.js";
 import { SECOND_QUESTION_BANK } from "./reader-second-question-bank.js";
+import {
+  ANSWER_WORD_MAX,
+  countAnswerWords,
+  answerWordState,
+  answerOverMaxNotice,
+  secondAnswerOverMaxNotice,
+  ANSWER_TOO_LONG_MESSAGE,
+} from "./reader-input-envelope.js";
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
 import { perceptionTap, isPerceptionValueForMode } from "./reader-perception-client.js";
@@ -1432,9 +1440,11 @@ function caseMeta(caseId) {
   return CURATED.find((c) => c.id === caseId);
 }
 
-function countWords(text) {
-  return (text || "").trim().split(/\s+/).filter(Boolean).length;
-}
+// Delegates to the shared counter the endpoints enforce with. This used to be its own
+// \s+ split, which agreed with the server on ordinary prose — and would have gone on
+// agreeing right up until an edge case made the run button and the gate disagree about
+// one person's answer.
+const countWords = countAnswerWords;
 
 function AntennaMark({ signal }) {
   return (
@@ -1546,9 +1556,14 @@ function CollapsedAnswerRow({ text, terms, litTerms, showHighlights = false, def
 
 // `readOnly` keeps a submitted answer VISIBLE as context without leaving it an active
 // competing input once a later stage owns the keyboard (reader-stage.js holds the rule).
-function PasteField({ label, value, onChange, error, placeholder, rows = 9, style, minAckLength = 1, readOnly = false, inputRef = null }) {
+// `overMaxNotice` opts a field into the word ceiling and names the sentence it shows.
+// Opt-IN, never default: only two of this component's six fields carry content the
+// endpoints word-gate. Warning on the others would refuse input the server accepts,
+// which is the same failure as accepting input it rejects, pointed the other way.
+function PasteField({ label, value, onChange, error, placeholder, rows = 9, style, minAckLength = 1, readOnly = false, inputRef = null, overMaxNotice = null }) {
   const [received, setReceived] = useState(false);
   const [ackWords, setAckWords] = useState(null);
+  const overMax = !!overMaxNotice && answerWordState(value).over;
   const handleChange = (e) => {
     const v = e.target.value;
     onChange(v);
@@ -1569,16 +1584,26 @@ function PasteField({ label, value, onChange, error, placeholder, rows = 9, styl
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className={`${INPUT_CLS}${received ? " is-paste-received" : ""}`}
+        className={`${INPUT_CLS}${received && !overMax ? " is-paste-received" : ""}`}
         style={style || inputStyle}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={error || overMax ? true : undefined}
         readOnly={readOnly || undefined}
         aria-readonly={readOnly || undefined}
       />
-      {ackWords && !error ? (
-        <div className="wb-paste-ack">{ackWords} words received</div>
-      ) : null}
-      {error ? <div className="wb-field-error" role="alert">{error}</div> : null}
+      {/* Over-limit is DERIVED from the text in the box, never stored from a past
+          submission. That is what stops the re-arm loop: re-pasting the same over-limit
+          answer recomputes the same state, so the notice cannot be cleared by an edit
+          that did not actually bring the answer under the ceiling. */}
+      {overMax ? (
+        <div className="wb-field-error" role="alert">{overMaxNotice(value)}</div>
+      ) : (
+        <>
+          {ackWords && !error ? (
+            <div className="wb-paste-ack">{ackWords} words received</div>
+          ) : null}
+          {error ? <div className="wb-field-error" role="alert">{error}</div> : null}
+        </>
+      )}
     </Field>
   );
 }
@@ -4665,6 +4690,9 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
   const [edits, setEdits] = useState(null);
   if (!openReceipt) return null;
   const hasAnswer = !!targeted.trim();
+  // Same derived gate as the primary compose: the second answer meets the same ceiling
+  // at the same endpoint, so it gets the same preflight rather than a round trip.
+  const answerOverMax = answerWordState(targeted).over;
 
   // The capture the side-by-side and the review record both key off. Built from the
   // three loose-voice inputs; the second answer is stored verbatim as pasted. The
@@ -4738,6 +4766,10 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
       setFieldError("Paste the answer your AI gave the direct question.");
       return;
     }
+    if (answerOverMax) {
+      setFieldError(secondAnswerOverMaxNotice(targeted));
+      return;
+    }
     setFieldError("");
     setRunError("");
     setBusy(true);
@@ -4752,7 +4784,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     } catch (err) {
       const info = (err && err.info) || {};
       if (err && err.status === 400 && info.error === "too_long") {
-        setFieldError("Answer is over 1200 words. Trim it and re-run.");
+        setFieldError(ANSWER_TOO_LONG_MESSAGE);
       } else if (err && err.status === 400 && info.error === "empty") {
         setFieldError("That's too short to compare. Paste the full answer.");
       } else if (err && err.status === 400) {
@@ -4777,6 +4809,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     <div className="wb-act2__test">
       <PasteField
         label="Answer to the direct question"
+        overMaxNotice={secondAnswerOverMaxNotice}
         value={targeted}
         onChange={touch}
         error={fieldError}
@@ -4843,9 +4876,9 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
       <div className="wb-action-row wb-act2__test-cta">
         <Btn
           kind="primary"
-          disabled={busy || !hasAnswer}
+          disabled={busy || !hasAnswer || answerOverMax}
           onClick={submit}
-          className={`wb-reader-cta${hasAnswer && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
+          className={`wb-reader-cta${hasAnswer && !answerOverMax && !busy ? " is-armed" : ""}${busy ? " is-inspecting" : ""}`}
         >
           {busy ? "Comparing…" : "Compare the two answers"}
         </Btn>
@@ -5454,7 +5487,11 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
     edits,
     stage: DECLARATION_STAGE.SUBMISSION,
   };
-  const canCompare = !!entry && !!firstAnswer.trim() && !!secondAnswer.trim();
+  // Only the second answer meets the word ceiling at the endpoint — the first travels
+  // inside the client-minted receipt and is not word-gated — so only it is preflighted.
+  // Preflighting the first would refuse input the server accepts.
+  const secondAnswerOverMax = answerWordState(secondAnswer).over;
+  const canCompare = !!entry && !!firstAnswer.trim() && !!secondAnswer.trim() && !secondAnswerOverMax;
 
   const clearErrors = () => {
     if (fieldError) setFieldError("");
@@ -5499,6 +5536,7 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
     if (!entry) { setFieldError(CHIP_UI.compose.chip_missing); return; }
     if (!firstAnswer.trim()) { setFieldError(CHIP_UI.compose.first_answer_missing); return; }
     if (!secondAnswer.trim()) { setFieldError(CHIP_UI.compose.second_answer_missing); return; }
+    if (secondAnswerOverMax) { setFieldError(secondAnswerOverMaxNotice(secondAnswer)); return; }
     setFieldError("");
     setRunError("");
     setBusy(true);
@@ -5621,6 +5659,7 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
 
           <PasteField
             label={CHIP_UI.compose.second_answer_label}
+            overMaxNotice={secondAnswerOverMaxNotice}
             value={secondAnswer}
             onChange={(v) => { setSecondAnswer(v); clearErrors(); }}
             placeholder={CHIP_UI.compose.second_answer_placeholder}
@@ -6098,7 +6137,12 @@ function ReaderWorkbench() {
 
   const hasQuestion = !!(mode === "guided" ? sel.openPrompt : question).trim();
   const hasAnswer = !!answer.trim();
-  const isReady = hasQuestion && hasAnswer;
+  // Derived from the answer currently in the box, on every render. The button may not
+  // present as ready for a request the server will deterministically reject, and because
+  // this is a view of the text rather than a stored verdict, re-pasting the same
+  // over-limit answer cannot re-arm it.
+  const answerOverMax = answerWordState(answer).over;
+  const isReady = hasQuestion && hasAnswer && !answerOverMax;
   const ownQuestionPrompt = mode === "own" && hasAnswer && !hasQuestion;
   const statusState = busy
     ? "inspecting"
@@ -6609,6 +6653,10 @@ function ReaderWorkbench() {
     const a = answer;
     if (mode === "own" && !(q || "").trim()) nextErrors.question = "Add the question you asked.";
     if (!(a || "").trim()) nextErrors.answer = "Paste an answer to run The Reader.";
+    // Preflight against the ceiling the endpoint enforces. The disabled button already
+    // covers the pointer path; this covers every other way run() can be reached, so no
+    // route spends a round trip on a request that is already known to be rejected.
+    if (answerWordState(a).over) nextErrors.answer = answerOverMaxNotice(a);
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors);
       return;
@@ -6666,7 +6714,7 @@ function ReaderWorkbench() {
       }
     } catch (err) {
       if (err && err.message === "too_long") {
-        setErrors({ answer: "Answer is over 1200 words. Trim it and re-run." });
+        setErrors({ answer: ANSWER_TOO_LONG_MESSAGE });
       } else {
         causeRef.current = CAUSE_DEGRADED;
         setReaderResult({
@@ -6799,6 +6847,7 @@ function ReaderWorkbench() {
                     <div className="wb-reader-v2__field wb-reader-v2__field--answer">
                       <PasteField
                         label="AI answer received"
+                        overMaxNotice={answerOverMaxNotice}
                         value={answer}
                         onChange={touchAnswer}
                         error={errors.answer}
@@ -6814,6 +6863,7 @@ function ReaderWorkbench() {
                     <div className="wb-reader-v2__field wb-reader-v2__field--answer">
                       <PasteField
                         label="AI answer received"
+                        overMaxNotice={answerOverMaxNotice}
                         value={answer}
                         onChange={touchAnswer}
                         error={errors.answer}
