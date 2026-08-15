@@ -41,6 +41,8 @@ import { fileURLToPath } from "node:url";
 import { stageView, STAGE_CHIPS, LANE_CHIPS, LANE_INSPECT } from "../reader-stage.js";
 import { CHIP_UI } from "../reader-paired.js";
 import { lintChipString } from "../reader-check-vocab.js";
+import { PENDING_SCENARIOS, SCENARIOS, resolvePayloads } from "../scripts/qa/scenarios.mjs";
+import { FINDING_CLASSES, normalizeClass } from "../reader-result.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
@@ -279,6 +281,150 @@ test("the new chip surfaces have styling of their own", () => {
   for (const rule of [".wb-chip__return", ".wb-chip__origin", ".wb-chip__origin-label", ".wb-chip__origin-question", ".wb-chip__origin-note"]) {
     assert.ok(CSS.includes(`${rule} {`) || CSS.includes(`${rule},`), `workbench.css is missing ${rule}`);
   }
+});
+
+// ── The governed scenario that photographs the composition ──────────────────
+//
+// Everything above holds the two fixes at source level. What none of it holds is the
+// STATE THEY COMPOSE: a findings-bearing inspection with the lane opened over it, where
+// `openedFrom` is non-empty and the origin block and the from-an-inspection return label
+// exist at all. `chip-arrival` cannot stand in for it — it arrives through ?start=chips
+// with nothing behind it, so `openedFrom` is "" and neither surface mounts.
+//
+// `chips-from-inspection` is that state. It waits in PENDING_SCENARIOS because a board
+// scenario owes a committed baseline and this lane holds every baseline until the founder
+// releases them, so these assertions are what hold the scenario meanwhile. They are
+// written against whichever registry holds it, so they keep passing unchanged on the day
+// it is promoted. The live drive is proven in scripts/qa/pending-scenario-proof.mjs.
+
+const composed = () => {
+  const s = PENDING_SCENARIOS["chips-from-inspection"] || SCENARIOS["chips-from-inspection"];
+  assert.ok(s, "chips-from-inspection is in neither registry");
+  return s;
+};
+
+test("the scenario composes the state through the shipped door, over a real findings result", () => {
+  const s = composed();
+  const steps = JSON.stringify(s.steps);
+
+  // A real inspection first: the source boxes are filled and submitted, and the drive
+  // waits on a rendered finding rather than on the response.
+  assert.match(steps, /"fill":"\.wb-reader-v2__field--answer textarea"/, "a real answer is pasted");
+  assert.match(steps, /"fill":"\.wb-reader-v2__reveal textarea"/, "and a real question");
+  assert.match(steps, /"click":"button\.wb-reader-cta"/, "and it is actually run");
+  assert.match(steps, /"waitFor":"\.wb-measure__list li\.wb-measure__finding"/, "and findings rendered before the door is touched");
+
+  // Then the door — the shipped control, pressed, not a query parameter.
+  assert.match(steps, /"click":"\.wb-chip-door"/, "the lane is opened by pressing the door");
+  assert.ok(!s.query, "no arrival query; this scenario composes the state rather than arriving at it");
+
+  // The order is the whole point: the door press has to come after the findings.
+  assert.ok(
+    steps.indexOf('"waitFor":".wb-measure__list li.wb-measure__finding"') < steps.indexOf('"click":".wb-chip-door"'),
+    "the door must be pressed over a result, or openedFrom is empty and this is chip-arrival again",
+  );
+});
+
+test("the scenario reuses the findings fixture the board already carries", () => {
+  // No new fixture architecture. The route entry is the same builder object that
+  // single-findings declares — identity on the builder, because resolvePayloads returns a
+  // fresh payload per call and comparing the results would pass for a copied fixture too.
+  assert.equal(
+    composed().routes["/api/read"],
+    SCENARIOS["single-findings"].routes["/api/read"],
+    "chips-from-inspection must drive the existing findings builder, not a fixture of its own",
+  );
+});
+
+test("the scenario pins the stage, the way back and the origin reference", () => {
+  const s = composed();
+  const claims = s.assertText || [];
+
+  // Stage is CHIPS and open: the lane's own headline and the sentence over its chip row.
+  // Neither string exists in the document until the lane renders.
+  assert.ok(claims.includes(CHIP_UI.value_statement.headline), "the lane's headline");
+  assert.ok(claims.includes(CHIP_UI.row_header), "the sentence over the chip row");
+
+  // The way back exists, in the form that only exists over an inspection.
+  assert.ok(claims.includes(CHIP_UI.compose.return_to_inspection), "the from-an-inspection return label");
+  assert.ok(
+    !claims.includes(CHIP_UI.compose.return_to_reader),
+    "the standing label would pass over an empty lane and prove nothing about this state",
+  );
+
+  // The origin reference exists: its label, the question it names, and its note.
+  assert.ok(claims.includes(CHIP_UI.compose.opened_from_label), "the origin label");
+  assert.ok(claims.includes(CHIP_UI.compose.opened_from_note), "the origin note");
+  assert.equal(s.assertSelector, ".wb-chip__origin-question", "and the question element must be visibly painted");
+
+  // The question the fixture asked is the question the origin reference must show.
+  const typed = [...s.steps].reverse().find((step) => step.fill === ".wb-reader-v2__reveal textarea");
+  assert.ok(typed, "the drive types a question");
+  assert.ok(claims.includes(typed.text), "the origin reference must be asserted to carry that same question");
+});
+
+test("the scenario pins that the underlying result keeps its findings", () => {
+  // The failure this guards is the lane opening over a result that quietly lost content.
+  // assertText reads the whole document, so these hold whether or not the result is still
+  // inside the photographed window — an assertion about the page, not about the frame.
+  const s = composed();
+  const read = resolvePayloads(s)["/api/read"];
+  const claims = s.assertText || [];
+
+  const findings = read.measurement.findings;
+  assert.ok(findings.length >= 2, "the fixture must carry findings for their survival to mean anything");
+
+  // Every mark the fixture produces must be named by an assertion. The label is derived
+  // through the product's own alias table, so renaming a signal class breaks this test
+  // rather than silently leaving the scenario asserting a string nothing renders.
+  for (const f of findings) {
+    const label = FINDING_CLASSES[normalizeClass(f.type)];
+    assert.ok(label, `the fixture carries an unmappable finding type: ${f.type}`);
+    assert.ok(claims.includes(label), `no assertion holds the ${label} mark after the lane opens`);
+  }
+
+  // The count line, and the count in it. Findings can survive as rows while the number
+  // above them is rewritten, so the asserted count is checked against the fixture.
+  const counted = claims.find((c) => /\d+ candidate items? surfaced/.test(c));
+  assert.ok(counted, "the count line must be asserted");
+  assert.equal(
+    Number(counted.match(/(\d+) candidate items? surfaced/)[1]),
+    findings.length,
+    "the asserted count must be the count the fixture produces",
+  );
+});
+
+test("no source paste box can be restored into the lane, structurally", () => {
+  // The absence a render assertion cannot express. The source boxes live in
+  // .wb-reader-v2__field wrappers; the lane's markup contains no such wrapper and the
+  // mount point holds nothing but the lane, so there is no place for one to reappear.
+  const lane = block("function ChipLane({", "\n}\n");
+  assert.ok(!lane.includes("wb-reader-v2__field"), "ChipLane must not render a source field wrapper");
+  assert.ok(!lane.includes("wb-reader-v2__reveal"), "nor the reveal wrapper");
+
+  const mount = JSX.slice(JSX.indexOf('id="wb-chip-lane"'), JSX.indexOf('id="wb-chip-lane"') + 600);
+  const inside = mount.slice(0, mount.indexOf("</div>"));
+  assert.ok(inside.includes("<ChipLane"), "the mount point holds the lane");
+  assert.ok(!inside.includes("wb-reader-v2__field"), "and nothing else that could carry a source box");
+
+  // The lane's own first answer box is a different thing and is supposed to be there.
+  // It is pinned as empty-by-construction: its value is lane state initialised to "".
+  assert.match(lane, /const \[firstAnswer, setFirstAnswer\] = useState\(""\);/);
+  assert.ok(
+    !lane.includes("setFirstAnswer(openedFrom)") && !lane.includes("useState(openedFrom)"),
+    "the lane must never seed its own answer box from the inspection it was opened over",
+  );
+});
+
+test("the frame is aimed at the head block, so the three surfaces are in it", () => {
+  // The captured rectangle is a window, and __qa.scrollToDeterministic CENTRES whatever
+  // the focus names. Aiming it at #wb-chip-lane centres a lane taller than the viewport
+  // and puts its head above the top edge — measured at 375x812, heading at top -206.
+  // Aiming at the head block frames the heading, the way back and the origin reference,
+  // which are the three things this scenario exists to photograph.
+  assert.equal(composed().focus, "#wb-chip-lane .wb-reader-result__head");
+  const lane = block("function ChipLane({", "\n}\n");
+  assert.equal(countOf(lane, 'className="wb-reader-result__head"'), 1, "one head block, so the focus is unambiguous");
 });
 
 // ── The lane constants this file reasons about ──────────────────────────────

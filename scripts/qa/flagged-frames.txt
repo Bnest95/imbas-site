@@ -1,0 +1,57 @@
+# The frames the compare-only board flagged on 2026-08-15 against HEAD f9e56fc,
+# renderer HeadlessChrome/148.0.7778.96, run 2026-08-15T04-14-08-981Z-981d24ef.
+# 53 of 70. Regenerate from a fresh board run before trusting an attribution made
+# against a later tree — a stale list attributes movement to the wrong frames.
+chip-arrival--desktop
+chip-arrival--mobile
+claim-authorized-match--desktop
+claim-authorized-match--mobile
+claim-authorized-mismatch--desktop
+claim-authorized-mismatch--mobile
+claim-client-declaration--desktop
+claim-client-declaration--mobile
+claim-unrecognized-source--desktop
+claim-unrecognized-source--mobile
+deposit-fixture--desktop
+deposit-fixture--mobile
+export-paired--desktop
+export-paired--mobile
+export-single--desktop
+export-single--mobile
+paired-empty--desktop
+paired-empty--mobile
+paired-legacy--desktop
+paired-legacy--mobile
+paired-legacy-rows--desktop
+paired-legacy-rows--mobile
+paired-matched--desktop
+paired-matched--mobile
+paired-rejected-snippet--desktop
+paired-rejected-snippet--mobile
+paired-unmatched--desktop
+paired-unmatched--mobile
+provenance-complete--desktop
+provenance-complete--mobile
+provenance-partial--desktop
+provenance-partial--mobile
+public-example--desktop
+public-example-provenance--desktop
+public-example-provenance--mobile
+read-in-flight--desktop
+read-in-flight--mobile
+register-overflow--desktop
+register-overflow--mobile
+register-overflow-expanded--desktop
+register-overflow-expanded--mobile
+share-consent--desktop
+share-consent--mobile
+share-receipt--desktop
+share-receipt--mobile
+share-single-empty--desktop
+share-single-empty--mobile
+single-empty--desktop
+single-empty--mobile
+single-empty-read--desktop
+single-empty-read--mobile
+single-findings--desktop
+single-findings--mobile
