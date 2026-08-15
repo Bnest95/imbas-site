@@ -59,4 +59,4 @@ span "1"
 span "Paste an AI answer to see what it might be missing."
 span "2"
 span "Copy the one question Imbas builds, then ask your own AI."
-button "Show follow-up checks" disabled=false expanded=false
+button "Choose your own follow-up" disabled=false expanded=false

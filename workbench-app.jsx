@@ -6340,10 +6340,18 @@ function ReaderWorkbench() {
            still a real element, so it is still named. aria-expanded stands either way. */
         aria-controls={chipMounted ? "wb-chip-lane" : undefined}
       >
-        {/* Show/Hide, not Open/Close: the lane is hidden rather than unmounted and
-            keeps whatever was typed in it, so "close" would describe the wrong
-            thing. The value statement is not lost — it heads the lane itself. */}
-        {lane === LANE_CHIPS ? "Hide follow-up checks" : "Show follow-up checks"}
+        {/* The closed label names where the press goes, not what appears. Activation
+            derives STAGE_CHIPS, and that stage's view drops pasteBox, result and act2,
+            so the source text and the result leave the stage. "Show" promised mere
+            disclosure and described the wrong operation. "Your own" is the line the
+            lane's own copy already holds — the person chooses this follow-up and the
+            inspection did not generate it — and the closed label is where it is needed,
+            because the follow-up stage carries the act-2 offer at the same time.
+            Hide stays on the open side, and not Close: the lane is hidden rather than
+            unmounted and keeps whatever was typed in it. That label renders on
+            STAGE_CHIPS alone, where the lane may be holding a comparison rather than a
+            row of choices, so it names the follow-up and never the choices. */}
+        {lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up"}
       </button>
     </div>
   );
@@ -6852,7 +6860,17 @@ function ReaderWorkbench() {
                 />
               </div>
             ) : null}
-            {readerResult.measurement && readerResult.receipt ? (
+            {/* The tap asks whether this surfaced something. With nothing surfaced the
+                question has no true answer, and both answers write the same two enums
+                into the same field as every other run, so a Yes here and a Yes after
+                four findings become one indistinguishable row. Telemetry that cannot be
+                read back is worse than telemetry that was never collected, so the tap is
+                not asked rather than reworded. The count is surfaced_findings, the subset
+                the panel above lists, so the tap and the rows cannot disagree about
+                whether anything surfaced; on a single-answer result it selects the same
+                set as the hero's surfaced_candidate_items. Paired keeps its own tap: an
+                empty delta still has a true answer to how big the difference felt. */}
+            {readerResult.measurement && readerResult.receipt && countOf(readerResult.result, "surfaced_findings") > 0 ? (
               <div className="wb-reader-v2__follow wb-reader-v2__follow--perception">
                 <PerceptionTap mode="single" receipt={readerResult.receipt} />
               </div>

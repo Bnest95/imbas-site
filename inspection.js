@@ -261,6 +261,16 @@ function rerunHref(record) {
   return id ? `/reader.html?rerun=${encodeURIComponent(id)}` : "";
 }
 
+// The chip lane's one entrance from the published record. ?start=chips has been the
+// lane's governed route since §D and nothing in the product pointed at it.
+//
+// It is ghost, never primary, so it cannot outrank the rerun above it. The label says
+// "your own answer" because the lane operates on text the visitor brings, not on this
+// record: it starts nothing here, adds nothing here, and reading this page is not the
+// premise for it. A label naming this record — or one shaped like a remedy — would
+// assert that Imbas found a problem in an inspection the visitor is only reading.
+const CHIP_LANE_DOOR = `<a class="insp-btn insp-btn--ghost" href="/reader.html?start=chips">Follow up on your own answer</a>`;
+
 function actionsHtml(record) {
   const rerun = rerunHref(record);
   return `
@@ -268,6 +278,7 @@ function actionsHtml(record) {
       ${rerun ? `<a class="insp-btn insp-btn--primary" href="${rerun}">Run this exact question again</a>` : ""}
       <button type="button" class="insp-btn insp-btn--ghost" id="insp-copy-link">Copy share link</button>
       <a class="insp-btn insp-btn--ghost" href="/reader.html?reader=1">Test another answer</a>
+      ${CHIP_LANE_DOOR}
       <a class="insp-btn insp-btn--ghost" href="/archive.html">Explore reviewed archive</a>
     </div>
     ${rerun ? `<p class="insp-actions__note">Running it again starts a new record with its own date. This one does not change.</p>` : ""}`;
