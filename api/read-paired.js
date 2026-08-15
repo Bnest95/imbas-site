@@ -45,6 +45,7 @@ import {
   addGlobalSpend,
   estimateCostUsd,
 } from "../reader-security.js";
+import { ANSWER_WORD_MAX, countAnswerWords } from "../reader-input-envelope.js";
 import {
   createRuntimeContext,
   markPhase,
@@ -105,12 +106,12 @@ const PAIRED_MAX_BODY = 256 * 1024;
 const ANSWER_MAX = 50000;
 const ANSWER_MIN = 20;
 // Same reject-not-clip word ceiling as the single read: truncating a pasted answer
-// would make the analysis measure a fragment and report a false delta.
-const ANSWER_WORD_MAX = 1200;
+// would make the analysis measure a fragment and report a false delta. The ceiling and
+// its counter are imported from reader-input-envelope.js so this endpoint, the single
+// read, and the client preflight all read one number.
 const WHY_MAX = 1000;
 const ANCHOR_MAX = 500;
 const POINT_MAX = 1000;
-const wordCount = (s) => (String(s).trim().match(/\S+/g) || []).length;
 
 const AIRTABLE_BASE = "appfxHraqlcpP1AAP";
 // Reader Paired Analyses (created for P2). Separate from Reader Runs so a paired
@@ -431,10 +432,19 @@ export function parsePairedMeasurement(raw) {
 // produce; OPEN_ONLY and BOTH_DIFFERENT exist in the enum for a later pass and are
 // not detected, displayed, or counted here.
 //
-// The conditions basis is genuinely unavailable on this surface: the paste-back
-// capture is client-side and this endpoint never receives it. So no finding can
-// carry a matched-conditions claim, and normalizeClaim records every one of them as
-// an observed difference. That is the honest result, not a degraded one.
+// The conditions basis comes from the declaration log and from nowhere else. Where the
+// log resolves a current declaration for this pair, that declaration's own source rides
+// through to every finding and the run reports the conditions as the person reported
+// them. Where it names none, the source stays empty and the findings say nobody recorded
+// how the two answers were captured. Both are honest results; neither is degraded.
+//
+// The source travels as the stored artifact's own field rather than as a constant
+// restated here. A declaration naming a source this build does not know then reads as
+// unrecognized, instead of being laundered into one we do.
+//
+// No finding reaches the matched-conditions register either way. normalizeClaim
+// authorizes that register from server-observed conditions alone, and a person's account
+// of their own session is not that.
 //
 // Exported for the visual-acceptance harness, for the same reason as
 // buildCanonicalSingle: a fixture that copies the mapping drifts from it.
@@ -450,7 +460,7 @@ export function parsePairedMeasurement(raw) {
 // targeted answer, every check here passes and the record is confidently wrong.
 // The claim the pipeline supports is: every anchor reproduces verbatim from the
 // artifact THIS RECORD LABELS as its source. Not: the labels are correct.
-export function buildCanonicalPaired(pm, { open, targeted } = {}) {
+export function buildCanonicalPaired(pm, { open, targeted, conditionsSource = "" } = {}) {
   if (!pm) return null;
   const artifacts = { [ARTIFACT_ORIGINAL]: open || "", [ARTIFACT_TARGETED]: targeted || "" };
   const resolution_tally = newResolutionTally();
@@ -470,6 +480,12 @@ export function buildCanonicalPaired(pm, { open, targeted } = {}) {
       artifacts,
       resolution_tally,
       comparison_direction: COMPARISON_DIRECTION.PROBE_ONLY,
+      conditions_source: conditionsSource,
+      // The status does not follow the source. UNVERIFIED would state that someone
+      // declared the capture conditions, and a declaration can carry a stage and an
+      // actor while saying nothing about the conditions themselves. Which declared
+      // fields would license UNVERIFIED is a separate ruling; until there is one, this
+      // says no conditions determination was made, which is true of every run today.
       conditions_status: CONDITIONS_STATUS.UNAVAILABLE,
     });
   });
@@ -830,6 +846,18 @@ async function recordDeclaration({ openRunId, answerHash, declaration }, ctx, de
 // is a PROJECTION, derived here from the log every time and never stored: where the log
 // branches there is no single current value, and the payload says DECLARATION_CHAIN_CONFLICT
 // instead of naming a winner. Choosing one would be reporting a history nobody recorded.
+// The conditions source for this run, read off the log's current-effective projection
+// and nowhere else.
+//
+// A resolved current declaration is the only thing that names conditions for a pair.
+// Nobody declared, the store could not be read, the write did not land, the chain
+// branched and no single declaration is current: every one of those returns the empty
+// source and renders as conditions not recorded. That is the pre-existing state, and it
+// is the correct one for all of them, because none of them puts a declaration in hand.
+function declaredConditionsSource(declared) {
+  return (declared && declared.current && declared.current.declaration_source) || "";
+}
+
 function applyDeclarationState(payload, declared) {
   payload.declaration_state = declared.state;
   payload.declaration_current = declared.current;
@@ -985,7 +1013,7 @@ export async function capturePaired(record, ctx, deps = {}) {
 // legacy path. It is never silently upgraded. The receipt is rebuilt fresh over the
 // re-sent open run, so it re-verifies even though its generated_at differs from the
 // original write.
-function reconstructPairedFromRecord(recordFields, embed, declarations = []) {
+function reconstructPairedFromRecord(recordFields, embed, declarations = [], conditionsSource = "") {
   const f = recordFields || {};
   let stored = [];
   try {
@@ -1003,7 +1031,13 @@ function reconstructPairedFromRecord(recordFields, embed, declarations = []) {
         { differences, gap_estimate: Number.isFinite(gap) ? gap : 0, estimate_type: ESTIMATE_TYPE_PAIRED, rubric_version: f["Rubric Version"] || RUBRIC_VERSION },
         // The replay path reconstructs the pair from stored fields, which is where the
         // role→body binding is most exposed to drift. Named keys, for that reason.
-        { open: (embed.openRun && embed.openRun.answer) || "", targeted: embed.targetedAnswer || "" },
+        //
+        // The conditions source is read live, not replayed. Declarations are recorded
+        // before the idempotency branch precisely because someone can come back to a
+        // pair they already ran and correct what they said, so the log can have moved
+        // since the analysis was stored. Reading it fresh is what stops one pair from
+        // reporting its conditions two ways depending on which path served it.
+        { open: (embed.openRun && embed.openRun.answer) || "", targeted: embed.targetedAnswer || "", conditionsSource },
       )
     : null;
   const pairedAnalysis = {
@@ -1166,7 +1200,7 @@ export function createReadPairedHandler(deps = {}) {
     if (targetedAnswer.trim().length < ANSWER_MIN) {
       return rejectValidation(res, ctx, "empty", 400, { error: "empty" });
     }
-    if (wordCount(targetedAnswer) > ANSWER_WORD_MAX) {
+    if (countAnswerWords(targetedAnswer) > ANSWER_WORD_MAX) {
       return rejectValidation(res, ctx, "answer_too_long", 400, { error: "too_long", limit_words: ANSWER_WORD_MAX });
     }
 
@@ -1331,7 +1365,7 @@ export function createReadPairedHandler(deps = {}) {
             { ...embed, chipId: body.chip_id, instructionVersion: chipEntry.instruction_version },
             declared.declarations,
           )
-        : reconstructPairedFromRecord(existing.record.fields, embed, declared.declarations);
+        : reconstructPairedFromRecord(existing.record.fields, embed, declared.declarations, declaredConditionsSource(declared));
       applyDeclarationState(payload, declared);
       logRuntimeEvent("paired_idempotent_hit", {
         request_id: ctx.request_id,
@@ -1495,7 +1529,11 @@ export function createReadPairedHandler(deps = {}) {
       // The canonical result is built FIRST and everything else is derived from it.
       // Nothing downstream re-reads the model's output, so no surface can show a
       // quotation the door did not resolve.
-      const canonical = buildCanonicalPaired(pm, { open: openAnswer, targeted: targetedAnswer });
+      const canonical = buildCanonicalPaired(pm, {
+        open: openAnswer,
+        targeted: targetedAnswer,
+        conditionsSource: declaredConditionsSource(declared),
+      });
       const pairedAnalysis = {
         open_run_id: openRunId,
         targeted_prompt: targetedPrompt,

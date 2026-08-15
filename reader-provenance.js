@@ -108,10 +108,14 @@ export function describeProvenance({ canonical, declaredModel, capturedAt, paire
 // the conditions" and "nobody recorded the conditions" are different states and a
 // single label for both would flatten the one distinction the register exists to
 // hold. MATCHED_CONDITIONS is reachable only from AUTHORIZED_MATCHED_BASIS plus a
-// MATCHED status, and no live surface supplies an authorized source, so today every
-// live paired run lands on OBSERVED_DIFFERENCE_NO_BASIS. The other states are
-// reachable by construction and carry copy so the surface is ready when the
-// authoritative conditions field lands, not rewritten for it.
+// MATCHED status, and no live surface supplies an authorized source, so no live run
+// reaches it or OBSERVED_DIFFERENCE_UNMATCHED. A live paired run reaches the other
+// three: the declaration log carries a source, so a run whose log names a current
+// declaration lands on OBSERVED_DIFFERENCE_REPORTED, a run whose log names none lands
+// on OBSERVED_DIFFERENCE_NO_BASIS, and a stored source this build has no rules for
+// lands on OBSERVED_DIFFERENCE_UNRECOGNIZED. The two authorized states carry copy so
+// the surface is ready when the authoritative conditions field lands, not rewritten
+// for it.
 export const CLAIM_STATE = Object.freeze({
   MATCHED_CONDITIONS: "MATCHED_CONDITIONS",
   OBSERVED_DIFFERENCE_UNMATCHED: "OBSERVED_DIFFERENCE_UNMATCHED",

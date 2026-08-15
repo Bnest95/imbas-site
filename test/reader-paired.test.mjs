@@ -75,6 +75,8 @@ import {
   hashClientIp,
   RATE_BURST_MAX,
 } from "../reader-security.js";
+import { CLAIM_BASIS, CLAIM_REGISTER, countOf } from "../reader-result.js";
+import { CLAIM_STATE, describeClaimState } from "../reader-provenance.js";
 
 const sha256Hex = (s) => createHash("sha256").update(String(s), "utf8").digest("hex");
 
@@ -1367,4 +1369,154 @@ test("wire: a declaration the store refused is flagged uncertain, and the read s
   assert.equal(status, 200, "a lost declaration row never breaks someone's read");
   assert.equal(body.declaration_uncertain, true, "stated, not hidden: the record may be incomplete");
   assert.deepEqual(body.run_declarations, [], "and nothing is reported that the store does not hold");
+});
+
+// ── The conditions basis: what the declaration log makes the findings say ─────────
+// Every paired finding carries a claim basis, and until this pass the endpoint supplied
+// none. So every run said the same thing — nobody recorded how these two answers were
+// captured — including the runs where somebody had just said so in the same POST. The
+// input was present and unwired, and the surface reported an absence that was not there.
+//
+// What is wired is the log's CURRENT-EFFECTIVE declaration, never the request body. A
+// declaration the store refused never entered the log; a branched chain names no single
+// current value. Both keep the not-recorded state, which is the honest reading of each.
+//
+// Each check reads body.result, the canonical result a surface renders, through the real
+// describeClaimState. What is asserted is the line a person would read.
+
+// The claim state of a run's canonical result, with the vacuous pass ruled out: a result
+// carrying no recorded finding has no basis to report and would answer NO_CLAIM to every
+// question below without any of the wiring working.
+function claimStateOf(body) {
+  const canonical = body && body.result;
+  assert.ok(canonical, "the run must carry a canonical result to read a basis off");
+  assert.ok(countOf(canonical, "recorded_findings") > 0, "and at least one recorded finding to carry it");
+  return describeClaimState(canonical);
+}
+
+test("wire: a run with an accepted declaration reports its conditions as declared", async () => {
+  const { status, body } = await runPaired({
+    receipt: buildOpenReceipt(),
+    declaration: {
+      stage: DECLARATION_STAGE.SUBMISSION,
+      same_model: PAIR_SAME_MODEL.YES,
+      edits: PAIR_EDITS.NONE,
+    },
+  });
+  assert.equal(status, 200);
+  assert.equal(body.declaration_state, DECLARATION_HISTORY.RESOLVED, "one unambiguous current declaration");
+
+  const claim = claimStateOf(body);
+  assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_REPORTED);
+  assert.equal(claim.claim_basis, CLAIM_BASIS.REPORTED_CLIENT_DECLARATION);
+  assert.equal(claim.label, "Conditions as you reported them");
+
+  // Reported is not matched, and the raise in register stops exactly here. A person's
+  // account of their own session cannot reach the matched register from any input.
+  assert.equal(claim.claim_register, CLAIM_REGISTER.OBSERVED_DIFFERENCE);
+  assert.notEqual(claim.state_id, CLAIM_STATE.MATCHED_CONDITIONS);
+
+  // Every finding on the run, not just the one describeClaimState happens to read. The
+  // basis is a property of how the pair was captured, so a run reporting two bases would
+  // be reporting two capture histories for one pair.
+  for (const f of body.result.findings) {
+    assert.equal(f.claim_basis, CLAIM_BASIS.REPORTED_CLIENT_DECLARATION);
+  }
+});
+
+test("wire: a run with no declaration still says nobody recorded the conditions", async () => {
+  const { status, body } = await runPaired({ receipt: buildOpenReceipt() });
+  assert.equal(status, 200);
+  assert.equal(body.declaration_state, DECLARATION_HISTORY.NONE);
+
+  const claim = claimStateOf(body);
+  assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_NO_BASIS);
+  assert.equal(claim.claim_basis, CLAIM_BASIS.NO_AUTHORIZED_BASIS);
+  assert.equal(claim.label, "Conditions not recorded");
+});
+
+test("wire: a branched declaration chain names no current value, so the conditions stay unrecorded", async () => {
+  const receipt = buildOpenReceipt();
+  const openRunId = receipt.open_run.provenance.request_id;
+  // A stored declaration and a new one, neither naming the other. Two originals nobody
+  // reconciled, which is a CONFLICT with both branches kept and no winner picked.
+  const { status, body } = await runPaired({
+    receipt,
+    fetchOpts: { declarationRows: [declRow({ "Open Run ID": openRunId })] },
+    declaration: { stage: DECLARATION_STAGE.INSPECTION, same_model: PAIR_SAME_MODEL.NO, edits: PAIR_EDITS.NONE },
+  });
+  assert.equal(status, 200);
+  assert.equal(body.declaration_state, DECLARATION_HISTORY.CONFLICT);
+  assert.equal(body.declaration_current, null);
+
+  // Two declarations exist, so a check counting rows would call this declared. The
+  // question the basis answers is which declaration describes the conditions, and a
+  // branched chain has no answer to it.
+  assert.equal(body.run_declarations.length, 2);
+  const claim = claimStateOf(body);
+  assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_NO_BASIS);
+  assert.equal(claim.claim_basis, CLAIM_BASIS.NO_AUTHORIZED_BASIS);
+});
+
+test("wire: a declaration the store refused leaves the conditions unrecorded", async () => {
+  // The write failed, so the log does not hold it and the read back cannot see it.
+  // Reporting the conditions as declared here would describe a record that does not
+  // exist — the same fail-open posture as capture_uncertain, held one step further.
+  const { status, body } = await runPaired({
+    receipt: buildOpenReceipt(),
+    fetchOpts: { declarationWriteFails: true },
+    declaration: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+  });
+  assert.equal(status, 200);
+  assert.equal(body.declaration_uncertain, true);
+  assert.equal(claimStateOf(body).claim_basis, CLAIM_BASIS.NO_AUTHORIZED_BASIS);
+});
+
+test("wire: a replay reads the conditions basis live, so a later declaration reaches an earlier analysis", async () => {
+  const receipt = buildOpenReceipt();
+  const openRunId = receipt.open_run.provenance.request_id;
+
+  // Run the pair with nothing declared. It reports what it should: no basis.
+  const first = await runPaired({ receipt });
+  assert.equal(claimStateOf(first.body).claim_basis, CLAIM_BASIS.NO_AUTHORIZED_BASIS);
+
+  // The person comes back and declares. The analysis row is untouched — declarations are
+  // recorded before the idempotency branch precisely so this case works — and the replay
+  // must report the log as it now stands, not as it stood when the row was written.
+  const replay = await runPaired({
+    receipt,
+    fetchOpts: {
+      existingRecord: { id: "recPairedStored", fields: first.stats.captureBodies[0].fields },
+      declarationRows: [declRow({ "Open Run ID": openRunId })],
+    },
+  });
+  assert.equal(replay.body.idempotent, true, "the analysis is served from the stored row");
+  assert.equal(replay.stats.post, 0, "and no second analysis row is written");
+  assert.equal(replay.body.declaration_state, DECLARATION_HISTORY.RESOLVED);
+
+  const claim = claimStateOf(replay.body);
+  assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_REPORTED);
+  assert.equal(claim.claim_basis, CLAIM_BASIS.REPORTED_CLIENT_DECLARATION);
+});
+
+test("wire: a stored declaration naming a source this build does not know reads as unrecognized", async () => {
+  // The source travels as the stored artifact's own field. A row written under a source
+  // this build has no rules for must not be laundered into one it does — the register
+  // carries a state for exactly this, and using it keeps the two situations apart.
+  const receipt = buildOpenReceipt();
+  const { status, body } = await runPaired({
+    receipt,
+    fetchOpts: {
+      declarationRows: [
+        declRow({ "Open Run ID": receipt.open_run.provenance.request_id, "Declaration Source": "some_future_oracle" }),
+      ],
+    },
+  });
+  assert.equal(status, 200);
+  assert.equal(body.declaration_state, DECLARATION_HISTORY.RESOLVED);
+
+  const claim = claimStateOf(body);
+  assert.equal(claim.claim_basis, CLAIM_BASIS.UNRECOGNIZED_BASIS);
+  assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_UNRECOGNIZED);
+  assert.notEqual(claim.claim_basis, CLAIM_BASIS.REPORTED_CLIENT_DECLARATION);
 });

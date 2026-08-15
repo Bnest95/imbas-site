@@ -30,6 +30,8 @@
 // server resolves that key to an exact span in the stored answer. Anything it
 // cannot resolve is recorded and never surfaced. The construction rule below is
 // unchanged; the probe text is unchanged.
+import { SECOND_ANSWER_TOO_LONG_MESSAGE } from "./reader-input-envelope.js";
+
 export const PAIRED_METHOD_VERSION = "2.0";
 
 // The one signal class that makes the offer eligible (design §1). Framing Drift and
@@ -1202,7 +1204,9 @@ export const CHIP_UI = {
     first_answer_missing: "Paste the answer or draft you started with.",
     second_answer_missing: "Paste the second answer your AI gave.",
     chip_missing: "Pick a follow-up above first.",
-    too_long: "Second answer is over 1200 words. Trim it and re-run.",
+    // Generated from the ceiling that produced the rejection, so the number a person
+    // reads here cannot drift from the number the endpoint enforced.
+    too_long: SECOND_ANSWER_TOO_LONG_MESSAGE,
     too_short: "That's too short to compare. Paste the full second answer.",
     not_eligible: "That follow-up isn't available right now. Pick another and try again.",
     blocked: "This follow-up can't run right now. Check what you pasted and try again.",
