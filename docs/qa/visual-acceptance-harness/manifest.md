@@ -8,7 +8,7 @@ Generation reads no browser, starts no server, captures no pixel and moves no ba
 
 **This manifest governs both committed baseline layers: the `.png` images and the `.snapshot.txt` files beside them.** Both are checksummed. There is one row per image, and it carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in `docs/qa/visual-acceptance-harness/` is governed here.
 
-The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 35 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 70 images and 70 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
+The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 36 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 72 images and 72 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
 
 **What it does not attest.** This manifest is a statement about byte identity as the tree stands, and nothing else. It does not attest the capture session that produced any image — not when the shutter fired, not which working tree was checked out, not which commit the capture ran against. It records no browser environment beyond the version string each snapshot carries for its own image, and no machine, path or operating system. It attests no review, approval or acceptance event, and no baseline-acceptance provenance: that an image is listed here means its bytes are on disk and hash to the value shown, not that anyone signed off on them. It carries no historical capture SHA and no history of any kind. Those facts are real and are kept, elsewhere and deliberately — each snapshot's `## environment` block holds the conditions its own capture ran under, `git log` on an image file holds when those bytes last moved and which commit moved them, and `docs/qa/HARNESS-HISTORY.md` holds the removed historical record of this document's own pre-generated era. None of them is this file, and a reader needing any of them should not look here.
 
@@ -57,7 +57,7 @@ A board that lists only what it covers reads as complete. These are the result s
 
 ## Images
 
-70 images, 70 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+72 images, 72 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
 
 ### `chip-arrival--desktop.png`
 
@@ -90,6 +90,38 @@ A board that lists only what it covers reads as complete. These are the result s
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The chip lane entered through ?start=chips, with no inspection under it |
 | expected behaviour | The lane heads itself with its own value statement, so it never reads as part of an inspection. The first answer box is the only live input on the page. The follow-up chips render in one row with the sentence that says the person is choosing them and Imbas has determined nothing. |
+
+### `chips-from-inspection--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `6c5e7c5bdfab661609824181aef95cdec1a44b57c603d68ec369d2aa4f1bcd22` |
+| bytes | 616075 |
+| snapshot | `chips-from-inspection--desktop.snapshot.txt` |
+| snapshot sha256 | `79fb9a5932832d50140d948935732a7f0b01de5943d653c61e69344ef3cb4dae` |
+| snapshot bytes | 29326 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 3983 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
+
+### `chips-from-inspection--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `ce0f4c8ac707a9b5320acc3cb3c26db03499074062554ac7fa1c2009f7158c32` |
+| bytes | 664416 |
+| snapshot | `chips-from-inspection--mobile.snapshot.txt` |
+| snapshot sha256 | `e32419d1f13bd5315a5ebdbe87fa7f8d14e4646c64ab2a60b1f5ddf669c3505d` |
+| snapshot bytes | 28462 |
+| viewport | 375x812@3x (mobile) |
+| url | `/reader.html`, query `(none)` |
+| framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 5610 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
 
 ### `claim-authorized-match--desktop.png`
 

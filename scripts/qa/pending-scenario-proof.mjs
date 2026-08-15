@@ -26,8 +26,14 @@
 // 4. Last, because it leaves the state: that pressing the way back returns what was
 //    pasted, byte-for-byte, with the marks intact. The origin note makes that promise in
 //    words and nothing else in the harness holds it to it.
+//
+// ── After a promotion ────────────────────────────────────────────────────────
+// `--name` resolves from SCENARIOS when the pending registry no longer holds the name, so
+// a scenario keeps this proof after it becomes a board member. The board photographs a
+// rectangle; proofs 2 and 4 are an absence and a round trip, and no frame can hold either.
+// The promotion is what makes the frame available, not what makes these checks redundant.
 
-import { PENDING_SCENARIOS, resolvePayloads } from "./scenarios.mjs";
+import { PENDING_SCENARIOS, SCENARIOS, resolvePayloads } from "./scenarios.mjs";
 import {
   BOARD_VIEWPORTS,
   CDP,
@@ -306,8 +312,8 @@ async function main() {
   try {
     await installInterception(cdp, []);
     for (const name of names) {
-      const scenario = PENDING_SCENARIOS[name];
-      if (!scenario) throw new Error(`not a pending scenario: ${name}`);
+      const scenario = PENDING_SCENARIOS[name] || SCENARIOS[name];
+      if (!scenario) throw new Error(`no such scenario: ${name}`);
       for (const viewName of BOARD_VIEWPORTS) {
         problems.push(...report(name, viewName, await drive(cdp, origin, scenario, viewName)));
       }
@@ -329,8 +335,8 @@ async function main() {
     return;
   }
   log(
-    `Every pending scenario reaches the state it claims at both board viewports. ` +
-      `No baseline was read for acceptance and none was written.`,
+    `${names.length === 1 ? names[0] : "Every scenario checked"} reaches the state it claims ` +
+      `at both board viewports. No baseline was read for acceptance and none was written.`,
   );
 }
 

@@ -2159,39 +2159,13 @@ export const SCENARIOS = {
     assertSelector: "#wb-chip-lane .wb-chip__row .wb-chip__pick",
     focus: "#wb-chip-lane",
   },
-};
 
-// ── The waiting room, now empty ──────────────────────────────────────────────
-//
-// This held three scenarios that were complete in every way a scenario can be — real
-// payloads through the real assemblers, drive steps, DOM assertions, a state and an
-// expectation — and were kept off the board for one reason only: membership in SCENARIOS
-// obliges a committed image and snapshot, assertBaselineInventory fails in both
-// directions, and the first capture of a new scenario writes a new baseline. The
-// surface-finish lane held every baseline until the founder ruled, so adding them to the
-// board before that ruling would have meant accepting three baselines under a ruling that
-// withheld them. The ruling came and register-overflow, register-overflow-expanded and
-// chip-arrival are now board members with committed baselines of their own.
-//
-// The registry stays, empty, and so do the tests that iterate it. It is the place a
-// finished-but-unphotographed scenario goes, and the next one needs somewhere to wait.
-// Emptiness is the correct state when nothing is waiting, not a sign the mechanism is
-// unused — the tests that guard it (no overlap with SCENARIOS, no committed baseline
-// while pending, board-ready by the board's own shape check) are what make a promotion a
-// move rather than a copy, and they cost nothing while the room is empty.
-//
-// This was never the fixture-only lane and must not be confused with it. `drivable: false`
-// means a scenario has no drive steps and so cannot be photographed at all; anything
-// waiting here has steps and can be photographed the moment it is allowed to be.
-// Promotion is one move — cut an entry into SCENARIOS, run `--update <name>` — and the
-// board tests then hold it exactly as they hold every other state.
-export const PENDING_SCENARIOS = {
   // The chip lane opened FROM an inspection. This is the state the repair exists for and
   // the one the board could not see.
   //
-  // `chip-arrival` photographs the lane standing on its own through `?start=chips`, with
-  // no inspection under it. That frame proves the lane renders; it says nothing about the
-  // transition, because the defect only exists when there IS an inspection to leave.
+  // `chip-arrival` above photographs the lane standing on its own through `?start=chips`,
+  // with no inspection under it. That frame proves the lane renders; it says nothing about
+  // the transition, because the defect only exists when there IS an inspection to leave.
   // Opening the lane drops both source paste boxes out of the stage, so the answer a
   // person was reading goes off screen — and the way back and the origin reference are
   // the answer to that. Neither renders in `chip-arrival`: `openedFrom` is empty there,
@@ -2242,6 +2216,35 @@ export const PENDING_SCENARIOS = {
     focus: "#wb-chip-lane .wb-reader-result__head",
   },
 };
+
+// ── The waiting room, empty again ────────────────────────────────────────────
+//
+// This room has now filled and emptied twice, and both times for the same reason:
+// membership in SCENARIOS obliges a committed image and snapshot,
+// assertBaselineInventory fails in both directions, and the first capture of a new
+// scenario writes a new baseline. A lane that is holding every baseline for a founder
+// ruling therefore cannot add a board member without accepting a baseline under that
+// same hold. So a finished scenario waits here instead of being weakened to fit.
+//
+// The first three were register-overflow, register-overflow-expanded and chip-arrival.
+// The fourth was chips-from-inspection, which waited through the movement ruling and
+// moved into SCENARIOS above when the founder released the baselines. Its two frames are
+// first baselines of a newly governed state, not acceptances of a changed one, and they
+// are recorded that way.
+//
+// The registry stays, empty, and so do the tests that iterate it. It is the place a
+// finished-but-unphotographed scenario goes, and the next one needs somewhere to wait.
+// Emptiness is the correct state when nothing is waiting, not a sign the mechanism is
+// unused — the tests that guard it (no overlap with SCENARIOS, no committed baseline
+// while pending, board-ready by the board's own shape check) are what make a promotion a
+// move rather than a copy, and they cost nothing while the room is empty.
+//
+// This was never the fixture-only lane and must not be confused with it. `drivable: false`
+// means a scenario has no drive steps and so cannot be photographed at all; anything
+// waiting here has steps and can be photographed the moment it is allowed to be.
+// Promotion is one move — cut an entry into SCENARIOS, run `--update <name>` — and the
+// board tests then hold it exactly as they hold every other state.
+export const PENDING_SCENARIOS = {};
 
 // Resolve a scenario's route table to concrete payloads.
 export function resolvePayloads(scenario) {
