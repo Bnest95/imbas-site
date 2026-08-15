@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5325
+scroll_offset: 5453
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
