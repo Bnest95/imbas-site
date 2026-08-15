@@ -66,6 +66,7 @@ import {
   answerOverMaxNotice,
   secondAnswerOverMaxNotice,
   ANSWER_TOO_LONG_MESSAGE,
+  SECOND_ANSWER_TOO_LONG_MESSAGE,
 } from "./reader-input-envelope.js";
 import { READER_EVENTS, buildEvent, buildFunnel } from "./reader-telemetry.js";
 import { initialScrollState, nextResultScroll } from "./reader-scroll.js";
@@ -4784,7 +4785,11 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     } catch (err) {
       const info = (err && err.info) || {};
       if (err && err.status === 400 && info.error === "too_long") {
-        setFieldError(ANSWER_TOO_LONG_MESSAGE);
+        // The second-answer sentence, because the gate this hits is the one on
+        // targeted_answer. The preflight over this same box already says "Second
+        // answer"; warning and rejecting under two different subjects made one box
+        // describe itself two ways.
+        setFieldError(SECOND_ANSWER_TOO_LONG_MESSAGE);
       } else if (err && err.status === 400 && info.error === "empty") {
         setFieldError("That's too short to compare. Paste the full answer.");
       } else if (err && err.status === 400) {

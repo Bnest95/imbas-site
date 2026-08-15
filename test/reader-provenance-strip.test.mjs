@@ -200,8 +200,10 @@ test("7) no canonical block → no surface, so the renderer can drop the strip e
 
 // ── Claim-state legibility ───────────────────────────────────────────────────
 
-test("8) today's live paired run: no authorized source, so the surface says the conditions are not recorded", () => {
-  // api/read-paired.js supplies conditions_status UNAVAILABLE and no conditions_source.
+test("8) an undeclared live paired run: no source at all, so the surface says the conditions are not recorded", () => {
+  // api/read-paired.js supplies conditions_status UNAVAILABLE always, and a conditions
+  // source only where the declaration log names a current declaration. This is the branch
+  // where it names none.
   const claim = describeClaimState(pairedResult({ conditions_status: CONDITIONS_STATUS.UNAVAILABLE }));
   assert.equal(claim.state_id, CLAIM_STATE.OBSERVED_DIFFERENCE_NO_BASIS);
   assert.equal(claim.claim_register, CLAIM_REGISTER.OBSERVED_DIFFERENCE);

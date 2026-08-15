@@ -11,10 +11,13 @@
 //
 // The load-bearing asymmetry: MATCHED_CONDITIONS needs an enumerated authorized basis AND
 // an affirmative MATCHED determination. Absent, unrecognized, unavailable, and
-// client-declared bases all land on OBSERVED_DIFFERENCE. Nothing normalizes upward. No live
-// surface supplies an authorized basis today — the paste-back capture is client-side and the
-// endpoint never sees it — so check 3 is the production case and checks 1 and 6 exist to
-// prove the semantic contract a later pass will implement is already enforced here.
+// client-declared bases all land on OBSERVED_DIFFERENCE. Nothing normalizes upward.
+//
+// No live surface supplies an AUTHORIZED basis, so checks 1 and 6 exist to prove the
+// semantic contract a later pass will implement is already enforced here. A live run does
+// supply a client-declared basis when its declaration log names a current declaration;
+// check 3 is the branch where the log names none, and the wiring that decides between the
+// two is tested through the real endpoint in test/reader-paired.test.mjs.
 //
 // Check 5 is the honest one. See its test body: the named subset is correct, and
 // PairedDeltaView does not yet read it.
@@ -159,9 +162,9 @@ test("2) a REPORTED_CLIENT_DECLARATION saying MATCHED normalizes to OBSERVED_DIF
   assert.notEqual(built.claim_basis, CLAIM_BASIS.AUTHORIZED_MATCHED_BASIS);
 });
 
-test("3) an absent basis normalizes downward — and that is what the live endpoint produces", () => {
-  // Not a synthetic basis: this is the real adapter on real delta items. The paste-back
-  // capture never reaches this endpoint, so every paired finding in production lands here.
+test("3) an absent basis normalizes downward — and that is what an undeclared live run produces", () => {
+  // Not a synthetic basis: this is the real adapter on real delta items, called the way
+  // the endpoint calls it for a pair whose declaration log names no current declaration.
   const canonical = canonicalFrom([QUOTABLE_DELTA, OMISSION_DELTA]);
   assert.equal(canonical.findings.length, 2);
   for (const f of canonical.findings) {

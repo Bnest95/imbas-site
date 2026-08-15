@@ -2,10 +2,10 @@
 //
 // WHY THIS MODULE EXISTS. The ceiling was written down four times: twice as a number
 // (api/read.js, api/read-paired.js) and twice as prose inside a sentence shown to a
-// person ("over 1200 words"). The client never checked it at all, so a 1925-word answer
-// armed the run button, bought a round trip, and came back rejected. Fixing that by
-// adding a fifth copy to the client would make the drift worse, not better: five truths
-// about one number, and a copy edit in one of them silently making the button lie.
+// person. The client never checked it at all, so an answer well over the limit armed the
+// run button, bought a round trip, and came back rejected. Fixing that by adding a fifth
+// copy to the client would make the drift worse, not better: five truths about one
+// number, and a copy edit in one of them silently making the button lie.
 //
 // So the number is stated once here and every consumer imports it — the two endpoints
 // that enforce it and the client surfaces that preflight against it. This is the pattern
@@ -25,7 +25,12 @@
 // which is a false measurement. Better to refuse than to measure a fragment. The coarse
 // character clip in each endpoint is the abuse guard; this is the semantic ceiling a real
 // inspection should stay under.
-export const ANSWER_WORD_MAX = 1200;
+//
+// Raised from 1200 to 2500 on founder ruling, 2026-08-15. The old number had no
+// derivation anywhere in the tree — no token arithmetic, no cost model, no timeout
+// budget — and read as a historical guardrail. Nothing about the reject-not-clip
+// rationale above depends on where the number sits.
+export const ANSWER_WORD_MAX = 2500;
 
 // One counter, shared. The server used a \S+ match and the client used a \s+ split; they
 // agreed on ordinary prose, which is precisely what makes two implementations dangerous —

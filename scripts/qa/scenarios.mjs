@@ -757,12 +757,14 @@ const pairedEmptyPayload = () =>
 //
 // THE ONE PLACE A FIXTURE BYPASSES THE ENDPOINT ADAPTER, so the reason is in writing.
 //
-// buildCanonicalPaired stamps every finding conditions_status UNAVAILABLE and supplies
-// no conditions_source, because the paste-back capture is client-side and the endpoint
-// never receives it. Four of the six claim states reader-provenance.js can display are
-// therefore unreachable through any endpoint in this build. A board that photographed
-// only what the endpoints emit would ship four labels no one has ever seen rendered,
-// and the first person to see them would be the first person whose run reached one.
+// buildCanonicalPaired stamps every finding conditions_status UNAVAILABLE, and it takes
+// its conditions_source from the declaration log, which no board fixture drives. Two of
+// the six claim states reader-provenance.js can display stay unreachable through any
+// endpoint in this build, because both need an AUTHORIZED source and no live surface
+// supplies one. A board
+// that photographed only what the endpoints emit would ship labels no one has ever seen
+// rendered, and the first person to see them would be the first person whose run reached
+// one.
 //
 // What stops this drifting away from the adapter: test/qa-board-coverage.test.mjs
 // asserts this builder and buildCanonicalPaired produce the same result except for the

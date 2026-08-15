@@ -2,9 +2,9 @@
 //
 // THE TWO PRODUCTION DEFECTS THIS FILE HOLDS CLOSED.
 //
-//   1. THE CLIENT DID NOT KNOW THE LIMIT. The endpoints reject an answer over 1200 words
-//      with a fast 400. The compose UI counted words, displayed the count, armed the run
-//      button, and let a 1925-word answer buy a round trip to learn what was knowable
+//   1. THE CLIENT DID NOT KNOW THE LIMIT. The endpoints reject an over-length answer with
+//      a fast 400. The compose UI counted words, displayed the count, armed the run
+//      button, and let an over-limit answer buy a round trip to learn what was knowable
 //      while the person was still typing.
 //
 //   2. THE RE-ARM LOOP. After that rejection, re-pasting the SAME over-limit answer
@@ -57,6 +57,17 @@ const BUNDLE = readFileSync(new URL("../workbench.bundle.js", import.meta.url), 
 
 const words = (n) => Array.from({ length: n }, (_, i) => `w${i}`).join(" ");
 
+// The ceiling moves by founder ruling — 1200 to 2500 on 2026-08-15 — so the behavioral
+// tests name their fixtures by RELATIONSHIP to it rather than by value. A test that spelled
+// the old number would not fail after a raise; it would quietly stop describing the
+// boundary and start describing a legal answer. Only section 1's explicit pin and section
+// 6's full-string pins state the number, which is exactly where stating it is the point.
+const AT_CEILING = ANSWER_WORD_MAX;
+const ONE_PAST = ANSWER_WORD_MAX + 1;
+const WELL_OVER = ANSWER_WORD_MAX + 425;
+const CLEAN = 528; // a real observed run, far under any ceiling this product has had
+const TRIMMED = ANSWER_WORD_MAX - 300; // the edit that brings an over-limit answer back
+
 // Lift one `const NAME = <expr>;` derivation out of ONE component and return it as a
 // function of the names it reads. Whatever shape the expression takes, it runs.
 //
@@ -79,12 +90,12 @@ function derivation(component, name, params) {
 // ── 1. The ceiling and its counter ───────────────────────────────────────────
 
 test("the ceiling is stated once and the counter agrees with it", () => {
-  assert.equal(ANSWER_WORD_MAX, 1200);
-  assert.equal(countAnswerWords(words(1200)), 1200);
-  assert.equal(isAnswerOverWordMax(words(1200)), false, "exactly at the ceiling is accepted");
-  assert.equal(isAnswerOverWordMax(words(1201)), true, "one word past it is not");
-  assert.deepEqual(answerWordState(words(1925)), { words: 1925, max: 1200, over: true });
-  assert.deepEqual(answerWordState(words(528)), { words: 528, max: 1200, over: false });
+  assert.equal(ANSWER_WORD_MAX, 2500, "the ceiling stands at 2500 by founder ruling, 2026-08-15");
+  assert.equal(countAnswerWords(words(AT_CEILING)), AT_CEILING);
+  assert.equal(isAnswerOverWordMax(words(AT_CEILING)), false, "exactly at the ceiling is accepted");
+  assert.equal(isAnswerOverWordMax(words(ONE_PAST)), true, "one word past it is not");
+  assert.deepEqual(answerWordState(words(WELL_OVER)), { words: WELL_OVER, max: ANSWER_WORD_MAX, over: true });
+  assert.deepEqual(answerWordState(words(CLEAN)), { words: CLEAN, max: ANSWER_WORD_MAX, over: false });
 });
 
 test("empty and whitespace-only input count as zero, never as over", () => {
@@ -102,16 +113,16 @@ test("the primary compose CTA does not arm on an over-limit answer", () => {
 
   const armed = (answer) => isReady(true, !!answer.trim(), overMax(answer, answerWordState));
 
-  assert.equal(armed(words(528)), true, "a clean answer still arms — the fix is not a blanket block");
-  assert.equal(armed(words(1200)), true, "exactly at the ceiling still arms; the server accepts it");
-  assert.equal(armed(words(1925)), false, "the 1925-word answer from the audit must not arm");
-  assert.equal(armed(words(1201)), false, "one word past the ceiling must not arm");
+  assert.equal(armed(words(CLEAN)), true, "a clean answer still arms — the fix is not a blanket block");
+  assert.equal(armed(words(AT_CEILING)), true, "exactly at the ceiling still arms; the server accepts it");
+  assert.equal(armed(words(WELL_OVER)), false, "an answer well past the ceiling must not arm");
+  assert.equal(armed(words(ONE_PAST)), false, "one word past the ceiling must not arm");
 });
 
 test("the follow-up lane CTA does not arm on an over-limit second answer", () => {
   const overMax = derivation("PairedTest", "answerOverMax", ["targeted", "answerWordState"]);
-  assert.equal(overMax(words(528), answerWordState), false);
-  assert.equal(overMax(words(1925), answerWordState), true);
+  assert.equal(overMax(words(CLEAN), answerWordState), false);
+  assert.equal(overMax(words(WELL_OVER), answerWordState), true);
 
   // The button's own disabled/armed expressions, lifted from the JSX it renders.
   const body = bodyOf("PairedTest");
@@ -128,8 +139,8 @@ test("the chip lane CTA does not arm on an over-limit second answer", () => {
   const armed = (second) =>
     !!canCompare({ id: "chip" }, words(50), second, overMax(second, answerWordState));
 
-  assert.equal(armed(words(528)), true);
-  assert.equal(armed(words(1925)), false);
+  assert.equal(armed(words(CLEAN)), true);
+  assert.equal(armed(words(WELL_OVER)), false);
 });
 
 test("the first answer is NOT preflighted — only the second is word-gated at the endpoint", () => {
@@ -138,7 +149,7 @@ test("the first answer is NOT preflighted — only the second is word-gated at t
   const canCompare = derivation("ChipLane", "canCompare", [
     "entry", "firstAnswer", "secondAnswer", "secondAnswerOverMax",
   ]);
-  assert.equal(!!canCompare({ id: "chip" }, words(5000), words(100), false), true);
+  assert.equal(!!canCompare({ id: "chip" }, words(ANSWER_WORD_MAX * 3), words(100), false), true);
 });
 
 // ── 3. Defect 2: an invalid payload cannot return to an armed state ──────────
@@ -147,7 +158,7 @@ test("re-pasting the identical over-limit answer does not re-arm the CTA", () =>
   const overMax = derivation("ReaderWorkbench", "answerOverMax", ["answer", "answerWordState"]);
   const isReady = derivation("ReaderWorkbench", "isReady", ["hasQuestion", "hasAnswer", "answerOverMax"]);
 
-  const doomed = words(1925);
+  const doomed = words(WELL_OVER);
 
   // The production sequence, in order.
   let errors = {};
@@ -165,18 +176,18 @@ test("re-pasting the identical over-limit answer does not re-arm the CTA", () =>
   assert.equal(armed(), false, "5. and the CTA STAYS disarmed — this is the defect");
 
   // 6. Only trimming the answer under the ceiling arms it again.
-  const trimmed = words(900);
+  const trimmed = words(TRIMMED);
   assert.equal(isReady(true, true, overMax(trimmed, answerWordState)), true);
 });
 
 test("the over-limit notice is derived from the text, so it survives an error clear", () => {
   // A stored notice could be blanked; a derived one is recomputed from the same text and
   // comes back identical. Same string before and after proves it is not stored.
-  const doomed = words(1925);
+  const doomed = words(WELL_OVER);
   const before = answerOverMaxNotice(doomed);
   const after = answerOverMaxNotice(doomed);
   assert.equal(before, after);
-  assert.match(before, /\(1925\)/);
+  assert.match(before, new RegExp(`\\(${WELL_OVER}\\)`));
 });
 
 // ── 4. One source of truth: no endpoint keeps a private ceiling or counter ───
@@ -193,9 +204,15 @@ test("neither endpoint defines its own word ceiling or its own counter", () => {
 test("no user-facing copy restates the ceiling as prose", () => {
   // The number reached the person through two hard-coded sentences. Both are generated
   // from the constant now, so a change to the ceiling cannot leave the copy behind.
-  assert.doesNotMatch(SRC, /over 1200 words/, "workbench-app.jsx must not hard-code the ceiling in prose");
+  //
+  // Built from the LIVE ceiling, not spelled. Spelling the number is how this assertion
+  // dies quietly: after a raise, `/over 1200 words/` matches nothing and passes forever
+  // while a fresh hard-coded 2500 sits right where the old one was.
+  const asProse = new RegExp(`over ${ANSWER_WORD_MAX} words`);
   const paired = readFileSync(new URL("../reader-paired.js", import.meta.url), "utf8");
-  assert.doesNotMatch(paired, /over 1200 words/, "reader-paired.js must not hard-code the ceiling in prose");
+  for (const [name, src] of [["workbench-app.jsx", SRC], ["reader-paired.js", paired]]) {
+    assert.doesNotMatch(src, asProse, `${name} must not hard-code the ceiling in prose`);
+  }
 });
 
 test("the client counts with the shared counter, not a second implementation", () => {
@@ -228,8 +245,8 @@ test("the shared counter matches the retired server counter on the cases that se
     "em—dash—joined",
     "hyphen-joined-token",
     "punctuation , . ; standing alone",
-    words(1200),
-    words(1201),
+    words(AT_CEILING),
+    words(ONE_PAST),
   ];
 
   for (const s of corpus) {
@@ -241,16 +258,25 @@ test("the shared counter matches the retired server counter on the cases that se
 // ── 6. Full-string pins ─────────────────────────────────────────────────────
 
 test("the envelope strings are pinned whole, in the module and in the bundle", () => {
-  assert.equal(ANSWER_TOO_LONG_MESSAGE, "Answer is over 1200 words. Trim it and re-run.");
-  assert.equal(SECOND_ANSWER_TOO_LONG_MESSAGE, "Second answer is over 1200 words. Trim it and re-run.");
+  // Spelled out, deliberately: this is the one place the exact sentence a person reads is
+  // written down as itself. A raise is expected to move these, and moving them is a copy
+  // change that wants founder eyes — which is the whole point of a pin that must be edited
+  // by hand rather than one that recomputes and never fails.
+  assert.equal(ANSWER_TOO_LONG_MESSAGE, "Answer is over 2500 words. Trim it and re-run.");
+  assert.equal(SECOND_ANSWER_TOO_LONG_MESSAGE, "Second answer is over 2500 words. Trim it and re-run.");
   assert.equal(
-    answerOverMaxNotice(words(1925)),
-    "Answer is over 1200 words (1925). Trim it and re-run.",
+    answerOverMaxNotice(words(2925)),
+    "Answer is over 2500 words (2925). Trim it and re-run.",
   );
   assert.equal(
-    secondAnswerOverMaxNotice(words(1925)),
-    "Second answer is over 1200 words (1925). Trim it and re-run.",
+    secondAnswerOverMaxNotice(words(2925)),
+    "Second answer is over 2500 words (2925). Trim it and re-run.",
   );
+
+  // The count in those two pins must describe an answer the server would actually reject.
+  // Without this, a raise past 2925 would leave the pins passing while they illustrate the
+  // notice with a legal answer — a pin that no longer pins the case it was written for.
+  assert.ok(2925 > ANSWER_WORD_MAX, "the pinned example count must sit above the live ceiling");
 
   // A cure that only holds in source is not a cure: these compile into what ships.
   assert.ok(BUNDLE.includes("Answer is over "), "the rejection sentence must reach the bundle");
@@ -266,11 +292,11 @@ test("the preflight notice is the rejection sentence carrying its count", () => 
     [answerOverMaxNotice, ANSWER_TOO_LONG_MESSAGE],
     [secondAnswerOverMaxNotice, SECOND_ANSWER_TOO_LONG_MESSAGE],
   ]) {
-    const shown = notice(words(1925));
+    const shown = notice(words(WELL_OVER));
     // Asserted separately: strip-and-compare alone would pass a notice that never set
     // the count in at all, which is the failure the anchored insertion can actually have.
-    assert.ok(shown.includes("(1925)"), "the notice must carry the live count");
-    assert.equal(shown.replace(" (1925)", ""), rejection);
+    assert.ok(shown.includes(`(${WELL_OVER})`), "the notice must carry the live count");
+    assert.equal(shown.replace(` (${WELL_OVER})`, ""), rejection);
   }
 });
 
