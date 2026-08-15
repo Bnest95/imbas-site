@@ -18,6 +18,11 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 import {
   createPerceptionHandler,
@@ -504,6 +509,24 @@ test("perceptionTap returns the honest per-mode question and the exact enums", (
   assert.equal(paired.prompt, "How big did the difference feel?");
   assert.deepEqual(paired.options.map((o) => o.value), PAIRED_PERCEPTION_VALUES);
   assert.equal(perceptionTap("nope"), null);
+});
+
+// The store keeps one field, "Perception Tap", and single_yes / single_no carry no
+// record of which question was asked. So the question the client shows and the question
+// the server's header comment documents have to be the same question, or a row read back
+// months from now answers a prompt nobody can name. Nothing in the row can settle it
+// after the fact: a run's stored "Finding Types" counts every finding the model returned,
+// while what the person saw is gated on the anchor-resolved surfaced count, which is
+// never persisted. Two runs with identical stored counts can have shown opposite screens.
+// That is why the prompt is one prompt per mode, and why this pin is here.
+test("the server's documented prompt is the prompt the client shows", () => {
+  const api = readFileSync(join(ROOT, "api", "reader-perception.js"), "utf8");
+  for (const mode of ["single", "paired"]) {
+    assert.ok(
+      api.includes(`- ${mode} mode: "${perceptionTap(mode).prompt}"`),
+      `api/reader-perception.js documents a ${mode} prompt that is not the one perceptionTap returns`,
+    );
+  }
 });
 
 test("no tap copy implies validation or accuracy (banned interpretation)", () => {

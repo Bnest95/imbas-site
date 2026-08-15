@@ -46,6 +46,7 @@ import {
   INJECT_HANG,
 } from "../scripts/qa/scenarios.mjs";
 import { ACT2_CAPACITY_COPY, isCapacityFallbackReason } from "../reader-paired.js";
+import { deriveStage, stageView, STAGE_RESULT } from "../reader-stage.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = readFileSync(join(ROOT, "workbench-app.jsx"), "utf8");
@@ -306,4 +307,35 @@ test("the first-load state promises an inspection, not a verdict", () => {
     // Nothing has happened, so nothing may be reported.
     assert.doesNotMatch(render, /differences surfaced|Omission: \d/, `${vp}: a count is on the arrival screen`);
   }
+});
+
+// ── The 503's way forward ────────────────────────────────────────────────────
+// The capacity state hands the person a manual continuation path in words: "You can
+// still generate and run a follow-up in your own AI." The generic failure says only
+// that the Reader did not run, and offers nothing in words. The audit read that as a
+// missing recovery seam.
+//
+// It is not missing. The control the capacity sentence points at is the chip door, and
+// both states reach it by the same derivation, so the 503 already carries the same way
+// forward the 429 does — the 429 just names it. Asserted from the stage machine rather
+// than the board, because the door's position relative to the fold differs by viewport
+// and a photograph of one rectangle cannot prove presence.
+//
+// The words stay where they are. "At capacity" is a claim about capacity, and
+// isCapacityFallbackReason("503") is false by design (above); moving that sentence onto
+// a route refusal would tell the person something the response does not support.
+test("the 503 state reaches the same continuation control the 429 state names", () => {
+  // Both failures produce a fallback body, and a fallback carries no measurement, so
+  // buildAct2 returns null and both derive the same stage.
+  const degraded = deriveStage({ hasResult: true, hasAct2: false });
+  assert.equal(degraded, STAGE_RESULT, "a degraded read lands on the result stage, capacity or not");
+  assert.equal(stageView(degraded).chipDoor, true, "and that stage carries the chip door");
+
+  // The door is one control with two mount points, and the mount that serves this stage
+  // is the late one — the early mount stands down everywhere except the follow-up stage,
+  // which a degraded read never reaches.
+  assert.match(SRC, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/);
+
+  // The seam is reused, not rebuilt: no failure-only recovery control exists.
+  assert.doesNotMatch(SRC, /retryRead|autoRetry|recoverFrom5\d\d/i, "a 503 must not retry on the person's behalf");
 });

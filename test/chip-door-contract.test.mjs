@@ -54,7 +54,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   stageView,
+  deriveStage,
   ALL_STAGES,
+  LANE_INSPECT,
+  LANE_CHIPS,
   STAGE_COMPOSE,
   STAGE_INSPECTING,
   STAGE_RESULT,
@@ -68,6 +71,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), "utf8");
 
 const JSX = read("workbench-app.jsx");
+const BUNDLE = read("workbench.bundle.js");
 const WORKBENCH_CSS = read("workbench.css");
 
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -134,14 +138,73 @@ test("the door tells assistive technology what it controls, and names the lane b
   assert.match(JSX, new RegExp(`id="${LANE_ID}"`), "the id the door points at must exist on the lane");
 });
 
-test("the door's two labels are the plain-language pair, and neither says open or close", () => {
-  const door = doorMarkup();
-  const labels = [...door.matchAll(/"((?:Show|Hide)[^"]*)"/g)].map((m) => m[1]);
-  assert.deepEqual(
-    labels.sort(),
-    ["Hide follow-up checks", "Show follow-up checks"],
-    "the lane is hidden rather than unmounted, so Show/Hide describes what happens and Open/Close does not",
+// AMENDED — the labels. The pair was "Show follow-up checks" / "Hide follow-up checks",
+// and the closed half described an operation the door does not perform. Pressing it does
+// not disclose hidden content in place: `openChipLane` sets the lane, `deriveStage`
+// returns STAGE_CHIPS, and that stage's view carries pasteBox:false, result:false and
+// act2:false, so the source text and the result leave the rendered stage. A disclosure
+// verb promised that the page would stay put. The closed label now names where the press
+// goes. "Checks" went with it — the lane's own copy says Imbas has not determined that
+// any of these problems are present, and a check is something an instrument runs.
+test("the door's two labels name the operation, and neither promises mere disclosure", () => {
+  const pair = doorMarkup().match(/\{lane === LANE_CHIPS \? "([^"]+)" : "([^"]+)"\}/);
+  assert.ok(pair, "the door must take its label from one ternary on the live lane state");
+  const [, whenOpen, whenClosed] = pair;
+  assert.equal(
+    whenClosed,
+    "Choose your own follow-up",
+    "the closed label names where the press goes, because the stage swaps rather than expands",
   );
+  assert.equal(
+    whenOpen,
+    "Hide your own follow-up",
+    "the open label names the follow-up, never the choices: by then the lane may be holding a comparison",
+  );
+  for (const label of [whenOpen, whenClosed]) {
+    assert.doesNotMatch(label, /\bshow\b/i, "Show promises that content appears in place; the stage swaps instead");
+    assert.doesNotMatch(label, /\b(?:open|close)\b/i, "the lane is hidden rather than unmounted, so Open/Close describes the wrong thing");
+  }
+  // The built artifact is what a runner's browser reads, and a checked-in bundle can be
+  // stale while the source is right.
+  for (const label of [whenOpen, whenClosed]) {
+    assert.equal(countOf(BUNDLE, label), 1, `workbench.bundle.js must carry "${label}" exactly once`);
+  }
+  assert.equal(countOf(BUNDLE, "follow-up checks"), 0, "the retired label must not survive in the shipped bundle");
+});
+
+// Which label a person actually reads, per stage. `deriveStage` tests the lane before it
+// tests anything else, so the open label is reachable on STAGE_CHIPS alone and the closed
+// label has to be accurate on all four of the other stages the door renders on. That is
+// why one shared pair works here without a stage-aware seam: nothing in the closed label
+// is true of only some of them.
+test("the closed label carries four stages and the open label carries one", () => {
+  const labelFor = (lane) => (lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up");
+  const byStage = new Map();
+  for (const lane of [LANE_INSPECT, LANE_CHIPS]) {
+    for (const busy of [false, true]) {
+      for (const hasResult of [false, true]) {
+        for (const hasAct2 of [false, true]) {
+          for (const followUpOpen of [false, true]) {
+            for (const hasDelta of [false, true]) {
+              const stage = deriveStage({ lane, busy, hasResult, hasAct2, followUpOpen, hasDelta });
+              if (!stageView(stage).chipDoor) continue;
+              const seen = byStage.get(stage) || new Set();
+              seen.add(labelFor(lane));
+              byStage.set(stage, seen);
+            }
+          }
+        }
+      }
+    }
+  }
+  const table = [...byStage.entries()].map(([stage, seen]) => [stage, [...seen].sort()]).sort();
+  assert.deepEqual(table, [
+    [STAGE_CHIPS, ["Hide your own follow-up"]],
+    [STAGE_COMPOSE, ["Choose your own follow-up"]],
+    [STAGE_DELTA, ["Choose your own follow-up"]],
+    [STAGE_FOLLOWUP, ["Choose your own follow-up"]],
+    [STAGE_RESULT, ["Choose your own follow-up"]],
+  ].sort());
 });
 
 test("the lane is hidden rather than unmounted, so a half-typed answer survives a close", () => {
