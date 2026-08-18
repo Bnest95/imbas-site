@@ -4162,6 +4162,15 @@ function MeasurementPanel({ result, context }) {
   // on the way out, so React state can be one leading newline out of register with
   // the coordinates, which is exactly enough to put every mark over the wrong words.
   const reading = buildSourceReading({ artifactText: receipt?.open_run?.answer || "", findings });
+  // The register's cards, addressed by id, built once for the whole list rather than
+  // scanned per row. The join itself is canonical — classifyRegisterOutcome made it
+  // server-side and describeFinding hands each row the one card id it resolved to —
+  // so this is a lookup table and never a second derivation of the relationship. A
+  // row that finds nothing here renders nothing; see FindingQuestion.
+  const cardsById = new Map(
+    (result?.checks?.cards || []).map((c) => [c.id, c])
+  );
+  const run = receipt?.open_run?.provenance?.request_id || "";
   return (
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
       {/* READ leads the panel, because the answer with the marks in it is the thing a
@@ -4223,6 +4232,9 @@ function MeasurementPanel({ result, context }) {
                       mark={(reading.marks_by_finding[f.id] || [])[i]}
                     />
                   ))}
+                  {/* Last in the row, because it is what a reader does after they have
+                      read what the mark points at — not before. */}
+                  <FindingQuestion card={cardsById.get(f.verification_card_id) || null} run={run} />
                 </li>
               ))}
             </ul>
@@ -4290,6 +4302,69 @@ function FindingEvidence({ anchor, mark }) {
     );
   }
   return null;
+}
+
+// The run-specific question, promoted to the row that produced it.
+//
+// WHAT THIS FIXES. The Check Register generates a question per finding, and until
+// now the only place to reach one was the register far below — so the fixed probe,
+// which sits further down still, was what a person reached first. A register that
+// named GI-bleed warning signs and phrased a question for them was routed past. The
+// intelligence was on the page and the product walked over it. This puts the finding's
+// own question one click from the finding.
+//
+// WHAT IT IS NOT. It does not advance the run. Copying here writes the question to the
+// clipboard and stops; the paste box does not open, no stage changes, and the person
+// carries the question to their own AI and comes back or does not. The two-question
+// test below remains the one wired path into COMPARE, and its prompt is untouched.
+//
+// WHY A LINK AND NOT A BUTTON. The page has one filled-accent moment and it belongs to
+// the primary CTA. Promoting this row action to a filled control would put a second
+// one on the same screen and the accent would stop meaning anything. Ember text with a
+// rule under it reads as the strongest thing in the row without competing with the
+// page. It is a real <button> underneath, so it is keyboard-operable and announces as
+// what it is.
+//
+// NO CARD, NO ELEMENT. Most findings never clear the both-ends-quotable rule, so most
+// rows get nothing here — no placeholder, no disabled control, no focus stop, no
+// spacing shell. A dangling id resolves to null and takes the same path, so a register
+// that dropped a card between assembly and render degrades to silence rather than to a
+// control that copies an empty string.
+function FindingQuestion({ card, run }) {
+  const [copied, setCopied] = useState(false);
+  const [copyFail, setCopyFail] = useState("");
+  if (!card || !(card.verification_question || "").trim()) return null;
+
+  const copyQuestion = async () => {
+    try {
+      await navigator.clipboard.writeText(card.verification_question);
+      setCopied(true);
+      setCopyFail("");
+      // The same event the register's own copy fires. One act, one name — a question
+      // copied from the row and a question copied from the card are the same thing
+      // happening, and splitting the event would split the count of it.
+      emitReaderEvent(READER_EVENTS.TARGET_QUESTION_COPIED, { run, check: card.finding_type });
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopyFail("Could not copy");
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+
+  return (
+    <p className="wb-measure__question">
+      <button
+        type="button"
+        className="wb-measure__question-link wb-focus"
+        onClick={copyQuestion}
+      >
+        {copied ? CHECK_UI.copied_affordance : CHECK_UI.copy_affordance}
+      </button>
+      {copyFail ? (
+        <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span>
+      ) : null}
+    </p>
+  );
 }
 
 // One number, one element, everywhere a mark is named. The label is read and not

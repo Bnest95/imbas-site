@@ -264,6 +264,16 @@ async function renderPanel(findings) {
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
+    // Stubbed, unlike the evidence element beside it, and the difference is what each
+    // one is to THIS file's claim. The evidence element is how an anchor reaches a
+    // reader, so a stub would let the panel pass while the thing these tests are about
+    // was broken. The row's question control is not part of generic rendering — it
+    // reads one descriptor key and resolves it against the register — and it is proven
+    // where it belongs, in test/finding-question-promotion.test.mjs, against the real
+    // component with real cards. Supplying it here keeps this file's sandbox honest
+    // about the panel's free identifiers without pulling the register into a file that
+    // has nothing to say about it.
+    "FindingQuestion",
     code,
   );
   const Panel = make(
@@ -279,6 +289,7 @@ async function renderPanel(findings) {
     stringConstant(SRC, "MEASURE_INSPECT_SUMMARY"),
     stringConstant(SRC, "MEASURE_SOURCE_LABEL"),
     "boundary",
+    stub,
     stub,
     stub,
   );

@@ -4475,6 +4475,47 @@
   color: rgba(205, 192, 176, 0.88);
 }
 
+/* The run-specific question, promoted into the row that produced it.
+
+   ACCENT LAW. Ember text with a rule under it, never a filled control. The page gets
+   one filled-accent moment and the primary CTA has it; a second one in every finding
+   row would spend the accent until it stopped reading as emphasis anywhere. This has
+   to be the strongest thing in the row and quieter than the page's one button at the
+   same time, and text-plus-underline in the accent colour is that position.
+
+   It is a <button>, so the reset here is undoing the agent stylesheet rather than
+   dressing a link up as a control: no chrome, no box, inherited metrics, and a text
+   cursor target that matches the words. Focus is left to the browser's own ring —
+   nothing here removes an outline. */
+.wb-measure__question {
+  margin: 0.2rem 0 0;
+}
+
+.wb-measure__question-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  /* `inherit`, not var(--font-sans) like the rows around it. That token is declared
+     nowhere, so all 86 of its uses already compute to inherit — this asks for the same
+     face by naming what it actually resolves to, which keeps the row visually identical
+     to its siblings without growing a count test/typography-tokens.test.mjs holds flat
+     until the token gets a ruling. A button needs it stated either way: the agent
+     stylesheet would otherwise serve its own. */
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ember);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(var(--ember-rgb), 0.55);
+  cursor: pointer;
+}
+
+.wb-measure__question-link:hover {
+  text-decoration-color: var(--ember);
+}
+
 /* A record-level absence. It sits where a quotation would sit and reads as plainly
    unlike one: upright rather than italic, and with no left rule, because the rule on
    .wb-measure__anchor is what marks an excerpt lifted out of the answer. Nothing here
