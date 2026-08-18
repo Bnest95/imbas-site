@@ -136,12 +136,45 @@ test("a finding carrying no register disposition at all publishes null", () => {
   assert.equal(describeFinding(nulled).verification_card_id, null);
 });
 
+test("an EMITTED status is necessary but not sufficient — the id must survive trimming", () => {
+  // RULING: verification_card_id means a usable card relationship, not merely a register
+  // that reached EMITTED. These two records claim EMITTED and address nothing, so the
+  // field is null and the row renders nothing.
+  //
+  // Neither can be built through registerDisposition — see the guard test below — so
+  // both are hand-seated, which is the same class of record as the missing-disposition
+  // case above: an older payload, a hand-built object, a field lost in transit. The
+  // point is that the descriptor answers them without throwing and without guessing.
+  const empty = { ...findingWith(undefined), check_register: { status: REGISTER_STATUS.EMITTED, card_id: "" } };
+  assert.equal(describeFinding(empty).verification_card_id, null, "an empty card id addresses nothing");
+
+  const blank = { ...findingWith(undefined), check_register: { status: REGISTER_STATUS.EMITTED, card_id: "   " } };
+  assert.equal(describeFinding(blank).verification_card_id, null, "a whitespace card id addresses nothing");
+
+  // A non-string id is the same answer for the same reason.
+  const numeric = { ...findingWith(undefined), check_register: { status: REGISTER_STATUS.EMITTED, card_id: 7 } };
+  assert.equal(describeFinding(numeric).verification_card_id, null);
+});
+
+test("normalization happens once, in the derivation, so no consumer trims", () => {
+  // This one IS canonically reachable. registerDisposition tests the id by its trimmed
+  // length but stores what it was given, so a padded id passes the guard and travels
+  // whole. The descriptor publishes it trimmed, which is what a Map lookup needs.
+  const padded = registerDisposition({ status: REGISTER_STATUS.EMITTED, card_id: `  ${CARD_ID}  ` });
+  assert.equal(padded.card_id, `  ${CARD_ID}  `, "the record keeps the id it was handed");
+  assert.equal(
+    describeFinding(findingWith(padded)).verification_card_id,
+    CARD_ID,
+    "the view receives the id it can actually look up",
+  );
+});
+
 test("the derivation keys on the status, and the record makes that the only safe test", () => {
-  // Why the descriptor compares against EMITTED rather than testing the id for
-  // truthiness: the record refuses to mint a card id on any other status, so status is
-  // the fact and the id is a consequence of it. A view that read the id directly would
-  // be reading a field the record guarantees is null anyway — right by accident, and
-  // wrong the moment that guarantee moved.
+  // Why the descriptor tests the status rather than the id alone: the record refuses to
+  // mint a card id on any other status, so status is the fact and the id is a
+  // consequence of it. A view that read the id by itself would be reading a field the
+  // record guarantees is null anyway — right by accident, and wrong the moment that
+  // guarantee moved.
   assert.throws(
     () => registerDisposition({ status: REGISTER_STATUS.ELIGIBLE, card_id: CARD_ID }),
     /cannot carry a card_id/,
@@ -156,6 +189,18 @@ test("the derivation keys on the status, and the record makes that the only safe
     /cannot carry a card_id/,
   );
   assert.throws(() => registerDisposition({ status: REGISTER_STATUS.EMITTED }), /EMITTED requires a card_id/);
+
+  // And the constructor already tests the id by its trimmed length, which is why the
+  // empty and whitespace cases above have to be hand-seated to exist at all. The
+  // descriptor's own check is defense against records that never came through here.
+  assert.throws(
+    () => registerDisposition({ status: REGISTER_STATUS.EMITTED, card_id: "" }),
+    /EMITTED requires a card_id/,
+  );
+  assert.throws(
+    () => registerDisposition({ status: REGISTER_STATUS.EMITTED, card_id: "   " }),
+    /EMITTED requires a card_id/,
+  );
 });
 
 test("the view contract stays narrow — no disposition object, no status enum", () => {

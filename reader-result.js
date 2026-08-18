@@ -1093,6 +1093,16 @@ export function buildFinding({
 // where new finding types register.
 // ---------------------------------------------------------------------------
 
+// The usable card id a register points at, or null. Absent register, absent
+// disposition, a status other than EMITTED, a non-string id, and an id that is
+// empty once trimmed all answer the same way, because a row can do nothing with
+// any of them. Trimming happens here so no consumer has to.
+function usableCardId(register) {
+  if (!register || register.status !== REGISTER_STATUS.EMITTED) return null;
+  const id = typeof register.card_id === "string" ? register.card_id.trim() : "";
+  return id || null;
+}
+
 export function describeFinding(finding) {
   const shape = getFindingShape(finding && finding.shape);
   if (!shape) reject(`cannot describe an unregistered shape: ${finding && finding.shape}`);
@@ -1152,9 +1162,21 @@ export function describeFinding(finding) {
     //
     // So this narrows to the single addressable fact: the id of the card this finding
     // actually produced, or null. EMITTED is the only status that carries a card id
-    // (registerDisposition rejects a card_id on any other status), so the derivation
-    // is a status equality and not a truthiness test — a view must never infer that a
-    // card exists from an id that happens to be a string.
+    // (registerDisposition rejects a card_id on any other status), so the status test
+    // is an equality and not a truthiness test — a view must never infer that a card
+    // exists from an id that happens to be a string.
+    //
+    // WHAT THE FIELD MEANS, by ruling: a usable card relationship, not merely a
+    // register that reached EMITTED. An id of "" or "   " is EMITTED bookkeeping that
+    // addresses nothing, and a field that promised an id would be lying if it handed
+    // one of those to a row. So the status equality is a necessary condition and not
+    // a sufficient one, and the trimmed id must survive on its own.
+    //
+    // NORMALIZATION LIVES HERE, once, rather than at each reader. The descriptor
+    // publishes the trimmed id, so a consumer never trims and never has to decide what
+    // a padded id means. The renderer's own guards stay — a Map lookup can still miss,
+    // and defense in depth is cheaper than a contract that has to be perfect — but
+    // they are now a second line rather than the only one.
     //
     // NULLABLE BY CONTRACT. A finding with no card is the ordinary case, not a
     // degraded one: most findings never clear the both-ends-quotable rule. null here
@@ -1164,10 +1186,7 @@ export function describeFinding(finding) {
     // The canonical record is unchanged. This adds no field to buildFinding, no wire
     // format, no schema — check_register still travels whole, and this is the view's
     // narrower reading of it.
-    verification_card_id:
-      finding.check_register && finding.check_register.status === REGISTER_STATUS.EMITTED
-        ? finding.check_register.card_id
-        : null,
+    verification_card_id: usableCardId(finding.check_register),
   });
 }
 
