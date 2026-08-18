@@ -1140,6 +1140,34 @@ export function describeFinding(finding) {
     conditions_status: finding.conditions_status,
     reader_state: finding.reader_state,
     disposition: finding.disposition,
+    // THE ONE THING A ROW NEEDS TO REACH ITS OWN QUESTION, and nothing more.
+    //
+    // The record already holds the join: classifyRegisterOutcome content-matches a
+    // finding's check block against the register's cards and seats the result on the
+    // finding as check_register. What it seats is a disposition — a status enum, a
+    // card id, and a list of suppression reasons — and a view has no business with
+    // most of that. SUPPRESSED-because-ANCHOR_NOT_VERBATIM is an account of why the
+    // register stayed quiet, which is a fact about the instrument, and the descriptor
+    // is what a reader's row holds.
+    //
+    // So this narrows to the single addressable fact: the id of the card this finding
+    // actually produced, or null. EMITTED is the only status that carries a card id
+    // (registerDisposition rejects a card_id on any other status), so the derivation
+    // is a status equality and not a truthiness test — a view must never infer that a
+    // card exists from an id that happens to be a string.
+    //
+    // NULLABLE BY CONTRACT. A finding with no card is the ordinary case, not a
+    // degraded one: most findings never clear the both-ends-quotable rule. null here
+    // means "this finding produced no question", and a renderer answers it by
+    // rendering nothing at all.
+    //
+    // The canonical record is unchanged. This adds no field to buildFinding, no wire
+    // format, no schema — check_register still travels whole, and this is the view's
+    // narrower reading of it.
+    verification_card_id:
+      finding.check_register && finding.check_register.status === REGISTER_STATUS.EMITTED
+        ? finding.check_register.card_id
+        : null,
   });
 }
 

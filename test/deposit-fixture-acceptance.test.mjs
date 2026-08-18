@@ -214,6 +214,12 @@ async function renderPanel() {
     "RECEIPT_BOUNDARY",
     "ProvenanceStrip",
     "ReaderReceiptActions",
+    // Stubbed. This fixture is the dense positioning record — nine marks, six of them
+    // in the body — and every assertion below is about where a mark lands and what a
+    // row says about it. The row's question control is proven against real register
+    // cards in test/finding-question-promotion.test.mjs; here it would only add nodes
+    // to the trees these assertions walk.
+    "FindingQuestion",
     code,
   );
   const Panel = make(
@@ -229,6 +235,7 @@ async function renderPanel() {
     stringConstant(SRC, "MEASURE_INSPECT_SUMMARY"),
     stringConstant(SRC, "MEASURE_SOURCE_LABEL"),
     "boundary",
+    stub,
     stub,
     stub,
   );
