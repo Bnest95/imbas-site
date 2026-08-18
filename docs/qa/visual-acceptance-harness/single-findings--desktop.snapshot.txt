@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1542
+scroll_offset: 1560
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -720,6 +720,7 @@ span "The deadline is set by state law and varies. The answer gives one number w
 blockquote "\"A landlord must return a security deposit within 30 days of the tenant moving out.\""
 span "1"
 span "mark"
+button "Copy the question" disabled=false
 span "Framing Drift"
 span "The closing line lowers the stakes of a question the person asked because the deadline had already passed."
 blockquote "\"Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.\""
