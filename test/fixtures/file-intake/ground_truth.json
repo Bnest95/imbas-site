@@ -1,0 +1,713 @@
+{
+  "f01_rendermode3": {
+    "class": "render mode 3 (invisible text)",
+    "texts": [
+      {
+        "str": "INVISIBLE-MODE3",
+        "render_mode": 3,
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "width_pt": 104.028
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f01_rendermode3.pdf",
+    "bytes": 650
+  },
+  "f02_alpha_zero": {
+    "class": "fill alpha exactly 0",
+    "texts": [
+      {
+        "str": "ALPHA-ZERO-TEXT",
+        "render_mode": 0,
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "fill_alpha": 0.0,
+        "stroke_alpha": 0.0
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f02_alpha_zero.pdf",
+    "bytes": 755
+  },
+  "f03_alpha_near_zero": {
+    "class": "fill alpha near 0 (0.004)",
+    "texts": [
+      {
+        "str": "ALPHA-NEAR-ZERO",
+        "render_mode": 0,
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "fill_alpha": 0.004,
+        "stroke_alpha": 0.004
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f03_alpha_near_zero.pdf",
+    "bytes": 763
+  },
+  "f04_outside_cropbox": {
+    "class": "text outside the crop box (+ clipped-away text)",
+    "texts": [
+      {
+        "str": "OUTSIDE-CROPBOX",
+        "origin_pdf": [
+          50,
+          300
+        ],
+        "font_size": 12,
+        "inside_cropbox": false
+      },
+      {
+        "str": "INSIDE-CROPBOX",
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12,
+        "inside_cropbox": true
+      },
+      {
+        "str": "CLIPPED-AWAY",
+        "origin_pdf": [
+          50,
+          50
+        ],
+        "font_size": 12,
+        "inside_cropbox": true,
+        "clip_rect_pdf": [
+          0,
+          0,
+          10,
+          10
+        ],
+        "inside_clip": false
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      400
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f04_outside_cropbox.pdf",
+    "bytes": 779
+  },
+  "f05_tiny_font": {
+    "class": "sub-point type: 0.5pt nominal and 12pt under 0.04 CTM",
+    "texts": [
+      {
+        "str": "TINY-HALF-POINT",
+        "font_size_nominal": 0.5,
+        "effective_size_pt": 0.5,
+        "origin_pdf": [
+          50,
+          150
+        ],
+        "ctm": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "str": "CTM-SCALED-12PT",
+        "font_size_nominal": 12,
+        "effective_size_pt": 0.48,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "ctm": [
+          0.04,
+          0,
+          0,
+          0.04,
+          50,
+          100
+        ]
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f05_tiny_font.pdf",
+    "bytes": 719
+  },
+  "f06_white_on_white": {
+    "class": "white fill text, nothing painted behind it",
+    "texts": [
+      {
+        "str": "WHITE-ON-WHITE",
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "fill_colorspace": "DeviceRGB",
+        "fill_color": [
+          1,
+          1,
+          1
+        ],
+        "render_mode": 0
+      }
+    ],
+    "painted_background": null,
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f06_white_on_white.pdf",
+    "bytes": 653
+  },
+  "f07_covered_text": {
+    "class": "text under an opaque rectangle, known z-order",
+    "texts": [
+      {
+        "str": "COVERED-BY-RECT",
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "width_pt": 116.004,
+        "glyph_box_pdf": [
+          50,
+          100,
+          166.004,
+          108.604
+        ],
+        "painted_before_coverer": true,
+        "fully_covered": true
+      },
+      {
+        "str": "NOT-COVERED",
+        "font_size": 12,
+        "origin_pdf": [
+          50,
+          50
+        ],
+        "fully_covered": false
+      }
+    ],
+    "coverer": {
+      "op": "re f",
+      "rect_pdf": [
+        45,
+        96,
+        175,
+        114
+      ],
+      "fill_colorspace": "DeviceRGB",
+      "fill_color": [
+        0,
+        0,
+        0
+      ],
+      "alpha": 1.0,
+      "drawn_after_text": true
+    },
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f07_covered_text.pdf",
+    "bytes": 724
+  },
+  "f08_annotation_text": {
+    "class": "text carried in annotations, not in the content stream",
+    "texts": [
+      {
+        "str": "PAGE-BODY-CONTROL",
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12
+      }
+    ],
+    "annotations": [
+      {
+        "subtype": "Text",
+        "contents": "ANNOT-SECRET-TEXT",
+        "rect": [
+          200,
+          120,
+          220,
+          140
+        ]
+      },
+      {
+        "subtype": "FreeText",
+        "contents": "FREETEXT-BODY-TEXT",
+        "rect": [
+          50,
+          140,
+          300,
+          170
+        ]
+      },
+      {
+        "subtype": "Widget",
+        "field_name": "probefield",
+        "field_value": "FIELDVALUE-42",
+        "rect": [
+          50,
+          20,
+          200,
+          40
+        ]
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f08_annotation_text.pdf",
+    "bytes": 1190
+  },
+  "f09_metadata_text": {
+    "class": "text in document metadata and in an embedded attachment",
+    "texts": [
+      {
+        "str": "PAGE-BODY-CONTROL",
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12
+      }
+    ],
+    "info": {
+      "Title": "META-TITLE-STRING",
+      "Author": "META-AUTHOR-STRING",
+      "Subject": "META-SUBJECT-STRING",
+      "Keywords": "META-KEYWORD-ALPHA"
+    },
+    "xmp_contains": [
+      "XMP-SECRET-MARKER",
+      "XMP-DESCRIPTION-PAYLOAD"
+    ],
+    "attachments": [
+      {
+        "filename": "attached.txt",
+        "content": "ATTACHMENT-PAYLOAD-TEXT\n"
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f09_metadata_text.pdf",
+    "bytes": 1843
+  },
+  "f10_hidden_ocg": {
+    "class": "text inside an optional-content group that is OFF by default",
+    "texts": [
+      {
+        "str": "VISIBLE-OCG-TEXT",
+        "origin_pdf": [
+          50,
+          140
+        ],
+        "font_size": 12,
+        "ocg_name": "VisibleLayer",
+        "ocg_visible": true
+      },
+      {
+        "str": "HIDDEN-OCG-TEXT",
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12,
+        "ocg_name": "HiddenLayer",
+        "ocg_visible": false
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f10_hidden_ocg.pdf",
+    "bytes": 1033
+  },
+  "f11_zero_width": {
+    "class": "zero-width and format characters inside a text run",
+    "texts": [
+      {
+        "str": "AB​CD‌E‍F⁠G­H﻿I",
+        "codepoints": [
+          "U+0041",
+          "U+0042",
+          "U+200B",
+          "U+0043",
+          "U+0044",
+          "U+200C",
+          "U+0045",
+          "U+200D",
+          "U+0046",
+          "U+2060",
+          "U+0047",
+          "U+00AD",
+          "U+0048",
+          "U+FEFF",
+          "U+0049"
+        ],
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12,
+        "n_chars": 15
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f11_zero_width.pdf",
+    "bytes": 1750
+  },
+  "f12_bidi_override": {
+    "class": "bidi override / isolate control characters",
+    "texts": [
+      {
+        "str": "SAFE‮DEGGALF‬END‏؜",
+        "codepoints": [
+          "U+0053",
+          "U+0041",
+          "U+0046",
+          "U+0045",
+          "U+202E",
+          "U+0044",
+          "U+0045",
+          "U+0047",
+          "U+0047",
+          "U+0041",
+          "U+004C",
+          "U+0046",
+          "U+202C",
+          "U+0045",
+          "U+004E",
+          "U+0044",
+          "U+200F",
+          "U+061C"
+        ],
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12,
+        "n_chars": 18
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f12_bidi_override.pdf",
+    "bytes": 1805
+  },
+  "f13_tag_block": {
+    "class": "Unicode tag-block characters (U+E0000..U+E007F) in a text run",
+    "texts": [
+      {
+        "str": "VISIBLE󠀁󠁔󠁁󠁇󠁿END",
+        "codepoints": [
+          "U+0056",
+          "U+0049",
+          "U+0053",
+          "U+0049",
+          "U+0042",
+          "U+004C",
+          "U+0045",
+          "U+E0001",
+          "U+E0054",
+          "U+E0041",
+          "U+E0047",
+          "U+E007F",
+          "U+0045",
+          "U+004E",
+          "U+0044"
+        ],
+        "origin_pdf": [
+          50,
+          100
+        ],
+        "font_size": 12,
+        "n_chars": 15
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f13_tag_block.pdf",
+    "bytes": 1770
+  },
+  "f14_visible_control": {
+    "class": "normal visible text control, four colorspaces / render modes",
+    "texts": [
+      {
+        "str": "VISIBLE-CONTROL-TEXT",
+        "origin_pdf": [
+          50,
+          150
+        ],
+        "font_size": 12,
+        "render_mode": 0,
+        "fill_colorspace": "DeviceRGB",
+        "fill_color": [
+          0.2,
+          0.4,
+          0.6
+        ],
+        "fill_rgb_255": [
+          51,
+          102,
+          153
+        ]
+      },
+      {
+        "str": "CMYK-FILL-TEXT",
+        "origin_pdf": [
+          50,
+          110
+        ],
+        "font_size": 12,
+        "render_mode": 0,
+        "fill_colorspace": "DeviceCMYK",
+        "fill_color": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "str": "STROKE-ONLY-TEXT",
+        "origin_pdf": [
+          50,
+          70
+        ],
+        "font_size": 12,
+        "render_mode": 1,
+        "stroke_colorspace": "DeviceRGB",
+        "stroke_color": [
+          1,
+          0,
+          0
+        ],
+        "line_width": 0.4
+      },
+      {
+        "str": "SPOT-SEPARATION-TEXT",
+        "origin_pdf": [
+          50,
+          30
+        ],
+        "font_size": 12,
+        "render_mode": 0,
+        "fill_colorspace": "Separation/SpotRed->DeviceCMYK",
+        "fill_tint": 1.0
+      }
+    ],
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f14_visible_control.pdf",
+    "bytes": 1158
+  },
+  "f15_ocr_confound": {
+    "class": "page image plus render-mode-3 text over the same region (OCR-style)",
+    "texts": [
+      {
+        "str": "OCR-LAYER-TEXT",
+        "origin_pdf": [
+          52,
+          95
+        ],
+        "font_size": 10,
+        "render_mode": 3,
+        "over_image": true
+      }
+    ],
+    "image": {
+      "name": "Im0",
+      "pixel_w": 4,
+      "pixel_h": 4,
+      "colorspace": "DeviceRGB",
+      "placed_rect_pdf": [
+        50,
+        80,
+        250,
+        140
+      ],
+      "ctm": [
+        200,
+        0,
+        0,
+        60,
+        50,
+        80
+      ],
+      "drawn_before_text": true
+    },
+    "page_media": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "page_crop": [
+      0,
+      0,
+      400,
+      200
+    ],
+    "file": "f15_ocr_confound.pdf",
+    "bytes": 917
+  },
+  "large_synthetic": {
+    "class": "perf load",
+    "file": "large_synthetic.pdf",
+    "bytes": 501917,
+    "pages": 82,
+    "text_lines": 3772
+  }
+}
