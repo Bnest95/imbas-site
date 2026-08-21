@@ -38,6 +38,7 @@ import {
   registerFindingShape,
   selectSubset,
 } from "../reader-result.js";
+import { MARK_NUMBER_ATTR, SPAN_SEGMENT_ATTR, resolveSelectionSpan } from "../reader-span-selection.js";
 
 const SRC = readFileSync(
   process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
@@ -274,6 +275,21 @@ async function renderPanel(findings) {
     // about the panel's free identifiers without pulling the register into a file that
     // has nothing to say about it.
     "FindingQuestion",
+    // The span lane's real exports, on the same reasoning as the evidence element above:
+    // SourceReading resolves a selection through this module, and the marked body these
+    // assertions walk is the body the resolver has to agree with.
+    "SPAN_SEGMENT_ATTR",
+    "MARK_NUMBER_ATTR",
+    "resolveSelectionSpan",
+    // Hooks. No DOM here, so the ref is null, the effect never runs, and the selection
+    // state holds its initial null — the panel before anyone has dragged a cursor.
+    "useRef",
+    "useState",
+    "useEffect",
+    // Stubbed on the FindingQuestion reasoning. With the selection state null the shipped
+    // component returns null anyway, and what it renders after a drag is not generic
+    // rendering; it is proven in test/reader-span-selection.test.mjs.
+    "SpanAffordances",
     code,
   );
   const Panel = make(
@@ -291,6 +307,13 @@ async function renderPanel(findings) {
     "boundary",
     stub,
     stub,
+    stub,
+    SPAN_SEGMENT_ATTR,
+    MARK_NUMBER_ATTR,
+    resolveSelectionSpan,
+    () => ({ current: null }),
+    (initial) => [initial, () => {}],
+    () => {},
     stub,
   );
   // The receipt carries the artifact the spans were resolved against, so the panel is

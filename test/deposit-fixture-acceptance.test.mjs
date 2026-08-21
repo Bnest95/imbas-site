@@ -45,6 +45,7 @@ import {
   describeFinding,
   selectSubset,
 } from "../reader-result.js";
+import { MARK_NUMBER_ATTR, SPAN_SEGMENT_ATTR, resolveSelectionSpan } from "../reader-span-selection.js";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
 
 const SRC = readFileSync(
@@ -220,6 +221,22 @@ async function renderPanel() {
     // cards in test/finding-question-promotion.test.mjs; here it would only add nodes
     // to the trees these assertions walk.
     "FindingQuestion",
+    // The span lane. SourceReading resolves a person's selection through this module, so
+    // the real exports are handed in rather than mocks of them — the marked body these
+    // assertions walk is the body the resolver has to agree with.
+    "SPAN_SEGMENT_ATTR",
+    "MARK_NUMBER_ATTR",
+    "resolveSelectionSpan",
+    // Hooks. There is no DOM here, so the ref is null, the effect never runs and the
+    // selection state holds its initial null — the body as it stands before anyone has
+    // dragged a cursor, which is the only state this fixture is about.
+    "useRef",
+    "useState",
+    "useEffect",
+    // Stubbed for the same reason as FindingQuestion. With the selection state null the
+    // shipped component returns null anyway; what it renders after a drag is proven in
+    // test/reader-span-selection.test.mjs.
+    "SpanAffordances",
     code,
   );
   const Panel = make(
@@ -237,6 +254,13 @@ async function renderPanel() {
     "boundary",
     stub,
     stub,
+    stub,
+    SPAN_SEGMENT_ATTR,
+    MARK_NUMBER_ATTR,
+    resolveSelectionSpan,
+    () => ({ current: null }),
+    (initial) => [initial, () => {}],
+    () => {},
     stub,
   );
   // The whole payload, unpicked. The panel reads measurement, result and receipt off

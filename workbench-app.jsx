@@ -113,6 +113,15 @@ import {
   normalizeArrivalStage,
   stageHash,
 } from "./reader-stage.js";
+import {
+  SPAN_SEGMENT_ATTR,
+  MARK_NUMBER_ATTR,
+  SPAN_UI,
+  SPAN_ACTION,
+  SPAN_AFFORDANCES,
+  resolveSelectionSpan,
+  resolveSpanAction,
+} from "./reader-span-selection.js";
 
 const { useState, useEffect, useRef } = React;
 
@@ -4064,7 +4073,36 @@ function findingExplanationId(findingId) {
   return id ? `wb-finding-${id.replace(/[^A-Za-z0-9_-]/g, "-")}` : "";
 }
 
-function SourceReading({ reading }) {
+function SourceReading({ reading, answer, findings, cardsById }) {
+  // Hooks before the early return, because an empty reading must not change the hook
+  // order. The effect below guards on the ref instead.
+  const bodyRef = useRef(null);
+  const [span, setSpan] = useState(null);
+
+  // THE SELECTION HANDLER, SCOPED TO THIS BODY. It listens on the document because that
+  // is the only place `selectionchange` fires, but every selection is resolved against
+  // this element: resolveSelectionSpan returns null unless BOTH boundary points sit
+  // inside it, so a drag that starts in the answer and ends in the explanation list below
+  // offers nothing rather than clipping to the body's edge.
+  //
+  // Nothing is recorded. No event is emitted, no telemetry, no fetch — the resolved span
+  // lives in this component's state and dies with it.
+  useEffect(() => {
+    const body = bodyRef.current;
+    const doc = body && body.ownerDocument;
+    if (!body || !doc) return undefined;
+    const onSelectionChange = () => {
+      const sel = doc.getSelection ? doc.getSelection() : null;
+      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+        setSpan(null);
+        return;
+      }
+      setSpan(resolveSelectionSpan({ range: sel.getRangeAt(0), bodyEl: body }));
+    };
+    doc.addEventListener("selectionchange", onSelectionChange);
+    return () => doc.removeEventListener("selectionchange", onSelectionChange);
+  }, [reading]);
+
   if (!reading || !reading.segments.length) return null;
   // mark number → the finding it belongs to, read off the reading's own mark table.
   // Nothing here recomputes the numbering; buildSourceReading published it already.
@@ -4080,9 +4118,20 @@ function SourceReading({ reading }) {
   // is never positioned, so neither one reaches this element to be linked from.
   return (
     <div className="wb-measure__source" role="group" aria-label={MEASURE_SOURCE_LABEL}>
-      <p className="wb-source__body">
+      {/* data-start on EVERY segment, marked and unmarked alike. An unmarked segment
+          carrying no offset would force a selection that begins in ordinary prose to
+          count backwards through its siblings, and that count goes wrong the moment a
+          mark numeral sits among them. The attribute is the answer offset of this
+          segment's own text — never of the numeral rendered before it. */}
+      <p className="wb-source__body" ref={bodyRef}>
         {reading.segments.map((seg) => {
-          if (!seg.marks.length) return <span key={seg.start}>{seg.text}</span>;
+          if (!seg.marks.length) {
+            return (
+              <span key={seg.start} {...{ [SPAN_SEGMENT_ATTR]: seg.start }}>
+                {seg.text}
+              </span>
+            );
+          }
           const details = seg.marks
             .map((n) => findingExplanationId(findingByMark.get(n)))
             .filter(Boolean)
@@ -4092,6 +4141,7 @@ function SourceReading({ reading }) {
               key={seg.start}
               className="wb-source__mark"
               data-mark={seg.marks.join(" ")}
+              {...{ [SPAN_SEGMENT_ATTR]: seg.start }}
               aria-details={details || undefined}
             >
               {seg.starts.map((n) => (
@@ -4102,6 +4152,13 @@ function SourceReading({ reading }) {
           );
         })}
       </p>
+      <SpanAffordances
+        span={span}
+        answer={answer}
+        reading={reading}
+        findings={findings}
+        cardsById={cardsById}
+      />
     </div>
   );
 }
@@ -4175,7 +4232,16 @@ function MeasurementPanel({ result, context }) {
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
       {/* READ leads the panel, because the answer with the marks in it is the thing a
           reader came for and everything else here is about it. */}
-      <SourceReading reading={reading} />
+      {/* `answer` is the same receipt expression `reading` was cut from, passed
+          separately because the span lane quotes the selected passage out of it
+          verbatim. Both derive from receipt.open_run.answer and nothing else, so a
+          composed request can never quote one string while the marks index another. */}
+      <SourceReading
+        reading={reading}
+        answer={receipt?.open_run?.answer || ""}
+        findings={findings}
+        cardsById={cardsById}
+      />
 
       {/* Nothing stands between the answer and the account of it.
           A visible `MEASUREMENT` title and a `Candidate findings` sub-title used to,
@@ -4369,13 +4435,127 @@ function FindingQuestion({ card, run }) {
 
 // One number, one element, everywhere a mark is named. The label is read and not
 // seen, so a bare numeral never reaches a screen reader on its own.
+// data-mark-number declares this subtree instrument chrome rather than answer text. The
+// numeral's characters exist in the DOM and do not exist in the answer, so every offset
+// walk in reader-span-selection.js skips it. It is an attribute rather than a class check
+// because `wb-mark-n` is a styling hook: renaming it during a restyle would silently start
+// counting numerals as answer characters and put every offset after a mark out of register.
 function MarkNumber({ n }) {
   if (!n) return null;
   return (
-    <span className="wb-mark-n">
+    <span className="wb-mark-n" {...{ [MARK_NUMBER_ATTR]: "" }}>
       <span className="wb-mark-n__label">mark </span>
       {n}
     </span>
+  );
+}
+
+// What appears when a person has selected words in the answer.
+//
+// THE PRODUCER IS THE PERSON. Nothing here is offered until a selection exists. That is
+// the whole basis of the carve-out from the do-not-build list's ban on AI-suggested chips:
+// a suggestion arrives unasked, and this cannot arrive until someone has dragged a cursor.
+//
+// WHERE IT SITS, AND WHY NOT FLOATING. "Adjacent to the selection" would most literally
+// mean a popover positioned off the selection's client rect. It renders here instead, in
+// flow, directly beneath the body. A popover positioned from getBoundingClientRect couples
+// its position to scroll offset and sub-pixel layout, and the acceptance board photographs
+// this surface — an element whose position is measured at paint time is exactly the shape
+// that produces an intermittent, unattributable frame difference, which CLAUDE.md makes a
+// STOP rather than an acceptance. Flow position is deterministic. Recorded as a deliberate
+// deviation, not an oversight.
+//
+// NOTHING IS RECORDED. No event, no telemetry, no fetch, no model call. Copying writes to
+// the clipboard and stops.
+function SpanAffordances({ span, answer, reading, findings, cardsById }) {
+  const [copiedKey, setCopiedKey] = useState("");
+  const [copyFail, setCopyFail] = useState("");
+  if (!span) return null;
+
+  const copy = async (text, key) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setCopyFail("");
+      setTimeout(() => setCopiedKey(""), 1800);
+    } catch {
+      setCopyFail(SPAN_UI.copy_failed);
+      setTimeout(() => setCopyFail(""), 2200);
+    }
+  };
+
+  // One decision per mode. Kind is mode-independent for every branch except COMPOSE, so
+  // the first result names the state and the per-mode results carry the composed messages.
+  const offers = SPAN_AFFORDANCES.map((a) => ({
+    ...a,
+    action: resolveSpanAction({ span, reading, findings, cardsById, mode: a.mode, answer }),
+  }));
+  const kind = offers.length ? offers[0].action.kind : SPAN_ACTION.NONE;
+  if (kind === SPAN_ACTION.NONE) return null;
+
+  // The attribution line. Exactly one short line, local to the affordances, never a block
+  // or a panel. It is deliberately NOT styled like a mark: the surrounding body is full of
+  // highlights Imbas placed, and a person who just dragged across words has to be able to
+  // tell their own highlight from the instrument's. Says what the person did first, then
+  // the boundary.
+  const attribution = <p className="wb-span__attribution">{SPAN_UI.attribution}</p>;
+
+  if (kind === SPAN_ACTION.NARROW) {
+    // No affordance that picks a card. Two findings are two things to ask about, and
+    // choosing one would be the surface deciding which the person meant. One line, the
+    // count, and the ask.
+    return (
+      <div className="wb-span" role="group" aria-label={SPAN_UI.attribution}>
+        <p className="wb-span__narrow">{offers[0].action.line}</p>
+        {attribution}
+      </div>
+    );
+  }
+
+  if (kind === SPAN_ACTION.QUESTION) {
+    // The register already has a question about these words. It re-enters verbatim; no
+    // second question is composed about a passage the register covers.
+    const { question } = offers[0].action;
+    return (
+      <div className="wb-span" role="group" aria-label={SPAN_UI.attribution}>
+        <p className="wb-span__question">{question}</p>
+        <p className="wb-measure__question">
+          <button
+            type="button"
+            className="wb-measure__question-link wb-focus"
+            onClick={() => copy(question, "question")}
+          >
+            {copiedKey === "question" ? CHECK_UI.copied_affordance : CHECK_UI.copy_affordance}
+          </button>
+          {copyFail ? (
+            <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span>
+          ) : null}
+        </p>
+        {attribution}
+      </div>
+    );
+  }
+
+  // COMPOSE. Two affordances, one per mode, each carrying its own composed message.
+  return (
+    <div className="wb-span" role="group" aria-label={SPAN_UI.attribution}>
+      <p className="wb-span__actions">
+        {offers.map((o) => (
+          <button
+            key={o.mode}
+            type="button"
+            className="wb-span__button wb-focus"
+            onClick={() => copy(o.action.message, o.mode)}
+          >
+            {copiedKey === o.mode ? SPAN_UI.copied_affordance : o.label}
+          </button>
+        ))}
+        {copyFail ? (
+          <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span>
+        ) : null}
+      </p>
+      {attribution}
+    </div>
   );
 }
 

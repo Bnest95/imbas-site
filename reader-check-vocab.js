@@ -23,7 +23,7 @@
 // slice. Bump CHECK_VOCAB_VERSION (never edit a shipped rule id) when the list
 // changes so a lint result is traceable to the rules that produced it.
 
-export const CHECK_VOCAB_VERSION = "check-vocab.v2";
+export const CHECK_VOCAB_VERSION = "check-vocab.v3";
 
 // v2 adds `verdict-outcome`. The five original verdict words rule on whether a
 // claim is so; these rule on whether the answer came out well, which is the same
@@ -51,6 +51,52 @@ export const CHECK_VOCAB_VERSION = "check-vocab.v2";
 // this boundary is asserted rather than merely stated.
 export const VERDICT_OUTCOME_WORDS = ["fail", "fails", "failed", "pass", "passes", "passed"];
 
+// v3 widens `can-rely-verdict` to INTERVENING-SUBJECT forms. v2's pattern required the
+// modal to sit directly against the verb — "can rely", "should rely" — so the commonest
+// way anyone actually writes a reliance verdict walked straight through it: "Can I rely on
+// this?", "Should I rely on this part?". The rule read as a ban on rating reliance and was
+// in fact a ban on one word order.
+//
+// A NAMED SUBJECT LIST, not `\w+`. `(?:\s+\w+)?\s+rely` would also swallow "can safely
+// rely" and "must therefore rely", which are the same verdict, but it would equally swallow
+// any future adverb the rule was never ruled to cover, and the reach of the rule would stop
+// being readable from the rule. The list is the whole of what intervenes; widening it is an
+// edit here with a receipt, not an accident of a wildcard.
+//
+// LONGEST FORMS FIRST. Regex alternation is leftmost-first, so "a reader" has to precede
+// any single word it starts with or the two-word form would never be reached.
+//
+// TWO FORMS ARE DELIBERATELY NOT ADDED, on the same boundary v2 drew around
+// verdict-outcome. The governing ruling widened this rule to intervening SUBJECTS and
+// enumerated two of them; that enumeration is the law it laid down, not a floor to build
+// adjacent grammar on. Both open forms are recorded here so a later pass finds a decision
+// rather than an oversight, and each enters as check-vocab.v4 with its own receipt.
+//
+//   NEGATION. "could not rely" walks through: `can(?:not)?` covers "cannot rely" and
+//   nothing covers a negation following a different modal.
+//   PASSIVE. "Can this be relied on?" walks through: the subject is the thing relied upon
+//   rather than the person relying, so nothing in the list below stands where the list is
+//   consulted, and the word on the page is `relied`, not `rely`.
+export const RELIANCE_SUBJECT_FORMS = [
+  "a reader",
+  "the reader",
+  "a user",
+  "the user",
+  "a person",
+  "the person",
+  "i",
+  "we",
+  "you",
+  "they",
+  "he",
+  "she",
+  "it",
+  "one",
+  "anyone",
+  "someone",
+  "everyone",
+];
+
 // Each rule: { id (stable, versioned), category, pattern, reason }. Word-boundary
 // anchored so pointer-register copy ("worth verifying", "rests on", "check
 // against", "calculation") is never tripped, while the banned verdict forms are.
@@ -71,8 +117,18 @@ export const BANNED_CONSTRUCTIONS = [
   {
     id: "can-rely-verdict",
     category: "reliance_verdict",
-    pattern: /\b(?:can(?:not)?|can['’]?t|could|should(?:n['’]?t)?|may|must)\s+rely\b/i,
-    reason: "reliance verdict (can/cannot/should rely) — hand over a check, do not rate reliance.",
+    // Same id, widened pattern, version bumped to v3 — append-only rule evolution keeps the
+    // id stable so a lint result stays traceable across the change. The subject group is
+    // OPTIONAL, so every v2 form ("can rely", "cannot rely", "can't rely") still matches
+    // exactly as before; v3 only adds what v2 let through.
+    pattern: new RegExp(
+      `\\b(?:can(?:not)?|can['’]?t|could|should(?:n['’]?t)?|may|must)` +
+        `(?:\\s+(?:${RELIANCE_SUBJECT_FORMS.join("|")}))?` +
+        `\\s+rely\\b`,
+      "i",
+    ),
+    reason:
+      "reliance verdict (can/cannot/should rely, with or without an intervening subject) — hand over a check, do not rate reliance.",
   },
   {
     id: "reliance-is-verdict",
@@ -231,6 +287,132 @@ export function lintChipStrings(input) {
   const walk = (node, path) => {
     if (typeof node === "string") {
       for (const hit of lintChipString(node)) violations.push({ path, string: node, ...hit });
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach((v, i) => walk(v, `${path}[${i}]`));
+      return;
+    }
+    if (node && typeof node === "object") {
+      for (const k of Object.keys(node)) walk(node[k], path ? `${path}.${k}` : k);
+    }
+  };
+  walk(input, "");
+  return violations;
+}
+
+// ── Span-request boundary (composed requests only) ────────────────────────────
+// THE DOCTRINE SENTENCE, and the whole of what this family enforces:
+//
+//   GOVERNED SPAN PROMPTS MAY NOT CLAIM AUTHORSHIP OF THE REPLACEMENT ANSWER.
+//
+// The founder boundary is binding and verbatim: "Imbas stays on the question side of
+// the line, never produces the improved answer." That governs AUTHORSHIP, not whether
+// a composed message asks for one. A person selects a passage, picks a mode, and
+// Imbas hands them a message to send to their OWN AI; that AI does the producing.
+// Composed requests are therefore inside the line even where they are imperative.
+//
+// What the line forbids is a composed request written as though Imbas were doing the
+// work — the answer-production imperatives. "Rewrite this passage." is one edit away
+// from Imbas offering the rewrite, and this family is what makes that edit fail CI
+// instead of ship.
+//
+// A THIRD LIST, WITH ITS OWN LINTER, AND SCOPE IS THE REASON. Three registers, three
+// lists (§Check demonstration; the chip lane above; this). Two scope facts make
+// sharing impossible rather than merely untidy:
+//
+//   - NARROWER THAN THE OTHER TWO. It applies ONLY to registered composed-request
+//     text: reader-span-bank.js `instruction_text`, and anything that enters a
+//     composed message. It does NOT apply to explanatory prose, code comments, module
+//     docs, or UI copy outside the registered tables. This very comment says
+//     "Rewrite this passage." and must not fail; the test holds a scope control that
+//     proves the same verb in non-registered copy passes.
+//   - IT WOULD FAIL A SHIPPED BANK. reader-second-question-bank.js instruction texts
+//     legitimately contain "revise the draft" — that bank composes a second question
+//     under a different ruling and is not governed here. Folding this rule into
+//     BANNED_CONSTRUCTIONS would fail that bank on the day it landed.
+//
+// The span lane's UI copy is governed by the OTHER TWO lanes, both of them, and is
+// registered there. Unregistered is not "passing"; it is unexamined.
+export const SPAN_VOCAB_VERSION = "span-vocab.v1";
+
+// The banned verbs, enumerated with their morphology rather than stemmed. A named
+// list, like VERDICT_OUTCOME_WORDS: the exact reach of the rule is readable at a
+// glance and narrowable in one edit, and no form is caught by accident of a suffix
+// pattern nobody wrote down.
+//
+// WHAT IS NOT HERE IS A RULING, NOT AN OVERSIGHT. "redo" asks for substantially what
+// "rewrite" asks for, and the founder-ratified bank entry D3 uses it verbatim
+// ("Redo this part properly..."). The governing ruling enumerated the banned verbs
+// and included D3 in the same act, so the list stops where the ruling stopped. A
+// later pass that wants "redo" here is overruling an entry the founder included, not
+// tidying a gap — and it enters span-vocab.v2 with its own receipt.
+export const ANSWER_AUTHORSHIP_VERBS = [
+  "rewrite",
+  "rewrites",
+  "rewriting",
+  "rewritten",
+  "rewrote",
+  "revise",
+  "revises",
+  "revising",
+  "revised",
+  "revision",
+  "revisions",
+  "fix",
+  "fixes",
+  "fixing",
+  "fixed",
+  "improve",
+  "improves",
+  "improving",
+  "improved",
+  "improvement",
+  "improvements",
+];
+
+export const SPAN_BANNED_CONSTRUCTIONS = [
+  {
+    id: "span-answer-authorship-verb",
+    category: "answer_authorship",
+    pattern: new RegExp(`\\b(?:${ANSWER_AUTHORSHIP_VERBS.join("|")})\\b`, "i"),
+    reason:
+      "answer-production imperative (rewrite / revise / fix / improve and their forms) — a governed span prompt may not claim authorship of the replacement answer; ask the person's own AI for the work instead.",
+  },
+  {
+    id: "span-produce-replacement",
+    category: "answer_authorship",
+    // PHRASE forms, and the phrase is load-bearing. Bare "complete" and bare "correct"
+    // are ordinary words two ratified entries already use — D2 ends "If you cannot
+    // complete it, say which part and why", D3 opens "Redo this part properly:
+    // complete, ...". Banning the bare words would fail the bank the ruling seeded.
+    // What crosses the line is the construction that hands over a finished replacement:
+    // produce THE corrected, write THE complete.
+    pattern: /\b(?:produc(?:e|es|ing|ed)|writ(?:e|es|ing|ten)|generat(?:e|es|ing|ed)|deliver(?:s|ing|ed)?)\s+the\s+(?:correct|complete|final|full|fixed|improved|revised)/i,
+    reason:
+      "replacement-delivery construction (produce the corrected / write the complete) — a governed span prompt hands over a request, never the finished answer.",
+  },
+];
+
+// Lint one composed-request string. Same shape as lintString and lintChipString.
+export function lintSpanString(str) {
+  const s = typeof str === "string" ? str : "";
+  const hits = [];
+  for (const rule of SPAN_BANNED_CONSTRUCTIONS) {
+    const m = s.match(rule.pattern);
+    if (m) hits.push({ id: rule.id, category: rule.category, reason: rule.reason, match: m[0] });
+  }
+  return hits;
+}
+
+// Lint a set of registered composed-request strings (array, or nested object/array of
+// strings), mirroring the other two walkers. Only registered composed-request text is
+// ever passed here; see the scope note above.
+export function lintSpanStrings(input) {
+  const violations = [];
+  const walk = (node, path) => {
+    if (typeof node === "string") {
+      for (const hit of lintSpanString(node)) violations.push({ path, string: node, ...hit });
       return;
     }
     if (Array.isArray(node)) {

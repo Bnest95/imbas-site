@@ -18,6 +18,10 @@
 //   3. THE CHANNEL RULE, unchanged by the rebuild. In-document marks are QUOTED-only.
 //      An absence is numbered and never positioned. An unresolved quotation is not a
 //      mark at all and reaches no surface.
+//   4. THE OFFSET SURFACE. Every segment element carries data-start, and an offset read
+//      back OUT of the rendered nodes equals the offset that went in — across a marked
+//      passage, with the mark numerals excluded. Paired with the control that including
+//      them breaks it, so the exclusion is load-bearing rather than decorative.
 //
 // The render assertions run the SHIPPED component, lifted from workbench-app.jsx by
 // symbol name and compiled with the bundle's own JSX settings, because a source scan
@@ -30,9 +34,6 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { transform } from "esbuild";
 
 import {
   ANCHOR_CHANNEL,
@@ -45,6 +46,16 @@ import {
 } from "../reader-result.js";
 import { buildCanonicalSingle } from "../api/read.js";
 import { buildSingleReceipt } from "../reader-receipt.js";
+import { SPAN_SEGMENT_ATTR, MARK_NUMBER_ATTR, resolveAnswerOffset } from "../reader-span-selection.js";
+import { componentSource, renderSourceReading } from "./source-reading-render.mjs";
+import {
+  ELEMENT_NODE,
+  boundaryAtAnswerIndex,
+  findByClass,
+  renderedAnswerText,
+  toNodeTree,
+  walk,
+} from "./span-dom.mjs";
 
 // ── The answer under inspection ──────────────────────────────────────────────
 // Three sentences, so a mark can sit at the very start of the artifact, another can
@@ -450,39 +461,14 @@ test("renumbering moves the numeral and touches nothing that identifies a mark",
 });
 
 // ── The shipped renderer, executed ───────────────────────────────────────────
+//
+// The harness lives in test/source-reading-render.mjs because two files need this exact
+// render — see its header. It lifts the shipped components out of workbench-app.jsx and
+// stubs the hooks, so the selection state is null in every render below and
+// SpanAffordances returns null: the surface as it stands before anyone has dragged a
+// cursor, which is the state this file is about.
 
-const SRC = readFileSync(
-  process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
-  "utf8",
-);
-
-function componentSource(text, name) {
-  const start = text.indexOf(`function ${name}(`);
-  assert.notEqual(start, -1, `workbench-app.jsx must define ${name}`);
-  const rest = text.slice(start);
-  const next = rest.indexOf("\nfunction ", 1);
-  return next === -1 ? rest : rest.slice(0, next);
-}
-
-function stringConstant(text, name) {
-  const m = new RegExp(`^const ${name} = ("(?:[^"\\\\]|\\\\.)*");$`, "m").exec(text);
-  assert.ok(m, `workbench-app.jsx must define ${name} as a single-line string constant`);
-  return JSON.parse(m[1]);
-}
-
-async function renderBody(reading) {
-  const { code } = await transform(
-    `${componentSource(SRC, "SourceReading")}\n${componentSource(SRC, "MarkNumber")}\n` +
-      `${componentSource(SRC, "findingExplanationId")}\nreturn SourceReading;`,
-    { loader: "jsx", jsxFactory: "h", jsxFragment: "Frag" },
-  );
-  const h = (type, props, ...children) => {
-    if (typeof type === "function") return type({ ...(props || {}), children });
-    return { type, props: props || {}, children };
-  };
-  const make = new Function("h", "Frag", "MEASURE_SOURCE_LABEL", code);
-  return make(h, "Frag", stringConstant(SRC, "MEASURE_SOURCE_LABEL"))({ reading });
-}
+const renderBody = renderSourceReading;
 
 // Everything the rendered tree would say out loud, minus the mark numbers, which are
 // the one thing this surface adds to the answer and are excluded here precisely so
@@ -559,7 +545,7 @@ test("a reading with no document renders nothing at all", async () => {
 });
 
 test("READ leads the panel: the body mounts before the disclosure that explains it", () => {
-  const panel = componentSource(SRC, "MeasurementPanel");
+  const panel = componentSource("MeasurementPanel");
   const body = panel.indexOf("<SourceReading");
   const inspect = panel.indexOf('<details className="wb-measure__inspect"');
   const list = panel.indexOf('className="wb-measure__list"');
@@ -573,7 +559,7 @@ test("the panel reads its artifact off the receipt, never off the compose field"
   // would put every mark one leading newline out of register, and nothing on screen
   // would say so. The negative control above proves the consequence; this proves the
   // shipped panel does not take that path.
-  const panel = componentSource(SRC, "MeasurementPanel");
+  const panel = componentSource("MeasurementPanel");
   assert.match(
     panel,
     /buildSourceReading\(\{\s*artifactText: receipt\?\.open_run\?\.answer \|\| ""/,
@@ -629,13 +615,13 @@ test("every mark in the body points at the explanation of its own finding", asyn
 test("the id the body points at is the id the list emits", () => {
   // Two components, one string. If either side computes it any other way the
   // relationship dangles and nothing on screen says so.
-  const panel = componentSource(SRC, "MeasurementPanel");
+  const panel = componentSource("MeasurementPanel");
   assert.match(
     panel,
     /<li key=\{f\.id\} id=\{findingExplanationId\(f\.id\)\}/,
     "the finding's list item must carry the explanation id",
   );
-  const body = componentSource(SRC, "SourceReading");
+  const body = componentSource("SourceReading");
   assert.match(body, /aria-details=/, "the body's marks must carry the relationship");
   assert.match(
     body,
@@ -721,4 +707,134 @@ test("the relationship adds no tab stop and no focusable node", async () => {
     if (node.children) walk(node.children);
   })(tree);
   assert.deepEqual(focusable, [], "READ stays a document to read, not a field of controls");
+});
+
+// ── 4. THE OFFSET SURFACE ────────────────────────────────────────────────────
+//
+// Sections 1–3 prove the marks land on the right words. This section proves the
+// rendered nodes can be read BACKWARDS — that a point in the DOM resolves to the answer
+// offset a person would expect it to, which is the thing a composed quotation depends on
+// and the thing nothing checked before.
+//
+// The tree comes from the shipped component, converted by test/span-dom.mjs into nodes
+// carrying only what the resolver actually touches. The expected offsets are derived by
+// counting rendered text, INDEPENDENTLY of reader-span-selection.js: the module is asked
+// to arrive at the same number from the other direction. A helper that called the module
+// would prove only that the module agrees with itself.
+
+async function renderNodeTree(reading, props = {}) {
+  const root = toNodeTree(await renderBody(reading, props));
+  const body = findByClass(root, "wb-source__body");
+  assert.ok(body, "the rendered tree must contain the source body");
+  return { root, body };
+}
+
+function segmentElements(body) {
+  const out = [];
+  walk(body, (n) => {
+    if (n.nodeType === ELEMENT_NODE && n.hasAttribute(SPAN_SEGMENT_ATTR)) out.push(n);
+  });
+  return out;
+}
+
+test("every segment carries data-start, marked and unmarked alike", async () => {
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const { body } = await renderNodeTree(reading);
+  const segs = segmentElements(body);
+
+  assert.equal(
+    segs.length,
+    reading.segments.length,
+    "one segment element per segment — an unmarked run without data-start would force a " +
+      "selection starting in ordinary prose to count backwards past a mark numeral",
+  );
+  assert.deepEqual(
+    segs.map((el) => Number(el.getAttribute(SPAN_SEGMENT_ATTR))),
+    reading.segments.map((s) => s.start),
+    "data-start is the answer offset of the segment's own text, in document order",
+  );
+  // The marked ones are a strict subset, not the whole set. Stated as a fact about this
+  // fixture so a change that stopped emitting the attribute on unmarked runs would fail
+  // here rather than pass a weaker assertion.
+  const marked = segs.filter((el) => el.hasAttribute("data-mark"));
+  assert.equal(marked.length, 2);
+  assert.ok(segs.length > marked.length, "the fixture must contain unmarked segments to prove the point");
+});
+
+test("the rendered nodes hold the answer exactly, once the mark numerals are excluded", async () => {
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const { body } = await renderNodeTree(reading);
+  assert.equal(
+    renderedAnswerText(body, MARK_NUMBER_ATTR),
+    ANSWER,
+    "what a person's drag can cover must be the answer and nothing else",
+  );
+});
+
+test("every DOM point across a marked passage resolves to its own answer offset", async () => {
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const { body } = await renderNodeTree(reading);
+
+  // Every boundary from before the first character to after the last, including both
+  // ends and every seam between segments — the seams are where an off-by-one would live.
+  for (let i = 0; i <= ANSWER.length; i += 1) {
+    const point = boundaryAtAnswerIndex(body, i, MARK_NUMBER_ATTR);
+    assert.ok(point, `index ${i} must fall in a rendered text node`);
+    const got = resolveAnswerOffset({ node: point.node, offset: point.offset, bodyEl: body });
+    assert.equal(got, i, `the point standing at answer index ${i} resolved to ${got}`);
+  }
+});
+
+test("counting the mark numerals as answer text breaks the offsets — the control", async () => {
+  // THE NEGATIVE CONTROL. The test above passes if data-mark-number is honoured. It would
+  // ALSO pass against a body that rendered no numerals at all, which is not the surface
+  // that ships. This produces the exact defect the exclusion prevents — chrome counted as
+  // answer characters — and shows it is caught.
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
+  const { body } = await renderNodeTree(reading);
+
+  const drifted = [];
+  for (let i = 0; i <= ANSWER.length; i += 1) {
+    const point = boundaryAtAnswerIndex(body, i, MARK_NUMBER_ATTR, { includeChrome: true });
+    if (!point) continue;
+    const got = resolveAnswerOffset({ node: point.node, offset: point.offset, bodyEl: body });
+    if (got !== i) drifted.push({ i, got });
+  }
+
+  assert.ok(
+    drifted.length > 0,
+    "if counting the numerals changed nothing, the exclusion would be decorative and this " +
+      "suite would be proving nothing about it",
+  );
+  // The numerals of mark 1 render "mark " + "1" = 6 characters ahead of the first word,
+  // so a count that includes them stands 6 characters early once it is past them.
+  assert.deepEqual(
+    drifted[0],
+    { i: 1, got: 0 },
+    "the drift starts inside the first numeral, where there is no answer character to be at",
+  );
+  assert.equal(
+    drifted.some((d) => d.got === d.i - 6),
+    true,
+    "and settles at the width of the chrome it wrongly counted",
+  );
+});
+
+test("a point in the mark numeral resolves to the start of the words it labels", async () => {
+  // Not an error case: a person can drag across a numeral, and every offset in it has to
+  // land somewhere defensible. It lands at the first character of the marked run, which is
+  // the only answer position the numeral stands next to.
+  const reading = readingOf([quotedFinding(0, FIRST_SENTENCE)]);
+  const { body } = await renderNodeTree(reading);
+  const [firstSeg] = segmentElements(body);
+  const numeral = findByClass(firstSeg, "wb-mark-n");
+  assert.ok(numeral, "the marked segment renders a numeral");
+
+  for (const offset of [0, 1, 2]) {
+    assert.equal(
+      resolveAnswerOffset({ node: numeral, offset, bodyEl: body }),
+      Number(firstSeg.getAttribute(SPAN_SEGMENT_ATTR)),
+      "a numeral has no answer character under it, so the clean answer is where its words begin",
+    );
+  }
 });
