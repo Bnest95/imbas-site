@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 10044
+scroll_offset: 9986
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -1273,3 +1273,4 @@ button "Noticeable" disabled=false
 button "Large" disabled=false
 button "Test another answer" disabled=false
 h2 "TEST ANOTHER QUESTION"
+p "Run the same check on another answer."

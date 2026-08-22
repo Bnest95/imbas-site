@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5610
+scroll_offset: 5543
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -975,4 +975,5 @@ span "Why this matters"
 p "The inspection records a difference in what was volunteered under the tested conditions. It does not determine why the difference occurred."
 span "What you can do next"
 p "Export the review record, copy the record of this inspection, or test another answer with a different question or another model."
-p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
+p "The boundary stated above governs this reading too."
+a "How admission works →" href="/how-it-works.html"

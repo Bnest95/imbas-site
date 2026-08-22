@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 2097
+scroll_offset: 2022
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -307,11 +307,16 @@ a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
+dt "Inspection model"
+dd "claude-opus-4-8"
+dt "Inspection model build"
+dd "not pinned"
+dt "Inspection method"
+dd "reader.v3"
 dt "Captured"
 dd "<TIMESTAMP>"
 p "The answer model is the one you declared. Imbas records it, and does not observe it."
-button "Copy JSON" disabled=false
-button "Download receipt" disabled=false
+p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
 div "NOTHING FLAGGED"
 p "This inspection surfaced no omission candidates."
 h2 "THE READER"
@@ -327,5 +332,6 @@ p "This read identifies how the answer was shaped — what it surfaced, omitted,
 p "Behavior, not intent."
 button "Copy Result" disabled=false
 button "Copy Full Receipt" disabled=false
+button "Copy JSON" disabled=false
+button "Download receipt" disabled=false
 button "Share this inspection" disabled=false
-button "Run again" disabled=false

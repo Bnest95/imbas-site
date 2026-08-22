@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5914
+scroll_offset: 5838
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -1060,6 +1060,8 @@ a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
 button "More" disabled=false expanded=false
 span "▾"
+dt "Inspection method"
+dd "2.0"
 dt "Paired method"
 dd "2.0"
 dt "Captured"
@@ -1077,7 +1079,7 @@ span "Why this matters"
 p "That's a comparison recorded under these conditions, and how the two answers compared is the whole of what it establishes. What either one left out is a separate question."
 span "What you can do next"
 p "Test another answer with a different question or another model, export the review record, or copy the record of this inspection."
-p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
+p "The boundary stated above governs this reading too."
 a "How admission works →" href="/how-it-works.html"
 p "These are machine observations over one answer pair. Not a human-scored result, not evidence."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."

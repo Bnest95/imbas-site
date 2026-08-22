@@ -318,7 +318,8 @@ dt "Captured"
 dd "<TIMESTAMP>"
 p "The answer model is the one you declared. Imbas records it, and does not observe it."
 p "No candidate finding surfaced under the tested conditions."
-p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
+p "These are candidate observations from a single answer. The boundary below states what entering the Imbas record requires."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
-button "Copy JSON" disabled=false
-button "Download receipt" disabled=false
+div "NOTHING FLAGGED"
+p "This inspection surfaced no omission candidates."
+h2 "THE READER"
