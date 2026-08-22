@@ -232,30 +232,78 @@ test("census baseline: the counts equal their own inventories", () => {
   assert.deepEqual(ARTIFACT.distinct_free_alphas, alphas);
 });
 
-// The R14 adjudication holds every region-only free-alpha spend for a founder ruling, and
-// a held item that nobody wrote down is an exception preserved silently. The subject list
-// is built from the measurement, so a new region-only spend joins it on its own — this
-// asserts the other half, that joining it obliges somebody to say what it is.
-test("census baseline: every held R14 subject is a region-only spend, and every one is adjudicated", () => {
+// The R14 adjudication carries every region-only free-alpha spend, and a subject nobody
+// wrote down is an exception preserved silently. The subject list is built from the
+// measurement, so a new region-only spend joins it on its own — this asserts the other
+// half, that joining it obliges somebody to say what it is.
+test("census baseline: every R14 subject is a region-only spend, and every one is adjudicated", () => {
   const adj = ARTIFACT.r14_adjudication;
   const measured = ARTIFACT.free_alpha_inventory.filter((r) => r.scope === "region-only");
   assert.deepEqual(
     adj.subjects.map((s) => `${s.selector}|${s.property}`).sort(),
     measured.map((r) => `${r.selector}|${r.property}`).sort(),
-    "the held subjects must be exactly the region-only free-alpha spends",
+    "the subjects must be exactly the region-only free-alpha spends",
   );
   for (const s of adj.subjects) {
-    assert.ok(s.note, `${s.selector} ${s.property} is held with no recorded rationale`);
+    assert.ok(s.note, `${s.selector} ${s.property} is carried with no recorded rationale`);
   }
   for (const s of adj.subjects) {
     const m = measured.find((r) => r.selector === s.selector && r.property === s.property);
     assert.equal(s.resting_paint, !m.pseudo_state_only, `${s.selector} disagrees with its own measurement`);
   }
-  // The lane changed no CSS, so the subjects must still be present in the tree exactly as
-  // the artifact records them. authoredProjection already proves the declarations match;
-  // this proves the disposition did not quietly become a fix.
-  assert.match(adj.disposition, /founder ruling/);
   assert.match(adj.changed_in_this_lane, /^No CSS\./);
+});
+
+// The 2026-08-22 ruling is the reason this count is not a gate, and a ruling that survives
+// only in a commit message is a ruling the next pass will not find. It is pinned here so
+// that quietly dropping it, or quietly turning the count back into a threshold, fails.
+test("census baseline: the founder ruling is carried verbatim and every named selector is covered", () => {
+  const r = ARTIFACT.r14_adjudication.ruling;
+  assert.equal(r.date, "2026-08-22");
+  assert.equal(r.authority, "founder");
+
+  assert.match(r.text, /^Free ember alpha values are not, by themselves, an R14 violation\./);
+  assert.match(r.text, /R14 governs the semantic role in which ember is spent\./);
+  assert.match(r.text, /does not establish a universal requirement/);
+  assert.match(r.text, /section 0 correction 1 left the registry unseeded/);
+  assert.match(r.text, /section 6 judgment 6 reserves accent-token reconciliation to the founder/);
+
+  const therefore = r.therefore.join(" ");
+  assert.match(therefore, /remains a governed measurement and a technical-debt and reconciliation signal/);
+  assert.match(therefore, /is NOT a pass\/fail R14 compliance threshold/);
+  assert.match(therefore, /semantic-role finding under R14 or a separately adopted founder rule/);
+  assert.match(therefore, /which does not exist today/);
+  assert.match(therefore, /withdrawn as inaccurate/);
+  assert.match(therefore, /do not normalize them to any prior target, including 26\/4\/4/);
+
+  // The ruling names six selectors as not-to-be-changed. Every one must still be a measured
+  // subject, or the record is protecting something that is no longer there.
+  const named = [
+    ".wb-loop__panel--second", ".wb-loop__tag", ".wb-loop__unmatched",
+    ".wb-share-consent__panel", ".wb-share-consent__confirm", ".wb-perception__option:hover",
+  ];
+  const subjects = ARTIFACT.r14_adjudication.subjects.map((s) => s.selector);
+  for (const sel of named) {
+    assert.match(therefore, new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `the ruling must name ${sel}`);
+    assert.ok(
+      subjects.some((s) => s.startsWith(sel)),
+      `${sel} is named in the ruling but is no longer a measured subject`,
+    );
+  }
+});
+
+// The count is a signal, not a gate. Anyone reading the artifact should hit that sentence
+// before they reach a number, so this pins the disclaimer to the notes rather than leaving
+// it to be inferred from the adjudication section further down.
+test("census baseline: the record says plainly that the free-alpha count is not a threshold", () => {
+  assert.match(ARTIFACT.notes.what_the_free_alpha_count_is_not, /NOT a pass\/fail R14 compliance threshold/);
+  assert.match(ARTIFACT.notes.withdrawn_claim, /WITHDRAWN as inaccurate/);
+  // And the withdrawal is not just asserted — the measurement contradicts the old claim.
+  const regionOnly = ARTIFACT.free_alpha_inventory.filter((r) => r.scope === "region-only");
+  assert.ok(
+    regionOnly.length > 0,
+    "the withdrawn claim said every surviving free alpha also painted outside the region",
+  );
 });
 
 // ── 7. The renderer half, on a fixture whose answer is known ─────────────────

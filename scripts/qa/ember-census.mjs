@@ -547,12 +547,16 @@ export const CENSUS_NOTES = {
     "Every authored declaration here is recovered from stylesheet TEXT. Chrome serializes a " +
     "var()-bearing shorthand followed by a same-family longhand as empty longhands, so a " +
     "CSSOM cssText census reports border-left: 2px solid rgba(var(--ember-rgb), 0.55) as absent.",
-  open_for_founder_ruling:
-    "Whether the ember left-rule idiom (.wb-loop__panel--second, .wb-loop__tag, " +
-    ".wb-loop__unmatched) maps to R14 registry role 1, 'evidence signal/mark', is not " +
-    "decided here. Doctrine section 6 judgment 6 reserves accent-token reconciliation to the " +
-    "founder and section 7 risk 2 forbids an implementer renaming decoration as semantics. " +
-    "See r14_adjudication for the full record.",
+  withdrawn_claim:
+    "The historical claim that every surviving result-region free alpha also painted outside " +
+    "the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census " +
+    "measures the opposite: most free-alpha spends in the region are region-only. The scope " +
+    "field on every row of free_alpha_inventory carries the measured answer per declaration.",
+  what_the_free_alpha_count_is_not:
+    "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling " +
+    "of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation " +
+    "signal. A rising count is a thing to look at, never on its own a thing to fix. " +
+    "See r14_adjudication for the ruling in full.",
 };
 
 // ── The R14 adjudication ─────────────────────────────────────────────────────
@@ -563,8 +567,48 @@ export const CENSUS_NOTES = {
 // that stops painting free alpha in the region leaves this record on its own and a new
 // one arrives without anybody remembering to add it.
 export const R14_ADJUDICATION = {
-  disposition: "held — founder ruling requested",
+  disposition: "ruled — founder ruling of 2026-08-22; every subject below stands unchanged",
   changed_in_this_lane: "No CSS. No declaration below was substituted, retired, or moved.",
+
+  // Recorded verbatim. This is the governing text; everything else in this object is the
+  // evidence that prompted it or the reading that follows from it, and where they differ
+  // the ruling wins.
+  ruling: {
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "PR #126 — Make Surface Finish measurements reproducible",
+    text:
+      "Free ember alpha values are not, by themselves, an R14 violation. R14 governs the " +
+      "semantic role in which ember is spent. The frozen doctrine does not establish a " +
+      "universal requirement that every ember alpha inside .wb-reader-v2__result map onto one " +
+      "of the declared alpha-ramp tokens, and section 0 correction 1 left the registry " +
+      "unseeded while section 6 judgment 6 reserves accent-token reconciliation to the founder.",
+    therefore: [
+      "the committed ember census remains a governed measurement and a technical-debt and " +
+        "reconciliation signal;",
+      "its free-alpha count is NOT a pass/fail R14 compliance threshold;",
+      "do not change .wb-loop__panel--second, .wb-loop__tag, .wb-loop__unmatched, " +
+        ".wb-share-consent__panel, .wb-share-consent__confirm, .wb-perception__option:hover, " +
+        "or any other product CSS merely to reduce that count;",
+      "any future change to those spends requires either a semantic-role finding under R14 or " +
+        "a separately adopted founder rule governing alpha-token consolidation, which does not " +
+        "exist today;",
+      "the historical claim that every surviving result-region free alpha also painted outside " +
+        "the region is withdrawn as inaccurate;",
+      "the census numbers remain whatever the committed instrument measures; do not normalize " +
+        "them to any prior target, including 26/4/4.",
+    ],
+  },
+
+  // What the ruling means for anyone who opens this file with a diff in hand.
+  standing_instruction:
+    "A free alpha in this region is not a defect to be closed. Only two things license a " +
+    "change to the spends listed under subjects: a semantic-role finding under R14 — that the " +
+    "ember is spent in a role the standing registry does not authorize — or a founder rule on " +
+    "alpha-token consolidation, which does not exist today. Reducing the count is not a " +
+    "reason. If a future pass proposes touching one of these declarations, it must name which " +
+    "of those two licenses it holds.",
+
   rule_text:
     "R14 — Ember spends only against the standing role registry. 'Every ember use must " +
     "map to a role already authorized by the standing accent law.' Seed registry: 1. evidence " +
@@ -577,8 +621,8 @@ export const R14_ADJUDICATION = {
     "through a declared custom property, it names no permitted alpha set, and it closes with " +
     "'No numeric ceiling is claimed by research.' So an authored rgba() at an alpha the ramp " +
     "does not declare is not, by itself, an R14 violation. Free alpha is a token-hygiene " +
-    "finding. This census reports it; R14 does not adjudicate it.",
-  why_the_role_question_cannot_be_settled_here: [
+    "finding. This census reports it; R14 does not adjudicate it. AFFIRMED by the ruling above.",
+  evidence_the_ruling_was_made_on: [
     "Section 0 correction 1: 'the registry must be seeded from the actual standing accent law. " +
       "A behavior-class label is not automatically entitled to ember merely because the live " +
       "surface currently uses it.' The registry these selectors would be judged against is " +
@@ -601,7 +645,9 @@ export const R14_ADJUDICATION = {
     "Three of the subjects paint rgba(var(--ember-rgb), 0.55) and the declared ramp holds no " +
     "0.55 token: --ember-glow is 0.30, --ember-trace is 0.14, --ember-pulse is 0.62 on a " +
     "different hue. Every available substitution therefore moves pixels, and no ruling " +
-    "authorizes the movement or the baselines it would need.",
+    "authorizes the movement or the baselines it would need. The ruling now forecloses the " +
+    "substitution outright, so this stands as the record of why none was made rather than as " +
+    "an obstacle somebody should try to clear.",
   per_subject_notes: {
     ".wb-btn--primary:disabled":
       "Not named in the brief. Region-only, pseudo-state-only: the dimmed rendering of the " +
@@ -632,15 +678,26 @@ export const R14_ADJUDICATION = {
       "Not named in the brief. Region-only resting free alpha, a 1px 0.22 border on the consent " +
       "panel. A container edge fits none of the five seed roles.",
   },
-  what_a_ruling_would_have_to_say: [
-    "whether the 2px ember left-rule idiom is registry role 1, role 3, or not a registry role;",
+  settled_by_the_ruling: [
+    "whether ember spends must route through declared ramp tokens — NO. The frozen doctrine " +
+      "establishes no such universal requirement, and adopting one would be a new rule rather " +
+      "than an application of R14.",
+    "whether a free alpha is on its own an R14 violation — NO.",
+    "what the free-alpha count is for — a technical-debt and reconciliation signal, and never " +
+      "a pass/fail compliance threshold.",
+    "whether the surviving spends should be edited to bring the count down — NO, explicitly, " +
+      "for all six named selectors and for any other product CSS.",
+    "whether the region-only spends also paint outside the region — the historical claim that " +
+      "they all did is withdrawn as inaccurate. The measured scope field governs.",
+  ],
+  still_open: [
+    "whether the 2px ember left-rule idiom is registry role 1, role 3, or not a registry role. " +
+      "The ruling leaves this open and makes it moot for now: a semantic-role finding is one of " +
+      "the only two things that could license a change here, and none has been made.",
     "whether hover feedback is an 'ember use' R14 governs at all, or interaction affordance " +
-      "outside the registry;",
-    "whether ember spends must route through declared ramp tokens, which R14 does not say and " +
-      "which would be a new rule rather than an application of this one;",
-    "if they must, whether the ramp gains tokens at the shipped alphas or the shipped alphas " +
-      "move to the declared ones — the second moves product pixels and needs its own baseline " +
-      "acceptance.",
+      "outside the registry.",
+    "whether a founder rule on alpha-token consolidation is ever adopted. It does not exist " +
+      "today, and until it does the shipped alphas stand.",
   ],
 };
 
