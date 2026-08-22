@@ -1599,6 +1599,7 @@ a "Case Archive" href="/archive.html"
 a "The Reader" href="/reader.html"
 a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
 button "More" disabled=false expanded=false
 span "▾"
 p "Which statute sets the 40-hour threshold and the one-and-a-half rate, and does it reach this employer?"
