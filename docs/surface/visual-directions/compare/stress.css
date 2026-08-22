@@ -1,0 +1,86 @@
+/* Review chrome for the stress board. Deliberately plain: the frames are the subject,
+ * and any styling here that competed with them would be doing the thing the lane is
+ * trying to measure. */
+
+.st-bar {
+  padding: 2rem 2rem 1.25rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+.st-title {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink-luminous);
+}
+.st-sub {
+  margin: 0 0 1rem;
+  max-width: 68ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-secondary);
+}
+.st-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.st-nav a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.st-nav a:hover { color: var(--ink-luminous); }
+
+.st-stage { padding: 0 2rem 4rem; }
+
+.st-block { padding: 2rem 0 0.5rem; }
+.st-block + .st-block { border-top: 1px solid var(--line-faint); }
+.st-head {
+  margin: 0 0 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+}
+.st-note {
+  margin: 0 0 1.25rem;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.st-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+.st-cell { min-width: 0; }
+.st-cap {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-secondary);
+}
+.st-cell img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line-soft);
+}
+.st-mob img { max-width: 390px; }
+
+.st-num {
+  margin: 0.6rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.75;
+  color: var(--ink-muted);
+}
+.st-num b { color: var(--ink-soft); font-weight: 400; }
+.st-num .st-out { color: var(--ember); }

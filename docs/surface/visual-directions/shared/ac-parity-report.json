@@ -1,0 +1,151 @@
+{
+  "question": "Does anything reaching an A or C reader differ from the ruled archive, and what did this pass change?",
+  "renderer": "Google Chrome for Testing 148.0.7778.96",
+  "states": 16,
+  "determinism": {
+    "rendered_twice": true,
+    "states_that_varied": 0,
+    "detail": []
+  },
+  "acceptance_against_archive": {
+    "archive": "shared/ac-archive.json",
+    "re_baselined": "2026-08-10",
+    "matches": 16,
+    "findings": 0,
+    "detail": []
+  },
+  "history_against_pre_strata": {
+    "byte_identical": 0,
+    "identical_but_for_the_added_anatomy_version_stamp": 0,
+    "identical_but_for_the_stamp_and_the_ruled_recast": 16,
+    "materially_different": 0,
+    "sanctioned_differences": [
+      {
+        "kind": "attribute",
+        "attribute": "data-anatomy-version",
+        "value_on_a_and_c": "record-anatomy.v1",
+        "why_safe": "additive, on the document element only, never rendered as text, and it names the archived anatomy"
+      },
+      {
+        "kind": "governed string",
+        "name": "FIRST_RUN_LINE",
+        "ruled": "2026-08-10",
+        "why_it_reaches_a_and_c": "one governed string that all three directions render by design"
+      }
+    ],
+    "rows": [
+      {
+        "state": "a/montana/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/furnace/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/deposit/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/website/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/montana/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/furnace/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/deposit/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/website/desktop",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/montana/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/furnace/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/deposit/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "a/website/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/montana/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/furnace/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/deposit/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      },
+      {
+        "state": "c/website/mobile",
+        "verdict": "identical but for the added stamp and the ruled recast",
+        "added_attribute": "data-anatomy-version=\"record-anatomy.v1\"",
+        "occurrences": 1,
+        "governed_string": "FIRST_RUN_LINE"
+      }
+    ]
+  }
+}

@@ -1,0 +1,156 @@
+{
+  "note": "Strings imported live from the repository packet. Every one is proved byte-identical at build time; none is retyped in this lane.",
+  "source_module": "/Users/brendan/Documents/Claude/Projects/imbas-site/reader-public-example.js",
+  "packet_version": "public-example.montana-601dc23d.v1",
+  "count": 21,
+  "all_byte_identical": true,
+  "strings": [
+    {
+      "at": "montana.context",
+      "src": "PUBLIC_EXAMPLE.context",
+      "chars": 39,
+      "sha256": "a79b02b990b72965a60f7e1400cd3f443280247d32a130fff79867c0ba2fadf5",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.finding_sentence",
+      "src": "PUBLIC_EXAMPLE.headline",
+      "chars": 62,
+      "sha256": "707e14c084f54ed0db1facf828b45fdfa8e9df0b8b8e7d5445057b12be354e51",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.prompt",
+      "src": "PUBLIC_EXAMPLE.question",
+      "chars": 45,
+      "sha256": "59ee480a0282729f2b90f81208b594b31e9115c5b4829361dfcb466a6e5d7c2f",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.source.blocks.0",
+      "src": "PUBLIC_EXAMPLE.open_answer",
+      "chars": 237,
+      "sha256": "e113937a803d2873397eef2e2b4361e37f098fcbff96e2b3f4ed867a0ba2bdba",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.second_artifact.prompt",
+      "src": "PUBLIC_EXAMPLE.targeted_prompt",
+      "chars": 155,
+      "sha256": "7027b445d812407d3ac85dfaccaf97546889e47b9c009bf87e0dab8934fe320f",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.marks.0.points_at",
+      "src": "PUBLIC_EXAMPLE.left_out",
+      "chars": 187,
+      "sha256": "97d6eee761c7768d300a51737a8bb5ce80e054cdef0531ecb7647fcf29c9f952",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.marks.0.observed",
+      "src": "PUBLIC_EXAMPLE.surfaced",
+      "chars": 98,
+      "sha256": "4b8b255026b87ef7c3a5a17ee8415f2f7c7ef32a06e91283440db6c8ddfe0c72",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.marks.0.materiality",
+      "src": "PUBLIC_EXAMPLE.why_it_mattered",
+      "chars": 111,
+      "sha256": "55727ae1c8ad941eb8ff70ce7e1c149f5226c3cb2472dc798a43b9be324b7a7a",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.register_close.0",
+      "src": "PUBLIC_EXAMPLE.counts_line",
+      "chars": 123,
+      "sha256": "7fb72808a807b804996c74631cfc8dc3c264abb76168ecfb25f0f05acb8b74f6",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.register_close.1",
+      "src": "PUBLIC_EXAMPLE.source_line",
+      "chars": 152,
+      "sha256": "1e26cddb8cfe6531f6920720b733b6054de16d9e91d032d8fbca8ff1a8780c7e",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.register_close.2",
+      "src": "PUBLIC_EXAMPLE.tag",
+      "chars": 127,
+      "sha256": "eea9c31db08c7548621fd70c8c6e980c8b43d220d1fa75a192d3a5bb5890f74c",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.0.label",
+      "src": "PUBLIC_EXAMPLE.provenance[0].label",
+      "chars": 27,
+      "sha256": "3c272896b9689d251c4259cd4c50f2a9cba27b2266fd3780fa8526d95824b9a3",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.0.body",
+      "src": "PUBLIC_EXAMPLE.provenance[0].body",
+      "chars": 172,
+      "sha256": "c16d0c40abf6c20dec90afa8ba01037d3bf984d0df38aee19d764b17798740a5",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.1.label",
+      "src": "PUBLIC_EXAMPLE.provenance[1].label",
+      "chars": 32,
+      "sha256": "e466dc39f8a28a558e7673f087c4d64875aa4f2fae1fd385e8922bde20b19493",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.1.body",
+      "src": "PUBLIC_EXAMPLE.provenance[1].body",
+      "chars": 205,
+      "sha256": "ab99a21430161694370a97df66eac59a40342766544ba880f8db4d71cd76985a",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.2.label",
+      "src": "PUBLIC_EXAMPLE.provenance[2].label",
+      "chars": 32,
+      "sha256": "b63faf2fdc6a1dacefa0bf78e206ca12bb2eefae977911685d999752e8369307",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.2.body",
+      "src": "PUBLIC_EXAMPLE.provenance[2].body",
+      "chars": 239,
+      "sha256": "7a7799b32dddb4ca8dbbcf2aa7924ff321dcb24f5f86e2154850556cf7179cdf",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.3.label",
+      "src": "PUBLIC_EXAMPLE.provenance[3].label",
+      "chars": 32,
+      "sha256": "610a8af542915e4da9baf8d02ced31a13733edf7325ac49f4b36be4eb07a3c28",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.provenance.3.body",
+      "src": "PUBLIC_EXAMPLE.provenance[3].body",
+      "chars": 170,
+      "sha256": "6608ed8767c41b2f94df77b29a59a4ace59846b761697a6dd217037d3fbe8534",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.packet_version",
+      "src": "PUBLIC_EXAMPLE.version",
+      "chars": 34,
+      "sha256": "cdf89fd9c83195e2c16367d7e10e0ac51f74f62c877b470892b7dd4862756aa3",
+      "byte_identical": true
+    },
+    {
+      "at": "montana.run_id",
+      "src": "PUBLIC_EXAMPLE.run_id",
+      "chars": 16,
+      "sha256": "bfb084033c9a965e877d7e87c097e6a8425dd8152fb0592b8d7d8eb18134a36d",
+      "byte_identical": true
+    }
+  ]
+}

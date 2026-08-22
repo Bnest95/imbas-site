@@ -1,0 +1,128 @@
+/* Review tooling. Deliberately plain, so nothing here reads as a fourth direction
+ * and nothing here competes with what it is showing. Labels and controls only. */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+}
+
+body { display: grid; grid-template-rows: auto minmax(0, 1fr); height: 100vh; }
+
+/* ── control bar ────────────────────────────────────────────────────────────── */
+
+.cmp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1.6rem;
+  padding: 0.7rem 1.2rem;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.cmp-group { display: flex; align-items: center; gap: 0.45rem; padding: 0.25rem 0; }
+
+.cmp-group > span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-right: 0.15rem;
+}
+
+.cmp-bar button {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0.42rem 0.6rem;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.cmp-bar button:hover { border-color: var(--line-strong); color: var(--ink-luminous); }
+.cmp-bar button[aria-pressed="true"] { color: var(--bg-deep); background: var(--ember); border-color: var(--ember); }
+.cmp-bar button[disabled] { opacity: 0.32; cursor: default; }
+.cmp-bar button[disabled]:hover { border-color: var(--line-soft); color: var(--ink-soft); }
+
+.cmp-bar :focus-visible, .cmp-pane :focus-visible { outline: 2px solid var(--ember-bright); outline-offset: 2px; }
+
+.cmp-note {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+/* The renderer note already claims the auto margin, so the link resets it and sits
+ * beside rather than being shoved to a second right edge. Drawn in its own ink with
+ * an underline, because a link identified only by a hairline is a control identified
+ * below the non-text threshold — the same fault this pass fixed on the dismiss. */
+.cmp-link {
+  margin-left: 1.25rem;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cmp-link:hover { color: var(--ink-luminous); }
+
+/* ── stage ──────────────────────────────────────────────────────────────────── */
+
+.cmp-stage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  min-height: 0;
+  background: var(--line-faint);
+}
+
+/* At 1:1 the three panes hold their true width and the stage scrolls sideways, so
+ * all three move together and stay comparable at the same place. */
+.cmp-stage[data-zoom="full"] { overflow-x: auto; }
+.cmp-stage[data-zoom="full"][data-viewport="desktop"] { grid-template-columns: repeat(3, 1440px); }
+.cmp-stage[data-zoom="full"][data-viewport="mobile"] { grid-template-columns: repeat(3, 390px); justify-content: start; }
+
+/* Below three-across the panes stack, and each one still shows the same screen. */
+@media (max-width: 900px) {
+  .cmp-stage, .cmp-stage[data-zoom="full"][data-viewport="desktop"] { grid-template-columns: minmax(0, 1fr); }
+}
+
+.cmp-pane { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; background: var(--bg-deep); }
+
+.cmp-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding: 0.5rem 0.8rem;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.cmp-letter { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.16em; color: var(--ember); }
+.cmp-name { font-family: var(--font-sans); font-size: 12.5px; color: var(--ink-soft); }
+.cmp-open { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-secondary); text-decoration: none; border-bottom: 1px solid var(--line-soft); }
+.cmp-open:hover { color: var(--ink-luminous); border-color: var(--ember); }
+
+.cmp-view { overflow: auto; position: relative; }
+.cmp-scaler { position: absolute; top: 0; left: 0; transform-origin: top left; }
+.cmp-scaler iframe { display: block; border: 0; background: var(--bg-base); }
+.cmp-scaler img { display: block; height: auto; }
+
+/* Holds the scaled height so the pane scrolls the right distance. */
+.cmp-shim { width: 1px; }
+
+.cmp-miss {
+  padding: 2rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+}

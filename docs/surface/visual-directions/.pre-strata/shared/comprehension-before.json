@@ -1,0 +1,794 @@
+[
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "1440",
+    "arrival": "as it opens",
+    "fold": 1000,
+    "finding_px": 106,
+    "answer_px": 509,
+    "answer_line_bottom": 530,
+    "first_mark_px": 975,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 404,
+    "claim_to_proof_screens": 0.4,
+    "blocks_before": 12,
+    "blocks": [
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 26,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Read 26 July 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Inspected Two answers to one question"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Condition Each read against the other"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 108,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 79,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 123,
+        "text": "This documents what the cited capture and the named sources show. It e"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 229,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 256,
+        "text": "Where they are anchored: 1 describes the answer as a whole."
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 282,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 229,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 287,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 3353
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "1440",
+    "arrival": "forwarded cold",
+    "fold": 1000,
+    "finding_px": 151,
+    "answer_px": 552,
+    "answer_line_bottom": 573,
+    "first_mark_px": 1018,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 400,
+    "claim_to_proof_screens": 0.4,
+    "blocks_before": 15,
+    "blocks": [
+      {
+        "zone": null,
+        "cls": "b-fwd-h",
+        "top": 13,
+        "text": "You are reading a record someone sent you"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-b",
+        "top": 11,
+        "text": "It carries its own scope, its own count and its own sources. Everythin"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-a",
+        "top": 12,
+        "text": "Back to the entry"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 71,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Read 26 July 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Inspected Two answers to one question"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Condition Each read against the other"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 153,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 125,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 168,
+        "text": "This documents what the cited capture and the named sources show. It e"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 274,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 301,
+        "text": "Where they are anchored: 1 describes the answer as a whole."
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 327,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 274,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 0,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 3587
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "390",
+    "arrival": "as it opens",
+    "fold": 844,
+    "finding_px": 154,
+    "answer_px": 855,
+    "answer_line_bottom": 875,
+    "first_mark_px": 1459,
+    "answer_in_fold": false,
+    "claim_to_proof_px": 700,
+    "claim_to_proof_screens": 0.83,
+    "blocks_before": 12,
+    "blocks": [
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 24,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 52,
+        "text": "Read 26 July 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 76,
+        "text": "Inspected Two answers to one question"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 100,
+        "text": "Condition Each read against the other"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 155,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 230,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 273,
+        "text": "This documents what the cited capture and the named sources show. It e"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 401,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 428,
+        "text": "Where they are anchored: 1 describes the answer as a whole."
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 475,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 533,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 612,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 5155
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "390",
+    "arrival": "forwarded cold",
+    "fold": 844,
+    "finding_px": 298,
+    "answer_px": 972,
+    "answer_line_bottom": 992,
+    "first_mark_px": 1577,
+    "answer_in_fold": false,
+    "claim_to_proof_px": 675,
+    "claim_to_proof_screens": 0.8,
+    "blocks_before": 15,
+    "blocks": [
+      {
+        "zone": null,
+        "cls": "b-fwd-h",
+        "top": 11,
+        "text": "You are reading a record someone sent you"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-b",
+        "top": 50,
+        "text": "It carries its own scope, its own count and its own sources. Everythin"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-a",
+        "top": 110,
+        "text": "Back to the entry"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 168,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 195,
+        "text": "Read 26 July 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 219,
+        "text": "Inspected Two answers to one question"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 243,
+        "text": "Condition Each read against the other"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 299,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 374,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 417,
+        "text": "This documents what the cited capture and the named sources show. It e"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 545,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 572,
+        "text": "Where they are anchored: 1 describes the answer as a whole."
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 619,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 676,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 0,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 5745
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "1440",
+    "arrival": "as it opens",
+    "fold": 1000,
+    "finding_px": 77,
+    "answer_px": 539,
+    "answer_line_bottom": 560,
+    "first_mark_px": 654,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 461,
+    "claim_to_proof_screens": 0.46,
+    "blocks_before": 12,
+    "blocks": [
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 26,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Read 4 August 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Inspected One answer"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 24,
+        "text": "Condition Read on its own, under the case protocol"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 79,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 96,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 156,
+        "text": "This describes behavior observed under the conditions recorded here, a"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 240,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 267,
+        "text": "Where they are anchored: 4 quote the answer's own words, 2 bracket a p"
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 314,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 240,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 299,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 4924
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "1440",
+    "arrival": "forwarded cold",
+    "fold": 1000,
+    "finding_px": 123,
+    "answer_px": 584,
+    "answer_line_bottom": 605,
+    "first_mark_px": 699,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 461,
+    "claim_to_proof_screens": 0.46,
+    "blocks_before": 15,
+    "blocks": [
+      {
+        "zone": null,
+        "cls": "b-fwd-h",
+        "top": 13,
+        "text": "You are reading a record someone sent you"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-b",
+        "top": 11,
+        "text": "It carries its own scope, its own count and its own sources. Everythin"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-a",
+        "top": 12,
+        "text": "Back to the entry"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 71,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Read 4 August 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Inspected One answer"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 69,
+        "text": "Condition Read on its own, under the case protocol"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 125,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 141,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 201,
+        "text": "This describes behavior observed under the conditions recorded here, a"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 285,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 313,
+        "text": "Where they are anchored: 4 quote the answer's own words, 2 bracket a p"
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 359,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 285,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 0,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 7010
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "390",
+    "arrival": "as it opens",
+    "fold": 844,
+    "finding_px": 130,
+    "answer_px": 860,
+    "answer_line_bottom": 880,
+    "first_mark_px": 1289,
+    "answer_in_fold": false,
+    "claim_to_proof_px": 730,
+    "claim_to_proof_screens": 0.86,
+    "blocks_before": 12,
+    "blocks": [
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 24,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 52,
+        "text": "Read 4 August 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 52,
+        "text": "Inspected One answer"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 76,
+        "text": "Condition Read on its own, under the case protocol"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 131,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 234,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 301,
+        "text": "This describes behavior observed under the conditions recorded here, a"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 386,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 413,
+        "text": "Where they are anchored: 4 quote the answer's own words, 2 bracket a p"
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 481,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 538,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 618,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 8649
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "390",
+    "arrival": "forwarded cold",
+    "fold": 844,
+    "finding_px": 274,
+    "answer_px": 978,
+    "answer_line_bottom": 998,
+    "first_mark_px": 1407,
+    "answer_in_fold": false,
+    "claim_to_proof_px": 704,
+    "claim_to_proof_screens": 0.83,
+    "blocks_before": 15,
+    "blocks": [
+      {
+        "zone": null,
+        "cls": "b-fwd-h",
+        "top": 11,
+        "text": "You are reading a record someone sent you"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-b",
+        "top": 50,
+        "text": "It carries its own scope, its own count and its own sources. Everythin"
+      },
+      {
+        "zone": null,
+        "cls": "b-fwd-a",
+        "top": 110,
+        "text": "Back to the entry"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 168,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 195,
+        "text": "Read 4 August 2026"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 195,
+        "text": "Inspected One answer"
+      },
+      {
+        "zone": null,
+        "cls": "b-addr-item",
+        "top": 219,
+        "text": "Condition Read on its own, under the case protocol"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 275,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 378,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.5",
+        "cls": "b-boundary",
+        "top": 445,
+        "text": "This describes behavior observed under the conditions recorded here, a"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 529,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.4",
+        "cls": "b-census",
+        "top": 556,
+        "text": "Where they are anchored: 4 quote the answer's own words, 2 bracket a p"
+      },
+      {
+        "zone": "Z2.2",
+        "cls": "b-count-rule",
+        "top": 624,
+        "text": "The count is the number of marks listed here. Count them."
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 682,
+        "text": "Each mark points at something in this answer, or at something that isn"
+      },
+      {
+        "zone": null,
+        "cls": "b-dismiss",
+        "top": 0,
+        "text": "Dismiss"
+      }
+    ],
+    "page_px": 13445
+  }
+]

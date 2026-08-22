@@ -1,0 +1,106 @@
+{
+  "question": "Does the overview-first / full-first choice at 390 move any measured column?",
+  "renderer": "Google Chrome for Testing 148.0.7778.96",
+  "boot_default": "consumer, from one DEFAULTS object in shared/kit.js, with no viewport condition",
+  "overview_is": "consumer — fields() adds rows for professional and removes none for consumer",
+  "forwarded": "not parameterised — canonical() forces professional on a forwarded record, per S1",
+  "measured_columns_that_differ": [],
+  "rows": [
+    {
+      "record": "montana",
+      "view": "1440",
+      "requested": "consumer",
+      "finding": 24,
+      "answer": 366,
+      "mark": 852,
+      "density": "consumer",
+      "fields": 3,
+      "page": 2813,
+      "in_fold": true
+    },
+    {
+      "record": "montana",
+      "view": "1440",
+      "requested": "professional",
+      "finding": 24,
+      "answer": 366,
+      "mark": 852,
+      "density": "professional",
+      "fields": 8,
+      "page": 3005,
+      "in_fold": true
+    },
+    {
+      "record": "deposit",
+      "view": "1440",
+      "requested": "consumer",
+      "finding": 24,
+      "answer": 406,
+      "mark": 541,
+      "density": "consumer",
+      "fields": 21,
+      "page": 4395,
+      "in_fold": true
+    },
+    {
+      "record": "deposit",
+      "view": "1440",
+      "requested": "professional",
+      "finding": 24,
+      "answer": 406,
+      "mark": 541,
+      "density": "professional",
+      "fields": 75,
+      "page": 6435,
+      "in_fold": true
+    },
+    {
+      "record": "montana",
+      "view": "390",
+      "requested": "consumer",
+      "finding": 24,
+      "answer": 382,
+      "mark": 1007,
+      "density": "consumer",
+      "fields": 3,
+      "page": 4075,
+      "in_fold": true
+    },
+    {
+      "record": "montana",
+      "view": "390",
+      "requested": "professional",
+      "finding": 24,
+      "answer": 382,
+      "mark": 1007,
+      "density": "professional",
+      "fields": 8,
+      "page": 4546,
+      "in_fold": true
+    },
+    {
+      "record": "deposit",
+      "view": "390",
+      "requested": "consumer",
+      "finding": 24,
+      "answer": 410,
+      "mark": 858,
+      "density": "consumer",
+      "fields": 21,
+      "page": 7591,
+      "in_fold": true
+    },
+    {
+      "record": "deposit",
+      "view": "390",
+      "requested": "professional",
+      "finding": 24,
+      "answer": 410,
+      "mark": 858,
+      "density": "professional",
+      "fields": 75,
+      "page": 12269,
+      "in_fold": true
+    }
+  ]
+}

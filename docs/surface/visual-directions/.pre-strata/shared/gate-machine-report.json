@@ -1,0 +1,277 @@
+{
+  "renderer": "Google Chrome for Testing 148.0.7778.96",
+  "pages_swept": 72,
+  "lexicon": [
+    {
+      "ap": "AP1",
+      "label": "verdict language",
+      "pattern": "/\\b(wrong|false|untrue|misleading|debunk\\w*|busted|caught|exposed?|failed the|gets it wrong|lie[sd]?)\\b/i"
+    },
+    {
+      "ap": "AP2",
+      "label": "score compression",
+      "pattern": "/\\b(score[ds]?|scoring|grade[ds]?|rating|rated|out of (ten|five|10|5)|confidence|accuracy)\\b/i"
+    },
+    {
+      "ap": "AP2",
+      "label": "numeric compression",
+      "pattern": "/\\d\\s?%|\\b\\d+(\\.\\d+)?\\s?\\/\\s?(5|10|100)\\b/"
+    },
+    {
+      "ap": "AP6",
+      "label": "urgency mechanics",
+      "pattern": "/\\b(urgent|act now|hurry|don'?t wait|last chance|expires? in|countdown|time is running|before it'?s too late)\\b/i"
+    },
+    {
+      "ap": "AP17",
+      "label": "fake precision",
+      "pattern": "/\\b\\d+\\.\\d{2,}\\b/"
+    },
+    {
+      "ap": "AP18",
+      "label": "motive verbs",
+      "pattern": "/(?<!\\b(you|i|we|they)\\s)\\b(hid|hide[sd]?|hiding|conceal\\w*|withh\\w*|refus\\w*|wants? to|wanted to|tr(y|ies|ied) to|intend\\w*|deliberat\\w*|avoid(s|ed)? (say|admit|mention)\\w*|chose to)\\b/i"
+    },
+    {
+      "ap": "AP19",
+      "label": "borrowed authority",
+      "pattern": "/\\b(certified|accredited|iso ?\\d|verified by|trusted by|as seen in|award-winning|peer[- ]reviewed by|endorsed)\\b/i"
+    },
+    {
+      "ap": "AP10",
+      "label": "leaderboard framing",
+      "pattern": "/\\b(leaderboard|rank(ed|ing)?|top \\d|#\\d\\b|beats?|outperform\\w*|head[- ]to[- ]head|versus\\b|\\bvs\\.?\\b)\\b/i"
+    },
+    {
+      "ap": "AP9",
+      "label": "chatbot framing",
+      "pattern": "/\\b(chat with|ask me|talk to (the|our)|type your message|send a message|conversation with)\\b/i"
+    },
+    {
+      "ap": "AP23",
+      "label": "silent correction",
+      "pattern": "/\\b(should have (said|appeared|been)|should say|correct(ed)? version|the right answer is|instead of that|here'?s what it missed)\\b/i"
+    },
+    {
+      "ap": "AP5",
+      "label": "alarm register",
+      "pattern": "/\\b(alarming|shocking|disturbing|dangerous|scandal|crisis|red flag|beware|warning:)\\b/i"
+    },
+    {
+      "ap": "COUNT",
+      "label": "checks as a grade",
+      "pattern": "/\\b\\d+\\s*(?:of|out of|\\/)\\s*\\d+\\b|\\b(?:failure|success|pass|error|hit|miss)[-\\s]rates?\\b|\\b(?:passed|passes|failed|fails|failing|pass|fail)\\b|\\b\\d+(?:\\.\\d+)?\\s*percent\\s+(?:of\\s+)?(?:the\\s+)?(?:checks?|tests?|findings?|records?)\\b|\\bratio\\s+of\\b/i"
+    }
+  ],
+  "glyph_set": "/[\\u2713\\u2714\\u2715\\u2716\\u2717\\u2718\\u274C\\u2705\\u26A0\\u26D4\\u2B50\\u2757\\u203C\\u2691]|[\\u{1F6A9}\\u{1F534}\\u{1F535}\\u{1F7E0}\\u{1F7E1}\\u{1F7E2}\\u{1F6A6}\\u{1F6A8}\\u{1F3C1}\\u{1F44D}\\u{1F44E}]/u",
+  "palette_closure": {
+    "grounds": [
+      "#120E0D",
+      "#2A211E",
+      "#3C302C",
+      "#4E403C",
+      "#61514C"
+    ],
+    "inks": [
+      "#FCF8EC",
+      "#F2E8DC",
+      "#D4CFC2",
+      "#B9B1AA",
+      "#A59A8F",
+      "#DE6F38",
+      "#C85830",
+      "#F08F58",
+      "#F8A866",
+      "rgba(242,232,220,0.09)",
+      "rgba(242,232,220,0.15)",
+      "rgba(242,232,220,0.24)",
+      "rgba(252,248,236,0.38)",
+      "rgba(222,111,56,0.30)",
+      "rgba(222,111,56,0.14)",
+      "rgba(248,168,102,0.62)",
+      "rgba(240,143,88,0.36)",
+      "#000000",
+      "#FFFFFF"
+    ],
+    "distinct_allowed": 3305
+  },
+  "directions": {
+    "a": {
+      "pages_swept": 24,
+      "distinct_findings": 5,
+      "total_occurrences": 63,
+      "detail": [
+        {
+          "ap": "COUNT",
+          "label": "checks as a grade",
+          "where": "Z6.2 · p.a-prov-body",
+          "match": "fails",
+          "text": "Imbas produces no authoritative matched-conditions field and persists none. Nothing here satisfies one and nothing here fails one. There is no such determinatio",
+          "frame": "a__record__montana__desktop__default__ordinary",
+          "frames": 4,
+          "first_frame": "a__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP2",
+          "label": "score compression",
+          "where": "Z7.2 · p.a-foot-body",
+          "match": "scored",
+          "text": "500 recorded captures across 4 models on 50 cases, 37 of them scored. Counts read from the Imbas numbers ledger on 2026-07-01.",
+          "frame": "a__record__montana__desktop__default__ordinary",
+          "frames": 17,
+          "first_frame": "a__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z1.2 · p.a-context",
+          "match": "withheld",
+          "text": "Protocol-measured case · security deposit withheld",
+          "frame": "a__record__deposit__desktop__default__ordinary",
+          "frames": 6,
+          "first_frame": "a__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z4.4 · p.a-detail-declared",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "a__record__deposit__desktop__default__ordinary",
+          "frames": 12,
+          "first_frame": "a__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z5.3 · span.a-field-body",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "a__record__deposit__desktop__default__ordinary",
+          "frames": 24,
+          "first_frame": "a__record__deposit__desktop__default__ordinary"
+        }
+      ],
+      "distinct_colours": 45,
+      "off_palette": []
+    },
+    "b": {
+      "pages_swept": 24,
+      "distinct_findings": 5,
+      "total_occurrences": 63,
+      "detail": [
+        {
+          "ap": "COUNT",
+          "label": "checks as a grade",
+          "where": "Z6.2 · p.b-prov-body",
+          "match": "fails",
+          "text": "Imbas produces no authoritative matched-conditions field and persists none. Nothing here satisfies one and nothing here fails one. There is no such determinatio",
+          "frame": "b__record__montana__desktop__default__ordinary",
+          "frames": 4,
+          "first_frame": "b__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP2",
+          "label": "score compression",
+          "where": "Z7.2 · p.b-foot-body",
+          "match": "scored",
+          "text": "500 recorded captures across 4 models on 50 cases, 37 of them scored. Counts read from the Imbas numbers ledger on 2026-07-01.",
+          "frame": "b__record__montana__desktop__default__ordinary",
+          "frames": 17,
+          "first_frame": "b__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z1.2 · p.b-context",
+          "match": "withheld",
+          "text": "Protocol-measured case · security deposit withheld",
+          "frame": "b__record__deposit__desktop__default__ordinary",
+          "frames": 6,
+          "first_frame": "b__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z4.4 · p.b-note-body",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "b__record__deposit__desktop__default__ordinary",
+          "frames": 12,
+          "first_frame": "b__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z5.3 · span.b-field-body",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "b__record__deposit__desktop__default__ordinary",
+          "frames": 24,
+          "first_frame": "b__record__deposit__desktop__default__ordinary"
+        }
+      ],
+      "distinct_colours": 49,
+      "off_palette": []
+    },
+    "c": {
+      "pages_swept": 24,
+      "distinct_findings": 5,
+      "total_occurrences": 63,
+      "detail": [
+        {
+          "ap": "COUNT",
+          "label": "checks as a grade",
+          "where": "Z6.2 · p.c-prov-body",
+          "match": "fails",
+          "text": "Imbas produces no authoritative matched-conditions field and persists none. Nothing here satisfies one and nothing here fails one. There is no such determinatio",
+          "frame": "c__record__montana__desktop__default__ordinary",
+          "frames": 4,
+          "first_frame": "c__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP2",
+          "label": "score compression",
+          "where": "Z7.2 · p.c-foot-body",
+          "match": "scored",
+          "text": "500 recorded captures across 4 models on 50 cases, 37 of them scored. Counts read from the Imbas numbers ledger on 2026-07-01.",
+          "frame": "c__record__montana__desktop__default__ordinary",
+          "frames": 17,
+          "first_frame": "c__record__montana__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z1.2 · p.c-context",
+          "match": "withheld",
+          "text": "Protocol-measured case · security deposit withheld",
+          "frame": "c__record__deposit__desktop__default__ordinary",
+          "frames": 6,
+          "first_frame": "c__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z4.4 · span.c-app-val-text",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "c__record__deposit__desktop__default__ordinary",
+          "frames": 12,
+          "first_frame": "c__record__deposit__desktop__default__ordinary"
+        },
+        {
+          "ap": "AP18",
+          "label": "motive verbs",
+          "where": "Z5.3 · span.c-led-val-text",
+          "match": "withheld",
+          "text": "The answer records that a lapsed window strengthens the reader's position and stops there. A number of state statutes attach a specific consequence to a late or",
+          "frame": "c__record__deposit__desktop__default__ordinary",
+          "frames": 24,
+          "first_frame": "c__record__deposit__desktop__default__ordinary"
+        }
+      ],
+      "distinct_colours": 35,
+      "off_palette": []
+    }
+  }
+}

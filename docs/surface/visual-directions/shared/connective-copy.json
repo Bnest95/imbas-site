@@ -1,0 +1,540 @@
+{
+  "note": "Connective UI copy for the record anatomy. Written once, consumed by all three directions, held nowhere else. Governed source strings are inventoried separately in governed-string-inventory.json.",
+  "anatomy_version": "record-anatomy.v2",
+  "count": 104,
+  "lint": {
+    "module": "/Users/brendan/Documents/Claude/Projects/imbas-site/reader-check-vocab.js",
+    "version": "check-vocab.v1",
+    "function": "lintUserFacingStrings",
+    "modified": false
+  },
+  "strings": [
+    {
+      "zone": "UI.z1.address_read",
+      "chars": 4,
+      "text": "Read"
+    },
+    {
+      "zone": "UI.z1.address_inspected",
+      "chars": 9,
+      "text": "Inspected"
+    },
+    {
+      "zone": "UI.z1.address_condition",
+      "chars": 9,
+      "text": "Condition"
+    },
+    {
+      "zone": "UI.z1.boundary_label",
+      "chars": 23,
+      "text": "What this record covers"
+    },
+    {
+      "zone": "UI.z1.fixture_flag",
+      "chars": 12,
+      "text": "Lane fixture"
+    },
+    {
+      "zone": "UI.z2.count_one",
+      "chars": 21,
+      "text": "1 mark on this record"
+    },
+    {
+      "zone": "UI.z2.count_many",
+      "chars": null,
+      "text": "2 marks on this record",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z2.count_rule",
+      "chars": 57,
+      "text": "The count is the number of marks listed here. Count them."
+    },
+    {
+      "zone": "UI.z2.census_lead",
+      "chars": 24,
+      "text": "Where they are anchored:"
+    },
+    {
+      "zone": "UI.z2.census_part.QUOTED_SPAN",
+      "chars": null,
+      "text": "2 quote the answer's own words",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z2.census_part.PASSAGE_CONTEXT",
+      "chars": null,
+      "text": "2 bracket a passage",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z2.census_part.RECORD_LEVEL_ABSENCE",
+      "chars": null,
+      "text": "2 describe the answer as a whole",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z2.orientation",
+      "chars": 97,
+      "text": "Each mark points at something in this answer, or at something absent from it. Imbas records both."
+    },
+    {
+      "zone": "UI.z2.orientation_dismiss",
+      "chars": 7,
+      "text": "Dismiss"
+    },
+    {
+      "zone": "UI.strata.header_detail",
+      "chars": 76,
+      "text": "What this record is, where its marks are anchored, and how to read the count"
+    },
+    {
+      "zone": "UI.strata.checks_detail",
+      "chars": 57,
+      "text": "What each check produced, and the condition it read under"
+    },
+    {
+      "zone": "UI.z3.assignment_disclosure",
+      "chars": 200,
+      "text": "Each expectation below is quoted from this assignment by hand. Imbas holds no instruction-set artifact role, and no Imbas code resolves an expectation anchor. This machinery is authored for this lane."
+    },
+    {
+      "zone": "UI.z4.record_level_heading",
+      "chars": 12,
+      "text": "Record-level"
+    },
+    {
+      "zone": "UI.z4.record_level_rule",
+      "chars": 28,
+      "text": "Not anywhere in this answer."
+    },
+    {
+      "zone": "UI.z4.record_level_note",
+      "chars": 136,
+      "text": "These marks point at the answer as a whole. There is no place in it where they sit, so they are recorded here rather than beside a line."
+    },
+    {
+      "zone": "UI.z4.mode_label",
+      "chars": 11,
+      "text": "Anchor mode"
+    },
+    {
+      "zone": "UI.z4.mode_meaning.QUOTED_SPAN",
+      "chars": 86,
+      "text": "The mark sits on the characters it quotes. The quote reproduces from the answer above."
+    },
+    {
+      "zone": "UI.z4.mode_meaning.PASSAGE_CONTEXT",
+      "chars": 130,
+      "text": "The mark brackets a region rather than a line, because the reading is legible across the region and not at any single point in it."
+    },
+    {
+      "zone": "UI.z4.mode_meaning.RECORD_LEVEL_ABSENCE",
+      "chars": 82,
+      "text": "The mark points at nothing in the answer. There is no place in it where this sits."
+    },
+    {
+      "zone": "UI.z4.open_label",
+      "chars": 14,
+      "text": "Open this mark"
+    },
+    {
+      "zone": "UI.z4.close_label",
+      "chars": 15,
+      "text": "Close this mark"
+    },
+    {
+      "zone": "UI.z4.jump_to_source",
+      "chars": 21,
+      "text": "Go to the marked line"
+    },
+    {
+      "zone": "UI.z4.jump_to_register",
+      "chars": 23,
+      "text": "Read the register entry"
+    },
+    {
+      "zone": "UI.z5.heading",
+      "chars": 14,
+      "text": "Check Register"
+    },
+    {
+      "zone": "UI.z5.note",
+      "chars": 352,
+      "text": "Each entry is one mark, numbered as it is beside the answer. It records what the mark is anchored to, whether that evidence resolved, and the question worth asking next. Anchor mode and evidence are separate: a mark can point at a real place and still have nothing to quote, and a mark that points at nothing in the answer is a different kind of claim."
+    },
+    {
+      "zone": "UI.z5.density_label",
+      "chars": 16,
+      "text": "Register density"
+    },
+    {
+      "zone": "UI.z5.density_consumer",
+      "chars": 5,
+      "text": "Plain"
+    },
+    {
+      "zone": "UI.z5.density_professional",
+      "chars": 4,
+      "text": "Full"
+    },
+    {
+      "zone": "UI.z5.density_consumer_note",
+      "chars": 56,
+      "text": "What each mark points at, and the question it hands you."
+    },
+    {
+      "zone": "UI.z5.density_professional_note",
+      "chars": 130,
+      "text": "Every field the record holds: anchor mode, evidence state, signal class, what the reading rests on, and how the documents connect."
+    },
+    {
+      "zone": "UI.z5.field_points_at",
+      "chars": 23,
+      "text": "What the mark points at"
+    },
+    {
+      "zone": "UI.z5.field_worth_asking",
+      "chars": 12,
+      "text": "Worth asking"
+    },
+    {
+      "zone": "UI.z5.field_evidence",
+      "chars": 8,
+      "text": "Evidence"
+    },
+    {
+      "zone": "UI.z5.field_signal_class",
+      "chars": 12,
+      "text": "Signal class"
+    },
+    {
+      "zone": "UI.z5.field_rests_on",
+      "chars": 16,
+      "text": "What it rests on"
+    },
+    {
+      "zone": "UI.z5.field_carries",
+      "chars": 15,
+      "text": "What carries it"
+    },
+    {
+      "zone": "UI.z5.field_connect",
+      "chars": 16,
+      "text": "How they connect"
+    },
+    {
+      "zone": "UI.z5.field_expectation",
+      "chars": 19,
+      "text": "The assignment says"
+    },
+    {
+      "zone": "UI.z5.field_quote",
+      "chars": 22,
+      "text": "Quoted from the answer"
+    },
+    {
+      "zone": "UI.z5.field_region",
+      "chars": 20,
+      "text": "The bracketed region"
+    },
+    {
+      "zone": "UI.z5.field_declared_by",
+      "chars": 15,
+      "text": "Who states that"
+    },
+    {
+      "zone": "UI.z5.field_observed",
+      "chars": 28,
+      "text": "Quoted from the probe answer"
+    },
+    {
+      "zone": "UI.z5.field_materiality",
+      "chars": 15,
+      "text": "Why it mattered"
+    },
+    {
+      "zone": "UI.z5.evidence_quoted",
+      "chars": 33,
+      "text": "Reproduces from the answer above."
+    },
+    {
+      "zone": "UI.z5.evidence_absent",
+      "chars": 77,
+      "text": "Nothing to quote in the answer above. The item is recorded as absent from it."
+    },
+    {
+      "zone": "UI.z5.evidence_probe",
+      "chars": 84,
+      "text": "Nothing to quote in the answer above. Resolved. It reproduces from the probe answer."
+    },
+    {
+      "zone": "UI.z5.evidence_region",
+      "chars": 55,
+      "text": "Reproduces as the bracketed region in the answer above."
+    },
+    {
+      "zone": "UI.z5.classes_heading",
+      "chars": 14,
+      "text": "Signal classes"
+    },
+    {
+      "zone": "UI.z5.classes_note",
+      "chars": 72,
+      "text": "Imbas records three signal classes: Omission, Framing Drift, Deflection."
+    },
+    {
+      "zone": "UI.z5.classes_none",
+      "chars": 198,
+      "text": "This record carries no Imbas signal class. Those classes describe what an AI answer surfaced. This record describes one produced artifact against one assignment, which is a different kind of record."
+    },
+    {
+      "zone": "UI.z5.applied_heading",
+      "chars": 14,
+      "text": "Checks applied"
+    },
+    {
+      "zone": "UI.z5.applied_note",
+      "chars": 227,
+      "text": "Three checks are declared for a record of this kind, and all three read the answer above. Each one is listed here with what it produced, so a check that produced nothing sits on the record beside a check that produced findings."
+    },
+    {
+      "zone": "UI.z5.applied_condition_label",
+      "chars": 9,
+      "text": "Condition"
+    },
+    {
+      "zone": "UI.z5.applied_condition_shared",
+      "chars": 238,
+      "text": "A check produces a finding where both ends resolve to exact text of the answer above: the wording a reading rests on, and the wording that carries it. Where an end does not resolve, the check produces nothing rather than something weaker."
+    },
+    {
+      "zone": "UI.z5.applied_silence_note",
+      "chars": 162,
+      "text": "A check that produced nothing is recorded as exactly that: it ran, under the condition above, and produced nothing. The register is a record of what was examined."
+    },
+    {
+      "zone": "UI.z5.applied_field_identity",
+      "chars": 5,
+      "text": "Check"
+    },
+    {
+      "zone": "UI.z5.applied_field_outcome",
+      "chars": 16,
+      "text": "What it produced"
+    },
+    {
+      "zone": "UI.z5.applied_field_detector",
+      "chars": 8,
+      "text": "Detector"
+    },
+    {
+      "zone": "UI.z5.applied_outcome_produced",
+      "chars": null,
+      "text": "Produced 2 findings: marks undefined.",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z5.applied_outcome_none",
+      "chars": 43,
+      "text": "Ran on this record and produced no finding."
+    },
+    {
+      "zone": "UI.z5.applied_outcome_not_applicable",
+      "chars": 27,
+      "text": "Did not run on this record."
+    },
+    {
+      "zone": "UI.z5.applied_not_applicable_why",
+      "chars": 155,
+      "text": "These three checks read an AI answer. This record holds one produced artifact against one assignment, so the marks on it come from that comparison instead."
+    },
+    {
+      "zone": "UI.z5.applied_census",
+      "chars": null,
+      "text": "2 checks ran. undefined produced one or more findings.",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z5.applied_census_none",
+      "chars": null,
+      "text": "2 checks are declared. None ran on this record, because each of them reads an AI answer.",
+      "note": "count line, rendered per record"
+    },
+    {
+      "zone": "UI.z6.heading",
+      "chars": 10,
+      "text": "Provenance"
+    },
+    {
+      "zone": "UI.z6.identity_heading",
+      "chars": 15,
+      "text": "Record identity"
+    },
+    {
+      "zone": "UI.z6.identity_note",
+      "chars": 154,
+      "text": "These are the durable handles. A reader who cites this record, asks for it again, or checks it against the anatomy it was built under quotes them exactly."
+    },
+    {
+      "zone": "UI.z6.address_run",
+      "chars": 3,
+      "text": "Run"
+    },
+    {
+      "zone": "UI.z6.address_packet",
+      "chars": 6,
+      "text": "Packet"
+    },
+    {
+      "zone": "UI.z6.address_record",
+      "chars": 6,
+      "text": "Record"
+    },
+    {
+      "zone": "UI.z6.address_anatomy",
+      "chars": 7,
+      "text": "Anatomy"
+    },
+    {
+      "zone": "UI.z7.method_label",
+      "chars": 27,
+      "text": "Where this check comes from"
+    },
+    {
+      "zone": "UI.z7.method_body",
+      "chars": 134,
+      "text": "The rubric, the prompt set and the capture protocol sit one layer down. A person citing this record cites the method that produced it."
+    },
+    {
+      "zone": "UI.z7.archive_label",
+      "chars": 31,
+      "text": "The archive this record sits in"
+    },
+    {
+      "zone": "UI.z7.archive_body",
+      "chars": 126,
+      "text": "500 recorded captures across 4 models on 50 cases, 37 of them scored. Counts read from the Imbas numbers ledger on 2026-07-01."
+    },
+    {
+      "zone": "UI.z7.citation_label",
+      "chars": 16,
+      "text": "Cite this record"
+    },
+    {
+      "zone": "UI.z7.forwarded_heading",
+      "chars": 41,
+      "text": "You are reading a record someone sent you"
+    },
+    {
+      "zone": "UI.z7.forwarded_body",
+      "chars": 109,
+      "text": "It carries its own scope, its own count and its own sources. Everything the first reader saw is on this page."
+    },
+    {
+      "zone": "UI.z8.field_label",
+      "chars": 11,
+      "text": "Your answer"
+    },
+    {
+      "zone": "UI.z8.field_placeholder",
+      "chars": 37,
+      "text": "Paste the answer you want to look at."
+    },
+    {
+      "zone": "UI.z8.action",
+      "chars": 19,
+      "text": "Look at this answer"
+    },
+    {
+      "zone": "UI.z8.scope",
+      "chars": 99,
+      "text": "Imbas reads the text you paste and records the run. Your answer is held as one block of characters."
+    },
+    {
+      "zone": "UI.z8.mechanism_heading",
+      "chars": 29,
+      "text": "Watch it on one recorded pair"
+    },
+    {
+      "zone": "UI.z8.mechanism_body",
+      "chars": 113,
+      "text": "One question, two answers, and what each one carried. The whole loop, on a public example, with nothing to paste."
+    },
+    {
+      "zone": "UI.z8.mechanism_action",
+      "chars": 23,
+      "text": "Open the public example"
+    },
+    {
+      "zone": "UI.z8.arriving_heading",
+      "chars": 41,
+      "text": "You are reading a record someone sent you"
+    },
+    {
+      "zone": "UI.z8.arriving_body",
+      "chars": 52,
+      "text": "Read it through, then look at an answer of your own."
+    },
+    {
+      "zone": "UI.z8.arriving_action",
+      "chars": 27,
+      "text": "Look at an answer of my own"
+    },
+    {
+      "zone": "UI.z8.ready_note",
+      "chars": 66,
+      "text": "One answer, one run. The record opens as soon as the run finishes."
+    },
+    {
+      "zone": "UI.z8.entry_return",
+      "chars": 17,
+      "text": "Back to the entry"
+    },
+    {
+      "zone": "UI.nav.record_chooser",
+      "chars": 6,
+      "text": "Record"
+    },
+    {
+      "zone": "UI.nav.viewport_note",
+      "chars": 64,
+      "text": "Scratch surface for visual direction review. Nothing here ships."
+    },
+    {
+      "zone": "UI.nav.lane_tag",
+      "chars": 39,
+      "text": "VISUAL DIRECTION · SCRATCH · FOR REVIEW"
+    },
+    {
+      "zone": "BOUNDARIES.GOVERNED_PUBLIC_EXAMPLE",
+      "chars": 148,
+      "text": "This documents what the cited capture and the named sources show. It establishes neither intent nor every fact you would need to reach a conclusion."
+    },
+    {
+      "zone": "BOUNDARIES.USER_SUPPLIED_RUN",
+      "chars": 126,
+      "text": "This is a Second Look at one answer you supplied. Each mark here is provisional, and each one is a prompt for your own review."
+    },
+    {
+      "zone": "BOUNDARIES.PROTOCOL_MEASURED_CASE",
+      "chars": 94,
+      "text": "This describes behavior observed under the conditions recorded here, and nothing outside them."
+    },
+    {
+      "zone": "BOUNDARIES.ADHERENCE_RECORD",
+      "chars": 84,
+      "text": "This describes one produced artifact against one assignment. Its scope is that pair."
+    },
+    {
+      "zone": "RECORD_LEVEL_RULE",
+      "chars": 28,
+      "text": "Not anywhere in this answer."
+    },
+    {
+      "zone": "FIRST_RUN_LINE",
+      "chars": 97,
+      "text": "Each mark points at something in this answer, or at something absent from it. Imbas records both."
+    }
+  ]
+}
