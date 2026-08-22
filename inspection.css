@@ -54,7 +54,7 @@
 
 .insp-record__trust-note {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(175, 162, 148, 0.88);
@@ -79,7 +79,7 @@
 
 .insp-glance__orientation {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(200, 186, 170, 0.9);
@@ -95,7 +95,7 @@
 }
 
 .insp-inspect__summary {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(180, 166, 150, 0.85);
@@ -133,7 +133,7 @@
   margin: 0;
   padding: 0.6rem 0.75rem;
   border-left: 2px solid rgba(230, 175, 130, 0.4);
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.55;
   color: rgba(175, 162, 148, 0.88);
@@ -174,7 +174,7 @@
 
 .insp-context__text {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(224, 210, 190, 0.94);
@@ -217,7 +217,7 @@
    question again starts a record, it does not revise this one. */
 .insp-actions__note {
   margin: 0.5rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(175, 162, 148, 0.82);
@@ -229,7 +229,7 @@
   justify-content: center;
   min-height: 2.75rem;
   padding: 0.45rem 0.85rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   font-weight: 500;
   text-decoration: none;
@@ -313,7 +313,7 @@
 
 .insp-receipt__note {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(200, 186, 170, 0.88);
@@ -362,7 +362,7 @@
    quote marks and no rule, so a reader never has to work out who is speaking. */
 .insp-receipt__statement {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(200, 186, 170, 0.88);
@@ -394,7 +394,7 @@
   padding: 0;
   display: grid;
   gap: 0.5rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.55;
   color: rgba(180, 167, 152, 0.86);
@@ -418,7 +418,7 @@
 
 .insp-report__body {
   margin: 0 0 0.6rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.55;
   color: rgba(175, 162, 148, 0.86);
@@ -433,7 +433,7 @@
 
 .insp-report__status {
   margin: 0.35rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(184, 200, 160, 0.9);
@@ -447,7 +447,7 @@
    a share. The ink token, opaque, measures 7.44:1 here. */
 .insp-report__privacy {
   margin: 0.6rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.75rem, 12px);
   line-height: 1.5;
   color: var(--ink-secondary);

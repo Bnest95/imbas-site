@@ -25,6 +25,32 @@
   --bg-surface-rgb: 60, 48, 44;
   --bg-elevated-rgb: 78, 64, 60;
   --bg-lift-rgb:    97, 81, 76;
+
+  /* Cool field — the same five rungs in navy, for the sections that carry the
+     environment rather than the page ground. Each cool rung is solved to the
+     luminance of its warm counterpart, so the ink table below governs both
+     ladders and a surface can change temperature without changing contrast.
+     Measured relative luminance / CIE L*, with the warm rung it answers to:
+       recess   #040F20  Y 0.00472  L*  4.26   (warm  4.26)
+       field    #162337  Y 0.01649  L* 13.52   (warm 13.67)
+       surface  #293344  Y 0.03256  L* 21.04   (warm 21.04)
+       elevated #38435A  Y 0.05593  L* 28.36   (warm 28.41)
+       lift     #485471  Y 0.08911  L* 35.81   (warm 35.88)
+     Every adjacent step clears 1.20:1 and 7.3 L*, as the warm ladder does, so
+     elevation still reads by value and temperature says only which band of the
+     page you are standing in. Cool is field: it paints a section and the panels
+     inside it, and it never paints a mark, a rule or a word. */
+  --bg-deep-cool:     #040F20;
+  --bg-base-cool:     #162337;
+  --bg-surface-cool:  #293344;
+  --bg-elevated-cool: #38435A;
+  --bg-lift-cool:     #485471;
+  --bg-deep-cool-rgb:     4, 15, 32;
+  --bg-base-cool-rgb:     22, 35, 55;
+  --bg-surface-cool-rgb:  41, 51, 68;
+  --bg-elevated-cool-rgb: 56, 67, 90;
+  --bg-lift-cool-rgb:     72, 84, 113;
+
   --section-aurora-fade: 14%;
   --edge-bleed: 72px;
 
@@ -63,9 +89,12 @@
   --ember-bloom:    rgba(240, 143, 88, 0.36);
   --ember-rgb:      222, 111, 56;
 
-  /* Cool atmospheric — the ONLY sanctioned use of cool. These are field, distance
-     and air: low-alpha light thrown across the warm ground. A cool value never
-     paints a panel, a card, a well or a line of text. */
+  /* Cool atmospheric — the ambient half of the field: distance and air, thrown
+     as low-alpha light across whichever ground it sits on. The solid half is the
+     cool ladder above. Ambient light cannot carry a section on its own, so the
+     two halves work together and neither substitutes for the other. Cool is
+     environment in both, and an accent in neither: it never colours a mark, a
+     rule or a word. */
   --slate-glow:     rgba(110, 150, 195, 0.18);
   --slate-deeper:   rgba(110, 150, 195, 0.11);
   --slate-bloom:    rgba(155, 188, 228, 0.20);
@@ -134,6 +163,37 @@
 
 @media (max-width: 699px) {
   :root { --text-min: var(--text-min-mobile); }
+}
+
+/* ── Field assignment: which sections stand on the cool ladder ───────────────
+   Rebinding the rungs, rather than restating colours, is what makes this a
+   field and not a paint job: a section and every panel inside it change
+   temperature together, and a panel that asks for --bg-elevated goes on asking
+   for the rung it always asked for. Adding a panel to one of these sections
+   needs no cool-specific rule.
+
+   These three carried the cool field before it was dropped, and each still
+   holds the cool ambient wash that was built to sit on it — the slate in
+   .compounding::before, .roadmap::before and .archive::before never left, which
+   is how the set was identified. Down the landing page the temperature now
+   goes: hero, proof strip and the opening stakes warm; the instrument cool;
+   the argument warm through your-experience, gap, categories and value; the
+   roadmap cool; audiences and record-compounds warm; the archive cool; the
+   close warm. Sections named nowhere here stand on the warm ladder, which is
+   the page ground and stays the default. */
+.compounding,
+.roadmap,
+.archive {
+  --bg-deep:         var(--bg-deep-cool);
+  --bg-base:         var(--bg-base-cool);
+  --bg-surface:      var(--bg-surface-cool);
+  --bg-elevated:     var(--bg-elevated-cool);
+  --bg-lift:         var(--bg-lift-cool);
+  --bg-deep-rgb:     var(--bg-deep-cool-rgb);
+  --bg-base-rgb:     var(--bg-base-cool-rgb);
+  --bg-surface-rgb:  var(--bg-surface-cool-rgb);
+  --bg-elevated-rgb: var(--bg-elevated-cool-rgb);
+  --bg-lift-rgb:     var(--bg-lift-cool-rgb);
 }
 
 * { box-sizing: border-box; }
@@ -2223,8 +2283,42 @@ body:has(main > section.hero) .nav__menu-btn {
   text-transform: none;
   color: var(--ink-soft);
 }
+/* Two layouts and nothing between them.
+
+   Below the switch each pair takes a line of its own and the line break does the
+   separating. Above it all three stand on one row and the middots do. There is no
+   middle state on purpose: the middot is a flex item of .proof-strip__metrics, so
+   a wrap can strand one at the end of a row or the start of the next, and a row
+   that wraps without them is the run-on this rule exists to stop.
+
+   1200px is where the switch goes because 1130px is where the row stops fitting:
+   1034px of content (279 + 11 + 329 + 11 + 329, measured at meta 13.44px / label
+   21.6px) inside 96px of strip padding. The 70px left over absorbs a scrollbar and
+   the width a fallback face takes before the webfont lands. Lengthen any of the six
+   strings and that margin is what gets spent, so measure again before you do.
+
+   Neither layout may break a pair. .proof-strip__metric holds white-space: nowrap
+   at every width, and the copy is cut to clear the narrowest one. */
+.proof-strip--landing .proof-strip__metrics > .proof-strip__lead,
+.proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
+  flex: 0 0 100%;
+  justify-content: center;
+}
 .proof-strip--landing .proof-strip__sep {
   display: none;
+}
+@media (min-width: 1200px) {
+  .proof-strip--landing .proof-strip__metrics {
+    flex-wrap: nowrap;
+  }
+  .proof-strip--landing .proof-strip__metrics > .proof-strip__lead,
+  .proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
+    flex: 0 0 auto;
+  }
+  .proof-strip--landing .proof-strip__sep {
+    display: inline;
+    color: var(--ink-muted);
+  }
 }
 .proof-strip--landing .proof-strip__metric::after {
   content: none;
@@ -4465,7 +4559,7 @@ body:has(main > section.hero) .nav__menu-btn {
 }
 .subscribe button:hover { color: var(--ember-soft); }
 .subscribe__msg {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   text-transform: none;
@@ -9607,8 +9701,16 @@ main > .close::before {
   }
 }
 
-/* Proof-strip lead+subline items: stack full-width and wrap internally so
-   longer sublines never overflow or scroll on narrow viewports (≤680px). */
+/* Proof-strip lead+subline items on narrow viewports (≤699px). The stacking is the
+   same one the switch above sets; only the row-gap is local, because the strip sits
+   tighter here.
+
+   This block used to add flex-wrap: wrap and white-space: normal to the pair so a
+   long subline would rewrap instead of overflowing. It rewrapped between the label
+   and its subline, which is the break this pass was opened to remove. Overflow was
+   the real risk it was answering, so the answer moved to the copy: the longest pair
+   measures 252px against 280px of room at 320px, the narrowest width the strip is
+   held to. Fitting is now the copy's job and nowrap is absolute. */
 @media (max-width: 699px) {
   main > .hero + .proof-strip--landing .proof-strip__metrics {
     row-gap: 0.5rem;
@@ -9619,10 +9721,7 @@ main > .close::before {
     justify-content: center;
   }
   main > .hero + .proof-strip--landing .proof-strip__metric {
-    flex-wrap: wrap;
     justify-content: center;
-    white-space: normal;
-    row-gap: 0.05rem;
   }
   main > .hero + .proof-strip--landing .proof-strip__metric::after {
     content: none;

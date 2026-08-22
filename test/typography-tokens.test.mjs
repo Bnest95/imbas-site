@@ -35,11 +35,17 @@ const ALL_CSS = SHEETS.map(([, css]) => css).join("\n");
 // evidence of anything and are dropped before counting.
 const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, "");
 
-// --font-sans is used 86 times and declared nowhere: the same defect as --font-serif,
-// at five times the size, and no ruling covers what it should resolve to. Every one of
-// the 86 is bare — no inline fallback anywhere — so all 86 currently compute to
-// `inherit`. Recorded rather than fixed, and counted so it cannot grow while it waits.
-const UNRESOLVED = { token: "--font-sans", uses: 86 };
+// --font-sans was the same defect as --font-serif at five times the size: read 86 times,
+// declared nowhere. It got the opposite fix, because the two defects are not the same
+// shape underneath. --font-serif's seventeen consumers all wanted one face, so declaring
+// the token served them all. --font-sans's 86 did not: --font-body reached the ones in
+// static markup, workbench.bundle.js reached the ones in React subtrees with its own
+// inline 'Inter', ui-sans-serif stack, and the user-agent sheet reached one through an
+// unstyled <button> with Arial. Any single declared value would have restyled two of
+// those three groups, so the 86 now name their resolution instead and say `inherit`.
+// The reasoning is recorded above .wb-span__narrow in workbench.css. The token has no
+// consumers left, and this file's job is now to keep it that way.
+const RETIRED = "--font-sans";
 
 function tokenUses(css) {
   return [...stripComments(css).matchAll(/var\((--font-[a-z-]+)/g)].map((m) => m[1]);
@@ -55,24 +61,20 @@ test("every typography token that is used is declared", () => {
   const undeclared = [...used].filter((t) => !declared.has(t)).sort();
   assert.deepEqual(
     undeclared,
-    [UNRESOLVED.token],
-    "a font-family reading an undeclared token does not fall through — it wins and " +
+    [],
+    "a font-family reading an undeclared token does not fall through. It wins and " +
       "resolves to inherit, serving the parent's face wherever that rule applies.",
   );
 });
 
-test("the one token still undeclared has not spread while it waits for a ruling", () => {
-  const uses = tokenUses(ALL_CSS).filter((t) => t === UNRESOLVED.token);
+test("the retired token stays retired", () => {
+  const uses = tokenUses(ALL_CSS).filter((t) => t === RETIRED);
   assert.equal(
     uses.length,
-    UNRESOLVED.uses,
-    `${UNRESOLVED.token} is used ${uses.length} times, recorded at ${UNRESOLVED.uses}. ` +
-      `Every one of them computes to inherit. Resolve the token or update the record.`,
-  );
-  assert.equal(
-    ALL_CSS.includes(`var(${UNRESOLVED.token},`),
-    false,
-    `${UNRESOLVED.token} gained an inline fallback. That hides one site and leaves the rest.`,
+    0,
+    `${RETIRED} is read ${uses.length} time(s). It has no declaration and no agreed face ` +
+      `to declare, so a rule that reads it renders from whatever its parent happens to ` +
+      `carry. Write \`font-family: inherit\` when that is what you mean.`,
   );
 });
 

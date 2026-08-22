@@ -35,7 +35,7 @@
   margin: 0 0 1rem;
 }
 .wb-noscript-fallback p {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 1rem;
   line-height: 1.55;
   margin: 0 0 0.85rem;
@@ -43,7 +43,7 @@
 .wb-noscript-fallback ul {
   margin: 0;
   padding: 0 0 0 1.1rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   line-height: 1.6;
 }
 .wb-noscript-fallback a {
@@ -577,7 +577,7 @@
   color: #D4C4B0;
 }
 .wb-plate-support {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9375rem;
   line-height: 1.55;
   color: rgba(210, 196, 180, 0.88);
@@ -592,7 +592,7 @@
   margin: 0 0 1.1rem;
 }
 .wb-plate-note {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.55;
   color: #B9A893;
@@ -608,14 +608,14 @@
   font-size: 0.9375rem;
 }
 .wb-plate-hint {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.5;
   color: rgba(196, 182, 166, 0.84);
   margin: 0.65rem 0 0;
 }
 .wb-field-error {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.875rem;
   color: var(--ember);
   line-height: 1.5;
@@ -760,7 +760,7 @@
 }
 
 .wb-another-case {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--ember);
@@ -870,7 +870,7 @@
   background: rgba(24, 18, 16, 0.72);
   border: 1px solid rgba(242, 232, 220, 0.08);
   border-radius: 4px;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.5;
   color: rgba(168, 154, 138, 0.88);
@@ -884,7 +884,7 @@
   flex-wrap: wrap;
 }
 .wb-share-panel__link {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--ember-soft);
@@ -1476,7 +1476,7 @@
 }
 .wb-status-readout__body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.90625rem;
   line-height: 1.55;
   color: rgba(185, 168, 147, 0.92);
@@ -1561,7 +1561,7 @@
 }
 .wb-example-plate__open {
   margin: 0.35rem 0 0.5rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   color: rgba(140, 124, 107, 0.88);
   line-height: 1.5;
@@ -2167,7 +2167,7 @@
 }
 
 .wb-reader-v2__subcopy {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 1.02rem;
   line-height: 1.58;
   color: rgba(200, 185, 165, 0.96);
@@ -2612,7 +2612,7 @@
 
 .wb-reader-v2__mode-desc {
   display: block;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.82rem;
   line-height: 1.45;
   color: rgba(160, 145, 132, 0.92);
@@ -2707,7 +2707,7 @@
 
 .wb-reader-v2__promise {
   margin: 0 0 0.65rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.45;
   color: rgba(170, 155, 138, 0.92);
@@ -3507,7 +3507,7 @@
 
 .wb-reader-sigil__sub {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.78rem;
   line-height: 1.42;
   text-align: center;
@@ -3888,7 +3888,7 @@
 .wb-reader-result__badge-gloss {
   margin: 0;
   max-width: 34ch;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.5;
   color: rgba(200, 185, 165, 0.82);
@@ -3923,7 +3923,7 @@
 
 .wb-reader-result__fallback {
   margin: 0 0 0.85rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.84rem;
   line-height: 1.45;
   color: rgba(160, 145, 132, 0.88);
@@ -4060,7 +4060,7 @@
 .wb-reader-result__list {
   margin: 0;
   padding: 0 0 0 1.15rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.96rem;
   line-height: 1.58;
   color: rgba(224, 200, 180, 0.95);
@@ -4073,7 +4073,7 @@
 .wb-reader-result__empty,
 .wb-reader-result__shaped {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.94rem;
   line-height: 1.58;
   color: rgba(185, 168, 147, 0.92);
@@ -4100,7 +4100,7 @@
 
 .wb-reader-result__inspection-note {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.875rem, 14px);
   line-height: 1.55;
   color: rgba(170, 158, 142, 0.78);
@@ -4180,7 +4180,7 @@
 
 .wb-prov__value {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.82rem;
   line-height: 1.45;
   color: rgba(242, 232, 220, 0.88);
@@ -4197,7 +4197,7 @@
 
 .wb-prov__note {
   margin: 0.6rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.78rem;
   line-height: 1.5;
   color: rgba(220, 208, 192, 0.62);
@@ -4231,7 +4231,7 @@
 
 .wb-claim__support {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.86rem;
   line-height: 1.5;
   color: rgba(220, 208, 192, 0.85);
@@ -4242,7 +4242,7 @@
   margin: 0.95rem 0 0;
   padding-top: 0.8rem;
   border-top: 1px solid rgba(242, 232, 220, 0.08);
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.55;
   color: rgba(242, 232, 220, 0.9);
@@ -4266,7 +4266,7 @@
 
 .wb-measure__estimate-why {
   margin: 0.5rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.55;
   color: rgba(196, 182, 205, 0.86);
@@ -4434,12 +4434,28 @@
    selection. Both are the instrument's voice about the selection rather than a control,
    so neither is actionable.
 
-   NO `font-family: var(--font-sans)` HERE, and the omission is deliberate. The token is
-   declared nowhere, so every one of its 86 existing uses computes to `inherit` and
-   serves the parent's face — test/typography-tokens.test.mjs records the count precisely
-   so the defect cannot spread while it waits for a ruling. Writing it here would inherit
-   exactly the same face and add two more sites to resolve. These inherit it instead, and
-   render identically. */
+   No font-family here, and the omission stays deliberate. These take the parent's face,
+   which is what every rule around them asks for as well, now in the words that say so.
+
+   THE --font-sans RULING, recorded here because this note is where the span lane left
+   the question. Three sheets read the token 86 times and none of them declared it. An
+   undeclared var() inside a font-family does not drop its declaration. The declaration
+   is invalid at computed-value time, so the property computes to unset, and unset on an
+   inherited property is inherit. The rule still wins its element and still serves the
+   parent's face, which is why nothing ever looked broken.
+
+   Declaring the token would have been the one-line fix, and it needed all 86 to resolve
+   to one face. They do not. Three faces arrive at those elements: --font-body, which
+   `body` in styles.css gives to consumers in static markup; the 'Inter', ui-sans-serif
+   stack that workbench.bundle.js sets inline on the subtrees React renders; and Arial,
+   which the user-agent sheet hands an unstyled <button> and .wb-reader-v2__mode-desc
+   then inherits through its button parent. One declared value would have restyled the
+   other two groups.
+
+   So the 86 now name what they already resolved to, --font-sans has no consumers left,
+   and the board moved no frame. .wb-measure__question-link below reached this answer
+   first, one rule at a time. The button serving Arial is a real defect and this pass
+   left it alone, because correcting it moves a frame and that needs its own ruling. */
 .wb-span__narrow,
 .wb-span__question {
   margin: 0;
@@ -4478,7 +4494,7 @@
 }
 
 .wb-measure__inspect-summary {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.45;
   color: rgba(180, 166, 150, 0.82);
@@ -4508,7 +4524,7 @@
    capture conditions. */
 .wb-measure__orientation {
   margin: 0 0 0.8rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.5;
   color: rgba(210, 196, 180, 0.88);
@@ -4545,7 +4561,7 @@
 }
 
 .wb-measure__finding-why {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.55;
   color: rgba(228, 216, 200, 0.92);
@@ -4582,12 +4598,10 @@
   padding: 0;
   border: 0;
   background: none;
-  /* `inherit`, not var(--font-sans) like the rows around it. That token is declared
-     nowhere, so all 86 of its uses already compute to inherit — this asks for the same
-     face by naming what it actually resolves to, which keeps the row visually identical
-     to its siblings without growing a count test/typography-tokens.test.mjs holds flat
-     until the token gets a ruling. A button needs it stated either way: the agent
-     stylesheet would otherwise serve its own. */
+  /* A button needs its face stated. The user-agent sheet serves form controls its own,
+     and `inherit` is what takes this row back to its siblings. This rule reached that
+     answer before the rest of the sheet did; the rows around it say `inherit` now too,
+     for the reason recorded above the .wb-span__narrow block. */
   font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.5;
@@ -4610,7 +4624,7 @@
    since the record holds no such text. */
 .wb-measure__absence {
   margin: 0.15rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.5;
   color: rgba(190, 176, 196, 0.82);
@@ -4618,7 +4632,7 @@
 
 .wb-measure__unvalidated {
   margin: 1.1rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(190, 176, 196, 0.82);
@@ -4652,7 +4666,7 @@
 
 .wb-explain__heading {
   margin: 0 0 0.85rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 1.02rem;
   font-weight: 600;
   line-height: 1.4;
@@ -4679,7 +4693,7 @@
 
 .wb-explain__body {
   margin: 0 0 0.4rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.55;
   color: rgba(228, 216, 200, 0.92);
@@ -4693,7 +4707,7 @@
   margin: 1rem 0 0;
   padding-top: 0.85rem;
   border-top: 1px solid rgba(242, 232, 220, 0.1);
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(205, 192, 176, 0.72);
@@ -4701,7 +4715,7 @@
 
 .wb-explain__method {
   margin: 0.55rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
 }
@@ -4728,7 +4742,7 @@
 
 .wb-checks__note {
   margin: -0.1rem 0 0.9rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.98rem;
   line-height: 1.55;
   color: rgba(228, 216, 200, 0.92);
@@ -4799,7 +4813,7 @@
 
 .wb-check__provisional {
   margin-left: auto;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.75rem, 12px);
   font-style: italic;
   color: rgba(190, 176, 196, 0.82);
@@ -4832,7 +4846,7 @@
 
 .wb-check__dependency {
   margin: 0.55rem 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.94rem;
   line-height: 1.55;
   color: rgba(228, 216, 200, 0.92);
@@ -4846,7 +4860,7 @@
 
 .wb-check__question {
   margin: 0.3rem 0 0.6rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.98rem;
   line-height: 1.55;
   color: rgba(232, 220, 204, 0.95);
@@ -4944,7 +4958,7 @@
 
 .wb-act2__offer {
   margin: -0.1rem 0 0.9rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.98rem;
   line-height: 1.55;
   color: rgba(228, 216, 200, 0.92);
@@ -4974,7 +4988,7 @@
 
 .wb-act2__degraded {
   margin: -0.1rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.55;
   color: rgba(205, 192, 176, 0.86);
@@ -5042,7 +5056,7 @@
   padding: 0.55rem 0.8rem;
   border: 1px solid rgba(222, 111, 56, 0.26);
   border-radius: 6px;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.5;
   color: rgba(228, 216, 200, 0.9);
@@ -5050,7 +5064,7 @@
 
 .wb-act2__run-error {
   margin: 0.75rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.5;
   color: rgba(205, 178, 168, 0.9);
@@ -5072,7 +5086,7 @@
 
 .wb-act2__check-copy {
   margin: 0 0 0.5rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.5;
   color: rgba(205, 192, 176, 0.82);
@@ -5107,14 +5121,14 @@
 }
 
 .wb-act2__check-label {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.92rem;
   font-weight: 600;
   color: rgba(242, 232, 220, 0.95);
 }
 
 .wb-act2__check-hint {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.82rem;
   line-height: 1.45;
   color: rgba(205, 192, 176, 0.78);
@@ -5133,7 +5147,7 @@
 
 .wb-act2__capture-heading {
   margin: 0 0 0.25rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
   color: rgba(242, 232, 220, 0.94);
@@ -5141,7 +5155,7 @@
 
 .wb-act2__capture-intro {
   margin: 0 0 0.85rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.85rem;
   line-height: 1.5;
   color: rgba(190, 178, 164, 0.72);
@@ -5161,7 +5175,7 @@
   display: block;
   margin: 0 0 0.45rem;
   padding: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.45;
   color: rgba(228, 216, 200, 0.9);
@@ -5170,7 +5184,7 @@
 .wb-act2__capture-hint {
   display: block;
   margin: -0.3rem 0 0.4rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8rem;
   line-height: 1.45;
   color: rgba(185, 172, 155, 0.68);
@@ -5184,7 +5198,7 @@
 
 .wb-act2__capture-opt {
   padding: 0.5rem 0.8rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   text-align: left;
   border: 1px solid rgba(242, 232, 220, 0.14);
@@ -5209,7 +5223,7 @@
 .wb-act2__capture-input {
   width: 100%;
   padding: 0.5rem 0.7rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   color: var(--ink-primary);
   border: 1px solid rgba(242, 232, 220, 0.16);
@@ -5227,7 +5241,7 @@
 
 .wb-act2__capture-disclosure {
   margin: 0.85rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.8rem;
   line-height: 1.5;
   color: rgba(185, 172, 155, 0.66);
@@ -5236,7 +5250,7 @@
 /* Item 1c — small print under the prompt, sub under the CTA. */
 .wb-act2__prompt-note {
   margin: -0.55rem 0 1rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.82rem;
   line-height: 1.5;
   color: rgba(190, 178, 164, 0.7);
@@ -5244,7 +5258,7 @@
 
 .wb-act2__sub {
   margin: 0.55rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.5;
   color: rgba(205, 192, 176, 0.8);
@@ -5262,7 +5276,7 @@
 
 .wb-loop__headline {
   margin: 0 0 0.9rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 1.22rem;
   line-height: 1.32;
   font-weight: 600;
@@ -5300,7 +5314,7 @@
 
 .wb-loop__panel-body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.94rem;
   line-height: 1.5;
   color: rgba(228, 216, 200, 0.92);
@@ -5310,7 +5324,7 @@
   margin: 0 0 0.9rem;
   padding: 0.5rem 0 0.5rem 0.75rem;
   border-left: 2px solid rgba(222, 111, 56, 0.55);
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.5;
   color: rgba(235, 222, 205, 0.94);
@@ -5341,7 +5355,7 @@
 
 .wb-loop__unmatched-warning {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.5;
   color: rgba(220, 208, 192, 0.9);
@@ -5363,7 +5377,7 @@
 
 .wb-loop__correct-label {
   margin-right: 0.15rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.85rem;
   color: rgba(190, 178, 164, 0.75);
 }
@@ -5472,7 +5486,7 @@
   flex: 1 1 14rem;
   max-width: 100%;
   padding: 0.55rem 0.75rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   letter-spacing: normal;
   line-height: 1.4;
@@ -5493,7 +5507,7 @@
    headline, so the person always sees which instruction produced the comparison. */
 .wb-chip__reason {
   margin: 0 0 0.85rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.85rem;
   line-height: 1.5;
   color: rgba(190, 178, 164, 0.78);
@@ -5503,7 +5517,7 @@
    of its own — the boundary line directly beneath it carries the divider. */
 .wb-chip__meaning {
   margin: 1rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.55;
   color: rgba(205, 192, 176, 0.8);
@@ -5535,7 +5549,7 @@
 }
 
 .wb-chip__pro-line {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   line-height: 1.5;
   color: rgba(205, 192, 176, 0.72);
@@ -5543,7 +5557,7 @@
 
 .wb-chip__pro-link {
   margin-left: 0.35rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: max(0.8125rem, 13px);
   color: rgba(200, 168, 150, 0.95);
 }
@@ -5578,7 +5592,7 @@
 
 .wb-return__text {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.9rem;
   line-height: 1.5;
   color: var(--ink-soft);
@@ -5657,7 +5671,7 @@
 }
 
 .wb-clarity__text {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.45;
   color: var(--ink-soft);
@@ -5719,7 +5733,7 @@
 }
 
 .wb-funnel__northstar-label {
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.85rem;
   line-height: 1.4;
   color: var(--ink-soft);
@@ -5900,7 +5914,7 @@
 
 .wb-demo__answer {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--ink-soft);
@@ -5908,7 +5922,7 @@
 
 .wb-demo__leftout {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.6;
 }
@@ -5947,7 +5961,7 @@
 .wb-demo__counts,
 .wb-demo__why {
   margin: 0.5rem 0 0;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.84rem;
   line-height: 1.55;
   color: rgba(242, 232, 220, 0.82);
@@ -6259,7 +6273,7 @@
 .wb-shell--reader-v2 .wb-reader-v2__input-note {
   margin: 0.45rem 0 0;
   max-width: 38rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.78rem;
   line-height: 1.45;
   color: rgba(165, 152, 138, 0.72);
@@ -7015,7 +7029,7 @@
 
 .wb-perception__prompt {
   margin: 0 0 0.6rem;
-  font-family: var(--font-sans);
+  font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.5;
   color: rgba(228, 216, 200, 0.9);
