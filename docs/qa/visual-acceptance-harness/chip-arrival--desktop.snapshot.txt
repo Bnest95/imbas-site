@@ -31,6 +31,7 @@ a "Case Archive" href="/archive.html"
 a "The Reader" href="/reader.html"
 a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
 button "More" disabled=false expanded=false
 span "▾"
 p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
