@@ -22,6 +22,7 @@
     { "source": "/archive", "destination": "/archive.html", "permanent": true },
     { "source": "/volunteer-gap", "destination": "/volunteer-gap.html", "permanent": true },
     { "source": "/for-readers", "destination": "/for-readers.html", "permanent": true },
+    { "source": "/advisory", "destination": "/advisory.html", "permanent": true },
     { "source": "/how-it-works", "destination": "/how-it-works.html", "permanent": true },
     { "source": "/faq", "destination": "/faq.html", "permanent": true },
     { "source": "/contact", "destination": "/contact.html", "permanent": true },
