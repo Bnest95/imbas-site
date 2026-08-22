@@ -4374,6 +4374,93 @@
   margin-right: 0.45em;
 }
 
+/* THE SPAN LANE — what appears when a person has selected words in the answer.
+   Nothing here renders until a selection exists.
+
+   NOT EMBER, AND THAT IS THE WHOLE RULE. Every ember thing on this surface is
+   something Imbas placed: the mark tint, the mark numeral, the register's question
+   link. A person's own selection wearing the same colour would say the instrument
+   marked it, which is the one claim the attribution line exists to deny. The lane is
+   parchment-neutral throughout — buttons included — so the two kinds of highlight are
+   told apart by eye before anyone reads a word.
+
+   The site sets ::selection to --ember-glow globally. Inside this body that would put
+   the instrument's colour under the person's own drag, in the one element where both
+   highlights appear at once, so it is overridden locally and nowhere else. It paints
+   only while a selection is live, so the acceptance board never photographs it. */
+.wb-source__body::selection,
+.wb-source__body *::selection {
+  background: rgba(242, 232, 220, 0.24);
+  color: inherit;
+}
+
+.wb-span {
+  margin: 0.55rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 2px solid rgba(242, 232, 220, 0.18);
+}
+
+.wb-span__actions {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  align-items: baseline;
+}
+
+/* Text with a rule under it, like the register's question link and for the same
+   reason — a filled control here would be a second accent moment on a surface that
+   already spends its one. Neutral rather than ember; see above. */
+.wb-span__button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(236, 225, 210, 0.95);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(242, 232, 220, 0.4);
+  cursor: pointer;
+}
+
+.wb-span__button:hover {
+  text-decoration-color: rgba(242, 232, 220, 0.85);
+}
+
+/* The narrowing state, and the register's own question re-entered over an overlapping
+   selection. Both are the instrument's voice about the selection rather than a control,
+   so neither is actionable.
+
+   NO `font-family: var(--font-sans)` HERE, and the omission is deliberate. The token is
+   declared nowhere, so every one of its 86 existing uses computes to `inherit` and
+   serves the parent's face — test/typography-tokens.test.mjs records the count precisely
+   so the defect cannot spread while it waits for a ruling. Writing it here would inherit
+   exactly the same face and add two more sites to resolve. These inherit it instead, and
+   render identically. */
+.wb-span__narrow,
+.wb-span__question {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: rgba(228, 216, 200, 0.92);
+  max-width: 60ch;
+}
+
+/* ONE LINE, and it is the whole of the attribution. Sized and coloured below every
+   other thing in the lane because it is a boundary note, not an offer — a block or a
+   panel here would make the disclaimer louder than the two words a person came to
+   click. Inherits its face, for the reason recorded above. */
+.wb-span__attribution {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: rgba(190, 175, 158, 0.78);
+}
+
 /* INSPECT. The last thing a reader passes before the list, and the reason the two
    lines above it can be short: everything that used to stand between a person and
    their own excerpts is in here, whole, one key away.

@@ -17,6 +17,7 @@ import {
   CHECK_VOCAB_VERSION,
   BANNED_CONSTRUCTIONS,
   VERDICT_OUTCOME_WORDS,
+  RELIANCE_SUBJECT_FORMS,
   lintString,
   lintUserFacingStrings,
   hasWorldClaimVerdict,
@@ -24,12 +25,19 @@ import {
   CHIP_BANNED_CONSTRUCTIONS,
   lintChipString,
   lintChipStrings,
+  SPAN_VOCAB_VERSION,
+  SPAN_BANNED_CONSTRUCTIONS,
+  ANSWER_AUTHORSHIP_VERBS,
+  lintSpanString,
+  lintSpanStrings,
 } from "../reader-check-vocab.js";
 import { CHECK_UI } from "../reader-checks.js";
 import { PAIR_CAPTURE_UI, CHIP_UI, CHIP_LOOP_STATE_COPY } from "../reader-paired.js";
 import { EXPLAIN_PANEL_UI } from "../reader-explain-panel.js";
 import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
 import { RECEIPT_BOUNDARY } from "../reader-receipt.js";
+import { READER_SPAN_BANK, PHASE0_EXCLUDED_IDS } from "../reader-span-bank.js";
+import { SPAN_REGISTERED_UI, SPAN_UI } from "../reader-span-selection.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -100,6 +108,16 @@ const PAIRED_FIXTURES = [
   ["can-rely-verdict", "shouldn't rely", "You shouldn't rely on the summary.", "the summary omits the filing window"],
   ["can-rely-verdict", "may rely", "A reader may rely on this.", "a reader can check this against the source"],
   ["can-rely-verdict", "must rely", "You must rely on the register.", "the register is where to check"],
+
+  // v3 (R14) — INTERVENING-SUBJECT forms. v2's pattern required the modal to sit hard
+  // against the verb, so the commonest way anyone writes a reliance verdict walked
+  // through it: the rule read as a ban on rating reliance and was a ban on one word
+  // order. The first two are the forms the governing ruling named.
+  ["can-rely-verdict", "can I rely", "Can I rely on this?", "what this conclusion rests on"],
+  ["can-rely-verdict", "should I rely", "Should I rely on this part?", "this part is worth checking against the source"],
+  ["can-rely-verdict", "should the reader rely", "Should the reader rely on that line?", "that line is where the conclusion rests"],
+  ["can-rely-verdict", "may anyone rely", "May anyone rely on this figure?", "no source is named for this figure"],
+  ["can-rely-verdict", "can we rely", "Can we rely on the summary?", "the summary is the thing to check"],
   ["reliance-is-verdict", "reliance … verdict", "Reliance verdict: open.", "what reliance would rest on is unstated"],
   ["reliance-is-verdict", "reliance … justified", "Reliance here is justified.", "reliance here would rest on one date"],
   ["reliance-is-verdict", "reliance … warranted", "Reliance on the figure is warranted.", "reliance on the figure rests on a source not named"],
@@ -197,6 +215,62 @@ test("AT-5 v2: the excluded verdict forms trip nothing in real prose", () => {
       [],
       `"${form}" tripped a rule — verdict-outcome has re-widened past the six ruled forms: ${JSON.stringify(control)}`,
     );
+  }
+});
+
+// ── AT-5 v3 (R14): the reliance rule's intervening subjects, and where it stops ───
+// Same two-test split as verdict-outcome, and for the same reason: the subject list
+// and the reach it buys are separate claims, and a mutation that survives one must
+// still die on the other.
+
+test("AT-5 v3: can-rely-verdict's intervening-subject list is a named enumeration, not a wildcard", () => {
+  // A `(?:\s+\w+)?` would have caught more forms and made the rule's reach unreadable
+  // from the rule. This asserts the list is finite, literal, and longest-first — the
+  // last part matters because regex alternation is leftmost-first, so a two-word form
+  // placed after a single word it starts with would never be reached.
+  assert.ok(RELIANCE_SUBJECT_FORMS.length > 0);
+  for (const f of RELIANCE_SUBJECT_FORMS) assert.match(f, /^[a-z]+(?: [a-z]+)?$/);
+  const multiWord = RELIANCE_SUBJECT_FORMS.filter((f) => f.includes(" "));
+  const lastMulti = RELIANCE_SUBJECT_FORMS.lastIndexOf(multiWord[multiWord.length - 1]);
+  const firstSingle = RELIANCE_SUBJECT_FORMS.findIndex((f) => !f.includes(" "));
+  assert.ok(lastMulti < firstSingle, "multi-word subject forms must precede single words in the alternation");
+
+  // Every v2 form still trips, because the subject group is optional. v3 only adds.
+  for (const s of ["You can rely on it.", "You cannot rely on it.", "You can’t rely on it.", "You must rely on it."]) {
+    assert.ok(lintString(s).some((h) => h.id === "can-rely-verdict"), `v2 form regressed: ${JSON.stringify(s)}`);
+  }
+});
+
+test("AT-5 v3: the reliance rule's documented reach stops where it stops, recorded not endorsed", () => {
+  // Two forms ARE reliance verdicts and this rule still does not catch either.
+  //
+  //   NEGATION. "could not rely" — `can(?:not)?` covers "cannot rely" and nothing covers
+  //   a negation after a different modal.
+  //   PASSIVE. "Can this be relied on?" — the subject is the thing relied upon rather
+  //   than the person relying, and the word on the page is `relied`, not `rely`.
+  //
+  // The governing ruling widened this rule to intervening SUBJECTS and named two forms;
+  // that enumeration is the law it laid down, not a floor for adjacent grammar.
+  //
+  // Asserted from the other side, like the percentage rule's edges: if one of these
+  // starts tripping, the rule has widened past its ruling and the record needs a
+  // receipt. Reported, not fixed — a rule change carries its own version bump.
+  for (const s of [
+    "A reader could not rely on that line.",
+    "You should never rely on the summary.",
+    "Can this be relied on?",
+    "Should that figure be relied upon?",
+  ]) {
+    assert.deepEqual(
+      lintString(s).filter((h) => h.id === "can-rely-verdict"),
+      [],
+      `${JSON.stringify(s)} now trips can-rely-verdict; its documented reach has changed and needs a receipt`,
+    );
+  }
+
+  // And the widening did not start eating ordinary copy that merely carries a modal.
+  for (const s of [SPAN_UI.copy_failed, "Can I check this against the source?", "You should ask what it rests on."]) {
+    assert.deepEqual(lintString(s), [], `the widened rule is eating legitimate copy: ${JSON.stringify(s)}`);
   }
 });
 
@@ -522,4 +596,290 @@ test("the two registers are genuinely separate: the chip meaning line clears the
   // lint — proving the chip surfaces must never be routed through lintUserFacingStrings.
   assert.deepEqual(lintChipString(CHIP_UI.meaning_panel_line), []);
   assert.ok(lintUserFacingStrings([CHIP_UI.meaning_panel_line]).some((v) => v.id === "world-claim-verdict"));
+});
+
+// ── Span-directed prompt composition: registration under BOTH governing lanes ─────
+// Every string this slice ships is registered here. Registration is not optional and
+// unregistered is not "passing" — it is unexamined. The span lane's UI copy and its
+// composed requests are governed by BOTH lists above, world-claim and chip, because
+// the surface renders inside the inspection panel and speaks about a person's own
+// selection: neither register's discipline is waived by the other applying.
+
+// Every user-facing string in the slice, with the path that names it, so a failure
+// says which string rather than which index. Kept as a table rather than derived from
+// one export so the affordance labels, the attribution line and the narrowing line are
+// each visibly present in the registration — the four the ruling enumerated.
+const SPAN_REGISTERED_STRINGS = {
+  problem_affordance: SPAN_UI.problem_affordance,
+  desired_affordance: SPAN_UI.desired_affordance,
+  attribution: SPAN_UI.attribution,
+  narrowing_template: SPAN_UI.narrowing_template,
+  copied_affordance: SPAN_UI.copied_affordance,
+  copy_failed: SPAN_UI.copy_failed,
+  bank_instruction_texts: READER_SPAN_BANK.map((e) => e.instruction_text),
+};
+
+test("span lane: the four enumerated strings are the founder's phrasing and carry no banned word", () => {
+  // The two labels are the founder's own phrasing family, pre-cleared. Asserted
+  // literally so a later "smoothing" edit into button-ese fails here rather than
+  // shipping — his words govern copy.
+  assert.equal(SPAN_UI.problem_affordance, "Click the problem");
+  assert.equal(SPAN_UI.desired_affordance, "Click what you want");
+
+  // "wrong" never appears in span UI copy. It is a world-claim verdict word, and the
+  // natural label for the first mode ("Click the part that is wrong") is exactly the
+  // string it would have been. This asserts the absence rather than trusting it.
+  for (const s of SPAN_REGISTERED_UI) assert.doesNotMatch(s, /\bwrong\b/i);
+
+  // The attribution is ONE line: what the person did, then the boundary. Two sentences
+  // and no more — a block or a panel here would make the disclaimer louder than the
+  // two words a person came to click.
+  assert.equal(SPAN_UI.attribution, "You selected this passage. Imbas did not mark it.");
+  assert.equal(SPAN_UI.attribution.split(". ").length, 2);
+
+  // The narrowing state is ONE template with the live count set into it, never a
+  // parallel sentence per count, so the number a person reads and the number the code
+  // resolved cannot drift apart.
+  assert.match(SPAN_UI.narrowing_template, /\{n\}/);
+});
+
+test("span lane: every shipped string clears the world-claim list", () => {
+  const violations = lintUserFacingStrings(SPAN_REGISTERED_STRINGS);
+  assert.deepEqual(
+    violations,
+    [],
+    `banned constructions in span-lane copy:\n${JSON.stringify(violations, null, 2)}`,
+  );
+});
+
+test("span lane: every shipped string clears the chip list", () => {
+  const violations = lintChipStrings(SPAN_REGISTERED_STRINGS);
+  assert.deepEqual(
+    violations,
+    [],
+    `banned chip constructions in span-lane copy:\n${JSON.stringify(violations, null, 2)}`,
+  );
+});
+
+test("span lane: the rendered narrowing line is linted, not just its template", () => {
+  // A template that lints clean and renders dirty is a template that was never linted.
+  // SPAN_REGISTERED_UI carries the template WITH a live value set in for this reason.
+  const rendered = SPAN_REGISTERED_UI.filter((s) => /touches \d+ findings/.test(s));
+  assert.ok(rendered.length >= 2, "the registered UI must carry rendered narrowing lines, not only the template");
+  for (const s of rendered) {
+    assert.deepEqual(lintString(s), []);
+    assert.deepEqual(lintChipString(s), []);
+  }
+});
+
+test("span lane: approved_ui_label is null on every entry, and absence is recorded not treated as clean", () => {
+  // The Phase 0 return supplied no per-entry UI label and no founder ruling approved
+  // one. A label invented here would be an unapproved string wearing the word
+  // "approved". The walkers skip nulls, so this test is what stops absence from
+  // reading as a pass: if a label ever lands, it must land with a ruling and it will
+  // be linted by the two tests above the moment it is a string.
+  for (const e of READER_SPAN_BANK) {
+    assert.equal(e.approved_ui_label, null, `${e.id} grew a UI label with no approving ruling`);
+  }
+});
+
+test("span lane: the excluded Phase 0 ids are recorded and their texts are absent", () => {
+  // The founder ruling kept three candidates out. Their ids are recorded so a later
+  // pass cannot re-derive them by accident and think it found something new; their
+  // texts are deliberately not in the module, so it cannot become a back door to the
+  // strings the ruling excluded.
+  assert.deepEqual([...PHASE0_EXCLUDED_IDS].sort(), ["D5", "P7", "P8"]);
+  const shipped = new Set(READER_SPAN_BANK.map((e) => e.id));
+  for (const id of PHASE0_EXCLUDED_IDS) assert.ok(!shipped.has(id), `excluded candidate ${id} is in the bank`);
+  assert.equal(READER_SPAN_BANK.length, 11);
+});
+
+// ── The span boundary rule family (composed requests only) ───────────────────────
+//
+//   GOVERNED SPAN PROMPTS MAY NOT CLAIM AUTHORSHIP OF THE REPLACEMENT ANSWER.
+//
+// The founder boundary is binding and verbatim: "Imbas stays on the question side of
+// the line, never produces the improved answer." It governs AUTHORSHIP, not whether a
+// composed message asks for one — the person's own AI does the producing, so an
+// imperative request is inside the line. What the line forbids is a composed request
+// written as though Imbas were doing the work.
+//
+// A THIRD LIST, and scope is the reason it cannot be folded into either other one.
+// It is narrower than both: it governs registered composed-request text only, never
+// explanatory prose or UI copy. Two tests below prove that boundary from both sides.
+
+test("span boundary: the rule family is versioned with unique rule ids", () => {
+  assert.match(SPAN_VOCAB_VERSION, /^span-vocab\.v\d+$/);
+  assert.ok(SPAN_BANNED_CONSTRUCTIONS.length > 0);
+  const ids = SPAN_BANNED_CONSTRUCTIONS.map((r) => r.id);
+  assert.equal(new Set(ids).size, ids.length);
+  // One family, one category — this is a boundary family, not a grab bag.
+  for (const r of SPAN_BANNED_CONSTRUCTIONS) assert.equal(r.category, "answer_authorship");
+});
+
+test("span boundary: the enumerated verbs are exactly what the shipped pattern accepts", () => {
+  // Derived from the pattern, not retyped — the same discipline the chip lane uses.
+  // Add a verb to the shipped pattern and this fails until the verb is enumerated and
+  // paired below.
+  const rule = SPAN_BANNED_CONSTRUCTIONS.find((r) => r.id === "span-answer-authorship-verb");
+  assert.deepEqual(expandWordListPattern(rule.pattern.source), [...ANSWER_AUTHORSHIP_VERBS].sort());
+});
+
+// [ruleId, form, positive that must fail, near-miss control that must pass].
+// The controls are the register the span lane is FOR: a request that asks the person's
+// own AI to do the work, which must survive.
+const SPAN_PAIRED_FIXTURES = [
+  // The paired failing fixture the ruling named, first.
+  ["span-answer-authorship-verb", "rewrite", "Rewrite this passage.", "Redo this part properly."],
+  ["span-answer-authorship-verb", "rewrites", "Imbas rewrites the passage for you.", "Your AI does the work; Imbas hands over the request."],
+  ["span-answer-authorship-verb", "rewriting", "Rewriting this passage now.", "Changing only this part now."],
+  ["span-answer-authorship-verb", "rewritten", "Here is the rewritten passage.", "Here is the request to send."],
+  ["span-answer-authorship-verb", "rewrote", "We rewrote the passage.", "We composed the request."],
+  ["span-answer-authorship-verb", "revise", "Revise this section.", "Change only this part, and show me just that part changed."],
+  ["span-answer-authorship-verb", "revises", "Imbas revises the section.", "Imbas composes the message you send."],
+  ["span-answer-authorship-verb", "revising", "Revising the section for you.", "Composing the message for you to send."],
+  ["span-answer-authorship-verb", "revised", "Here is the revised section.", "Here is the finished output, not a description of it."],
+  ["span-answer-authorship-verb", "revision", "a revision of this passage", "a request about this passage"],
+  ["span-answer-authorship-verb", "revisions", "two revisions of this passage", "two questions about this passage"],
+  ["span-answer-authorship-verb", "fix", "Fix this part.", "Say plainly what you cannot do and why."],
+  ["span-answer-authorship-verb", "fixes", "Imbas fixes this part.", "Imbas hands you the request for this part."],
+  ["span-answer-authorship-verb", "fixing", "Fixing this part now.", "Showing you what this part rests on."],
+  ["span-answer-authorship-verb", "fixed", "Here is the fixed part.", "Here is the exact change: the file, the lines, and the result."],
+  ["span-answer-authorship-verb", "improve", "Improve this paragraph.", "Take this part and go deeper."],
+  ["span-answer-authorship-verb", "improves", "This improves the paragraph.", "This asks for the full detail and the conditions that apply."],
+  ["span-answer-authorship-verb", "improving", "Improving the paragraph for you.", "Going deeper on the part you selected."],
+  ["span-answer-authorship-verb", "improved", "Here is the improved paragraph.", "Here is the request you can send."],
+  ["span-answer-authorship-verb", "improvement", "an improvement on this paragraph", "a request about this paragraph"],
+  ["span-answer-authorship-verb", "improvements", "two improvements to this paragraph", "two requests about this paragraph"],
+
+  // The replacement-delivery constructions. PHRASE forms, because bare "complete" and
+  // bare "correct" are ordinary words two ratified bank entries already use.
+  ["span-produce-replacement", "produce the corrected", "Produce the corrected version.", "Name the source and the date for it."],
+  ["span-produce-replacement", "write the complete", "Write the complete answer.", "If you cannot complete it, say which part and why."],
+  ["span-produce-replacement", "generate the final", "Generate the final text.", "Give me this as the finished output, not as a description of it."],
+  ["span-produce-replacement", "deliver the full", "Deliver the full answer.", "Give the full detail, the steps, and the conditions that apply."],
+];
+
+test("span boundary: every rule has a paired fixture, so no boundary rule ships unproven", () => {
+  const covered = new Set(SPAN_PAIRED_FIXTURES.map(([id]) => id));
+  for (const rule of SPAN_BANNED_CONSTRUCTIONS) {
+    assert.ok(covered.has(rule.id), `span rule "${rule.id}" has no paired fixture`);
+  }
+  const known = new Set(SPAN_BANNED_CONSTRUCTIONS.map((r) => r.id));
+  for (const id of covered) assert.ok(known.has(id), `fixture names unknown span rule "${id}"`);
+  // Every enumerated verb is paired, so no banned form is proved by nothing. This is
+  // the morphology control: banning "rewrite" while leaving "rewriting" unpaired is
+  // the exact defect shape the chip lane's derived enumeration was built to close.
+  const pairedForms = new Set(SPAN_PAIRED_FIXTURES.map(([, form]) => form));
+  for (const verb of ANSWER_AUTHORSHIP_VERBS) {
+    assert.ok(pairedForms.has(verb), `banned verb "${verb}" has no paired fixture`);
+  }
+});
+
+test("span boundary: the rule catches its own fixture — 'Rewrite this passage.' fails in registered scope", () => {
+  // The named fixture, asserted on its own rather than only inside the loop, because a
+  // rule that passes vacuously is the failure mode this whole family guards against.
+  const hits = lintSpanString("Rewrite this passage.");
+  assert.ok(hits.some((h) => h.id === "span-answer-authorship-verb"), "the boundary rule did not catch its own fixture");
+  assert.equal(hits[0].category, "answer_authorship");
+
+  // And through the table walker, which is how a bank is actually linted.
+  const violations = lintSpanStrings({ bank_instruction_texts: ["Rewrite this passage."] });
+  assert.equal(violations.length, 1);
+  assert.equal(violations[0].path, "bank_instruction_texts[0]");
+});
+
+test("span boundary: each banned form is caught by its own rule", () => {
+  for (const [ruleId, form, positive] of SPAN_PAIRED_FIXTURES) {
+    const hits = lintSpanString(positive);
+    assert.ok(
+      hits.some((h) => h.id === ruleId),
+      `"${form}" did not trip ${ruleId}: ${JSON.stringify(positive)} → ${JSON.stringify(hits.map((h) => h.id))}`,
+    );
+  }
+});
+
+test("span boundary: each banned form's near-miss control trips nothing", () => {
+  for (const [ruleId, form, , control] of SPAN_PAIRED_FIXTURES) {
+    assert.deepEqual(
+      lintSpanString(control),
+      [],
+      `the control for ${ruleId}/"${form}" tripped a span rule — the boundary is eating the request register it exists to protect: ${JSON.stringify(control)}`,
+    );
+  }
+});
+
+test("span boundary: every bank instruction_text clears it", () => {
+  const violations = lintSpanStrings(READER_SPAN_BANK.map((e) => e.instruction_text));
+  assert.deepEqual(
+    violations,
+    [],
+    `a span bank entry claims authorship of the replacement answer:\n${JSON.stringify(violations, null, 2)}`,
+  );
+});
+
+test("span boundary: 'redo' is permitted by ruling, not by oversight", () => {
+  // D3 is founder-ratified and opens "Redo this part properly". "redo" asks for
+  // substantially what "rewrite" asks for, and the ruling enumerated the banned verbs
+  // and included D3 in the same act — so the list stops where the ruling stopped. A
+  // later pass that wants "redo" banned is overruling an entry the founder included,
+  // not tidying a gap, and this test is what makes it say so out loud.
+  assert.ok(!ANSWER_AUTHORSHIP_VERBS.includes("redo"));
+  const d3 = READER_SPAN_BANK.find((e) => e.id === "D3");
+  assert.match(d3.instruction_text, /^Redo /);
+  assert.deepEqual(lintSpanString(d3.instruction_text), []);
+});
+
+// ── SCOPE: the boundary rule governs composed requests and nothing else ───────────
+
+test("span boundary: SCOPE CONTROL — the same verb in non-registered explanatory copy does not fail", () => {
+  // The rule is scoped to registered composed-request text. Explanatory prose, module
+  // docs and code comments are NOT governed by it. The scope is enforced by WHAT IS
+  // PASSED to lintSpanStrings, so the control has to prove two things: that this copy
+  // would fail if it were routed there, and that nothing routes it.
+  const explanatory = [
+    "A governed span prompt may not claim authorship of the replacement answer, so it never says rewrite.",
+    "The banned verbs are rewrite, revise, fix and improve, with their morphological forms.",
+    "An improvement claim here would put Imbas on the far side of the line it stays behind.",
+  ];
+  for (const s of explanatory) {
+    // Non-vacuity. Without this the control could be a sentence that happens to be
+    // clean, which proves nothing about scope at all.
+    assert.ok(
+      lintSpanString(s).length > 0,
+      `scope control is vacuous — nothing to be scoped out of: ${JSON.stringify(s)}`,
+    );
+    // And it is in no registered composed-request table, so the walkers never see it.
+    for (const entry of READER_SPAN_BANK) assert.notEqual(entry.instruction_text, s);
+  }
+
+  // The lanes that DO govern shipped copy still govern it, and a banned span verb is
+  // not banned by them. Asserted on the two sentences that are ordinary prose in both
+  // other registers — the third is deliberately excluded because "improvement" IS a
+  // chip-lane banned construction, which is the whole reason three separate lists
+  // exist rather than one union.
+  for (const s of explanatory.slice(0, 2)) {
+    assert.deepEqual(lintString(s), [], `explanatory copy tripped the world-claim list: ${JSON.stringify(s)}`);
+    assert.deepEqual(lintChipString(s), [], `explanatory copy tripped the chip list: ${JSON.stringify(s)}`);
+  }
+  assert.ok(lintChipString(explanatory[2]).some((h) => h.id === "chip-imbas-action"));
+
+  // The span lane's own UI copy is explanatory, not a composed request, and is never
+  // routed through lintSpanStrings. Asserted so a later pass cannot "tidy" the three
+  // walkers into one.
+  assert.deepEqual(lintSpanStrings(SPAN_REGISTERED_UI), []);
+});
+
+test("span boundary: SCOPE CONTROL — a shipped sibling bank would fail this rule, and is not governed by it", () => {
+  // The live proof that the scope boundary is load-bearing rather than tidy.
+  // SECOND_QUESTION_BANK composes a second question under a different ruling and its
+  // instruction texts legitimately contain "revise the draft". Folding this rule into
+  // BANNED_CONSTRUCTIONS would have failed that shipped bank on the day it landed.
+  const secondQuestionTexts = SECOND_QUESTION_BANK.map((e) => e.instruction_text);
+  assert.ok(
+    lintSpanStrings(secondQuestionTexts).length > 0,
+    "SECOND_QUESTION_BANK no longer trips the span boundary; the scope argument needs re-checking against its current copy",
+  );
+  // It passes the lane that DOES govern it, unchanged by anything in this slice.
+  assert.deepEqual(lintUserFacingStrings(secondQuestionTexts), []);
 });

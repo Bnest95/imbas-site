@@ -44,6 +44,7 @@ import {
   MARK_ORIENTATION_NOTE,
 } from "../reader-result.js";
 import { CHECK_UI } from "../reader-checks.js";
+import { MARK_NUMBER_ATTR, SPAN_SEGMENT_ATTR, resolveSelectionSpan } from "../reader-span-selection.js";
 import { READER_EVENTS } from "../reader-telemetry.js";
 
 const SRC = readFileSync(
@@ -269,6 +270,21 @@ async function renderPanel({ findings, cards }) {
     "emitReaderEvent",
     "ProvenanceStrip",
     "ReaderReceiptActions",
+    // The span lane. SourceReading resolves a person's selection through this module, so
+    // its real exports are supplied rather than mocks of them.
+    "SPAN_SEGMENT_ATTR",
+    "MARK_NUMBER_ATTR",
+    "resolveSelectionSpan",
+    // The two remaining hooks. `useState` above already stands for FindingQuestion's;
+    // SourceReading adds a ref and an effect, and with no DOM here the ref is null, the
+    // effect never runs, and the selection state holds its initial null.
+    "useRef",
+    "useEffect",
+    // Stubbed. This file is about which findings reach a question control by way of the
+    // register; the span lane's own affordance answers a different question, is proven in
+    // test/reader-span-selection.test.mjs, and returns null here regardless because no
+    // selection exists.
+    "SpanAffordances",
     code,
   );
   const Panel = make(
@@ -289,6 +305,12 @@ async function renderPanel({ findings, cards }) {
     READER_EVENTS,
     () => {},
     stub,
+    stub,
+    SPAN_SEGMENT_ATTR,
+    MARK_NUMBER_ATTR,
+    resolveSelectionSpan,
+    () => ({ current: null }),
+    () => {},
     stub,
   );
   return Panel({
