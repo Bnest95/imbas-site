@@ -1,0 +1,1226 @@
+{
+  "instrument": "scripts/qa/blocks-ratchet.mjs",
+  "rule": "R2",
+  "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
+  "measured_at_master": "61954be77268f5e2fe616cfc8bc16e0f6135781a",
+  "browser": "HeadlessChrome/148.0.7778.96",
+  "coverage_fingerprint": {
+    "target_selectors": [
+      "#insp-record-root",
+      ".wb-reader-v2__result"
+    ],
+    "scenarios": [
+      "chip-arrival",
+      "chips-from-inspection",
+      "claim-authorized-match",
+      "claim-authorized-mismatch",
+      "claim-client-declaration",
+      "claim-unrecognized-source",
+      "curated-readout",
+      "deposit-fixture",
+      "export-paired",
+      "export-single",
+      "first-load",
+      "paired-empty",
+      "paired-legacy",
+      "paired-legacy-rows",
+      "paired-matched",
+      "paired-rejected-snippet",
+      "paired-unmatched",
+      "provenance-complete",
+      "provenance-partial",
+      "public-example",
+      "public-example-provenance",
+      "read-capacity",
+      "read-error",
+      "read-in-flight",
+      "register-overflow",
+      "register-overflow-expanded",
+      "share-consent",
+      "share-legacy",
+      "share-not-found",
+      "share-paired-no-model",
+      "share-receipt",
+      "share-single",
+      "share-single-empty",
+      "single-empty",
+      "single-empty-read",
+      "single-findings"
+    ],
+    "viewports": [
+      390,
+      1440
+    ],
+    "sources": [
+      {
+        "path": "scripts/qa/comprehension.mjs",
+        "sha256": "549db79442d5c070"
+      },
+      {
+        "path": "scripts/qa/scenarios.mjs",
+        "sha256": "82d0c6f99190e2bc"
+      }
+    ],
+    "sha256": "2d738d88b1990cf87e4fec2240f7fc54f8620de213e7c0f89f1b44bf54b8ad6e"
+  },
+  "sources": [
+    {
+      "path": "scripts/qa/scenarios.mjs",
+      "extraction": "whole file",
+      "sha256": "82d0c6f99190e2bc"
+    },
+    {
+      "path": "scripts/qa/comprehension.mjs",
+      "extraction": "measureExpression source text",
+      "sha256": "549db79442d5c070"
+    }
+  ],
+  "counts": {
+    "governed_states": 60,
+    "governed_scenarios": 30,
+    "ungoverned_scenarios": 6,
+    "max_blocks_before": 9
+  },
+  "ceilings": [
+    {
+      "scenario": "chips-from-inspection",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 6,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "chips-from-inspection",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 6,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-authorized-match",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-authorized-match",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-authorized-mismatch",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-authorized-mismatch",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-client-declaration",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-client-declaration",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-unrecognized-source",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "claim-unrecognized-source",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "deposit-fixture",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 6,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "deposit-fixture",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 6,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "export-paired",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "export-paired",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "export-single",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "export-single",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-empty",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-empty",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-legacy",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-legacy",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-legacy-rows",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-legacy-rows",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-matched",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-matched",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-rejected-snippet",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-rejected-snippet",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-unmatched",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "paired-unmatched",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "provenance-complete",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "provenance-complete",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "provenance-partial",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "provenance-partial",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "read-capacity",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-reader-result__title",
+        "wb-reader-result__fallback",
+        "",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small wb-reader-result__rerun",
+        "wb-reader-result__title",
+        "wb-loop__lead",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small",
+        "wb-reader-v2__post-privacy"
+      ]
+    },
+    {
+      "scenario": "read-capacity",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-reader-result__title",
+        "wb-reader-result__fallback",
+        "",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small wb-reader-result__rerun",
+        "wb-reader-result__title",
+        "wb-loop__lead",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small",
+        "wb-reader-v2__post-privacy"
+      ]
+    },
+    {
+      "scenario": "read-error",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-reader-result__title",
+        "wb-reader-result__fallback",
+        "",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small wb-reader-result__rerun",
+        "wb-reader-result__title",
+        "wb-loop__lead",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small",
+        "wb-reader-v2__post-privacy"
+      ]
+    },
+    {
+      "scenario": "read-error",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-reader-result__title",
+        "wb-reader-result__fallback",
+        "",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small wb-reader-result__rerun",
+        "wb-reader-result__title",
+        "wb-loop__lead",
+        "wb-focus wb-btn wb-btn--ghost wb-btn--small",
+        "wb-reader-v2__post-privacy"
+      ]
+    },
+    {
+      "scenario": "register-overflow",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "register-overflow",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "register-overflow-expanded",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "register-overflow-expanded",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "share-consent",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "share-consent",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "share-legacy",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 6,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-record__trust-note",
+        "wb-reader-result__archival-notice",
+        "wb-reader-result__title wb-reader-result__title--sub",
+        "wb-reader-result__provenance"
+      ]
+    },
+    {
+      "scenario": "share-legacy",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 6,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-record__trust-note",
+        "wb-reader-result__archival-notice",
+        "wb-reader-result__title wb-reader-result__title--sub",
+        "wb-reader-result__provenance"
+      ]
+    },
+    {
+      "scenario": "share-not-found",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 4,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-error__title",
+        "insp-error__body",
+        "insp-btn insp-btn--primary",
+        "insp-btn insp-btn--ghost"
+      ]
+    },
+    {
+      "scenario": "share-not-found",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 4,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-error__title",
+        "insp-error__body",
+        "insp-btn insp-btn--primary",
+        "insp-btn insp-btn--ghost"
+      ]
+    },
+    {
+      "scenario": "share-paired-no-model",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 4,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-record__trust-note",
+        "insp-record__anchor"
+      ]
+    },
+    {
+      "scenario": "share-paired-no-model",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 4,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-record__trust-note",
+        "insp-record__anchor"
+      ]
+    },
+    {
+      "scenario": "share-receipt",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "share-receipt",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "share-single",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "share-single",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "share-single-empty",
+      "view": 390,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 3,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "share-single-empty",
+      "view": 1440,
+      "composition": "share",
+      "region": "#insp-record-root",
+      "boundary": "prompt",
+      "blocks_before": 5,
+      "blocks_above_region": 11,
+      "block_classes": [
+        "insp-record__eyebrow",
+        "insp-record__status",
+        "insp-glance__count",
+        "insp-glance__orientation",
+        "insp-inspect__summary"
+      ]
+    },
+    {
+      "scenario": "single-empty",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 5,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "single-empty",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 5,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "single-empty-read",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 5,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "single-empty-read",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 5,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "single-findings",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 25,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "single-findings",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 9,
+      "blocks_above_region": 33,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    }
+  ],
+  "ungoverned_scenarios": [
+    "chip-arrival",
+    "curated-readout",
+    "first-load",
+    "public-example",
+    "public-example-provenance",
+    "read-in-flight"
+  ],
+  "notes": {
+    "rule": "R2 — no change may increase blocks_before for any finding class without a recorded founder ruling.",
+    "relation": "CEILING. A governed state passes when measured blocks_before <= the committed value. A decrease passes and does not rewrite the ceiling automatically; --write does that, and refuses when a state common to both baselines has increased.",
+    "block_definition": "scripts/qa/comprehension.mjs measureExpression — imported, not transcribed. Leaf text blocks inside the region, checkVisibility-gated, strictly above the boundary, prompt excluded.",
+    "finding_class_quantifier": "R2 says 'for any finding class'. blocks_before is a per-arrival count and cannot be sliced by finding class without inventing an aggregation R2 does not state. This instrument holds every governed STATE, which is strictly stronger: every monotone aggregation of per-state values into a per-class figure is bounded by the per-state ceilings, so no per-class figure can rise while every state holds. No founder ruling is required to discharge the phrase.",
+    "viewports": "comprehension.mjs FLOOR_VIEWPORTS (1440x1000, 390x844, dSF 1), not the board's. One block definition, one measurement geometry, so the two instruments' numbers can be set beside each other. Device scale factor and viewport height do not enter the count.",
+    "fingerprint_sources": "The population's sources, not the measured product's. scenarios.mjs is the registry and its drive steps; comprehension.mjs contributes the block definition, hashed on the extracted measureExpression text so unrelated edits to that file do not churn this fingerprint. Product sources are excluded on purpose: a baseline invalidated by every product change would be invalid on exactly the commits this instrument exists to govern.",
+    "superseded_historical_figures": "Figures circulated before this instrument existed — deposit-fixture 7/13/22, single-findings 10/14, export-single 10/14, share-single 7/10 — were produced by an uncommitted instrument that cannot be run and whose population, viewports and block definition are unknown. They are NOT authoritative, were not used to calibrate anything here, and are superseded by the measured baseline in this artifact. They are recorded so that a future reader meeting them in an older document knows they were retired rather than lost.",
+    "ungoverned_scenarios": "A registered scenario that renders neither governed region is listed by name under ungoverned_scenarios rather than dropped. The scenario list in the fingerprint is the WHOLE registry, so a scenario cannot leave the governed population without changing the fingerprint."
+  }
+}
