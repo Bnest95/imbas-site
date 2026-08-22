@@ -381,7 +381,7 @@ function singlePanelHtml(record) {
             : `<p class="wb-reader-result__empty">${escapeHtml(SINGLE_EMPTY)}</p>`}
         </article>
       </div>
-      <p class="wb-measure__unvalidated">These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence.</p>
+      <p class="wb-measure__unvalidated">These are candidate observations from a single answer. The boundary below states what entering the Imbas record requires.</p>
       ${boundary ? `<p class="wb-reader-result__trust wb-measure__boundary">${escapeHtml(boundary)}</p>` : ""}
     </section>`;
 }
@@ -437,7 +437,7 @@ function pairedPanelHtml(record) {
             : `<p class="wb-reader-result__empty">${escapeHtml(PAIRED_EMPTY)}</p>`}
         </article>
       </div>
-      <p class="wb-measure__unvalidated">These are machine observations over one answer pair. Not a human-scored result, not evidence.</p>
+      <p class="wb-measure__unvalidated">These are machine observations over one answer pair. The boundary below states what entering the Imbas record requires.</p>
       ${boundary ? `<p class="wb-reader-result__trust wb-measure__boundary">${escapeHtml(boundary)}</p>` : ""}
     </section>`;
 }

@@ -309,11 +309,13 @@ test("the shipped panel renders the answer with six marks in it", async () => {
   const body = nodes.find((n) => cls(n) === "wb-source__body");
   assert.ok(body, "the panel renders a source body");
   const printed = textOf(body.children).join("");
-  // The outer span only. A `includes` match would also catch the screen-reader label
+  // The outer element only. A `includes` match would also catch the screen-reader label
   // nested inside it and count its text twice, which is exactly six "mark " prefixes
-  // of slack — enough to make a broken body look right.
+  // of slack — enough to make a broken body look right. Token equality rather than
+  // whole-string equality because item 1 (R21) made the in-answer numeral an anchor, so
+  // it now carries wb-mark-n--path and wb-focus alongside the base class.
   const withoutNumbers = collect(body)
-    .filter((n) => cls(n) === "wb-mark-n")
+    .filter((n) => String(cls(n)).split(" ").includes("wb-mark-n"))
     .flatMap((n) => textOf(n))
     .join("");
   assert.equal(printed.length - withoutNumbers.length, ANSWER.length);

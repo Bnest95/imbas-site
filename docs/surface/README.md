@@ -50,7 +50,16 @@ Section 8 states that the doctrine may be frozen for Surface Finish when:
 - Actionability has merged so Surface Finish sees the actual final action substrate.
 
 The doctrine is a freeze candidate, not a frozen document. Section 8 governs that
-transition. Nobody has recorded those four conditions as met.
+transition.
+
+### Freeze record — 2026-08-21
+
+Doctrine frozen for Surface Finish on the firing of the Surface Finish build 1 brief. Section 8's bullets are met as follows:
+
+- Current-master reproduction completed against master `cae974fa34ea1ae05549fe300684d876c604e6a2`, eleven items dispositioned.
+- The Surface Finish build 1 brief is the implementation brief, mapping each reproduced defect to its rule and its seam.
+- No new numeric threshold is introduced.
+- Actionability is satisfied per founder ruling: the span-directed composition build, merged as PR #116, constitutes the action substrate.
 
 ## visual-directions/
 

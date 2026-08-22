@@ -86,7 +86,11 @@
   --ember-glow:     rgba(222, 111, 56, 0.30);
   --ember-trace:    rgba(222, 111, 56, 0.14);
   --ember-pulse:    rgba(248, 168, 102, 0.62);
-  --ember-bloom:    rgba(240, 143, 88, 0.36);
+  /* Item 4, R14. --ember-bloom (rgba(240,143,88,0.36)) is deleted here. It was declared
+     and never consumed on any surface, and a declared step nothing spends is a licence
+     sitting open: the next spend that wants a warm hue reaches for it because it is
+     there, not because a role called for it. The result panel's 0.36 border is the
+     --ember-rgb hue, not this one, so nothing authorized needed the token. */
   --ember-rgb:      222, 111, 56;
 
   /* Cool atmospheric — the ambient half of the field: distance and air, thrown

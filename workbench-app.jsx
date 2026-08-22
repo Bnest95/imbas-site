@@ -3195,6 +3195,16 @@ function readerResultProvenanceLabel({ mode, sel, result }) {
   return "Reader agent · Custom answer";
 }
 
+// Item 3, R22. One string per empty condition, read by the surface that renders it and
+// by the artifact that travels off it. These lived as literals in two components and a
+// clipboard formatter, which is how the page came to say "The Reader flagged nothing
+// missing under the tested conditions" while the card a person pasted said "(none
+// identified)" — the same result, named twice, and the second naming reads as a clean
+// bill the first one refuses to give.
+const MEASURE_EMPTY_LINE = "No candidate finding surfaced under the tested conditions.";
+const READER_NO_MISSING_LINE = "The Reader flagged nothing missing under the tested conditions.";
+const READER_NO_SHAPING_LINE = "The Reader recorded no shaping under the tested conditions.";
+
 function formatReaderResultCopy(result) {
   // A fallback is not an inspection, and this branch comes first so nothing below it
   // can reach for a reading that was never taken. The card is the copy that travels:
@@ -3220,18 +3230,43 @@ function formatReaderResultCopy(result) {
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
+  // Item 3, R22 — PARTIAL, and the residual is named rather than left implied. This
+  // artifact used to travel with the three narrative sections and nothing else, so the
+  // copy a person pasted into a document was an account of an inspection that never
+  // carried the inspection's own statement of what it found. The finding's materiality
+  // line is that statement. It leads here for the same reason it leads on the page, and
+  // the narrative follows rather than stands in for it. The section names and the
+  // empty-condition lines are the page's own, single-sourced above, because a card that
+  // named the same result in different words would be a second account of it.
+  //
+  // What this does NOT reach: the_read, what_was_left_out and how_it_was_shaped are
+  // written by the model, against the system prompt in api/read.js. The renderer places
+  // them and cannot police their wording, so any one of them may still independently
+  // restate a finding in full and R22 would not catch it here. That residual is open,
+  // it is a founder call because closing it means editing the system prompt, and no
+  // pass should read the roles above as evidence that it is closed.
+  const record = selectSubset(result?.result, "surfaced_findings").map(describeFinding);
+  const recordLines = record.length
+    ? record.map((f) => {
+        const why = (f.materiality || "").trim();
+        return why ? `- ${f.class_display}: ${why}` : `- ${f.class_display}`;
+      })
+    : [`- ${MEASURE_EMPTY_LINE}`];
   const lines = [
     `This inspection: ${comp}`,
     gloss,
     "",
+    "WHAT THE READER RECORDED",
+    ...recordLines,
+    "",
     "THE READ",
     result?.the_read || "",
     "",
-    "WHAT WAS LEFT OUT",
-    ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : ["- (none identified)"]),
+    "WHAT MAY BE MISSING",
+    ...(leftOut.length ? leftOut.map((item) => `- ${item}`) : [`- ${READER_NO_MISSING_LINE}`]),
     "",
     "HOW IT WAS SHAPED",
-    shaped || "(none detected)",
+    shaped || READER_NO_SHAPING_LINE,
   ];
   if (inspectionNote) {
     lines.push("", "INSPECTION NOTE", inspectionNote);
@@ -3654,14 +3689,14 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
               ) : (
                 // The prior line leaned on an unstated threshold for what counts as
                 // major and read as a clean bill. Naming the condition is the whole fix.
-                <p className="wb-reader-result__empty">The Reader flagged nothing missing under the tested conditions.</p>
+                <p className="wb-reader-result__empty">{READER_NO_MISSING_LINE}</p>
               )}
             </article>
             <article className="wb-reader-result__section wb-reader-result__section--shaped">
               <h3 className="wb-reader-result__section-title">How it was shaped</h3>
               {/* The prior line graded the answer against a bar it never stated. The
                   replacement reports the run and nothing else. */}
-              <p className="wb-reader-result__shaped">{shaped || "The Reader recorded no shaping under the tested conditions."}</p>
+              <p className="wb-reader-result__shaped">{shaped || READER_NO_SHAPING_LINE}</p>
             </article>
           </>
         ) : null}
@@ -3677,14 +3712,30 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
           was given a way to run again, and a next step is a property of the run rather
           than of that control. */}
       <ReaderResultActions result={result} context={context} />
+      {/* Item 8, R11+R8. The receipt pair used to close the measurement panel, which put
+          an export between the marks and the reading of them. Both receipt controls
+          land here instead, after the last interpretive block of the measure-plus-
+          narrative sequence, beside the other artifacts a person can take away.
+
+          Item 5, R7+R8+R11. Six controls carried one class between them and read as six
+          peers. They are not: four produce a copy, one publishes a URL, and one starts
+          another run. The four that produce a copy are peers and group as peers, in the
+          subordinate register R11 gives an export. Publishing keeps its own row and its
+          button chrome, because it is the one control here with an effect outside this
+          page. Starting over leaves the group entirely — see below. */}
+      {onRunAgain && isAgent ? (
+        <div className="wb-reader-result__footer">
+          <div className="wb-reader-result__keep">
+            <ReaderResultCopyActions result={result} context={context} shareUrl={shareUrl} />
+            <ReaderReceiptActions receipt={result.receipt} />
+          </div>
+          <ReaderShareAction mode="single" receipt={result.receipt} onShared={setShareUrl} />
+        </div>
+      ) : null}
+      {/* Run again acts on the run, not on the artifacts, so it stands under the whole
+          result on its own rule rather than sitting in a row of export controls. */}
       {onRunAgain ? (
-        <div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>
-          {isAgent ? (
-            <>
-              <ReaderResultCopyActions result={result} context={context} shareUrl={shareUrl} />
-              <ReaderShareAction mode="single" receipt={result.receipt} onShared={setShareUrl} />
-            </>
-          ) : null}
+        <div className="wb-reader-result__restart">
           <Btn kind="ghost" small onClick={onRunAgain} className="wb-reader-result__rerun">
             Run again
           </Btn>
@@ -4144,9 +4195,10 @@ function SourceReading({ reading, answer, findings, cardsById }) {
               {...{ [SPAN_SEGMENT_ATTR]: seg.start }}
               aria-details={details || undefined}
             >
-              {seg.starts.map((n) => (
-                <MarkNumber key={n} n={n} />
-              ))}
+              {seg.starts.map((n) => {
+                const target = findingExplanationId(findingByMark.get(n));
+                return <MarkNumber key={n} n={n} href={target ? `#${target}` : undefined} />;
+              })}
               {seg.text}
             </mark>
           );
@@ -4279,7 +4331,11 @@ function MeasurementPanel({ result, context }) {
           {findings.length ? (
             <ul className="wb-measure__list">
               {findings.map((f) => (
-                <li key={f.id} id={findingExplanationId(f.id)} className="wb-measure__finding">
+                // Item 1, R21. tabIndex -1 is what makes the mark's link land: a
+                // fragment whose target cannot hold focus moves the viewport and leaves
+                // focus behind, so the next Tab goes back to the answer instead of on
+                // through the explanation.
+                <li key={f.id} id={findingExplanationId(f.id)} tabIndex={-1} className="wb-measure__finding">
                   <span className="wb-measure__finding-type">{f.class_display}</span>
                   {(f.materiality || "").trim() ? (
                     <span className="wb-measure__finding-why">{f.materiality.trim()}</span>
@@ -4309,18 +4365,22 @@ function MeasurementPanel({ result, context }) {
             // panel below carries the full framing, so this one states the condition
             // and stops. Naming the condition is what makes it honest: the claim is
             // about this inspection, not about the answer.
-            <p className="wb-reader-result__empty">No candidate finding surfaced under the tested conditions.</p>
+            <p className="wb-reader-result__empty">{MEASURE_EMPTY_LINE}</p>
           )}
         </article>
       </div>
 
+      {/* Item 6, R13. This stratum used to close on two full scope statements: this
+          line stated the whole scope, and the boundary below stated it again in the
+          record's own words. One of them has to be the statement and the other has to
+          point at it. The boundary owns the stratum's edge and is the string every
+          other surface single-sources, so it keeps the full statement and this line
+          became a pointer to it. */}
       <p className="wb-measure__unvalidated">
-        These are candidate observations from a single answer — inspection hypotheses, not validated
-        classifications or evidence.
+        These are candidate observations from a single answer. The boundary below states what
+        entering the Imbas record requires.
       </p>
       <p className="wb-reader-result__trust wb-measure__boundary">{RECEIPT_BOUNDARY}</p>
-
-      <ReaderReceiptActions receipt={receipt} />
     </section>
   );
 }
@@ -4440,13 +4500,41 @@ function FindingQuestion({ card, run }) {
 // walk in reader-span-selection.js skips it. It is an attribute rather than a class check
 // because `wb-mark-n` is a styling hook: renaming it during a restyle would silently start
 // counting numerals as answer characters and put every offset after a mark out of register.
-function MarkNumber({ n }) {
+//
+// Item 1, R21+R17. `href` turns the numeral into the keyboard path from a mark to the
+// explanation of it. aria-details already published that relationship, but a
+// relationship a browser exposes only to assistive technology is not a path a keyboard
+// can walk: a sighted keyboard reader could see the numeral and had no way to reach
+// what it stood for. A link is the oldest keyboard-operable form of exactly this
+// relationship and it needs no script, so a mark reaches its explanation with Enter.
+//
+// Only the marks IN THE ANSWER carry an href. The numerals repeated beside each
+// quotation in the list get none: they are already inside the explanation, a link back
+// to the words would be a second path to a place the reader just came from, and every
+// one of them would be another tab stop between a person and the next finding.
+//
+// draggable={false} because this element sits inside the span-selection surface. A
+// bare anchor answers a press-and-drag with a link drag, which would take the gesture
+// that selects a passage and spend it on dragging a URL.
+function MarkNumber({ n, href }) {
   if (!n) return null;
-  return (
-    <span className="wb-mark-n" {...{ [MARK_NUMBER_ATTR]: "" }}>
+  const inner = (
+    <>
       <span className="wb-mark-n__label">mark </span>
       {n}
-    </span>
+    </>
+  );
+  if (!href) {
+    return (
+      <span className="wb-mark-n" {...{ [MARK_NUMBER_ATTR]: "" }}>
+        {inner}
+      </span>
+    );
+  }
+  return (
+    <a className="wb-mark-n wb-mark-n--path wb-focus" href={href} draggable={false} {...{ [MARK_NUMBER_ATTR]: "" }}>
+      {inner}
+    </a>
   );
 }
 
@@ -6132,7 +6220,12 @@ function SecondRunLoop({ mode, sel, onAnother }) {
             {copyFail ? <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span> : null}
           </>
         ) : null}
-        <Btn kind="primary" small onClick={() => onAnother(suggestion)}>Test another question</Btn>
+        {/* Item 5, R7. This closed the page on a second filled control 281px under
+            Act2's "Ask your AI", so a reader met two equally weighted primaries in one
+            viewport and the page named no next step. Act2's control acts on the prompt
+            directly above it and keeps the weight; leaving this run for another one is
+            the subordinate of the two. */}
+        <Btn kind="ghost" small onClick={() => onAnother(suggestion)}>Test another question</Btn>
       </div>
     </section>
   );

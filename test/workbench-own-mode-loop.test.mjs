@@ -126,12 +126,19 @@ test("the empty-question guard is scoped to guided, so own mode never returns nu
 
 test("own mode keeps a restart control and its own lead line", () => {
   // What own mode actually renders at loop close: the heading, one plain sentence, and
-  // one primary button. No question card, no copy button, nothing curated.
+  // one button. No question card, no copy button, nothing curated.
+  //
+  // The button was primary until Surface Finish item 5 (R7). It closed the page 281px
+  // under Act2's "Ask your AI", so one viewport held two equally weighted primaries and
+  // named no next step between them. Act2's control acts on the prompt directly above it
+  // and keeps the weight; this one is the subordinate of the pair. What this test holds
+  // is unchanged — the control exists and sits outside the guided branch — with its
+  // weight now pinned too, so a later pass cannot quietly promote it back.
   assert.ok(
-    /<Btn kind="primary" small onClick=\{\(\) => onAnother\(suggestion\)\}>Test another question<\/Btn>/.test(
+    /<Btn kind="ghost" small onClick=\{\(\) => onAnother\(suggestion\)\}>Test another question<\/Btn>/.test(
       BODY.replace(/\s+/g, " "),
     ),
-    "the restart button sits outside the guided branch and must stay there",
+    "the restart button sits outside the guided branch, subordinate, and must stay there",
   );
   assert.ok(
     /Run the same check on another answer\./.test(BODY),

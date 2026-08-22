@@ -691,9 +691,22 @@ test("NEGATIVE CONTROL — an unresolved quotation emits no relationship", async
   );
 });
 
-test("the relationship adds no tab stop and no focusable node", async () => {
-  // aria-details rather than a link or a button: a reader passing forty marked words
-  // must not collect forty tab stops on the way to the next control.
+test("the only thing focusable in READ is a mark numeral, and it goes where its mark points", async () => {
+  // This test used to require zero focusable nodes here, on the reasoning that
+  // aria-details carried the relationship and a reader passing forty marked words must
+  // not collect forty tab stops. aria-details still carries it, and it still reaches
+  // only assistive technology: a sighted keyboard reader could see the numeral and had
+  // no operable way to reach what it stood for. Surface Finish item 1 (R21) closes that,
+  // and R21's escape clause — skip the per-mark stop if an equivalent mechanism is
+  // provided — has nothing to point at here, because every equivalent costs either a new
+  // text block above the findings list (which the composition ratchet forbids) or a path
+  // buried inside a collapsed disclosure.
+  //
+  // So the guard changes shape rather than going away. The old one said "nothing";
+  // this one says exactly what may be focusable and why, which is the stricter claim:
+  // one anchor per numbered mark, each carrying its own finding's fragment, and no
+  // button, field, or click handler anywhere in READ. A stop that is not a mark numeral
+  // still fails, and a numeral pointing at the wrong finding still fails.
   const reading = readingOf([quotedFinding(0, FIRST_SENTENCE), quotedFinding(1, LAST_SENTENCE)]);
   const tree = await renderBody(reading);
   const focusable = [];
@@ -702,11 +715,25 @@ test("the relationship adds no tab stop and no focusable node", async () => {
     if (Array.isArray(node)) return node.forEach(walk);
     if (typeof node !== "object") return;
     const p = node.props || {};
-    if (["a", "button", "input", "select", "textarea"].includes(node.type)) focusable.push(node.type);
-    if (p.tabIndex != null || p.href != null || p.onClick != null) focusable.push(node.type);
+    const interactive =
+      ["button", "input", "select", "textarea"].includes(node.type) ||
+      p.onClick != null ||
+      (p.tabIndex != null && p.tabIndex >= 0);
+    if (interactive) focusable.push({ type: node.type, why: "interactive control" });
+    else if (node.type === "a" || p.href != null) focusable.push({ type: node.type, href: p.href, cls: p.className });
     if (node.children) walk(node.children);
   })(tree);
-  assert.deepEqual(focusable, [], "READ stays a document to read, not a field of controls");
+
+  assert.equal(focusable.length, 2, "one stop per numbered mark, and nothing else");
+  for (const stop of focusable) {
+    assert.equal(stop.type, "a", "READ stays a document to read, not a field of controls");
+    assert.match(String(stop.cls), /\bwb-mark-n\b/, "the only stop in READ is the mark numeral itself");
+  }
+  const targets = focusable.map((s) => String(s.href));
+  const expected = reading.marks
+    .filter((m) => m.n)
+    .map((m) => `#wb-finding-${m.finding_id.replace(/[^A-Za-z0-9_-]/g, "-")}`);
+  assert.deepEqual(targets, expected, "each numeral goes to its own finding's explanation");
 });
 
 // ── 4. THE OFFSET SURFACE ────────────────────────────────────────────────────

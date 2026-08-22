@@ -277,17 +277,17 @@ test("the support line under each export names that file's own contents", () => 
 //
 // Measured on the governed renderer against single-findings at 1440x1000, the two
 // things R11 forbids are both absent. Nothing that reads as a hash, a record id or
-// custody data renders before the first finding — the first such string on the page is
-// the prompt version at y1966, and the first finding is at y1810. And every export
-// group is the closing node of the block that produced it: the receipt controls end the
-// measurement panel, the copy and share controls end the Reader's reading, and the
-// Review Record export ends the check register.
+// custody data renders before the first finding, and every export group follows the
+// content that produced it rather than preceding it.
 //
-// The strata that makes that a compliance claim rather than an opinion is the tree's
-// own, stated where the three blocks mount: the hero is GLANCE, the measurement panel
-// is READ, the register is INSPECT. So "after the last interpretive block of their
-// stratum" resolves against those blocks, and nothing here had to move. What follows
-// pins the two orderings a later pass could quietly reverse.
+// Surface Finish item 8 moved one of those groups. The receipt pair used to close the
+// measurement panel, which read as compliant against a strata assignment where the
+// panel is a stratum of its own — but on the page it put an export between the marks
+// and the narrative reading of those marks, so a person met "Download receipt" before
+// the account of what they were downloading. The pair now closes the whole
+// measure-plus-narrative sequence, which satisfies "after the last interpretive block"
+// under either assignment. No strata ruling is taken here; the ordering is pinned
+// against the blocks themselves.
 
 function componentSource(name) {
   const start = JSX.indexOf(`function ${name}(`);
@@ -297,19 +297,42 @@ function componentSource(name) {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-test("the receipt controls close the panel that produced them", () => {
+test("the measurement panel offers no export of its own, and still closes on its scope line", () => {
   const panel = componentSource("MeasurementPanel");
   const list = panel.indexOf('className="wb-measure__list"');
   const boundary = panel.indexOf("wb-measure__boundary");
-  const actions = panel.indexOf("<ReaderReceiptActions");
-  assert.ok(list > 0 && boundary > 0 && actions > 0, "the panel must still mount all three");
-  assert.ok(actions > list, "an export offered above the marks is an artifact offered before its meaning");
-  assert.ok(actions > boundary, "the scope line closes the panel's reading; the export follows it");
+  assert.ok(list > 0 && boundary > 0, "the panel must still mount the list and the scope line");
+  assert.ok(boundary > list, "the scope line closes the panel's reading");
   assert.equal(
-    panel.slice(actions).replace(/\s/g, "").startsWith("<ReaderReceiptActionsreceipt={receipt}/></section>"),
-    true,
-    "and nothing interpretive may be added after it without moving it",
+    panel.includes("<ReaderReceiptActions"),
+    false,
+    "an export inside the panel sits between the marks and the reading of them",
   );
+  assert.equal(
+    panel.slice(boundary).replace(/\s/g, "").startsWith('wb-measure__boundary">{RECEIPT_BOUNDARY}</p></section>'),
+    true,
+    "and nothing may be added after the scope line without moving it",
+  );
+});
+
+test("the receipt controls close the measure-plus-narrative sequence", () => {
+  const block = componentSource("ReaderResultBlock");
+  const sections = block.indexOf('className="wb-reader-result__sections"');
+  const actions = block.indexOf("<ReaderReceiptActions");
+  const restart = block.indexOf('className="wb-reader-result__restart"');
+  assert.ok(sections > 0 && actions > 0 && restart > 0, "the block must mount all three");
+  assert.ok(
+    actions > sections,
+    "an export offered above the reading is an artifact offered before its meaning",
+  );
+  assert.ok(
+    actions < restart,
+    "the take-away rail holds the artifacts; starting another run is not one of them",
+  );
+  // R11 keeps the export subordinate and grouped with the other things a person carries
+  // off, not standing alone as a step of its own.
+  const keep = block.indexOf('className="wb-reader-result__keep"');
+  assert.ok(keep > 0 && keep < actions, "the receipt pair sits inside the take-away group");
 });
 
 test("the prompt version renders inside the INSPECT disclosure, not in the open READ flow", () => {
@@ -342,8 +365,8 @@ test("the two receipt controls mint different files from the same two labels", (
   // the label collision stops being a naming problem and becomes a wrong-file problem.
   assert.match(
     JSX,
-    /<ReaderReceiptActions receipt=\{receipt\} \/>/,
-    "the marks panel keeps the first answer's receipt",
+    /<ReaderReceiptActions receipt=\{result\.receipt\} \/>/,
+    "the single-run rail keeps the first answer's receipt",
   );
   assert.match(
     JSX,
