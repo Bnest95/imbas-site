@@ -692,11 +692,11 @@ a "A working copy to take with you" href="#wb-review-record--single"
 a "A second answer beside this one" href="#wb-act2"
 a "A follow-up question of your own" href="#wb-chip-door"
 mark "A landlord must return a security deposit within 30 days of the tenant moving out."
-span "1"
+a "1" href="#wb-finding-single_candidate_item-0"
 span "mark"
 span "If the landlord keeps any part of the deposit, they have to send an itemized list of deductions."
 mark "Most tenants get the full amount back without any trouble, so there is usually nothing to worry about."
-span "2"
+a "2" href="#wb-finding-single_candidate_item-1"
 span "mark"
 details expanded=false
 summary "What a mark points at, and the conditions this answer was read under"
@@ -726,7 +726,6 @@ span "The closing line lowers the stakes of a question the person asked because 
 blockquote "\"Most tenants get the full amount back without any trouble, so there is usually nothing to worry about.\""
 span "2"
 span "mark"
-p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
+p "These are candidate observations from a single answer. The boundary below states what entering the Imbas record requires."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
-button "Copy JSON" disabled=false
-button "Download receipt" disabled=false
+div "SOMETHING TO CHECK"

@@ -151,5 +151,5 @@ blockquote "\"A landlord must return a security deposit within 30 days of the te
 span "First answer"
 blockquote "\"Several states also require the landlord to pay the tenant a penalty\""
 span "Second answer"
-p "These are machine observations over one answer pair. Not a human-scored result, not evidence."
+p "These are machine observations over one answer pair. The boundary below states what entering the Imbas record requires."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."

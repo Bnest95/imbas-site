@@ -122,7 +122,7 @@ p "This is a Reader inspection of answer behavior, not a reviewed archive case. 
 h3 "Question"
 p "My landlord still has my security deposit. How long do they have to return it?"
 p "No candidate finding surfaced under the tested conditions."
-p "These are candidate observations from a single answer — inspection hypotheses, not validated classifications or evidence."
+p "These are candidate observations from a single answer. The boundary below states what entering the Imbas record requires."
 p "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review."
 h3 "What the AI system said"
 p "This record preserved no quoted words from the answer."
