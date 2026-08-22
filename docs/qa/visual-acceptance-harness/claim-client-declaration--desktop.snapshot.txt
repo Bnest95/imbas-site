@@ -1264,6 +1264,7 @@ a "Case Archive" href="/archive.html"
 a "The Reader" href="/reader.html"
 a "For Institutions" href="/institutions.html"
 a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
 button "More" disabled=false expanded=false
 span "▾"
 pre "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each."
