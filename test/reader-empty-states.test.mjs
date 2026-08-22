@@ -26,6 +26,7 @@ import { fileURLToPath } from "node:url";
 
 import { CHIP_UI, PAIRED_EMPTY_CLOSE } from "../reader-paired.js";
 import { lintUserFacingStrings } from "../reader-check-vocab.js";
+import { stringConstant } from "./source-reading-render.mjs";
 
 const SRC = readFileSync(fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)), "utf8");
 
@@ -58,7 +59,12 @@ const EMPTY_STATES = [
   {
     site: "MeasurementPanel — the Candidate findings list",
     kind: "null_result",
-    text: "No candidate finding surfaced under the tested conditions.",
+    // Read out of the component rather than transcribed. Item 3 (R22) named these three
+    // lines as constants precisely so no second copy of them could exist; a literal here
+    // would be one, and it would be the copy that decides whether the honesty rule
+    // passes.
+    text: stringConstant("MEASURE_EMPTY_LINE", SRC),
+    expression: "{MEASURE_EMPTY_LINE}",
   },
   {
     site: "PairedDeltaView — the zero-delta side-by-side",
@@ -69,12 +75,13 @@ const EMPTY_STATES = [
   {
     site: "ReaderResultBlock — What may be missing",
     kind: "null_result",
-    text: "The Reader flagged nothing missing under the tested conditions.",
+    text: stringConstant("READER_NO_MISSING_LINE", SRC),
+    expression: "{READER_NO_MISSING_LINE}",
   },
   {
     site: "ReaderResultBlock — How it was shaped",
     kind: "null_result",
-    text: "The Reader recorded no shaping under the tested conditions.",
+    text: stringConstant("READER_NO_SHAPING_LINE", SRC),
   },
   {
     site: "chip loop reveal — the empty delta (chip.1.0 copy, single-sourced)",

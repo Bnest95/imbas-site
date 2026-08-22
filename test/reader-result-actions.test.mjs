@@ -85,7 +85,12 @@ test("the seam is seated in the panel, and outside the footer's condition", () =
   );
   const seam = SRC.indexOf("<ReaderResultActions result={result} context={context} />");
   const sections = SRC.indexOf('</div>\n      {/* Outside the footer\'s condition on purpose.');
-  const footer = SRC.indexOf('<div className={`wb-reader-result__footer${isFallback ? " is-fallback" : ""}`}>');
+  // Item 5 (R7+R8+R11) split the old single footer row into a take-away rail and a
+  // separate restart row, and dropped the is-fallback modifier with it — the rail now
+  // renders only when there is something to take away. The seam's claim is unchanged:
+  // it must sit above whichever conditional block comes first.
+  const footer = SRC.indexOf('<div className="wb-reader-result__footer">');
+  assert.ok(footer >= 0, "the take-away rail is gone from the result panel");
   assert.ok(sections >= 0 && sections < seam, "the seam moved above the read it is a next step from");
   assert.ok(seam < footer, "the seam is inside the footer, so a panel without a rerun control would lose it");
 });

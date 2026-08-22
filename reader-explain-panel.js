@@ -172,15 +172,18 @@ export const EXPLAIN_PANEL_UI = {
   // S5 adds exactly this one line to the Why section (it never replaces the base copy).
   s5_condition_line:
     "The compared answers were produced under unmatched or unverified conditions, so differences may reflect changed conditions rather than response behavior alone.",
-  // Mandatory closing element on all five states. This is the canonical Reader boundary
-  // line (RECEIPT_BOUNDARY in reader-receipt.js) carried here VERBATIM — the same one
-  // sentence that rides the receipt, whitepaper §7, and construct paper §5. It is held
-  // byte-for-byte rather than imported: the render-only invariant keeps this file free of
-  // reader-receipt.js, exactly as every other surface carries the line by copy, not import.
+  // Mandatory closing element on all five states.
+  //
+  // Item 6, R13. This held the canonical Reader boundary line (RECEIPT_BOUNDARY in
+  // reader-receipt.js) verbatim by copy. The result surface renders that line whole one
+  // panel above this one, so a reader met the same scope statement twice on one screen
+  // and the second one taught nothing the first had not. A stratum carries one full
+  // scope statement; every other mention of it points back. This line points back.
+  //
   // how-it-works.html explains protocol capture, human review, and the reviewed archive —
   // the admission pipeline — so it is the method link's destination (an existing page).
   archive_boundary:
-    "Reader inspections are discovery, not evidence. Nothing enters the Imbas record without protocol capture and a recorded human review.",
+    "The boundary stated above governs this reading too.",
   method_link: {
     label: "How admission works",
     href: "/how-it-works.html",
