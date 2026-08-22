@@ -3760,8 +3760,12 @@
   padding: 1.2rem 1.1rem 1.3rem;
   border: 1px solid rgba(200, 175, 150, 0.12);
   border-radius: 9px;
+  /* Item 10, R14. The ember wash that used to sit over this gradient painted at 0.03,
+     below every declared step of the ramp. Nothing in the ramp carries an alpha that
+     faint, and lifting it to the nearest declared step would have made a decorative
+     wash four times stronger — salience inflation, which is the thing R14 exists to
+     stop. The wash goes; the ground it sat on is unchanged. */
   background:
-    radial-gradient(ellipse 90% 50% at 50% 0%, rgba(var(--ember-rgb), 0.03) 0%, transparent 55%),
     linear-gradient(180deg, rgba(24, 19, 15, 0.97) 0%, rgba(16, 13, 11, 0.98) 100%);
   box-shadow:
     inset 0 1px 0 rgba(252, 248, 236, 0.06),
@@ -3772,8 +3776,10 @@
   padding: 1.55rem 1.35rem 1.65rem;
   margin-top: 0.25rem;
   border-color: rgba(200, 175, 150, 0.2);
+  /* Item 10, R14. Same adjudication as the base panel: an 0.08 ember wash sits below
+     the ramp's faintest declared step, and the violet bloom and the linear ground carry
+     the panel's depth without it. */
   background:
-    radial-gradient(ellipse 90% 48% at 50% 0%, rgba(var(--ember-rgb), 0.08) 0%, transparent 54%),
     radial-gradient(ellipse 70% 50% at 100% 100%, var(--wb-reader-violet-soft) 0%, transparent 50%),
     linear-gradient(180deg, rgba(30, 24, 19, 0.99) 0%, rgba(18, 14, 12, 0.99) 100%);
   box-shadow:
@@ -3790,12 +3796,14 @@
     0 0 40px rgba(155, 174, 126, 0.08);
 }
 
+/* Item 4, R14 — the same edge on the agent variant, and the same adjudication. The
+   outer 40px ember bloom went with the border for the same reason: it is the panel
+   telling a reader the run was partial, which the pill above already says in words. */
 .wb-reader-result.is-agent.is-partial {
-  border-color: rgba(var(--ember-rgb), 0.36);
+  border-color: var(--line-strong);
   box-shadow:
     inset 0 1px 0 rgba(252, 248, 236, 0.06),
-    0 12px 36px rgba(0, 0, 0, 0.38),
-    0 0 40px rgba(var(--ember-rgb), 0.08);
+    0 12px 36px rgba(0, 0, 0, 0.38);
 }
 
 .wb-reader-result.is-agent.is-thin {
@@ -3854,13 +3862,18 @@
   margin-bottom: 0;
 }
 
-/* Item 4, R14. Registry role: status. The panel edge carries a three-state completeness
-   ramp — green when the inspection ran whole, ember when it ran partial, deep red when
-   it ran thin — and ember is the middle step of it. Authorized, not removed: pulling
-   only the ember state would leave a ramp signalling on two of its three states and
-   silent on the third, which is worse than either spending or not spending. */
+/* Item 4, R14 — re-adjudicated against the registry as frozen. The registry admits an
+   evidence signal or mark and its numeral, one ruled keyword inside an authorized
+   heading, a ruled consequential gap or figure, a ruled mono/status pill, and the
+   primary action. A panel border is none of those. The earlier reading called this
+   "status" and so borrowed the pill's role for an element that is not a pill; the
+   registry is closed and that role was not available to borrow. The spend goes and the
+   edge takes a declared parchment line. Consequence, recorded rather than painted over:
+   is-full and is-thin are not ember and are not governed here, so the completeness ramp
+   now speaks on two of its three states and the partial state is the quiet one. Whether
+   that warrants a ruled role is a founder call, not one this pass may take. */
 .wb-reader-result.is-full { border-color: rgba(155, 174, 126, 0.28); }
-.wb-reader-result.is-partial { border-color: rgba(var(--ember-rgb), 0.32); }
+.wb-reader-result.is-partial { border-color: var(--line-strong); }
 .wb-reader-result.is-thin { border-color: rgba(196, 74, 40, 0.35); }
 
 .wb-reader-result__head {
@@ -4005,9 +4018,9 @@
    again and so raises the text's contrast on this ground rather than lowering it. */
 .wb-reader-result__badge.is-partial {
   color: var(--ember-bright);
-  border-color: rgba(var(--ember-rgb), 0.48);
-  background: rgba(var(--ember-rgb), 0.1);
-  box-shadow: 0 0 16px rgba(var(--ember-rgb), 0.1);
+  border-color: var(--ember-glow);
+  background: var(--ember-trace);
+  box-shadow: 0 0 16px var(--ember-trace);
 }
 
 .wb-reader-result__badge.is-thin {
@@ -4338,10 +4351,16 @@
    so a mark that spans a line break reads as one continuous passage instead of two
    rectangles. `color: inherit` because the browser default for <mark> is black on
    yellow, which on this ground would be the loudest thing on the page. */
+/* Item 10, R14 + R21. The evidence mark is registry role 1, so the spend stands; only
+   its alphas were ungoverned. The fill moves 0.16 -> --ember-trace and the underline
+   0.45 -> --ember-glow, both declared steps of the same hue. The underline is the one
+   change here that could cost a reader something, because it is what says "this span
+   is evidence", so it is measured rather than assumed: the composited contrast check
+   and the board frames are the receipt. */
 .wb-source__mark {
-  background: rgba(var(--ember-rgb), 0.16);
+  background: var(--ember-trace);
   color: inherit;
-  box-shadow: inset 0 -1px 0 rgba(var(--ember-rgb), 0.45);
+  box-shadow: inset 0 -1px 0 var(--ember-glow);
   border-radius: 2px;
   padding: 0.05em 0;
 }
@@ -4636,7 +4655,7 @@
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
-  text-decoration-color: rgba(var(--ember-rgb), 0.55);
+  text-decoration-color: var(--ember-pulse);
   cursor: pointer;
 }
 
@@ -4798,10 +4817,20 @@
   gap: 0.85rem;
 }
 
+/* Item 10, R14. Alphas only — the role is untouched and is not re-adjudicated here.
+   Both spends move to the nearest declared step of the ramp: the box 0.24 -> --ember-glow
+   (0.30, up) and the spine 0.5 -> --ember-pulse (0.62, up). Directions are written down
+   rather than averaged away, because "consolidate" can hide an increase. The box landing
+   on --ember-glow also puts it on the token .wb-check__family and .wb-check__detector
+   already use, so the module now states one border idiom instead of two.
+   This rule escaped the first census: Chrome stores a var()-bearing shorthand followed by
+   a same-family longhand as a pending-substitution value and serialises it as empty
+   longhands, so `border:` was absent from cssText while `border-left:` was present. The
+   census was rebuilt to read declarations from source for that reason. */
 .wb-check {
   padding: 0.95rem 1.05rem;
-  border: 1px solid rgba(var(--ember-rgb), 0.24);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.5);
+  border: 1px solid var(--ember-glow);
+  border-left: 2px solid var(--ember-pulse);
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(26, 20, 16, 0.5) 0%, rgba(18, 16, 13, 0.5) 100%);
 }
@@ -4936,10 +4965,17 @@
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
+/* Item 10, R14. Alphas only: 0.6 -> --ember-pulse (0.62) and 0.12 -> --ember-trace
+   (0.14), both the nearest declared step. The role is NOT re-adjudicated here. This is
+   the same selected-option pattern as .wb-act2__check-opt.is-active, which correction 1
+   named and which lost its ember for not being the registry's action — but correction 1
+   named four selectors and this is not one of them, and a pass does not get to widen its
+   own list because a sibling looks similar. The resulting divergence across the three
+   selected-option patterns is reported founder-facing. */
 .wb-check__status-opt.is-active {
-  border-color: rgba(var(--ember-rgb), 0.6);
+  border-color: var(--ember-pulse);
   color: rgba(232, 220, 204, 0.95);
-  background: rgba(var(--ember-rgb), 0.12);
+  background: var(--ember-trace);
 }
 
 .wb-checks__more {
@@ -4996,16 +5032,17 @@
   color: rgba(228, 216, 200, 0.92);
 }
 
-/* Item 4, R14+R20. The prompt block is the artifact the primary control below it acts
-   on, so ember ties the two together — registry role: the action. It was carrying that
-   tie twice, as a full ember box and again as an ember left rule, which is two markers
-   for one relationship. The rule stays, because it is the idiom this page already uses
-   for "this block is the thing"; the box turns parchment. */
+/* Item 4, R14+R20 — re-adjudicated. The earlier reading tied this block to the control
+   below it and called the tie "the action". The registry's action role is the primary
+   CTA itself, not the artifact a CTA operates on, so that reading widened a role rather
+   than matching one. Build 1's return separately reported this spend as removed when it
+   was not; both the spend and the misreport are corrected here. The box was already
+   parchment and the left rule now joins it. */
 .wb-act2__prompt {
   margin: 0 0 1rem;
   padding: 0.9rem 1rem;
   border: 1px solid rgba(242, 232, 220, 0.12);
-  border-left: 2px solid rgba(var(--ember-rgb), 0.5);
+  border-left: 2px solid var(--line-strong);
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(26, 20, 16, 0.6) 0%, rgba(18, 16, 13, 0.6) 100%);
   font-family: var(--font-mono);
@@ -5091,7 +5128,7 @@
 .wb-act2__notice {
   margin: 0 0 0.95rem;
   padding: 0.55rem 0.8rem;
-  border: 1px solid rgba(var(--ember-rgb), 0.26);
+  border: 1px solid var(--ember-glow);
   border-radius: 6px;
   font-family: inherit;
   font-size: 0.88rem;
@@ -5152,15 +5189,16 @@
   border-color: rgba(242, 232, 220, 0.26);
 }
 
-/* Item 4, R14. Registry role: the action. Ember marks the option a person has chosen,
-   which is the live state of a control and not decoration — the same treatment
-   .wb-check__status-opt.is-active already carries for the same reason. Authorized, not
-   removed: with the spend gone the only thing separating a chosen option from an
-   unchosen one is a 0.26 parchment edge against a 0.12 one, and the person's own
-   answer would become the hardest state on the panel to see. */
+/* Item 4, R14 — re-adjudicated against the registry as frozen. The registry's action
+   role is the primary CTA. A selected option inside a chooser is not that, and reading
+   "the action" to cover any control in a live state is precisely the rename the
+   doctrine's own implementation risks warn against: an implementer cannot promote
+   decoration to semantics by widening a role's words. The spend goes. The chosen option
+   now separates from an unchosen one by a declared luminous line rather than by hue —
+   a narrower separation than ember gave it, recorded founder-facing rather than
+   repainted, because the remedy for it would be a new role only the founder can rule. */
 .wb-act2__check-opt.is-active {
-  border-color: rgba(var(--ember-rgb), 0.6);
-  background: rgba(var(--ember-rgb), 0.08);
+  border-color: var(--line-luminous);
 }
 
 .wb-act2__check-label {
@@ -5257,9 +5295,15 @@
   color: rgba(228, 216, 200, 0.95);
 }
 
+/* Item 10, R14. Alphas only. This is the capture chooser's selected option, the sibling
+   of .wb-act2__check-opt.is-active — which lost its ember under correction 1, because a
+   selected option is not the registry's action role. This one was not named for
+   re-adjudication and so keeps its spend with declared alphas, which leaves two sibling
+   selected-option patterns reading differently. That inconsistency is reported
+   founder-facing rather than resolved by widening this pass past what it was given. */
 .wb-act2__capture-opt.is-active {
-  border-color: rgba(var(--ember-rgb), 0.6);
-  background: rgba(var(--ember-rgb), 0.1);
+  border-color: var(--ember-pulse);
+  background: var(--ember-trace);
   color: var(--ink-primary);
 }
 
@@ -5443,9 +5487,12 @@
   color: rgba(228, 216, 200, 0.95);
 }
 
+/* Item 10, R14. Alphas only, nearest declared step, role untouched — the third of the
+   selected-option patterns, treated exactly as .wb-check__status-opt.is-active and
+   .wb-act2__capture-opt.is-active were. */
 .wb-loop__chip.is-active {
-  border-color: rgba(var(--ember-rgb), 0.6);
-  background: rgba(var(--ember-rgb), 0.12);
+  border-color: var(--ember-pulse);
+  background: var(--ember-trace);
   color: var(--ink-primary);
 }
 
@@ -5891,6 +5938,20 @@
 .wb-demo-trigger:hover {
   border-color: rgba(var(--ember-rgb), 0.7);
   color: var(--ink);
+}
+
+/* Item 4, R14 — re-adjudicated against the registry as frozen. The chip door is a
+   disclosure that opens a lane; it is not the primary action, and no other registry
+   role reaches a door. The spend is removed here, on the compound, rather than on
+   .wb-demo-trigger itself: that base paints controls outside the result surface, and
+   this pass has no brief to touch them. The ember on the base is therefore still
+   spent elsewhere and is reported, not silently left as though it were adjudicated. */
+.wb-demo-trigger.wb-chip-door {
+  border-color: var(--line-strong);
+}
+
+.wb-demo-trigger.wb-chip-door:hover {
+  border-color: var(--line-luminous);
 }
 
 .wb-demo {
@@ -6482,7 +6543,7 @@
 
 .wb-reader-result__rerun.wb-btn--ghost:hover {
   color: rgba(230, 215, 195, 0.92);
-  border-color: rgba(var(--ember-rgb), 0.22);
+  border-color: var(--ember-glow);
 }
 
 .wb-reader-result__copy {
@@ -6654,7 +6715,7 @@
 
 .wb-reader-result.is-agent .wb-reader-result__copy .wb-btn--ghost:hover {
   color: rgba(235, 220, 200, 0.95);
-  border-color: rgba(var(--ember-rgb), 0.28);
+  border-color: var(--ember-glow);
 }
 
 .wb-reader-result.is-agent .wb-reader-result__copy .wb-btn--ghost.is-copied {

@@ -415,17 +415,67 @@ test("the follow-up choices wrap instead of pushing the page sideways", () => {
   );
 });
 
+// Every rule in a sheet whose selector mentions a class, with its declarations parsed.
+// Used instead of an exact-selector lookup because the thing being governed below is
+// "whatever this class is allowed to say about itself", which a compound selector can
+// say just as well as a bare one.
+function rulesMentioning(css, needle) {
+  const out = [];
+  for (const m of stripComments(css).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const sel = m[1].trim();
+    if (!sel.includes(needle)) continue;
+    const decls = [];
+    for (const d of m[2].split(";")) {
+      const i = d.indexOf(":");
+      if (i < 0) continue;
+      const prop = d.slice(0, i).trim();
+      const value = d.slice(i + 1).trim();
+      if (prop && value) decls.push({ prop, value });
+    }
+    out.push({ sel, decls });
+  }
+  return out;
+}
+
 test("the door is a text trigger, so it cannot outrank the offer it sits below", () => {
   // Measured heights on the same run: the door is 32px, the two-question test above it
-  // is 427px at 1440 and 683px at 390. The rule below is what keeps that true — the door
-  // borrows the demo trigger's treatment and declares no surface of its own.
+  // is 427px at 1440 and 683px at 390. What keeps that true is that the door borrows the
+  // demo trigger's treatment and declares no surface of its own.
   const door = doorMarkup();
   assert.match(door, /className="wb-demo-trigger wb-chip-door"/, "the door must stay on the shared text-trigger treatment");
-  assert.equal(
-    /\.wb-chip-door\s*\{/.test(stripComments(WORKBENCH_CSS)),
-    false,
-    "a rule of its own is how a secondary door starts competing with the earned action above it",
-  );
+
+  // AMENDED — what "no surface of its own" is actually being checked by. This assertion
+  // used to read `.wb-chip-door\s*\{` and fail on any match at all. That was a proxy:
+  // declaring no rule is ONE way to declare no surface, and it was the way that held for
+  // as long as the door took its entire treatment from .wb-demo-trigger. The R14
+  // re-adjudication broke the proxy without touching the contract underneath it. The base
+  // primitive's ember ring is the registry's action role; a disclosure that opens a lane
+  // is not that action; and the base paints controls outside this surface, which this
+  // pass has no brief to repaint. So the spend had to come off the compound — a door rule
+  // that SUBTRACTS salience, which the old form could not tell apart from one that adds.
+  //
+  // The check now names what the door may say rather than counting how many times it
+  // speaks, and in the axis that decides the test's own question it is stricter, not
+  // looser: the old form returned green for the whole time the door was ringed in ember,
+  // and this one does not.
+  const doorRules = rulesMentioning(WORKBENCH_CSS, ".wb-chip-door");
+  for (const rule of doorRules) {
+    for (const { prop, value } of rule.decls) {
+      assert.equal(
+        prop,
+        "border-color",
+        `${rule.sel} may only restate the shared trigger's border colour; "${prop}" is a surface of its own, and that is how a secondary door starts competing with the earned action above it`,
+      );
+      // A neutral line token, by name. An ember spend here would be the action role worn
+      // by something that is not the action, and a free rgba() would be a salience level
+      // nobody ruled on.
+      assert.match(
+        value,
+        /^var\(--line-(faint|soft|strong|luminous)\)$/,
+        `${rule.sel} must draw its border from a declared neutral line token; "${value}" is not one`,
+      );
+    }
+  }
 });
 
 // ── Programmatic relationships: no control names an element that is not there ──

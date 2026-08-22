@@ -3230,14 +3230,21 @@ function formatReaderResultCopy(result) {
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
-  // Item 3, R22. This artifact used to travel with the three narrative sections and
-  // nothing else, so the copy a person pasted into a document was an account of an
-  // inspection that never carried the inspection's own statement of what it found. The
-  // finding's materiality line is that statement; every other surface points at it or
-  // supports it. It leads here for the same reason it leads on the page, and the
-  // narrative follows rather than stands in for it. The section names and the
+  // Item 3, R22 — PARTIAL, and the residual is named rather than left implied. This
+  // artifact used to travel with the three narrative sections and nothing else, so the
+  // copy a person pasted into a document was an account of an inspection that never
+  // carried the inspection's own statement of what it found. The finding's materiality
+  // line is that statement. It leads here for the same reason it leads on the page, and
+  // the narrative follows rather than stands in for it. The section names and the
   // empty-condition lines are the page's own, single-sourced above, because a card that
   // named the same result in different words would be a second account of it.
+  //
+  // What this does NOT reach: the_read, what_was_left_out and how_it_was_shaped are
+  // written by the model, against the system prompt in api/read.js. The renderer places
+  // them and cannot police their wording, so any one of them may still independently
+  // restate a finding in full and R22 would not catch it here. That residual is open,
+  // it is a founder call because closing it means editing the system prompt, and no
+  // pass should read the roles above as evidence that it is closed.
   const record = selectSubset(result?.result, "surfaced_findings").map(describeFinding);
   const recordLines = record.length
     ? record.map((f) => {
