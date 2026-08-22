@@ -4513,6 +4513,23 @@ function FindingQuestion({ card, run }) {
 // to the words would be a second path to a place the reader just came from, and every
 // one of them would be another tab stop between a person and the next finding.
 //
+// CORRECTION TO THE RECORD. The build-1 commit acccb03 described this anchor as
+// "focusable but not a tab stop". That is wrong, and the sentence has been repeated
+// since. An `<a href>` carrying no tabindex is a NATURAL SEQUENTIAL TAB STOP, and
+// nothing here removes it from the focus order: there is no tabindex attribute on this
+// element at all. Measured on single-findings at 1440 in the pinned renderer, the two
+// in-answer numerals report tabIndex 0 and sit at sequential positions 20 and 21 of the
+// 67 sequential stops on that page. What is true is the narrower claim the paragraph
+// above makes: the numerals in the findings list add no further stops, so the number of
+// stops the answer contributes is the number of marks and not a multiple of it.
+//
+// Being a tab stop is permitted rather than merely tolerated. R21 requires the
+// mark-to-explanation relationship to be programmatically determinable and keyboard
+// operable, and says only that every inline mark need not become an individual tab stop
+// where an equivalent mechanism exists; section 7 risk 6 names the opposite reading,
+// treating one-stop-per-mark as a defect, as accessibility overcorrection. Doctrine
+// permits either. This surface chose the stop.
+//
 // draggable={false} because this element sits inside the span-selection surface. A
 // bare anchor answers a press-and-drag with a link drag, which would take the gesture
 // that selects a passage and spend it on dragging a URL.

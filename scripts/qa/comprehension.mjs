@@ -202,7 +202,11 @@ export const STATES = [
 // ── The in-page measurement ──────────────────────────────────────────────────
 // One expression, evaluated in the real page after the real drive steps. Everything
 // inside it is the scratch's code with the selectors and the origin parameterised.
-function measureExpression(sel, fold) {
+//
+// Exported because blocks-ratchet.mjs governs `blocks_before` and must count a block
+// the same way this file does. Two transcriptions of a walker are two definitions, and
+// a ratchet measuring a quantity the floor does not measure governs nothing.
+export function measureExpression(sel, fold) {
   return `(() => {
   const CFG = ${JSON.stringify(sel)};
   const FOLD = ${fold};
