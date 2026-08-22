@@ -1,0 +1,575 @@
+/* Direction B — Editorial Instrument.
+ *
+ * Two columns working at once. The answer runs down the left, the marks stand in a
+ * ruled channel on the right, level with the block each one belongs to. Nothing waits
+ * to be discovered: the whole apparatus is visible on arrival, and opening a mark
+ * raises an entry that was already on the page.
+ *
+ * The bet: showing everything at once reads as an instrument at work rather than as
+ * clutter. If the rail reads as noise, this direction is wrong.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--bg-base); }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.b-record { display: block; }
+[hidden] { display: none !important; }
+
+.b-label {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ── Z7.4 · forwarded, fixed to the top for the whole descent ─────────────── */
+
+/* Compact by ruling: same three strings, set as one running line instead of three
+ * stacked rows. The stack cost the forwarded arrival three rendered blocks and about
+ * 145px above the finding sentence at 390, and the reader paying it was the one with
+ * the least context. Nothing here shortens, hides or conditions any part of the zone.
+ *
+ * The setting is what changed, and it had to change in CSS rather than in markup:
+ * a flex container blockifies its children, so `display: flex` was making three
+ * blocks out of three strings however they were tagged. Compact drops to normal flow
+ * with inline parts, and the strip wraps as one piece of prose. Separation is carried
+ * by inline margins, never by a generated character — this zone adds no glyph. */
+.b-fwd {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--ember-deep);
+  padding: 0.55rem var(--space-4);
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.85rem;
+}
+.b-fwd-h { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ember-bright); }
+.b-fwd-b { margin: 0; flex: 1 1 20rem; font-size: 13.5px; line-height: 1.45; color: var(--ink-secondary); }
+.b-fwd-a { font-family: var(--font-mono); font-size: 12.5px; color: var(--ember); text-decoration: none; border-bottom: 1px solid var(--ember-deep); }
+.b-fwd-a:hover { color: var(--ember-bright); }
+
+.b-fwd[data-compact="true"] {
+  display: block;
+  padding: 0.5rem var(--space-4) 0.55rem;
+  font-size: 13.5px; line-height: 1.5;
+}
+.b-fwd[data-compact="true"] .b-fwd-h { display: inline; margin-inline-end: 0.6rem; }
+.b-fwd[data-compact="true"] .b-fwd-b { display: inline; }
+.b-fwd[data-compact="true"] .b-fwd-a { display: inline; margin-inline-start: 0.6rem; white-space: nowrap; }
+
+/* ── Z1 + Z2 · GLANCE, then the rest of the masthead in INSPECT ───────────────
+ *
+ * The header strip used to be a two-row grid holding eleven things. It holds two,
+ * and a line into the rest. Everything below is the same type at the same sizes;
+ * what changed is where it sits and how much of it a reader meets first.
+ */
+
+.b-head {
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--line-strong);
+  padding: var(--space-3) var(--space-4) var(--space-3);
+}
+.b-head-inner { max-width: 1240px; margin-inline: auto; }
+
+/* Z1.1 · Z1.2, one line, present for a cold arrival above the finding and inside
+ * INSPECT for a runner. Inline children so a compact identity costs one rendered
+ * block rather than two. */
+.b-head-id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.15rem 0.9rem; margin-bottom: 0.75rem; }
+.b-head-id .b-class, .b-head-id .b-context { display: inline; }
+.b-class {
+  margin: 0; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember);
+}
+/* First contact carries sentences now, so the value leaves the mono face and the
+ * label keeps it. The identifiers went to Z6.3. */
+.b-address { margin: 0.9rem 0 0; display: flex; flex-wrap: wrap; gap: 0.2rem 1.7rem; font-size: 13px; color: var(--ink-muted); }
+.b-addr-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.7; }
+.b-addr-value { color: var(--ink-secondary); }
+
+/* The claim and the arithmetic, and nothing beside them. The finding keeps every
+ * pixel of its display setting; what it loses is the four things that used to
+ * share its grid. */
+.b-glance { display: block; }
+.b-finding {
+  margin: 0; max-width: 30ch;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.5rem, 2.6vw, 2.15rem); line-height: 1.16;
+  letter-spacing: -0.01em; color: var(--ink-luminous);
+}
+.b-context { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-secondary); max-width: 46ch; }
+.b-boundary { margin: 0.9rem 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-muted); max-width: 52ch; }
+
+.b-head-scope {
+  margin-top: 1rem; padding-top: 0.9rem; border-top: 1px solid var(--line-faint);
+}
+/* Z2.1 rides directly under the finding in GLANCE, so its spacing is the gap
+ * between a claim and the count that sizes it, not a block margin. */
+.b-glance .b-count { margin: 0.85rem 0 0; }
+.b-count { margin: 0 0 0.3rem; font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.06em; color: var(--ink-luminous); }
+/* Z2.4 · census. B's header is a tight instrument block, so this stays at the body
+ * size and leans on ink rather than scale to sit above the count rule under it. */
+.b-census { margin: 0 0 0.3rem; max-width: 58ch; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+.b-count-rule { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.b-scope-orient { margin-top: 0.75rem; }
+.b-orient { margin: 0 0 0.6rem; font-size: 13.5px; line-height: 1.55; color: var(--ink-secondary); }
+html[data-orient="dismissed"] .b-scope-orient { display: none; }
+/* Subordinate, because it changes a view and not a record. B gives its density
+ * control a bordered chip, and dismiss wearing the same chip claimed the same rank.
+ * It keeps B's mono register and loses the box. */
+/* Underlined in its own ink rather than a --line- token: the line tokens are all
+ * sub-3:1 hairlines, correct as separators and unusable as the single mark that
+ * makes a word pressable. */
+.b-dismiss {
+  background: none; border: 0; padding: 0;
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.08em; color: var(--ink-muted); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.b-dismiss:hover { color: var(--ink-soft); }
+html[data-forwarded="true"] .b-dismiss { display: none; }
+
+/* ── INSPECT · the disclosure ─────────────────────────────────────────────────
+ *
+ * Set as a line of type with a rule above it, not as a button and not as a chip. B
+ * already spends its one bordered control on the density switch, and a second
+ * bordered control at the top of the page would read as the more important of the
+ * two while doing the smaller job.
+ *
+ * The marker is a hairline mono glyph on the baseline of the label. The UA triangle
+ * is removed because it is the one element on this page whose size and colour B does
+ * not control, and it renders as a filled solid at a weight nothing else here
+ * carries.
+ *
+ * The focus ring is the visible one, not the hairline: this is the control a keyboard
+ * reader meets first on the record, and the line tokens are all sub-3:1.
+ */
+.b-more { margin-top: 1rem; border-top: 1px solid var(--line-faint); }
+.b-more-sum {
+  list-style: none; cursor: pointer;
+  padding: 0.7rem 0 0.1rem;
+  display: flex; align-items: baseline; gap: 0.55rem;
+  font-size: 13.5px; line-height: 1.5; color: var(--ink-muted);
+}
+.b-more-sum::-webkit-details-marker { display: none; }
+.b-more-sum::before {
+  content: "+"; font-family: var(--font-mono); font-size: 13px;
+  color: var(--ember); flex: none; width: 0.8em;
+}
+.b-more[open] > .b-more-sum::before { content: "−"; }
+.b-more-sum:hover { color: var(--ink-secondary); }
+.b-more-sum:focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; }
+.b-more-label { display: inline; }
+.b-more-body { padding: 0.35rem 0 0.4rem; }
+/* Inside the register the disclosure sits under a census sentence that already has a
+ * rule of its own above it, so this one drops the second line. */
+.b-more-checks { border-top: 0; margin-top: 0.5rem; }
+
+/* ── Z3 + Z4 · the instrument ─────────────────────────────────────────────── */
+
+.b-work { padding: var(--space-4) var(--space-4) var(--space-5); }
+.b-column { max-width: 1240px; margin-inline: auto; }
+
+.b-prompt, .b-expect, .b-second, .b-shape { max-width: 62ch; margin-bottom: var(--space-3); }
+.b-prompt-text {
+  margin: 0; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.15rem, 1.9vw, 1.4rem); line-height: 1.4; color: var(--ink-luminous);
+}
+.b-expect { border-left: 1px solid var(--line-soft); padding-left: 1.2rem; max-width: 74ch; }
+.b-expect-text {
+  margin: 0 0 0.8rem; font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+  white-space: pre-wrap; color: var(--ink-soft);
+}
+.b-disclosure { margin: 0; font-size: 13px; line-height: 1.6; color: var(--ink-muted); }
+.b-source-label { margin-top: var(--space-4); }
+
+/* the grid that makes the rail */
+.b-body { border-top: 1px solid var(--line-soft); }
+.b-row { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 0 2.5rem; align-items: start; }
+.b-row-source { padding: 0.9rem 0; min-width: 0; }
+.b-row-marks {
+  padding: 0.9rem 0 0.9rem 1.5rem;
+  border-left: 1px solid var(--line-faint);
+  min-height: 100%;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.b-para { margin: 0; font-size: 17.5px; line-height: 1.72; color: var(--ink-primary); max-width: 64ch; }
+.b-filename {
+  margin: 0; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted);
+}
+.b-code {
+  margin: 0; background: var(--bg-surface); border: 1px solid var(--line-faint); border-radius: 2px;
+  padding: 0.9rem 1rem 0.9rem 2.2rem; font-family: var(--font-mono); font-size: 12.5px;
+  line-height: 1.75; color: var(--ink-soft); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* Z4.1 · span channel — the mark takes the ground under the characters.
+ *
+ * The ground steps one rung at rest and a second rung when the mark is open. It
+ * stops at elevated: the rung above it is the first ground on which neither the
+ * ember family nor the muted ink can carry the numeral, so a third step would buy
+ * a little more depth and lose the address. */
+.b-span {
+  position: relative;
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 1px var(--line-soft);
+  border-radius: 2px;
+  padding: 0.05em 0.12em;
+  color: var(--ink-luminous);
+  cursor: pointer;
+}
+.b-span::after {
+  content: attr(data-anchor);
+  position: relative; top: -0.55em; left: 0.18em;
+  font-family: var(--font-mono); font-size: 0.62em; color: var(--ember-bright);
+}
+.b-span:hover, .b-span[aria-expanded="true"] { background: var(--bg-elevated); box-shadow: 0 0 0 1px var(--ember-bright); }
+
+/* Z4.1 · region channel — a rule down the gutter for the region's whole height */
+.b-region {
+  display: inline; cursor: pointer;
+  border-left: 2px solid var(--ember-deep);
+  margin-left: -0.9rem; padding-left: 0.7rem;
+  color: var(--ink-luminous);
+}
+.b-region::before {
+  content: attr(data-anchor);
+  font-family: var(--font-mono); font-size: 0.62em; color: var(--ember);
+  vertical-align: super; margin-right: 0.2em;
+}
+.b-region:hover, .b-region[aria-expanded="true"] { border-left-color: var(--ember-bright); }
+
+.b-code-region {
+  display: block; position: relative;
+  border-left: 2px solid var(--ember-deep);
+  margin-left: -1.3rem; padding-left: 1.1rem;
+  background: var(--bg-elevated);
+  cursor: pointer;
+}
+.b-code-region::before {
+  content: attr(data-region);
+  position: absolute; left: -1.55rem; top: 0;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ember);
+}
+.b-code-region:hover { border-left-color: var(--ember-bright); }
+.b-code-plain { display: block; }
+.b-code .b-region { border-left: none; margin-left: 0; padding-left: 0; }
+.b-code .b-region::before { content: none; }
+
+/* Z4.4 · the standing rail note */
+.b-note { margin-bottom: 0.9rem; }
+.b-note-head {
+  display: flex; gap: 0.7rem; width: 100%; text-align: left;
+  background: none; border: none; border-radius: 2px; padding: 0.35rem 0.4rem 0.35rem 0;
+  font-family: inherit; cursor: pointer;
+}
+.b-note-head:hover .b-note-points { color: var(--ink-luminous); }
+.b-note-n {
+  flex: 0 0 auto; min-width: 1.5ch;
+  font-family: var(--font-mono); font-size: 12px; color: var(--ember-bright);
+}
+.b-note-points { font-size: 14.5px; line-height: 1.5; color: var(--ink-secondary); }
+.b-note-open { display: none; padding: 0.2rem 0 0.4rem 2.2rem; }
+.b-note[data-open="true"] .b-note-open { display: block; animation: b-raise 180ms ease-out; }
+.b-note[data-open="true"] { background: var(--bg-surface); border-radius: 2px; box-shadow: inset 2px 0 0 var(--ember); }
+.b-note[data-open="true"] .b-note-head { padding-left: 0.7rem; }
+.b-note[data-open="true"] .b-note-points { color: var(--ink-luminous); }
+@keyframes b-raise { from { opacity: 0; } to { opacity: 1; } }
+
+.b-note-mode { margin: 0 0 0.6rem; font-size: 12.5px; line-height: 1.55; color: var(--ink-muted); }
+.b-note-quote {
+  margin: 0 0 0.6rem; border-left: 1px solid var(--line-strong); padding-left: 0.8rem;
+  font-family: var(--font-display); font-style: italic; font-size: 14.5px; line-height: 1.55; color: var(--ink-luminous);
+}
+.b-note-quote::before { content: "\201C"; }
+.b-note-quote::after { content: "\201D"; }
+.b-note-body { margin: 0 0 0.6rem; font-size: 13.5px; line-height: 1.6; color: var(--ink-soft); }
+.b-note-ask { margin: 0 0 0.7rem; font-size: 13.5px; line-height: 1.6; color: var(--ink-primary); }
+.b-note-ask-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-muted); display: block; }
+.b-note-close {
+  background: none; border: 1px solid var(--line-soft); border-radius: 2px;
+  padding: 0.22rem 0.55rem; font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.08em; color: var(--ink-muted); cursor: pointer;
+}
+.b-note-close:hover { color: var(--ink-primary); border-color: var(--line-strong); }
+
+.b-second-text {
+  margin: 0; font-family: var(--font-display); font-size: 1.1rem; line-height: 1.45; color: var(--ink-soft);
+}
+.b-shape-body { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+/* ── Z4.2 · outside the document, below both columns ──────────────────────── */
+
+.b-outside {
+  background: var(--bg-deep);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  padding: var(--space-4) var(--space-4);
+}
+.b-outside-inner { max-width: 1240px; margin-inline: auto; }
+.b-outside-label {
+  margin: 0 0 0.5rem; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember);
+}
+.b-outside-rule {
+  margin: 0 0 0.7rem; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem); color: var(--ink-luminous);
+}
+.b-outside-note { margin: 0 0 var(--space-3); max-width: 62ch; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+.b-outside-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.2rem 2.5rem; }
+.b-note-outside { margin-bottom: 0; border-top: 1px solid var(--line-faint); padding-top: 0.8rem; }
+.b-note-outside .b-note-points { font-size: 15.5px; color: var(--ink-primary); }
+
+/* ── Z5 · Check Register ──────────────────────────────────────────────────── */
+
+.b-register { padding: var(--space-5) var(--space-4); }
+.b-register-inner { max-width: 1240px; margin-inline: auto; }
+.b-reg-head { display: grid; grid-template-columns: minmax(0, 1fr) 23rem; gap: 1.5rem 2.5rem; align-items: start; padding-bottom: var(--space-3); border-bottom: 1px solid var(--line-strong); }
+.b-reg-h { margin: 0 0 0.4rem; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.4rem, 2.4vw, 1.9rem); color: var(--ink-luminous); }
+.b-reg-note { margin: 0; max-width: 62ch; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+
+.b-density { display: flex; flex-direction: column; gap: 0.5rem; }
+.b-density-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted); }
+.b-density-set { display: flex; }
+.b-density-btn {
+  background: none; border: 1px solid var(--line-soft); padding: 0.35rem 0.75rem;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--ink-muted); cursor: pointer;
+}
+.b-density-btn:first-of-type { border-radius: 2px 0 0 2px; }
+.b-density-btn:last-of-type { border-radius: 0 2px 2px 0; border-left: none; }
+.b-density-btn[aria-pressed="true"] { background: var(--bg-elevated); color: var(--ink-luminous); border-color: var(--line-strong); }
+.b-density-note { font-size: 12.5px; line-height: 1.5; color: var(--ink-muted); }
+html[data-density="consumer"] .b-density-note-pro,
+html[data-density="professional"] .b-density-note-consumer { display: none; }
+
+.b-entries { list-style: none; margin: 0; padding: 0; }
+.b-entry { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: 0 0.5rem; padding: 1.1rem 0; border-bottom: 1px solid var(--line-faint); }
+.b-entry-n { font-family: var(--font-mono); font-size: 13px; color: var(--ember); padding-top: 0.15rem; }
+.b-entry-col { min-width: 0; }
+.b-field { display: grid; grid-template-columns: 13rem minmax(0, 1fr); gap: 0.3rem 1.5rem; padding: 0.2rem 0; }
+.b-field-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-muted); padding-top: 0.28rem; }
+.b-field-body { font-size: 15px; line-height: 1.6; color: var(--ink-soft); max-width: 70ch; }
+.b-field-lead .b-field-body { font-size: 16.5px; color: var(--ink-primary); }
+.b-field-ask .b-field-body { color: var(--ink-primary); }
+.b-field-quoted { font-family: var(--font-display); font-style: italic; color: var(--ink-luminous); }
+.b-field-quoted::before { content: "\201C"; }
+.b-field-quoted::after { content: "\201D"; }
+.b-field-mono { font-family: var(--font-mono); font-size: 12.5px; }
+html[data-density="consumer"] .b-entry-fields[data-fields="professional"],
+html[data-density="professional"] .b-entry-fields[data-fields="consumer"] { display: none; }
+.b-entry-jump {
+  margin-top: 0.5rem; background: none; border: none; padding: 0;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--ember); cursor: pointer; border-bottom: 1px solid var(--line-strong);
+}
+.b-entry-jump:hover { color: var(--ember-bright); }
+
+.b-reg-close { margin-top: var(--space-3); display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1.2rem 2.5rem; }
+.b-close-label { margin: 0 0 0.25rem; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.b-close-body { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+/* ── Z6 · provenance, Z7 · foot ───────────────────────────────────────────── */
+
+.b-prov { background: var(--bg-deep); border-top: 1px solid var(--line-strong); padding: var(--space-4); }
+.b-prov-inner { max-width: 1240px; margin-inline: auto; }
+.b-prov-h { margin: 0 0 var(--space-3); font-family: var(--font-display); font-weight: 400; font-size: clamp(1.3rem, 2.2vw, 1.7rem); color: var(--ink-luminous); }
+.b-prov-row { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 1.2rem; padding: 0.85rem 0; border-top: 1px solid var(--line-faint); }
+.b-prov-label { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+.b-prov-body { margin: 0; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); max-width: 68ch; }
+pre.b-prov-body { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Z6.3 · the durable handles, at the foot of the provenance table. */
+.b-ids {
+  margin: 0 0 0.45rem; display: flex; flex-wrap: wrap; gap: 0.25rem 1.6rem;
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-secondary);
+  overflow-wrap: anywhere;
+}
+.b-id-label { text-transform: uppercase; letter-spacing: 0.1em; font-size: 10.5px; color: var(--ink-muted); }
+.b-id-value { color: var(--ink-primary); }
+[data-prov="identity"] .b-prov-body { font-size: 13px; color: var(--ink-muted); }
+
+.b-foot { background: var(--bg-deep); border-top: 1px solid var(--line-faint); padding: var(--space-4) var(--space-4) var(--space-5); }
+.b-foot-inner { max-width: 1240px; margin-inline: auto; }
+.b-foot-row { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 1.2rem; padding: 0.8rem 0; border-top: 1px solid var(--line-faint); }
+.b-foot-row:first-child { border-top: none; }
+.b-foot-label { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+.b-foot-body { margin: 0; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); max-width: 68ch; }
+.b-foot-cite { margin: 0; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-secondary); overflow-wrap: anywhere; }
+.b-lane { margin: var(--space-4) 0 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em; color: var(--ink-muted); opacity: 0.7; }
+
+/* ── Z8 · reader entry ────────────────────────────────────────────────────────
+ * Two columns again, and both are working from the first pixel. Neither state hides
+ * the other; the state decides which column is wide, not which one exists.
+ */
+
+.b-enter { display: block; }
+.b-e-head { background: var(--bg-deep); border-bottom: 1px solid var(--line-strong); padding: var(--space-3) var(--space-4); }
+.b-e-head-inner { max-width: 1240px; margin-inline: auto; }
+.b-e-kicker { margin: 0; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember); }
+
+.b-e-work { padding: var(--space-4); }
+.b-e-cols { max-width: 1240px; margin-inline: auto; display: grid; gap: var(--space-4) 3rem; align-items: start; }
+html[data-entry-state="empty"] .b-e-cols { grid-template-columns: minmax(0, 1fr) 26rem; }
+html[data-entry-state="answer"] .b-e-cols { grid-template-columns: minmax(0, 1fr) 24rem; }
+html[data-entry-state="shared"] .b-e-cols { grid-template-columns: minmax(0, 1fr) 24rem; }
+
+.b-e-primary { min-width: 0; }
+.b-e-secondary { min-width: 0; border-left: 1px solid var(--line-faint); padding-left: 2rem; }
+
+.b-e-field-label { display: block; margin: 0 0 0.6rem; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted); }
+.b-e-textarea {
+  display: block; width: 100%; resize: vertical;
+  background: var(--bg-surface); color: var(--ink-luminous);
+  border: 1px solid var(--line-soft); border-radius: 2px;
+  padding: 1rem 1.1rem; font-family: var(--font-body); font-size: 16px; line-height: 1.62;
+}
+.b-e-textarea::placeholder { color: var(--ink-muted); }
+.b-e-textarea:focus-visible { border-color: var(--ember-deep); }
+.b-e-paste-foot { margin-top: 0.9rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.b-e-action {
+  flex: 0 0 auto; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.05em;
+  color: var(--bg-deep); background: var(--ember); border: 1px solid var(--ember);
+  border-radius: 2px; padding: 0.6rem 1.1rem; cursor: pointer;
+}
+.b-e-action:hover { background: var(--ember-bright); border-color: var(--ember-bright); }
+.b-e-scope { flex: 1 1 20rem; margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-secondary); }
+.b-e-ready { margin: 0.8rem 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-muted); }
+
+.b-e-mech-heading, .b-e-arriving-heading {
+  margin: 0 0 0.5rem; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem); line-height: 1.25; color: var(--ink-luminous);
+}
+.b-e-mech-body, .b-e-arriving-body { margin: 0 0 0.9rem; max-width: 52ch; font-size: 15px; line-height: 1.62; color: var(--ink-soft); }
+.b-e-mech-action, .b-e-arriving-action {
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--ember);
+  text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 0.12rem;
+}
+.b-e-mech-action:hover, .b-e-arriving-action:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+/* when the mechanism leads it takes the wide column and grows a proof strip */
+.b-e-primary .b-e-mech-heading { font-size: clamp(1.6rem, 3vw, 2.4rem); max-width: 22ch; }
+.b-e-primary .b-e-mech-body { font-size: 17px; max-width: 56ch; }
+.b-e-primary .b-e-arriving-heading { font-size: clamp(1.5rem, 2.6vw, 2.1rem); max-width: 24ch; }
+
+.b-e-arrived {
+  margin: var(--space-3) 0 0; background: var(--bg-surface);
+  border: 1px solid var(--line-soft); border-left: 2px solid var(--ember-deep);
+  border-radius: 2px; padding: 1.3rem 1.4rem; max-width: 44rem;
+}
+.b-e-arrived-label { margin: 0 0 0.6rem; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.b-e-arrived-finding { margin: 0 0 0.7rem; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.2rem, 2.1vw, 1.55rem); line-height: 1.24; color: var(--ink-luminous); }
+.b-e-arrived-count { margin: 0 0 0.9rem; font-size: 14px; color: var(--ink-secondary); }
+.b-e-arrived-open { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ember); text-decoration: none; border-bottom: 1px solid var(--ember-deep); }
+.b-e-arrived-open:hover { color: var(--ember-bright); }
+
+/* ── mobile · the rail dissolves and each note inlines under its block ────── */
+
+@media (max-width: 900px) {
+  .b-reg-head { grid-template-columns: 1fr; }
+  .b-finding { max-width: none; }
+  .b-row { grid-template-columns: 1fr; gap: 0; }
+  .b-row-source { padding-bottom: 0.4rem; }
+  .b-row-marks {
+    padding: 0 0 1rem 1rem;
+    border-left: 2px solid var(--line-soft);
+    margin-bottom: 0.6rem;
+  }
+  .b-e-cols, html[data-entry-state="empty"] .b-e-cols,
+  html[data-entry-state="answer"] .b-e-cols, html[data-entry-state="shared"] .b-e-cols { grid-template-columns: 1fr; }
+  .b-e-secondary { border-left: none; border-top: 1px solid var(--line-faint); padding-left: 0; padding-top: var(--space-3); }
+}
+
+@media (max-width: 640px) {
+  .b-head, .b-work, .b-register, .b-prov, .b-foot, .b-outside, .b-e-work, .b-e-head { padding-inline: 1.25rem; }
+  .b-para { font-size: 17px; }
+  .b-field, .b-prov-row, .b-foot-row { grid-template-columns: 1fr; gap: 0.25rem; }
+  .b-entry { grid-template-columns: 2rem minmax(0, 1fr); }
+  .b-outside-list { grid-template-columns: 1fr; }
+  .b-e-action { width: 100%; }
+  .b-region { margin-left: 0; padding-left: 0; border-left: none; }
+}
+
+/* ── reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .b-note[data-open="true"] .b-note-open { animation: none; }
+  * { transition: none !important; }
+}
+html[data-motion="reduced"] .b-note[data-open="true"] .b-note-open { animation: none; }
+html[data-motion="reduced"] * { transition: none !important; }
+
+/* ── Z5.6 · applied checks ────────────────────────────────────────────────────
+ * B opens the register with this, so it sits above the entries and inside the same
+ * register frame. It is ruled top and bottom to separate it from the entry list
+ * without becoming a second panel inside the panel B already has. */
+.b-applied {
+  margin: 0 0 1.6rem;
+  padding: 1.1rem 0 0.2rem;
+  border-top: 1px solid var(--line-soft);
+}
+.b-applied-h {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.b-applied-census {
+  margin: 0 0 0.5rem;
+  max-width: 52ch;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  color: var(--ink-luminous);
+}
+.b-applied-note { margin: 0 0 0.45rem; max-width: 64ch; font-size: 13.5px; line-height: 1.6; color: var(--ink-secondary); }
+.b-applied-cond { margin: 0 0 1rem; max-width: 64ch; font-size: 13px; line-height: 1.6; color: var(--ink-muted); }
+.b-applied-row {
+  display: grid;
+  grid-template-columns: 11rem minmax(0, 1fr);
+  gap: 0 1.2rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--line-faint);
+}
+.b-applied-row:last-of-type { border-bottom: 1px solid var(--line-faint); margin-bottom: 0.9rem; }
+.b-applied-name {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+}
+.b-applied-out { margin: 0; max-width: 54ch; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
+.b-applied-rowcond { grid-column: 2; margin: 0.3rem 0 0; max-width: 58ch; font-size: 13px; line-height: 1.55; color: var(--ink-muted); }
+.b-applied-condlabel { color: var(--ink-secondary); }
+.b-applied-det { grid-column: 2; margin: 0.3rem 0 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; color: var(--ink-muted); }
+.b-applied-detlabel { color: var(--ink-secondary); }
+
+@media (max-width: 900px) {
+  .b-applied-row { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; }
+  .b-applied-rowcond, .b-applied-det { grid-column: 1; }
+}

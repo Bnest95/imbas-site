@@ -1,0 +1,1001 @@
+{
+  "lint": {
+    "module": "/Users/brendan/Documents/Claude/Projects/imbas-site/reader-check-vocab.js",
+    "version": "check-vocab.v1",
+    "imported_unmodified": true,
+    "strings_checked": 192,
+    "violations": 0,
+    "detail": []
+  },
+  "positive_framing_sweep": {
+    "rule": "State positively what the record is, carries and supports. Do not deny a misreading by naming it.",
+    "connective_strings_checked": 136,
+    "denial_shapes_found": 2,
+    "detail": [
+      {
+        "path": "ui.z2.orientation",
+        "text": "Each mark points at something in this answer, or at something that isn't in it. Imbas records what was there and what wasn't.",
+        "kind": "ui",
+        "violations": [],
+        "denial_shapes": [
+          "/\\bisn't\\b/i"
+        ]
+      },
+      {
+        "path": "FIRST_RUN_LINE",
+        "text": "Each mark points at something in this answer, or at something that isn't in it. Imbas records what was there and what wasn't.",
+        "kind": "scope",
+        "violations": [],
+        "denial_shapes": [
+          "/\\bisn't\\b/i"
+        ]
+      }
+    ]
+  },
+  "connective_copy": [
+    {
+      "path": "ui.z1.address_read",
+      "kind": "ui",
+      "text": "Read"
+    },
+    {
+      "path": "ui.z1.address_inspected",
+      "kind": "ui",
+      "text": "Inspected"
+    },
+    {
+      "path": "ui.z1.address_condition",
+      "kind": "ui",
+      "text": "Condition"
+    },
+    {
+      "path": "ui.z1.boundary_label",
+      "kind": "ui",
+      "text": "What this record covers"
+    },
+    {
+      "path": "ui.z1.fixture_flag",
+      "kind": "ui",
+      "text": "Lane fixture"
+    },
+    {
+      "path": "ui.z2.count_one",
+      "kind": "ui",
+      "text": "1 mark on this record"
+    },
+    {
+      "path": "ui.z2.count_rule",
+      "kind": "ui",
+      "text": "The count is the number of marks listed here. Count them."
+    },
+    {
+      "path": "ui.z2.census_lead",
+      "kind": "ui",
+      "text": "Where they are anchored:"
+    },
+    {
+      "path": "ui.z2.orientation",
+      "kind": "ui",
+      "text": "Each mark points at something in this answer, or at something that isn't in it. Imbas records what was there and what wasn't."
+    },
+    {
+      "path": "ui.z2.orientation_dismiss",
+      "kind": "ui",
+      "text": "Dismiss"
+    },
+    {
+      "path": "ui.z3.assignment_disclosure",
+      "kind": "ui",
+      "text": "Each expectation below is quoted from this assignment by hand. Imbas holds no instruction-set artifact role, and no Imbas code resolves an expectation anchor. This machinery is authored for this lane."
+    },
+    {
+      "path": "ui.z4.record_level_heading",
+      "kind": "ui",
+      "text": "Record-level"
+    },
+    {
+      "path": "ui.z4.record_level_rule",
+      "kind": "ui",
+      "text": "Not anywhere in this answer."
+    },
+    {
+      "path": "ui.z4.record_level_note",
+      "kind": "ui",
+      "text": "These marks point at the answer as a whole. There is no place in it where they sit, so they are recorded here rather than beside a line."
+    },
+    {
+      "path": "ui.z4.mode_label",
+      "kind": "ui",
+      "text": "Anchor mode"
+    },
+    {
+      "path": "ui.z4.mode_meaning.QUOTED_SPAN",
+      "kind": "ui",
+      "text": "The mark sits on the characters it quotes. The quote reproduces from the answer above."
+    },
+    {
+      "path": "ui.z4.mode_meaning.PASSAGE_CONTEXT",
+      "kind": "ui",
+      "text": "The mark brackets a region rather than a line, because the reading is legible across the region and not at any single point in it."
+    },
+    {
+      "path": "ui.z4.mode_meaning.RECORD_LEVEL_ABSENCE",
+      "kind": "ui",
+      "text": "The mark points at nothing in the answer. There is no place in it where this sits."
+    },
+    {
+      "path": "ui.z4.open_label",
+      "kind": "ui",
+      "text": "Open this mark"
+    },
+    {
+      "path": "ui.z4.close_label",
+      "kind": "ui",
+      "text": "Close this mark"
+    },
+    {
+      "path": "ui.z4.jump_to_source",
+      "kind": "ui",
+      "text": "Go to the marked line"
+    },
+    {
+      "path": "ui.z4.jump_to_register",
+      "kind": "ui",
+      "text": "Read the register entry"
+    },
+    {
+      "path": "ui.z5.heading",
+      "kind": "ui",
+      "text": "Check Register"
+    },
+    {
+      "path": "ui.z5.note",
+      "kind": "ui",
+      "text": "Each entry is one mark, numbered as it is beside the answer. It records what the mark is anchored to, whether that evidence resolved, and the question worth asking next. Anchor mode and evidence are separate: a mark can point at a real place and still have nothing to quote, and a mark that points at nothing in the answer is a different kind of claim."
+    },
+    {
+      "path": "ui.z5.density_label",
+      "kind": "ui",
+      "text": "Register density"
+    },
+    {
+      "path": "ui.z5.density_consumer",
+      "kind": "ui",
+      "text": "Plain"
+    },
+    {
+      "path": "ui.z5.density_professional",
+      "kind": "ui",
+      "text": "Full"
+    },
+    {
+      "path": "ui.z5.density_consumer_note",
+      "kind": "ui",
+      "text": "What each mark points at, and the question it hands you."
+    },
+    {
+      "path": "ui.z5.density_professional_note",
+      "kind": "ui",
+      "text": "Every field the record holds: anchor mode, evidence state, signal class, what the reading rests on, and how the documents connect."
+    },
+    {
+      "path": "ui.z5.field_points_at",
+      "kind": "ui",
+      "text": "What the mark points at"
+    },
+    {
+      "path": "ui.z5.field_worth_asking",
+      "kind": "ui",
+      "text": "Worth asking"
+    },
+    {
+      "path": "ui.z5.field_evidence",
+      "kind": "ui",
+      "text": "Evidence"
+    },
+    {
+      "path": "ui.z5.field_signal_class",
+      "kind": "ui",
+      "text": "Signal class"
+    },
+    {
+      "path": "ui.z5.field_rests_on",
+      "kind": "ui",
+      "text": "What it rests on"
+    },
+    {
+      "path": "ui.z5.field_carries",
+      "kind": "ui",
+      "text": "What carries it"
+    },
+    {
+      "path": "ui.z5.field_connect",
+      "kind": "ui",
+      "text": "How they connect"
+    },
+    {
+      "path": "ui.z5.field_expectation",
+      "kind": "ui",
+      "text": "The assignment says"
+    },
+    {
+      "path": "ui.z5.field_quote",
+      "kind": "ui",
+      "text": "Quoted from the answer"
+    },
+    {
+      "path": "ui.z5.field_region",
+      "kind": "ui",
+      "text": "The bracketed region"
+    },
+    {
+      "path": "ui.z5.field_declared_by",
+      "kind": "ui",
+      "text": "Who states that"
+    },
+    {
+      "path": "ui.z5.field_observed",
+      "kind": "ui",
+      "text": "Quoted from the probe answer"
+    },
+    {
+      "path": "ui.z5.field_materiality",
+      "kind": "ui",
+      "text": "Why it mattered"
+    },
+    {
+      "path": "ui.z5.evidence_quoted",
+      "kind": "ui",
+      "text": "Reproduces from the answer above."
+    },
+    {
+      "path": "ui.z5.evidence_absent",
+      "kind": "ui",
+      "text": "Nothing to quote in the answer above. The item is recorded as absent from it."
+    },
+    {
+      "path": "ui.z5.evidence_probe",
+      "kind": "ui",
+      "text": "Nothing to quote in the answer above. Resolved. It reproduces from the probe answer."
+    },
+    {
+      "path": "ui.z5.evidence_region",
+      "kind": "ui",
+      "text": "Reproduces as the bracketed region in the answer above."
+    },
+    {
+      "path": "ui.z5.classes_heading",
+      "kind": "ui",
+      "text": "Signal classes"
+    },
+    {
+      "path": "ui.z5.classes_note",
+      "kind": "ui",
+      "text": "Imbas records three signal classes: Omission, Framing Drift, Deflection."
+    },
+    {
+      "path": "ui.z5.classes_none",
+      "kind": "ui",
+      "text": "This record carries no Imbas signal class. Those classes describe what an AI answer surfaced. This record describes one produced artifact against one assignment, which is a different kind of record."
+    },
+    {
+      "path": "ui.z5.applied_heading",
+      "kind": "ui",
+      "text": "Checks applied"
+    },
+    {
+      "path": "ui.z5.applied_note",
+      "kind": "ui",
+      "text": "Three checks are declared for a record of this kind, and all three read the answer above. Each one is listed here with what it produced, so a check that produced nothing sits on the record beside a check that produced findings."
+    },
+    {
+      "path": "ui.z5.applied_condition_label",
+      "kind": "ui",
+      "text": "Condition"
+    },
+    {
+      "path": "ui.z5.applied_condition_shared",
+      "kind": "ui",
+      "text": "A check produces a finding where both ends resolve to exact text of the answer above: the wording a reading rests on, and the wording that carries it. Where an end does not resolve, the check produces nothing rather than something weaker."
+    },
+    {
+      "path": "ui.z5.applied_silence_note",
+      "kind": "ui",
+      "text": "A check that produced nothing is recorded as exactly that: it ran, under the condition above, and produced nothing. The register is a record of what was examined."
+    },
+    {
+      "path": "ui.z5.applied_field_identity",
+      "kind": "ui",
+      "text": "Check"
+    },
+    {
+      "path": "ui.z5.applied_field_outcome",
+      "kind": "ui",
+      "text": "What it produced"
+    },
+    {
+      "path": "ui.z5.applied_field_detector",
+      "kind": "ui",
+      "text": "Detector"
+    },
+    {
+      "path": "ui.z5.applied_outcome_none",
+      "kind": "ui",
+      "text": "Ran on this record and produced no finding."
+    },
+    {
+      "path": "ui.z5.applied_outcome_not_applicable",
+      "kind": "ui",
+      "text": "Did not run on this record."
+    },
+    {
+      "path": "ui.z5.applied_not_applicable_why",
+      "kind": "ui",
+      "text": "These three checks read an AI answer. This record holds one produced artifact against one assignment, so the marks on it come from that comparison instead."
+    },
+    {
+      "path": "ui.z6.heading",
+      "kind": "ui",
+      "text": "Provenance"
+    },
+    {
+      "path": "ui.z6.identity_heading",
+      "kind": "ui",
+      "text": "Record identity"
+    },
+    {
+      "path": "ui.z6.identity_note",
+      "kind": "ui",
+      "text": "These are the durable handles. A reader who cites this record, asks for it again, or checks it against the anatomy it was built under quotes them exactly."
+    },
+    {
+      "path": "ui.z6.address_run",
+      "kind": "ui",
+      "text": "Run"
+    },
+    {
+      "path": "ui.z6.address_packet",
+      "kind": "ui",
+      "text": "Packet"
+    },
+    {
+      "path": "ui.z6.address_record",
+      "kind": "ui",
+      "text": "Record"
+    },
+    {
+      "path": "ui.z6.address_anatomy",
+      "kind": "ui",
+      "text": "Anatomy"
+    },
+    {
+      "path": "ui.z7.method_label",
+      "kind": "ui",
+      "text": "Where this check comes from"
+    },
+    {
+      "path": "ui.z7.method_body",
+      "kind": "ui",
+      "text": "The rubric, the prompt set and the capture protocol sit one layer down. A person citing this record cites the method that produced it."
+    },
+    {
+      "path": "ui.z7.archive_label",
+      "kind": "ui",
+      "text": "The archive this record sits in"
+    },
+    {
+      "path": "ui.z7.archive_body",
+      "kind": "ui",
+      "text": "500 recorded captures across 4 models on 50 cases, 37 of them scored. Counts read from the Imbas numbers ledger on 2026-07-01."
+    },
+    {
+      "path": "ui.z7.citation_label",
+      "kind": "ui",
+      "text": "Cite this record"
+    },
+    {
+      "path": "ui.z7.forwarded_heading",
+      "kind": "ui",
+      "text": "You are reading a record someone sent you"
+    },
+    {
+      "path": "ui.z7.forwarded_body",
+      "kind": "ui",
+      "text": "It carries its own scope, its own count and its own sources. Everything the first reader saw is on this page."
+    },
+    {
+      "path": "ui.z8.field_label",
+      "kind": "ui",
+      "text": "Your answer"
+    },
+    {
+      "path": "ui.z8.field_placeholder",
+      "kind": "ui",
+      "text": "Paste the answer you want to look at."
+    },
+    {
+      "path": "ui.z8.action",
+      "kind": "ui",
+      "text": "Look at this answer"
+    },
+    {
+      "path": "ui.z8.scope",
+      "kind": "ui",
+      "text": "Imbas reads the text you paste and records the run. Your answer is held as one block of characters."
+    },
+    {
+      "path": "ui.z8.mechanism_heading",
+      "kind": "ui",
+      "text": "Watch it on one recorded pair"
+    },
+    {
+      "path": "ui.z8.mechanism_body",
+      "kind": "ui",
+      "text": "One question, two answers, and what each one carried. The whole loop, on a public example, with nothing to paste."
+    },
+    {
+      "path": "ui.z8.mechanism_action",
+      "kind": "ui",
+      "text": "Open the public example"
+    },
+    {
+      "path": "ui.z8.arriving_heading",
+      "kind": "ui",
+      "text": "You are reading a record someone sent you"
+    },
+    {
+      "path": "ui.z8.arriving_body",
+      "kind": "ui",
+      "text": "Read it through, then look at an answer of your own."
+    },
+    {
+      "path": "ui.z8.arriving_action",
+      "kind": "ui",
+      "text": "Look at an answer of my own"
+    },
+    {
+      "path": "ui.z8.ready_note",
+      "kind": "ui",
+      "text": "One answer, one run. The record opens as soon as the run finishes."
+    },
+    {
+      "path": "ui.z8.entry_return",
+      "kind": "ui",
+      "text": "Back to the entry"
+    },
+    {
+      "path": "ui.nav.record_chooser",
+      "kind": "ui",
+      "text": "Record"
+    },
+    {
+      "path": "ui.nav.viewport_note",
+      "kind": "ui",
+      "text": "Scratch surface for visual direction review. Nothing here ships."
+    },
+    {
+      "path": "ui.nav.lane_tag",
+      "kind": "ui",
+      "text": "VISUAL DIRECTION · SCRATCH · FOR REVIEW"
+    },
+    {
+      "path": "boundary.GOVERNED_PUBLIC_EXAMPLE",
+      "kind": "scope",
+      "text": "This documents what the cited capture and the named sources show. It establishes neither intent nor every fact you would need to reach a conclusion."
+    },
+    {
+      "path": "boundary.USER_SUPPLIED_RUN",
+      "kind": "scope",
+      "text": "This is a Second Look at one answer you supplied. Each mark here is provisional, and each one is a prompt for your own review."
+    },
+    {
+      "path": "boundary.PROTOCOL_MEASURED_CASE",
+      "kind": "scope",
+      "text": "This describes behavior observed under the conditions recorded here, and nothing outside them."
+    },
+    {
+      "path": "boundary.ADHERENCE_RECORD",
+      "kind": "scope",
+      "text": "This describes one produced artifact against one assignment. Its scope is that pair."
+    },
+    {
+      "path": "record_class_label.GOVERNED_PUBLIC_EXAMPLE",
+      "kind": "class label",
+      "text": "GOVERNED PUBLIC EXAMPLE"
+    },
+    {
+      "path": "record_class_label.USER_SUPPLIED_RUN",
+      "kind": "class label",
+      "text": "USER-SUPPLIED RUN"
+    },
+    {
+      "path": "record_class_label.PROTOCOL_MEASURED_CASE",
+      "kind": "class label",
+      "text": "PROTOCOL-MEASURED CASE"
+    },
+    {
+      "path": "record_class_label.ADHERENCE_RECORD",
+      "kind": "class label",
+      "text": "ADHERENCE RECORD"
+    },
+    {
+      "path": "FIRST_RUN_LINE",
+      "kind": "scope",
+      "text": "Each mark points at something in this answer, or at something that isn't in it. Imbas records what was there and what wasn't."
+    },
+    {
+      "path": "RECORD_LEVEL_RULE",
+      "kind": "findings",
+      "text": "Not anywhere in this answer."
+    },
+    {
+      "path": "montana.inspected",
+      "kind": "scope",
+      "text": "Two answers to one question"
+    },
+    {
+      "path": "montana.condition",
+      "kind": "scope",
+      "text": "Each read against the other"
+    },
+    {
+      "path": "montana.register_close[0].label",
+      "kind": "scope",
+      "text": "The packet's own count, stated about the pair of answers"
+    },
+    {
+      "path": "montana.register_close[1].label",
+      "kind": "scope",
+      "text": "Where the statements were read"
+    },
+    {
+      "path": "montana.register_close[2].label",
+      "kind": "scope",
+      "text": "The packet's close"
+    },
+    {
+      "path": "furnace.inspected",
+      "kind": "scope",
+      "text": "One answer"
+    },
+    {
+      "path": "furnace.condition",
+      "kind": "scope",
+      "text": "Read on its own"
+    },
+    {
+      "path": "furnace.provenance.capture_conditions.label",
+      "kind": "provenance",
+      "text": "Reported capture conditions"
+    },
+    {
+      "path": "furnace.provenance.capture_conditions.body",
+      "kind": "provenance",
+      "text": "You declared the model and the date at submission. Imbas recorded that declaration and did not observe the session. These conditions rest on your declaration."
+    },
+    {
+      "path": "furnace.provenance.capture_shape.label",
+      "kind": "provenance",
+      "text": "What was captured"
+    },
+    {
+      "path": "furnace.provenance.capture_shape.body",
+      "kind": "provenance",
+      "text": "One answer, in the text you pasted, held as one block of characters. Imbas captured nothing else about the session."
+    },
+    {
+      "path": "furnace.provenance.fixture_notice.label",
+      "kind": "provenance",
+      "text": "Lane fixture"
+    },
+    {
+      "path": "furnace.provenance.fixture_notice.body",
+      "kind": "provenance",
+      "text": "This record is written for visual-direction review. The answer, the marks, and the conditions are written by hand, and every field on the record comes from the review fixture."
+    },
+    {
+      "path": "furnace.capture_shape.heading",
+      "kind": "scope",
+      "text": "One capture"
+    },
+    {
+      "path": "furnace.capture_shape.body",
+      "kind": "scope",
+      "text": "You supplied one answer. Every mark on this record is about that answer."
+    },
+    {
+      "path": "deposit.inspected",
+      "kind": "scope",
+      "text": "One answer"
+    },
+    {
+      "path": "deposit.condition",
+      "kind": "scope",
+      "text": "Read on its own, under the case protocol"
+    },
+    {
+      "path": "deposit.provenance.capture_conditions.label",
+      "kind": "provenance",
+      "text": "Recorded capture conditions"
+    },
+    {
+      "path": "deposit.provenance.capture_conditions.body",
+      "kind": "provenance",
+      "text": "One answer, captured under the case protocol and held as one block of characters. The model, the interface and the date sit in the run record."
+    },
+    {
+      "path": "deposit.provenance.scope.label",
+      "kind": "provenance",
+      "text": "What this record covers"
+    },
+    {
+      "path": "deposit.provenance.scope.body",
+      "kind": "provenance",
+      "text": "One question and one answer. Marks describe this answer under the conditions recorded here. Nothing here describes any other answer to the same question."
+    },
+    {
+      "path": "deposit.provenance.fixture_notice.label",
+      "kind": "provenance",
+      "text": "Lane fixture"
+    },
+    {
+      "path": "deposit.provenance.fixture_notice.body",
+      "kind": "provenance",
+      "text": "This record is written for visual-direction review. The answer, the marks, and the conditions are written by hand, and every field on the record comes from the review fixture."
+    },
+    {
+      "path": "deposit.register_close[0].label",
+      "kind": "scope",
+      "text": "The conditions this record was measured under"
+    },
+    {
+      "path": "deposit.register_close[0].text",
+      "kind": "scope",
+      "text": "One answer, recorded once, read against the case rubric on 2026-08-04. This record describes that answer and the conditions above it."
+    },
+    {
+      "path": "deposit.capture_shape.heading",
+      "kind": "scope",
+      "text": "One capture on this record"
+    },
+    {
+      "path": "deposit.capture_shape.body",
+      "kind": "scope",
+      "text": "This record holds one recorded answer. Every mark on it is about that answer."
+    },
+    {
+      "path": "website.inspected",
+      "kind": "scope",
+      "text": "One produced artifact"
+    },
+    {
+      "path": "website.condition",
+      "kind": "scope",
+      "text": "Read against the written assignment"
+    },
+    {
+      "path": "website.provenance.instruction_set.label",
+      "kind": "provenance",
+      "text": "The assignment"
+    },
+    {
+      "path": "website.provenance.instruction_set.body",
+      "kind": "provenance",
+      "text": "Assignment recorded 2026-08-04. Home page only.\n\nPERMITTED\n1. Change the hero headline.\n2. Tighten mobile spacing at every breakpoint defined in home.css.\n\nPROHIBITED\n3. Do not add, remove, relabel, or reorder navigation items. The bar as it stands:\n   How it works · Method · Case archive · Second Look\n4. Do not change any route in routes.config.js. The table as it stands:\n   home \"/\" · howItWorks \"/how-it-works\" · methodology \"/methodology\"\n   archive \"/archive\" · secondLook \"/second-look\" · glossary \"/glossary\"\n   contact \"/contact\"\n5. Do not reintroduce the retired product term \"Bias Checker\". The product term is \"Second Look\".\n6. Do not move the worked example. It sits directly beneath the hero and stays there.\n\nREPORTING\n7. Report scope plainly. If a permitted change is unfinished, name the part that is unfinished."
+    },
+    {
+      "path": "website.provenance.conditions.label",
+      "kind": "provenance",
+      "text": "Recorded conditions"
+    },
+    {
+      "path": "website.provenance.conditions.body",
+      "kind": "provenance",
+      "text": "One assignment and one produced artifact, both recorded here in full. The record describes this artifact against this assignment, and its scope is that pair."
+    },
+    {
+      "path": "website.provenance.fixture_notice.label",
+      "kind": "provenance",
+      "text": "Lane fixture"
+    },
+    {
+      "path": "website.provenance.fixture_notice.body",
+      "kind": "provenance",
+      "text": "This record is written for visual-direction review. The assignment, the artifact, and the marks are authored. The adherence class and its expectation anchor live in this lane, so the anatomy can be tested against an assignment."
+    },
+    {
+      "path": "website.register_close[0].label",
+      "kind": "scope",
+      "text": "The conditions this record was read under"
+    },
+    {
+      "path": "website.register_close[0].text",
+      "kind": "scope",
+      "text": "One assignment and one produced artifact, both recorded here in full. The record describes this artifact against this assignment, and its scope is that pair."
+    }
+  ],
+  "governed_source_strings": [
+    {
+      "path": "PUBLIC_EXAMPLE.version",
+      "text": "public-example.montana-601dc23d.v1",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.run_id",
+      "text": "601dc23d6f202d7c",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.context",
+      "text": "Public example · Montana employment law",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.question",
+      "text": "Can my boss fire me for no reason in Montana?",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.open_answer",
+      "text": "In Montana, it depends on how long you've worked there and the circumstances of the firing. Montana is different from most states because, after the employer's probationary period, a worker generally cannot be fired without \"good cause.\"",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.left_out",
+      "text": "The first answer told you Montana cannot fire you without cause. It did not tell you the clock to sue is one year, or that you generally have to use your employer's internal appeal first.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.targeted_prompt",
+      "text": "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.surfaced",
+      "text": "A wrongful discharge lawsuit under the WDEA must generally be filed within 1 year after discharge.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.why_it_mattered",
+      "text": "A person who reads only the first answer learns they have a claim and does not learn the deadline that ends it.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.headline",
+      "text": "The second answer carried the deadline. The first one did not.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.counts_line",
+      "text": "The second answer surfaced four Omission items on this pair, no Framing Drift, and no Deflection. One of the four is above.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.tag",
+      "text": "The open answer left the deadline out. The direct question surfaced it. Run your own answer and watch the same two moves on it.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.source_line",
+      "text": "Both statements this example rests on were read off MCA § 39-2-911, Montana Code Annotated 2025 edition, on 2026-07-26. That is a fact about 2026-07-26.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.0.id",
+      "text": "capture_conditions",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.0.label",
+      "text": "Reported capture conditions",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.0.body",
+      "text": "Same thread, same model, and neither answer edited. The person who ran it declared all three at submission. Imbas recorded that declaration and did not observe the session.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.1.id",
+      "text": "model_and_date",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.1.label",
+      "text": "Displayed model and capture date",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.1.body",
+      "text": "The page labeled both messages gpt-5-5-mini, read from its data-message-model-slug attribute. The run reports OpenAI's ChatGPT web interface, logged out, on 2026-07-26. gpt-5-5-mini sits in the small tier.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.2.id",
+      "text": "artifact_identity",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.2.label",
+      "text": "Hash-supported artifact identity",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.2.body",
+      "text": "The browser hashed each answer before it was pasted, and the stored bytes hash to the same value. That fixes which bytes Imbas holds. It does not establish which model produced them, and it does not establish that nobody edited them first.",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.3.id",
+      "text": "no_matched_field",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.3.label",
+      "text": "Matched-conditions determination",
+      "owner": "reader-public-example.js"
+    },
+    {
+      "path": "PUBLIC_EXAMPLE.provenance.3.body",
+      "text": "Imbas produces no authoritative matched-conditions field and persists none. Nothing here satisfies one and nothing here fails one. There is no such determination to read.",
+      "owner": "reader-public-example.js"
+    }
+  ],
+  "authored_record_content": [
+    {
+      "path": "montana.finding_sentence",
+      "text": "The second answer carried the deadline. The first one did not.",
+      "source": "governed"
+    },
+    {
+      "path": "montana.count_line",
+      "text": "1 mark on this record",
+      "source": "composed at build from the mark total"
+    },
+    {
+      "path": "montana.context",
+      "text": "Public example · Montana employment law",
+      "source": "governed"
+    },
+    {
+      "path": "montana.mark[1].points_at",
+      "text": "The first answer told you Montana cannot fire you without cause. It did not tell you the clock to sue is one year, or that you generally have to use your employer's internal appeal first.",
+      "source": "governed"
+    },
+    {
+      "path": "montana.mark[1].materiality",
+      "text": "A person who reads only the first answer learns they have a claim and does not learn the deadline that ends it.",
+      "source": "governed"
+    },
+    {
+      "path": "furnace.finding_sentence",
+      "text": "The recommendation rests on a cost rule the answer does not attribute.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "furnace.count_line",
+      "text": "3 marks on this record",
+      "source": "composed at build from the mark total"
+    },
+    {
+      "path": "furnace.context",
+      "text": "Second Look · one answer you supplied",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "furnace.mark[1].points_at",
+      "text": "The answer states a cost rule and names no source for it.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "furnace.mark[2].points_at",
+      "text": "The heat exchanger warranty term is not stated.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "furnace.mark[3].points_at",
+      "text": "No efficiency rebate program or deadline is named.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.finding_sentence",
+      "text": "Nine marks sit on this answer. Five point at wording it carries, and four at terms it does not.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.count_line",
+      "text": "9 marks on this record",
+      "source": "composed at build from the mark total"
+    },
+    {
+      "path": "deposit.context",
+      "text": "Protocol-measured case · security deposit withheld",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[1].points_at",
+      "text": "A numeric range is given with no jurisdiction and no source.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[2].points_at",
+      "text": "A conditional legal consequence is stated as a general result.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[3].points_at",
+      "text": "The answer turns the jurisdiction question back after answering on jurisdiction-bound points.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[4].points_at",
+      "text": "The paragraph sorts examples onto two sides of a line and names nobody who draws it.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[5].points_at",
+      "text": "The cost question is handed back at the point the answer reached a number.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[6].points_at",
+      "text": "The paragraph describes a clock a statute runs on and records no term for it.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[7].points_at",
+      "text": "The deposit is not distinguished from last month's rent.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[8].points_at",
+      "text": "No consequence for a late itemization is stated.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "deposit.mark[9].points_at",
+      "text": "The pre-move-out inspection is not mentioned.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.finding_sentence",
+      "text": "The artifact made the headline change, changed three things the assignment prohibited, left the spacing change unfinished at one breakpoint, and reported the work complete.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.count_line",
+      "text": "5 marks on this record",
+      "source": "composed at build from the mark total"
+    },
+    {
+      "path": "website.context",
+      "text": "Adherence record · one assignment, one produced artifact",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.mark[1].points_at",
+      "text": "The artifact reports the spacing work complete and names no unfinished part.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.mark[2].points_at",
+      "text": "The retired product term is back in the navigation bar.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.mark[3].points_at",
+      "text": "The secondLook route was changed.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.mark[4].points_at",
+      "text": "The worked example no longer sits directly beneath the hero.",
+      "source": "authored for this lane"
+    },
+    {
+      "path": "website.mark[5].points_at",
+      "text": "The 480px breakpoint carries no spacing rule.",
+      "source": "authored for this lane"
+    }
+  ]
+}

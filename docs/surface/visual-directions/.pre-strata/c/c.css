@@ -1,0 +1,514 @@
+/* Direction C — Forensic Manuscript.
+ *
+ * The record is a filed document. It opens on its own docket — a ruled table of what
+ * this record is — and the answer arrives further down as an exhibit: an inset plate
+ * with a pointing gutter. Nothing but a reference numeral is allowed to touch the
+ * answer, so every reading happens in the apparatus below the plate.
+ *
+ * The bet: authority carried by form rather than by scale. If a docket reads as
+ * bureaucracy instead of care, this direction is wrong.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--bg-base); }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.c-record { display: block; }
+[hidden] { display: none !important; }
+
+.c-wrap { max-width: var(--container-wide); margin-inline: auto; }
+
+.c-label {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.c-quoted { font-family: var(--font-display); font-style: italic; color: var(--ink-luminous); }
+.c-quoted::before { content: "\201C"; }
+.c-quoted::after { content: "\201D"; }
+.c-mono { font-family: var(--font-mono); font-size: 12.5px; }
+
+/* ── the margin ───────────────────────────────────────────────────────────────
+ * One rule runs down the docket, the plate and the apparatus at the same measure.
+ * In the plate it is where a mark can point. Everywhere else it stands empty, which
+ * is what makes its use inside the plate legible as pointing.
+ */
+
+.c-margin, .c-gutter { border-right: 1px solid var(--line-faint); }
+
+/* ── Z1 + Z2 + Z7.4 · the docket ──────────────────────────────────────────────
+ * Every fact about this record is a row against that margin, and the finding
+ * sentence is one of them. The only thing that separates it from its neighbours is
+ * that it is set in the serif and lit one rung brighter.
+ */
+
+.c-docket { background: var(--bg-deep); padding: var(--space-5) var(--space-4) var(--space-4); }
+
+.c-dk { border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.c-dk-row { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-dk-row:first-child { border-top: none; }
+.c-dk-val { padding: 0.95rem 0 1rem 1.5rem; min-width: 0; }
+
+.c-class { margin: 0; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ember); }
+/* The docket line reads as a docket line. Its values are sentences now, so they take
+ * the reading face; the identifiers it used to carry are filed at Z6.3. */
+.c-address { margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 2.2rem; font-size: 13px; color: var(--ink-muted); }
+.c-addr-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.75; }
+.c-addr-value { color: var(--ink-secondary); }
+
+.c-dk-row-finding .c-dk-val { padding-block: 1.5rem; }
+.c-finding {
+  margin: 0; max-width: 44ch;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--type-h3); line-height: 1.34; letter-spacing: -0.005em;
+  color: var(--ink-luminous);
+}
+.c-context { margin: 0; max-width: 68ch; font-size: 15px; line-height: 1.62; color: var(--ink-secondary); }
+.c-boundary { margin: 0; max-width: 68ch; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+.c-dk-scope { margin-top: var(--space-3); border-bottom: none; }
+.c-count { margin: 0 0 0.3rem; font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.05em; color: var(--ink-luminous); }
+/* Z2.4 · census, an entry in the docket like any other, so it takes the docket's
+ * reading face and its entry ink rather than a treatment of its own. */
+.c-census { margin: 0; max-width: 60ch; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.c-count-rule { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.c-orient { margin: 0 0 0.6rem; max-width: 68ch; font-size: 13.5px; line-height: 1.58; color: var(--ink-secondary); }
+html[data-orient="dismissed"] .c-dk-row-orient { display: none; }
+/* The apparatus close acts on evidence — it shuts an open finding — so it keeps the
+ * ruled chip this direction gives its record actions. Dismiss only changes what one
+ * reader looks at, and it was wearing the same chip. It gets the quieter rule. */
+.c-app-close {
+  background: none; border: 1px solid var(--line-soft); border-radius: 2px;
+  padding: 0.24rem 0.6rem; font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.09em; color: var(--ink-muted); cursor: pointer;
+}
+.c-app-close:hover { color: var(--ink-primary); border-color: var(--line-strong); }
+/* Underlined in its own ink, not a --line- token. C's chip border is legitimate on
+ * the apparatus close because the chip is one of several marks identifying it; on a
+ * bare word the rule is the only mark, and every line token sits under 3:1. */
+.c-dismiss {
+  background: none; border: 0; padding: 0;
+  font-family: var(--font-mono); font-size: 10.5px;
+  letter-spacing: 0.09em; color: var(--ink-muted); cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.c-dismiss:hover { color: var(--ink-soft); }
+html[data-forwarded="true"] .c-dismiss { display: none; }
+
+/* Z7.4 · one more row. In this direction, arriving cold is a fact of filing. */
+.c-fwd-h { margin: 0 0 0.4rem; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ember-bright); }
+.c-fwd-b { margin: 0 0 0.6rem; max-width: 62ch; font-size: 14px; line-height: 1.6; color: var(--ink-secondary); }
+.c-fwd-a { font-family: var(--font-mono); font-size: 12px; color: var(--ember); text-decoration: none; border-bottom: 1px solid var(--ember-deep); }
+.c-fwd-a:hover { color: var(--ember-bright); }
+
+/* ── Z3 + Z4.1 · the exhibit plate ────────────────────────────────────────────
+ * Two columns: a gutter that points and a face that carries the answer. The gutter
+ * rule runs the whole height of the plate, so the place a mark can point to is
+ * visible before any mark uses it.
+ */
+
+.c-exhibit { padding: var(--space-5) var(--space-4) var(--space-4); }
+
+.c-plate {
+  max-width: 60rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  padding: 0.4rem 1.6rem 1.4rem 0;
+}
+.c-plate-row { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); }
+.c-face { padding: 0.75rem 0 0.75rem 1.5rem; min-width: 0; }
+.c-plate-meta .c-face { padding-block: 1.15rem; }
+.c-plate-srclabel .c-face { padding-bottom: 0.15rem; }
+
+.c-prompt { margin: 0; max-width: 58ch; font-family: var(--font-display); font-weight: 400; font-size: 1.24rem; line-height: 1.42; color: var(--ink-luminous); }
+.c-expect { margin: 0 0 0.8rem; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink-soft); }
+.c-disclosure { margin: 0; max-width: 66ch; font-size: 13px; line-height: 1.6; color: var(--ink-muted); }
+.c-second { margin: 0; max-width: 58ch; font-family: var(--font-display); font-size: 1.08rem; line-height: 1.46; color: var(--ink-soft); }
+.c-shape { margin: 0; max-width: 66ch; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+.c-body { display: block; }
+.c-src-row .c-face { padding-block: 0.35rem; }
+.c-src-row:first-child .c-face { padding-top: 0.6rem; }
+.c-src-row:last-child .c-face { padding-bottom: 0.9rem; }
+
+.c-para { margin: 0; max-width: 62ch; font-size: 17px; line-height: 1.78; color: var(--ink-primary); }
+.c-filename { margin: 0.5rem 0 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--ink-muted); }
+.c-code {
+  margin: 0; position: relative;
+  background: var(--bg-deep); border: 1px solid var(--line-faint); border-radius: 2px;
+  padding: 0.85rem 1rem 0.85rem 2.6rem;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.8;
+  color: var(--ink-soft); white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* Z4.1 · span channel — minimum contact. A dotted rule and a raised numeral, and
+   nothing else lands on the characters. */
+.c-span {
+  cursor: pointer;
+  color: var(--ink-luminous);
+  text-decoration: underline dotted var(--ember);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.26em;
+}
+.c-span::after {
+  content: attr(data-anchor);
+  font-family: var(--font-mono); font-size: 0.6em; vertical-align: 0.62em;
+  margin-left: 0.16em; letter-spacing: 0.03em; color: var(--ember);
+  text-decoration: none;
+}
+.c-span:hover, .c-span[aria-expanded="true"] { text-decoration-style: solid; text-decoration-color: var(--ember-bright); }
+
+/* Z4.1 · region channel in prose — a hairline drawn around the run. The outline
+   states the extent; it changes no ground and no ink.
+   Drawn in ember rather than in a rule colour: the line family divides well and
+   marks badly, because no rung of it reaches the non-text threshold on any ground
+   above the base. A rule the reader has to hunt for is not a mark. */
+.c-region {
+  display: inline; cursor: pointer;
+  color: var(--ink-luminous);
+  box-shadow: 0 0 0 1px var(--ember);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.14em 0.28em;
+  border-radius: 1px;
+}
+.c-region::before {
+  content: attr(data-anchor);
+  font-family: var(--font-mono); font-size: 0.6em; vertical-align: 0.62em;
+  margin-right: 0.28em; color: var(--ember);
+}
+.c-region:hover, .c-region[aria-expanded="true"] { box-shadow: 0 0 0 1px var(--ember-bright); }
+
+/* Z4.1 · region channel in code — the gutter does the pointing. A bracket spans the
+   region's lines and carries the numeral at its head. */
+.c-code-region { display: block; position: relative; cursor: pointer; }
+.c-code-region::before {
+  content: "";
+  position: absolute; left: -1.5rem; top: 0.15em; bottom: 0.15em; width: 0.55rem;
+  border: 1px solid var(--ember-deep); border-right: none;
+}
+.c-code-region::after {
+  content: attr(data-region);
+  position: absolute; left: -2.4rem; top: 0;
+  font-family: var(--font-mono); font-size: 11px; color: var(--ember);
+}
+.c-code-region:hover::before { border-color: var(--ember-bright); }
+.c-code-plain { display: block; }
+.c-code .c-region { box-shadow: none; padding: 0; }
+.c-code .c-region::before { content: none; }
+
+/* ── Z4.4 · the apparatus ─────────────────────────────────────────────────────
+ * Below the plate, in mark order. The reading lives here, so the document above
+ * never has to make room for it.
+ */
+
+.c-apparatus { padding: 0 var(--space-4) var(--space-5); }
+.c-app-list { max-width: 60rem; border-top: 1px solid var(--line-strong); }
+.c-app-entry { border-bottom: 1px solid var(--line-faint); }
+.c-app-head {
+  display: grid; grid-template-columns: 3.4rem minmax(0, 1fr);
+  width: 100%; text-align: left; background: none; border: none;
+  padding: 0.75rem 0; font-family: inherit; cursor: pointer;
+}
+.c-app-n { font-family: var(--font-mono); font-size: 12px; color: var(--ember); padding-top: 0.2rem; }
+.c-app-points { font-size: 15px; line-height: 1.56; color: var(--ink-secondary); padding-left: 1.5rem; border-left: 1px solid var(--line-faint); }
+.c-app-head:hover .c-app-points { color: var(--ink-luminous); }
+.c-app-entry[data-open="true"] .c-app-points { color: var(--ink-luminous); }
+
+.c-app-open { display: none; padding: 0 0 1.1rem 4.9rem; }
+.c-app-entry[data-open="true"] .c-app-open { display: block; animation: c-settle 160ms ease-out; }
+@keyframes c-settle { from { opacity: 0; } to { opacity: 1; } }
+
+.c-app-row { display: grid; grid-template-columns: 12rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-app-key { padding: 0.6rem 1.1rem 0.6rem 0; border-right: 1px solid var(--line-faint); }
+.c-app-key-text { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.c-app-val { padding: 0.6rem 0 0.6rem 1.3rem; min-width: 0; }
+.c-app-val-text { font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+.c-app-row-ask .c-app-val-text { color: var(--ink-primary); }
+.c-app-close { margin-top: 0.9rem; }
+
+/* ── Z4.2 · the plate that cannot point ───────────────────────────────────────
+ * The gutter is this direction's only way of pointing at a place. This block is
+ * drawn without one, and it is not inset, so it is plainly a different object.
+ */
+
+.c-nogutter {
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  padding: var(--space-3) 0 var(--space-4);
+}
+.c-nogutter-label { margin: 0 0 0.5rem; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ember); }
+.c-nogutter-rule { margin: 0 0 0.7rem; font-family: var(--font-display); font-weight: 400; font-size: var(--type-h3); line-height: 1.3; color: var(--ink-luminous); }
+.c-nogutter-note { margin: 0 0 var(--space-3); max-width: 66ch; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+.c-app-list-outside { max-width: none; border-top-color: var(--line-faint); }
+.c-app-list-outside .c-app-points { border-left: none; padding-left: 1.5rem; }
+.c-app-list-outside .c-app-points { font-size: 16px; color: var(--ink-primary); }
+
+/* ── Z5 · Check Register ──────────────────────────────────────────────────────
+ * Plain keeps the plate's measure and drops every rule: it reads as prose.
+ * Full leaves the measure behind and becomes a ruled ledger across the page.
+ */
+
+.c-register { background: var(--bg-deep); border-top: 1px solid var(--line-strong); padding: var(--space-5) var(--space-4); }
+.c-reg-wrap { max-width: var(--container-wide); margin-inline: auto; }
+.c-reg-head { padding-bottom: var(--space-3); }
+.c-reg-h { margin: 0 0 0.5rem; font-family: var(--font-display); font-weight: 400; font-size: var(--type-h2); color: var(--ink-luminous); }
+.c-reg-note { margin: 0 0 var(--space-3); max-width: 64ch; font-size: 14.5px; line-height: 1.64; color: var(--ink-soft); }
+
+.c-density { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.2rem; }
+.c-density-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted); }
+.c-density-set { display: flex; }
+.c-density-btn {
+  background: none; border: 1px solid var(--line-soft); padding: 0.35rem 0.8rem;
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--ink-muted); cursor: pointer;
+}
+.c-density-btn:first-of-type { border-radius: 2px 0 0 2px; }
+.c-density-btn:last-of-type { border-radius: 0 2px 2px 0; border-left: none; }
+.c-density-btn[aria-pressed="true"] { background: var(--bg-surface); color: var(--ink-luminous); border-color: var(--line-strong); }
+.c-density-note { flex: 1 1 22rem; margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink-muted); }
+html[data-density="consumer"] .c-density-note-pro,
+html[data-density="professional"] .c-density-note-consumer { display: none; }
+html[data-density="consumer"] .c-led-fields[data-fields="professional"],
+html[data-density="professional"] .c-led-fields[data-fields="consumer"] { display: none; }
+
+.c-led-rowhead { display: flex; align-items: baseline; gap: 1rem; }
+.c-led-n { font-family: var(--font-mono); font-size: 12.5px; color: var(--ember); }
+.c-led-jump {
+  background: none; border: none; padding: 0;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.07em;
+  color: var(--ember); cursor: pointer; border-bottom: 1px solid var(--line-strong);
+}
+.c-led-jump:hover { color: var(--ember-bright); }
+.c-led-key-text { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.c-led-val-text { font-size: 15px; line-height: 1.62; color: var(--ink-soft); }
+.c-led-row-lead .c-led-val-text { color: var(--ink-primary); }
+.c-led-row-ask .c-led-val-text { color: var(--ink-primary); }
+
+/* plain — the register at the plate's measure, no rules at all */
+html[data-density="consumer"] .c-ledger { max-width: 60rem; }
+html[data-density="consumer"] .c-led-entry { padding: 1.15rem 0 0; }
+html[data-density="consumer"] .c-led-row { padding: 0.35rem 0; }
+html[data-density="consumer"] .c-led-key { padding-bottom: 0.15rem; }
+html[data-density="consumer"] .c-led-row-lead .c-led-val-text { font-size: 16.5px; }
+
+/* full — the ledger. The container changes, not only the field count. */
+html[data-density="professional"] .c-ledger { border-top: 1px solid var(--line-strong); }
+html[data-density="professional"] .c-led-entry { border-bottom: 1px solid var(--line-soft); padding: 1rem 0 1.2rem; }
+html[data-density="professional"] .c-led-rowhead { padding-bottom: 0.5rem; }
+html[data-density="professional"] .c-led-row { display: grid; grid-template-columns: 16rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+html[data-density="professional"] .c-led-key { padding: 0.5rem 1.2rem 0.5rem 0; border-right: 1px solid var(--line-faint); }
+html[data-density="professional"] .c-led-val { padding: 0.5rem 0 0.5rem 1.4rem; min-width: 0; }
+html[data-density="professional"] .c-led-val-text { font-size: 14.5px; }
+
+.c-reg-close { margin-top: var(--space-4); border-top: 1px solid var(--line-strong); }
+.c-close-row { display: grid; grid-template-columns: 16rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-close-row:first-child { border-top: none; }
+.c-close-label { margin: 0; padding: 0.7rem 1.2rem 0.7rem 0; border-right: 1px solid var(--line-faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.c-close-body { margin: 0; padding: 0.7rem 0 0.7rem 1.4rem; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
+
+/* ── Z6 · provenance, Z7 · foot ───────────────────────────────────────────── */
+
+.c-prov { padding: var(--space-5) var(--space-4) var(--space-4); }
+.c-prov-h { margin: 0 0 var(--space-3); font-family: var(--font-display); font-weight: 400; font-size: var(--type-h3); color: var(--ink-luminous); }
+.c-prov-row { display: grid; grid-template-columns: 16rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-prov-label { margin: 0; padding: 0.8rem 1.2rem 0.8rem 0; border-right: 1px solid var(--line-faint); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.c-prov-body { margin: 0; padding: 0.8rem 0 0.8rem 1.4rem; max-width: 72ch; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+pre.c-prov-body { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Z6.3 · the last row of the filing. In this direction the identifiers read as the
+ * stamp at the bottom of a document rather than the letterhead at the top. */
+.c-ids {
+  margin: 0; padding: 0.8rem 0 0.35rem 1.4rem;
+  display: flex; flex-wrap: wrap; gap: 0.25rem 2rem;
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-secondary);
+  overflow-wrap: anywhere;
+}
+.c-id-label { text-transform: uppercase; letter-spacing: 0.12em; font-size: 10.5px; color: var(--ink-muted); }
+.c-id-value { color: var(--ink-primary); }
+[data-prov="identity"] .c-prov-body { padding-top: 0; font-size: 13px; color: var(--ink-muted); }
+
+.c-foot { background: var(--bg-deep); border-top: 1px solid var(--line-strong); padding: var(--space-4) var(--space-4) var(--space-5); }
+.c-foot-row { display: grid; grid-template-columns: 16rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-foot-row:first-child { border-top: none; }
+.c-foot-label { margin: 0; padding: 0.8rem 1.2rem 0.8rem 0; border-right: 1px solid var(--line-faint); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); }
+.c-foot-body { margin: 0; padding: 0.8rem 0 0.8rem 1.4rem; max-width: 72ch; font-size: 14.5px; line-height: 1.62; color: var(--ink-soft); }
+.c-foot-cite { margin: 0; padding: 0.8rem 0 0.8rem 1.4rem; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-secondary); overflow-wrap: anywhere; }
+.c-lane { margin: var(--space-4) 0 0; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em; color: var(--ink-muted); opacity: 0.72; }
+
+/* ── Z8 · reader entry ────────────────────────────────────────────────────────
+ * The same ruled form. Every part is a row, and every row is filled in on every
+ * state; the state decides which row comes first and how much room it takes.
+ */
+
+.c-enter { display: block; }
+.c-e-page { display: grid; align-content: center; min-height: 100vh; padding: var(--space-5) var(--space-4) var(--space-6); }
+.c-e-form { max-width: 58rem; margin-inline: auto; border-top: 1px solid var(--line-strong); border-bottom: 1px solid var(--line-strong); }
+.c-e-row { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); border-top: 1px solid var(--line-faint); }
+.c-e-row:first-child { border-top: none; }
+.c-e-val { padding: 1.1rem 0 1.35rem 1.5rem; min-width: 0; }
+.c-e-row-lead .c-e-val { padding-block: 1.8rem 1.9rem; }
+
+.c-e-field-label { display: block; margin: 0 0 0.55rem; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted); }
+.c-e-textarea {
+  display: block; width: 100%; resize: vertical;
+  background: var(--bg-surface); color: var(--ink-luminous);
+  border: 1px solid var(--line-soft); border-radius: 2px;
+  padding: 0.9rem 1rem; font-family: var(--font-body); font-size: 15.5px; line-height: 1.62;
+}
+.c-e-textarea::placeholder { color: var(--ink-muted); }
+.c-e-textarea:focus-visible { border-color: var(--ember-deep); }
+.c-e-row-lead .c-e-textarea { font-size: 17px; }
+.c-e-foot { margin-top: 0.9rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.9rem 1.2rem; }
+.c-e-action {
+  flex: 0 0 auto; font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.05em;
+  color: var(--bg-deep); background: var(--ember); border: 1px solid var(--ember);
+  border-radius: 2px; padding: 0.58rem 1.1rem; cursor: pointer;
+}
+.c-e-action:hover { background: var(--ember-bright); border-color: var(--ember-bright); }
+.c-e-scope { flex: 1 1 22rem; margin: 0; font-size: 13px; line-height: 1.55; color: var(--ink-secondary); }
+.c-e-ready { margin: 0.75rem 0 0; font-size: 13px; line-height: 1.55; color: var(--ink-muted); }
+
+.c-e-mech-heading, .c-e-arriving-heading {
+  margin: 0 0 0.5rem; font-family: var(--font-display); font-weight: 400;
+  font-size: 1.3rem; line-height: 1.3; color: var(--ink-luminous);
+}
+.c-e-row-lead .c-e-mech-heading, .c-e-row-lead .c-e-arriving-heading { font-size: var(--type-h2); max-width: 22ch; }
+.c-e-mech-body, .c-e-arriving-body { margin: 0 0 0.85rem; max-width: 56ch; font-size: 15px; line-height: 1.62; color: var(--ink-soft); }
+.c-e-row-lead .c-e-mech-body, .c-e-row-lead .c-e-arriving-body { font-size: 16.5px; }
+.c-e-mech-action, .c-e-arriving-action {
+  font-family: var(--font-mono); font-size: 12px; color: var(--ember);
+  text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 0.12rem;
+}
+.c-e-mech-action:hover, .c-e-arriving-action:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+.c-e-arrived { margin-top: var(--space-3); border-top: 1px solid var(--line-faint); padding-top: 1rem; }
+.c-e-arrived-label { margin: 0 0 0.5rem; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted); }
+.c-e-arrived-finding { margin: 0 0 0.6rem; max-width: 44ch; font-family: var(--font-display); font-weight: 400; font-size: 1.24rem; line-height: 1.34; color: var(--ink-luminous); }
+.c-e-arrived-count { margin: 0 0 0.8rem; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-secondary); }
+.c-e-arrived-open { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ember); text-decoration: none; border-bottom: 1px solid var(--ember-deep); }
+.c-e-arrived-open:hover { color: var(--ember-bright); }
+
+/* ── mobile · the gutter narrows, every table stacks ──────────────────────── */
+
+@media (max-width: 900px) {
+  .c-dk-row, .c-e-row, .c-plate-row, .c-app-head { grid-template-columns: 2.1rem minmax(0, 1fr); }
+  .c-dk-val, .c-e-val { padding-left: 1rem; }
+  .c-e-row-lead .c-e-val { padding-block: 1.2rem 1.4rem; }
+
+  .c-plate { padding-right: 1.1rem; }
+  .c-face { padding-left: 1rem; }
+  .c-app-points { padding-left: 1rem; }
+  .c-app-open { padding-left: 3.1rem; }
+
+  .c-app-row, .c-prov-row, .c-foot-row, .c-close-row,
+  html[data-density="professional"] .c-led-row { grid-template-columns: 1fr; }
+  .c-app-key, .c-prov-label, .c-foot-label, .c-close-label,
+  html[data-density="professional"] .c-led-key { border-right: none; padding: 0.6rem 0 0; }
+  .c-app-val, .c-prov-body, .c-foot-body, .c-foot-cite, .c-close-body,
+  html[data-density="professional"] .c-led-val { padding: 0.15rem 0 0.7rem; }
+}
+
+@media (max-width: 640px) {
+  .c-docket, .c-exhibit, .c-apparatus, .c-register, .c-prov, .c-foot, .c-e-page { padding-inline: 1.1rem; }
+  .c-para { font-size: 16.5px; }
+  .c-code { padding-left: 2.3rem; }
+  .c-app-open { padding-left: 0; }
+  .c-e-action { width: 100%; }
+}
+
+/* ── reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .c-app-entry[data-open="true"] .c-app-open { animation: none; }
+  * { transition: none !important; }
+}
+html[data-motion="reduced"] .c-app-entry[data-open="true"] .c-app-open { animation: none; }
+html[data-motion="reduced"] * { transition: none !important; }
+
+/* ── Z5.6 · applied checks ────────────────────────────────────────────────────
+ * The fourth row-group of the docket, and it is written to be indistinguishable
+ * from the other three at a glance: the same ruled margin, the same hairlines
+ * between rows, the same reading face in the value column. C answered the
+ * placement question by putting the register in the front matter, and that answer
+ * only holds if the front matter still reads as front matter. A bordered card here
+ * would be an instrument readout sitting above the source, which is the one thing
+ * this zone was told not to become.
+ *
+ * The margin rule is drawn once across the group rather than per row, because the
+ * kit emits a flat list of paragraphs and rows — no per-row margin cell to carry a
+ * border-right. Stacked .c-margin cells already render as one continuous hairline,
+ * so a single gradient at the same offset is the same drawn result, not a second
+ * grammar. The offset lives in a custom property so the rule and the text padding
+ * cannot drift apart at the 900px breakpoint.
+ */
+
+.c-dk-applied { margin-top: var(--space-3); border-bottom: none; }
+
+.c-applied {
+  --c-gut: 3.4rem;
+  --c-pad: 1.5rem;
+  background-image: linear-gradient(
+    to right,
+    transparent var(--c-gut),
+    var(--line-faint) var(--c-gut),
+    var(--line-faint) calc(var(--c-gut) + 1px),
+    transparent calc(var(--c-gut) + 1px)
+  );
+}
+.c-applied > * { margin: 0; padding-left: calc(var(--c-gut) + var(--c-pad)); }
+
+.c-applied-h {
+  padding-top: 0.95rem;
+  font-family: var(--font-mono); font-weight: 400; font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-muted);
+}
+/* The census takes the count's own type, because it is the same kind of fact as
+ * the mark count two row-groups above it and should not out-rank it. */
+.c-applied-census { padding-top: 0.5rem; font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.05em; color: var(--ink-luminous); }
+.c-applied-note { padding-top: 0.45rem; max-width: 66ch; font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); }
+.c-applied-cond { padding-top: 0.45rem; padding-bottom: 1rem; max-width: 66ch; font-size: 13.5px; line-height: 1.55; color: var(--ink-muted); }
+
+.c-applied-row { border-top: 1px solid var(--line-faint); padding-top: 0.9rem; padding-bottom: 1rem; }
+.c-applied-row p { margin: 0; }
+.c-applied-name { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+/* The outcome is the sentence the row exists to carry, so it is the only line in
+ * the group set in the reading face at reading size. A row that produced nothing
+ * gets exactly this treatment too — same face, same ink, same size — because the
+ * register records what was examined and both outcomes are that record. */
+.c-applied-row .c-applied-out { margin-top: 0.3rem; max-width: 60ch; font-size: 15px; line-height: 1.5; color: var(--ink-primary); }
+.c-applied-row .c-applied-rowcond { margin-top: 0.4rem; max-width: 64ch; font-size: 13.5px; line-height: 1.55; color: var(--ink-muted); }
+.c-applied-condlabel { color: var(--ink-secondary); }
+.c-applied-row .c-applied-det { margin-top: 0.45rem; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-muted); }
+.c-applied-detlabel { color: var(--ink-secondary); }
+
+/* The closing notes are one more ruled row under the last check. */
+.c-applied-row + .c-applied-note { border-top: 1px solid var(--line-faint); padding-top: 0.9rem; }
+.c-applied > .c-applied-note:last-child { padding-bottom: 1.1rem; }
+
+@media (max-width: 900px) {
+  .c-applied { --c-gut: 2.1rem; --c-pad: 1rem; }
+}

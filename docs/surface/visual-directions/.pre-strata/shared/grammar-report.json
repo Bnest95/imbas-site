@@ -1,0 +1,1282 @@
+{
+  "harness_version": "grammar-assertions.v1",
+  "renderer": "Google Chrome for Testing 148.0.7778.96",
+  "check_vocab_version": "check-vocab.v1",
+  "packet_version": "public-example.montana-601dc23d.v1",
+  "directions": [
+    "a",
+    "b",
+    "c"
+  ],
+  "records": [
+    "montana",
+    "furnace",
+    "deposit",
+    "website"
+  ],
+  "assertions": 15,
+  "runs": 180,
+  "failures": 0,
+  "results": [
+    {
+      "direction": "a",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "a/montana missing none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "a/montana count=1 marks=1 entries=1"
+    },
+    {
+      "direction": "a",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "a/montana channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "a/montana marks=1 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "a/montana leaked=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "a/montana checked=20 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "a/montana all blocks exact"
+    },
+    {
+      "direction": "a",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "a/montana strings=115 violations=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "a/montana controls=2 unreachable=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "a/montana same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "a/montana spoken=[1] expected=[1] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "a/montana rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "a/montana consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "a",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "a/montana identical"
+    },
+    {
+      "direction": "a",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "a/montana density=professional orient-visible=true entries=1/1 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "a/furnace missing none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "a/furnace count=3 marks=3 entries=3"
+    },
+    {
+      "direction": "a",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "a/furnace channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "a/furnace marks=2 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "a/furnace leaked=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "a/furnace checked=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "a/furnace all blocks exact"
+    },
+    {
+      "direction": "a",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "a/furnace strings=168 violations=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "a/furnace controls=6 unreachable=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "a/furnace same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "a/furnace spoken=[1,2] expected=[1,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "a/furnace rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "a/furnace consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "a",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "a/furnace identical"
+    },
+    {
+      "direction": "a",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "a/furnace density=professional orient-visible=true entries=3/3 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "a/deposit missing none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "a/deposit count=9 marks=9 entries=9"
+    },
+    {
+      "direction": "a",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "a/deposit channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "a/deposit marks=3 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "a/deposit leaked=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "a/deposit checked=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "a/deposit all blocks exact"
+    },
+    {
+      "direction": "a",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "a/deposit strings=361 violations=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "a/deposit controls=18 unreachable=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "a/deposit same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "a/deposit spoken=[4,2,3] expected=[4,2,3] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "a/deposit rows=3 ran=3 produced=3 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "a/deposit consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "a",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "a/deposit identical"
+    },
+    {
+      "direction": "a",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "a/deposit density=professional orient-visible=true entries=9/9 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "a/website missing none"
+    },
+    {
+      "direction": "a",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "a/website count=5 marks=5 entries=5"
+    },
+    {
+      "direction": "a",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "a/website channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "a/website no record-level absence on this record"
+    },
+    {
+      "direction": "a",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "a/website leaked=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "a/website checked=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "a/website all blocks exact"
+    },
+    {
+      "direction": "a",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "a/website strings=267 violations=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "a/website controls=16 unreachable=0"
+    },
+    {
+      "direction": "a",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "a/website same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "a/website spoken=[3,2] expected=[3,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "a",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "a/website rows=3 ran=0 produced=0 "
+    },
+    {
+      "direction": "a",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "a/website consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "a",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "a/website identical"
+    },
+    {
+      "direction": "a",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "a/website density=professional orient-visible=true entries=5/5 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "b/montana missing none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "b/montana count=1 marks=1 entries=1"
+    },
+    {
+      "direction": "b",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "b/montana channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "b/montana marks=1 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "b/montana leaked=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "b/montana checked=20 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "b/montana all blocks exact"
+    },
+    {
+      "direction": "b",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "b/montana strings=113 violations=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "b/montana controls=2 unreachable=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "b/montana same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "b/montana spoken=[1] expected=[1] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "b/montana rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "b/montana consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "b",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "b/montana identical"
+    },
+    {
+      "direction": "b",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "b/montana density=professional orient-visible=true entries=1/1 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "b/furnace missing none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "b/furnace count=3 marks=3 entries=3"
+    },
+    {
+      "direction": "b",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "b/furnace channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "b/furnace marks=2 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "b/furnace leaked=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "b/furnace checked=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "b/furnace all blocks exact"
+    },
+    {
+      "direction": "b",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "b/furnace strings=164 violations=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "b/furnace controls=7 unreachable=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "b/furnace same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "b/furnace spoken=[1,2] expected=[1,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "b/furnace rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "b/furnace consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "b",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "b/furnace identical"
+    },
+    {
+      "direction": "b",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "b/furnace density=professional orient-visible=true entries=3/3 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "b/deposit missing none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "b/deposit count=9 marks=9 entries=9"
+    },
+    {
+      "direction": "b",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "b/deposit channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "b/deposit marks=3 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "b/deposit leaked=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "b/deposit checked=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "b/deposit all blocks exact"
+    },
+    {
+      "direction": "b",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "b/deposit strings=355 violations=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "b/deposit controls=24 unreachable=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "b/deposit same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "b/deposit spoken=[4,2,3] expected=[4,2,3] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "b/deposit rows=3 ran=3 produced=3 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "b/deposit consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "b",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "b/deposit identical"
+    },
+    {
+      "direction": "b",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "b/deposit density=professional orient-visible=true entries=9/9 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "b/website missing none"
+    },
+    {
+      "direction": "b",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "b/website count=5 marks=5 entries=5"
+    },
+    {
+      "direction": "b",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "b/website channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "b/website no record-level absence on this record"
+    },
+    {
+      "direction": "b",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "b/website leaked=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "b/website checked=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "b/website all blocks exact"
+    },
+    {
+      "direction": "b",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "b/website strings=267 violations=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "b/website controls=21 unreachable=0"
+    },
+    {
+      "direction": "b",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "b/website same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "b/website spoken=[3,2] expected=[3,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "b",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "b/website rows=3 ran=0 produced=0 "
+    },
+    {
+      "direction": "b",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "b/website consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "b",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "b/website identical"
+    },
+    {
+      "direction": "b",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "b/website density=professional orient-visible=true entries=5/5 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "c/montana missing none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "c/montana count=1 marks=1 entries=1"
+    },
+    {
+      "direction": "c",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "c/montana channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "c/montana marks=1 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "c/montana leaked=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "c/montana checked=20 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "c/montana all blocks exact"
+    },
+    {
+      "direction": "c",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "c/montana strings=117 violations=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "c/montana controls=2 unreachable=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "c/montana same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "c/montana spoken=[1] expected=[1] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "c/montana rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "c/montana consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "c",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "c/montana identical"
+    },
+    {
+      "direction": "c",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "c/montana density=professional orient-visible=true entries=1/1 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "c/furnace missing none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "c/furnace count=3 marks=3 entries=3"
+    },
+    {
+      "direction": "c",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "c/furnace channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "c/furnace marks=2 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "c/furnace leaked=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "c/furnace checked=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "c/furnace all blocks exact"
+    },
+    {
+      "direction": "c",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "c/furnace strings=173 violations=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "c/furnace controls=7 unreachable=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "c/furnace same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "c/furnace spoken=[1,2] expected=[1,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "c/furnace rows=3 ran=3 produced=1 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "c/furnace consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "c",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "c/furnace identical"
+    },
+    {
+      "direction": "c",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "c/furnace density=professional orient-visible=true entries=3/3 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "c/deposit missing none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "c/deposit count=9 marks=9 entries=9"
+    },
+    {
+      "direction": "c",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "c/deposit channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "c/deposit marks=3 in-source=0 clears-source-column=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "c/deposit leaked=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "c/deposit checked=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "c/deposit all blocks exact"
+    },
+    {
+      "direction": "c",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "c/deposit strings=386 violations=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "c/deposit controls=24 unreachable=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "c/deposit same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "c/deposit spoken=[4,2,3] expected=[4,2,3] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "c/deposit rows=3 ran=3 produced=3 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "c/deposit consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "c",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "c/deposit identical"
+    },
+    {
+      "direction": "c",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "c/deposit density=professional orient-visible=true entries=9/9 fields-match-full=true missing-zones=none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G1",
+      "name": "required zones render",
+      "pass": true,
+      "detail": "c/website missing none"
+    },
+    {
+      "direction": "c",
+      "assertion": "G2",
+      "name": "count equals marks equals register entries",
+      "pass": true,
+      "detail": "c/website count=5 marks=5 entries=5"
+    },
+    {
+      "direction": "c",
+      "assertion": "G3",
+      "name": "anchor modes use only their authorized channel",
+      "pass": true,
+      "detail": "c/website channel-violations=0 mode-violations=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G4",
+      "name": "record-level absence stays outside the document",
+      "pass": true,
+      "detail": "c/website no record-level absence on this record"
+    },
+    {
+      "direction": "c",
+      "assertion": "G5",
+      "name": "no direction holds a local copy of a record string",
+      "pass": true,
+      "detail": "c/website leaked=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G6",
+      "name": "governed strings render byte-identical to the packet",
+      "pass": true,
+      "detail": "c/website checked=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G7",
+      "name": "source text renders exactly",
+      "pass": true,
+      "detail": "c/website all blocks exact"
+    },
+    {
+      "direction": "c",
+      "assertion": "G8",
+      "name": "rendered strings clear the repository lint",
+      "pass": true,
+      "detail": "c/website strings=293 violations=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G9",
+      "name": "every mark is keyboard reachable and announces state",
+      "pass": true,
+      "detail": "c/website controls=21 unreachable=0"
+    },
+    {
+      "direction": "c",
+      "assertion": "G10",
+      "name": "density adds fields and never changes entries",
+      "pass": true,
+      "detail": "c/website same-entries=true superset=true adds=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G13",
+      "name": "the census counts the marks the page actually rendered",
+      "pass": true,
+      "detail": "c/website spoken=[3,2] expected=[3,2] declared-matches=true sums-to-count=true"
+    },
+    {
+      "direction": "c",
+      "assertion": "G14",
+      "name": "the applied checks agree with the marks the page drew",
+      "pass": true,
+      "detail": "c/website rows=3 ran=0 produced=0 "
+    },
+    {
+      "direction": "c",
+      "assertion": "G15",
+      "name": "the register is whole at consumer density and the anatomy hash is current",
+      "pass": true,
+      "detail": "c/website consumer-rows=3/3 anatomy-sha=matches disk"
+    },
+    {
+      "direction": "c",
+      "assertion": "G11",
+      "name": "reduced motion changes no rendered evidence",
+      "pass": true,
+      "detail": "c/website identical"
+    },
+    {
+      "direction": "c",
+      "assertion": "G12",
+      "name": "a forwarded record opens complete whatever the runner did",
+      "pass": true,
+      "detail": "c/website density=professional orient-visible=true entries=5/5 fields-match-full=true missing-zones=none"
+    }
+  ]
+}

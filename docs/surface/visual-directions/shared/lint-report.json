@@ -1,0 +1,9 @@
+{
+  "lint_module": "/Users/brendan/Documents/Claude/Projects/imbas-site/reader-check-vocab.js",
+  "lint_version": "check-vocab.v1",
+  "lint_function": "lintUserFacingStrings",
+  "imported_unmodified": true,
+  "module_sha256": "675264071cf3398228037145724cb7ae872d247cbb888c23d89a81b28a2b45b9",
+  "strings_linted": 627,
+  "violations": []
+}

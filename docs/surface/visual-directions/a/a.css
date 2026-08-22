@@ -1,0 +1,684 @@
+/* Direction A — Investigative Cinematic.
+ *
+ * Scale and pacing, not animation. One column, one thing at a time, a long descent.
+ * The only thing that moves is a mark opening, because that is the record changing state.
+ *
+ * The bet: a plainly-worded scoped sentence, set at display scale on near-black ground,
+ * reads as a syllabus head rather than as a campaign. If it reads as a campaign, this
+ * direction is wrong — and it is wrong in a way the other two cannot be.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--bg-deep); }
+
+body {
+  margin: 0;
+  background: var(--bg-deep);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.a-record { display: block; }
+[hidden] { display: none !important; }
+
+/* ── shared leaf type ─────────────────────────────────────────────────────── */
+
+.a-lede-label {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* ── Z1 · masthead. The whole first viewport. ─────────────────────────────── */
+
+.a-mast {
+  min-height: 100vh;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.a-mast > * { width: 100%; max-width: 1080px; margin-inline: auto; }
+.a-mast-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+.a-class {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ember);
+}
+
+.a-context {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+/* First contact. This line used to be four mono identifiers and it now carries three
+ * short sentences, so the mono face went with the identifiers to the provenance block.
+ * The label keeps its mono uppercase because a label is still a label; the value is
+ * set in the reading face, because a value that reads as English should look it. */
+.a-address {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 2rem;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+.a-addr-label {
+  font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.75;
+}
+.a-addr-value { color: var(--ink-secondary); }
+
+.a-finding {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--ink-luminous);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+html[data-finding-length="short"]  .a-finding { font-size: clamp(2.6rem, 6.2vw, 4.7rem); line-height: 1.04; max-width: 15ch; }
+html[data-finding-length="medium"] .a-finding { font-size: clamp(2.1rem, 4.4vw, 3.3rem); line-height: 1.1;  max-width: 22ch; }
+html[data-finding-length="long"]   .a-finding { font-size: clamp(1.65rem, 3.1vw, 2.3rem); line-height: 1.22; max-width: 32ch; }
+
+.a-boundary {
+  margin: 0;
+  max-width: 54ch;
+  font-size: 17px;
+  line-height: 1.62;
+  color: var(--ink-soft);
+}
+
+.a-mast-foot { border-top: 1px solid var(--line-faint); padding-top: var(--space-3); }
+
+.a-count {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  color: var(--ink-luminous);
+}
+/* Z2.4 · the census. Reading face, not mono: it is a sentence about the record and
+ * the mono register belongs to the count it sits under. Set at --ink-soft so it
+ * reads above the count rule beside it, because the rule is an instruction and the
+ * census is evidence about what this particular run found. */
+.a-census { margin: 0 0 0.5rem; max-width: 62ch; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.a-count-rule { margin: 0 0 1rem; font-size: 14px; color: var(--ink-muted); }
+
+.a-orient-wrap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.9rem; }
+.a-orient { margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.55; color: var(--ink-secondary); }
+html[data-orient="dismissed"] .a-orient-wrap { display: none; }
+
+/* The control is a view preference, so it is drawn as one. It carried a border and
+ * uppercase mono at 12px, which is the chip this direction gives a real action, and
+ * near the top of the record it was reading as a peer of the evidence. Stripped to a
+ * quiet underline it stays reachable and stops competing.
+ *
+ * The underline is the label's own ink, not a --line- token. Every line token is a
+ * sub-3:1 hairline, which is right for a separator and wrong for the one mark that
+ * says this word can be pressed: the first draft of this rule measured 1.21:1.
+ * Subordination is carried by size, case and the missing chip, none of which costs
+ * a reader the affordance. */
+.a-dismiss {
+  background: none; border: 0; padding: 0;
+  color: var(--ink-muted); font-family: inherit; font-size: 13px;
+  letter-spacing: 0; text-transform: none; cursor: pointer;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.a-dismiss:hover { color: var(--ink-soft); }
+/* A record that travelled carries its orientation, so nothing offers to remove it. */
+html[data-forwarded="true"] .a-dismiss { display: none; }
+
+/* Z7.4 · forwarded. Not a bar: the first line of the masthead's own composition. */
+.a-fwd { margin-bottom: var(--space-3); border-left: 2px solid var(--ember-deep); padding-left: 1.1rem; }
+.a-fwd-h {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  color: var(--ink-soft);
+}
+.a-fwd-b { margin: 0 0 0.7rem; max-width: 56ch; font-size: 15px; color: var(--ink-muted); }
+.a-fwd-a {
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.06em;
+  color: var(--ember); text-decoration: none; border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 0.15rem;
+}
+.a-fwd-a:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+/* ── Z3 · source. The stage. ──────────────────────────────────────────────── */
+
+.a-source {
+  background: var(--bg-base);
+  padding: var(--space-5) var(--space-4);
+}
+.a-source > * { max-width: 760px; margin-inline: auto; }
+
+.a-prompt { margin-bottom: var(--space-4); }
+.a-prompt-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  line-height: 1.32;
+  color: var(--ink-luminous);
+}
+
+.a-expect { margin-bottom: var(--space-4); border-top: 1px solid var(--line-faint); padding-top: var(--space-3); }
+.a-expect-text {
+  margin: 0 0 1rem;
+  padding: 1.15rem 1.3rem;
+  background: var(--bg-surface);
+  border-left: 2px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.72;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.a-disclosure { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-muted); }
+
+.a-source-label { margin-bottom: 1.1rem; }
+
+.a-body { }
+
+.a-para {
+  margin: 0 0 1.5rem;
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--ink-primary);
+  overflow-wrap: break-word;
+}
+
+.a-filename {
+  margin: 1.6rem 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.a-code {
+  margin: 0 0 1.4rem;
+  padding: 1.1rem 1.2rem 1.1rem 2.6rem;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--line-soft);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.a-code-line { display: inline; }
+
+/* Z4.1 · QUOTED_SPAN — the mark sits on the characters, and the numeral is drawn
+   by the stylesheet so no character enters the answer. */
+.a-span {
+  background: none;
+  color: var(--ink-luminous);
+  box-shadow: inset 0 -2px 0 var(--ember);
+  padding-bottom: 1px;
+  cursor: pointer;
+}
+.a-span::after {
+  content: attr(data-anchor);
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  vertical-align: 0.55em;
+  margin-left: 0.18em;
+  letter-spacing: 0.04em;
+  color: var(--ember);
+}
+.a-span:hover, .a-span[aria-expanded="true"] { box-shadow: inset 0 -3px 0 var(--ember-bright); }
+
+/* Z4.1 · PASSAGE_CONTEXT — the region keeps its light and the block around it
+   steps down one rung. A region, not a character range. */
+.a-region {
+  display: inline;
+  background: var(--bg-elevated);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  box-shadow: -0.35em 0 0 var(--bg-elevated), 0.35em 0 0 var(--bg-elevated);
+  border-left: 2px solid var(--ember-soft);
+  padding-left: 0.4em;
+  color: var(--ink-luminous);
+  cursor: pointer;
+}
+.a-region::before {
+  content: attr(data-anchor);
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  vertical-align: 0.55em;
+  margin-right: 0.35em;
+  color: var(--ember-bright);
+}
+.a-region:hover, .a-region[aria-expanded="true"] { border-left-color: var(--ember-bright); }
+
+/* In code the region is a run of whole lines, so the bracket is drawn once around
+   the run and the numeral sits on the bracket. */
+.a-code-region {
+  display: block;
+  position: relative;
+  margin: 0.15rem 0 0.15rem -0.6rem;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--ember-soft);
+  background: var(--bg-elevated);
+}
+.a-code-region::before {
+  content: attr(data-region);
+  position: absolute;
+  left: -1.75rem;
+  top: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ember-bright);
+}
+.a-code .a-region {
+  background: none; border-left: none; padding-left: 0; box-shadow: none; color: var(--ink-luminous);
+}
+.a-code .a-region::before { content: none; }
+.a-code .a-span { box-shadow: inset 0 -2px 0 var(--ember); }
+
+/* Z4.4 · the mark opens where it sits. */
+.a-detail {
+  display: flex;
+  gap: 1.1rem;
+  margin: 0 0 1.6rem;
+  padding: 1.3rem 1.4rem;
+  background: var(--bg-elevated);
+  border-left: 2px solid var(--ember);
+  animation: a-open 200ms ease-out;
+}
+@keyframes a-open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.a-detail-n {
+  margin: 0;
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: var(--ember-bright);
+  min-width: 1.6ch;
+}
+.a-detail-col { flex: 1; min-width: 0; }
+.a-detail-points { margin: 0 0 0.7rem; font-size: 17px; line-height: 1.55; color: var(--ink-luminous); }
+.a-detail-mode { margin: 0 0 0.9rem; font-size: 14px; line-height: 1.55; color: var(--ink-secondary); }
+.a-detail-declared, .a-detail-body { margin: 0 0 0.8rem; font-size: 15.5px; line-height: 1.65; color: var(--ink-soft); }
+.a-detail-quote {
+  margin: 0 0 0.8rem;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--line-strong);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-primary);
+}
+.a-detail-quote::before { content: "\201C"; }
+.a-detail-quote::after { content: "\201D"; }
+.a-detail-ask { margin: 0 0 0.9rem; font-size: 15.5px; line-height: 1.6; color: var(--ink-primary); }
+.a-detail-ask-label {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--ink-secondary); display: block; margin-bottom: 0.25rem;
+}
+.a-detail-close {
+  background: none; border: 1px solid var(--line-soft); border-radius: 2px; cursor: pointer;
+  color: var(--ink-secondary); font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 0.35rem 0.75rem;
+}
+.a-detail-close:hover { color: var(--ink-primary); border-color: var(--line-strong); }
+
+.a-second { margin-top: var(--space-4); border-top: 1px solid var(--line-faint); padding-top: var(--space-3); }
+.a-second-text {
+  margin: 0; font-family: var(--font-display); font-size: 17px; line-height: 1.55; color: var(--ink-soft);
+}
+.a-shape { margin-top: var(--space-4); border-top: 1px solid var(--line-faint); padding-top: var(--space-3); }
+.a-shape-body { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--ink-soft); max-width: 58ch; }
+
+/* ── Z4.2 · record level. Full bleed, after the column closes. ─────────────── */
+
+.a-band {
+  background: var(--bg-deep);
+  padding: var(--space-5) var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+.a-band-inner { max-width: 1080px; margin-inline: auto; }
+.a-band-label {
+  margin: 0 0 1.2rem; font-family: var(--font-mono); font-size: 13px;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-band-rule {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3.4vw, 2.5rem);
+  line-height: 1.15;
+  color: var(--ink-luminous);
+}
+.a-band-note { margin: 0 0 var(--space-3); max-width: 58ch; font-size: 16px; line-height: 1.65; color: var(--ink-soft); }
+
+.a-band-row {
+  display: flex; gap: 1.2rem; align-items: baseline;
+  padding: 1.1rem 0; border-top: 1px solid var(--line-faint); cursor: pointer;
+}
+.a-band-row:hover .a-band-text { color: var(--ink-luminous); }
+.a-band-n { flex: 0 0 auto; min-width: 2ch; font-family: var(--font-mono); font-size: 14px; color: var(--ember); }
+.a-band-text { font-size: 19px; line-height: 1.5; color: var(--ink-primary); }
+.a-band .a-detail { background: var(--bg-surface); margin-top: 0.2rem; }
+
+/* ── Z5 · Check Register ──────────────────────────────────────────────────── */
+
+.a-register {
+  background: var(--bg-base);
+  padding: var(--space-5) var(--space-4);
+  border-top: 1px solid var(--line-soft);
+}
+.a-register > * { max-width: 1080px; margin-inline: auto; }
+
+.a-reg-h {
+  margin: 0 0 0.8rem; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.7rem, 3vw, 2.2rem); color: var(--ink-luminous);
+}
+.a-reg-note { margin: 0 0 var(--space-3); max-width: 72ch; font-size: 15px; line-height: 1.66; color: var(--ink-soft); }
+
+.a-density {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem;
+  padding: 0.9rem 0; border-block: 1px solid var(--line-faint); margin-bottom: var(--space-3);
+}
+.a-density-label {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-muted); margin-right: 0.4rem;
+}
+.a-density-btn {
+  background: none; border: 1px solid var(--line-soft); border-radius: 2px; cursor: pointer;
+  color: var(--ink-secondary); font-family: var(--font-mono); font-size: 12.5px;
+  letter-spacing: 0.09em; text-transform: uppercase; padding: 0.4rem 0.9rem;
+}
+.a-density-btn[aria-pressed="true"] { color: var(--bg-deep); background: var(--ember); border-color: var(--ember); }
+.a-density-note { flex-basis: 100%; font-size: 13.5px; color: var(--ink-muted); }
+html[data-density="consumer"] .a-density-note-pro,
+html[data-density="professional"] .a-density-note-consumer { display: none; }
+
+.a-entries { list-style: none; margin: 0; padding: 0; }
+.a-entry {
+  display: flex; gap: 1.2rem; padding: 1.5rem 0; border-top: 1px solid var(--line-faint);
+}
+.a-entry-n { flex: 0 0 auto; min-width: 2.5ch; font-family: var(--font-mono); font-size: 15px; color: var(--ember); }
+.a-entry-col { flex: 1; min-width: 0; }
+
+html[data-density="consumer"] .a-entry-fields[data-fields="professional"],
+html[data-density="professional"] .a-entry-fields[data-fields="consumer"] { display: none; }
+
+.a-field { margin-bottom: 0.85rem; }
+.a-field-label {
+  display: block; margin-bottom: 0.2rem; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-field-body { display: block; font-size: 16px; line-height: 1.6; color: var(--ink-soft); }
+.a-field-lead .a-field-body { font-size: 18px; color: var(--ink-luminous); }
+.a-field-quoted { font-family: var(--font-display); color: var(--ink-primary); }
+.a-field-quoted::before { content: "\201C"; }
+.a-field-quoted::after { content: "\201D"; }
+.a-field-mono { font-family: var(--font-mono); font-size: 13.5px; }
+.a-field-ask .a-field-body { color: var(--ink-primary); }
+
+.a-entry-jump {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--ember); font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 1px solid var(--ember-deep);
+}
+.a-entry-jump:hover { color: var(--ember-bright); }
+
+.a-reg-close { margin-top: var(--space-3); border-top: 1px solid var(--line-soft); padding-top: var(--space-3); }
+.a-close-row { margin-bottom: 1.1rem; }
+.a-close-label {
+  margin: 0 0 0.25rem; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-close-body { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--ink-soft); max-width: 72ch; }
+
+/* ── Z6 · provenance ──────────────────────────────────────────────────────── */
+
+.a-prov { background: var(--bg-deep); padding: var(--space-5) var(--space-4); border-top: 1px solid var(--line-soft); }
+.a-prov > * { max-width: 1080px; margin-inline: auto; }
+.a-prov-h {
+  margin: 0 0 var(--space-3); font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.5rem, 2.6vw, 1.95rem); color: var(--ink-luminous);
+}
+.a-prov-row { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; padding: 1.1rem 0; border-top: 1px solid var(--line-faint); }
+.a-prov-label { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+.a-prov-body { margin: 0; font-size: 15.5px; line-height: 1.62; color: var(--ink-soft); max-width: 66ch; }
+pre.a-prov-body { font-family: var(--font-mono); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Z6.3 · the identifiers, in the mono face they came down here wearing. */
+.a-ids {
+  margin: 0 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.3rem 1.8rem;
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-secondary);
+  overflow-wrap: anywhere;
+}
+.a-id-label { text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; color: var(--ink-muted); }
+.a-id-value { color: var(--ink-primary); }
+[data-prov="identity"] .a-prov-body { font-size: 14px; color: var(--ink-muted); }
+
+/* ── Z7 · foot ────────────────────────────────────────────────────────────── */
+
+.a-foot { background: var(--bg-deep); padding: var(--space-4) var(--space-4) var(--space-5); border-top: 1px solid var(--line-soft); }
+.a-foot > * { max-width: 1080px; margin-inline: auto; }
+.a-foot-row { display: grid; grid-template-columns: 15rem 1fr; gap: 1.5rem; padding: 1rem 0; border-top: 1px solid var(--line-faint); }
+.a-foot-row:first-child { border-top: none; }
+.a-foot-label { margin: 0; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-muted); }
+.a-foot-body { margin: 0; font-size: 15.5px; line-height: 1.62; color: var(--ink-soft); max-width: 66ch; }
+.a-foot-cite { margin: 0; font-family: var(--font-mono); font-size: 13px; line-height: 1.7; color: var(--ink-secondary); overflow-wrap: anywhere; }
+.a-lane {
+  margin: var(--space-4) auto 0; font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.18em; color: var(--ink-muted); opacity: 0.7;
+}
+
+/* ── Z8 · reader entry ────────────────────────────────────────────────────────
+ * The same descent. One part takes the first viewport at display scale; the rest
+ * follow underneath at reading scale, in full.
+ */
+
+.a-enter { display: block; }
+
+/* The stage takes the state that is being answered and the descent takes the other
+ * route. It stops short of a full viewport on purpose: at 100vh whichever route is
+ * in the descent starts one pixel below the fold, and the entry rule says neither
+ * route may hide the other. Three-quarters leaves the descent breaking the fold in
+ * every state, so both routes are on screen from the first paint. */
+.a-e-stage {
+  min-height: 74vh;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid var(--line-soft);
+}
+.a-e-stage-inner { width: 100%; max-width: 1080px; margin-inline: auto; }
+
+.a-e-eyebrow {
+  margin: 0 0 1.4rem; font-family: var(--font-mono); font-size: 13px;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-e-lede {
+  margin: 0 0 var(--space-4); max-width: 20ch;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(2.2rem, 5vw, 3.7rem); line-height: 1.08;
+  letter-spacing: -0.015em; color: var(--ink-luminous);
+}
+.a-e-stage-action {
+  display: inline-block; font-family: var(--font-mono); font-size: 14px;
+  letter-spacing: 0.06em; color: var(--ember); text-decoration: none;
+  border-bottom: 1px solid var(--ember-deep); padding-bottom: 0.25rem;
+}
+.a-e-stage-action:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+.a-e-descent { padding: var(--space-5) var(--space-4); }
+.a-e-descent > * { max-width: 760px; margin-inline: auto; }
+.a-e-descent > * + * { margin-top: var(--space-5); border-top: 1px solid var(--line-faint); padding-top: var(--space-4); }
+
+.a-e-field-label {
+  display: block; margin: 0 0 0.7rem; font-family: var(--font-mono); font-size: 12px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-e-textarea {
+  display: block; width: 100%; resize: vertical;
+  background: var(--bg-surface); color: var(--ink-luminous);
+  border: 1px solid var(--line-soft); border-radius: 3px;
+  padding: 1.1rem 1.2rem; font-family: var(--font-body);
+  font-size: 17px; line-height: 1.62;
+}
+.a-e-textarea::placeholder { color: var(--ink-muted); }
+.a-e-textarea:focus-visible { border-color: var(--ember-deep); }
+
+.a-e-paste-foot { margin-top: 1.1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1.2rem; }
+.a-e-action {
+  flex: 0 0 auto; font-family: var(--font-mono); font-size: 14px; letter-spacing: 0.05em;
+  color: var(--bg-deep); background: var(--ember); border: 1px solid var(--ember);
+  border-radius: 3px; padding: 0.7rem 1.25rem; cursor: pointer;
+}
+.a-e-action:hover { background: var(--ember-bright); border-color: var(--ember-bright); }
+.a-e-scope { flex: 1 1 22rem; margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-secondary); }
+.a-e-ready { margin: 1rem 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-muted); }
+
+/* the paste block when it leads: the field is the stage */
+.a-e-paste.is-lead .a-e-field-label { display: none; }
+.a-e-paste.is-lead .a-e-textarea {
+  background: var(--bg-base); border-color: var(--line-strong);
+  padding: 1.6rem 1.7rem; font-size: clamp(1.15rem, 2vw, 1.5rem); line-height: 1.5;
+}
+
+.a-e-mech-heading, .a-e-arriving-heading {
+  margin: 0 0 0.6rem; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem); color: var(--ink-luminous);
+}
+.a-e-mech-body, .a-e-arriving-body {
+  margin: 0 0 1rem; max-width: 58ch; font-size: 16px; line-height: 1.65; color: var(--ink-soft);
+}
+.a-e-mech-action, .a-e-arriving-action {
+  font-family: var(--font-mono); font-size: 13.5px; color: var(--ember);
+  text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 0.15rem;
+}
+.a-e-mech-action:hover, .a-e-arriving-action:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+.a-e-arrived {
+  margin: 0 0 var(--space-4); max-width: 46rem;
+  background: var(--bg-base); border: 1px solid var(--line-soft);
+  border-left: 2px solid var(--ember-deep); border-radius: 3px;
+  padding: 1.5rem 1.6rem;
+}
+.a-e-arrived-label {
+  margin: 0 0 0.7rem; font-family: var(--font-mono); font-size: 11.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted);
+}
+.a-e-arrived-finding {
+  margin: 0 0 0.8rem; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(1.3rem, 2.3vw, 1.7rem); line-height: 1.22; color: var(--ink-luminous);
+}
+.a-e-arrived-count { margin: 0 0 1rem; font-size: 14.5px; color: var(--ink-secondary); }
+.a-e-arrived-open {
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ember); text-decoration: none;
+  border-bottom: 1px solid var(--ember-deep); padding-bottom: 0.15rem;
+}
+.a-e-arrived-open:hover { color: var(--ember-bright); border-bottom-color: var(--ember-bright); }
+
+/* ── mobile ───────────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .a-e-stage { padding: var(--space-4) 1.25rem var(--space-3); }
+  .a-e-descent { padding: var(--space-4) 1.25rem; }
+  .a-e-descent > * + * { margin-top: var(--space-4); padding-top: var(--space-3); }
+  .a-e-paste-foot { gap: 0.9rem; }
+  .a-e-action { width: 100%; }
+  .a-e-arrived { padding: 1.2rem 1.25rem; }
+  .a-e-paste.is-lead .a-e-textarea { padding: 1.1rem 1.2rem; font-size: 1.05rem; }
+  .a-mast { padding: var(--space-4) 1.25rem var(--space-3); gap: var(--space-3); }
+  .a-source, .a-band, .a-register, .a-prov, .a-foot { padding-inline: 1.25rem; }
+  .a-source, .a-band, .a-register, .a-prov { padding-block: var(--space-4); }
+  .a-para { font-size: 17px; line-height: 1.72; }
+  .a-address { gap: 0 1rem; font-size: 12px; }
+  .a-prov-row, .a-foot-row { grid-template-columns: 1fr; gap: 0.4rem; }
+  .a-detail { padding: 1.1rem; gap: 0.8rem; }
+  .a-band-text { font-size: 17px; }
+  .a-entry { gap: 0.9rem; }
+  .a-region { box-shadow: none; }
+}
+
+/* ── reduced motion ───────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .a-detail { animation: none; }
+  * { transition: none !important; }
+}
+html[data-motion="reduced"] .a-detail { animation: none; }
+html[data-motion="reduced"] * { transition: none !important; }
+
+/* ── Z5.6 · applied checks ────────────────────────────────────────────────────
+ * A places this between the masthead and the source, so it is set as prose in the
+ * record's own voice rather than as a panel. No ground, no border box, no ember:
+ * the first thing above the evidence must not be the first thing that looks like a
+ * readout. The rows are separated by a hairline and nothing else, and the check
+ * name carries its weight through size and ink rather than through a chip. */
+.a-applied {
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+.a-applied > * { max-width: 760px; margin-inline: auto; }
+.a-applied-h {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.a-applied-census {
+  margin: 0 0 0.6rem;
+  max-width: 46ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.9vw, 1.35rem);
+  line-height: 1.3;
+  color: var(--ink-luminous);
+}
+.a-applied-note { margin: 0 0 0.5rem; max-width: 66ch; font-size: 14.5px; line-height: 1.6; color: var(--ink-secondary); }
+.a-applied-cond { margin: 0 0 1.4rem; max-width: 66ch; font-size: 14px; line-height: 1.6; color: var(--ink-muted); }
+.a-applied-row {
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line-faint);
+}
+.a-applied-row:last-of-type { border-bottom: 1px solid var(--line-faint); margin-bottom: 1.1rem; }
+.a-applied-name {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+}
+.a-applied-out { margin: 0; max-width: 60ch; font-size: 15px; line-height: 1.5; color: var(--ink-soft); }
+.a-applied-rowcond { margin: 0.35rem 0 0; max-width: 64ch; font-size: 13.5px; line-height: 1.55; color: var(--ink-muted); }
+.a-applied-condlabel { color: var(--ink-secondary); }
+.a-applied-det { margin: 0.4rem 0 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em; color: var(--ink-muted); }
+.a-applied-detlabel { color: var(--ink-secondary); }

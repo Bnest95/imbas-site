@@ -1,0 +1,386 @@
+[
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "1440",
+    "arrival": "as it opens",
+    "fold": 1000,
+    "finding_px": 22,
+    "answer_px": 386,
+    "answer_line_bottom": 407,
+    "first_mark_px": 852,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 364,
+    "claim_to_proof_screens": 0.36,
+    "blocks_before": 3,
+    "blocks": [
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 24,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 117,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 168,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 2813
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "1440",
+    "arrival": "forwarded cold",
+    "fold": 1000,
+    "finding_px": 97,
+    "answer_px": 493,
+    "answer_line_bottom": 514,
+    "first_mark_px": 959,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 397,
+    "claim_to_proof_screens": 0.4,
+    "blocks_before": 7,
+    "blocks": [
+      {
+        "zone": "Z7.4",
+        "cls": "b-fwd",
+        "top": 0,
+        "text": "You are reading a record someone sent youIt carries its own scope, its"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 67,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 63,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 99,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 192,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 226,
+        "text": "Each mark points at something in this answer, or at something absent f"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 275,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 3112
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "390",
+    "arrival": "as it opens",
+    "fold": 844,
+    "finding_px": 23,
+    "answer_px": 402,
+    "answer_line_bottom": 422,
+    "first_mark_px": 1007,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 379,
+    "claim_to_proof_screens": 0.45,
+    "blocks_before": 3,
+    "blocks": [
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 24,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 93,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 144,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 4075
+  },
+  {
+    "direction": "b",
+    "record": "montana",
+    "view": "390",
+    "arrival": "forwarded cold",
+    "fold": 844,
+    "finding_px": 180,
+    "answer_px": 612,
+    "answer_line_bottom": 632,
+    "first_mark_px": 1217,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 433,
+    "claim_to_proof_screens": 0.51,
+    "blocks_before": 7,
+    "blocks": [
+      {
+        "zone": "Z7.4",
+        "cls": "b-fwd",
+        "top": 0,
+        "text": "You are reading a record someone sent youIt carries its own scope, its"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 124,
+        "text": "GOVERNED PUBLIC EXAMPLE"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 145,
+        "text": "Public example · Montana employment law"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 181,
+        "text": "The second answer carried the deadline. The first one did not."
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 250,
+        "text": "1 mark on this record"
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 284,
+        "text": "Each mark points at something in this answer, or at something absent f"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 354,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 4757
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "1440",
+    "arrival": "as it opens",
+    "fold": 1000,
+    "finding_px": 22,
+    "answer_px": 426,
+    "answer_line_bottom": 447,
+    "first_mark_px": 541,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 404,
+    "claim_to_proof_screens": 0.4,
+    "blocks_before": 3,
+    "blocks": [
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 24,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 157,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 208,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 4395
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "1440",
+    "arrival": "forwarded cold",
+    "fold": 1000,
+    "finding_px": 97,
+    "answer_px": 533,
+    "answer_line_bottom": 554,
+    "first_mark_px": 648,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 437,
+    "claim_to_proof_screens": 0.44,
+    "blocks_before": 7,
+    "blocks": [
+      {
+        "zone": "Z7.4",
+        "cls": "b-fwd",
+        "top": 0,
+        "text": "You are reading a record someone sent youIt carries its own scope, its"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 67,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 63,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 99,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 232,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 266,
+        "text": "Each mark points at something in this answer, or at something absent f"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 315,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 6543
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "390",
+    "arrival": "as it opens",
+    "fold": 844,
+    "finding_px": 23,
+    "answer_px": 430,
+    "answer_line_bottom": 450,
+    "first_mark_px": 858,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 407,
+    "claim_to_proof_screens": 0.48,
+    "blocks_before": 3,
+    "blocks": [
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 24,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 121,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 172,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 7591
+  },
+  {
+    "direction": "b",
+    "record": "deposit",
+    "view": "390",
+    "arrival": "forwarded cold",
+    "fold": 844,
+    "finding_px": 204,
+    "answer_px": 664,
+    "answer_line_bottom": 684,
+    "first_mark_px": 1093,
+    "answer_in_fold": true,
+    "claim_to_proof_px": 460,
+    "claim_to_proof_screens": 0.55,
+    "blocks_before": 7,
+    "blocks": [
+      {
+        "zone": "Z7.4",
+        "cls": "b-fwd",
+        "top": 0,
+        "text": "You are reading a record someone sent youIt carries its own scope, its"
+      },
+      {
+        "zone": "Z1.1",
+        "cls": "b-class",
+        "top": 124,
+        "text": "PROTOCOL-MEASURED CASE"
+      },
+      {
+        "zone": "Z1.2",
+        "cls": "b-context",
+        "top": 145,
+        "text": "Protocol-measured case · security deposit withheld"
+      },
+      {
+        "zone": "Z1.4",
+        "cls": "b-finding",
+        "top": 205,
+        "text": "Nine marks sit on this answer. Five point at wording it carries, and f"
+      },
+      {
+        "zone": "Z2.1",
+        "cls": "b-count",
+        "top": 302,
+        "text": "9 marks on this record"
+      },
+      {
+        "zone": "Z2.3",
+        "cls": "b-orient",
+        "top": 336,
+        "text": "Each mark points at something in this answer, or at something absent f"
+      },
+      {
+        "zone": null,
+        "cls": "b-more-label",
+        "top": 406,
+        "text": "What this record is, where its marks are anchored, and how to read the"
+      }
+    ],
+    "page_px": 12504
+  }
+]

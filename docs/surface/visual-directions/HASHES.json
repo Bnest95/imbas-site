@@ -1,0 +1,41 @@
+{
+  "anatomy_version": "record-anatomy.v2",
+  "tokens_extracted_from": "/Users/brendan/Documents/Claude/Projects/imbas-site/styles.css",
+  "generated_from_repo_head": null,
+  "frozen": {
+    "ANATOMY.md": "73826c9f94d2ca88c73f42e3b6288b302d021ddc1e136bc877cf789155a645fc",
+    "ANATOMY.v1.md": "890405ee90ba55f195672489178a6bb81de48cf0460a530a6576ec926c2c0847",
+    "shared/fixture.mjs": "4518544547ff42eb3abe591958aa3a48449d24872fd55e968efe95a61d4f35db",
+    "shared/fixture.data.js": "a80f88963b195bea4dc504444ec4bd5949ecf21123e0acef260e0bd16c380533",
+    "shared/tokens.css": "f6774ed83b09c97c26703d75acaf728de9d35f5806af0e82465aab3cbca6256b"
+  },
+  "repository_inputs": {
+    "reader-public-example.js": "9cc1de52041d23498e811dd6a2931d79a5175630630c8a9f15451a14c5e38a86",
+    "reader-result.js": "3949cd04913e9fa947000ed6b999d6e4641bec4032bd9e32d3829931b3135e65",
+    "reader-check-vocab.js": "675264071cf3398228037145724cb7ae872d247cbb888c23d89a81b28a2b45b9",
+    "reader-checks.js": "769fff87395cd05d72b11ef36912707c6299af98f5c8cb7a8ef177965c10fd93",
+    "styles.css": "490bf78599fce4e7a6c0f9a7d8bba69344b67c87dbf8431c28b3afdddc00ffdd"
+  },
+  "records": {
+    "montana": {
+      "marks": 1,
+      "class": "GOVERNED PUBLIC EXAMPLE",
+      "sha256": "c273447f3ee4d4abb55d26407871bae3cab33d692eb3dd7e5d96ab270fac5288"
+    },
+    "furnace": {
+      "marks": 3,
+      "class": "USER-SUPPLIED RUN",
+      "sha256": "9782d4f6e8e291831a6237c68a1d10dd93e12bebd0fd2e369bb11d784aa712fa"
+    },
+    "deposit": {
+      "marks": 9,
+      "class": "PROTOCOL-MEASURED CASE",
+      "sha256": "69cf48561b92d55ff216293accfb6ffa8accadf6bef1dc4603615d28e777eaab"
+    },
+    "website": {
+      "marks": 5,
+      "class": "ADHERENCE RECORD",
+      "sha256": "742b01bbb29fc9dff0745fad81a3182cd495433b7a31f8d02cf92fc1fc69517d"
+    }
+  }
+}
