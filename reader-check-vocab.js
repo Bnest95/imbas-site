@@ -245,6 +245,44 @@ export function hasWorldClaimVerdict(str) {
 // construct words the chip lane must exclude. Two registers, two lists.
 export const CHIP_VOCAB_VERSION = "chip-vocab.v1";
 
+// ── JURISDICTION ─────────────────────────────────────────────────────────────
+// The rules above are written for surfaces that describe a change to a person WITHOUT
+// speaking as the instrument. That is a property of the surface, not of the words, so
+// the lane has a boundary and it is written down here rather than inferred at each
+// call site.
+//
+// An INSPECTION surface is outside it. Input Integrity reports what a local parser
+// recovered from a file's structure; "surfaced" is the accurate verb for what it did,
+// and the construct-vocabulary rule is right to refuse that word on a chip and wrong
+// to refuse it here. Running the lane over inspection copy produces hits that are
+// evidence the lane was pointed at the wrong surface, never evidence the copy should
+// borrow Reader's descriptive register. An inspection instrument must not avoid the
+// accurate word to satisfy a rule written for a surface that is not an instrument.
+//
+// Consumers assert against this rather than carrying their own exception lists. A list
+// of known exceptions decays into a list nobody can tell from a list of defects.
+export const CHIP_VOCAB_SCOPE = Object.freeze({
+  lane: CHIP_VOCAB_VERSION,
+  governs: Object.freeze([
+    "reader-chip-pair",
+    "reader-chip-meaning-panel",
+  ]),
+  does_not_govern: Object.freeze([
+    "input-integrity-surface",
+  ]),
+  reason:
+    "The chip lane governs surfaces that describe a change without speaking as the instrument. " +
+    "An inspection surface speaks as the instrument, so the construct-vocabulary and Imbas-action " +
+    "rules do not apply to it.",
+});
+
+// True when the named surface is inside this lane's jurisdiction. Unknown surfaces are
+// NOT governed: a lane that silently claimed every surface it had never heard of would
+// be asserting jurisdiction it was never given.
+export function chipVocabGoverns(surfaceId) {
+  return CHIP_VOCAB_SCOPE.governs.includes(surfaceId);
+}
+
 export const CHIP_BANNED_CONSTRUCTIONS = [
   {
     id: "chip-imbas-action",

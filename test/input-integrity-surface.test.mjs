@@ -290,10 +290,10 @@ test("a file where nothing qualified reaches a complete state that claims nothin
 
 test("the zero state never implies the document is safe, clean, ordinary, verified, or complete in itself", () => {
   const words = ["safe", "clean", "ordinary", "verified", "secure", "trusted", "harmless", "no issues", "all clear", "nothing wrong"];
-  const text = `${COPY.ZERO_REPORTABLE.statement} ${COPY.ZERO_REPORTABLE.scope}`.toLowerCase();
+  const text = `${COPY.zeroReportable().statement} ${COPY.zeroReportable().scope}`.toLowerCase();
   for (const word of words) assert.ok(!text.includes(word), `the zero state says "${word}"`);
   // It must positively state its own scope rather than leaving it to inference.
-  assert.ok(COPY.ZERO_REPORTABLE.scope.includes("Other structure may exist"));
+  assert.ok(COPY.zeroReportable().scope.includes("Other structure may exist"));
 });
 
 test("a zero-finding file and a file that would not open are different objects", async () => {
@@ -414,7 +414,7 @@ test("the receipt states what the run could not establish, and a zero-finding on
   assert.equal(found.limitations.length, 3);
 
   const empty = buildReceipt({ view: (await viewOf("c1_nocrop.pdf")).view, generatedAt: "t" });
-  assert.ok(empty.limitations.includes(COPY.ZERO_REPORTABLE.scope));
+  assert.ok(empty.limitations.includes(COPY.zeroReportable().scope));
   assert.equal(empty.limitations.length, 4);
 });
 
@@ -428,7 +428,7 @@ test("a partial run's receipt names the pages it read and the pages it did not",
       pages: [{ page_index: 0 }, { page_index: 2 }],
       page_failures: [{ page_index: 1, reason: "stream must have data" }],
     }),
-    items: [], zero_reportable: COPY.ZERO_REPORTABLE,
+    items: [], zero_reportable: COPY.zeroReportable(),
   };
   const receipt = buildReceipt({ view, generatedAt: "t" });
   assert.equal(receipt.coverage.state, "partial");

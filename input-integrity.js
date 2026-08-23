@@ -121,7 +121,7 @@ function onWorkerMessage(message) {
     const index = message.page_index;
     const slot = pendingRenders.get(index);
     if (slot) {
-      slot.replaceChildren(el("p", "ii-contrast__unavailable", COPY.RESULT.render_unavailable));
+      slot.replaceChildren(el("p", "ii-contrast__unavailable", COPY.renderUnavailable()));
     }
     pendingRenders.delete(index);
   }

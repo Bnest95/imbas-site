@@ -181,7 +181,7 @@ export function unavailableView() {
   return {
     state: "unavailable",
     label: COPY.COVERAGE.failed_label,
-    statement: COPY.INTAKE.unavailable,
+    statement: COPY.inspectionUnavailable(),
     boundary: COPY.BOUNDARY,
     establishes: COPY.ESTABLISHES,
   };
@@ -225,7 +225,7 @@ export function buildView({ fileName, byteSize, detection, record }) {
     groups,
     surfaced_count: items.length,
     surfaced_count_copy: COPY.surfacedCount(items.length),
-    zero_reportable: items.length === 0 ? COPY.ZERO_REPORTABLE : null,
+    zero_reportable: items.length === 0 ? COPY.zeroReportable() : null,
     provenance_statement: COPY.provenanceStatement(
       detection.identity.parser_name,
       detection.identity.parser_version,

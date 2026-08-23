@@ -21,8 +21,25 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { FILE_VOCAB_VERSION, FILE_BANNED_CONSTRUCTIONS, lintFileString, lintFileStrings } from "../file-vocab.js";
-import { lintString, lintUserFacingStrings, lintChipString, lintChipStrings } from "../reader-check-vocab.js";
-import { renderCompleteOutputSpace, FILE_TEMPLATES } from "../file-templates.js";
+import {
+  lintString,
+  lintUserFacingStrings,
+  lintChipString,
+  lintChipStrings,
+  CHIP_VOCAB_SCOPE,
+  chipVocabGoverns,
+} from "../reader-check-vocab.js";
+
+// The surface these templates render for. Read from the lane's own declared scope
+// rather than restated, so the two cannot drift apart silently.
+const SURFACE_ID = "input-integrity-surface";
+import {
+  renderCompleteOutputSpace,
+  FILE_TEMPLATES,
+  renderCompleteConclusionSpace,
+  conclusionSpaceCoverage,
+  CONCLUSION_TEMPLATES,
+} from "../file-templates.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
 
@@ -82,6 +99,80 @@ test("RECEIPT: the rendered output space is 36 strings across 16 templates and 1
   assert.equal(STRINGS.length, 36);
   assert.equal(FILE_TEMPLATES.length, 16);
   assert.equal(new Set(SPACE.map((r) => r.class_label)).size, 11);
+});
+
+// ── (d) exhaustive: the conclusion space ────────────────────────────────────────
+//
+// A SECOND closed space in the same module, and it gets the same three lanes for the
+// same reason. A finding template says what the file contains; a conclusion template
+// says what the run established — coverage, the count, the zero case, the two ways an
+// inspection can fail to happen. Both reach a reader, so neither may sit outside the
+// lint. Kept as a separate space rather than folded into the output space because a
+// conclusion has no class_label and no family: the finding-space tests walk every row
+// back to a FILE_TEMPLATES id and a phenomenon class, and a conclusion has neither.
+
+const CONCLUSION_SPACE = renderCompleteConclusionSpace();
+const CONCLUSION_STRINGS = CONCLUSION_SPACE.map((r) => r.string);
+
+test("EXHAUSTIVE: every conclusion the instrument can state passes file-vocab.v1", () => {
+  const violations = lintFileStrings(CONCLUSION_STRINGS);
+  assert.deepEqual(violations, [], `file-vocab.v1 violations:\n${JSON.stringify(violations, null, 2)}`);
+});
+
+test("EXHAUSTIVE: every conclusion also passes the main lane (check-vocab.v2)", () => {
+  const violations = lintUserFacingStrings(CONCLUSION_STRINGS);
+  assert.deepEqual(violations, [], `check-vocab.v2 violations:\n${JSON.stringify(violations, null, 2)}`);
+});
+
+// chip-vocab.v1 does not govern this space, and the reason is jurisdictional rather
+// than an exemption granted string by string. The lane is declared in
+// reader-check-vocab.js as CHIP_VOCAB_SCOPE and names the surfaces it governs; the
+// conclusions rendered here are spoken BY the instrument, and the chip lane governs
+// surfaces that describe a change without speaking as the instrument.
+//
+// The concrete disagreement is "surfaced", and the parser genuinely did surface a
+// structural property. An inspection instrument must not avoid the accurate verb to
+// satisfy a rule written for a surface that is not an instrument.
+//
+// The lane still runs, as a tripwire on the boundary itself: a hit must be attributable
+// to one of the two categories that are jurisdictional by construction. A
+// quantified_improvement hit is not a jurisdiction question — no conclusion here may
+// claim an improvement either — so that one would be a real defect and fails.
+test("chip-vocab.v1 does not govern the conclusion space, and the lane says so itself", () => {
+  assert.equal(chipVocabGoverns(SURFACE_ID), false);
+  assert.ok(CHIP_VOCAB_SCOPE.does_not_govern.includes(SURFACE_ID));
+});
+
+test("no chip-lane hit on a conclusion falls outside the two jurisdictional rules", () => {
+  const violations = lintChipStrings(CONCLUSION_STRINGS);
+  const outside = violations.filter(
+    (v) => v.category !== "construct_vocab" && v.category !== "imbas_action_claim",
+  );
+  assert.deepEqual(outside, [],
+    `a chip-vocab.v1 hit on a conclusion must answer for:\n${JSON.stringify(outside, null, 2)}`);
+});
+
+test("the conclusion claim is exhaustive: every conclusion template contributed a linted string", () => {
+  const coverage = conclusionSpaceCoverage();
+  assert.deepEqual(coverage.unreached_templates, [],
+    `these conclusion templates were never linted: ${coverage.unreached_templates.join(", ")}`);
+  assert.equal(coverage.rendered_strings, CONCLUSION_STRINGS.length);
+  assert.equal(new Set(CONCLUSION_SPACE.map((r) => r.template_id)).size, CONCLUSION_TEMPLATES.length);
+});
+
+test("RECEIPT: the conclusion space is 12 strings across 9 templates", () => {
+  assert.equal(CONCLUSION_STRINGS.length, 12);
+  assert.equal(CONCLUSION_TEMPLATES.length, 9);
+});
+
+// No conclusion may state or imply that the file is clean, safe, or free of anything.
+// This is the specific failure the zero-reportable move exists to prevent: "nothing
+// found" is the one sentence on the whole surface most likely to be read as a verdict,
+// which is why it is a governed template and not an authored string.
+test("no conclusion implies the document is clean, safe, or free of anything", () => {
+  const forbidden = /\b(clean|safe|secure|harmless|benign|legitimate|trustworthy|no (?:problems?|issues?|threats?)|nothing (?:wrong|suspicious)|free of)\b/i;
+  const hits = CONCLUSION_SPACE.filter((r) => forbidden.test(r.string));
+  assert.deepEqual(hits, [], `a conclusion reads as a verdict on the file:\n${JSON.stringify(hits, null, 2)}`);
 });
 
 // ── (c) the seven Phase 0 control strings ───────────────────────────────────────

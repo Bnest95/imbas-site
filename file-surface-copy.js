@@ -26,16 +26,26 @@
 // it. A person may draw the inference the architecture is built on. The instrument
 // states only what it measured.
 //
-// ══ ZERO-REPORTABLE IS AUTHORED HERE, AND THAT IS A GAP ════════════════════════
+// ══ WHAT THIS FILE OWNS, AND WHAT IT ONLY CONSUMES ═════════════════════════════
 //
-// file-templates.js has no template for "nothing qualified", because it is a registry
-// of sentences about findings and this is a statement about their absence. The string
-// lives here instead and carries its own scope: it names the checks that ran and says
-// plainly that other structure may exist which those checks do not describe. It never
-// says clean, safe, ordinary, or verified. Recorded as a vocabulary gap in the lane
-// return rather than papered over.
+// It owns the sentences that are true before any file arrives: the boundary, the
+// scope disclosure, the intake prompts, the group headings, the labels, and the
+// rendering of typed values like a page number or a byte count.
+//
+// It does NOT own the instrument's CONCLUSIONS — the sentences whose truth depends on
+// evidence from a particular run. Those live in file-templates.js beside the finding
+// templates, gated on the run record by the same eligibility rule, and this file
+// re-exports them under the names the surface already calls. The functions below are
+// consumption points, not definitions: change the words in file-templates.js.
+//
+// The zero-reportable state is the case that forced the split. "No phenomenon
+// surfaced under the checks that ran" looks like page furniture and is in fact an
+// evidence-bearing claim: it is false if the checks did not run, and nothing on a
+// surface can gate that. See the CONCLUSION TEMPLATES section of file-templates.js.
 //
 // Pure JS by contract, like its siblings: no node: imports, no DOM, no Date.now.
+
+import { renderConclusionById, CONCLUSION_TEMPLATES } from "./file-templates.js";
 
 export const FILE_SURFACE_COPY_VERSION = "file-surface-copy.v1";
 
@@ -93,11 +103,14 @@ export const INTAKE = Object.freeze({
   processing: "Reading the file in your browser.",
   sample_action: "Inspect a sample file",
   sample_note: "A constructed demonstration file, not a document found in the wild.",
-  // The inspection never started. Held apart from a parse failure on purpose: "the
-  // parser reported" would name a parser that never ran, and a browser that could not
-  // start the reader has established nothing at all about the file.
-  unavailable: "The inspection did not start in this browser. No file was read.",
 });
+
+// The inspection never started — a conclusion about the run, so the sentence is
+// governed. Held apart from a parse failure on purpose: "the parser reported" would
+// name a parser that never ran.
+export function inspectionUnavailable() {
+  return renderConclusionById("inspection_unavailable", { startup_failure: true });
+}
 
 export function refusal(name) {
   return `${INTAKE.limit} ${name} was not read.`;
@@ -115,31 +128,36 @@ export const COVERAGE = Object.freeze({
 });
 
 export function coverageComplete(pageCount) {
-  return `This run inspected ${count(pageCount, "page")}, and every page was read.`;
+  return renderConclusionById("coverage_complete", { coverage: { state: "complete", page_count: pageCount } });
 }
 
 export function coveragePartial(inspected, total) {
-  return `This run inspected ${inspected} of ${count(total, "page")}. The rest could not be read.`;
+  return renderConclusionById("coverage_partial", {
+    coverage: { state: "partial", page_count: total, pages_inspected_count: inspected },
+  });
 }
 
 export function coveragePageFailure(pageNumber, reason) {
-  return `Page ${pageNumber} could not be read. The parser reported: ${reason}`;
+  return renderConclusionById("coverage_page_failure", { page_failure: { page_number: pageNumber, reason } });
 }
 
 export function coverageFailed(reason) {
-  return `This file could not be read. The parser reported: ${reason}`;
+  return renderConclusionById("parse_failure", { parse_failure: { reason } });
 }
 
 // ---------------------------------------------------------------------------
 // Zero-reportable. States the scope of the checks and nothing about the document.
+// Both sentences are governed conclusions; this is the shape the surface reads them
+// in, assembled from the registry rather than written here.
 // ---------------------------------------------------------------------------
 
-export const ZERO_REPORTABLE = Object.freeze({
-  statement: "No phenomenon surfaced under the checks that ran.",
-  scope:
-    "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file " +
-    "that they do not describe.",
-});
+export function zeroReportable() {
+  const subject = { surfaced_count: 0 };
+  return Object.freeze({
+    statement: renderConclusionById("zero_reportable_statement", subject),
+    scope: renderConclusionById("zero_reportable_scope", subject),
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Groups. Every boundary below is a fact the schema already carries, never a judgement
@@ -193,11 +211,13 @@ export const RESULT = Object.freeze({
   provenance_pages: "Pages inspected",
   export_action: "Download the evidence receipt",
   export_note: "A JSON record of this inspection. The PDF itself is not included.",
-  // The rendered half can be missing for a page the renderer would not draw. Saying so
-  // is the only honest option: an empty panel beside a full one reads as a blank page,
-  // which is a claim about the file rather than about this run.
-  render_unavailable: "This page could not be drawn here.",
 });
+
+// The rendered half can be missing for a page the renderer would not draw. A
+// conclusion about this run, so the sentence is governed.
+export function renderUnavailable() {
+  return renderConclusionById("render_unavailable", { render_failure: true });
+}
 
 // The rendered half of the two-reading contrast names the renderer that drew it, so the
 // panel is evidence of what a renderer displays rather than a claim about a person.
@@ -210,7 +230,7 @@ export function provenanceStatement(parserName, parserVersion, sha256) {
 }
 
 export function surfacedCount(n) {
-  return `${count(n, "item")} surfaced.`;
+  return renderConclusionById("surfaced_count", { surfaced_count: n });
 }
 
 export function locator(pageNumber) {
@@ -242,18 +262,25 @@ const STATIC_GROUPS = Object.freeze({
   ESTABLISHES,
   INTAKE,
   COVERAGE,
-  ZERO_REPORTABLE,
   RESULT,
 });
 
 // Two value sets where a function takes a number, so singular and plural both render.
+// The conclusion consumers are rendered here too. Their words belong to
+// file-templates.js and are linted there as well; rendering them again through the
+// path the surface actually calls is what proves the consumption point is wired to the
+// registry rather than to a copy of it that drifted.
 const COPY_FUNCTION_FIXTURES = Object.freeze([
   { id: "refusal", render: () => refusal("notes.docx") },
+  { id: "inspectionUnavailable", render: () => inspectionUnavailable() },
   { id: "coverageComplete.singular", render: () => coverageComplete(1) },
   { id: "coverageComplete.plural", render: () => coverageComplete(12) },
   { id: "coveragePartial", render: () => coveragePartial(2, 3) },
   { id: "coveragePageFailure", render: () => coveragePageFailure(3, "stream must have data") },
   { id: "coverageFailed", render: () => coverageFailed("Invalid PDF structure.") },
+  { id: "zeroReportable.statement", render: () => zeroReportable().statement },
+  { id: "zeroReportable.scope", render: () => zeroReportable().scope },
+  { id: "renderUnavailable", render: () => renderUnavailable() },
   { id: "renderedSideNote", render: () => renderedSideNote("pdfjs-dist", "6.2.108") },
   {
     id: "provenanceStatement",
@@ -261,6 +288,7 @@ const COPY_FUNCTION_FIXTURES = Object.freeze([
   },
   { id: "surfacedCount.singular", render: () => surfacedCount(1) },
   { id: "surfacedCount.plural", render: () => surfacedCount(4) },
+  { id: "surfacedCount.zero", render: () => surfacedCount(0) },
   { id: "locator", render: () => locator(1) },
   { id: "locatorPoint", render: () => locatorPoint(50, 100) },
   { id: "byteSize.bytes", render: () => byteSize(650) },
@@ -294,10 +322,13 @@ export function renderCompleteCopySpace() {
 // them rather than trusting that a new export was remembered here.
 export const COPY_FUNCTION_NAMES = Object.freeze([
   "refusal",
+  "inspectionUnavailable",
   "coverageComplete",
   "coveragePartial",
   "coveragePageFailure",
   "coverageFailed",
+  "zeroReportable",
+  "renderUnavailable",
   "renderedSideNote",
   "provenanceStatement",
   "surfacedCount",
@@ -305,6 +336,74 @@ export const COPY_FUNCTION_NAMES = Object.freeze([
   "locatorPoint",
   "byteSize",
 ]);
+
+// The conclusion consumers above, paired with the registry id each one must resolve
+// to. test/file-surface-copy.test.mjs walks this to prove every consumption point
+// returns exactly what file-templates.js renders — the assertion that keeps "consumes
+// rather than owns" true after the comment explaining it has gone stale.
+//
+// `args` is how the function is called and `subject` is what the template is handed;
+// the test asserts the two produce the same string. They are stated separately on
+// purpose, because the whole job of these functions is to translate a caller's
+// arguments into a template subject, and a test that derived one from the other would
+// be asserting the translation against itself.
+export const CONCLUSION_CONSUMERS = Object.freeze([
+  {
+    fn: "inspectionUnavailable",
+    template_id: "inspection_unavailable",
+    args: [],
+    subject: { startup_failure: true },
+  },
+  {
+    fn: "coverageComplete",
+    template_id: "coverage_complete",
+    args: [12],
+    subject: { coverage: { state: "complete", page_count: 12 } },
+  },
+  {
+    fn: "coveragePartial",
+    template_id: "coverage_partial",
+    args: [2, 3],
+    subject: { coverage: { state: "partial", page_count: 3, pages_inspected_count: 2 } },
+  },
+  {
+    fn: "coveragePageFailure",
+    template_id: "coverage_page_failure",
+    args: [3, "stream must have data"],
+    subject: { page_failure: { page_number: 3, reason: "stream must have data" } },
+  },
+  {
+    fn: "coverageFailed",
+    template_id: "parse_failure",
+    args: ["Invalid PDF structure."],
+    subject: { parse_failure: { reason: "Invalid PDF structure." } },
+  },
+  {
+    fn: "zeroReportable.statement",
+    template_id: "zero_reportable_statement",
+    args: [],
+    subject: { surfaced_count: 0 },
+  },
+  {
+    fn: "zeroReportable.scope",
+    template_id: "zero_reportable_scope",
+    args: [],
+    subject: { surfaced_count: 0 },
+  },
+  {
+    fn: "renderUnavailable",
+    template_id: "render_unavailable",
+    args: [],
+    subject: { render_failure: true },
+  },
+  { fn: "surfacedCount", template_id: "surfaced_count", args: [4], subject: { surfaced_count: 4 } },
+]);
+
+// Every conclusion template the surface actually reaches. A template in the registry
+// that no consumption point calls is a sentence nobody can see, and the test says so.
+export const CONSUMED_CONCLUSION_IDS = Object.freeze(CONCLUSION_CONSUMERS.map((c) => c.template_id));
+
+export { CONCLUSION_TEMPLATES };
 
 export function copySpaceCoverage() {
   const space = renderCompleteCopySpace();

@@ -554,3 +554,200 @@ export function outputSpaceCoverage() {
     uncovered_classes: Object.keys(PHENOMENON_CLASSES).filter((c) => !coveredClasses.has(c)),
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONCLUSION TEMPLATES — the instrument's own statements about a run.
+//
+// FILE_TEMPLATES above holds every sentence a FINDING can produce. It cannot hold
+// the sentences the instrument says about the RUN, because those are not about a
+// finding and several of them exist precisely when there is no finding to speak of.
+// They were authored on the surface at first, and that was the hole: a sentence like
+// "No phenomenon surfaced under the checks that ran" is an evidence-bearing claim
+// wearing the clothes of page furniture. It states what this run established. If it
+// renders when the checks did not run, it is false, and nothing on the surface was
+// stopping that.
+//
+// So they live here under the same three rules as the finding templates:
+//
+//   CLOSED     — every conclusion sentence is written down in this file. No
+//                generator, no fallback branch.
+//   TYPED      — a conclusion renders NUMBERS and CLOSED ENUMS only. The parser's
+//                own failure reason is the single exception, and it is quoted after
+//                a colon as attributed evidence rather than woven into a claim.
+//   GATED      — `requires` names dot paths into the run subject. A conclusion whose
+//                fields are absent is INELIGIBLE and renders nothing. It does not
+//                degrade to a vaguer sentence.
+//
+// WHAT IS A CONCLUSION AND WHAT IS NOT. The line is whether the sentence's truth
+// depends on evidence from the run. "This run inspected 9 of 10 pages" is false if
+// the record says otherwise, so it is gated here. A boundary line, a scope
+// disclosure, a column label, a provenance attribution and an intake prompt are true
+// before any file arrives and are not conclusions; they stay in file-surface-copy.js.
+//
+// WHY THE ZERO CASE AND THE COUNT ARE THE SAME SLOT. `surfaced_count` and
+// `zero_reportable_statement` render into the same place on the page, and the zero
+// case is not a variant of the count — it is the point where a count stops being
+// informative and the scope of the checks has to be stated instead. Both are here so
+// that neither can drift away from the other.
+//
+// NOTHING HERE MAY IMPLY A CLEAN DOCUMENT. The zero conclusion names what ran and
+// what that leaves unsaid. It never says safe, clean, ordinary, or verified, and
+// test/input-integrity-surface.test.mjs holds that as a banned-word assertion rather
+// than as a matter of authorial care.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// The scope sentence states this count in words. It is not interpolated, because a
+// numeral rendered mid-sentence reads as a measurement of the file rather than a
+// property of the instrument. file-templates.test.mjs pins the word against
+// PHENOMENON_CLASS_IDS.length, so adding a class fails the suite instead of quietly
+// leaving the sentence wrong.
+export const DESCRIBED_CLASS_COUNT_WORD = "eleven";
+
+export const CONCLUSION_TEMPLATES = Object.freeze(
+  [
+    // ── what surfaced ──────────────────────────────────────────────────────────
+    {
+      id: "surfaced_count",
+      requires: ["surfaced_count"],
+      render: (r) => `${count(r.surfaced_count, "item")} surfaced.`,
+    },
+    {
+      id: "zero_reportable_statement",
+      requires: ["surfaced_count"],
+      requires_values: { surfaced_count: 0 },
+      render: () => "No phenomenon surfaced under the checks that ran.",
+    },
+    {
+      id: "zero_reportable_scope",
+      requires: ["surfaced_count"],
+      requires_values: { surfaced_count: 0 },
+      render: () =>
+        `Those checks describe ${DESCRIBED_CLASS_COUNT_WORD} structural properties of a PDF. ` +
+        "Other structure may exist in this file that they do not describe.",
+    },
+
+    // ── how much of the file was read ──────────────────────────────────────────
+    {
+      id: "coverage_complete",
+      requires: ["coverage.page_count", "coverage.state"],
+      requires_values: { "coverage.state": "complete" },
+      render: (r) => `This run inspected ${count(r.coverage.page_count, "page")}, and every page was read.`,
+    },
+    {
+      id: "coverage_partial",
+      requires: ["coverage.page_count", "coverage.pages_inspected_count", "coverage.state"],
+      requires_values: { "coverage.state": "partial" },
+      render: (r) =>
+        `This run inspected ${r.coverage.pages_inspected_count} of ${count(r.coverage.page_count, "page")}. ` +
+        "The rest could not be read.",
+    },
+    {
+      id: "coverage_page_failure",
+      requires: ["page_failure.page_number", "page_failure.reason"],
+      render: (r) => `Page ${num(r.page_failure.page_number)} could not be read. The parser reported: ${r.page_failure.reason}`,
+    },
+
+    // ── the run established nothing ────────────────────────────────────────────
+    {
+      id: "parse_failure",
+      requires: ["parse_failure.reason"],
+      render: (r) => `This file could not be read. The parser reported: ${r.parse_failure.reason}`,
+    },
+    {
+      // Held apart from parse_failure deliberately: a parse failure is something the
+      // parser established about the file, and this is the absence of a parser. It
+      // names no file, because no file was read.
+      id: "inspection_unavailable",
+      requires: ["startup_failure"],
+      render: () => "The inspection did not start in this browser. No file was read.",
+    },
+    {
+      // The rendered half of the two-reading contrast, when the renderer would not
+      // draw the page. An empty panel beside a full one reads as a blank page, which
+      // is a claim about the file rather than about this run.
+      id: "render_unavailable",
+      requires: ["render_failure"],
+      render: () => "This page could not be drawn here.",
+    },
+  ].map((t) => Object.freeze({ ...t, requires: Object.freeze(t.requires) })),
+);
+
+const CONCLUSION_BY_ID = Object.freeze(
+  Object.fromEntries(CONCLUSION_TEMPLATES.map((t) => [t.id, t])),
+);
+
+// Render one conclusion against one run subject. Returns the string, or null when the
+// template is ineligible. Never returns a fallback.
+export function renderConclusion(template, subject) {
+  if (!subject || typeof subject !== "object") return null;
+  for (const path of template.requires) {
+    if (!hasPath(subject, path)) return null;
+  }
+  if (template.requires_values) {
+    for (const [path, expected] of Object.entries(template.requires_values)) {
+      if (getPath(subject, path) !== expected) return null;
+    }
+  }
+  return template.render(subject);
+}
+
+// Named lookup, for the surface, which asks for one conclusion at a known slot rather
+// than for whatever happens to be eligible. An unknown id throws: a typo that silently
+// rendered nothing would read on screen as an honest absence.
+export function renderConclusionById(id, subject) {
+  const template = CONCLUSION_BY_ID[id];
+  if (!template) throw new Error(`no conclusion template with id "${id}"`);
+  return renderConclusion(template, subject);
+}
+
+// Every eligible conclusion for one subject, in registry order.
+export function renderConclusions(subject) {
+  const out = [];
+  for (const template of CONCLUSION_TEMPLATES) {
+    const line = renderConclusion(template, subject);
+    if (line !== null) out.push({ template_id: template.id, string: line });
+  }
+  return out;
+}
+
+// The closed subject set that makes the conclusion output space enumerable. Numeric
+// subjects carry singular and plural where a template interpolates a count.
+export const CONCLUSION_LINT_FIXTURES = Object.freeze([
+  { id: "surfaced.singular", subject: { surfaced_count: 1 } },
+  { id: "surfaced.plural", subject: { surfaced_count: 4 } },
+  { id: "surfaced.zero", subject: { surfaced_count: 0 } },
+  { id: "coverage.complete.singular", subject: { coverage: { state: "complete", page_count: 1 } } },
+  { id: "coverage.complete.plural", subject: { coverage: { state: "complete", page_count: 12 } } },
+  {
+    id: "coverage.partial",
+    subject: { coverage: { state: "partial", page_count: 3, pages_inspected_count: 2 } },
+  },
+  {
+    id: "coverage.page_failure",
+    subject: { page_failure: { page_number: 3, reason: "stream must have data" } },
+  },
+  { id: "parse_failure", subject: { parse_failure: { reason: "Invalid PDF structure." } } },
+  { id: "startup_failure", subject: { startup_failure: true } },
+  { id: "render_failure", subject: { render_failure: true } },
+]);
+
+// The whole conclusion output space, enumerated, on the same terms as the finding
+// space above: this is what test/file-vocab-lint.test.mjs lints, and its length is the
+// receipt that the lint was exhaustive rather than sampled.
+export function renderCompleteConclusionSpace() {
+  const out = [];
+  for (const fixture of CONCLUSION_LINT_FIXTURES) {
+    for (const line of renderConclusions(fixture.subject)) {
+      out.push({ fixture_id: fixture.id, ...line });
+    }
+  }
+  return out;
+}
+
+export function conclusionSpaceCoverage() {
+  const reached = new Set(renderCompleteConclusionSpace().map((r) => r.template_id));
+  return {
+    rendered_strings: renderCompleteConclusionSpace().length,
+    unreached_templates: CONCLUSION_TEMPLATES.filter((t) => !reached.has(t.id)).map((t) => t.id),
+  };
+}

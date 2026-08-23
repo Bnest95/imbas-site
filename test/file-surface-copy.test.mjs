@@ -30,11 +30,25 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { lintFileStrings } from "../file-vocab.js";
-import { lintUserFacingStrings, lintChipStrings } from "../reader-check-vocab.js";
+import {
+  lintUserFacingStrings,
+  lintChipStrings,
+  CHIP_VOCAB_SCOPE,
+  chipVocabGoverns,
+} from "../reader-check-vocab.js";
 import * as COPY from "../file-surface-copy.js";
+import {
+  renderConclusionById,
+  CONCLUSION_TEMPLATES,
+  renderCompleteConclusionSpace,
+} from "../file-templates.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PAGE = fs.readFileSync(path.join(ROOT, "input-integrity.html"), "utf8");
+
+// The name this surface answers to inside a vocabulary lane's declared scope. Written
+// once here and read from the lane, so the two cannot drift apart silently.
+const SURFACE_ID = "input-integrity-surface";
 
 const SPACE = COPY.renderCompleteCopySpace();
 const STRINGS = SPACE.map((r) => r.string);
@@ -55,33 +69,45 @@ test("EXHAUSTIVE: every string also passes the main lane (check-vocab.v2)", () =
   assert.deepEqual(violations, [], `check-vocab.v2 violations:\n${JSON.stringify(violations, null, 2)}`);
 });
 
-// The chip lane is a THIRD register, and it does not govern this surface. Recorded here
-// rather than silently dropped, because "we ran two of the three lanes" is the kind of
-// omission that reads as an oversight a year from now.
+// ── the third lane, and why it is not run over this surface ─────────────────────
 //
-// chip-vocab.v1 governs the user-chip pair, which is descriptive by design and must not
-// borrow inspection constructs. This surface IS the inspection, so "surfaced" is the
-// correct verb for what it reports and the chip rule is right to refuse it in its own
-// lane and wrong to apply here. The one remaining hit is the chip lane's `found` rule
-// meeting ordinary English in "a document found in the wild".
+// chip-vocab.v1 is a THIRD register with its own jurisdiction, declared in
+// reader-check-vocab.js as CHIP_VOCAB_SCOPE. It governs surfaces that describe a
+// change to a person without speaking as the instrument. This surface IS the
+// instrument, so the lane does not govern it, and that is a boundary rather than an
+// exemption: "surfaced" is the accurate verb for what a parser did to a structural
+// property, and an inspection instrument must not avoid the accurate word to satisfy a
+// rule written for a surface that is not an instrument.
 //
-// So the lane still runs, and what is asserted is the SHAPE of its disagreement: two
-// known categories, five known strings. A new kind of chip violation — anything outside
-// those two categories — fails here, which is the property the assertion is for.
-test("the chip lane disagrees with this surface in exactly two known ways, and no others", () => {
-  const violations = lintChipStrings(STRINGS);
-  assert.deepEqual(
-    [...new Set(violations.map((v) => v.category))].sort(),
-    ["construct_vocab", "imbas_action_claim"],
-    `an unexpected chip-vocab.v1 category:\n${JSON.stringify(violations, null, 2)}`,
+// Recorded rather than silently dropped, because "we ran two of the three lanes" reads
+// as an oversight a year from now. What is asserted is the SCOPE, not a list of strings
+// the lane happens to dislike — a list of known exceptions decays into a list nobody
+// can tell from a list of defects.
+test("chip-vocab.v1 does not govern this surface, and says so where the lane is defined", () => {
+  assert.equal(CHIP_VOCAB_SCOPE.lane, "chip-vocab.v1");
+  assert.ok(
+    CHIP_VOCAB_SCOPE.does_not_govern.includes(SURFACE_ID),
+    `${SURFACE_ID} is not named in chip-vocab.v1's declared scope`,
   );
-  assert.deepEqual(violations.map((v) => v.string).sort(), [
-    "1 item surfaced.",
-    "4 items surfaced.",
-    "A constructed demonstration file, not a document found in the wild.",
-    "No phenomenon surfaced under the checks that ran.",
-    "What surfaced",
-  ]);
+  assert.equal(chipVocabGoverns(SURFACE_ID), false);
+  // The lane's own jurisdiction is non-empty, so "does not govern" is a boundary
+  // between two named surfaces and not a lane that governs nothing at all.
+  assert.ok(CHIP_VOCAB_SCOPE.governs.length > 0);
+  assert.ok(!CHIP_VOCAB_SCOPE.governs.includes(SURFACE_ID));
+});
+
+// The lane still runs, as a tripwire on the boundary itself. Every hit must be
+// attributable to the two rule categories that are jurisdictional by construction —
+// the ones that exist because a chip is not an instrument. A hit in the third category
+// (quantified_improvement) is not a jurisdiction question: this surface must never
+// claim a percentage improvement either, so that one would be a real defect and fails
+// here.
+test("no chip-lane hit on this surface falls outside the two jurisdictional rules", () => {
+  const violations = lintChipStrings(STRINGS);
+  const outside = violations.filter(
+    (v) => v.category !== "construct_vocab" && v.category !== "imbas_action_claim",
+  );
+  assert.deepEqual(outside, [], `a chip-vocab.v1 hit this surface must answer for:\n${JSON.stringify(outside, null, 2)}`);
 });
 
 // ── (2) the claim is exhaustive ─────────────────────────────────────────────────
@@ -117,10 +143,96 @@ test("every exported string constant reaches the space too", () => {
   assert.deepEqual(missing, [], `these exported strings are outside the linted space: ${missing.join(", ")}`);
 });
 
-test("RECEIPT: the space is 62 strings", () => {
+test("RECEIPT: the space is 63 strings", () => {
   // Pinned on purpose. A string added without re-reading this file lands the author in
   // the receipt, which is where the decision belongs.
-  assert.equal(STRINGS.length, 62);
+  assert.equal(STRINGS.length, 63);
+});
+
+// ── (2b) this module CONSUMES the instrument's conclusions, it does not own them ─
+//
+// Every sentence whose truth depends on evidence from the run is generated by a
+// governed template in file-templates.js. This module is the consumption point, and
+// these tests are what makes "consumes rather than owns" checkable instead of a claim
+// in a header comment.
+//
+// The failure this prevents is specific and has happened once already on this surface:
+// a conclusion authored here reads exactly like a conclusion generated there, and the
+// difference only shows up when someone edits the prose without the lint noticing.
+
+test("every conclusion the surface renders is byte-identical to what the registry renders", () => {
+  // Not "similar", not "passes the same lint" — the same string. If these two ever
+  // diverge, one of them is an authored sentence wearing the registry's clothes.
+  for (const consumer of COPY.CONCLUSION_CONSUMERS) {
+    const fromRegistry = renderConclusionById(consumer.template_id, consumer.subject);
+    assert.equal(typeof fromRegistry, "string",
+      `${consumer.template_id} rendered nothing for its declared subject`);
+
+    const [fnName, member] = consumer.fn.split(".");
+    const fn = COPY[fnName];
+    assert.equal(typeof fn, "function", `${consumer.fn} is not an exported function`);
+    assert.ok(Array.isArray(consumer.args), `${consumer.fn} declares no call arguments`);
+    const produced = member ? fn(...consumer.args)[member] : fn(...consumer.args);
+
+    assert.equal(produced, fromRegistry,
+      `${consumer.fn} does not render its template verbatim:\n` +
+      `  surface:  ${JSON.stringify(produced)}\n` +
+      `  registry: ${JSON.stringify(fromRegistry)}`);
+  }
+});
+
+test("no conclusion template is declared and then left unconsumed", () => {
+  // The registry is the authority on what conclusions exist. If a template lands there
+  // and nothing here reaches it, the surface has a sentence it can never say — which
+  // is a gap, not a safety margin.
+  const declared = CONCLUSION_TEMPLATES.map((t) => t.id).sort();
+  const consumed = [...new Set(COPY.CONSUMED_CONCLUSION_IDS)].sort();
+  assert.deepEqual(consumed, declared,
+    "the conclusion registry and this surface's consumption points disagree");
+});
+
+test("this module authors no sentence that depends on run evidence", () => {
+  // The dividing line, stated as a test. A string constant is fine when it is true
+  // before any file arrives — a heading, a label, a scope disclosure like "This run
+  // establishes what the local parser recovered", which is a statement about what this
+  // KIND of run can establish and is written before any file exists. It is NOT fine
+  // when the sentence reports a result, because a result is an instrument claim and
+  // instrument claims are generated from the registry.
+  //
+  // So each pattern names a conclusion together with its SUBJECT. That distinction is
+  // load-bearing: "What surfaced" is a section heading and stays a constant here, while
+  // "0 items surfaced." reports a count and must come from the registry. A pattern
+  // matching a bare verb would not be able to tell those two apart.
+  const fromRegistry = new Set(renderCompleteConclusionSpace().map((r) => r.string));
+  const REPORTS_A_RESULT = [
+    /\bthis run inspected\b/i,
+    /\bthe parser reported\b/i,
+    /\b\d+ items? surfaced\b/i,
+    /\bno phenomenon surfaced\b/i,
+    /\b(?:this file|this page|page \d+)\b[^.]*\bcould not be (?:read|drawn)\b/i,
+    /\bthe inspection did not start\b/i,
+  ];
+
+  // The tripwire must be live. A pattern set that matched nothing would pass this test
+  // forever while an authored conclusion sat next to it, so the patterns are first
+  // checked against the registry's own sentences — the strings they are known to
+  // describe. Eleven of the twelve report a result; the twelfth is the zero state's
+  // scope disclosure, which states what the checks describe rather than what this run
+  // found, and is correctly not result-shaped.
+  const matchedInRegistry = [...fromRegistry].filter((s) =>
+    REPORTS_A_RESULT.some((re) => re.test(s)));
+  assert.equal(matchedInRegistry.length, 11,
+    "the patterns no longer describe the registry's own conclusions, so this test " +
+    "would pass without checking anything");
+
+  const offenders = SPACE
+    .filter((r) => REPORTS_A_RESULT.some((re) => re.test(r.string)))
+    .filter((r) => !fromRegistry.has(r.string))
+    .map((r) => ({ source: r.source, string: r.string }));
+
+  assert.deepEqual(offenders, [],
+    "these read as run conclusions but are authored outside the template registry:\n" +
+    JSON.stringify(offenders, null, 2));
 });
 
 // ── (3) and (4) the markup carries the registry, and nothing else ───────────────

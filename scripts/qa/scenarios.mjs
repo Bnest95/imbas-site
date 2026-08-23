@@ -2217,6 +2217,102 @@ export const SCENARIOS = {
     // exists to photograph — the heading, the way back, and the origin reference.
     focus: "#wb-chip-lane .wb-reader-result__head",
   },
+
+  // ── Input Integrity ────────────────────────────────────────────────────────
+  //
+  // A different KIND of surface from everything above it, and the difference is what
+  // these three frames exist to hold. Every other scenario on this board photographs a
+  // Reader state assembled from a canned API payload. Input Integrity never calls an
+  // API: a PDF is parsed in a Web Worker on the machine the page is open on, and the
+  // whole result — the finding, the page image beside it, the coverage line — is
+  // computed from bytes that never leave. So these carry `canned: true`, and it is not
+  // a convenience. There is no route to stub because there is no route.
+  //
+  // That also means the file is the fixture. Two of the three put a real file into the
+  // real <input type="file"> or press the real sample button, and the states they reach
+  // are reached the way a person reaches them.
+  //
+  // THREE STATES, chosen as the product contract rather than as detector coverage. The
+  // detectors have eleven phenomenon classes and node:test already walks all of them
+  // exhaustively; a board frame per class would photograph the same composition eleven
+  // times. What a picture settles that a string assertion cannot is the composition:
+  // the surface before anything has happened, the surface holding a finding beside a
+  // rendering of the page it was found on, and the surface holding nothing.
+
+  "input-integrity-intake": {
+    name: "input-integrity-intake",
+    page: "/input-integrity.html",
+    drivable: true,
+    canned: true,
+    state: "Input Integrity, the intake state before any file has been chosen",
+    expected:
+      "The page offers one way in — a file picker that takes PDFs — and beside it the sample the surface can inspect without a file, marked as a constructed demonstration rather than a document found in the wild. The boundary sits on the page before any result does: what the run establishes, and what it does not. No result region, no coverage line, no count.",
+    routes: {},
+    // The intake region is in the document from first paint, so the only step is the
+    // wait that proves it is on screen when the frame is taken.
+    steps: [{ waitFor: "#intake" }],
+    assertText: [
+      "Inspect a sample file",
+      "A constructed demonstration file, not a document found in the wild.",
+    ],
+    assertSelector: "#intake",
+  },
+
+  "input-integrity-sample": {
+    name: "input-integrity-sample",
+    page: "/input-integrity.html",
+    drivable: true,
+    canned: true,
+    state: "Input Integrity, the constructed sample inspected — one finding, with the rendered page beside the structure it reports",
+    expected:
+      "One item surfaced, under the heading for text the page's instructions do not paint. The finding states three things in the registry's order: what the content stream sets, what a system extracting text receives, and that the rendering instructions do not paint it. Beside it the page is drawn as the renderer draws it, with the marker framing the place the structure names — the two-reading contrast, which is the whole argument of the surface and the one thing only a picture can settle. The coverage line reads complete over one page.",
+    routes: {},
+    steps: [
+      { click: "#sample" },
+      // The sentence the rendering-consequence template produces. Waiting on the
+      // result region alone would race the worker: the region unhides before the
+      // page image arrives.
+      { waitForText: "The page's rendering instructions do not paint it." },
+    ],
+    assertText: [
+      "1 item surfaced.",
+      "Text the page's instructions do not paint",
+      "The page's content stream sets text render mode 3 for this run.",
+      "A system that reads this file by extracting its text receives this text.",
+      "The page's rendering instructions do not paint it.",
+      "This run inspected 1 page, and every page was read.",
+    ],
+    // The canvas, not the panel. A passing text assertion proves the statements
+    // rendered; only the canvas proves the rendered half of the contrast is there.
+    assertSelector: ".ii-contrast__canvas",
+  },
+
+  "input-integrity-zero": {
+    name: "input-integrity-zero",
+    page: "/input-integrity.html",
+    drivable: true,
+    canned: true,
+    state: "Input Integrity, a file inspected with nothing to report — the zero-reportable state",
+    expected:
+      "The run completed and surfaced nothing, and the page says so without implying the file is clean. The count reads zero, the statement names the checks that ran rather than the document, and the scope line states how many structural properties those checks describe and that other structure may exist which they do not. Coverage still reads complete over one page, because a run that found nothing and a run that could not read the file are different states and must not photograph the same.",
+    routes: {},
+    steps: [
+      // An image-only page: a real PDF with a picture where the text would be, which is
+      // the ordinary shape of a scanned document. Chosen over a synthetic empty file
+      // because the zero state has to be reachable by a document somebody could
+      // actually hand the surface. The fixture is in the tree and the corpus test
+      // already holds it at zero findings.
+      { setFile: "test/fixtures/file-intake/c9_image_only.pdf", selector: "#file-input" },
+      { waitForText: "No phenomenon surfaced under the checks that ran." },
+    ],
+    assertText: [
+      "0 items surfaced.",
+      "No phenomenon surfaced under the checks that ran.",
+      "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file that they do not describe.",
+      "This run inspected 1 page, and every page was read.",
+    ],
+    assertSelector: "#result",
+  },
 };
 
 // ── The waiting room, empty again ────────────────────────────────────────────

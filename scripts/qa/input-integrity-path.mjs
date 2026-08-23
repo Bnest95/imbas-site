@@ -53,6 +53,7 @@ import {
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -105,6 +106,35 @@ const FORBIDDEN_SUBSTRINGS = [
 // contrast a person can read in a glance. large_synthetic exercises a many-item result.
 const PDF_FIXTURE = path.join(REPO_ROOT, "test/fixtures/file-intake/f01_rendermode3.pdf");
 const MULTI_FIXTURE = path.join(REPO_ROOT, "test/fixtures/file-intake/f09_metadata_text.pdf");
+
+// Every endpoint this route is allowed to touch, as method plus path. Pinned so that a
+// request added later has to be read by a person rather than inherited: the custody
+// search below can only find leaks of a file it already knows about, and this catches
+// the request it does not. The typeface stylesheet is the single off-origin entry, it is
+// denied by the harness, and it carries no content either way.
+const EXPECTED_REQUEST_INVENTORY = [
+  "GET /brand-mark-header.png",
+  "GET /file-detectors.js",
+  "GET /file-graphics-walker.js",
+  "GET /file-intake-pdfjs.js",
+  "GET /file-intake-worker.js",
+  "GET /file-result.js",
+  "GET /file-surface-copy.js",
+  "GET /file-templates.js",
+  "GET /file-view.js",
+  "GET /input-integrity.css",
+  "GET /input-integrity.html",
+  "GET /input-integrity.js",
+  "GET /site-header.js",
+  "GET /styles.css",
+  // pdf.js in fake-worker mode: the module worker imports the library, which then pulls
+  // its own worker bundle in-process. Both are same-origin static files.
+  "GET /vendor/pdfjs/pdf.min.mjs",
+  "GET /vendor/pdfjs/pdf.worker.min.mjs",
+  // The one off-origin request on the route, and it is denied. Listed rather than hidden:
+  // claiming the page never reaches off-origin would be false.
+  "GET https://fonts.googleapis.com/css2",
+];
 
 // ── In-page reader ───────────────────────────────────────────────────────────────────
 // Installed at document start. It reads the rendered tree and reports structure. It calls
@@ -308,12 +338,106 @@ function check(phase, claim, actual, expected) {
   return ok;
 }
 
+// ── The custody witnesses ────────────────────────────────────────────────────────────
+//
+// "The file never leaves the machine" is the whole promise of this surface, so it is
+// proved by looking for the file rather than by trusting that nothing was sent.
+//
+// A witness is a string that CANNOT appear in an outbound request unless content left.
+// Four kinds, because there are four honest ways bytes could ride out:
+//
+//   raw        — windows of the file's own bytes, for a request that carries them plainly.
+//   encoded    — base64 (all three alignments), base64url, and hex of the whole file, so
+//                a re-encoding is caught at whatever offset it starts.
+//   extracted  — the sentinel strings the parser actually recovers from these fixtures,
+//                read from ground_truth.json rather than restated here. This is the layer
+//                that matters most: a leak of the EXTRACTED text is still a leak, and it
+//                would not contain a single byte of the original file.
+//   derived    — the sha256. The receipt is allowed to state it; the network is not. A
+//                hash is derived content, and "we only sent a fingerprint" is exactly the
+//                claim this check exists to refuse.
+//
+// Degenerate windows are dropped. A run of identical bytes could collide with padding
+// somewhere and would turn a custody failure into a coin flip.
+function buildWitnesses(fixturePaths) {
+  const groundTruth = JSON.parse(
+    fs.readFileSync(path.join(REPO_ROOT, "test/fixtures/file-intake/ground_truth.json"), "utf8"),
+  );
+  const witnesses = [];
+  const add = (kind, fixture, value) => {
+    if (value && value.length >= 16) witnesses.push({ kind, fixture, value });
+  };
+
+  for (const p of fixturePaths) {
+    const name = path.basename(p);
+    const bytes = fs.readFileSync(p);
+    const latin1 = bytes.toString("latin1");
+
+    // raw: eight evenly spaced 24-byte windows.
+    const WINDOW = 24;
+    for (let i = 0; i < 8; i += 1) {
+      const at = Math.floor((bytes.length - WINDOW) * (i / 8));
+      const slice = latin1.slice(at, at + WINDOW);
+      if (new Set(slice).size >= 8) add("raw", name, slice);
+    }
+
+    // encoded: a 40-char core of each encoding, taken from the middle so a header or a
+    // trailer common to every PDF cannot be what matches.
+    const core = (s) => s.slice(Math.floor(s.length / 2), Math.floor(s.length / 2) + 40);
+    for (let phase = 0; phase < 3; phase += 1) {
+      add("encoded", name, core(bytes.subarray(phase).toString("base64")));
+    }
+    add("encoded", name, core(bytes.toString("base64url")));
+    add("encoded", name, core(bytes.toString("hex")));
+
+    // derived: the fingerprint the receipt is allowed to show and the wire is not.
+    add("derived", name, crypto.createHash("sha256").update(bytes).digest("hex"));
+
+    // extracted: what the parser recovers, per the fixture corpus's own record.
+    const key = name.replace(/\.pdf$/, "");
+    const truth = groundTruth[key];
+    if (truth) {
+      const strings = [];
+      for (const t of truth.texts || []) if (t.str) strings.push(t.str);
+      for (const v of Object.values(truth.info || {})) if (typeof v === "string") strings.push(v);
+      for (const v of truth.xmp_contains || []) strings.push(v);
+      for (const a of truth.attachments || []) if (a.content) strings.push(a.content);
+      // Sentinels are short by design, so they are added without the length floor the
+      // other kinds use. They are unique tokens; a coincidental match is not a thing.
+      for (const s of strings) witnesses.push({ kind: "extracted", fixture: name, value: s });
+    }
+  }
+  return witnesses;
+}
+
+// Everything about one request that a witness could hide in, flattened. Percent-decoded
+// as well as raw, because a query string is the most natural place to smuggle bytes and
+// it would be encoded on the way in.
+function wireText(r) {
+  const parts = [
+    r.method || "",
+    r.url || "",
+    r.url_fragment || "",
+    ...Object.entries(r.headers || {}).flatMap(([k, v]) => [k, String(v)]),
+    r.body || "",
+  ];
+  const joined = parts.join("\n");
+  let decoded = "";
+  try {
+    decoded = decodeURIComponent(joined.replace(/%(?![0-9A-Fa-f]{2})/g, "%25"));
+  } catch {
+    decoded = "";
+  }
+  return `${joined}\n${decoded}`;
+}
+
 // ── Interception ─────────────────────────────────────────────────────────────────────
 // Deny-by-default, like the board's. Two differences, both deliberate:
 //   · the document response is fulfilled with the production headers, so the policy the
 //     site ships is the policy the path runs under here;
-//   · every paused request is recorded with its method and the size of its body, which is
-//     one of the two layers behind the no-transmission claim.
+//   · every paused request is recorded WHOLE — method, full URL including query and
+//     fragment, every header, and the body — because the no-transmission claim is about
+//     content and content can ride in any of those, not only in a body.
 async function installPolicyInterception(cdp, { origin, requests, blocked }) {
   await cdp.send("Page.enable");
   await cdp.send("Runtime.enable");
@@ -324,7 +448,16 @@ async function installPolicyInterception(cdp, { origin, requests, blocked }) {
   cdp.on("Fetch.requestPaused", async (params) => {
     const { requestId, request } = params;
     const body = request.postData ? request.postData.length : 0;
-    requests.push({ url: request.url, method: request.method, body_bytes: body });
+    requests.push({
+      url: request.url,
+      // CDP reports a fragment separately when one is present; it is part of the URL a
+      // leak could use, so it is kept rather than dropped.
+      url_fragment: request.urlFragment || "",
+      method: request.method,
+      headers: request.headers || {},
+      body: request.postData || "",
+      body_bytes: body,
+    });
 
     try {
       if (request.url === `${origin}${ROUTE}`) {
@@ -477,13 +610,26 @@ async function main() {
   // interception is installed on the page session; a dedicated worker's requests may not
   // pause there. Every request that reaches the local origin reaches THIS handler,
   // whoever issued it, so the method and body of worker traffic are recorded here.
+  // The body is drained rather than assumed from content-length: a chunked upload sets
+  // no content-length at all, so trusting the header would let the one shape that most
+  // looks like an upload report zero bytes. Listening does not consume the stream the
+  // static server later reads, because 'data' here only fires if something else resumes
+  // it; the static handler serves GETs and never reads a request body, so in practice
+  // this records the bytes that a POST would have carried.
   const served = [];
   server.on("request", (req) => {
-    served.push({
+    const record = {
       method: req.method,
       url: req.url,
+      headers: { ...req.headers },
+      body: "",
       body_bytes: Number(req.headers["content-length"] || 0),
+    };
+    req.on("data", (chunk) => {
+      record.body += chunk.toString("latin1");
+      record.body_bytes = record.body.length;
     });
+    served.push(record);
   });
 
   const { proc, port: cdpPort } = await launchBrowser(renderer.binary);
@@ -697,14 +843,119 @@ async function main() {
   }
 
   // ── The no-transmission receipt ────────────────────────────────────────────────────
-  // Two layers, because one of them cannot see the worker.
-  const withBody = [...requests, ...served].filter((r) => r.body_bytes > 0);
-  const nonGet = [...requests, ...served].filter((r) => r.method !== "GET");
+  //
+  // Two capture layers, because neither sees everything: Fetch interception sees what the
+  // page issues, and the origin server sees what reaches it from anywhere INCLUDING the
+  // worker, whose requests may not pause on the page session.
+  //
+  // The shape checks come first — all GET, no body — but they are the weak half. They
+  // prove nobody uploaded on purpose. They do not prove the file stayed put, because a
+  // GET carries a URL and a URL carries whatever you put in it. So the custody claim is
+  // made positively below: every request is searched for the file itself.
+  const allRequests = [...requests, ...served];
+  const withBody = allRequests.filter((r) => r.body_bytes > 0);
+  const nonGet = allRequests.filter((r) => r.method !== "GET");
   const offOriginHosts = [...new Set(blocked.map((u) => new URL(u).hostname))].sort();
   check("network", "every request the page issued was a GET", nonGet, []);
   check("network", "no request carried a body", withBody, []);
   check("network", "the server was never asked for anything outside this repository",
     served.every((r) => r.url.startsWith("/")), true);
+
+  // ── Custody: the file's bytes are not in any request the page made ─────────────────
+  //
+  // The assertion Ruling 10 actually requires. Every request captured across the full
+  // sample path — both fixtures, from first paint through export — is searched for the
+  // file's raw bytes, three alignments of its base64, its base64url, its hex, its
+  // sha256, and every string the parser extracts from it. A hit on any of those is a
+  // custody failure and there is no shape of request that could pass this by accident.
+  const witnesses = buildWitnesses([PDF_FIXTURE, MULTI_FIXTURE]);
+  const wire = allRequests.map((r) => ({ r, text: wireText(r) }));
+  const leaks = [];
+  for (const { r, text } of wire) {
+    for (const w of witnesses) {
+      if (text.includes(w.value)) {
+        leaks.push({
+          kind: w.kind,
+          fixture: w.fixture,
+          method: r.method,
+          url: (r.url || "").slice(0, 200),
+          witness: w.value.slice(0, 60),
+        });
+      }
+    }
+  }
+
+  // The search must be live. Witnesses that match nothing anywhere would make the check
+  // above pass whether or not it was capable of failing, so the same witness set is run
+  // against the file's own bytes first. A witness that cannot find the file it was built
+  // from cannot find it on the wire either.
+  const selfTest = witnesses.filter((w) => {
+    const bytes = fs.readFileSync(
+      w.fixture === path.basename(PDF_FIXTURE) ? PDF_FIXTURE : MULTI_FIXTURE,
+    );
+    if (w.kind === "raw") return bytes.toString("latin1").includes(w.value);
+    if (w.kind === "encoded") {
+      return [bytes.toString("base64"), bytes.subarray(1).toString("base64"),
+        bytes.subarray(2).toString("base64"), bytes.toString("base64url"),
+        bytes.toString("hex")].some((e) => e.includes(w.value));
+    }
+    if (w.kind === "derived") {
+      return crypto.createHash("sha256").update(bytes).digest("hex") === w.value;
+    }
+    return true; // extracted sentinels come from the corpus record, not from the bytes
+  });
+  check("custody", "the witness set can find the file it was built from",
+    selfTest.length, witnesses.length);
+  check("custody", "the witness set covers bytes, every encoding, the hash, and the extracted text",
+    [...new Set(witnesses.map((w) => w.kind))].sort(),
+    ["derived", "encoded", "extracted", "raw"]);
+
+  // A negative control, because a search that returns nothing looks identical whether it
+  // is working or broken. Four requests that DO leak, one per witness kind, each hiding
+  // the content somewhere a real leak would put it: a query string, a percent-encoded
+  // query string, a custom header, and a POST body. The detector must catch all four.
+  // If this ever reports fewer, the green result above means nothing.
+  const bait = (() => {
+    const raw = witnesses.find((w) => w.kind === "raw");
+    const enc = witnesses.find((w) => w.kind === "encoded");
+    const der = witnesses.find((w) => w.kind === "derived");
+    const ext = witnesses.find((w) => w.kind === "extracted");
+    return [
+      { method: "GET", url: `http://example.test/collect?d=${enc.value}`, headers: {}, body: "" },
+      { method: "GET", url: `http://example.test/c?d=${encodeURIComponent(raw.value)}`, headers: {}, body: "" },
+      { method: "GET", url: "http://example.test/c", headers: { "x-file-hash": der.value }, body: "" },
+      { method: "POST", url: "http://example.test/c", headers: {}, body: `text=${ext.value}` },
+    ];
+  })();
+  const baitCaught = bait.filter((b) => {
+    const text = wireText(b);
+    return witnesses.some((w) => text.includes(w.value));
+  });
+  check("custody", "the custody search catches a planted leak in a query, an encoded query, a header, and a body",
+    baitCaught.length, bait.length);
+
+  check("custody",
+    "NO REQUEST CARRIES THE FILE: not its bytes, not any encoding of them, not its hash, not its extracted text",
+    leaks, []);
+
+  // The inventory is closed, not merely clean. Searching for known witnesses catches a
+  // leak of THIS file; pinning the set of URLs catches the next request somebody adds,
+  // whatever it carries. A route that starts talking to something new fails here and has
+  // to be read by a person before the receipt goes green again.
+  // Same-origin entries collapse to a bare path, because the two capture layers see the
+  // same request differently — the interceptor with an absolute URL, the server with a
+  // path — and one request should appear once. Off-origin keeps its host, which is the
+  // only part of an entry here that a reader needs to stop and think about.
+  const inventory = [...new Set(allRequests.map((r) => {
+    const u = r.url.startsWith("http") ? new URL(r.url) : new URL(r.url, "http://127.0.0.1");
+    const local = u.hostname === "127.0.0.1";
+    return `${r.method} ${local ? "" : u.origin}${u.pathname}`;
+  }))].sort();
+  results.request_inventory = inventory;
+  results.request_count = allRequests.length;
+  results.witness_count = witnesses.length;
+  check("custody", "the page talks to exactly the endpoints this receipt has read",
+    inventory, EXPECTED_REQUEST_INVENTORY);
   // The typeface stylesheet is the one thing this page reaches off-origin for, and the
   // harness denies it. Naming the hosts rather than asserting an empty list is the honest
   // form: an empty list would be a claim the page never tries, which is false.
