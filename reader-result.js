@@ -1190,6 +1190,81 @@ export function describeFinding(finding) {
   });
 }
 
+// ── The R4 adjudication ──────────────────────────────────────────────────────
+// R4 governs mark numerals, and this file is where mark numerals are assigned, so this
+// file is where the ruling that reads R4 belongs. The prior disposition of the defect it
+// settles — intake item 2 of the Surface Finish table, CLEARED — exists only inside a
+// commit message, in a sentence that never says which of items 2, 9 and 11 it cleared.
+// That is the failure this export exists to stop: a ruling recorded only in commit prose
+// is a ruling the next reader cannot find.
+//
+// It is data rather than a comment so a test can pin it, and it is pinned twice — once on
+// the ruling text, once on the verbatim reversed reasoning above, which the test re-reads
+// out of this file's own source. Edit that comment and the pin fails.
+export const R4_ADJUDICATION = deepFreeze({
+  rule: "R4 — QUOTED reconnects to the actual passage; mark numerals follow answer order",
+  disposition: "ruled — founder ruling of 2026-08-22; the render site sorts, the numbering does not move",
+
+  ruling: deepFreeze({
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "Reader value-seam correction — close the Reader finding-to-action seam",
+    text:
+      "R4 requires preservation of answer-order numeral identity, but satisfying the literal " +
+      "clause that a separately ordered findings list displays the answer-order numeral does not " +
+      "clear the rule when the rendered list presents those numerals out of sequence. A list " +
+      "rendering 1,2,4,3 against an answer presenting 1,2,3,4 creates the dual-order mapping tax " +
+      "named in R4's Prevents line. Therefore: numeral identity remains document-order identity; " +
+      "numerals must not be reassigned merely to make the list look sequential; the rendered " +
+      "finding-row order must not force a person to reconcile two visible numeral sequences; and " +
+      "ABSENT or record-level findings remain non-positional and follow positioned findings.",
+    therefore: deepFreeze([
+      "numeral identity remains document-order identity;",
+      "numerals must not be reassigned merely to make the list look sequential;",
+      "the rendered finding-row order must not force a person to reconcile two visible numeral " +
+        "sequences;",
+      "ABSENT or record-level findings remain non-positional and follow positioned findings.",
+    ]),
+  }),
+
+  // THIS RULING REVERSES A RECORDED DESIGN ARGUMENT. Stated plainly, because a reversal
+  // that reads as a clarification is a reversal that gets re-litigated. The argument was
+  // shipped, in this file, as the justification for leaving the list unsorted.
+  reverses: deepFreeze({
+    what: "the recorded design argument that an unsorted findings list costs nothing",
+    where: "reader-result.js, the SUPERSEDED-REASONING block above buildSourceReading",
+    // Verbatim. The pinning test re-reads the comment out of this file and compares.
+    quote:
+      "This reverses what stood here, and the argument it reverses was not wrong about its own " +
+      "risk — numbering by position does make the list beneath the body count out of sequence, " +
+      "because the list renders in record order and always did. What that argument got wrong was " +
+      "the cause of the agreement it was protecting. Body and list agree because there is ONE " +
+      "numbering and two views of it, not because that numbering happened to be the record's. " +
+      "Renumber it and they still agree; the list simply shows its numbers unsorted, which costs " +
+      "nothing, because the list is a set of explanations reached through a numeral rather than a " +
+      "sequence anybody counts. The body is the surface that is read in order, so the body is the " +
+      "surface the order belongs to.",
+    why_it_fails:
+      "The clause treats the list as a lookup table reached through a numeral. It is also a list " +
+      "read top to bottom, and a person reading it top to bottom meets 1, 2, 4, 3 and has to hold " +
+      "two orders at once to know nothing is missing. That reconciliation is the cost the clause " +
+      "says is not there.",
+    what_survives:
+      "Where the numbering comes from. The body is read in order, so the body is the surface the " +
+      "order belongs to, and buildSourceReading still numbers by document order. Only the render " +
+      "site changes.",
+  }),
+
+  // What the ruling does NOT license, because the cheap fix is the wrong one.
+  standing_instruction:
+    "Do not fix an out-of-sequence findings list by renumbering. The numeral is the document's, " +
+    "assigned in buildSourceReading by byReadingOrder, and reassigning it to make a list look " +
+    "sequential breaks the mark-to-row correspondence R4 exists to protect. Sort the rendered " +
+    "rows by the numeral they already carry, at the render site only. Do not reorder the findings " +
+    "array handed to buildSourceReading: byReadingOrder's final tiebreak is record_index, so " +
+    "reordering the input silently reassigns numerals among findings that tie on span.",
+});
+
 // ---------------------------------------------------------------------------
 // THE SOURCE READING — the answer with its marks positioned in it.
 //
@@ -1215,6 +1290,10 @@ export function describeFinding(finding) {
 // that the count they could see was not a count. So the numerals ascend down the
 // answer: first passage marked is mark 1.
 //
+// SUPERSEDED-REASONING-BEGIN — kept verbatim, and governed by R4_ADJUDICATION above.
+// The final clause of this paragraph is the design argument the founder ruling of
+// 2026-08-22 reverses. It is left standing because a reversed argument deleted is a
+// reversal nobody can audit.
 // This reverses what stood here, and the argument it reverses was not wrong about
 // its own risk — numbering by position does make the list beneath the body count out
 // of sequence, because the list renders in record order and always did. What that
@@ -1225,6 +1304,12 @@ export function describeFinding(finding) {
 // of explanations reached through a numeral rather than a sequence anybody counts.
 // The body is the surface that is read in order, so the body is the surface the
 // order belongs to.
+// SUPERSEDED-REASONING-END — the "costs nothing" clause no longer holds. It does cost:
+// an unsorted list against an ordered body is the dual-order mapping tax R4's Prevents
+// line names. What survives the reversal is everything above about WHERE the numbering
+// comes from — the body is still the surface the order belongs to, and this function
+// still numbers by document order. What changes is downstream of here, at the render
+// site, which must now present the rows in that order too. See R4_ADJUDICATION.
 //
 // The numeral is therefore a DISPLAY key: it names which mark, it does not identify
 // one. Identity is finding_id and the anchor's own offsets, neither of which this

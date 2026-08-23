@@ -347,6 +347,27 @@ function questionControls(tree) {
   );
 }
 
+function questionTexts(tree) {
+  return nodes(tree).filter(
+    (n) => n.props && String(n.props.className || "").split(" ").includes("wb-measure__question-text"),
+  );
+}
+
+// Every string in a subtree, concatenated. Used to read what a person would see.
+function textOf(node, out = []) {
+  if (node == null || node === false) return out;
+  if (Array.isArray(node)) {
+    for (const n of node) textOf(n, out);
+    return out;
+  }
+  if (typeof node === "string" || typeof node === "number") {
+    out.push(String(node));
+    return out;
+  }
+  if (node.children) textOf(node.children, out);
+  return out;
+}
+
 const EMITTED = () =>
   describeFinding(findingWith(registerDisposition({ status: REGISTER_STATUS.EMITTED, card_id: CARD_ID })));
 const NO_CARD = () =>
@@ -412,6 +433,131 @@ test("a card with an empty question renders nothing", async () => {
 test("the empty state produces no question artifact at all", async () => {
   const tree = await renderPanel({ findings: [], cards: [card()] });
   assert.equal(questionControls(tree).length, 0);
+});
+
+// ── 2b. The question is legible where the finding is read ────────────────────
+//
+// THE SECOND HALF OF THE SAME DEFECT. Promotion put the question's CONTROL on the row
+// and left its WORDS in the Check Register, so the row asked a person to copy something
+// they could not read and travel to learn what they had taken. R10 already requires the
+// derived question to render as literal, selectable final text before any control that
+// acts on it, and the span-directed site renders it that way. This is the same treatment
+// on the surface that produced the question.
+
+test("a qualifying finding renders its verification question literally, in words", async () => {
+  const tree = await renderPanel({ findings: [EMITTED()], cards: [card()] });
+  const texts = questionTexts(tree);
+  assert.equal(texts.length, 1, "the row must render exactly one question text");
+
+  // The register's own string, character for character. Not a paraphrase, not a
+  // truncation, not a tooltip.
+  const printed = textOf(texts[0]).join("");
+  assert.equal(printed, `${CHECK_UI.labels.verification}${QUESTION}`);
+  assert.ok(printed.includes(QUESTION), "the exact question string must be on the page");
+
+  // R10's ordering: the words come before the control that acts on them.
+  const flat = nodes(tree);
+  const textAt = flat.indexOf(texts[0]);
+  const controlAt = flat.indexOf(questionControls(tree)[0]);
+  assert.ok(textAt !== -1 && controlAt !== -1);
+  assert.ok(textAt < controlAt, "the literal question must render before the control that copies it");
+});
+
+test("the control copies the string the row displays — one question, not two", async () => {
+  // R22: one canonical full statement per finding. The row shows a question and offers
+  // to copy a question, and if those could differ the row would be publishing two.
+  // They cannot: both read card.verification_question, and nothing transforms either.
+  const tree = await renderPanel({ findings: [EMITTED()], cards: [card()] });
+  const displayed = textOf(questionTexts(tree)[0]).join("").replace(CHECK_UI.labels.verification, "");
+  assert.equal(displayed, QUESTION);
+
+  assert.match(
+    QUESTION_CONTROL,
+    /writeText\(card\.verification_question\)/,
+    "the control must copy the card's question verbatim",
+  );
+  assert.match(
+    QUESTION_CONTROL,
+    /\{card\.verification_question\}/,
+    "the displayed question must be the same expression the control copies",
+  );
+
+  // The component reads the question exactly three times — the guard that decides
+  // whether to render at all, the display, and the copy. A fourth read is where a second
+  // wording would enter. Counted against the code with its commentary removed, since the
+  // comment explaining this names the same expression.
+  const code = QUESTION_CONTROL.replace(/\{?\/\*[\s\S]*?\*\/\}?/g, "").replace(/^\s*\/\/.*$/gm, "");
+  const reads = code.match(/card\.verification_question/g) || [];
+  assert.equal(reads.length, 3, "the guard, the display, and the copy — and nothing else");
+});
+
+test("no question is manufactured where the register produced none", async () => {
+  // The give-nothing-away line. A row without a card had no question before this change
+  // and has none after it: no text, no label, no placeholder, no spacing shell.
+  for (const [why, args] of [
+    ["a finding with no card", { findings: [NO_CARD()], cards: [card()] }],
+    ["a dangling id", { findings: [EMITTED()], cards: [card({ id: "chk_someone_else_1_2" })] }],
+    ["an absent register", { findings: [EMITTED()], cards: null }],
+    ["an empty register", { findings: [EMITTED()], cards: [] }],
+    ["a card with a blank question", { findings: [EMITTED()], cards: [card({ verification_question: "   " })] }],
+    ["the empty state", { findings: [], cards: [card()] }],
+  ]) {
+    const tree = await renderPanel(args);
+    assert.equal(questionTexts(tree).length, 0, `${why}: no question text`);
+    assert.equal(
+      nodes(tree).filter((n) => textOf(n).join("").includes(CHECK_UI.labels.verification)).length,
+      0,
+      `${why}: not even the label`,
+    );
+  }
+});
+
+test("the mixed record shows one question, and the row without a card stays quiet", async () => {
+  const tree = await renderPanel({
+    findings: [EMITTED(), { ...NO_CARD(), id: "single_candidate.1" }],
+    cards: [card()],
+  });
+  const texts = questionTexts(tree);
+  assert.equal(texts.length, 1, "exactly one of two rows may show a question");
+  assert.equal(textOf(texts[0]).join("").includes(QUESTION), true);
+});
+
+test("showing the question is not asking it", async () => {
+  // GIVE NOTHING AWAY. Rendering the words changes nothing about what the product has
+  // done: no stage advances, no run starts, no paste box opens, nothing is sent. The
+  // component's prohibitions are already pinned above; this adds the one the display
+  // could plausibly have broken, which is that reading a question is not running a check.
+  const tree = await renderPanel({ findings: [EMITTED()], cards: [card()] });
+  const text = questionTexts(tree)[0];
+  assert.equal(text.type, "p", "the question is prose, not a control");
+  assert.equal(Boolean(text.props.onClick), false, "the question text must not be clickable");
+  assert.equal(Boolean(text.props.href), false, "the question text must not navigate");
+  assert.equal(Boolean(text.props.role), false, "the question text must claim no widget role");
+
+  // And it does not become a second primary CTA. One filled-accent moment on the page,
+  // and it belongs to the run.
+  assert.equal(QUESTION_CONTROL.includes("<Btn"), false);
+  const CSS = readFileSync(fileURLToPath(new URL("../workbench.css", import.meta.url)), "utf8");
+  const rule = /\.wb-measure__question-text \{([^}]*)\}/.exec(CSS);
+  assert.ok(rule, "workbench.css must style the question text");
+  assert.equal(/background/.test(rule[1]), false, "the question text must not be a filled block");
+  assert.equal(/color:/.test(rule[1]), false, "the question text inherits the row's ink and spends no accent");
+});
+
+test("the local question ships no new user-facing string", async () => {
+  // The label is the register's own — the same one the Check Register prints over the
+  // same question — so nothing new entered the product vocabulary and AT-5's recursive
+  // lint over CHECK_UI already covers it.
+  assert.match(QUESTION_CONTROL, /CHECK_UI\.labels\.verification/);
+  assert.equal(CHECK_UI.labels.verification, "Worth asking");
+
+  const tree = await renderPanel({ findings: [EMITTED()], cards: [card()] });
+  const printed = textOf(questionTexts(tree)[0]).join("");
+  assert.equal(
+    printed.replace(CHECK_UI.labels.verification, "").replace(QUESTION, ""),
+    "",
+    "the row prints the register's label and the register's question, and nothing of its own",
+  );
 });
 
 // ── 3. The rulings this lane was given, held in source ────────────────────────

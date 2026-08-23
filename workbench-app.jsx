@@ -4280,6 +4280,33 @@ function MeasurementPanel({ result, context }) {
     (result?.checks?.cards || []).map((c) => [c.id, c])
   );
   const run = receipt?.open_run?.provenance?.request_id || "";
+  // THE ORDER THE ROWS ARE PRINTED IN, and nothing else. R4, closed by the founder
+  // ruling of 2026-08-22, recorded as R4_ADJUDICATION in reader-result.js beside the
+  // function that assigns the numerals.
+  //
+  // The numerals are the reading's, handed out in the answer's document order. This
+  // list held the RECORD's order, so on an answer whose marks ascend 1..6 a reader met
+  // rows numbered 1, 2, 4, 3, 5, 6 and had to reconcile two visible sequences to know
+  // they were looking at one set of findings. That is the dual-order mapping tax R4
+  // names, and it is not cured by the numeral being correct on both surfaces.
+  //
+  // NOTHING IS RENUMBERED. The sort key is the numeral buildSourceReading already
+  // published, read back out of marks_by_finding, so this changes which row prints
+  // first and cannot change which numeral a row carries. `findings` itself is left
+  // alone: byReadingOrder tiebreaks on record_index, so reordering the array handed to
+  // buildSourceReading would silently reassign numerals among marks that tie on span.
+  //
+  // A row with no numeral keeps the record's order behind the numbered ones. Nothing
+  // here branches on what kind of finding a row holds, and nothing needs to:
+  // byReadingOrder places every unpositioned mark after every positioned one, so a
+  // record-level absence already carries a higher numeral than any marked passage and
+  // lands after them on the numeral alone. A branch would be a second rule capable of
+  // disagreeing with the numbering.
+  const rowNumeral = (f) => {
+    const ns = (reading.marks_by_finding[f.id] || []).filter((n) => n != null);
+    return ns.length ? Math.min(...ns) : Number.MAX_SAFE_INTEGER;
+  };
+  const rows = [...findings].sort((a, b) => rowNumeral(a) - rowNumeral(b));
   return (
     <section className="wb-reader-result is-agent wb-measure wb-scroll-anchor" aria-label={MEASURE_SECTION_LABEL}>
       {/* READ leads the panel, because the answer with the marks in it is the thing a
@@ -4330,7 +4357,7 @@ function MeasurementPanel({ result, context }) {
               a shape registered outside those three names. The rows are the account. */}
           {findings.length ? (
             <ul className="wb-measure__list">
-              {findings.map((f) => (
+              {rows.map((f) => (
                 // Item 1, R21. tabIndex -1 is what makes the mark's link land: a
                 // fragment whose target cannot hold focus moves the viewport and leaves
                 // focus behind, so the next Tab goes back to the answer instead of on
@@ -4478,18 +4505,40 @@ function FindingQuestion({ card, run }) {
   };
 
   return (
-    <p className="wb-measure__question">
-      <button
-        type="button"
-        className="wb-measure__question-link wb-focus"
-        onClick={copyQuestion}
-      >
-        {copied ? CHECK_UI.copied_affordance : CHECK_UI.copy_affordance}
-      </button>
-      {copyFail ? (
-        <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span>
-      ) : null}
-    </p>
+    <>
+      {/* THE QUESTION ITSELF, where the finding is read. The row owned this string and
+          showed a control that copied it; the words were legible only in the Check
+          Register further down, so the one affordance here asked a person to take a
+          question on trust and go elsewhere to learn what they had taken. R10 already
+          requires the derived question to render as literal, selectable final text
+          before any control that acts on it, and the span-directed site renders it that
+          way; this is the same treatment on the surface that produced it.
+
+          The string is card.verification_question verbatim — the register's own, not a
+          second wording of it, so R22 sees one canonical question with two views and no
+          new paraphrase. The label is the register's own too. No question is composed
+          here and none is generated: a row with no card still renders nothing at all.
+
+          GIVE-NOTHING-AWAY IS UNCHANGED. Showing the question is not asking it. Nothing
+          here advances the run, opens the paste box, changes a stage, or sends anything;
+          the copy control does what it did before and stops. */}
+      <p className="wb-measure__question-text">
+        <span className="wb-check__label">{CHECK_UI.labels.verification}</span>
+        {card.verification_question}
+      </p>
+      <p className="wb-measure__question">
+        <button
+          type="button"
+          className="wb-measure__question-link wb-focus"
+          onClick={copyQuestion}
+        >
+          {copied ? CHECK_UI.copied_affordance : CHECK_UI.copy_affordance}
+        </button>
+        {copyFail ? (
+          <span className="wb-reader-result__copy-fail" role="status">{copyFail}</span>
+        ) : null}
+      </p>
+    </>
   );
 }
 
