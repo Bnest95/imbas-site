@@ -1190,6 +1190,221 @@ export function describeFinding(finding) {
   });
 }
 
+// ── The R4 adjudication ──────────────────────────────────────────────────────
+// R4 governs mark numerals, and this file is where mark numerals are assigned, so this
+// file is where the ruling that reads R4 belongs. The prior disposition of the defect it
+// settles — intake item 2 of the Surface Finish table, CLEARED — exists only inside a
+// commit message, in a sentence that never says which of items 2, 9 and 11 it cleared.
+// That is the failure this export exists to stop: a ruling recorded only in commit prose
+// is a ruling the next reader cannot find.
+//
+// It is data rather than a comment so a test can pin it, and it is pinned twice — once on
+// the ruling text, once on the verbatim reversed reasoning above, which the test re-reads
+// out of this file's own source. Edit that comment and the pin fails.
+export const R4_ADJUDICATION = deepFreeze({
+  rule: "R4 — QUOTED reconnects to the actual passage; mark numerals follow answer order",
+  disposition: "ruled — founder ruling of 2026-08-22; the render site sorts, the numbering does not move",
+
+  ruling: deepFreeze({
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "Reader value-seam correction — close the Reader finding-to-action seam",
+    text:
+      "R4 requires preservation of answer-order numeral identity, but satisfying the literal " +
+      "clause that a separately ordered findings list displays the answer-order numeral does not " +
+      "clear the rule when the rendered list presents those numerals out of sequence. A list " +
+      "rendering 1,2,4,3 against an answer presenting 1,2,3,4 creates the dual-order mapping tax " +
+      "named in R4's Prevents line. Therefore: numeral identity remains document-order identity; " +
+      "numerals must not be reassigned merely to make the list look sequential; the rendered " +
+      "finding-row order must not force a person to reconcile two visible numeral sequences; and " +
+      "ABSENT or record-level findings remain non-positional and follow positioned findings.",
+    therefore: deepFreeze([
+      "numeral identity remains document-order identity;",
+      "numerals must not be reassigned merely to make the list look sequential;",
+      "the rendered finding-row order must not force a person to reconcile two visible numeral " +
+        "sequences;",
+      "ABSENT or record-level findings remain non-positional and follow positioned findings.",
+    ]),
+  }),
+
+  // THIS RULING REVERSES A RECORDED DESIGN ARGUMENT. Stated plainly, because a reversal
+  // that reads as a clarification is a reversal that gets re-litigated. The argument was
+  // shipped, in this file, as the justification for leaving the list unsorted.
+  reverses: deepFreeze({
+    what: "the recorded design argument that an unsorted findings list costs nothing",
+    where: "reader-result.js, the SUPERSEDED-REASONING block above buildSourceReading",
+    // Verbatim. The pinning test re-reads the comment out of this file and compares.
+    quote:
+      "This reverses what stood here, and the argument it reverses was not wrong about its own " +
+      "risk — numbering by position does make the list beneath the body count out of sequence, " +
+      "because the list renders in record order and always did. What that argument got wrong was " +
+      "the cause of the agreement it was protecting. Body and list agree because there is ONE " +
+      "numbering and two views of it, not because that numbering happened to be the record's. " +
+      "Renumber it and they still agree; the list simply shows its numbers unsorted, which costs " +
+      "nothing, because the list is a set of explanations reached through a numeral rather than a " +
+      "sequence anybody counts. The body is the surface that is read in order, so the body is the " +
+      "surface the order belongs to.",
+    why_it_fails:
+      "The clause treats the list as a lookup table reached through a numeral. It is also a list " +
+      "read top to bottom, and a person reading it top to bottom meets 1, 2, 4, 3 and has to hold " +
+      "two orders at once to know nothing is missing. That reconciliation is the cost the clause " +
+      "says is not there.",
+    what_survives:
+      "Where the numbering comes from. The body is read in order, so the body is the surface the " +
+      "order belongs to, and buildSourceReading still numbers by document order. Only the render " +
+      "site changes.",
+  }),
+
+  // What the ruling does NOT license, because the cheap fix is the wrong one.
+  standing_instruction:
+    "Do not fix an out-of-sequence findings list by renumbering. The numeral is the document's, " +
+    "assigned in buildSourceReading by byReadingOrder, and reassigning it to make a list look " +
+    "sequential breaks the mark-to-row correspondence R4 exists to protect. Sort the rendered " +
+    "rows by the numeral they already carry, at the render site only. Do not reorder the findings " +
+    "array handed to buildSourceReading: byReadingOrder's final tiebreak is record_index, so " +
+    "reordering the input silently reassigns numerals among findings that tie on span.",
+});
+
+// ── The finding-continuation ruling ──────────────────────────────────────────
+// WHICH FINDINGS MAY CARRY A LOCAL ACTION, and on what evidence. Both predicates that
+// decide it are computed in this file — `verification_card_id`, seated by describeFinding
+// above, and `in_document`, seated by buildSourceReading below — so this file is where the
+// ruling that reads them belongs.
+//
+// Data rather than a comment so a test can pin it, and so a render site asks which tier a
+// finding is in rather than re-deriving the boundary from two fields it happens to hold.
+//
+// TIER TWO IS RULED AND NOT BUILT. That asymmetry is the point of recording this: the
+// mechanism it needs already ships and answers correctly, and what stops it is three
+// strings that do not exist. Recorded in `continuation_gap` so the next pass reads a
+// specific copy request rather than rediscovering the wall.
+export const FINDING_CONTINUATION_RULING = deepFreeze({
+  rule: "a finding's local continuation is governed by its evidence tier and by nothing else",
+  disposition:
+    "ruled — founder amendment of 2026-08-22 to the Reader value-seam correction. Tiers one and " +
+    "three are settled and shipped; tier two is settled and held on copy the tree does not carry",
+
+  ruling: deepFreeze({
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "Reader value-seam correction — amendment, ruling one",
+    // Verbatim.
+    text:
+      "Findings that do not qualify for the Check Register get a local continuation ONLY where the " +
+      "finding has a concrete passage in the answer the person can act on. For those, expose the " +
+      "existing span affordance from the finding row: the machinery already ships, it composes from " +
+      "the governed bank, and it invents no epistemic category. Use the smallest existing mechanism " +
+      "the current contracts support; compose no new prose in a governed path. Record-level and " +
+      "ABSENT findings get NO local continuation in this lane. Do not point them at the span " +
+      "affordance: they have no passage, so \"select the passage\" is not a continuation of that " +
+      "finding, it is a manufactured connection that lowers a zero-count without helping anyone. Do " +
+      "not manufacture a verification question, an evidence state, or any wording implying " +
+      "passage-level evidence. Those findings stay honestly without a local action and are picked up " +
+      "by the committed corrective steering layer, which takes the person's own words as input and " +
+      "needs no passage.",
+    stop_clause:
+      "If after this ruling the tree still cannot determine the exact rendered text from existing " +
+      "vocabulary, STOP and return the precise copy or schema gap rather than fabricating a string.",
+  }),
+
+  // THE GOVERNING DISTINCTION, which the ruling directs be stated in whatever durable
+  // record this lane touches. Three tiers, each decided by the record alone.
+  tiers: deepFreeze([
+    deepFreeze({
+      id: "register_qualified",
+      decided_by: "verification_card_id !== null",
+      gets: "a specific check, grounded in the stronger evidence contract",
+      renders: "FindingQuestion — the card's literal verification_question, then the control that copies it",
+      status: "shipped",
+    }),
+    deepFreeze({
+      id: "passage_anchored_non_register",
+      decided_by: "verification_card_id === null, and at least one of the finding's marks has in_document === true",
+      gets: "a continuation that is explicitly NOT a verification",
+      renders: null,
+      status: "held — ruled, and blocked on copy; see continuation_gap",
+    }),
+    deepFreeze({
+      id: "record_level",
+      decided_by: "verification_card_id === null, and no mark of the finding has in_document === true",
+      gets: "neither, by ruling",
+      renders: null,
+      status: "shipped as silence",
+      picked_up_by:
+        "the corrective steering layer — ChipLane in workbench-app.jsx, which takes the person's own " +
+        "answer as its input and needs no passage",
+    }),
+  ]),
+
+  // WHY TIER TWO DID NOT SHIP. The mechanism was measured against every shipped fixture and
+  // it answers correctly: resolveSpanAction over a passage-anchored non-Register finding's
+  // OWN mark span returns COMPOSE on all 33 such marks, in both modes, touching zero cards.
+  // Nothing here is a doubt about the machinery.
+  //
+  // What blocks it is that the span lane's entire vocabulary asserts the person chose the
+  // passage, and in a finding row Imbas chose it. Three strings say so, and none of the
+  // three has an existing counterpart that is true in the finding-row case.
+  continuation_gap: deepFreeze({
+    mechanism_status: "available and correct — resolveSpanAction returns COMPOSE for the whole tier",
+    blocked_on: "user-facing copy, not schema and not machinery",
+    gaps: deepFreeze([
+      deepFreeze({
+        id: "problem_entry_provenance",
+        where: "reader-span-bank.js, entry P1 — the PROBLEM default by recorded order",
+        string: "You marked this as the problem. Ask your AI: what is this based on, and what is the source and date?",
+        why_it_fails:
+          "Its opening clause states that the person marked the passage. Composed from a finding row " +
+          "the passage is Imbas's own mark, so the clause is false, and it travels into the message " +
+          "the person pastes into their AI. P1's own abstraction_note already holds this clause under " +
+          "founder review for a related defect, so the entry is not settled copy.",
+        what_would_resolve_it:
+          "either a founder-approved PROBLEM entry whose instruction states no provenance, or a ruling " +
+          "that the row composes DESIRED only — which is a bank-level default decision that " +
+          "defaultSpanEntry explicitly reserves to the founder",
+      }),
+      deepFreeze({
+        id: "attribution_line_inverts",
+        where: "reader-span-selection.js, SPAN_UI.attribution",
+        string: "You selected this passage. Imbas did not mark it.",
+        why_it_fails:
+          "Over a finding's own mark, Imbas did mark it. The line's recorded purpose is to tell a " +
+          "person which kind of highlight they are looking at on a surface dense with Imbas's marks, " +
+          "so the finding-row case inverts the exact condition it was written for. Dropping the line " +
+          "removes the boundary statement where mark provenance is most confusable, and no string in " +
+          "the tree states the inverse.",
+        what_would_resolve_it: "one founder-approved attribution line for a passage Imbas marked",
+      }),
+      deepFreeze({
+        id: "affordance_labels_presuppose_a_gesture",
+        where: "reader-span-selection.js, SPAN_UI.problem_affordance and SPAN_UI.desired_affordance",
+        string: "Click the problem / Click what you want",
+        why_it_fails:
+          "Both are imperatives to click on the passage, recorded as the founder's phrasing family " +
+          "pre-cleared for the selection lane. A finding row has no passage to click: the row's " +
+          "passage is fixed and the button is the only clickable thing, so the labels instruct an act " +
+          "that cannot occur there.",
+        what_would_resolve_it: "one founder-approved row-level label per mode, or one for a single ruled mode",
+      }),
+    ]),
+    // A fourth constraint, recorded because it rules out the obvious way around the first three.
+    duplication_bar:
+      "test/reader-span-selection.test.mjs pins the affordance pair and its attribution together: two " +
+      "buttons, exactly one attribution line, and that line is SPAN_UI.attribution. Rendering the two " +
+      "buttons in a finding row without the line either breaks that committed invariant or needs a " +
+      "second component that is SpanAffordances minus its boundary statement. That second component is " +
+      "the duplicated-machinery defect for which Actionability v1 was rejected.",
+  }),
+
+  standing_instruction:
+    "Do not give a record-level or ABSENT finding a local continuation, and do not point one at the " +
+    "span affordance: it has no passage, so the affordance is a manufactured connection that lowers a " +
+    "zero-count without helping anyone. Do not manufacture a verification question, an evidence state, " +
+    "or any wording implying passage-level evidence, for any finding outside tier one. Tier two ships " +
+    "when the strings in continuation_gap exist and not before; composing around them by reusing a " +
+    "string that asserts the person chose the passage would put a false statement of provenance into " +
+    "a governed path.",
+});
+
 // ---------------------------------------------------------------------------
 // THE SOURCE READING — the answer with its marks positioned in it.
 //
@@ -1215,6 +1430,10 @@ export function describeFinding(finding) {
 // that the count they could see was not a count. So the numerals ascend down the
 // answer: first passage marked is mark 1.
 //
+// SUPERSEDED-REASONING-BEGIN — kept verbatim, and governed by R4_ADJUDICATION above.
+// The final clause of this paragraph is the design argument the founder ruling of
+// 2026-08-22 reverses. It is left standing because a reversed argument deleted is a
+// reversal nobody can audit.
 // This reverses what stood here, and the argument it reverses was not wrong about
 // its own risk — numbering by position does make the list beneath the body count out
 // of sequence, because the list renders in record order and always did. What that
@@ -1225,6 +1444,12 @@ export function describeFinding(finding) {
 // of explanations reached through a numeral rather than a sequence anybody counts.
 // The body is the surface that is read in order, so the body is the surface the
 // order belongs to.
+// SUPERSEDED-REASONING-END — the "costs nothing" clause no longer holds. It does cost:
+// an unsorted list against an ordered body is the dual-order mapping tax R4's Prevents
+// line names. What survives the reversal is everything above about WHERE the numbering
+// comes from — the body is still the surface the order belongs to, and this function
+// still numbers by document order. What changes is downstream of here, at the render
+// site, which must now present the rows in that order too. See R4_ADJUDICATION.
 //
 // The numeral is therefore a DISPLAY key: it names which mark, it does not identify
 // one. Identity is finding_id and the anchor's own offsets, neither of which this

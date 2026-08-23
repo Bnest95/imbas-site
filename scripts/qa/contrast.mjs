@@ -99,6 +99,11 @@ export const STYLES = [
   ".wb-chip__origin-label",
   ".wb-chip__origin-question",
   ".wb-chip__origin-note",
+  // The finding row's own verification question, made legible where the finding is read.
+  // It declares no color and inherits the row's ink, so it is registered on the standing
+  // instruction above rather than on a suspicion: a text style this instrument has never
+  // sampled is an unmeasured text style whatever it inherits.
+  ".wb-measure__question-text",
 ];
 
 export const STATES = [

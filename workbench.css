@@ -4640,6 +4640,22 @@
   margin: 0.2rem 0 0;
 }
 
+/* The question's own words, above the control that copies them. Set in the row's body
+   register and NOT in the accent: the ember in this row belongs to the copy affordance
+   under the accent law recorded above, and painting the sentence as well would put the
+   emphasis on the text a reader is already reading rather than on the one thing they
+   can do with it. Same metrics as the quotation and the absence note it follows, so the
+   row reads as one block and the question does not outrank the finding it belongs to
+   (R15). Declares no colour of its own — it inherits the row's ink, which is what keeps
+   this off the accent registry entirely. */
+.wb-measure__question-text {
+  margin: 0.45rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  max-width: 60ch;
+}
+
+
 .wb-measure__question-link {
   padding: 0;
   border: 0;
