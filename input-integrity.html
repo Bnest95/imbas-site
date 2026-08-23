@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Input Integrity — What a PDF carries under the page</title>
+  <meta name="description" content="Read a PDF's own structure in your browser. The file does not leave your machine.">
+  <link rel="canonical" href="https://www.imbaslabs.com/input-integrity.html">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.imbaslabs.com/input-integrity.html">
+  <meta property="og:site_name" content="Imbas">
+  <meta property="og:title" content="Input Integrity | Imbas">
+  <meta property="og:description" content="Read a PDF's own structure in your browser. The file does not leave your machine.">
+  <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Input Integrity | Imbas">
+  <meta name="twitter:description" content="Read a PDF's own structure in your browser. The file does not leave your machine.">
+  <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/input-integrity.css">
+  <script src="/site-header.js" defer></script>
+  <script type="module" src="/input-integrity.js"></script>
+</head>
+<body>
+
+<div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="brand" aria-label="Imbas, home">
+      <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
+      <span>Imbas</span>
+    </a>
+    <button class="nav__menu-btn" data-shared-nav aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/reader.html">The Reader</a>
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/advisory.html">AI Advisory</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="page page--input-integrity">
+  <div class="page__inner page__inner--narrow">
+
+    <span class="section-label section-label--named"><span data-copy="MASTHEAD.eyebrow">Input Integrity</span></span>
+    <h1 data-copy="MASTHEAD.title">What the file carries under the page</h1>
+    <p class="page__lede" data-copy="MASTHEAD.lede">A PDF's structure can carry more than its pages render. This reads that structure in your browser and reports what the file instructs, with the evidence beside every statement.</p>
+
+    <div class="ii-boundary">
+      <p data-copy="BOUNDARY.statement">This reads the file's own structure and reports what it instructs.</p>
+      <p data-copy="BOUNDARY.denials">It does not scan for viruses, audit security, or make any claim about the file's safety. It reaches no verdict on the document or its author.</p>
+    </div>
+
+    <section id="intake" class="ii-intake" aria-label="Choose a file">
+      <div id="dropzone" class="ii-drop">
+        <p class="ii-drop__prompt" data-copy="INTAKE.prompt">Drop a PDF here, or choose one.</p>
+        <p class="ii-drop__limit" data-copy="INTAKE.limit">PDF only.</p>
+        <button type="button" id="choose" class="ii-drop__choose" data-copy="INTAKE.choose">Choose a PDF</button>
+        <input type="file" id="file-input" accept="application/pdf,.pdf" hidden>
+      </div>
+      <p class="ii-intake__refusal" id="intake-refusal" role="status" hidden></p>
+      <p class="ii-intake__custody" data-copy="INTAKE.custody">Your browser reads the file. The file does not leave this machine.</p>
+      <div class="ii-sample">
+        <button type="button" id="sample" class="ii-sample__action" data-copy="INTAKE.sample_action">Inspect a sample file</button>
+        <p class="ii-sample__note" data-copy="INTAKE.sample_note">A constructed demonstration file, not a document found in the wild.</p>
+      </div>
+    </section>
+
+    <section id="processing" class="ii-processing" hidden aria-live="polite">
+      <span class="ii-processing__pulse" aria-hidden="true"></span>
+      <p data-copy="INTAKE.processing">Reading the file in your browser.</p>
+    </section>
+
+    <section id="result" class="ii-result" hidden aria-live="polite"></section>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/archive.html">Case Archive</a>
+      <a href="/reader.html">The Reader</a>
+      <!--imbas:placement footerDefaultPublicExample--><a href="/archive.html#archive-featured-title" data-example-placement="defaultPublicExample">Featured case</a><!--/imbas:placement-->
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/challenge.html">Challenge</a>
+      <a href="/independence.html">Independence</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/field-notes/">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+      <span><a href="https://creativecommons.org/licenses/by/4.0/">Public record licensed CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

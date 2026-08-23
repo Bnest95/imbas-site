@@ -129,17 +129,31 @@ export async function readPdf({ pdfjsLib, data, standardFontDataUrl }) {
     const attachmentsRaw = await doc.getAttachments();
     const optional_content_groups = await optionalContentRecords(doc);
 
+    // A page that cannot be walked is recorded rather than thrown, because the two
+    // outcomes are different facts and a surface has to be able to tell them apart. A
+    // document that will not open is a failed inspection. A document where nine pages
+    // walked and the tenth did not is a PARTIAL inspection, and the nine results are
+    // real. Aborting the file on the tenth would throw away established evidence and
+    // leave a consumer unable to say which pages it actually covered — so `pages` holds
+    // the walks that completed and `page_failures` names the ones that did not, with
+    // the parser's own reason. Neither list is inferred from the other: their lengths
+    // sum to page_count, and a consumer that reports whole-file coverage has to check.
     const pages = [];
+    const page_failures = [];
     for (let n = 1; n <= doc.numPages; n++) {
-      const page = await doc.getPage(n);
-      const operatorList = await page.getOperatorList();
-      const walk = walkPageOperators({
-        operatorList,
-        ops: pdfjsLib.OPS,
-        page: { index: n - 1, view: page.view, rotation: page.rotate, user_unit: page.userUnit },
-      });
-      walk.annotations = annotationRecords(await page.getAnnotations({ intent: "display" }));
-      pages.push(walk);
+      try {
+        const page = await doc.getPage(n);
+        const operatorList = await page.getOperatorList();
+        const walk = walkPageOperators({
+          operatorList,
+          ops: pdfjsLib.OPS,
+          page: { index: n - 1, view: page.view, rotation: page.rotate, user_unit: page.userUnit },
+        });
+        walk.annotations = annotationRecords(await page.getAnnotations({ intent: "display" }));
+        pages.push(walk);
+      } catch (err) {
+        page_failures.push({ page_index: n - 1, reason: String(err?.message || err) });
+      }
     }
 
     const attachments = Object.entries(attachmentsRaw || {}).map(([key, value]) => ({
@@ -166,6 +180,7 @@ export async function readPdf({ pdfjsLib, data, standardFontDataUrl }) {
       attachments,
       optional_content_groups,
       pages,
+      page_failures,
     };
   } finally {
     await task.destroy();

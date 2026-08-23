@@ -144,7 +144,14 @@ const stripComments = (src) => scanText(src).out;
 const parsesCleanly = (src) => scanText(src).endState === "code";
 
 // ── What ships ────────────────────────────────────────────────────────────────
-const SKIP_DIRS = new Set(["node_modules", ".git", "test", "qa", ".claude", "case", "grant-engine", "lessons", "docs"]);
+// "vendor" is third-party code served verbatim, and both halves of this ratchet's
+// premise break on it. Its string literals are pdf.js internals, not sentences Imbas
+// authored for a reader, so a ceiling over them would ratchet somebody else's release
+// notes. And the scanner is not a parser: pdf.worker.min.mjs is 1.2MB of minified
+// regex literals that finish it mid-literal, so parsesCleanly() already refuses to
+// trust any count taken over it. Baselining a number the scanner itself disowns would
+// be worse than not scanning. Part A holds every string that reaches a reader.
+const SKIP_DIRS = new Set(["node_modules", ".git", "test", "qa", ".claude", "case", "grant-engine", "lessons", "docs", "vendor"]);
 const SCANNED_EXT = /\.(jsx|mjs|html|js)$/;
 
 function shippedFiles(dir = ROOT, out = []) {
