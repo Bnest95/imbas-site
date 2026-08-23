@@ -28,3 +28,6 @@ scripts/
 
 # D1 registry — node-only custody modules, never served
 registry/
+
+# Design research tree — QA fixtures and visual-direction studies, never served
+docs/surface/visual-directions/
