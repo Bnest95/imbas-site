@@ -9,7 +9,7 @@ Operating contract for any AI session touching Imbas. Short by design — contex
 ## Staleness protocol (the standing failure this section exists to stop)
 - Notion pages get updated by prepending UPDATE banners at the header while the body stays stale. **Header banners govern over body text.** Bodies are historical strata — never anchor to them because they are bulky. Weight recency, not volume.
 - Local drafts in `grant-engine/applications/` can differ from what was actually submitted. Files named `*-SUBMITTED-*` are the as-submitted snapshots and are positioning ground truth.
-- Numbers are LOCKED to the Numbers Ledger: 50 cases · 37 scored · 500 captures · 4 models (2026-07-01); the Reader captures runs automatically, with review and publication as separate manual steps. Never revert to the retired 22-scored/331-capture snapshot.
+- Numbers: the 2026-07-01 standing (50 cases · 37 scored · 500 captures · 4 models) is preserved as a historical governed assertion and is NOT authoritative for current public copy. Its archive-tier figures (50 recorded, 500 captures, 45 held) failed custody reconciliation on 2026-08-23 because their provenance is circular; read the custody-correction banner in IMBAS-NUMBERS-LEDGER.md before quoting any of them. Keep them off living surfaces and put nothing in their place. 5 cases have public pages, and that is the only archive count this tree establishes. The Reader captures runs automatically, with review and publication as separate manual steps. Never revert to the retired 22-scored/331-capture snapshot.
 - Retired — never cite in current work: the Hacker News reference · Case 018 PDUFA as lead evidence · v1 1.65-vs-1.17 stats as lead evidence · "case archive" centering · plugin-as-spine · keyword/paste-box detection framing · "Ledger still unlocked / VERIFY every count."
 - Precedence when sources disagree: newest as-submitted application > STATE.md > docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md (Workbench product architecture only) > Notion header banners > page bodies > local drafts. Flag the conflict; never silently pick a side.
 
@@ -69,4 +69,5 @@ Anything failing a check: hold and log in the Discrepancy Log. Never silently fi
 Store one lesson per file in `/lessons`, one-line summary at top. Record corrections and confirmed approaches only. Don't save what the repo, Notion, or chat history already records.
 
 ## Reference docs
-STATE.md · VOICE.md · IMBAS-NUMBERS-LEDGER.md · AUDIT-2026-07-01.md · grant-engine/ (ANSWER-BANK.md · BUDGET-TIERS.md · OBJECTION-CANON.md · campaign-status.md · applications/) · Notion: Numbers Ledger · GRANT-CORE · Reader Agent Spec v3.
+STATE.md · VOICE.md · IMBAS-NUMBERS-LEDGER.md · CLAIMS-LEDGER.md · DOCS-LEDGER.md · grant-engine/ (ANSWER-BANK.md · BUDGET-TIERS.md · OBJECTION-CANON.md · campaign-status.md · applications/) · Notion: Numbers Ledger · GRANT-CORE · Reader Agent Spec v3.
+AUDIT-2026-07-01.md was listed here as a governing source and is unavailable in this repository. It has never been tracked on any ref. Do not cite it, do not look for it here, and do not name any other artifact as that audit. DOCS-LEDGER.md "MISSING" carries the evidence.

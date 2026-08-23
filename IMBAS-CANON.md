@@ -10,7 +10,7 @@ Imbas is real-time AI accountability infrastructure: multi-surface (consumer plu
 Never state a bare case count. State the tier:
 
 - **v1 study (May 2026):** 13 cases × 4 frontier models (GPT, Claude, Gemini, Grok), human-scored 0–3, methodology public.
-- **Public archive claim (locked ledger 2026-07-01):** 50 cases recorded · 500+ captures · 4 frontier models compared · 5 published as full public case records · 45 held.
+- **Public archive claim (locked ledger 2026-07-01) — SUPERSEDED 2026-08-23 for living public copy:** the figures signed off that date were 50 cases recorded · 500+ captures · 4 frontier models compared · 5 published as full public case records · 45 held. They stand as a historical governed assertion. The archive-tier counts among them (50 recorded, 500+ captures, 45 held) are not independently established and must not appear on a living public surface; the custody-correction banner in IMBAS-NUMBERS-LEDGER.md governs. Put nothing in their place. 5 published as full public case records is provable and may be stated where a published-record count is actually needed. The v1 study tier above is unaffected, as are the tier-labeled figures inside the frozen publications.
 - **Evidence custody (July 2026):** the original 13-case corpus = 169 captures under content-addressed custody in a versioned instrument repository with a constitutional human-only admission gate; rejected captures retained as method documentation.
 - Operational Airtable counts are internal and never quoted publicly.
 
@@ -125,7 +125,7 @@ These are locked. Use them verbatim in Brendan's voice across all surfaces. The 
 - "Inspect what AI surfaces — and what it leaves out."
 - "Imbas turns invisible AI behavior into a measurable record."
 - "No one is capturing this. Imbas does."
-- "50 cases recorded · 500+ captures · 4 frontier models compared" (proof strip; tier rule still applies elsewhere)
+- "50 cases recorded · 500+ captures · 4 frontier models compared" (proof strip) — **RETIRED 2026-08-23. Do not use.** It licensed archive-tier counts whose custody is not independently established. The founder ruling of 2026-08-23 supersedes it and locks no replacement phrase in its place.
 - "Observing frontier AI behavior"
 - "Comparable, citable, and measurable over time."
 - "Because AI shapes human judgment."

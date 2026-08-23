@@ -41,8 +41,7 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 | `README.md` | Repo readme. Matches live static site. |
 | `DEPLOY.md` | Deploy notes. Matches live build (workbench bundle, field-notes API). |
 | `CLAIMS-LEDGER.md` | Governing authority for every public claim / all copy. |
-| `IMBAS-NUMBERS-LEDGER.md` | Locked numbers source (50/37/500/4). |
-| `AUDIT-2026-07-01.md` | Current full audit; STATE.md "Known gaps" points here. |
+| `IMBAS-NUMBERS-LEDGER.md` | Numbers source. Carries the 2026-07-01 standing as a historical governed assertion plus the 2026-08-23 custody correction that governs it. Read the banner before quoting a figure. |
 | `AGENTS.md` | Agent entrypoint stub → CLAUDE.md + CLAIMS-LEDGER.md. Byte-identical to `GEMINI.md` **by design** (parallel per-tool entrypoints); NOT treated as duplicate — deleting either removes a tool's entrypoint. |
 | `GEMINI.md` | Gemini CLI entrypoint stub. See `AGENTS.md` note above. |
 | `grant-engine/ANSWER-BANK.md` | Canonical answer set (CLAUDE.md). |
@@ -65,6 +64,12 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 | `lessons/2026-07-04-fabricated-submitted-status.md` | Lesson (memory, per CLAUDE.md `/lessons`). |
 | `lessons/reader-not-plugin-framing.md` | Lesson (memory). |
 | `DOCS-LEDGER.md` | This ledger. |
+
+## MISSING — cited as governing, absent from this repository
+
+| File | Status |
+|------|--------|
+| `AUDIT-2026-07-01.md` | **Unavailable in this repository.** It was cited as a governing source by `CLAUDE.md` (reference docs) and by `STATE.md` ("Known gaps"), and it has never been tracked on any ref in this repo: `git log --all -- AUDIT-2026-07-01.md` returns nothing and no object in `git rev-list --all --objects` carries the name. Both citations were rewritten on 2026-08-23 so that nothing depends on it as an accessible governing source. No replacement was written and no other artifact may be named as that audit; fabricating it would be worse than its absence. If the genuine original exists elsewhere in project custody, recovering it is a separate act. Record its location and method here when it happens. |
 
 ## SUPERSEDED — bannered + moved to `docs-archive/`
 

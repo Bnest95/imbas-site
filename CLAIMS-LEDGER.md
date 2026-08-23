@@ -8,7 +8,7 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 1. historical study fact · 2. historical case fact · 3. current product capability · 4. current operational/site metric · 5. current archive/public-record state · 6. derived statistic · 7. methodology/protocol description · 8. planned protocol / future work · 9. positioning / mission · 10. hypothesis / interpretation
 
 ## Sources of truth
-- **Numbers:** `IMBAS-NUMBERS-LEDGER.md` (LOCKED 2026-07-01: 50 cases recorded · 37 scored under current rubric · 500 model captures · 4 models). Airtable base `appfxHraqlcpP1AAP` — Cases `tblf7c2RYUolaTVXJ`, Repository `tblyPn1kp4PHbxTWz`, Reader Runs `tblqmHiOCQ5YSXBN3`.
+- **Numbers:** `IMBAS-NUMBERS-LEDGER.md`, and read its 2026-08-23 custody-correction banner first. The 2026-07-01 archive-tier figures (50 cases recorded · 500 model captures · 45 held) are preserved there as a historical governed assertion and are **not authoritative for current public copy**: their provenance chain is circular and its last link was broken before it was cited. Restoring any of them to a public surface requires a fresh custody reconciliation under an explicit population definition. Airtable base `appfxHraqlcpP1AAP` — Cases `tblf7c2RYUolaTVXJ`, Repository `tblyPn1kp4PHbxTWz`, Reader Runs `tblqmHiOCQ5YSXBN3`.
 - **Current-state operational metrics (read-only):** `scripts/imbas-metrics.mjs` (`npm run metrics`) reports live-table state from base `appfxHraqlcpP1AAP` for pipeline management — Cases-table total + Severity coverage + the exact unscored substantive Case IDs (intentionally-unscored controls separated, detected from the live `(control…)` Name annotation, not a hardcoded list), Repository triage-status distribution, and Reader Runs provenance-population. Read-only (GETs only); never prints captured content. **These are operational counts, not the public record figures.** The live Cases-table row count and its Severity coverage are NOT the locked "50 recorded / 37 scored" Numbers-Ledger figures in #8 (the current table shows fewer scored rows — the same population CLAUDE.md flags as the retired 22-scored snapshot). Use the script to track the open Severity backfill and triage state, never as a public metric or to override the Numbers Ledger.
 - **Reader behavior:** `api/read.js` (agent writes prose read + `completeness`, `what_was_left_out`, `how_it_was_shaped`; as of Reader v2 also an optional measurement layer — a 0–3 `candidate_gap` estimate plus candidate findings — which is explicitly unvalidated and is NOT the rubric-bound validated Volunteer Gap score/category the client assigns for cases).
 - **Capture / candidate pool:** `api/repository.js` (Repository table; Triage Status `new`; "Never touches the Cases archive").
@@ -84,23 +84,23 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **Should not be used:** Do not rewrite scores or findings because positioning evolved. Case 006 is a v1 fact with no public page — reference as text only, never as a link.
 - **Update trigger:** Never (locked historical evidence). Any change requires re-scoring documentation, not copy edits.
 
-### 8. "50+ cases recorded" / "500+ model captures"
-- **Category:** 4 (current operational/site metric)
-- **Canonical interpretation:** The record holds 50 cases and 500 model captures across four frontier models (37 scored under the current rubric) as of 2026-07-01; figures are floors ("+"), growing.
-- **Source of truth:** `IMBAS-NUMBERS-LEDGER.md`.
-- **Temporal scope:** Current; expected to grow.
-- **May be used:** Homepage proof strip, archive stat strip. Floor phrasing ("50+", "500+") preferred over exact frozen counts.
-- **Should not be used:** Do not revert to the retired 22-scored / 331-capture snapshot. Do not state exact non-floor counts that will stale.
-- **Update trigger:** New signed-off standing in `IMBAS-NUMBERS-LEDGER.md`.
+### 8. "50+ cases recorded" / "500+ model captures" — RETIRED from public copy 2026-08-23
+- **Category:** 4 (current operational/site metric) — retired; no current-metric claim replaces it.
+- **Canonical interpretation:** These figures were signed off on 2026-07-01 and governed public copy until 2026-08-23. A custody reconciliation then established that they cannot be traced: 50+ and 500+ entered `index.html` on 2026-06-08 (`0b0320e`) carrying no source, propagated site-wide on 2026-06-14 (`cec00a1`) as "homepage source of truth," and were cited back on 2026-07-05 (`fdb37e7`) as the Numbers Ledger's corroboration, pointing at a `methodology.html` sentence deleted two days earlier on 2026-07-03 (`8c89c9e`). The tree cannot establish 50 total cases, 45 held, or any capture figure. The figures remain a historical governed assertion in `IMBAS-NUMBERS-LEDGER.md`; they are not evidence.
+- **Source of truth:** `IMBAS-NUMBERS-LEDGER.md`, custody-correction banner (2026-08-23).
+- **Temporal scope:** Historical (2026-07-01 to 2026-08-23). No current figure supersedes it.
+- **May be used:** Nowhere on a public surface. Internal custody discussion only, always with its status attached.
+- **Should not be used:** Do not put 50, 50+, 500, 500+, or 45 on any living surface. Do not substitute 37, 22, or 331 — none is established well enough for public copy, and the 2026-07-01 sign-off retired the 22/331 snapshot without this correction reinstating it. Do not infer a replacement count from any other figure. Do not restore the figures on the authority of a locked ledger, a canon tier rule, or a locked phrase; a locked figure does not outrank contradictory or missing evidence.
+- **Update trigger:** A fresh custody reconciliation under an explicit population definition (what counts as a case, what counts as a capture, which table is authoritative), signed off and recorded in `IMBAS-NUMBERS-LEDGER.md`.
 
 ### 9. Archive / public-record definition
 - **Category:** 5 (current archive/public-record state)
-- **Canonical interpretation:** The Case Archive is a growing, human-reviewed public record of observed AI surfacing behavior under documented prompt conditions. 50 recorded cases; 5 have public pages (003, 005, 013, 018, 021); 45 held pending release.
-- **Source of truth:** `archive.html` (stat strip + qualifier "50 recorded · 5 public · 45 held"); sitemap; CollectionPage JSON-LD.
+- **Canonical interpretation:** The Case Archive is a growing, human-reviewed public record of observed AI surfacing behavior under documented prompt conditions. 5 cases have public pages (003, 005, 013, 018, 021). Further records are held; how many is not established. The total-case and held counts were removed from public copy on 2026-08-23 under the custody correction in #8.
+- **Source of truth:** `archive.html` (qualifier "5 public records"; arc-record entries); `sitemap.xml`; CollectionPage/ItemList JSON-LD (`numberOfItems: 5`); the five files under `case/`. The 5 figure is provable four independent ways and is the only archive count that is.
 - **Temporal scope:** Current.
-- **May be used:** Archive, homepage, for-readers, metadata.
-- **Should not be used:** Do not describe the archive as an automated dump of Reader outputs. Do not imply all 50 cases have public pages.
-- **Update trigger:** Change in count of public case pages (sitemap) or signed-off recorded/held counts.
+- **May be used:** Archive, homepage, for-readers, metadata — the 5-public-records figure only, and only where a published-record count is actually needed. Nonnumeric context about held records may stand in existing governed wording ("Additional records are held until validation and publication are complete").
+- **Should not be used:** Do not describe the archive as an automated dump of Reader outputs. Do not state a total-case count or a held count; neither is established. Do not mechanically substitute "5 published" into every location a removed archive-tier figure vacated.
+- **Update trigger:** Change in count of public case pages (sitemap + `case/` + JSON-LD + archive entries must agree), or a signed-off custody reconciliation establishing recorded/held counts.
 
 ### 10. Candidate observation vs public case
 - **Category:** 5 (current archive state) + 7 (methodology description)
@@ -200,6 +200,24 @@ Do not treat this ledger as aspirational. If the repository does not prove a cap
 - **May be used:** Internal ops / `DEPLOY.md` description, methodology-hardening notes, resilience posture in operational/funder context.
 - **Should not be used:** Do not say telemetry is "collected," "transmitted," "sent," or "reported" — it is browser-local and transmission is disabled. There is no production default ceiling; do not present any historical development number (e.g. `8`) as a launch, production, or budget figure. While the ceiling is unset, metered calls fail closed to the capacity fallback and instruction generation stays available. Do not describe the follow-up or paired comparison as better, corrected, fixed, safer, or true; the capacity path only preserves the person's ability to generate and run a follow-up in their own AI. Do not claim durable rate limiting or a spend ceiling is "complete," "guaranteed," or "verified," and do not claim a launch ceiling is set. Do not describe any of this as a dashboard, monitoring product, or delivered unit-economics reporting — only metric definitions exist. No user content ever enters telemetry or operational logs.
 - **Update trigger:** A founder-set interim launch spend ceiling (`READER_SPEND_CEILING_USD`); an approved telemetry privacy line plus a server-delivered `config.enabled === true` flag (via `shouldTransmitTelemetry`); or a change to the timeout/ceiling config, the telemetry event allowlist, or the capacity-degradation copy.
+
+### 21. Frozen publications — what counts as a revision, and what does not
+- **Category:** 7 (methodology/protocol description)
+- **Canonical interpretation:** `whitepaper.html` and `volunteer-gap-paper.html` are frozen dated publications. Each carries its own colophon rule: superseded only by a later version with a change log, never silently edited. `IMBAS-CANON.md` rule 5 defines the freeze itself and is untouched by this entry. This entry answers the classification question the freeze does not: which edits count as a revision. **Site-shell changes do not constitute a publication revision** — navigation, footer, and design-system integration require no change-log entry, provided they do not alter substantive claims, figures, methods, conclusions, or evidentiary content. **The converse binds equally: a shell edit must not alter the article's substantive rendered content.** If a shell change would move a figure, a claim, a method statement, a conclusion, or evidentiary text, it is a revision and takes the change-log path instead. The tier-labeled figures inside both papers are part of the published historical record, not current site metrics; they are correct as published and are not touched when current copy is corrected. A later version's change log carries any correction.
+- **Source of truth:** `whitepaper.html` and `volunteer-gap-paper.html` colophons; `IMBAS-CANON.md` rule 5 (the freeze); this entry (the classification).
+- **Temporal scope:** Durable.
+- **May be used:** Any pass touching either paper's shell, and any pass correcting current-site figures that also appear in a paper.
+- **Should not be used:** Do not add an addendum, note, or correction to a frozen paper to reconcile it with corrected current copy. Do not treat a paper's tier-labeled figure as a current metric. Do not use this exemption to reach substantive content.
+- **Update trigger:** A published later version of either paper, or a founder ruling narrowing what counts as chrome.
+
+### 22. "169 captures" (v1 corpus, evidence custody) — provenance unresolved in this repository
+- **Category:** 1 (historical study fact) — provenance unresolved here.
+- **Canonical interpretation:** `whitepaper.html` reports the original 13-case corpus as 169 captures held under content-addressed custody in a versioned instrument repository behind a human-only admission gate. It is a publication figure whose source record is **not recoverable from this repository**. `IMBAS-CANON.md` places that custody in a separate repo (`Projects/imbas-instrument`). This tree can neither confirm nor refute the figure. It is a separate orphan from the archive-tier 50/500/45 chain in #8 and must not be folded into it.
+- **Source of truth:** None available in this repository. `whitepaper.html` (as published, frozen); `IMBAS-CANON.md` (points custody elsewhere).
+- **Temporal scope:** Published July 2026; provenance unresolved as of 2026-08-23.
+- **May be used:** Where it already stands in the frozen whitepaper, untouched.
+- **Should not be used:** Do not promote 169 to any other surface. Do not manufacture a custody trail for it after the fact. Do not cite it as corroborating or contradicting any archive-tier figure.
+- **Update trigger:** Recovery of the source record in project custody, recorded with its location and method.
 
 ---
 

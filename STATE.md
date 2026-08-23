@@ -8,9 +8,9 @@
 - Static site carrying the validated case record; Field Notes email signup live.
 - Two-tier data model operating: open capture pool (Repository `tblyPn1kp4PHbxTWz`) → human-promoted Cases (`tblf7c2RYUolaTVXJ`).
 
-## Numbers (LOCKED 2026-07-01 — Numbers Ledger governs)
+## Numbers (custody-corrected 2026-08-23 — Numbers Ledger governs)
 
-50 cases recorded · 37 scored against the current rubric · 500 model captures · 4 frontier models. The Reader captures runs automatically; review and publication are separate manual steps. Never revert to the retired 22-scored / 331-capture snapshot (2026-06-13).
+The 2026-07-01 standing (50 cases recorded · 37 scored against the current rubric · 500 model captures · 4 frontier models) is preserved as signed off and is NOT authoritative for current public copy. Its archive-tier figures (50 recorded, 500 captures, 45 held) failed custody reconciliation on 2026-08-23 because their provenance is circular; the custody-correction banner in IMBAS-NUMBERS-LEDGER.md governs. Keep them off living surfaces and put nothing in their place. 5 cases have public pages, and that is the only archive count this tree establishes. The Reader captures runs automatically; review and publication are separate manual steps. Never revert to the retired 22-scored / 331-capture snapshot (2026-06-13).
 
 ## Positioning (canonical)
 
@@ -22,7 +22,7 @@
 - Newest register (Longview, 2026-07-02): independent situation monitoring of the AI-mediated information environment — whether frontier systems preserve or degrade the public's ability to see concentrated power clearly.
 - Retired, never use: Hacker News reference · Case 018 PDUFA as lead evidence · v1 1.65-vs-1.17 stats as lead evidence · "case archive" centering · plugin-as-spine · keyword/paste-box detection framing.
 
-## Known gaps (open items from AUDIT-2026-07-01.md)
+## Known gaps (the audit that recorded them is unavailable in this repository — see DOCS-LEDGER.md "MISSING")
 
 Airtable Severity backfill for cases 023–037 · Experience Captures table empty · Repository triage backlog (8 rows).
 
