@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "7c81b2e2105e92575a49ceb4ba93c55f25640180",
+  "measured_at_master": "da2f2384cf4db28b6774a8a4e1fb1cd220904350",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -66,10 +66,100 @@
       },
       {
         "path": "workbench.css",
-        "sha256": "c9977aa19c998ea97efe7c59a87969c007a8014234f7e86567d8965272a54b61"
+        "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
       }
     ],
-    "sha256": "9724adaa442524d6078f2e4de180bd9a2e5eb78a99adf0c1df13041e41e97078"
+    "sha256": "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229"
+  },
+  "provenance": {
+    "reseal_rule": {
+      "disposition": "ruled — founder ruling of 2026-08-22, recorded against the Reader value-seam amendment",
+      "ruling": {
+        "date": "2026-08-22",
+        "authority": "founder",
+        "recorded_against": "Reader value-seam correction — amendment, ruling two",
+        "text": "A source-fingerprint change may be resealed only after the governed instrument proves that every measured value and every governed inventory is unchanged, and the source movement is attributable to an identified authorized change. The reseal records provenance; it does not convert a changed measurement into an accepted one, and it is never a response to a failing test.",
+        "record_requirements": [
+          "state that measured state did not move;",
+          "name the authorized edit that moved the source hash;",
+          "show the before-and-after governed counts and inventory as identical."
+        ]
+      },
+      "what_this_is_not": "This is provenance maintenance, not baseline acceptance. A reseal carries no authority over a measured value. If any count or any free-alpha inventory line differs, the condition for a reseal is absent and the difference is a finding to report, whatever the test output looks like.",
+      "standing_instruction": "Before resealing, run --check and read WHICH lines it printed. A fingerprint line alone is the reseal condition. A fingerprint line accompanied by any count or inventory line is not — reseal nothing, and report the measurement. Never reseal because a custody seal in the suite went red: the red seal is the prompt to look, and the proof is the instrument's own --check output, never the test result."
+    },
+    "reseals": [
+      {
+        "date": "2026-08-22",
+        "reason": "authorized source edits in commit da2f238, 'Close the Reader finding-to-action seam'",
+        "fingerprint_before": "9724adaa442524d6078f2e4de180bd9a2e5eb78a99adf0c1df13041e41e97078",
+        "fingerprint_after": "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229",
+        "authorized_edits": [
+          {
+            "source": "workbench.css",
+            "extraction": "whole file",
+            "sha256_before": "c9977aa19c998ea97efe7c59a87969c007a8014234f7e86567d8965272a54b61",
+            "sha256_after": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+            "edit": "added the .wb-measure__question-text rule — margin, font-size, line-height, max-width. It declares no colour and no border, so it introduces no ember spend of any kind: not a declared-token spend, not a free alpha, not a literal hue."
+          }
+        ],
+        "edits_that_moved_no_governed_source": [
+          {
+            "source": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256_unchanged": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+            "edit": "MeasurementPanel sorts its finding rows by the numeral they already carry, and FindingQuestion renders the card's literal verification_question above the copy control. One new className, wb-measure__question-text, and no change to any ember-bearing class."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false
+      }
+    ]
   },
   "source_extraction": [
     {
@@ -80,7 +170,7 @@
     {
       "path": "workbench.css",
       "extraction": "whole file",
-      "sha256": "c9977aa19c998ea97efe7c59a87969c007a8014234f7e86567d8965272a54b61"
+      "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
     },
     {
       "path": "workbench-app.jsx",

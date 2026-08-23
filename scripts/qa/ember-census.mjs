@@ -701,6 +701,121 @@ export const R14_ADJUDICATION = {
   ],
 };
 
+// ── The provenance-reseal rule ───────────────────────────────────────────────
+// The coverage fingerprint hashes the region selector, the driven scenarios, the driven
+// viewports, and the sha256 of every governed source. So ANY authorized edit to a governed
+// source moves the fingerprint, including one that moves no measured value — and this
+// census has exactly one governed source that product work touches routinely.
+//
+// That recurs, and it has one honest response and one dishonest one. The honest response
+// records why the hash moved. The dishonest one rewrites the artifact because a seal went
+// red. They produce the same file, which is why the rule below has to be recorded rather
+// than remembered.
+export const PROVENANCE_RESEAL_RULE = {
+  disposition: "ruled — founder ruling of 2026-08-22, recorded against the Reader value-seam amendment",
+
+  // Verbatim.
+  ruling: {
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "Reader value-seam correction — amendment, ruling two",
+    text:
+      "A source-fingerprint change may be resealed only after the governed instrument proves " +
+      "that every measured value and every governed inventory is unchanged, and the source " +
+      "movement is attributable to an identified authorized change. The reseal records " +
+      "provenance; it does not convert a changed measurement into an accepted one, and it is " +
+      "never a response to a failing test.",
+    record_requirements: [
+      "state that measured state did not move;",
+      "name the authorized edit that moved the source hash;",
+      "show the before-and-after governed counts and inventory as identical.",
+    ],
+  },
+
+  what_this_is_not:
+    "This is provenance maintenance, not baseline acceptance. A reseal carries no authority " +
+    "over a measured value. If any count or any free-alpha inventory line differs, the " +
+    "condition for a reseal is absent and the difference is a finding to report, whatever the " +
+    "test output looks like.",
+
+  standing_instruction:
+    "Before resealing, run --check and read WHICH lines it printed. A fingerprint line alone is " +
+    "the reseal condition. A fingerprint line accompanied by any count or inventory line is not " +
+    "— reseal nothing, and report the measurement. Never reseal because a custody seal in the " +
+    "suite went red: the red seal is the prompt to look, and the proof is the instrument's own " +
+    "--check output, never the test result.",
+};
+
+// Every reseal this artifact has carried, appended, never rewritten. Each entry names its
+// authorized edit; the identity evidence beside it is COMPUTED at write time in
+// buildArtifact against the live measurement, so an entry cannot claim an identity the
+// instrument does not currently reproduce.
+export const PROVENANCE_RESEALS = [
+  {
+    date: "2026-08-22",
+    reason: "authorized source edits in commit da2f238, 'Close the Reader finding-to-action seam'",
+    fingerprint_before: "9724adaa442524d6078f2e4de180bd9a2e5eb78a99adf0c1df13041e41e97078",
+    fingerprint_after: "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229",
+    // ONE governed source moved. The commit edited others; only this one is hashed here.
+    authorized_edits: [
+      {
+        source: "workbench.css",
+        extraction: "whole file",
+        sha256_before: "c9977aa19c998ea97efe7c59a87969c007a8014234f7e86567d8965272a54b61",
+        sha256_after: "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+        edit:
+          "added the .wb-measure__question-text rule — margin, font-size, line-height, max-width. " +
+          "It declares no colour and no border, so it introduces no ember spend of any kind: not a " +
+          "declared-token spend, not a free alpha, not a literal hue.",
+      },
+    ],
+    // Recorded so a later reader does not infer a second contribution from the commit's own
+    // diff. workbench-app.jsx changed in da2f238 and its governed hash did NOT move, because
+    // this census hashes an extraction of that file rather than the file: the five CSS
+    // template literals named in source_extraction, which the commit left byte-identical.
+    edits_that_moved_no_governed_source: [
+      {
+        source: "workbench-app.jsx",
+        extraction: "CSS template literals only",
+        sha256_unchanged: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+        edit:
+          "MeasurementPanel sorts its finding rows by the numeral they already carry, and " +
+          "FindingQuestion renders the card's literal verification_question above the copy control. " +
+          "One new className, wb-measure__question-text, and no change to any ember-bearing class.",
+      },
+    ],
+    // The measured state as the committed baseline held it, typed from that file. buildArtifact
+    // compares the live measurement against these and publishes the verdict, so a wrong
+    // transcription here fails visibly instead of passing quietly.
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
+];
+
+// The key --check compares inventory lines on. One definition, so the reseal evidence and
+// the drift check cannot disagree about what "the same spend" means.
+export const inventoryLine = (r) => `${r.source}|${r.selector}|${r.property}|${r.value}`;
+
 function headSha() {
   try {
     return execFileSync("git", ["rev-parse", "HEAD"], { cwd: REPO_ROOT, encoding: "utf8" }).trim();
@@ -778,6 +893,25 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
   }
   restingPaint.sort((a, b) => `${a.cls}|${a.property}|${a.alpha}`.localeCompare(`${b.cls}|${b.property}|${b.alpha}`));
 
+  const counts = {
+    declared_token_spends: declaredSpends.length,
+    free_alpha_spends: freeSpends.length,
+    distinct_free_alphas: distinctFree.length,
+    free_alpha_spends_resting: restingFree.length,
+    free_alpha_spends_pseudo_state_only: freeSpends.length - restingFree.length,
+  };
+  const freeAlphaInventory = freeSpends.map((r) => ({
+    source: r.source,
+    selector: r.selector,
+    property: r.property,
+    value: r.value,
+    media: r.media,
+    scope: r.scope,
+    pseudo_state_only: r.pseudo_state_only,
+    alphas: r.free_alphas.map((f) => f.alpha),
+  }));
+  const inventoryNow = freeAlphaInventory.map(inventoryLine).sort();
+
   return {
     instrument: "scripts/qa/ember-census.mjs",
     rule: "R14 — ember spends only against the standing role registry",
@@ -785,6 +919,26 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
     measured_at_master: headSha(),
     renderer: browserVersion,
     coverage_fingerprint: coverageFingerprint({ scenarios, viewports, sources: inv.sources }),
+    // Why this fingerprint is the one it is. The rule is static; the identity evidence
+    // beside each reseal is measured here, against this run, so an entry that claims an
+    // identity the instrument no longer reproduces says so in the artifact it is written into.
+    provenance: {
+      reseal_rule: PROVENANCE_RESEAL_RULE,
+      reseals: PROVENANCE_RESEALS.map((r) => {
+        const countsIdentical = Object.keys(counts).every((k) => r.counts_before[k] === counts[k]);
+        const before = [...r.free_alpha_inventory_before].sort();
+        const inventoryIdentical =
+          before.length === inventoryNow.length && before.every((k, i) => k === inventoryNow[i]);
+        return {
+          ...r,
+          counts_after: counts,
+          counts_identical: countsIdentical,
+          free_alpha_inventory_after: inventoryNow,
+          free_alpha_inventory_identical: inventoryIdentical,
+          measured_state_moved: !(countsIdentical && inventoryIdentical),
+        };
+      }),
+    },
     source_extraction: inv.sources.map((s) => ({ path: s.path, extraction: s.extraction, sha256: s.sha256 })),
     declared_ramp: {
       paint_tokens: inv.ramp.paintTokens,
@@ -792,24 +946,9 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
       hues: [...inv.ramp.hues].sort(),
     },
     scenarios_rendering_region: [...new Set(regionStates.map((s) => s.scenario))].sort(),
-    counts: {
-      declared_token_spends: declaredSpends.length,
-      free_alpha_spends: freeSpends.length,
-      distinct_free_alphas: distinctFree.length,
-      free_alpha_spends_resting: restingFree.length,
-      free_alpha_spends_pseudo_state_only: freeSpends.length - restingFree.length,
-    },
+    counts,
     distinct_free_alphas: distinctFree,
-    free_alpha_inventory: freeSpends.map((r) => ({
-      source: r.source,
-      selector: r.selector,
-      property: r.property,
-      value: r.value,
-      media: r.media,
-      scope: r.scope,
-      pseudo_state_only: r.pseudo_state_only,
-      alphas: r.free_alphas.map((f) => f.alpha),
-    })),
+    free_alpha_inventory: freeAlphaInventory,
     declared_token_inventory: declaredSpends.map((r) => ({
       source: r.source, selector: r.selector, property: r.property, tokens: r.declared_tokens, scope: r.scope,
     })),
@@ -923,23 +1062,33 @@ async function main() {
     }
     const base = JSON.parse(fs.readFileSync(target, "utf8"));
     const diffs = [];
+    let fingerprintOnly = false;
     if (base.coverage_fingerprint.sha256 !== artifact.coverage_fingerprint.sha256) {
       diffs.push(
         `coverage fingerprint: ${base.coverage_fingerprint.sha256} → ${artifact.coverage_fingerprint.sha256}. ` +
           "The governed population moved. Compare unlike populations and every count below is meaningless.",
       );
+      // Which of the two things this is depends entirely on whether any line follows it.
+      fingerprintOnly = true;
     }
     for (const k of Object.keys(artifact.counts)) {
       if (base.counts[k] !== artifact.counts[k]) diffs.push(`${k}: ${base.counts[k]} → ${artifact.counts[k]}`);
     }
-    const line = (r) => `${r.source}|${r.selector}|${r.property}|${r.value}`;
-    const was = new Set(base.free_alpha_inventory.map(line));
-    const now = new Set(artifact.free_alpha_inventory.map(line));
+    const was = new Set(base.free_alpha_inventory.map(inventoryLine));
+    const now = new Set(artifact.free_alpha_inventory.map(inventoryLine));
     for (const k of now) if (!was.has(k)) diffs.push(`new free-alpha spend: ${k}`);
     for (const k of was) if (!now.has(k)) diffs.push(`free-alpha spend gone: ${k}`);
     if (diffs.length) {
       log("\n  ✗ census diverges from the committed baseline:");
       for (const d of diffs) log(`      ${d}`);
+      // The reseal condition, stated where an operator reads the failure rather than
+      // only in the rule they would have to already know to go and read.
+      if (fingerprintOnly && diffs.length === 1) {
+        log("\n      Fingerprint only: no count moved and no inventory line moved. Per");
+        log("      PROVENANCE_RESEAL_RULE this is resealable with --write once the source");
+        log("      movement is attributed to an identified authorized edit and recorded in");
+        log("      PROVENANCE_RESEALS. A reseal records provenance; it accepts nothing.");
+      }
       return 1;
     }
     log("\n  ✓ census matches the committed baseline.");

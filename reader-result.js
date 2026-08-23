@@ -1265,6 +1265,146 @@ export const R4_ADJUDICATION = deepFreeze({
     "reordering the input silently reassigns numerals among findings that tie on span.",
 });
 
+// ── The finding-continuation ruling ──────────────────────────────────────────
+// WHICH FINDINGS MAY CARRY A LOCAL ACTION, and on what evidence. Both predicates that
+// decide it are computed in this file — `verification_card_id`, seated by describeFinding
+// above, and `in_document`, seated by buildSourceReading below — so this file is where the
+// ruling that reads them belongs.
+//
+// Data rather than a comment so a test can pin it, and so a render site asks which tier a
+// finding is in rather than re-deriving the boundary from two fields it happens to hold.
+//
+// TIER TWO IS RULED AND NOT BUILT. That asymmetry is the point of recording this: the
+// mechanism it needs already ships and answers correctly, and what stops it is three
+// strings that do not exist. Recorded in `continuation_gap` so the next pass reads a
+// specific copy request rather than rediscovering the wall.
+export const FINDING_CONTINUATION_RULING = deepFreeze({
+  rule: "a finding's local continuation is governed by its evidence tier and by nothing else",
+  disposition:
+    "ruled — founder amendment of 2026-08-22 to the Reader value-seam correction. Tiers one and " +
+    "three are settled and shipped; tier two is settled and held on copy the tree does not carry",
+
+  ruling: deepFreeze({
+    date: "2026-08-22",
+    authority: "founder",
+    recorded_against: "Reader value-seam correction — amendment, ruling one",
+    // Verbatim.
+    text:
+      "Findings that do not qualify for the Check Register get a local continuation ONLY where the " +
+      "finding has a concrete passage in the answer the person can act on. For those, expose the " +
+      "existing span affordance from the finding row: the machinery already ships, it composes from " +
+      "the governed bank, and it invents no epistemic category. Use the smallest existing mechanism " +
+      "the current contracts support; compose no new prose in a governed path. Record-level and " +
+      "ABSENT findings get NO local continuation in this lane. Do not point them at the span " +
+      "affordance: they have no passage, so \"select the passage\" is not a continuation of that " +
+      "finding, it is a manufactured connection that lowers a zero-count without helping anyone. Do " +
+      "not manufacture a verification question, an evidence state, or any wording implying " +
+      "passage-level evidence. Those findings stay honestly without a local action and are picked up " +
+      "by the committed corrective steering layer, which takes the person's own words as input and " +
+      "needs no passage.",
+    stop_clause:
+      "If after this ruling the tree still cannot determine the exact rendered text from existing " +
+      "vocabulary, STOP and return the precise copy or schema gap rather than fabricating a string.",
+  }),
+
+  // THE GOVERNING DISTINCTION, which the ruling directs be stated in whatever durable
+  // record this lane touches. Three tiers, each decided by the record alone.
+  tiers: deepFreeze([
+    deepFreeze({
+      id: "register_qualified",
+      decided_by: "verification_card_id !== null",
+      gets: "a specific check, grounded in the stronger evidence contract",
+      renders: "FindingQuestion — the card's literal verification_question, then the control that copies it",
+      status: "shipped",
+    }),
+    deepFreeze({
+      id: "passage_anchored_non_register",
+      decided_by: "verification_card_id === null, and at least one of the finding's marks has in_document === true",
+      gets: "a continuation that is explicitly NOT a verification",
+      renders: null,
+      status: "held — ruled, and blocked on copy; see continuation_gap",
+    }),
+    deepFreeze({
+      id: "record_level",
+      decided_by: "verification_card_id === null, and no mark of the finding has in_document === true",
+      gets: "neither, by ruling",
+      renders: null,
+      status: "shipped as silence",
+      picked_up_by:
+        "the corrective steering layer — ChipLane in workbench-app.jsx, which takes the person's own " +
+        "answer as its input and needs no passage",
+    }),
+  ]),
+
+  // WHY TIER TWO DID NOT SHIP. The mechanism was measured against every shipped fixture and
+  // it answers correctly: resolveSpanAction over a passage-anchored non-Register finding's
+  // OWN mark span returns COMPOSE on all 33 such marks, in both modes, touching zero cards.
+  // Nothing here is a doubt about the machinery.
+  //
+  // What blocks it is that the span lane's entire vocabulary asserts the person chose the
+  // passage, and in a finding row Imbas chose it. Three strings say so, and none of the
+  // three has an existing counterpart that is true in the finding-row case.
+  continuation_gap: deepFreeze({
+    mechanism_status: "available and correct — resolveSpanAction returns COMPOSE for the whole tier",
+    blocked_on: "user-facing copy, not schema and not machinery",
+    gaps: deepFreeze([
+      deepFreeze({
+        id: "problem_entry_provenance",
+        where: "reader-span-bank.js, entry P1 — the PROBLEM default by recorded order",
+        string: "You marked this as the problem. Ask your AI: what is this based on, and what is the source and date?",
+        why_it_fails:
+          "Its opening clause states that the person marked the passage. Composed from a finding row " +
+          "the passage is Imbas's own mark, so the clause is false, and it travels into the message " +
+          "the person pastes into their AI. P1's own abstraction_note already holds this clause under " +
+          "founder review for a related defect, so the entry is not settled copy.",
+        what_would_resolve_it:
+          "either a founder-approved PROBLEM entry whose instruction states no provenance, or a ruling " +
+          "that the row composes DESIRED only — which is a bank-level default decision that " +
+          "defaultSpanEntry explicitly reserves to the founder",
+      }),
+      deepFreeze({
+        id: "attribution_line_inverts",
+        where: "reader-span-selection.js, SPAN_UI.attribution",
+        string: "You selected this passage. Imbas did not mark it.",
+        why_it_fails:
+          "Over a finding's own mark, Imbas did mark it. The line's recorded purpose is to tell a " +
+          "person which kind of highlight they are looking at on a surface dense with Imbas's marks, " +
+          "so the finding-row case inverts the exact condition it was written for. Dropping the line " +
+          "removes the boundary statement where mark provenance is most confusable, and no string in " +
+          "the tree states the inverse.",
+        what_would_resolve_it: "one founder-approved attribution line for a passage Imbas marked",
+      }),
+      deepFreeze({
+        id: "affordance_labels_presuppose_a_gesture",
+        where: "reader-span-selection.js, SPAN_UI.problem_affordance and SPAN_UI.desired_affordance",
+        string: "Click the problem / Click what you want",
+        why_it_fails:
+          "Both are imperatives to click on the passage, recorded as the founder's phrasing family " +
+          "pre-cleared for the selection lane. A finding row has no passage to click: the row's " +
+          "passage is fixed and the button is the only clickable thing, so the labels instruct an act " +
+          "that cannot occur there.",
+        what_would_resolve_it: "one founder-approved row-level label per mode, or one for a single ruled mode",
+      }),
+    ]),
+    // A fourth constraint, recorded because it rules out the obvious way around the first three.
+    duplication_bar:
+      "test/reader-span-selection.test.mjs pins the affordance pair and its attribution together: two " +
+      "buttons, exactly one attribution line, and that line is SPAN_UI.attribution. Rendering the two " +
+      "buttons in a finding row without the line either breaks that committed invariant or needs a " +
+      "second component that is SpanAffordances minus its boundary statement. That second component is " +
+      "the duplicated-machinery defect for which Actionability v1 was rejected.",
+  }),
+
+  standing_instruction:
+    "Do not give a record-level or ABSENT finding a local continuation, and do not point one at the " +
+    "span affordance: it has no passage, so the affordance is a manufactured connection that lowers a " +
+    "zero-count without helping anyone. Do not manufacture a verification question, an evidence state, " +
+    "or any wording implying passage-level evidence, for any finding outside tier one. Tier two ships " +
+    "when the strings in continuation_gap exist and not before; composing around them by reusing a " +
+    "string that asserts the person chose the passage would put a false statement of provenance into " +
+    "a governed path.",
+});
+
 // ---------------------------------------------------------------------------
 // THE SOURCE READING — the answer with its marks positioned in it.
 //
