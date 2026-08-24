@@ -36,7 +36,9 @@ import {
   coverageFingerprint,
   governedScenarios,
   parseDeclarations,
+  populationResealChain,
   populationResealEvidence,
+  producedPopulation,
   readEmberRamp,
   recomputeAuthored,
   stripSelectorPart,
@@ -572,16 +574,30 @@ test("census fixture: a population reseal is refused when a governed inventory l
 
 test("census fixture: a population reseal is refused when a scenario disappears silently", () => {
   // beta is gone from the driven population and the record's removals are still empty.
+  //
+  // Which conditions refuse this moved with the 2026-08-24 amendment, and the fixture keeps
+  // both halves of that. Conditions 4 and 5 now read the population the record itself claims
+  // to have produced, so the careful operator's move below — set fingerprint_after to the
+  // live value so condition 4 has nothing to say — no longer works: the record's enumerated
+  // delta and its recorded fingerprint now have to agree with each other, and here they do
+  // not. The honest-fingerprint variant is refused too, by the checks that answer for today.
   const scenarios = ["alpha", "delta", "gamma"];
   const live = popLive({ scenarios, scenariosRenderingRegion: ["alpha"] });
   const record = popRecord({ fingerprint_after: popFingerprint(scenarios, live) });
-  const got = refusals(record, live);
-  assert.deepEqual(got, [
-    "5 — additions and removals enumerated",
+  assert.deepEqual(refusals(record, live), [
+    "4 — population is the only moved fingerprint input",
+    "4 — the newest entry reproduces the live population",
     "8 — no silent disappearance or reclassification",
   ]);
-  const e = populationResealEvidence(record, live);
-  assert.match(e.failures[1].detail, /gone without being enumerated: beta/);
+
+  // Same disappearance, recorded by an operator whose fingerprint matches their own claim.
+  const honest = popRecord();
+  assert.deepEqual(refusals(honest, live), [
+    "4 — the newest entry reproduces the live population",
+    "8 — no silent disappearance or reclassification",
+  ]);
+  const e = populationResealEvidence(honest, live);
+  assert.match(e.failures.find((f) => f.condition.startsWith("8")).detail, /gone without being enumerated: beta/);
   assert.equal(e.retained_scenarios_unchanged, false);
 });
 
@@ -615,4 +631,129 @@ test("census fixture: a population reseal carrying source evidence is refused ou
 test("census fixture: a population reseal is refused when nothing names the authorizing change", () => {
   assert.deepEqual(refusals(popRecord({ authorizing_change: "board grew" })), ["7 — tied to an authorized change"]);
   assert.deepEqual(refusals(popRecord({ authorizing_change: undefined })), ["7 — tied to an authorized change"]);
+});
+
+// ── 8. The route stays open across stacked moves ─────────────────────────────
+//
+// Founder ruling of 2026-08-24. Conditions 4, 5 and the disappearance half of 8 once read
+// the live population for every recorded entry, which only the newest could ever satisfy.
+// With an append-only array and a --write that refuses if any entry fails, the second
+// population move closed the route permanently — and it did, on the real artifact.
+//
+// So the shape under test here is three moves, not two: a route that only survived the
+// second one would pass a two-entry fixture and close again on the third. Synthetic
+// throughout, and nothing below reads the committed artifact.
+
+const CHAIN_P0 = ["alpha", "beta", "gamma"];
+const CHAIN_P1 = ["alpha", "beta", "delta", "gamma"];
+const CHAIN_P2 = ["alpha", "beta", "delta", "epsilon", "gamma"];
+const CHAIN_P3 = ["alpha", "beta", "delta", "epsilon", "gamma", "zeta"];
+
+const chainLive = (over = {}) => popLive({ scenarios: CHAIN_P3, ...over });
+
+const chainRecord = (date, before, added, over = {}) =>
+  popRecord({
+    date,
+    fingerprint_before: popFingerprint(before, chainLive()),
+    fingerprint_after: popFingerprint([...before, ...added].sort(), chainLive()),
+    population_before: before,
+    scenarios_added: added,
+    added_scenario_dispositions: added.map((s) => ({ scenario: s, renders_region: false })),
+    ...over,
+  });
+
+const chainRecords = () => [
+  chainRecord("2026-01-01", CHAIN_P0, ["delta"]),
+  chainRecord("2026-02-01", CHAIN_P1, ["epsilon"]),
+  chainRecord("2026-03-01", CHAIN_P2, ["zeta"]),
+];
+
+const judge = (records, live = chainLive()) =>
+  records.map((r, i) => populationResealEvidence(r, live, { isNewest: i === records.length - 1 }));
+
+test("census fixture: three stacked population moves all validate, so a third move cannot re-close the route", () => {
+  const records = chainRecords();
+  const verdicts = judge(records);
+  assert.deepEqual(verdicts.map((v) => v.eligible), [true, true, true]);
+  assert.deepEqual(verdicts.flatMap((v) => v.failures), []);
+  // Each entry reports the population it produced, not the one measured today.
+  assert.deepEqual(verdicts.map((v) => v.population_after), [CHAIN_P1, CHAIN_P2, CHAIN_P3]);
+  assert.deepEqual(verdicts.map((v) => v.is_newest_entry), [false, false, true]);
+  assert.deepEqual(populationResealChain(records, CHAIN_P3), { intact: true, failures: [] });
+});
+
+test("census fixture: the old live-anchored reading is what closed the route, and it still would", () => {
+  // The same two superseded entries judged as though each were the newest. This is the
+  // pre-ruling behaviour, kept as a fixture so the reason for the amendment stays legible.
+  const records = chainRecords();
+  const asNewest = records.map((r) => populationResealEvidence(r, chainLive()));
+  assert.deepEqual(asNewest.map((v) => v.eligible), [false, false, true]);
+  for (const v of asNewest.slice(0, 2)) {
+    assert.ok(v.failures.some((f) => f.condition === "4 — the newest entry reproduces the live population"));
+  }
+});
+
+test("census fixture: a superseded entry still cannot claim a move it did not make", () => {
+  // The amendment moved which population a condition asks about. It did not stop asking.
+  const records = chainRecords();
+  records[0] = chainRecord("2026-01-01", CHAIN_P0, ["delta"], { fingerprint_after: "9".repeat(64) });
+  const v = judge(records)[0];
+  assert.equal(v.eligible, false);
+  assert.deepEqual(v.failures.map((f) => f.condition), ["4 — population is the only moved fingerprint input"]);
+
+  // And a record claiming credit for a scenario that was already in its own starting
+  // population. Its fingerprints are both reproducible and the chain reads clean through it,
+  // because the population it produced really is CHAIN_P2. Only the enumerated delta lies,
+  // and condition 5 is the one thing left that can catch that.
+  const mislabelled = chainRecords();
+  mislabelled[1] = chainRecord("2026-02-01", CHAIN_P1, ["epsilon"], {
+    scenarios_added: ["epsilon", "gamma"],
+    added_scenario_dispositions: [
+      { scenario: "epsilon", renders_region: false },
+      { scenario: "gamma", renders_region: false },
+    ],
+  });
+  const w = judge(mislabelled)[1];
+  assert.equal(w.eligible, false);
+  assert.deepEqual(w.failures.map((f) => f.condition), ["5 — additions and removals enumerated"]);
+  assert.match(w.failures[0].detail, /observed added \[epsilon\].*record says added \[epsilon, gamma\]/);
+  assert.equal(populationResealChain(mislabelled, CHAIN_P3).intact, true);
+});
+
+test("census fixture: the chain catches a scenario that disappears between two records", () => {
+  // gamma is in the first entry's produced population and absent from the second's start,
+  // and no entry enumerates its removal. The per-record conditions cannot see across the
+  // gap; the chain is what closes it.
+  const records = chainRecords();
+  const gapped = CHAIN_P1.filter((s) => s !== "gamma");
+  records[1] = chainRecord("2026-02-01", gapped, ["epsilon"]);
+  records[2] = chainRecord("2026-03-01", [...gapped, "epsilon"].sort(), ["zeta"]);
+  const chain = populationResealChain(records, [...gapped, "epsilon", "zeta"].sort());
+  assert.equal(chain.intact, false);
+  assert.deepEqual(chain.failures.map((f) => f.link), ["2026-01-01 → 2026-02-01"]);
+  assert.match(chain.failures[0].detail, /not the same population/);
+});
+
+test("census fixture: a live population move with no appended record breaks the final link", () => {
+  // The guarantee --write leans on. The records are internally perfect; the board simply
+  // moved past them, and the last link is where that shows.
+  const records = chainRecords();
+  const moved = [...CHAIN_P3, "omega"].sort();
+  const chain = populationResealChain(records, moved);
+  assert.equal(chain.intact, false);
+  assert.deepEqual(chain.failures.map((f) => f.link), ["2026-03-01 → live"]);
+  assert.match(chain.failures[0].detail, /no appended record/);
+  // And the newest entry says so on its own too, which is why both checks exist.
+  const v = populationResealEvidence(records[2], chainLive({ scenarios: moved }), { isNewest: true });
+  assert.ok(v.failures.some((f) => f.condition === "4 — the newest entry reproduces the live population"));
+});
+
+test("census fixture: a produced population is exactly before, less removed, plus added", () => {
+  assert.deepEqual(producedPopulation(chainRecords()[0]), CHAIN_P1);
+  assert.deepEqual(
+    producedPopulation({ population_before: ["a", "b", "c"], scenarios_added: ["d"], scenarios_removed: ["b"] }),
+    ["a", "c", "d"],
+  );
+  // No new field carries this. A record with none of the three produces nothing.
+  assert.deepEqual(producedPopulation({}), []);
 });

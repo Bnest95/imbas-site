@@ -855,6 +855,29 @@ export const POPULATION_RESEAL_RULE = {
     ],
   },
 
+  // The route the ruling above opened closed itself on its own second use. Verbatim.
+  amendment: {
+    date: "2026-08-24",
+    authority: "founder",
+    recorded_against: "the homepage and Advisory board coverage — the stacked population move",
+    text:
+      "A superseded population reseal is validated against the population it claims to have " +
+      "produced (population_before + scenarios_added − scenarios_removed). Only the newest " +
+      "entry must reproduce the live population. The array stays append-only.",
+    guarantees_that_survive: [
+      "a record cannot claim a move it did not make;",
+      "the newest entry must reproduce the live population exactly;",
+      "--write still refuses population movement that has no appended record;",
+      "no entry is deleted, moved, or rewritten.",
+    ],
+    // Nothing new is stored to carry this. Each entry already names what it started from,
+    // what it added and what it removed, which is the whole of what a link needs.
+    chain_continuity:
+      "Each entry's population_before equals the population produced by the entry before it, " +
+      "and the newest entry's produced population equals the live one. populationResealChain() " +
+      "asserts both from the fields the records already carry.",
+  },
+
   what_this_is_not:
     "This is not a second way to reach the same door. A population reseal carries no authority " +
     "over a measured value and none over a source hash. If a governed source moved, this is the " +
@@ -960,7 +983,101 @@ export const POPULATION_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-08-24",
+    authorizing_change:
+      "Branch claude/practical-elion-94731d — the homepage and Advisory registered four states on " +
+      "the acceptance board ahead of their structural rebuilds, so a rebuild reseals a named frame " +
+      "rather than discovering the old one was never photographed. governedScenarios() is the board " +
+      "registry, so the census population grew with it. All four are document surfaces on " +
+      "index.html and advisory.html; neither page mounts the workbench, so none of them renders a " +
+      ".wb-reader-v2__result region and none contributes ember spend to measure. Nothing under this " +
+      "census's source list was edited: styles.css, workbench.css and workbench-app.jsx are " +
+      "byte-identical to the hashes the previous entry recorded.",
+    fingerprint_before: "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+    fingerprint_after: "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6",
+    population_before: [
+      "chip-arrival", "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "curated-readout", "deposit-fixture",
+      "export-paired", "export-single", "first-load", "input-integrity-intake",
+      "input-integrity-sample", "input-integrity-zero", "paired-empty", "paired-legacy",
+      "paired-legacy-rows", "paired-matched", "paired-rejected-snippet", "paired-unmatched",
+      "provenance-complete", "provenance-partial", "public-example", "public-example-provenance",
+      "read-capacity", "read-error", "read-in-flight", "register-overflow",
+      "register-overflow-expanded", "share-consent", "share-legacy", "share-not-found",
+      "share-paired-no-model", "share-receipt", "share-single", "share-single-empty",
+      "single-empty", "single-empty-read", "single-findings",
+    ],
+    scenarios_added: ["advisory-boundaries", "advisory-masthead", "home-archive-preview", "home-experience"],
+    scenarios_removed: [],
+    added_scenario_dispositions: [
+      { scenario: "advisory-boundaries", renders_region: false, note: "advisory.html, the governance and commercial-boundary region — advisory.html mounts no workbench, so the Reader result region is not on this page." },
+      { scenario: "advisory-masthead", renders_region: false, note: "advisory.html, the masthead, lede and thesis — same page, same absence." },
+      { scenario: "home-archive-preview", renders_region: false, note: "index.html, the archive preview above the featured case — the homepage links to the Reader and does not embed its result region." },
+      { scenario: "home-experience", renders_region: false, note: "index.html, the Your Experience region — it carries the route into the Reader, not the Reader itself." },
+    ],
+    region_rendering_before: [
+      "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "deposit-fixture", "export-paired",
+      "export-single", "paired-empty", "paired-legacy", "paired-legacy-rows", "paired-matched",
+      "paired-rejected-snippet", "paired-unmatched", "provenance-complete", "provenance-partial",
+      "read-capacity", "read-error", "register-overflow", "register-overflow-expanded",
+      "share-consent", "single-empty", "single-empty-read", "single-findings",
+    ],
+    sources_unchanged: [
+      { path: "styles.css", extraction: "whole file", sha256: "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d" },
+      { path: "workbench.css", extraction: "whole file", sha256: "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d" },
+      { path: "workbench-app.jsx", extraction: "CSS template literals only", sha256: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146" },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
+
+// ── THE SECOND POPULATION MOVE FOUND THE ROUTE CLOSED, 2026-08-24 ────────────────
+// The homepage and Advisory added four board scenarios, moving the population a second
+// time. The move was textbook: fingerprint alone, every source hash byte-identical, every
+// count identical, every inventory line identical, nothing removed, nothing reclassified.
+// A record for it satisfied all eight conditions — measured, not assumed.
+//
+// --write refused anyway, and not because of the new record. The 2026-08-23 entry ABOVE
+// failed conditions 4 and 5, because both read the LIVE population rather than the one the
+// record itself claims to have produced. Condition 4 computed fpAfter from live.scenarios,
+// forcing every entry's fingerprint_after to equal the current fingerprint; condition 5
+// computed the delta as live minus the record's own population_before, forcing every entry
+// to claim every scenario added since. Against a 43-scenario population the 2026-08-23
+// entry was required to claim it ended at c3b0c9bc… (it ended at 6ac31341…) and to claim
+// it added the four homepage and Advisory scenarios (it added the three Input Integrity
+// ones). Only the newest entry could ever satisfy them, the array is append-only, and
+// --write refuses if ANY entry fails — three properties that cannot hold together once a
+// second move happens. The source route never had this: PROVENANCE_RESEALS entries record
+// their verdicts and do not gate the write.
+//
+// Because test/ember-census-fixtures.test.mjs asserts the committed artifact against the
+// live registry, the closed route meant any pass adding a board scenario reddened the
+// suite with no governed way to green. The finding went to the gate rather than being
+// worked around, and the ruling below came back. It is implemented in
+// populationResealEvidence() and populationResealChain(); read those for the mechanics.
 
 // The key --check compares inventory lines on. One definition, so the reseal evidence and
 // the drift check cannot disagree about what "the same spend" means.
@@ -984,11 +1101,73 @@ export function coverageFingerprint({ region = REGION, scenarios, viewports, sou
   return { ...fields, sha256: sha256(JSON.stringify(fields)) };
 }
 
-// A population reseal's whole case, computed against the live measurement rather than read
-// off the record. Each of the ruling's eight conditions gets its own verdict and its own
-// failure line, so a refused reseal says which condition refused it. Pure and renderer-free:
-// the negative fixture drives it directly with populations that must not be resealable.
-export function populationResealEvidence(record, live) {
+// The population a record claims to have produced: what it started from, less what it says
+// it removed, plus what it says it added. Derived from the three fields the record already
+// carries — no new field, and no way for a record to name a population it did not compute.
+export function producedPopulation(record) {
+  const removed = new Set(record.scenarios_removed || []);
+  const kept = (record.population_before || []).filter((s) => !removed.has(s));
+  return [...new Set([...kept, ...(record.scenarios_added || [])])].sort();
+}
+
+// The chain that carries the guarantee across every recorded move: each entry starts from
+// the population the entry before it produced, and the last entry produces the population
+// the instrument measures today. Nothing can be smuggled between two links, and a live move
+// with no appended record breaks the final link rather than passing silently.
+//
+// This is what lets a superseded entry stop being asked about the present. Its own case is
+// checked against the population it claims; its connection to today is this chain.
+export function populationResealChain(records, livePopulation) {
+  const failures = [];
+  const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  records.forEach((r, i) => {
+    if (i === 0) return;
+    const handedOver = producedPopulation(records[i - 1]);
+    const startedFrom = [...(r.population_before || [])].sort();
+    if (!same(handedOver, startedFrom)) {
+      failures.push({
+        link: `${records[i - 1].date} → ${r.date}`,
+        detail:
+          `the ${records[i - 1].date} entry produced ${handedOver.length} scenarios and the ` +
+          `${r.date} entry starts from ${startedFrom.length}; they are not the same population`,
+      });
+    }
+  });
+  const last = records[records.length - 1];
+  if (last) {
+    const produced = producedPopulation(last);
+    const measured = [...livePopulation].sort();
+    if (!same(produced, measured)) {
+      failures.push({
+        link: `${last.date} → live`,
+        detail:
+          `the newest entry produces ${produced.length} scenarios and the instrument measures ` +
+          `${measured.length}; a population move with no appended record`,
+      });
+    }
+  }
+  return { intact: failures.length === 0, failures };
+}
+
+// A population reseal's whole case. Each of the ruling's eight conditions gets its own
+// verdict and its own failure line, so a refused reseal says which condition refused it.
+// Pure and renderer-free: the negative fixture drives it directly with populations that
+// must not be resealable.
+//
+// WHICH POPULATION A CONDITION ASKS ABOUT — founder ruling of 2026-08-24. Conditions 4, 5
+// and the disappearance half of 8 originally read the LIVE population for every entry. That
+// is right for the entry being written and a category error for a superseded one: it asks a
+// record about a move that happened after it, and since only the newest entry can ever
+// answer, the second population move closed the route for good. The array is append-only and
+// --write refuses if any entry fails, so those two properties could not both hold once a
+// second move happened. The ruling: a superseded entry is validated against the population
+// IT claims to have produced, only the newest must reproduce the live population, and the
+// array stays append-only. Nothing is loosened — a record still cannot claim a move it did
+// not make, and populationResealChain() pins every entry to the next and the last to today.
+//
+// isNewest defaults true, so a caller checking a single record in isolation gets the
+// live-anchored reading unchanged.
+export function populationResealEvidence(record, live, { isNewest = true } = {}) {
   const failures = [];
   const fail = (condition, detail) => failures.push({ condition, detail });
   const sorted = (a) => [...(a || [])].sort();
@@ -1033,26 +1212,40 @@ export function populationResealEvidence(record, live) {
   // (4) The population is the only fingerprint input that moved. Not asserted — demonstrated:
   // swapping ONLY the scenario list, against the live region, viewports and source hashes,
   // has to reproduce both ends of the claimed fingerprint move. If the region selector, a
-  // viewport or a source had also moved, neither end would come back.
+  // viewport or a source had also moved, neither end would come back. Both ends come from
+  // the record's own populations, so the demonstration is about the move the record claims
+  // rather than about whatever the board holds today.
+  const claimedAfter = producedPopulation(record);
   const fpBefore = coverageFingerprint({
     region: live.region, scenarios: record.population_before || [], viewports: live.viewports, sources: live.sources,
   }).sha256;
   const fpAfter = coverageFingerprint({
-    region: live.region, scenarios: live.scenarios, viewports: live.viewports, sources: live.sources,
+    region: live.region, scenarios: claimedAfter, viewports: live.viewports, sources: live.sources,
   }).sha256;
   const populationIsOnlyMovedInput = fpBefore === record.fingerprint_before && fpAfter === record.fingerprint_after;
   if (!populationIsOnlyMovedInput) {
     fail(
       "4 — population is the only moved fingerprint input",
       `recomputing with the recorded population gives ${fpBefore} (record claims ${record.fingerprint_before}); ` +
-        `with the live population ${fpAfter} (record claims ${record.fingerprint_after})`,
+        `with the population it claims to have produced ${fpAfter} (record claims ${record.fingerprint_after})`,
     );
   }
 
-  // (5) The exact additions and removals, enumerated.
+  // And the newest entry alone answers for today: the population it produced has to be the
+  // one the instrument just measured. This is the check that refuses a live population move
+  // carrying no appended record, and it is why moving 4 off live costs nothing.
+  if (isNewest && !same(claimedAfter, [...live.scenarios].sort())) {
+    fail(
+      "4 — the newest entry reproduces the live population",
+      `it produces ${claimedAfter.length} scenarios and the instrument measures ${live.scenarios.length}`,
+    );
+  }
+
+  // (5) The exact additions and removals, enumerated. Against the record's own produced
+  // population for the same reason as (4).
   const before = new Set(record.population_before || []);
-  const after = new Set(live.scenarios);
-  const addedObserved = live.scenarios.filter((s) => !before.has(s)).sort();
+  const after = new Set(claimedAfter);
+  const addedObserved = claimedAfter.filter((s) => !before.has(s)).sort();
   const removedObserved = [...before].filter((s) => !after.has(s)).sort();
   const deltaMatchesRecord =
     same(addedObserved, sorted(record.scenarios_added)) && same(removedObserved, sorted(record.scenarios_removed));
@@ -1086,9 +1279,17 @@ export function populationResealEvidence(record, live) {
   // (8) Nothing existing disappeared or changed classification silently. The retained
   // scenarios are checked one at a time against the recorded region list, so a swap that
   // holds the region count still is caught — a count alone would not see it.
+  //
+  // Disappearance is asked of the newest entry against the live board, where it has teeth:
+  // a scenario gone without being enumerated is caught there. Asking it of a superseded
+  // entry against the live board is the same category error as (4), and asking it against
+  // that entry's own produced population answers itself. So for superseded entries the
+  // question is carried by populationResealChain(), which pins each entry's starting
+  // population to the one before it and catches exactly the same disappearance.
   const declaredRemoved = new Set(record.scenarios_removed || []);
   const retained = (record.population_before || []).filter((s) => !declaredRemoved.has(s));
-  const vanished = retained.filter((s) => !after.has(s));
+  const liveSet = new Set(live.scenarios);
+  const vanished = isNewest ? retained.filter((s) => !liveSet.has(s)) : [];
   const regionBefore = new Set(record.region_rendering_before || []);
   const reclassified = retained.filter((s) => after.has(s) && regionBefore.has(s) !== liveRegion.has(s));
   const retainedUnchanged = vanished.length === 0 && reclassified.length === 0;
@@ -1104,7 +1305,9 @@ export function populationResealEvidence(record, live) {
 
   return {
     ...record,
-    population_after: live.scenarios,
+    // The population this entry produced, which for the newest is the one just measured.
+    population_after: claimedAfter,
+    is_newest_entry: isNewest,
     scenarios_added_observed: addedObserved,
     scenarios_removed_observed: removedObserved,
     region_rendering_after: [...live.scenariosRenderingRegion].sort(),
@@ -1234,17 +1437,24 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
         };
       }),
       population_reseal_rule: POPULATION_RESEAL_RULE,
-      population_reseals: POPULATION_RESEALS.map((r) =>
-        populationResealEvidence(r, {
-          region: REGION,
-          scenarios: [...scenarios].sort(),
-          viewports: [...viewports].sort(),
-          sources: inv.sources,
-          scenariosRenderingRegion: regionScenarios,
-          counts,
-          inventory: inventoryNow,
-        }),
+      population_reseals: POPULATION_RESEALS.map((r, i) =>
+        populationResealEvidence(
+          r,
+          {
+            region: REGION,
+            scenarios: [...scenarios].sort(),
+            viewports: [...viewports].sort(),
+            sources: inv.sources,
+            scenariosRenderingRegion: regionScenarios,
+            counts,
+            inventory: inventoryNow,
+          },
+          { isNewest: i === POPULATION_RESEALS.length - 1 },
+        ),
       ),
+      // What ties the superseded entries to today: link by link, and the last link to the
+      // live population. Written into the artifact so the chain is a receipt, not a claim.
+      population_reseal_chain: populationResealChain(POPULATION_RESEALS, [...scenarios].sort()),
     },
     source_extraction: inv.sources.map((s) => ({ path: s.path, extraction: s.extraction, sha256: s.sha256 })),
     declared_ramp: {
@@ -1361,11 +1571,15 @@ async function main() {
     // and a source reseal that reached for population evidence is refused the same way.
     const refused = artifact.provenance.population_reseals.filter((r) => !r.eligible);
     const crossed = artifact.provenance.reseals.filter((r) => r.carries_population_evidence.length);
-    if (refused.length || crossed.length) {
+    const chain = artifact.provenance.population_reseal_chain;
+    if (refused.length || crossed.length || !chain.intact) {
       log("\n  ✗ refusing to write: a recorded reseal does not hold against this measurement.");
       for (const r of refused) {
         log(`      population reseal ${r.date} — ${r.failures.length} condition(s) refused it:`);
         for (const f of r.failures) log(`        ${f.condition}: ${f.detail}`);
+      }
+      for (const f of chain.failures) {
+        log(`      population reseal chain broken at ${f.link}: ${f.detail}`);
       }
       for (const r of crossed) {
         log(`      source reseal ${r.date} carries population evidence: ${r.carries_population_evidence.join(", ")}`);
