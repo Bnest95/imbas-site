@@ -17,12 +17,12 @@
   <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta property="og:image:alt" content="Imbas — independent inspection instruments.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Input Integrity | Imbas">
   <meta name="twitter:description" content="Read a PDF's own structure in your browser. The file does not leave your machine.">
   <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
-  <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta name="twitter:image:alt" content="Imbas — independent inspection instruments.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
@@ -30,6 +30,66 @@
   <link rel="stylesheet" href="/input-integrity.css">
   <script src="/site-header.js" defer></script>
   <script type="module" src="/input-integrity.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com"
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://www.imbaslabs.com/input-integrity.html#application",
+        "name": "Imbas Input Integrity",
+        "url": "https://www.imbaslabs.com/input-integrity.html",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web browser",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Read a PDF's own structure in your browser. The file does not leave your machine.",
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "isRelatedTo": [
+          { "@id": "https://www.imbaslabs.com/reader.html#application" }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.imbaslabs.com/input-integrity.html#webpage",
+        "url": "https://www.imbaslabs.com/input-integrity.html",
+        "name": "Input Integrity",
+        "description": "A PDF's structure can carry more than its pages render. This reads that structure in your browser and reports what the file instructs, with the evidence beside every statement.",
+        "about": { "@id": "https://www.imbaslabs.com/input-integrity.html#application" },
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "isPartOf": {
+          "@type": "WebSite",
+          "@id": "https://www.imbaslabs.com/#website",
+          "name": "Imbas",
+          "url": "https://www.imbaslabs.com"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.imbaslabs.com/input-integrity.html#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.imbaslabs.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Input Integrity",
+            "item": "https://www.imbaslabs.com/input-integrity.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
