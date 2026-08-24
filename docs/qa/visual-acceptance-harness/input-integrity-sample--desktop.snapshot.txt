@@ -1,0 +1,68 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .ii-contrast__canvas
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1403
+timezone: UTC
+url: /input-integrity.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
+button "More" disabled=false expanded=false
+span "▾"
+h2 "Text the page's instructions do not paint"
+p "The file carries this text and the page's own operands settle that it contributes no paint."
+h3 "The page's content stream sets text render mode 3 for this run."
+li "A system that reads this file by extracting its text receives this text."
+li "The page's rendering instructions do not paint it."
+span "Where"
+span "Page 1"
+span "x 50, y 100"
+h4 "Rendered page"
+p "Drawn here by pdfjs-dist 6.2.108."
+h4 "In the file's structure"
+p "INVISIBLE-MODE3"
+li "The page's content stream sets text render mode 3 for this run."
+li "A system that reads this file by extracting its text receives this text."
+li "The page's rendering instructions do not paint it."
+details expanded=false
+summary "Evidence"
+dt "Phenomenon class"
+dd "invisible_render_mode"
+dt "Extracted text"
+dd "INVISIBLE-MODE3"
+dt "Checks that ran"
+dd "text_render_mode"
+dt "Measured values"
+dd "render_mode 3"
+a "Back to the summary" href="#result-summary"
+details expanded=false
+summary "Provenance"
+p "This result came from pdfjs-dist 6.2.108 over the file with sha256 <HASH64>."
+dt "File digest, SHA-256"
+dd "<HASH64>"
+button "Download the evidence receipt" disabled=false

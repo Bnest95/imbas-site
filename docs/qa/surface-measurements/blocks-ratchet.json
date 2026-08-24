@@ -2,7 +2,7 @@
   "instrument": "scripts/qa/blocks-ratchet.mjs",
   "rule": "R2",
   "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
-  "measured_at_master": "61954be77268f5e2fe616cfc8bc16e0f6135781a",
+  "measured_at_master": "a2cd00ab2dd119e2c29402105f4f799c226b25cd",
   "browser": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "target_selectors": [
@@ -21,6 +21,9 @@
       "export-paired",
       "export-single",
       "first-load",
+      "input-integrity-intake",
+      "input-integrity-sample",
+      "input-integrity-zero",
       "paired-empty",
       "paired-legacy",
       "paired-legacy-rows",
@@ -58,16 +61,16 @@
       },
       {
         "path": "scripts/qa/scenarios.mjs",
-        "sha256": "82d0c6f99190e2bc"
+        "sha256": "778825202371e73d"
       }
     ],
-    "sha256": "2d738d88b1990cf87e4fec2240f7fc54f8620de213e7c0f89f1b44bf54b8ad6e"
+    "sha256": "1c209abefb7fa900c84e6cb1c3280043736e7c308b1e03d665b8c628056da5de"
   },
   "sources": [
     {
       "path": "scripts/qa/scenarios.mjs",
       "extraction": "whole file",
-      "sha256": "82d0c6f99190e2bc"
+      "sha256": "778825202371e73d"
     },
     {
       "path": "scripts/qa/comprehension.mjs",
@@ -78,7 +81,7 @@
   "counts": {
     "governed_states": 60,
     "governed_scenarios": 30,
-    "ungoverned_scenarios": 6,
+    "ungoverned_scenarios": 9,
     "max_blocks_before": 9
   },
   "ceilings": [
@@ -1209,6 +1212,9 @@
     "chip-arrival",
     "curated-readout",
     "first-load",
+    "input-integrity-intake",
+    "input-integrity-sample",
+    "input-integrity-zero",
     "public-example",
     "public-example-provenance",
     "read-in-flight"
