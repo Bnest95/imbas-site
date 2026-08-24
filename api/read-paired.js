@@ -601,6 +601,16 @@ export function validateOpenReceipt(receipt) {
   const run = receipt.open_run;
   if (!run || typeof run !== "object") return { ok: false, reason: "open_run" };
   if (typeof run.question !== "string" || typeof run.answer !== "string") return { ok: false, reason: "content" };
+  // An open run with no answer has nothing to compare against, so the pair it would
+  // produce is a delta over nothing. The question stays optional — a chip open receipt
+  // legitimately carries an empty one — but the answer is the open run.
+  //
+  // This is the rule and not the disabled button in the client. The button is a courtesy
+  // to the person typing; a request that arrives here without it has still asked the
+  // endpoint to bill a model call and mint a receipt over an empty first state, and the
+  // empty string also hashes to one constant, so every such run would collide on a single
+  // open_run_id and be served each other's idempotent result.
+  if (!run.answer.trim()) return { ok: false, reason: "content_empty" };
   const prov = run.provenance;
   if (!prov || typeof prov !== "object" || typeof prov.request_id !== "string" || !prov.request_id.trim()) {
     return { ok: false, reason: "provenance" };

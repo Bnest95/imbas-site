@@ -180,6 +180,49 @@ test("both doors into the compare stage exist, and both go through one handler",
   );
 });
 
+// THE REMOUNT SEAM. Act2Offer mounts PairedTest under `key={check}`, and the Quick/Cleaner
+// toggle stays on screen after a comparison returns — PairedDeltaView even offers its own
+// control that calls setCheck. So a tap on either changes the key, React remounts
+// PairedTest, and `paired` is back to null: the delta is gone and the paste box is live
+// again.
+//
+// The parent's hasDelta was raised once inside submit() and lowered only inside reset(),
+// and NOTHING in that path lowered it. The workbench went on deriving STAGE_DELTA — which
+// declares `answerEntry: null` and lists the paired answer as read-only context — over a
+// stage that was in fact showing a live, editable paired answer box. A boolean outlived the
+// state it described, and the stage contract this whole file exists to enforce was being
+// consumed from the stale copy.
+//
+// The repair is that the flag is REPORTED from the state that determines it.
+test("the paired delta flag is reported from the paired result, not latched by its caller", () => {
+  const body = SRC.slice(SRC.indexOf("function PairedTest("), SRC.indexOf("\n}\n", SRC.indexOf("function PairedTest(")));
+
+  // The remount is real and stays: it is what keeps a Quick answer from being submitted
+  // under Cleaner. This test holds the flag truthful across it rather than removing it.
+  assert.ok(/<PairedTest\s+key=\{check\}/.test(SRC), "the key is still what forces a fresh box per check mode");
+
+  assert.ok(
+    /useEffect\(\(\) => \{\s*if \(onPairedChange\) onPairedChange\(!!paired\);/.test(body),
+    "the flag must be derived from `paired`, which is the only authority on whether a delta is on screen",
+  );
+  assert.ok(
+    /\}, \[!!paired\]\);/.test(body),
+    "and keyed on it, so a remount with no paired result reports false instead of leaving the parent's true standing",
+  );
+
+  // No imperative latch anywhere: those are what could disagree with `paired`.
+  assert.ok(!/onPairedChange\(true\)/.test(body), "nothing may raise the flag except the state itself");
+  assert.ok(!/onPairedChange\(false\)/.test(body), "nor lower it");
+
+  // The parent still owns the transition, and still only advances on a rise.
+  assert.ok(
+    /const setPairedDelta = \(present\) => \{ if \(present === hasDelta\) return; if \(present\) advance\(\); setHasDelta\(present\); \};/.test(
+      COLLAPSED,
+    ),
+    "an unchanged report is a no-op, so reporting on every mount emits no spurious advance",
+  );
+});
+
 // ── The chip lane ──────────────────────────────────────────────────────────────
 
 test("the chip lane renders behind the view's own door, never unconditionally", () => {
@@ -247,12 +290,24 @@ test("closing the chip lane hides it instead of unmounting its answers", () => {
 test("the chip lane's first answer goes read-only as soon as its second box appears", () => {
   const block = tagBlock("CHIP_UI.compose.first_answer_label", "PasteField");
   assert.ok(
-    /readOnly=\{!!entry\}/.test(block),
+    /readOnly=\{held \|\| !!entry\}/.test(block),
     "picking a follow-up opens a second box; the first must stop competing for keystrokes",
   );
   assert.ok(
     /CHIP_UI\.compose\.edit_first_answer/.test(SRC),
     "and a labelled way back out, so read-only is not a trap",
+  );
+  // The other half of that expression is a different rule. A HELD first answer is the
+  // state an inspection already ran on, so it is read-only from the moment the lane
+  // opens — not from the moment a chip is picked — and there is nothing to unlock: the
+  // edit door is withheld over it, and the way out is back to the inspection itself.
+  assert.ok(
+    /\{entry && !held \? \(/.test(SRC),
+    "no edit-the-first-answer door over a held answer; it is not this lane's to edit",
+  );
+  assert.ok(
+    /`← \$\{openedFrom \? CHIP_UI\.compose\.return_to_inspection/.test(SRC),
+    "so the way out over a held answer is the return to the inspection that holds it",
   );
 });
 

@@ -207,10 +207,14 @@ test("the origin reference carries the question, and never the answer body", () 
     /openedFrom=\{readerResult \? \(mode === "guided" \? sel\.openPrompt : question\)\.trim\(\) : ""\}/,
     "the same expression the workbench already reads a question from",
   );
-  // The answer is what must not be duplicated onto this surface. None of the variables
-  // that hold one appear in the expression.
+  // Scoped to the question prop, and deliberately not to the whole mount. The answer does
+  // reach the lane now — the lane holds the inspected one and shows it read-only — so a
+  // check over every prop would forbid the contract instead of the confusion. What must
+  // never happen is the QUESTION arriving as answer content, or a second answer variable
+  // being handed over beside the receipt.
+  const openedFrom = /openedFrom=\{[^\n]*/.exec(mount)[0];
   for (const forbidden of ["answer", "pastedAnswer", "composeAnswer", "pairedAnswer", "readerResult.answer"]) {
-    assert.ok(!mount.includes(forbidden), `the origin reference must not carry ${forbidden}`);
+    assert.ok(!openedFrom.includes(forbidden), `the origin reference must not carry ${forbidden}`);
   }
 });
 
@@ -224,6 +228,16 @@ test("the origin block renders only over a real inspection, and is read-only", (
   assert.match(origin, /\{CHIP_UI\.compose\.opened_from_label\}/);
   assert.match(origin, /\{openedFrom\}/);
   assert.match(origin, /\{CHIP_UI\.compose\.opened_from_note\}/);
+  // The note says the text is still here, so it renders off the text. A degraded run
+  // carries a question and no receipt, and over one of those the lane holds nothing — the
+  // note would be describing an empty box the person is about to type into.
+  assert.match(
+    origin,
+    /\{held \? <p className="wb-chip__origin-note">\{CHIP_UI\.compose\.opened_from_note\}<\/p> : null\}/,
+    "the still-here note is gated on there being something held",
+  );
+  // And the answer body itself is not reproduced here. It is held once, in the field.
+  assert.ok(!origin.includes("firstAnswer") && !origin.includes("heldAnswer"), "the origin block is not a second copy of the answer");
 });
 
 // ── The strings ─────────────────────────────────────────────────────────────
@@ -402,18 +416,73 @@ test("no source paste box can be restored into the lane, structurally", () => {
   assert.ok(!lane.includes("wb-reader-v2__field"), "ChipLane must not render a source field wrapper");
   assert.ok(!lane.includes("wb-reader-v2__reveal"), "nor the reveal wrapper");
 
-  const mount = JSX.slice(JSX.indexOf('id="wb-chip-lane"'), JSX.indexOf('id="wb-chip-lane"') + 600);
-  const inside = mount.slice(0, mount.indexOf("</div>"));
+  // From the lane's id to the close of the div that carries it. Derived rather than a
+  // fixed-width window, which a comment at the mount point can push the element out of.
+  const from = JSX.indexOf('id="wb-chip-lane"');
+  const inside = JSX.slice(from, JSX.indexOf("</div>", from));
   assert.ok(inside.includes("<ChipLane"), "the mount point holds the lane");
   assert.ok(!inside.includes("wb-reader-v2__field"), "and nothing else that could carry a source box");
 
   // The lane's own first answer box is a different thing and is supposed to be there.
-  // It is pinned as empty-by-construction: its value is lane state initialised to "".
-  assert.match(lane, /const \[firstAnswer, setFirstAnswer\] = useState\(""\);/);
+  // What it must never be is a copy of the QUESTION. That is the rule; the draft's
+  // initial value is not.
+  //
+  // This assertion used to read `useState("")` and so pinned the box empty in every mode,
+  // which outlawed the lane referencing the answer its inspection actually ran on. The
+  // rule it was reaching for is below, and is about the question.
   assert.ok(
-    !lane.includes("setFirstAnswer(openedFrom)") && !lane.includes("useState(openedFrom)"),
-    "the lane must never seed its own answer box from the inspection it was opened over",
+    !lane.includes("setDraftAnswer(openedFrom)") &&
+      !lane.includes("useState(openedFrom)") &&
+      !/const\s+heldAnswer\s*=\s*[^;]*openedFrom/.test(lane),
+    "the lane must never seed an answer from the question it was opened over",
   );
+});
+
+// ── The held first answer: referenced, not owned ────────────────────────────
+//
+// The contract the assertion above used to over-reach on. Steering continues from the
+// answer that was actually inspected, so the authoritative first state is
+// receipt.open_run.answer and the lane REFERENCES it. An editable second copy could drift
+// away from the state the receipt attests to, and then the compare would run over one
+// answer while the receipt named another.
+
+test("the lane reads its held first answer off the inspection receipt, and owns only a draft", () => {
+  const lane = block("function ChipLane({", "\n}\n");
+  assert.match(lane, /function ChipLane\(\{ headingRef, onReturn, openedFrom, heldReceipt \}\)/);
+  assert.match(
+    lane,
+    /const heldAnswer = \(heldReceipt && heldReceipt\.open_run && heldReceipt\.open_run\.answer\) \|\| "";/,
+    "the authoritative first state is the answer on the open run of the receipt",
+  );
+  assert.match(lane, /const firstAnswer = held \? heldAnswer : draftAnswer;/);
+  // The draft is the OTHER mode and still exists: the standing door and ?start=chips open
+  // the lane over no inspection, and a degraded run returns no receipt at all.
+  assert.match(lane, /const \[draftAnswer, setDraftAnswer\] = useState\(""\);/);
+  assert.match(lane, /const held = !!heldAnswer\.trim\(\);/, "held-ness is read off the answer, never the question");
+});
+
+test("a held first answer cannot be mutated from inside the lane", () => {
+  const lane = block("function ChipLane({", "\n}\n");
+  // One setter, and it writes the draft. Nothing in the lane can write heldAnswer.
+  assert.equal(countOf(lane, "setDraftAnswer("), 2, "one declaration and one onChange, and no third writer");
+  assert.ok(!lane.includes("setHeldAnswer"), "there is no setter for the held answer");
+  assert.match(lane, /readOnly=\{held \|\| !!entry\}/, "a held answer is read-only from the moment the lane opens");
+  // The control that unlocks a chip-locked box must not offer to unlock a held one.
+  assert.match(lane, /\{entry && !held \? \(/, "no edit-the-first-answer door over a held answer");
+});
+
+test("the workbench hands the lane the whole receipt, so the answer and its parent agree", () => {
+  const mount = block("<ChipLane", "/>");
+  assert.match(
+    mount,
+    /heldReceipt=\{readerResult \? readerResult\.receipt \|\| null : null\}/,
+    "the receipt itself, so the held answer and the receipt it continues cannot come from different runs",
+  );
+  // The question expression is unchanged and still carries no answer.
+  const openedFrom = /openedFrom=\{[^\n]*/.exec(mount)[0];
+  for (const forbidden of ["answer", "pastedAnswer", "composeAnswer", "pairedAnswer", "readerResult.answer"]) {
+    assert.ok(!openedFrom.includes(forbidden), `the origin question must not carry ${forbidden}`);
+  }
 });
 
 test("the frame is aimed at the head block, so the three surfaces are in it", () => {
@@ -425,6 +494,71 @@ test("the frame is aimed at the head block, so the three surfaces are in it", ()
   assert.equal(composed().focus, "#wb-chip-lane .wb-reader-result__head");
   const lane = block("function ChipLane({", "\n}\n");
   assert.equal(countOf(lane, 'className="wb-reader-result__head"'), 1, "one head block, so the focus is unambiguous");
+});
+
+// ── The receipt chain ───────────────────────────────────────────────────────
+//
+// inspect → steer → compare → receipt has to be one STATED lineage. Before this, the chip
+// open receipt recorded nothing about the inspection it continued: its open_run_id is the
+// hash of the answer alone, so a chip pair run over an inspected answer was
+// indistinguishable from the same text pasted cold. Two artifacts sharing a hash is a
+// coincidence; a receipt naming the receipt it continues is evidence.
+//
+// The behaviour of the reference — that it survives the embed into the paired receipt and
+// that its absence changes nothing — is executed end-to-end in test/reader-paired.test.mjs.
+// What is pinned here is that the client mints it, and mints it from the held receipt.
+
+test("the chip open receipt records which receipt it continues", () => {
+  const fn = block("async function buildChipOpenReceipt(", "\n}\n");
+  assert.match(fn, /async function buildChipOpenReceipt\(firstAnswer, generatedAt, parentReceipt\)/);
+  assert.match(fn, /continues: parentHash\s*\?/, "the reference is minted from the parent's own content hash");
+  assert.match(fn, /content_hash: parentHash,/);
+  assert.match(fn, /request_id: \(parentProv && parentProv\.request_id\) \|\| "",/);
+  assert.match(fn, /: null,/, "and is an explicit null when the lane continues nothing");
+
+  // Inside open_run, because that is the block the paired and chip-paired envelopes embed
+  // verbatim. A top-level sibling would be dropped at that hop and the chain would end at
+  // the open receipt.
+  const openRun = fn.slice(fn.indexOf("open_run: {"), fn.indexOf("integrity: {"));
+  assert.ok(openRun.includes("continues:"), "the reference must sit inside open_run, which travels whole");
+
+  // And it stays out of the idempotency key. That id is the join key already written to
+  // the Reader Runs row and owned by value.
+  assert.match(fn, /provenance: \{ request_id: answerHex\.slice\(0, 16\) \}/, "the open_run_id is still the answer's own hash");
+  assert.ok(!/answerHex[^\n]*parentHash|parentHash[^\n]*answerHex/.test(fn), "the parent must not enter the open_run_id");
+});
+
+test("the lane passes the receipt it read the held answer from, and nothing else", () => {
+  const lane = block("function ChipLane({", "\n}\n");
+  assert.match(
+    lane,
+    /parentReceipt: held \? heldReceipt : null,/,
+    "the parent is the receipt the held answer came from, or an honest null in draft mode",
+  );
+  const client = block("async function runChipPairedReader(", "\n}\n");
+  assert.match(client, /parentReceipt \}\)/, "and the client threads it");
+  assert.match(client, /buildChipOpenReceipt\(firstAnswer, new Date\(\)\.toISOString\(\), parentReceipt\)/);
+});
+
+// ── The authored failure that had no way of being seen ──────────────────────
+//
+// CHIP_UI.compose.first_answer_missing was written, shipped, and unreachable: canCompare is
+// false with an empty first answer, so the CTA is disabled, and the only place the string
+// was set is inside submit() behind that disabled button. Authored copy nobody can reach is
+// dead copy. The server now rejects an open receipt whose answer is empty, and that
+// rejection is what the sentence explains.
+
+test("the empty-first-answer rejection reaches the sentence written for it", () => {
+  const lane = block("function ChipLane({", "\n}\n");
+  assert.match(
+    lane,
+    /info\.error === "invalid_receipt" && info\.detail === "content_empty"\) \{\s*setFieldError\(CHIP_UI\.compose\.first_answer_missing\);/,
+    "the server's own reason for refusing an empty first state must reach the field it is about",
+  );
+  // The preflight guard stays. It is the courtesy; the server rule is the rule.
+  assert.match(lane, /if \(!firstAnswer\.trim\(\)\) \{ setFieldError\(CHIP_UI\.compose\.first_answer_missing\); return; \}/);
+  assert.equal(CHIP_UI.compose.first_answer_missing, "Paste the answer or draft you started with.");
+  assert.deepEqual(lintChipString(CHIP_UI.compose.first_answer_missing), []);
 });
 
 // ── The lane constants this file reasons about ──────────────────────────────

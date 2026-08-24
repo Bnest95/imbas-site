@@ -14,8 +14,10 @@
 // settle them:
 //
 //   1. after opening, focus is INSIDE the lane and the lane heading is IN the viewport;
-//   2. the return control closes the lane and puts the person back where they were;
-//   3. a half-typed draft survives the close and the reopen.
+//   2. the lane's first answer is the answer the inspection ran on, it is read-only, and
+//      an edit aimed at it does not move it;
+//   3. the return control closes the lane and puts the person back where they were;
+//   4. a half-typed draft survives the close and the reopen.
 //
 // So they are measured here, on the governed renderer, against the board's own scenario.
 //
@@ -58,9 +60,16 @@ const DOOR = ".wb-chip-door";
 const LANE = "#wb-chip-lane";
 const HEADING = "#wb-chip-heading";
 const RETURN = ".wb-chip__return-btn";
-const DRAFT = "#wb-chip-lane textarea";
+// The lane's two paste boxes. Over an inspection the first one is not a draft: it holds
+// the answer the inspection ran on, read-only, off receipt.open_run.answer. So the draft
+// that has to survive a close is the SECOND one, which is the lane's own state and the
+// only thing in here a person types.
+const FIRST = "#wb-chip-lane textarea";
+const PICK = "#wb-chip-lane .wb-chip__pick";
+const DRAFT = "#wb-chip-lane .wb-chip__instruction textarea";
 
 const DRAFT_TEXT = "half-typed answer, mid-sen";
+const EDIT_ATTEMPT = "an edit the lane must refuse";
 
 // The scroll restore lands within a pixel of the captured position on an instant scroll.
 // The tolerance exists for sub-pixel layout rounding, not for a near miss: 2px is smaller
@@ -75,6 +84,7 @@ const READ = `(() => {
   const lane = document.querySelector(${q(LANE)});
   const heading = document.querySelector(${q(HEADING)});
   const draft = document.querySelector(${q(DRAFT)});
+  const first = document.querySelector(${q(FIRST)});
   const active = document.activeElement;
   const r = heading ? heading.getBoundingClientRect() : null;
   return {
@@ -94,6 +104,13 @@ const READ = `(() => {
       parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-offset")) || 0,
     ),
     draftValue: draft ? draft.value : null,
+    firstValue: first ? first.value : null,
+    firstReadOnly: first ? first.readOnly : null,
+    // Every paste box the lane offers, so "one live input" is a count and not an
+    // impression. A second editable copy of the held answer would show up here.
+    liveInputs: lane
+      ? [...lane.querySelectorAll("textarea")].filter((t) => !t.readOnly && !t.disabled).length
+      : null,
     reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 })()`;
@@ -202,14 +219,41 @@ async function probe(cdp, viewKey) {
   check(`${viewKey}: the reading position moved to follow the lane`, open.scrollY !== before.scrollY,
     `scrollY ${before.scrollY} → ${open.scrollY}`);
 
-  // ── 2. A half-typed draft ─────────────────────────────────────────────────
+  // ── 2. The held first answer ──────────────────────────────────────────────
+  // The lane was opened over an inspection, so its first answer is the one that
+  // inspection ran on. Read the expected text off the same receipt the app renders
+  // from rather than a copy of it: a constant would go on passing after a drift.
+  const heldExpected = resolvePayloads(scenario)["/api/read"].receipt.open_run.answer;
+  check(`${viewKey}: the first answer is the inspected answer, not an empty box`,
+    open.firstValue === heldExpected,
+    `${(open.firstValue || "").length} of ${heldExpected.length} chars`);
+  check(`${viewKey}: the held answer is read-only`, open.firstReadOnly === true);
+  check(`${viewKey}: the held answer is the lane's only copy of it, and no box is live yet`,
+    open.liveInputs === 0, `${open.liveInputs} live paste boxes`);
+
+  // A synthetic edit takes the same route a real keystroke takes. The held answer
+  // belongs to the inspection, so the lane has to refuse it.
+  const refused = await evaluate(cdp, typeDraft(FIRST, EDIT_ATTEMPT));
+  if (!refused.ok) throw new Error(refused.why);
+  await settle(cdp);
+  const afterEdit = await evaluate(cdp, READ);
+  check(`${viewKey}: an edit to the held answer does not change it`,
+    afterEdit.firstValue === heldExpected, JSON.stringify((afterEdit.firstValue || "").slice(0, 40)));
+
+  // ── 3. A half-typed draft, in the box that is actually the person's ───────
+  const picked = await evaluate(cdp, click(PICK));
+  if (!picked.ok) throw new Error(picked.why);
+  await waitUntil(cdp, `!!document.querySelector(${q(DRAFT)})`, { label: "second answer box" });
+  await settle(cdp);
   const typed = await evaluate(cdp, typeDraft(DRAFT, DRAFT_TEXT));
   if (!typed.ok) throw new Error(typed.why);
   await settle(cdp);
   const drafted = await evaluate(cdp, READ);
   check(`${viewKey}: the draft went in`, drafted.draftValue === DRAFT_TEXT, JSON.stringify(drafted.draftValue));
+  check(`${viewKey}: the held answer still stands beside it, untouched`,
+    drafted.firstValue === heldExpected);
 
-  // ── 3. Return ─────────────────────────────────────────────────────────────
+  // ── 4. Return ─────────────────────────────────────────────────────────────
   const returned = await evaluate(cdp, click(RETURN));
   if (!returned.ok) throw new Error(returned.why);
   await waitUntil(cdp, `document.querySelector(${q(LANE)}).hidden === true`, { label: "lane hidden" });
@@ -226,7 +270,7 @@ async function probe(cdp, viewKey) {
     typeof back.activeClass === "string" && back.activeClass.includes("wb-chip-door"),
     `activeElement <${back.activeTag} class="${back.activeClass}">`);
 
-  // ── 4. Reopen ─────────────────────────────────────────────────────────────
+  // ── 5. Reopen ─────────────────────────────────────────────────────────────
   const reopened = await evaluate(cdp, click(DOOR));
   if (!reopened.ok) throw new Error(reopened.why);
   await waitUntil(cdp, `!document.querySelector(${q(LANE)}).hidden`, { label: "lane visible again" });
@@ -235,6 +279,11 @@ async function probe(cdp, viewKey) {
 
   check(`${viewKey}: the half-typed draft survived the close and reopen`,
     again.draftValue === DRAFT_TEXT, JSON.stringify(again.draftValue));
+  // Not the same guarantee as the line above it. The draft survives because the lane is
+  // hidden and not unmounted; the held answer survives because it is read off a receipt
+  // the lane does not own. Two mechanisms, and a person needs both to hold.
+  check(`${viewKey}: the held answer came back as the inspection left it`,
+    again.firstValue === heldExpected, `${(again.firstValue || "").length} of ${heldExpected.length} chars`);
   check(`${viewKey}: reopening focuses the lane heading again`, again.focusIsHeading === true);
   check(`${viewKey}: and brings it back into the viewport`, again.headingInViewport === true,
     `heading top ${again.headingTop}px`);

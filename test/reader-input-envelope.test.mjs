@@ -152,6 +152,44 @@ test("the first answer is NOT preflighted — only the second is word-gated at t
   assert.equal(!!canCompare({ id: "chip" }, words(ANSWER_WORD_MAX * 3), words(100), false), true);
 });
 
+// The first answer the chip lane compares against is HELD — read off the receipt of the
+// inspection the lane was opened over — and the whole resolution runs here rather than
+// being read. An empty first state must leave the CTA disabled whichever way it got there:
+// no inspection behind the lane, or an inspection that returned no receipt to hold.
+test("an empty first state cannot arm the chip compare, held or drafted", () => {
+  const heldAnswerOf = derivation("ChipLane", "heldAnswer", ["heldReceipt"]);
+  const heldOf = derivation("ChipLane", "held", ["heldAnswer"]);
+  const firstAnswerOf = derivation("ChipLane", "firstAnswer", ["held", "heldAnswer", "draftAnswer"]);
+  const canCompare = derivation("ChipLane", "canCompare", [
+    "entry", "firstAnswer", "secondAnswer", "secondAnswerOverMax",
+  ]);
+
+  const resolve = (receipt, draft) => {
+    const h = heldAnswerOf(receipt);
+    return firstAnswerOf(heldOf(h), h, draft);
+  };
+  const armed = (receipt, draft) => !!canCompare({ id: "chip" }, resolve(receipt, draft), words(50), false);
+
+  const inspected = words(120);
+  const receipt = { open_run: { answer: inspected } };
+
+  // Held: the answer the inspection ran on IS the first answer, and it arms the compare
+  // with nothing typed into the lane at all.
+  assert.equal(resolve(receipt, ""), inspected, "the held answer is the first answer");
+  assert.equal(armed(receipt, ""), true);
+  // And the draft cannot displace it. There is no second copy to type into.
+  assert.equal(resolve(receipt, words(9)), inspected, "a draft cannot override a held answer");
+
+  // Every way an inspection can fail to hand over an answer: no lane parent at all, a
+  // degraded run that carried no receipt, and a receipt whose open run has no answer.
+  for (const empty of [null, undefined, {}, { open_run: {} }, { open_run: { answer: "" } }, { open_run: { answer: "   " } }]) {
+    assert.equal(resolve(empty, ""), "", "nothing held and nothing typed resolves to no first answer");
+    assert.equal(armed(empty, ""), false, "and an empty first state must not arm the compare");
+    // The draft is the truthful path for exactly these cases, and it still works.
+    assert.equal(armed(empty, words(80)), true, "the draft arms it instead");
+  }
+});
+
 // ── 3. Defect 2: an invalid payload cannot return to an armed state ──────────
 
 test("re-pasting the identical over-limit answer does not re-arm the CTA", () => {

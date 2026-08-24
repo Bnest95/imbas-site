@@ -2234,8 +2234,32 @@ async function sha256HexClient(str) {
 // to hex, so a non-hex id would silently mismatch). Shape is the minimum
 // validateOpenReceipt requires; content_hash is taken over the canonical envelope with
 // content_hash nulled — identical to the server's rule (reader-receipt.js).
-async function buildChipOpenReceipt(firstAnswer, generatedAt) {
+//
+// `parentReceipt` is the inspection receipt this open run continues, and it is what turns
+// inspect → steer → compare → receipt into one stated chain instead of four artifacts that
+// happen to share a hash. Without it, a chip pair run over an inspected answer is
+// indistinguishable from the same text pasted cold: both hash to the same open_run_id,
+// because the id is taken over the answer alone. `continues` says which receipt the answer
+// was read from, so the claim is written down rather than inferred.
+//
+// It sits INSIDE open_run deliberately. The paired and chip-paired envelopes embed open_run
+// verbatim (reader-receipt.js: `open_run: openRun || null`), so a field placed here survives
+// into the downstream receipt and travels with the artifact; a top-level sibling would be
+// dropped at that hop and the chain would end at the open receipt.
+//
+// It does NOT enter the open_run_id. That id is the join key already written to the
+// Reader Runs row and is owned by value, so folding a parent hash into it would change what
+// existing rows join on. The reference is additive and stands beside the id.
+//
+// Null when there is no parent: the standing chip door, ?start=chips, and a degraded run
+// that returned no receipt all open the lane over nothing. A stated null is the honest
+// record that this open run continues no inspection.
+async function buildChipOpenReceipt(firstAnswer, generatedAt, parentReceipt) {
   const answerHex = await sha256HexClient(firstAnswer);
+  const parent = parentReceipt && typeof parentReceipt === "object" ? parentReceipt : null;
+  const parentRun = (parent && parent.open_run) || null;
+  const parentProv = (parentRun && parentRun.provenance) || null;
+  const parentHash = (parent && parent.integrity && parent.integrity.content_hash) || "";
   const receipt = {
     receipt_type: "single",
     schema_version: RECEIPT_SCHEMA_VERSION,
@@ -2244,6 +2268,14 @@ async function buildChipOpenReceipt(firstAnswer, generatedAt) {
       question: "",
       answer: firstAnswer,
       provenance: { request_id: answerHex.slice(0, 16) },
+      continues: parentHash
+        ? {
+            receipt_schema_version: parent.schema_version || "",
+            content_hash: parentHash,
+            request_id: (parentProv && parentProv.request_id) || "",
+            generated_at: parent.generated_at || "",
+          }
+        : null,
     },
     integrity: { content_hash: null },
   };
@@ -2255,8 +2287,8 @@ async function buildChipOpenReceipt(firstAnswer, generatedAt) {
 // user-chip provenance the server needs to look the instruction up in the FROZEN bank:
 // the server never trusts client-supplied instruction text, only chip_id +
 // instruction_version. Builds the open receipt on the way out.
-async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion, declaration }) {
-  const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString());
+async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion, declaration, parentReceipt }) {
+  const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString(), parentReceipt);
   const res = await fetch(READER_PAIRED_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -5098,6 +5130,30 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
   const [sameModel, setSameModel] = useState(null);
   const [modelVersion, setModelVersion] = useState("");
   const [edits, setEdits] = useState(null);
+
+  // The parent's delta flag is REPORTED from here, not latched by the caller, because
+  // `paired` is the only authoritative answer to "is there a delta on screen" and it lives
+  // in this component.
+  //
+  // The seam this closes: Act2Offer mounts this component under `key={check}`, and the
+  // Quick/Cleaner toggle stays on screen after a comparison returns — PairedDeltaView even
+  // offers its own "try the cleaner check" control, which calls back up to setCheck. So a
+  // tap on either one changes the key and React remounts this component with `paired` back
+  // to null. The delta is gone and the paste box is live again. When the flag was raised
+  // once inside submit() and lowered only inside reset(), nothing in that path lowered it:
+  // the workbench went on deriving STAGE_DELTA, which declares `answerEntry: null` and
+  // lists the paired answer as read-only context, over a stage that was in fact showing a
+  // live, editable paired answer box. That is the one-live-answer-input invariant broken by
+  // a boolean that outlived the state it described.
+  //
+  // Reporting it from an effect on `paired` fixes it at the cause: a remount runs this with
+  // `paired` null and tells the parent so, a returned comparison tells the parent so, and a
+  // reset tells the parent so. The flag can no longer describe a delta that is not there.
+  useEffect(() => {
+    if (onPairedChange) onPairedChange(!!paired);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!paired]);
+
   if (!openReceipt) return null;
   const hasAnswer = !!targeted.trim();
   // Same derived gate as the primary compose: the second answer meets the same ceiling
@@ -5159,6 +5215,7 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     if (runError) setRunError("");
   };
 
+  // Clearing `paired` is what lowers the parent's delta flag, via the effect above.
   const reset = () => {
     setPaired(null);
     setTargeted("");
@@ -5167,7 +5224,6 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     setSameModel(null);
     setModelVersion("");
     setEdits(null);
-    if (onPairedChange) onPairedChange(false);
   };
 
   const submit = async () => {
@@ -5185,12 +5241,12 @@ function PairedTest({ openReceipt, run, check, onTryCleaner, onPairedChange, inp
     setBusy(true);
     emitReaderEvent(READER_EVENTS.LOOP_RETURNED, { run, check });
     try {
-      const data = await runPairedReader(openReceipt, targeted, declaration);
-      setPaired(data);
       // The delta replaces this paste box, so the stage moves. It lands async but the
       // person's "Compare the two answers" click is what initiated it — one action, one
-      // stage change, one event.
-      if (onPairedChange) onPairedChange(true);
+      // stage change, one event. Setting `paired` is the whole of it: the effect above
+      // reports the stage change from the state that caused it.
+      const data = await runPairedReader(openReceipt, targeted, declaration);
+      setPaired(data);
     } catch (err) {
       const info = (err && err.info) || {};
       if (err && err.status === 400 && info.error === "too_long") {
@@ -5864,12 +5920,34 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
 // client. No chip is preselected: Imbas has determined nothing about the answer until the
 // person chooses a follow-up.
 //
-// Three props, all about the way in and the way out, none about the flow itself.
-// headingRef is what the workbench focuses and scrolls to when the lane opens; onReturn
-// closes it; openedFrom is the question of the inspection the lane was opened over, and
-// is empty when there was no inspection to open it over.
-function ChipLane({ headingRef, onReturn, openedFrom }) {
-  const [firstAnswer, setFirstAnswer] = useState("");
+// Four props. Two are about the way in and the way out: headingRef is what the workbench
+// focuses and scrolls to when the lane opens, and onReturn closes it. Two carry the
+// inspection the lane was opened over, and both are empty when there was none: openedFrom
+// is that inspection's question, and heldReceipt is that inspection's own receipt.
+//
+// heldReceipt is why this lane owns no first answer of its own when it opens over an
+// inspection. The authoritative first state is receipt.open_run.answer — the answer the
+// inspection actually ran on — so steering continues from THAT answer: the lane references
+// it and keeps no editable second copy that could drift away from it. A person who wants to
+// steer a different first answer runs a new inspection.
+//
+// ONE prop and not two, because the answer and the parent identity have to come off the
+// same receipt. The chip-open receipt this lane mints records which receipt it continues
+// (open_run.continues), and that reference is only evidence if it names the receipt the
+// held answer was actually read from. Passing them separately would let a caller hand over
+// one inspection's answer under another inspection's hash and the chain would still look
+// intact.
+//
+// The draft is the other mode and it stays: the standing chip door and ?start=chips open
+// this lane with no inspection behind it, and a degraded run returns a read with no receipt
+// at all (api/read.js fallback()), so there is nothing held there either. Held-ness is
+// therefore read off the answer and never off the question — a fallback run has a question
+// and no answer to hold.
+function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt }) {
+  const [draftAnswer, setDraftAnswer] = useState("");
+  const heldAnswer = (heldReceipt && heldReceipt.open_run && heldReceipt.open_run.answer) || "";
+  const held = !!heldAnswer.trim();
+  const firstAnswer = held ? heldAnswer : draftAnswer;
   const [chipId, setChipId] = useState("");
   const [secondAnswer, setSecondAnswer] = useState("");
   const [sameModel, setSameModel] = useState(null);
@@ -5912,9 +5990,11 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
     if (runError) setRunError("");
   };
 
+  // Clears what this lane owns. A held first answer belongs to the inspection, not to the
+  // lane, so running another follow-up over the same inspection leaves it standing.
   const reset = () => {
     setChipResult(null);
-    setFirstAnswer("");
+    setDraftAnswer("");
     setChipId("");
     setSecondAnswer("");
     setSameModel(null);
@@ -5962,6 +6042,9 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
         chipId: entry.id,
         instructionVersion: entry.instruction_version,
         declaration,
+        // The receipt the held answer was read from, or null in draft mode. Passed whole
+        // so the open receipt names the inspection it continues.
+        parentReceipt: held ? heldReceipt : null,
       });
       setChipResult(data);
     } catch (err) {
@@ -5970,6 +6053,10 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
         setFieldError(CHIP_UI.compose.too_long);
       } else if (err && err.status === 400 && info.error === "empty") {
         setFieldError(CHIP_UI.compose.too_short);
+      // The server rejects an open receipt whose answer is empty. That is the first
+      // answer, so this says so in the words the field uses, on the field itself.
+      } else if (err && err.status === 400 && info.error === "invalid_receipt" && info.detail === "content_empty") {
+        setFieldError(CHIP_UI.compose.first_answer_missing);
       } else if (err && err.status === 400 && info.error === "not_eligible") {
         setRunError(CHIP_UI.compose.not_eligible);
       } else if (err && err.status === 400) {
@@ -5996,15 +6083,19 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
           {`← ${openedFrom ? CHIP_UI.compose.return_to_inspection : CHIP_UI.compose.return_to_reader}`}
         </button>
       </div>
-      {/* The read-only tie to what the lane was opened over. The question only, never
-          the answer body — see the copy's own note in reader-paired.js. */}
+      {/* The read-only tie to what the lane was opened over. The question only — the
+          answer body is held once, in the first-answer field below, and is not reproduced
+          here as a second copy of itself.
+          The note states that the text is still here, so it is rendered off the text and
+          not off the question. A degraded run carries a question and no receipt, and a
+          lane opened over one has nothing held to say that about. */}
       {openedFrom ? (
         <div className="wb-chip__origin">
           <p className="wb-chip__origin-line">
             <span className="wb-chip__origin-label">{CHIP_UI.compose.opened_from_label}</span>{" "}
             <span className="wb-chip__origin-question">{openedFrom}</span>
           </p>
-          <p className="wb-chip__origin-note">{CHIP_UI.compose.opened_from_note}</p>
+          {held ? <p className="wb-chip__origin-note">{CHIP_UI.compose.opened_from_note}</p> : null}
         </div>
       ) : null}
     </div>
@@ -6025,16 +6116,21 @@ function ChipLane({ headingRef, onReturn, openedFrom }) {
       <p className="wb-act2__offer">{CHIP_UI.value_statement.sub}</p>
 
       {/* Picking a follow-up opens the second paste box below, so this one stops accepting
-          input and stays as context. One live answer field at a time, in this lane too. */}
+          input and stays as context. One live answer field at a time, in this lane too.
+          A held answer is read-only from the start: it is the state the inspection ran on,
+          shown so the person can see what they are steering from, and it is not this lane's
+          to edit. */}
       <PasteField
         label={CHIP_UI.compose.first_answer_label}
         value={firstAnswer}
-        onChange={(v) => { setFirstAnswer(v); clearErrors(); }}
+        onChange={(v) => { setDraftAnswer(v); clearErrors(); }}
         placeholder={CHIP_UI.compose.first_answer_placeholder}
         minAckLength={1}
-        readOnly={!!entry}
+        readOnly={held || !!entry}
       />
-      {entry ? (
+      {/* Unlocks the box a picked chip locked. A held answer has no unlocked state to
+          return to, so the control that offers one is not rendered over it. */}
+      {entry && !held ? (
         <div className="wb-chip__edit-first">
           <button type="button" className="wb-demo-trigger wb-edit-answer" onClick={() => setChipId("")}>
             {`← ${CHIP_UI.compose.edit_first_answer}`}
@@ -7586,11 +7682,19 @@ function ReaderWorkbench() {
                 inspection exists: the standing door and the ?start=chips arrival open
                 this lane over nothing, and naming an inspection there would name a
                 page the person never ran. It is the same expression the workbench
-                already reads a question from, so the two cannot drift. */}
+                already reads a question from, so the two cannot drift.
+
+                heldReceipt is the inspection's own receipt, and the lane reads the
+                authoritative first answer off it. It is deliberately the whole receipt
+                rather than the answer alone: the chip-open receipt records which receipt
+                it continues, and that reference only means anything if it names the
+                receipt the answer came from. A degraded run carries no receipt, so this
+                is null there and the lane opens on its own draft instead. */}
             <ChipLane
               headingRef={chipHeadingRef}
               onReturn={closeChipLane}
               openedFrom={readerResult ? (mode === "guided" ? sel.openPrompt : question).trim() : ""}
+              heldReceipt={readerResult ? readerResult.receipt || null : null}
             />
           </div>
         ) : null}
