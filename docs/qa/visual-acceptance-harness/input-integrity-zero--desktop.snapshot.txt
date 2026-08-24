@@ -1,0 +1,61 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: #result
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 863
+timezone: UTC
+url: /input-integrity.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
+button "More" disabled=false expanded=false
+span "▾"
+p "A constructed demonstration file, not a document found in the wild."
+h2 "c9_image_only.pdf"
+p "867 bytes"
+span "Complete"
+p "This run inspected 1 page, and every page was read."
+h3 "What this run establishes"
+p "This run establishes what the local parser recovered from the file's structure, and what the local renderer draws. It does not establish what any AI system, pipeline, or person received from this file."
+h2 "What surfaced"
+p "0 items surfaced."
+p "No phenomenon surfaced under the checks that ran."
+p "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file that they do not describe."
+details expanded=false
+summary "Provenance"
+p "This result came from pdfjs-dist 6.2.108 over the file with sha256 <HASH64>."
+dt "File digest, SHA-256"
+dd "<HASH64>"
+dt "Parser"
+dd "pdfjs-dist 6.2.108"
+dt "Predicate versions"
+dd "imbas-file-graphics-walker 1.0.0, imbas-file-predicates 1.0.0"
+dt "Pages inspected"
+dd "1"
+p "This file stayed on your machine."
+button "Download the evidence receipt" disabled=false
+p "A JSON record of this inspection. The PDF itself is not included."

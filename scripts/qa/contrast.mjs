@@ -104,6 +104,51 @@ export const STYLES = [
   // instruction above rather than on a suspicion: a text style this instrument has never
   // sampled is an unmeasured text style whatever it inherits.
   ".wb-measure__question-text",
+  // ── Input Integrity ────────────────────────────────────────────────────────
+  // This list is a hardcoded set of selectors, not the board registry, so a route can be
+  // photographed on every board scenario and still reach nobody's contrast measurement.
+  // Input Integrity arrived that way. Every style below paints glyphs in one of the three
+  // registered states; the route's containers are left out because a container's rect
+  // spans background its own text never sits on, and a ratio read off that rect belongs
+  // to no element.
+  ".ii-boundary p",
+  ".ii-drop__prompt",
+  ".ii-drop__limit",
+  ".ii-drop__choose",
+  ".ii-intake__custody",
+  ".ii-sample__action",
+  ".ii-sample__note",
+  ".ii-result__file",
+  ".ii-result__size",
+  ".ii-coverage__label",
+  ".ii-coverage__statement",
+  ".ii-coverage__page",
+  ".ii-establishes__label",
+  ".ii-establishes__body",
+  ".ii-summary__heading",
+  ".ii-summary__count",
+  ".ii-summary__link",
+  ".ii-summary__where",
+  ".ii-zero__statement",
+  ".ii-zero__scope",
+  ".ii-group__heading",
+  ".ii-group__note",
+  ".ii-item__lead",
+  ".ii-item__statements li",
+  ".ii-item__locator-label",
+  ".ii-item__locator-part",
+  ".ii-item__back",
+  ".ii-contrast__label",
+  ".ii-contrast__note",
+  ".ii-contrast__span",
+  ".ii-contrast__statements li",
+  ".ii-disclosure__summary",
+  ".ii-def__term",
+  ".ii-def__value",
+  ".ii-provenance__statement",
+  ".ii-provenance__custody",
+  ".ii-export__action",
+  ".ii-export__note",
 ];
 
 export const STATES = [
@@ -121,6 +166,12 @@ export const STATES = [
   // it is where this lane's chip copy gets measured at all.
   "chip-arrival",
   "single-findings+chips",
+  // Input Integrity's three board states, driven here for the same reason they are
+  // photographed there: intake before a file, a file that surfaces a finding, and a file
+  // that surfaces none. Between them they paint every registered .ii-* style once.
+  "input-integrity-intake",
+  "input-integrity-sample",
+  "input-integrity-zero",
 ];
 
 // chip-arrival reaches the lane but arrives with no inspection behind it, so the origin

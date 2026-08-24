@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "da2f2384cf4db28b6774a8a4e1fb1cd220904350",
+  "measured_at_master": "451e7a591ced3f86a3fa583550ff06ea0b3ff23c",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -25,6 +25,9 @@
       "export-paired",
       "export-single",
       "first-load",
+      "input-integrity-intake",
+      "input-integrity-sample",
+      "input-integrity-zero",
       "paired-empty",
       "paired-legacy",
       "paired-legacy-rows",
@@ -69,7 +72,7 @@
         "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
       }
     ],
-    "sha256": "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229"
+    "sha256": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967"
   },
   "provenance": {
     "reseal_rule": {
@@ -157,7 +160,270 @@
           "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
         ],
         "free_alpha_inventory_identical": true,
-        "measured_state_moved": false
+        "measured_state_moved": false,
+        "carries_population_evidence": []
+      }
+    ],
+    "population_reseal_rule": {
+      "disposition": "ruled — founder ruling of 2026-08-23, recorded against the Input Integrity acceptance",
+      "ruling": {
+        "date": "2026-08-23",
+        "authority": "founder",
+        "recorded_against": "Input Integrity baseline acceptance — the census population gap",
+        "text": "The census conflates two distinct provenance events inside one fingerprint: governed source movement and governed scenario-population movement. The existing reseal rule remains unchanged and governs the first. A population reseal governs the second, and it is not permission to loosen the census: it is eligible only when every governed source hash is byte-identical, every measured count is identical, every governed inventory line is identical, the only fingerprint input that changed is the governed scenario population, the exact additions and removals are enumerated, each added scenario's governed-region disposition is recorded, the movement is tied to an explicit founder-authorized product or QA change, and no existing scenario disappears or changes classification silently. Do not fabricate an authorized source edit where no governed source hash moved.",
+        "eligibility": [
+          "every governed source hash byte-identical before and after;",
+          "every measured count identical;",
+          "every governed inventory line identical;",
+          "the only fingerprint input that changed is the governed scenario population;",
+          "the exact scenario additions and removals enumerated;",
+          "each added scenario's governed-region disposition recorded;",
+          "the population movement tied to an explicit founder-authorized product or QA change;",
+          "no existing scenario disappears or changes classification silently."
+        ]
+      },
+      "what_this_is_not": "This is not a second way to reach the same door. A population reseal carries no authority over a measured value and none over a source hash. If a governed source moved, this is the wrong route and the source rule governs; if any count or inventory line moved, neither route is open and the difference is a finding to report.",
+      "standing_instruction": "The two routes are told apart by the evidence they carry, and neither may satisfy the other. A record that carries both is refused rather than read twice. Before recording a population reseal, run --check and confirm the fingerprint line stands alone; then confirm which of its inputs moved, because a fingerprint line alone still does not say which rule governs."
+    },
+    "population_reseals": [
+      {
+        "date": "2026-08-23",
+        "authorizing_change": "PR #131, branch claude/input-integrity-surface — the Input Integrity route registered its three states on the acceptance board. governedScenarios() is the board registry, so the census population grew with it. The route renders no .wb-reader-v2__result region and input-integrity.css is deliberately outside this census's source list, so the route contributes no ember spend to measure.",
+        "fingerprint_before": "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229",
+        "fingerprint_after": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+        "population_before": [
+          "chip-arrival",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "scenarios_added": [
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero"
+        ],
+        "scenarios_removed": [],
+        "added_scenario_dispositions": [
+          {
+            "scenario": "input-integrity-intake",
+            "renders_region": false,
+            "note": "input-integrity.html before a file — the Reader result region is not on this page."
+          },
+          {
+            "scenario": "input-integrity-sample",
+            "renders_region": false,
+            "note": "input-integrity.html after the sample PDF surfaces a finding — still no Reader result region."
+          },
+          {
+            "scenario": "input-integrity-zero",
+            "renders_region": false,
+            "note": "input-integrity.html after a file that surfaces nothing — still no Reader result region."
+          }
+        ],
+        "region_rendering_before": [
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "sources_unchanged": [
+          {
+            "path": "styles.css",
+            "extraction": "whole file",
+            "sha256": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d"
+          },
+          {
+            "path": "workbench.css",
+            "extraction": "whole file",
+            "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
+          },
+          {
+            "path": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146"
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "population_after": [
+          "chip-arrival",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "scenarios_added_observed": [
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero"
+        ],
+        "scenarios_removed_observed": [],
+        "region_rendering_after": [
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "fingerprint_before_recomputed": "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229",
+        "fingerprint_after_recomputed": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+        "source_hashes_identical": true,
+        "counts_identical": true,
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "population_is_the_only_moved_input": true,
+        "population_delta_matches_record": true,
+        "added_scenario_dispositions_hold": true,
+        "retained_scenarios_unchanged": true,
+        "eligible": true,
+        "failures": []
       }
     ]
   },

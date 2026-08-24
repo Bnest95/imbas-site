@@ -36,6 +36,7 @@ import {
   coverageFingerprint,
   governedScenarios,
   parseDeclarations,
+  populationResealEvidence,
   readEmberRamp,
   recomputeAuthored,
   stripSelectorPart,
@@ -452,4 +453,166 @@ test("census fixture: the CSSOM loses a var()-bearing shorthand, which is why th
     !res.cssText.includes("222") && !res.borderLeftColor.includes("222"),
     `Chrome now serializes the shorthand's colour (${JSON.stringify(res)}) — revisit the census's text-parsing rationale`,
   );
+});
+
+// ── 8. The population-reseal path can refuse ─────────────────────────────────
+// The founder ruling of 2026-08-23 opened a second reseal route for the case where the
+// governed scenario population moves and no governed source hash does. A route that has
+// never been shown to reject anything is a checker asserting a result it never computed,
+// so each of these drives populationResealEvidence with a world it must refuse, and names
+// the condition that has to do the refusing. The control comes first: without it, a
+// function that refused everything would pass every test below.
+//
+// Synthetic throughout. The real record lives in the artifact and is checked against the
+// real tree in test/finding-continuation-ruling.test.mjs; these fixtures need a world whose
+// right answer is fixed, not one that moves with the next stylesheet edit.
+
+const POP_REGION = ".fixture-region";
+const POP_VIEWPORTS = ["desktop", "mobile"];
+const POP_SOURCES = [
+  { path: "a.css", sha256: "1111111111111111111111111111111111111111111111111111111111111111" },
+  { path: "b.css", sha256: "2222222222222222222222222222222222222222222222222222222222222222" },
+];
+const POP_BEFORE = ["alpha", "beta", "gamma"];
+const POP_AFTER = ["alpha", "beta", "delta", "gamma"];
+const POP_REGION_SCENARIOS = ["alpha", "beta"];
+const POP_COUNTS = {
+  declared_token_spends: 3,
+  free_alpha_spends: 2,
+  distinct_free_alphas: 2,
+  free_alpha_spends_resting: 1,
+  free_alpha_spends_pseudo_state_only: 1,
+};
+const POP_INVENTORY = ["b.css|.one|border|1px solid rgba(222, 111, 56, 0.3)", "b.css|.two:hover|background|rgba(222, 111, 56, 0.1)"];
+
+const popLive = (over = {}) => ({
+  region: POP_REGION,
+  scenarios: POP_AFTER,
+  viewports: POP_VIEWPORTS,
+  sources: POP_SOURCES,
+  scenariosRenderingRegion: POP_REGION_SCENARIOS,
+  counts: POP_COUNTS,
+  inventory: POP_INVENTORY,
+  ...over,
+});
+
+const popFingerprint = (scenarios, live = popLive()) =>
+  coverageFingerprint({ region: live.region, scenarios, viewports: live.viewports, sources: live.sources }).sha256;
+
+const popRecord = (over = {}) => ({
+  date: "2026-01-01",
+  authorizing_change: "a fixture change, named and described at more than the minimum length",
+  fingerprint_before: popFingerprint(POP_BEFORE),
+  fingerprint_after: popFingerprint(POP_AFTER),
+  population_before: POP_BEFORE,
+  scenarios_added: ["delta"],
+  scenarios_removed: [],
+  added_scenario_dispositions: [{ scenario: "delta", renders_region: false }],
+  region_rendering_before: POP_REGION_SCENARIOS,
+  sources_unchanged: POP_SOURCES.map((s) => ({ ...s, extraction: "whole file" })),
+  counts_before: POP_COUNTS,
+  free_alpha_inventory_before: POP_INVENTORY,
+  ...over,
+});
+
+const refusals = (record, live = popLive()) => populationResealEvidence(record, live).failures.map((f) => f.condition);
+
+test("census fixture: a clean population move is eligible", () => {
+  const e = populationResealEvidence(popRecord(), popLive());
+  assert.deepEqual(e.failures, []);
+  assert.equal(e.eligible, true);
+  assert.deepEqual(e.scenarios_added_observed, ["delta"]);
+  assert.deepEqual(e.scenarios_removed_observed, []);
+  assert.equal(e.population_is_the_only_moved_input, true);
+});
+
+test("census fixture: a population reseal is refused when a governed source hash moved", () => {
+  // The source's after-hash is not the one the record swears it is still sitting at.
+  const moved = [POP_SOURCES[0], { ...POP_SOURCES[1], sha256: "9".repeat(64) }];
+  const live = popLive({ sources: moved });
+  // Fingerprints recomputed against the moved world, so condition 4 has no complaint and
+  // condition 1 has to be the one that refuses. This is the careful operator's version of
+  // the mistake, and it still does not get through.
+  const record = popRecord({
+    fingerprint_before: popFingerprint(POP_BEFORE, live),
+    fingerprint_after: popFingerprint(POP_AFTER, live),
+  });
+  const got = refusals(record, live);
+  assert.deepEqual(got, ["1 — governed source hashes unchanged"]);
+  assert.equal(populationResealEvidence(record, live).eligible, false);
+});
+
+test("census fixture: updating the record to the moved hash does not rescue it", () => {
+  // The other half of the same trap: name the new hash as though it had always been there.
+  // The recorded before-fingerprint is then no longer reproducible from the live sources,
+  // because the real one was computed when the source held its old hash.
+  const moved = [POP_SOURCES[0], { ...POP_SOURCES[1], sha256: "9".repeat(64) }];
+  const live = popLive({ sources: moved });
+  const record = popRecord({
+    sources_unchanged: moved.map((s) => ({ ...s, extraction: "whole file" })),
+  });
+  assert.deepEqual(refusals(record, live), ["4 — population is the only moved fingerprint input"]);
+});
+
+test("census fixture: a population reseal is refused when a measured count moved", () => {
+  const live = popLive({ counts: { ...POP_COUNTS, free_alpha_spends: 3 } });
+  const e = populationResealEvidence(popRecord(), live);
+  assert.deepEqual(e.failures.map((f) => f.condition), ["2 — measured counts unchanged"]);
+  assert.match(e.failures[0].detail, /free_alpha_spends: 2 → 3/);
+  assert.equal(e.measured_state_moved, true);
+  assert.equal(e.eligible, false);
+});
+
+test("census fixture: a population reseal is refused when a governed inventory line moved", () => {
+  const live = popLive({ inventory: [POP_INVENTORY[0], "b.css|.two:hover|background|rgba(222, 111, 56, 0.4)"] });
+  const e = populationResealEvidence(popRecord(), live);
+  assert.deepEqual(e.failures.map((f) => f.condition), ["3 — governed inventory unchanged"]);
+  assert.equal(e.measured_state_moved, true);
+});
+
+test("census fixture: a population reseal is refused when a scenario disappears silently", () => {
+  // beta is gone from the driven population and the record's removals are still empty.
+  const scenarios = ["alpha", "delta", "gamma"];
+  const live = popLive({ scenarios, scenariosRenderingRegion: ["alpha"] });
+  const record = popRecord({ fingerprint_after: popFingerprint(scenarios, live) });
+  const got = refusals(record, live);
+  assert.deepEqual(got, [
+    "5 — additions and removals enumerated",
+    "8 — no silent disappearance or reclassification",
+  ]);
+  const e = populationResealEvidence(record, live);
+  assert.match(e.failures[1].detail, /gone without being enumerated: beta/);
+  assert.equal(e.retained_scenarios_unchanged, false);
+});
+
+test("census fixture: a population reseal is refused when a retained scenario changes classification", () => {
+  // The region count holds at two while beta drops out and gamma takes its place. A count
+  // would see nothing here; the recorded region list is what catches the swap.
+  const live = popLive({ scenariosRenderingRegion: ["alpha", "gamma"] });
+  const e = populationResealEvidence(popRecord(), live);
+  assert.deepEqual(e.failures.map((f) => f.condition), ["8 — no silent disappearance or reclassification"]);
+  assert.match(e.failures[0].detail, /region disposition changed: beta, gamma/);
+});
+
+test("census fixture: a population reseal is refused when an addition's region disposition is wrong", () => {
+  const record = popRecord({ added_scenario_dispositions: [{ scenario: "delta", renders_region: true }] });
+  const e = populationResealEvidence(record, popLive());
+  assert.deepEqual(e.failures.map((f) => f.condition), ["6 — each addition's region disposition recorded"]);
+  assert.match(e.failures[0].detail, /delta: recorded renders_region=true, measured false/);
+});
+
+test("census fixture: a population reseal carrying source evidence is refused outright", () => {
+  // The route-around the ruling forbids: claim both, and pass whichever check runs first.
+  const record = popRecord({
+    authorized_edits: [{ source: "b.css", sha256_before: "3".repeat(64), sha256_after: "4".repeat(64), edit: "a fabricated edit, described" }],
+  });
+  const e = populationResealEvidence(record, popLive());
+  assert.equal(e.failures[0].condition, "route separation");
+  assert.match(e.failures[0].detail, /carries source-reseal evidence: authorized_edits/);
+  assert.equal(e.eligible, false);
+});
+
+test("census fixture: a population reseal is refused when nothing names the authorizing change", () => {
+  assert.deepEqual(refusals(popRecord({ authorizing_change: "board grew" })), ["7 — tied to an authorized change"]);
+  assert.deepEqual(refusals(popRecord({ authorizing_change: undefined })), ["7 — tied to an authorized change"]);
 });

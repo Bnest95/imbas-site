@@ -8,7 +8,7 @@ Generation reads no browser, starts no server, captures no pixel and moves no ba
 
 **This manifest governs both committed baseline layers: the `.png` images and the `.snapshot.txt` files beside them.** Both are checksummed. There is one row per image, and it carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in `docs/qa/visual-acceptance-harness/` is governed here.
 
-The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 36 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 72 images and 72 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
+The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 39 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 78 images and 78 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
 
 **What it does not attest.** This manifest is a statement about byte identity as the tree stands, and nothing else. It does not attest the capture session that produced any image — not when the shutter fired, not which working tree was checked out, not which commit the capture ran against. It records no browser environment beyond the version string each snapshot carries for its own image, and no machine, path or operating system. It attests no review, approval or acceptance event, and no baseline-acceptance provenance: that an image is listed here means its bytes are on disk and hash to the value shown, not that anyone signed off on them. It carries no historical capture SHA and no history of any kind. Those facts are real and are kept, elsewhere and deliberately — each snapshot's `## environment` block holds the conditions its own capture ran under, `git log` on an image file holds when those bytes last moved and which commit moved them, and `docs/qa/HARNESS-HISTORY.md` holds the removed historical record of this document's own pre-generated era. None of them is this file, and a reader needing any of them should not look here.
 
@@ -57,7 +57,7 @@ A board that lists only what it covers reads as complete. These are the result s
 
 ## Images
 
-72 images, 72 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+78 images, 78 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
 
 ### `chip-arrival--desktop.png`
 
@@ -410,6 +410,102 @@ A board that lists only what it covers reads as complete. These are the result s
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The workbench on arrival — the paste box, before anything is pasted |
 | expected behaviour | The paste box leads. The intro says what the Reader does and does not promise a verdict: paste an AI answer, the Reader inspects what it might be missing. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind. |
+
+### `input-integrity-intake--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `7b3f4a35349d0be79a28bd6a69a80584c0506a65e828851ff0f4d6b4ac21e71d` |
+| bytes | 217431 |
+| snapshot | `input-integrity-intake--desktop.snapshot.txt` |
+| snapshot sha256 | `8fb056a239d61a34eb2bfc15a678f4f06fa448d815ddc5fbed9ed79730415dad` |
+| snapshot bytes | 1682 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `#intake` at scroll offset 258 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, the intake state before any file has been chosen |
+| expected behaviour | The page offers one way in — a file picker that takes PDFs — and beside it the sample the surface can inspect without a file, marked as a constructed demonstration rather than a document found in the wild. The boundary sits on the page before any result does: what the run establishes, and what it does not. No result region, no coverage line, no count. |
+
+### `input-integrity-intake--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `f53ba3e675a1ac370e603abcd180a33fd5bbb6302e061c8eca910812220145d3` |
+| bytes | 179676 |
+| snapshot | `input-integrity-intake--mobile.snapshot.txt` |
+| snapshot sha256 | `523906ffff56630328f11a003b8478d658d8c19e75396903fda554eeca5f621c` |
+| snapshot bytes | 1094 |
+| viewport | 375x812@3x (mobile) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `#intake` at scroll offset 438 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, the intake state before any file has been chosen |
+| expected behaviour | The page offers one way in — a file picker that takes PDFs — and beside it the sample the surface can inspect without a file, marked as a constructed demonstration rather than a document found in the wild. The boundary sits on the page before any result does: what the run establishes, and what it does not. No result region, no coverage line, no count. |
+
+### `input-integrity-sample--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `ae52960b5f0dcab882ec407b0e34cfd12746312b6967ed812acb914a21e30004` |
+| bytes | 231265 |
+| snapshot | `input-integrity-sample--desktop.snapshot.txt` |
+| snapshot sha256 | `266eb65db7428d74679267ce19176a196fc528e8672288d53ae9d8f3ad4e657c` |
+| snapshot bytes | 2140 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `.ii-contrast__canvas` at scroll offset 1403 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, the constructed sample inspected — one finding, with the rendered page beside the structure it reports |
+| expected behaviour | One item surfaced, under the heading for text the page's instructions do not paint. The finding states three things in the registry's order: what the content stream sets, what a system extracting text receives, and that the rendering instructions do not paint it. Beside it the page is drawn as the renderer draws it, with the marker framing the place the structure names — the two-reading contrast, which is the whole argument of the surface and the one thing only a picture can settle. The coverage line reads complete over one page. |
+
+### `input-integrity-sample--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `15afd0544baccf3bd56c480433cdd20261a5f2edc9ea2d62bb81a7af7e9d5adc` |
+| bytes | 228065 |
+| snapshot | `input-integrity-sample--mobile.snapshot.txt` |
+| snapshot sha256 | `92153bef6835c154778831091f59ef185c4b7eabe6e95f749407a6bf4db96a76` |
+| snapshot bytes | 1311 |
+| viewport | 375x812@3x (mobile) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `.ii-contrast__canvas` at scroll offset 1808 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, the constructed sample inspected — one finding, with the rendered page beside the structure it reports |
+| expected behaviour | One item surfaced, under the heading for text the page's instructions do not paint. The finding states three things in the registry's order: what the content stream sets, what a system extracting text receives, and that the rendering instructions do not paint it. Beside it the page is drawn as the renderer draws it, with the marker framing the place the structure names — the two-reading contrast, which is the whole argument of the surface and the one thing only a picture can settle. The coverage line reads complete over one page. |
+
+### `input-integrity-zero--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `1958b4a5303069ae522329318555b7b1e168355d364db309330118fa003103c6` |
+| bytes | 211526 |
+| snapshot | `input-integrity-zero--desktop.snapshot.txt` |
+| snapshot sha256 | `9a9a130e34e89571917e42390d4d249212e64e388b594939dd91a6a16e707213` |
+| snapshot bytes | 2070 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `#result` at scroll offset 863 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, a file inspected with nothing to report — the zero-reportable state |
+| expected behaviour | The run completed and surfaced nothing, and the page says so without implying the file is clean. The count reads zero, the statement names the checks that ran rather than the document, and the scope line states how many structural properties those checks describe and that other structure may exist which they do not. Coverage still reads complete over one page, because a run that found nothing and a run that could not read the file are different states and must not photograph the same. |
+
+### `input-integrity-zero--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `2ad9f85a785afc0005180bb5b7fd2a27f4907ad151aa15b39ad87a7af2751b6e` |
+| bytes | 229810 |
+| snapshot | `input-integrity-zero--mobile.snapshot.txt` |
+| snapshot sha256 | `bcc717b746fc90357589c99ea95b4d52a3a9601922f913cf324af94dd6043297` |
+| snapshot bytes | 1342 |
+| viewport | 375x812@3x (mobile) |
+| url | `/input-integrity.html`, query `(none)` |
+| framed on | `#result` at scroll offset 1149 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Input Integrity, a file inspected with nothing to report — the zero-reportable state |
+| expected behaviour | The run completed and surfaced nothing, and the page says so without implying the file is clean. The count reads zero, the statement names the checks that ran rather than the document, and the scope line states how many structural properties those checks describe and that other structure may exist which they do not. Coverage still reads complete over one page, because a run that found nothing and a run that could not read the file are different states and must not photograph the same. |
 
 ### `paired-empty--desktop.png`
 

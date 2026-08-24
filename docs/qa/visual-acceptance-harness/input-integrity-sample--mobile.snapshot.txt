@@ -1,0 +1,43 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .ii-contrast__canvas
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1808
+timezone: UTC
+url: /input-integrity.html
+viewport: 375x812
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+p "The file carries this text and the page's own operands settle that it contributes no paint."
+h3 "The page's content stream sets text render mode 3 for this run."
+li "A system that reads this file by extracting its text receives this text."
+li "The page's rendering instructions do not paint it."
+span "Where"
+span "Page 1"
+span "x 50, y 100"
+h4 "Rendered page"
+p "Drawn here by pdfjs-dist 6.2.108."
+h4 "In the file's structure"
+p "INVISIBLE-MODE3"
+li "The page's content stream sets text render mode 3 for this run."
+li "A system that reads this file by extracting its text receives this text."
+li "The page's rendering instructions do not paint it."
+details expanded=false
+summary "Evidence"

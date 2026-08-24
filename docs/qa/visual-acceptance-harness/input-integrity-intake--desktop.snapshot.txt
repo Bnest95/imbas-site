@@ -1,0 +1,46 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: #intake
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 258
+timezone: UTC
+url: /input-integrity.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
+button "More" disabled=false expanded=false
+span "▾"
+p "A PDF's structure can carry more than its pages render. This reads that structure in your browser and reports what the file instructs, with the evidence beside every statement."
+p "This reads the file's own structure and reports what it instructs."
+p "It does not scan for viruses, audit security, or make any claim about the file's safety. It reaches no verdict on the document or its author."
+p "Drop a PDF here, or choose one."
+p "PDF only."
+button "Choose a PDF" disabled=false
+p "Your browser reads the file. The file does not leave this machine."
+button "Inspect a sample file" disabled=false
+p "A constructed demonstration file, not a document found in the wild."
+p "Imbas measures how frontier AI systems surface information."
