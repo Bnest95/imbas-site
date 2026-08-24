@@ -95,33 +95,33 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1215b28ec321248fb4d3abb594aa60c1b1ccebcfc9172950bc4781acc9ae8e25` |
-| bytes | 478473 |
+| sha256 | `39d03e5d18e3628c07c115642699b4a4164e2a4de8c00059cd9fb661fe3b435d` |
+| bytes | 524417 |
 | snapshot | `chips-from-inspection--desktop.snapshot.txt` |
-| snapshot sha256 | `b41e36609e348c5a21523353ce6a9ce581b9d7a9c5c647824a33daf18d056df6` |
-| snapshot bytes | 29364 |
+| snapshot sha256 | `3c7ea2c87ff0a28c15381bdbf823baa32773239e87b0512a8be4dacc422fa1de` |
+| snapshot bytes | 29650 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 4008 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
-| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over. The origin block names the question and never the answer body, because the answer body is held once below it: the lane's own first answer field carries the inspected answer, read-only, so the text a person is about to steer is the text that was measured. No second editable copy of it stands anywhere on the page, and the inspection's own count and marks are still in the document above it. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. |
 
 ### `chips-from-inspection--mobile.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `e6e7f034b97511412e08066350169d4d416a5a856a8a23686839605357e81f33` |
-| bytes | 435464 |
+| sha256 | `26969049fb319c40982c3384c64bbf9ac74fd09a1961eb99dd8519ec781b1a49` |
+| bytes | 497411 |
 | snapshot | `chips-from-inspection--mobile.snapshot.txt` |
-| snapshot sha256 | `c45e7c1a5ed8cdf7d92ff5f00a519365362078c0aed1c9615b9e34d21f96ea28` |
-| snapshot bytes | 28462 |
+| snapshot sha256 | `8590ef8c31e862f45b165311f330dc95657a857514ab59941ad66b5cf3617e6c` |
+| snapshot bytes | 28748 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 5703 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The chip lane opened from a findings-bearing inspection by pressing the door on the result |
-| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it. |
+| expected behaviour | The lane heads itself, offers the way back to the inspection by name, and states what it was opened over. The origin block names the question and never the answer body, because the answer body is held once below it: the lane's own first answer field carries the inspected answer, read-only, so the text a person is about to steer is the text that was measured. No second editable copy of it stands anywhere on the page, and the inspection's own count and marks are still in the document above it. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. |
 
 ### `claim-authorized-match--desktop.png`
 

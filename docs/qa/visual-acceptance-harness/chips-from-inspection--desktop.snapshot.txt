@@ -705,6 +705,6 @@ span "My landlord still has my security deposit. How long do they have to return
 p "What you pasted is still here. Going back opens it as you left it."
 p "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back."
 div "The answer or draft you started with"
-textarea disabled=false readonly=false value_len=0
+textarea "A landlord must return a security deposit within 30 days of the tenant moving out. If the landlord keeps any part of the deposit, they have to send an itemized list of deductions. Most tenants get the full amount back without any trouble, so there is usually nothing to worry about." disabled=false readonly=true value_len=282
 p "What would you like the next answer to do differently?"
 p "These are optional follow-ups you choose. Imbas has not determined that any of these problems are present."
