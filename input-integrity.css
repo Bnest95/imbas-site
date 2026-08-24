@@ -144,6 +144,13 @@
   color: var(--ink-soft);
 }
 
+/* An author `display` outranks the user agent's [hidden] rule whatever its specificity, so
+ * the region above needs the attribute restated or it paints in every state. .ii-intake and
+ * .ii-result declare no display and need no such line. This is the form styles.css uses. */
+.ii-processing[hidden] {
+  display: none !important;
+}
+
 .ii-processing p {
   margin: 0;
 }

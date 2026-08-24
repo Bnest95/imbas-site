@@ -147,23 +147,47 @@ const EXPECTED_REQUEST_INVENTORY = [
 // a flake. A MutationObserver armed before the document runs records every transition of
 // the two region's `hidden` attributes, so the run reports the sequence that actually
 // happened rather than the one it managed to catch.
+//
+// ── WHY EVERY TRANSITION CARRIES A MEASUREMENT ───────────────────────────────────────
+// `hidden` is an intent, and an author `display` outranks the user agent rule that carries
+// it out. A region can therefore hold the attribute correctly and stay on screen, which is
+// what .ii-processing did: hidden in all three states and painted at 824x29 in all three,
+// asserting a read in progress before any file was chosen and above a finished result. No
+// assertion about the attribute could see that, so every entry records what the renderer
+// computed and what it painted, taken at the transition rather than polled for.
 const READER_SCRIPT = `
 (() => {
   const timeline = [];
   window.__iiTimeline = timeline;
 
-  const note = (id, hidden) => {
+  const rendered = (node) => {
+    const cs = getComputedStyle(node);
+    const r = node.getBoundingClientRect();
+    return {
+      display: cs.display,
+      visibility: cs.visibility,
+      opacity: cs.opacity,
+      width: Math.round(r.width),
+      height: Math.round(r.height),
+      painted: cs.display !== "none" && cs.visibility !== "hidden"
+        && Number(cs.opacity) > 0 && r.width > 0 && r.height > 0,
+    };
+  };
+  window.__iiRendered = rendered;
+
+  const note = (id, node) => {
+    const hidden = node.hidden;
     const last = timeline[timeline.length - 1];
     if (last && last.id === id && last.hidden === hidden) return;
-    timeline.push({ id, hidden, t: Math.round(performance.now()) });
+    timeline.push({ id, hidden, ...rendered(node), t: Math.round(performance.now()) });
   };
 
   const arm = () => {
     for (const id of ["processing", "result"]) {
       const node = document.getElementById(id);
       if (!node) continue;
-      note(id, node.hidden);
-      new MutationObserver(() => note(id, node.hidden)).observe(node, {
+      note(id, node);
+      new MutationObserver(() => note(id, node)).observe(node, {
         attributes: true, attributeFilter: ["hidden"],
       });
     }
@@ -176,6 +200,21 @@ const READER_SCRIPT = `
 
   window.__ii = {
     timeline: () => timeline.slice(),
+
+    // One region, measured now rather than at a transition.
+    rendered(id) {
+      const node = document.getElementById(id);
+      return node ? { hidden: node.hidden, ...rendered(node) } : null;
+    },
+
+    // Every region this surface hides, and which of them the renderer painted anyway.
+    // The answer must always be the empty list, in every state the run visits.
+    paintedWhileHidden() {
+      return ["processing", "result", "intake-refusal"]
+        .map((id) => document.getElementById(id))
+        .filter((node) => node && node.hidden && rendered(node).painted)
+        .map((node) => node.id);
+    },
 
     // Before anything is chosen.
     initial() {
@@ -548,6 +587,14 @@ async function inspectFile(cdp, { phase, fixture, expectContrast }) {
   check(phase, "no processing state stood before this file was chosen", before, true);
   check(phase, "the local-processing state was shown, then withdrawn", processing, [false, true]);
 
+  // The same two transitions, read as pixels rather than as an attribute. This is the
+  // half that can catch a stylesheet outranking `hidden`: the sequence above holds
+  // whether or not the region ever left the screen.
+  check(phase, "it was painted while it stood, and unpainted once withdrawn",
+    timeline.filter((t) => t.id === "processing").map((t) => t.painted), [true, false]);
+  check(phase, "no region the surface hides is painted beside the result",
+    await evaluate(cdp, "__ii.paintedWhileHidden()"), []);
+
   const name = path.basename(fixture);
   check(phase, "the file's own name heads the result", result.file_name, name);
   check(phase, "the controller holds a read state for that file", [view.state, view.file_name], ["read", name]);
@@ -691,6 +738,17 @@ async function main() {
     check("initial", "no result stands before a file is chosen",
       [initial.result_hidden, initial.result_children], [true, 0]);
     check("initial", "no processing indicator stands either", initial.processing_hidden, true);
+
+    // Not "carries the attribute" — is not on screen. A reader arriving at this route must
+    // not be told a file is being read before they have chosen one.
+    const idleProcessing = await evaluate(cdp, "__ii.rendered('processing')");
+    results.initial_processing = idleProcessing;
+    check("initial", "and the processing indicator is not painted, not merely marked hidden",
+      [idleProcessing.painted, idleProcessing.display, idleProcessing.width, idleProcessing.height],
+      [false, "none", 0, 0]);
+    check("initial", "no region the surface hides is painted anyway",
+      await evaluate(cdp, "__ii.paintedWhileHidden()"), []);
+
     check("initial", "the drop target is present", initial.dropzone, true);
     check("initial", "the picker accepts PDF and nothing else", initial.file_input_accept, "application/pdf,.pdf");
     check("initial", "the PDF-only limit is stated before anything is tried", initial.limit, "PDF only.");
@@ -717,6 +775,8 @@ async function main() {
     check("refusal", "no processing state was entered for it",
       (await evaluate(cdp, "__ii.timeline()")).filter((t) => t.id === "processing" && t.hidden === false).length, 0);
     check("refusal", "the parser was never handed the file", await evaluate(cdp, "__ii.view()"), null);
+    check("refusal", "and nothing the surface hides is painted beside the refusal",
+      await evaluate(cdp, "__ii.paintedWhileHidden()"), []);
 
     // ── Phase 3: the sample's own bytes, through the picker ──────────────────────────
     const single = await inspectFile(cdp, { phase: "single", fixture: PDF_FIXTURE, expectContrast: true });
@@ -1028,7 +1088,8 @@ async function main() {
       log(`                span  ${JSON.stringify(item.contrast_span)}`);
     }
   }
-  log(`  timeline:   ${results.single.timeline.map((t) => `${t.id}:${t.hidden ? "hidden" : "shown"}@${t.t}ms`).join(" → ")}`);
+  log(`  timeline:   ${results.single.timeline.map((t) => `${t.id}:${t.hidden ? "hidden" : "shown"}/${t.painted ? `painted ${t.width}x${t.height}` : "unpainted"}@${t.t}ms`).join(" → ")}`);
+  log(`  idle state: #processing computed ${results.initial_processing.display}, ${results.initial_processing.width}x${results.initial_processing.height}, painted ${results.initial_processing.painted}`);
   log(`  export:     ${results.export ? `${results.export.name}, ${results.export.bytes} bytes` : "NOT PRODUCED"}`);
   log(`  second file: ${results.multi.result.file_name} — ${results.multi.view.classes.length} classes across ${results.multi.result.groups.length} group(s), no contrast panel`);
 
