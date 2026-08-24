@@ -2313,6 +2313,130 @@ export const SCENARIOS = {
     ],
     assertSelector: "#result",
   },
+
+  // ── Homepage and Advisory ──────────────────────────────────────────────────
+  //
+  // These two pages carry the company's framing and its commercial boundary, and
+  // until now neither was on the board. Both are plain documents: no API, no mount,
+  // nothing fetched at load. So they carry `canned: true` with no routes, for the same
+  // reason Input Integrity does — there is no route to stub because there is no route.
+  // The one thing that arrives after first paint is the shared header's "More" control,
+  // and that is held by the readiness rule for the page rather than by any scenario.
+  //
+  // FIVE FRAMES, NOT FOURTEEN. The homepage has fourteen sections and photographing all
+  // of them would produce a wall of images nobody could attribute a change to. Each frame
+  // below is anchored on one named element, so when a section is rebuilt the rebuild
+  // reseals the frame that names it and leaves the others untouched. That is the whole
+  // point of framing on a selector rather than screenshotting a page.
+  //
+  // What these frames are NOT is an endorsement of the copy inside them. They record the
+  // state as it stands so that the structural work coming next has something to diff
+  // against.
+
+  "home-hero": {
+    name: "home-hero",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage as it first arrives — header, the instrument line, the monolith, and the one action",
+    expected:
+      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the line that says what Imbas is; the IMBAS monolith and the sentence under it; and one action, Test your AI, with the sentence that says what pressing it involves. If a rebuild moves the action, drops the instrument line, or changes the navigation, this frame moves.",
+    routes: {},
+    // The hero markup ships complete, so the only step is the wait that proves the
+    // composition is on screen when the frame is taken. The header's injected control
+    // is waited on by the page readiness rule before any step runs.
+    steps: [{ waitFor: ".hero__center" }],
+    assertText: [
+      "The Inspection Layer for AI",
+      "Test your AI",
+      "Paste an answer. See what surfaced, what was missing, and how it was shaped.",
+    ],
+    assertSelector: ".hero__capture-block",
+    // Framed on the centre column rather than the whole hero: the hero is a full
+    // viewport tall, so centring it lands the frame on the top of the page and keeps
+    // the sticky header in the picture, which is where the navigation is proved.
+    focus: ".hero__center",
+  },
+
+  "home-experience": {
+    name: "home-experience",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage's experience region — the loop described in prose beside the two ways into it",
+    expected:
+      "The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sit the two entrances — Open the Reader for a run now, and the suggestion form for a case to look at later, with the line saying suggestions are reviewed rather than published. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page.",
+    routes: {},
+    steps: [{ waitFor: ".your-experience__layout" }],
+    assertText: [
+      "Your Experience",
+      "Bring that answer to the Reader.",
+      "Open the Reader",
+      "Run a live inspection now.",
+      "Suggest an investigation",
+      "Reviewed, not published automatically.",
+    ],
+    assertSelector: ".experience-intake",
+    focus: ".your-experience__layout",
+  },
+
+  "home-archive-preview": {
+    name: "home-archive-preview",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage's archive preview — what the record claims about itself, above the featured case",
+    expected:
+      "The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product.",
+    routes: {},
+    steps: [{ waitFor: ".hp-arc-intro" }],
+    assertText: [
+      "Case Archive",
+      "Across ChatGPT, Claude, Gemini, and Grok",
+      "Cases are scored from 0 to 3 on the Volunteer Gap scale.",
+    ],
+    assertSelector: ".hp-arc-stat-strip",
+    focus: ".hp-arc-intro",
+  },
+
+  "advisory-masthead": {
+    name: "advisory-masthead",
+    page: "/advisory.html",
+    drivable: true,
+    canned: true,
+    state: "Advisory, the masthead — the heading, the lede, and the thesis under it",
+    expected:
+      "The proposition the page opens with, in three parts: the heading, the sentence naming what the advisory work is for, and the thesis that says why both halves belong on one page. A later Advisory restructure changes this first, so it is framed on its own.",
+    routes: {},
+    steps: [{ waitFor: ".adv-masthead" }],
+    assertText: [
+      "Get found. Get faster.",
+      "I help businesses use AI to win more customers, remove expensive repetitive work, and let the same team do more.",
+      "AI is changing both sides of the business at once",
+    ],
+    assertSelector: ".adv-masthead",
+    focus: ".adv-masthead",
+  },
+
+  "advisory-boundaries": {
+    name: "advisory-boundaries",
+    page: "/advisory.html",
+    drivable: true,
+    canned: true,
+    state: "Advisory, the practice terms — the three commitments, including the wall between advisory work and published measurement",
+    expected:
+      "Three statements, and the third is the one that matters most to the rest of the tree: advisory clients do not influence Imbas's public methods, measurements, or findings, and a business under advice is not published into measurement work without separate consent. The other two say what is not promised and what stays confidential. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose.",
+    routes: {},
+    steps: [{ waitFor: ".adv-practice" }],
+    assertText: [
+      "No promises about rankings or AI answers. Nobody honestly controls those.",
+      "Your material stays yours.",
+      "Advisory clients do not influence Imbas",
+      "are not included in published Imbas measurement work without separate consent and governance.",
+    ],
+    assertSelector: ".adv-practice",
+    focus: ".adv-practice",
+  },
 };
 
 // ── The waiting room, empty again ────────────────────────────────────────────

@@ -315,22 +315,6 @@ const UNPHOTOGRAPHED = [
       "obvious next scenarios to add.",
   },
   {
-    state: "The Check Register above its top-N line, and the chip lane's own front door",
-    why:
-      "`register-overflow`, `register-overflow-expanded` and `chip-arrival` are written and " +
-      "complete — real payloads through the real assemblers, drive steps, DOM assertions, a " +
-      "state and an expectation — and they pass the same shape check the board runs over its " +
-      "own members. They sit in `PENDING_SCENARIOS` in `scripts/qa/scenarios.mjs` rather than " +
-      "in `SCENARIOS`, because membership in `SCENARIOS` is what obliges a committed baseline " +
-      "and the surface-finish lane holds every baseline until the founder gives the go-ahead " +
-      "after its mid-lane checkpoint. This is not the fixture-only lane: fixture-only means a " +
-      "scenario has no drive steps and cannot be photographed at all, and these can be " +
-      "photographed the moment they are allowed to be. Promotion is one move — cut the entry " +
-      "into `SCENARIOS`, run `--update <name>` — and the board tests then hold it like any " +
-      "other state. Until then the states are held by execution coverage in " +
-      "`test/register-overflow-contract.test.mjs`.",
-  },
-  {
     state: "The mobile-tall viewport",
     why:
       "Declared in VIEWPORTS and not part of the default board. It exists to re-test a " +
@@ -436,6 +420,21 @@ const PAGE_READINESS = {
   "/input-integrity.html": {
     react: false,
     rendered: "#intake, #result",
+  },
+  // The homepage and Advisory are plain documents: every region a scenario photographs
+  // is in the markup at first paint. The one thing that arrives afterwards is the shared
+  // header's "More" control, which site-header.js appends into #primary-nav at
+  // DOMContentLoaded. A frame taken before that lands photographs a navigation with fewer
+  // items than the one that ships, so that injected control is what "rendered" means on
+  // these pages. Each scenario still waits for its own region in its steps; this is the
+  // page-wide floor beneath those waits.
+  "/index.html": {
+    react: false,
+    rendered: ".site-header .nav-more",
+  },
+  "/advisory.html": {
+    react: false,
+    rendered: ".site-header .nav-more",
   },
 };
 
