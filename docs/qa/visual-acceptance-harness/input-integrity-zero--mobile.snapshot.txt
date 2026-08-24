@@ -1,0 +1,40 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: #result
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1149
+timezone: UTC
+url: /input-integrity.html
+viewport: 375x812
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+span "Complete"
+p "This run inspected 1 page, and every page was read."
+h3 "What this run establishes"
+p "This run establishes what the local parser recovered from the file's structure, and what the local renderer draws. It does not establish what any AI system, pipeline, or person received from this file."
+h2 "What surfaced"
+p "0 items surfaced."
+p "No phenomenon surfaced under the checks that ran."
+p "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file that they do not describe."
+details expanded=false
+summary "Provenance"
+p "This result came from pdfjs-dist 6.2.108 over the file with sha256 <HASH64>."
+dt "File digest, SHA-256"
+button "Download the evidence receipt" disabled=false

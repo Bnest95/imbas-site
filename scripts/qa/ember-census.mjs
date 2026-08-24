@@ -812,6 +812,156 @@ export const PROVENANCE_RESEALS = [
   },
 ];
 
+// ── The population-reseal rule ───────────────────────────────────────────────
+// The fingerprint hashes four fields and two of them move for unrelated reasons. A governed
+// source hash moves when someone edits a stylesheet. The governed scenario population moves
+// when someone adds a board scenario, because governedScenarios() returns the whole registry
+// — this census consumes the registry as a population, not as a source.
+//
+// Until 2026-08-23 only the first had a rule, and the second inherited it. A pass that added
+// three scenarios found the seal red, PROVENANCE_RESEAL_RULE demanding the source whose hash
+// moved, and no source whose hash had moved. Both doors were shut: write the reseal and it
+// names an edit that did not happen, write nothing and the artifact stays behind the
+// instrument. It stopped and reported instead, and this is the ruling that came back.
+export const POPULATION_RESEAL_RULE = {
+  disposition: "ruled — founder ruling of 2026-08-23, recorded against the Input Integrity acceptance",
+
+  // Verbatim.
+  ruling: {
+    date: "2026-08-23",
+    authority: "founder",
+    recorded_against: "Input Integrity baseline acceptance — the census population gap",
+    text:
+      "The census conflates two distinct provenance events inside one fingerprint: governed " +
+      "source movement and governed scenario-population movement. The existing reseal rule " +
+      "remains unchanged and governs the first. A population reseal governs the second, and " +
+      "it is not permission to loosen the census: it is eligible only when every governed " +
+      "source hash is byte-identical, every measured count is identical, every governed " +
+      "inventory line is identical, the only fingerprint input that changed is the governed " +
+      "scenario population, the exact additions and removals are enumerated, each added " +
+      "scenario's governed-region disposition is recorded, the movement is tied to an " +
+      "explicit founder-authorized product or QA change, and no existing scenario disappears " +
+      "or changes classification silently. Do not fabricate an authorized source edit where " +
+      "no governed source hash moved.",
+    eligibility: [
+      "every governed source hash byte-identical before and after;",
+      "every measured count identical;",
+      "every governed inventory line identical;",
+      "the only fingerprint input that changed is the governed scenario population;",
+      "the exact scenario additions and removals enumerated;",
+      "each added scenario's governed-region disposition recorded;",
+      "the population movement tied to an explicit founder-authorized product or QA change;",
+      "no existing scenario disappears or changes classification silently.",
+    ],
+  },
+
+  what_this_is_not:
+    "This is not a second way to reach the same door. A population reseal carries no authority " +
+    "over a measured value and none over a source hash. If a governed source moved, this is the " +
+    "wrong route and the source rule governs; if any count or inventory line moved, neither " +
+    "route is open and the difference is a finding to report.",
+
+  standing_instruction:
+    "The two routes are told apart by the evidence they carry, and neither may satisfy the " +
+    "other. A record that carries both is refused rather than read twice. Before recording a " +
+    "population reseal, run --check and confirm the fingerprint line stands alone; then confirm " +
+    "which of its inputs moved, because a fingerprint line alone still does not say which rule " +
+    "governs.",
+};
+
+// A population reseal proves its case with the scenario population; a source reseal proves
+// its case with a hash delta. Keeping the key sets disjoint is what makes "neither route may
+// satisfy the other" a property of the data rather than a habit of the reader — a record
+// carrying both would satisfy whichever check ran first.
+export const SOURCE_RESEAL_EVIDENCE_KEYS = ["authorized_edits", "edits_that_moved_no_governed_source"];
+export const POPULATION_RESEAL_EVIDENCE_KEYS = [
+  "population_before",
+  "scenarios_added",
+  "scenarios_removed",
+  "added_scenario_dispositions",
+  "region_rendering_before",
+  "sources_unchanged",
+];
+
+// Every population reseal this artifact has carried, appended, never rewritten. As with the
+// source reseals, the identity evidence beside each entry is COMPUTED at write time against
+// the live measurement, so an entry cannot claim a population the instrument does not drive
+// or an identity it does not reproduce.
+export const POPULATION_RESEALS = [
+  {
+    date: "2026-08-23",
+    authorizing_change:
+      "PR #131, branch claude/input-integrity-surface — the Input Integrity route registered its " +
+      "three states on the acceptance board. governedScenarios() is the board registry, so the " +
+      "census population grew with it. The route renders no .wb-reader-v2__result region and " +
+      "input-integrity.css is deliberately outside this census's source list, so the route " +
+      "contributes no ember spend to measure.",
+    fingerprint_before: "2195fcd9d4b888665e3f9ad68eff9b0ced6b9954f8c378bb6918ce85e39e2229",
+    fingerprint_after: "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+    population_before: [
+      "chip-arrival", "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "curated-readout", "deposit-fixture",
+      "export-paired", "export-single", "first-load", "paired-empty", "paired-legacy",
+      "paired-legacy-rows", "paired-matched", "paired-rejected-snippet", "paired-unmatched",
+      "provenance-complete", "provenance-partial", "public-example", "public-example-provenance",
+      "read-capacity", "read-error", "read-in-flight", "register-overflow",
+      "register-overflow-expanded", "share-consent", "share-legacy", "share-not-found",
+      "share-paired-no-model", "share-receipt", "share-single", "share-single-empty",
+      "single-empty", "single-empty-read", "single-findings",
+    ],
+    scenarios_added: ["input-integrity-intake", "input-integrity-sample", "input-integrity-zero"],
+    scenarios_removed: [],
+    // The disposition of each addition against the governed region, recorded because a
+    // scenario that DID render the region would move counts, and a reseal is not the place
+    // that gets discovered.
+    added_scenario_dispositions: [
+      { scenario: "input-integrity-intake", renders_region: false, note: "input-integrity.html before a file — the Reader result region is not on this page." },
+      { scenario: "input-integrity-sample", renders_region: false, note: "input-integrity.html after the sample PDF surfaces a finding — still no Reader result region." },
+      { scenario: "input-integrity-zero", renders_region: false, note: "input-integrity.html after a file that surfaces nothing — still no Reader result region." },
+    ],
+    // Which scenarios rendered the region BEFORE, so a swap that holds the count at 24 while
+    // changing which scenarios make it up is caught. A count alone would not see that.
+    region_rendering_before: [
+      "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "deposit-fixture", "export-paired",
+      "export-single", "paired-empty", "paired-legacy", "paired-legacy-rows", "paired-matched",
+      "paired-rejected-snippet", "paired-unmatched", "provenance-complete", "provenance-partial",
+      "read-capacity", "read-error", "register-overflow", "register-overflow-expanded",
+      "share-consent", "single-empty", "single-empty-read", "single-findings",
+    ],
+    // No sha256_before/sha256_after pair, because no hash moved. Each entry is one hash,
+    // asserted to be where the source both started and ended, and checked against the live
+    // extraction at write time.
+    sources_unchanged: [
+      { path: "styles.css", extraction: "whole file", sha256: "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d" },
+      { path: "workbench.css", extraction: "whole file", sha256: "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d" },
+      { path: "workbench-app.jsx", extraction: "CSS template literals only", sha256: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146" },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
+];
+
 // The key --check compares inventory lines on. One definition, so the reseal evidence and
 // the drift check cannot disagree about what "the same spend" means.
 export const inventoryLine = (r) => `${r.source}|${r.selector}|${r.property}|${r.value}`;
@@ -832,6 +982,147 @@ export function coverageFingerprint({ region = REGION, scenarios, viewports, sou
     sources: sources.map((s) => ({ path: s.path, sha256: s.sha256 })).sort((a, b) => a.path.localeCompare(b.path)),
   };
   return { ...fields, sha256: sha256(JSON.stringify(fields)) };
+}
+
+// A population reseal's whole case, computed against the live measurement rather than read
+// off the record. Each of the ruling's eight conditions gets its own verdict and its own
+// failure line, so a refused reseal says which condition refused it. Pure and renderer-free:
+// the negative fixture drives it directly with populations that must not be resealable.
+export function populationResealEvidence(record, live) {
+  const failures = [];
+  const fail = (condition, detail) => failures.push({ condition, detail });
+  const sorted = (a) => [...(a || [])].sort();
+  const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+  // Before any of the record's own claims are read: a record carrying the other route's
+  // evidence is refused. Reading it twice is the route-around the ruling forbids.
+  const contaminated = SOURCE_RESEAL_EVIDENCE_KEYS.filter((k) => k in record);
+  if (contaminated.length) {
+    fail("route separation", `carries source-reseal evidence: ${contaminated.join(", ")}`);
+  }
+
+  // (1) Every governed source hash byte-identical. The record names one hash per source, not
+  // a delta, and every source the instrument hashes has to appear.
+  const liveHashes = new Map(live.sources.map((s) => [s.path, s.sha256]));
+  const recordedHashes = new Map((record.sources_unchanged || []).map((s) => [s.path, s.sha256]));
+  const movedSources = [...liveHashes].filter(([p, h]) => recordedHashes.get(p) !== h).map(([p]) => p);
+  const unnamedSources = [...liveHashes.keys()].filter((p) => !recordedHashes.has(p));
+  const sourceHashesIdentical = movedSources.length === 0 && unnamedSources.length === 0 && recordedHashes.size === liveHashes.size;
+  if (!sourceHashesIdentical) {
+    fail(
+      "1 — governed source hashes unchanged",
+      movedSources.length
+        ? `source hash moved: ${movedSources.join(", ")} — the source rule governs this, not the population rule`
+        : `governed sources not accounted for: ${unnamedSources.join(", ") || "record names sources the instrument does not hash"}`,
+    );
+  }
+
+  // (2) Every measured count identical.
+  const countsIdentical = Object.keys(live.counts).every((k) => record.counts_before[k] === live.counts[k]);
+  if (!countsIdentical) {
+    const moved = Object.keys(live.counts).filter((k) => record.counts_before[k] !== live.counts[k]);
+    fail("2 — measured counts unchanged", moved.map((k) => `${k}: ${record.counts_before[k]} → ${live.counts[k]}`).join("; "));
+  }
+
+  // (3) Every governed inventory line identical.
+  const inventoryBefore = sorted(record.free_alpha_inventory_before);
+  const inventoryAfter = sorted(live.inventory);
+  const inventoryIdentical = same(inventoryBefore, inventoryAfter);
+  if (!inventoryIdentical) fail("3 — governed inventory unchanged", "a free-alpha inventory line moved");
+
+  // (4) The population is the only fingerprint input that moved. Not asserted — demonstrated:
+  // swapping ONLY the scenario list, against the live region, viewports and source hashes,
+  // has to reproduce both ends of the claimed fingerprint move. If the region selector, a
+  // viewport or a source had also moved, neither end would come back.
+  const fpBefore = coverageFingerprint({
+    region: live.region, scenarios: record.population_before || [], viewports: live.viewports, sources: live.sources,
+  }).sha256;
+  const fpAfter = coverageFingerprint({
+    region: live.region, scenarios: live.scenarios, viewports: live.viewports, sources: live.sources,
+  }).sha256;
+  const populationIsOnlyMovedInput = fpBefore === record.fingerprint_before && fpAfter === record.fingerprint_after;
+  if (!populationIsOnlyMovedInput) {
+    fail(
+      "4 — population is the only moved fingerprint input",
+      `recomputing with the recorded population gives ${fpBefore} (record claims ${record.fingerprint_before}); ` +
+        `with the live population ${fpAfter} (record claims ${record.fingerprint_after})`,
+    );
+  }
+
+  // (5) The exact additions and removals, enumerated.
+  const before = new Set(record.population_before || []);
+  const after = new Set(live.scenarios);
+  const addedObserved = live.scenarios.filter((s) => !before.has(s)).sort();
+  const removedObserved = [...before].filter((s) => !after.has(s)).sort();
+  const deltaMatchesRecord =
+    same(addedObserved, sorted(record.scenarios_added)) && same(removedObserved, sorted(record.scenarios_removed));
+  if (!deltaMatchesRecord) {
+    fail(
+      "5 — additions and removals enumerated",
+      `observed added [${addedObserved.join(", ")}] removed [${removedObserved.join(", ")}]; ` +
+        `record says added [${sorted(record.scenarios_added).join(", ")}] removed [${sorted(record.scenarios_removed).join(", ")}]`,
+    );
+  }
+
+  // (6) Each added scenario's governed-region disposition, recorded and true.
+  const liveRegion = new Set(live.scenariosRenderingRegion);
+  const dispositions = record.added_scenario_dispositions || [];
+  const dispositionsCoverAdditions = same(sorted(dispositions.map((d) => d.scenario)), sorted(record.scenarios_added));
+  const wrongDispositions = dispositions.filter((d) => d.renders_region !== liveRegion.has(d.scenario));
+  const dispositionsHold = dispositionsCoverAdditions && wrongDispositions.length === 0;
+  if (!dispositionsHold) {
+    fail(
+      "6 — each addition's region disposition recorded",
+      wrongDispositions.length
+        ? wrongDispositions.map((d) => `${d.scenario}: recorded renders_region=${d.renders_region}, measured ${liveRegion.has(d.scenario)}`).join("; ")
+        : "the dispositions do not cover exactly the enumerated additions",
+    );
+  }
+
+  // (7) Tied to an explicit authorized change.
+  const authorized = typeof record.authorizing_change === "string" && record.authorizing_change.trim().length > 20;
+  if (!authorized) fail("7 — tied to an authorized change", "the authorizing change must be named and described, not merely asserted");
+
+  // (8) Nothing existing disappeared or changed classification silently. The retained
+  // scenarios are checked one at a time against the recorded region list, so a swap that
+  // holds the region count still is caught — a count alone would not see it.
+  const declaredRemoved = new Set(record.scenarios_removed || []);
+  const retained = (record.population_before || []).filter((s) => !declaredRemoved.has(s));
+  const vanished = retained.filter((s) => !after.has(s));
+  const regionBefore = new Set(record.region_rendering_before || []);
+  const reclassified = retained.filter((s) => after.has(s) && regionBefore.has(s) !== liveRegion.has(s));
+  const retainedUnchanged = vanished.length === 0 && reclassified.length === 0;
+  if (!retainedUnchanged) {
+    fail(
+      "8 — no silent disappearance or reclassification",
+      [
+        vanished.length ? `gone without being enumerated: ${vanished.join(", ")}` : "",
+        reclassified.length ? `region disposition changed: ${reclassified.join(", ")}` : "",
+      ].filter(Boolean).join("; "),
+    );
+  }
+
+  return {
+    ...record,
+    population_after: live.scenarios,
+    scenarios_added_observed: addedObserved,
+    scenarios_removed_observed: removedObserved,
+    region_rendering_after: [...live.scenariosRenderingRegion].sort(),
+    counts_after: live.counts,
+    free_alpha_inventory_after: inventoryAfter,
+    fingerprint_before_recomputed: fpBefore,
+    fingerprint_after_recomputed: fpAfter,
+    source_hashes_identical: sourceHashesIdentical,
+    counts_identical: countsIdentical,
+    free_alpha_inventory_identical: inventoryIdentical,
+    measured_state_moved: !(countsIdentical && inventoryIdentical),
+    population_is_the_only_moved_input: populationIsOnlyMovedInput,
+    population_delta_matches_record: deltaMatchesRecord,
+    added_scenario_dispositions_hold: dispositionsHold,
+    retained_scenarios_unchanged: retainedUnchanged,
+    eligible: failures.length === 0,
+    failures,
+  };
 }
 
 export function buildArtifact({ inv, states, browserVersion, scenarios, viewports }) {
@@ -911,6 +1202,7 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
     alphas: r.free_alphas.map((f) => f.alpha),
   }));
   const inventoryNow = freeAlphaInventory.map(inventoryLine).sort();
+  const regionScenarios = [...new Set(regionStates.map((s) => s.scenario))].sort();
 
   return {
     instrument: "scripts/qa/ember-census.mjs",
@@ -936,8 +1228,23 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
           free_alpha_inventory_after: inventoryNow,
           free_alpha_inventory_identical: inventoryIdentical,
           measured_state_moved: !(countsIdentical && inventoryIdentical),
+          // The mirror of the population route's route-separation check. A source reseal
+          // that reached for population evidence would be claiming the other rule's ground.
+          carries_population_evidence: POPULATION_RESEAL_EVIDENCE_KEYS.filter((k) => k in r),
         };
       }),
+      population_reseal_rule: POPULATION_RESEAL_RULE,
+      population_reseals: POPULATION_RESEALS.map((r) =>
+        populationResealEvidence(r, {
+          region: REGION,
+          scenarios: [...scenarios].sort(),
+          viewports: [...viewports].sort(),
+          sources: inv.sources,
+          scenariosRenderingRegion: regionScenarios,
+          counts,
+          inventory: inventoryNow,
+        }),
+      ),
     },
     source_extraction: inv.sources.map((s) => ({ path: s.path, extraction: s.extraction, sha256: s.sha256 })),
     declared_ramp: {
@@ -945,7 +1252,7 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
       channel_tokens: inv.ramp.channelTokens,
       hues: [...inv.ramp.hues].sort(),
     },
-    scenarios_rendering_region: [...new Set(regionStates.map((s) => s.scenario))].sort(),
+    scenarios_rendering_region: regionScenarios,
     counts,
     distinct_free_alphas: distinctFree,
     free_alpha_inventory: freeAlphaInventory,
@@ -1049,6 +1356,24 @@ async function main() {
   report(artifact);
 
   if (args.includes("--write")) {
+    // A reseal path that cannot refuse asserts a result it never computed. Every population
+    // reseal in the artifact has to hold against THIS run before the artifact is written,
+    // and a source reseal that reached for population evidence is refused the same way.
+    const refused = artifact.provenance.population_reseals.filter((r) => !r.eligible);
+    const crossed = artifact.provenance.reseals.filter((r) => r.carries_population_evidence.length);
+    if (refused.length || crossed.length) {
+      log("\n  ✗ refusing to write: a recorded reseal does not hold against this measurement.");
+      for (const r of refused) {
+        log(`      population reseal ${r.date} — ${r.failures.length} condition(s) refused it:`);
+        for (const f of r.failures) log(`        ${f.condition}: ${f.detail}`);
+      }
+      for (const r of crossed) {
+        log(`      source reseal ${r.date} carries population evidence: ${r.carries_population_evidence.join(", ")}`);
+      }
+      log("\n      Neither route may satisfy the other. Fix the record or report the finding;");
+      log("      do not move the artifact to meet it.");
+      return 1;
+    }
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, `${JSON.stringify(artifact, null, 2)}\n`);
     log(`\n  wrote ${BASELINE_PATH}`);
@@ -1082,12 +1407,38 @@ async function main() {
       log("\n  ✗ census diverges from the committed baseline:");
       for (const d of diffs) log(`      ${d}`);
       // The reseal condition, stated where an operator reads the failure rather than
-      // only in the rule they would have to already know to go and read.
+      // only in the rule they would have to already know to go and read. A fingerprint line
+      // alone does not say WHICH rule governs, and sending a population change to the source
+      // rule is what produced the 2026-08-23 ruling: the only way through that door was to
+      // name a source edit that had not happened.
       if (fingerprintOnly && diffs.length === 1) {
-        log("\n      Fingerprint only: no count moved and no inventory line moved. Per");
-        log("      PROVENANCE_RESEAL_RULE this is resealable with --write once the source");
-        log("      movement is attributed to an identified authorized edit and recorded in");
-        log("      PROVENANCE_RESEALS. A reseal records provenance; it accepts nothing.");
+        const hashes = (fp) => fp.sources.map((s) => `${s.path}:${s.sha256}`).sort().join("\n");
+        const sourcesMoved = hashes(base.coverage_fingerprint) !== hashes(artifact.coverage_fingerprint);
+        const populationMoved =
+          base.coverage_fingerprint.scenarios.join("\n") !== artifact.coverage_fingerprint.scenarios.join("\n");
+        log("\n      Fingerprint only: no count moved and no inventory line moved.");
+        if (sourcesMoved && !populationMoved) {
+          log("      A governed source hash moved. Per PROVENANCE_RESEAL_RULE this is resealable");
+          log("      with --write once the movement is attributed to an identified authorized edit");
+          log("      and recorded in PROVENANCE_RESEALS.");
+        } else if (populationMoved && !sourcesMoved) {
+          const was = new Set(base.coverage_fingerprint.scenarios);
+          const now = new Set(artifact.coverage_fingerprint.scenarios);
+          const added = artifact.coverage_fingerprint.scenarios.filter((s) => !was.has(s));
+          const gone = base.coverage_fingerprint.scenarios.filter((s) => !now.has(s));
+          log(`      The governed scenario population moved and no governed source hash did:`);
+          log(`        ${base.coverage_fingerprint.scenarios.length} → ${artifact.coverage_fingerprint.scenarios.length} scenarios`);
+          if (added.length) log(`        added:   ${added.join(", ")}`);
+          if (gone.length) log(`        removed: ${gone.join(", ")}`);
+          log("      Per POPULATION_RESEAL_RULE this is resealable with --write once the movement");
+          log("      is tied to an authorized change and recorded in POPULATION_RESEALS with its");
+          log("      enumerated delta. Do NOT record it as a source reseal: no source hash moved,");
+          log("      and there is no authorized source edit to name.");
+        } else if (populationMoved && sourcesMoved) {
+          log("      BOTH a governed source hash and the governed scenario population moved. Neither");
+          log("      rule governs a compound move on its own — separate the two changes and report.");
+        }
+        log("      A reseal records provenance; it accepts nothing.");
       }
       return 1;
     }

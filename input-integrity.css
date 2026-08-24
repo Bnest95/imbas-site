@@ -1,0 +1,569 @@
+/* input-integrity.css — the Input Integrity surface.
+ *
+ * A second stylesheet rather than a block appended to styles.css, following workbench.css.
+ * That is not a filing preference: scripts/qa/ember-census.mjs reads exactly
+ * ["styles.css", "workbench.css", "workbench-app.jsx"] and scripts/qa/blocks-ratchet.mjs
+ * measures the board registry's scenarios. Keeping this file out of both inputs means the
+ * two committed instruments measure the same bytes before and after this lane, so a
+ * reading that moves is a real movement and not this page arriving.
+ *
+ * Every colour below is a declared token from the styles.css :root ramp. */
+
+.page--input-integrity .page__lede {
+  max-width: 62ch;
+}
+
+/* ── Boundary ──────────────────────────────────────────────────────────────── */
+
+.ii-boundary {
+  max-width: 62ch;
+  margin: var(--space-3) 0 var(--space-5);
+  padding: 0.9rem 1.2rem;
+  border-left: 2px solid var(--line-strong);
+  background: rgba(var(--bg-surface-rgb), 0.45);
+  border-radius: 0 4px 4px 0;
+}
+
+.ii-boundary p {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.ii-boundary p + p {
+  margin-top: 0.5rem;
+}
+
+/* ── Intake ────────────────────────────────────────────────────────────────── */
+
+.ii-intake {
+  margin: 0 0 var(--space-5);
+}
+
+.ii-drop {
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  background: rgba(var(--bg-surface-rgb), 0.35);
+  padding: var(--space-4) var(--space-3);
+  text-align: center;
+  transition: border-color .2s ease, background .2s ease;
+}
+
+.ii-drop.is-over {
+  border-color: var(--ember);
+  background: var(--ember-trace);
+}
+
+.ii-drop__prompt {
+  margin: 0;
+  color: var(--ink-primary);
+  font-size: 1.0625rem;
+}
+
+.ii-drop__limit {
+  margin: 0.35rem 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.ii-drop__choose {
+  background: var(--ember);
+  border: 1px solid var(--ember);
+  border-radius: 2px;
+  color: var(--bg-deep);
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 1.25rem;
+  min-height: 44px;
+  cursor: pointer;
+  transition: background .25s ease, border-color .25s ease;
+}
+
+.ii-drop__choose:hover {
+  background: var(--ember-soft);
+  border-color: var(--ember-soft);
+}
+
+.ii-intake__refusal {
+  margin: var(--space-2) 0 0;
+  padding: 0.6rem 0.9rem;
+  border-left: 2px solid var(--ember);
+  background: var(--ember-trace);
+  color: var(--ink-primary);
+  font-size: 0.9375rem;
+}
+
+.ii-intake__custody,
+.ii-sample__note {
+  margin: var(--space-2) 0 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.ii-sample {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+}
+
+.ii-sample__action {
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 1rem;
+  min-height: 44px;
+  cursor: pointer;
+  transition: border-color .25s ease, color .25s ease;
+}
+
+.ii-sample__action:hover {
+  border-color: var(--ember);
+  color: var(--ink-primary);
+}
+
+/* ── Processing ────────────────────────────────────────────────────────────── */
+
+/* Indeterminate on purpose. A bar that filled here would be measuring the clock. */
+.ii-processing {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 var(--space-5);
+  color: var(--ink-soft);
+}
+
+/* An author `display` outranks the user agent's [hidden] rule whatever its specificity, so
+ * the region above needs the attribute restated or it paints in every state. .ii-intake and
+ * .ii-result declare no display and need no such line. This is the form styles.css uses. */
+.ii-processing[hidden] {
+  display: none !important;
+}
+
+.ii-processing p {
+  margin: 0;
+}
+
+.ii-processing__pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ember);
+  animation: ii-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ii-pulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ii-processing__pulse { animation: none; opacity: 1; }
+}
+
+/* ── Result ────────────────────────────────────────────────────────────────── */
+
+.ii-result__header {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line-soft);
+  margin-bottom: var(--space-4);
+}
+
+.ii-result__file {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.0625rem;
+  color: var(--ink-luminous);
+  overflow-wrap: anywhere;
+}
+
+.ii-result__size {
+  margin: 0.25rem 0 var(--space-2);
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}
+
+.ii-coverage__label {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: max(0.7rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  padding: 0.15rem 0.5rem;
+}
+
+.ii-coverage__statement,
+.ii-coverage__page {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.ii-establishes {
+  max-width: 62ch;
+  margin: 0 0 var(--space-4);
+  padding: 0.9rem 1.2rem;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.4);
+  background: rgba(var(--ember-rgb), 0.05);
+  border-radius: 0 4px 4px 0;
+}
+
+.ii-establishes__label {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ember-bright);
+}
+
+.ii-establishes__body {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* ── Summary ───────────────────────────────────────────────────────────────── */
+
+.ii-summary {
+  margin: 0 0 var(--space-5);
+}
+
+.ii-summary__heading {
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 0.5rem;
+}
+
+.ii-summary__count {
+  margin: 0 0 var(--space-2);
+  color: var(--ink-primary);
+}
+
+.ii-summary__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--line-faint);
+}
+
+.ii-summary__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.ii-summary__link {
+  color: var(--ink-primary);
+  flex: 1 1 22ch;
+}
+
+.ii-summary__link:hover {
+  color: var(--ember-bright);
+}
+
+.ii-summary__where {
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  color: var(--ink-muted);
+}
+
+.ii-zero {
+  border-left: 2px solid var(--line-strong);
+  padding: 0.75rem 1.1rem;
+  background: rgba(var(--bg-surface-rgb), 0.4);
+  border-radius: 0 4px 4px 0;
+}
+
+.ii-zero p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.ii-zero__statement {
+  color: var(--ink-primary);
+}
+
+.ii-zero__scope {
+  margin-top: 0.5rem !important;
+  color: var(--ink-muted);
+}
+
+/* ── Groups and items ──────────────────────────────────────────────────────── */
+
+.ii-group {
+  margin: 0 0 var(--space-5);
+}
+
+.ii-group__heading {
+  margin: 0;
+  font-size: var(--type-h4);
+  color: var(--ink-luminous);
+}
+
+.ii-group__note {
+  margin: 0.3rem 0 var(--space-3);
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  max-width: 62ch;
+}
+
+.ii-item {
+  border: 1px solid var(--line-faint);
+  border-radius: 4px;
+  background: rgba(var(--bg-surface-rgb), 0.3);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  scroll-margin-top: calc(var(--header-offset) + var(--scroll-anchor-gap));
+}
+
+.ii-item__lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  color: var(--ink-primary);
+  line-height: 1.5;
+}
+
+.ii-item__statements {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.ii-item__statements li {
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin-top: 0.25rem;
+}
+
+.ii-item__locator {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.75rem;
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+}
+
+.ii-item__locator-label {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.ii-item__locator-part {
+  color: var(--ember-bright);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 0.1rem;
+}
+
+.ii-item__back {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, var(--mono-min));
+  letter-spacing: 0.1em;
+  color: var(--ink-muted);
+}
+
+.ii-item__back:hover {
+  color: var(--ember-bright);
+}
+
+/* ── Two-reading contrast ──────────────────────────────────────────────────── */
+
+.ii-contrast {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+}
+
+.ii-contrast__label {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.ii-contrast__slot {
+  min-height: 120px;
+  background: rgba(var(--bg-deep-rgb), 0.4);
+  border: 1px solid var(--line-faint);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ii-contrast__canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ii-contrast__note,
+.ii-contrast__unavailable {
+  margin: 0.5rem 0 0;
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+}
+
+.ii-contrast__span {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: max(0.8125rem, var(--mono-min));
+  color: var(--ink-luminous);
+  background: rgba(var(--bg-deep-rgb), 0.5);
+  border: 1px solid var(--line-faint);
+  border-radius: 2px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.ii-contrast__statements {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.ii-contrast__statements li {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin-top: 0.3rem;
+}
+
+/* ── Disclosures ───────────────────────────────────────────────────────────── */
+
+.ii-disclosure {
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--line-faint);
+  padding-top: var(--space-2);
+}
+
+.ii-disclosure__summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: max(0.72rem, var(--mono-min));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.ii-disclosure__summary:hover {
+  color: var(--ink-soft);
+}
+
+.ii-disclosure--provenance {
+  margin-top: var(--space-5);
+}
+
+.ii-def-list {
+  margin: 0.25rem 0 0;
+}
+
+.ii-def {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) 1fr;
+  gap: 0.5rem 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line-faint);
+}
+
+.ii-def__term {
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  color: var(--ink-muted);
+}
+
+.ii-def__value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 560px) {
+  .ii-def { grid-template-columns: 1fr; gap: 0.15rem; }
+}
+
+.ii-provenance__statement,
+.ii-provenance__custody {
+  margin: 0 0 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.ii-provenance__custody {
+  margin: 0.75rem 0 0;
+}
+
+/* ── Export ────────────────────────────────────────────────────────────────── */
+
+.ii-export {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+.ii-export__action {
+  background: none;
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: max(0.74rem, var(--mono-min));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0 1rem;
+  min-height: 44px;
+  cursor: pointer;
+  transition: border-color .25s ease, color .25s ease;
+}
+
+.ii-export__action:hover {
+  border-color: var(--ember);
+  color: var(--ink-primary);
+}
+
+.ii-export__note {
+  margin: var(--space-2) 0 0;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+}

@@ -429,6 +429,14 @@ const PAGE_READINESS = {
     react: false,
     rendered: ".insp-record__mast, .insp-error",
   },
+  // Input Integrity is a plain module page: the markup ships complete and the script
+  // fills regions in place. So "rendered" is the intake region, which is in the document
+  // from first paint — there is no mount to wait for, and waiting for the result region
+  // would hang every scenario that photographs the state before a file.
+  "/input-integrity.html": {
+    react: false,
+    rendered: "#intake, #result",
+  },
 };
 
 export function resolveReadiness(page) {
@@ -1242,6 +1250,24 @@ export async function runSteps(cdp, steps) {
     } else if (step.click) {
       const r = await evaluate(cdp, `__qa.click(${JSON.stringify(step.click)})`);
       if (!r.ok) fail(`Drive step failed (click): ${r.why}`);
+    } else if (step.setFile) {
+      // A real file into a real <input type="file">, the way the picker does it. There
+      // is no script route to this: the File constructor cannot be assigned to an
+      // input's files, so a page whose only input is a file picker cannot be driven from
+      // the page at all. DOM.setFileInputFiles is the browser's own answer, and it is
+      // the same call the product-path receipt uses.
+      //
+      // The path is repo-relative and resolved here, so a scenario never carries a
+      // machine path — the board's frames have to be reproducible on another checkout.
+      const abs = path.join(REPO_ROOT, step.setFile);
+      if (!fs.existsSync(abs)) fail(`Drive step failed (setFile): no file at ${step.setFile}`);
+      await cdp.send("DOM.enable").catch(() => {});
+      const { result } = await cdp.send("Runtime.evaluate", {
+        expression: `document.querySelector(${JSON.stringify(step.selector)})`,
+      });
+      if (!result || !result.objectId) fail(`Drive step failed (setFile): no element at ${step.selector}`);
+      await cdp.send("DOM.setFileInputFiles", { files: [abs], objectId: result.objectId });
+      await cdp.send("Runtime.releaseObject", { objectId: result.objectId }).catch(() => {});
     } else if (step.clickText) {
       const r = await evaluate(cdp, `__qa.clickText(${JSON.stringify(step.clickText)}, ${JSON.stringify(step.text)})`);
       if (!r.ok) fail(`Drive step failed (clickText): ${r.why}`);

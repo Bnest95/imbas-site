@@ -26,6 +26,14 @@ import {
   renderCompleteOutputSpace,
   outputSpaceCoverage,
   getPath,
+  CONCLUSION_TEMPLATES,
+  CONCLUSION_LINT_FIXTURES,
+  DESCRIBED_CLASS_COUNT_WORD,
+  renderConclusion,
+  renderConclusionById,
+  renderConclusions,
+  renderCompleteConclusionSpace,
+  conclusionSpaceCoverage,
 } from "../file-templates.js";
 import { PHENOMENON_CLASS_IDS, makeFinding } from "../file-result.js";
 
@@ -273,4 +281,113 @@ test("the rendered output space is finite and enumerable", () => {
   }
   // Deterministic: same registry, same fixtures, same strings.
   assert.deepEqual(renderCompleteOutputSpace(), space);
+});
+
+// ── The conclusion registry ─────────────────────────────────────────────────────
+//
+// The second closed space in this module. A finding template says what the file
+// contains; a conclusion template says what the RUN established — the count, coverage,
+// the zero case, and the two ways an inspection can fail to happen. It lives here, and
+// not in file-surface-copy.js, because a sentence whose truth depends on run evidence
+// is an instrument claim, and every instrument claim on this surface is generated from
+// a closed registry so the vocabulary lint over it can be exhaustive rather than
+// representative.
+//
+// The gate is the same as the finding gate and for the same reason: a conclusion whose
+// subject lacks a required field renders NOTHING. Not a shorter sentence, not "unknown".
+
+test("the conclusion registry is closed: unique ids, frozen rows, declared dependencies", () => {
+  const ids = CONCLUSION_TEMPLATES.map((t) => t.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const t of CONCLUSION_TEMPLATES) {
+    assert.ok(Object.isFrozen(t), `${t.id} is not frozen`);
+    assert.ok(Array.isArray(t.requires) && t.requires.length > 0, `${t.id} declares no dependency`);
+    assert.equal(typeof t.render, "function");
+  }
+});
+
+test("a conclusion whose subject lacks a required field renders nothing at all", () => {
+  for (const t of CONCLUSION_TEMPLATES) {
+    assert.equal(renderConclusion(t, {}), null, `${t.id} rendered on an empty subject`);
+    assert.equal(renderConclusion(t, null), null, `${t.id} rendered on a null subject`);
+    // And each dependency is load-bearing individually, not just as a set.
+    const fixture = CONCLUSION_LINT_FIXTURES.find((f) => {
+      const s = f.subject;
+      return t.requires.every((p) => getPath(s, p) !== undefined) &&
+        (!t.requires_values ||
+          Object.entries(t.requires_values).every(([p, v]) => getPath(s, p) === v));
+    });
+    assert.ok(fixture, `${t.id} has no fixture that satisfies it`);
+    for (const path of t.requires) {
+      const stripped = withoutPath(fixture.subject, path);
+      assert.equal(renderConclusion(t, stripped), null,
+        `${t.id} still rendered without "${path}"`);
+    }
+  }
+});
+
+test("a value gate refuses a subject in the wrong state rather than restating it", () => {
+  // The zero-reportable sentences are gated on surfaced_count === 0. A run that
+  // surfaced four items must not be able to render "no phenomenon surfaced" merely
+  // because the field it depends on happens to be present.
+  assert.equal(renderConclusionById("zero_reportable_statement", { surfaced_count: 4 }), null);
+  assert.equal(renderConclusionById("zero_reportable_scope", { surfaced_count: 4 }), null);
+  assert.ok(renderConclusionById("zero_reportable_statement", { surfaced_count: 0 }));
+
+  // And coverage cannot render the wrong half of its own pair.
+  const partial = { coverage: { state: "partial", page_count: 3, pages_inspected_count: 2 } };
+  assert.equal(renderConclusionById("coverage_complete", partial), null);
+  assert.ok(renderConclusionById("coverage_partial", partial));
+});
+
+test("an unknown conclusion id throws rather than rendering an honest-looking absence", () => {
+  // A typo that returned null would reach a reader as a blank where a sentence should
+  // be, and a blank on this surface means "the instrument established nothing" — a
+  // claim a typo has no standing to make.
+  assert.throws(() => renderConclusionById("no_such_conclusion", {}), /no conclusion template/);
+});
+
+test("no conclusion interpolates document-supplied text", () => {
+  // Same closure property as the finding registry: parser-reported failure reasons are
+  // the one exception, and they are the parser's words about the parse, not the
+  // document's words about itself.
+  const SENTINEL = "ZZQQ_DOC_TEXT_ZZQQ";
+  const subject = {
+    surfaced_count: 2,
+    file_name: SENTINEL,
+    extracted_text: SENTINEL,
+    coverage: { state: "complete", page_count: 3 },
+  };
+  const lines = renderConclusions(subject);
+  assert.ok(lines.length > 0, "the sentinel subject rendered nothing, so the test proved nothing");
+  for (const line of lines) {
+    assert.ok(!line.string.includes(SENTINEL),
+      `${line.template_id} interpolated document-supplied text: ${line.string}`);
+  }
+});
+
+test("the described-class count in the zero-reportable scope matches the class registry", () => {
+  // The zero state tells a reader how many structural properties the checks describe.
+  // Spelled as a word for register, so it cannot be derived at render time — which
+  // means a twelfth phenomenon class would leave the sentence quietly wrong. It fails
+  // here instead.
+  const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen"];
+  assert.equal(DESCRIBED_CLASS_COUNT_WORD, WORDS[PHENOMENON_CLASS_IDS.length],
+    `the scope sentence says "${DESCRIBED_CLASS_COUNT_WORD}" but the registry declares ` +
+    `${PHENOMENON_CLASS_IDS.length} classes`);
+  const scope = renderConclusionById("zero_reportable_scope", { surfaced_count: 0 });
+  assert.ok(scope.includes(DESCRIBED_CLASS_COUNT_WORD));
+});
+
+test("the rendered conclusion space is finite, enumerable, and deterministic", () => {
+  const space = renderCompleteConclusionSpace();
+  assert.ok(space.length > 0);
+  for (const row of space) {
+    assert.equal(typeof row.string, "string");
+    assert.ok(row.string.length > 0);
+    assert.ok(CONCLUSION_TEMPLATES.some((t) => t.id === row.template_id));
+  }
+  assert.deepEqual(conclusionSpaceCoverage().unreached_templates, []);
+  assert.deepEqual(renderCompleteConclusionSpace(), space);
 });
