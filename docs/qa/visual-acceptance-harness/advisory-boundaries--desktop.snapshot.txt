@@ -1,0 +1,43 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .adv-practice
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 2116
+timezone: UTC
+url: /advisory.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
+button "More" disabled=false expanded=false
+span "▾"
+h2 "Start free"
+p "Show me how your business works. I’ll tell you where I think AI can actually help, where it probably can’t, and whether there’s enough value to justify doing anything. If there’s nothing useful, I’ll say so."
+li "No promises about rankings or AI answers. Nobody honestly controls those. What I can do is measure where you show up, improve the signals that are actually improvable, and report what changed."
+li "Your material stays yours. Client documents, workflows, and outputs are confidential by default, and nothing becomes public research without your explicit consent."
+li "Advisory clients do not influence Imbas’s public methods, measurements, or findings, and businesses I advise are not included in published Imbas measurement work without separate consent and governance. The states that boundary in full, and names the part of it I have not written yet."
+a "independence policy" href="/independence.html"
+p "I’m Brendan Nestor. I build Imbas, where people inspect what AI surfaces, what it leaves out, and how that changes over time. Before that I ran a service business, and I’ve worked in product, growth, and operations at a startup. I’ve used AI for software, research, writing, operations, and situations where a sloppy answer wasn’t good enough. I care less about what looks impressive in a demo than whether it holds up when somebody has to rely on it."

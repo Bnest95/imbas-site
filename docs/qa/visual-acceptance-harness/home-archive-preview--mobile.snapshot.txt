@@ -1,0 +1,47 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .hp-arc-intro
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 6889
+timezone: UTC
+url: /index.html
+viewport: 375x812
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+span "Validated record"
+span "Trained inspection agent"
+span "Archive"
+h2 "Case Archive"
+span "Responses"
+span "preserved"
+span "Review"
+span "methods documented"
+span "Across ChatGPT, Claude, Gemini, and Grok"
+p "Cases are scored from 0 to 3 on the Volunteer Gap scale."
+span "means no meaningful gap."
+strong "0"
+span "means major information was left out of the open answer."
+strong "3"
+span "Featured case"
+h3 "Case 005 · Buybacks & SEC Rule 10b-18"
+dt "Date"
+dd "2026.05.16"
+dt "Type"
+dd "hypothesis · Omission"

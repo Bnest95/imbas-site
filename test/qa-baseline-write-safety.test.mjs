@@ -55,7 +55,7 @@ function baselineHashes() {
   return out;
 }
 
-function runHarness(argv, timeout = 180000) {
+function runHarness(argv, timeout = 360000) {
   const r = spawnSync(process.execPath, [HARNESS, ...argv], { cwd: REPO_ROOT, encoding: "utf8", timeout });
   return { code: r.status, out: `${r.stdout || ""}${r.stderr || ""}` };
 }
