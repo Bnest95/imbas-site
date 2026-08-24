@@ -580,6 +580,85 @@ test("validateOpenReceipt rejects the wrong shape, type, missing provenance, and
   assert.equal(validateOpenReceipt(noInteg).reason, "integrity");
 });
 
+// An open run with no answer is not a thin request, it is an empty one: the pair it would
+// produce is a delta over nothing, and the empty string hashes to a single constant, so
+// every such run would collide on one open_run_id and be served each other's idempotent
+// result. The disabled client button is a courtesy to the person typing; this is the rule.
+test("validateOpenReceipt rejects an open run whose answer is empty", () => {
+  for (const answer of ["", "   ", "\n\t "]) {
+    const r = buildOpenReceipt();
+    r.open_run.answer = answer;
+    r.integrity.content_hash = sha256Hex(canonicalizeForHash(r));
+    assert.equal(validateOpenReceipt(r).reason, "content_empty", `answer ${JSON.stringify(answer)}`);
+  }
+  // A missing answer is still a shape failure, not an emptiness one — the two reasons
+  // stay distinct so the client can say the right thing about each.
+  const missing = buildOpenReceipt();
+  delete missing.open_run.answer;
+  assert.equal(validateOpenReceipt(missing).reason, "content");
+  // The QUESTION stays optional: a chip open receipt legitimately carries an empty one.
+  const noQuestion = buildOpenReceipt();
+  noQuestion.open_run.question = "";
+  noQuestion.integrity.content_hash = sha256Hex(canonicalizeForHash(noQuestion));
+  assert.deepEqual(validateOpenReceipt(noQuestion), { ok: true });
+});
+
+test("endpoint: an open receipt with an empty answer is refused before any paid work", async () => {
+  const receipt = buildOpenReceipt();
+  receipt.open_run.answer = "";
+  receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
+  const { status, body, stats } = await runPaired({ receipt });
+  assert.equal(status, 400);
+  assert.equal(body.error, "invalid_receipt");
+  assert.equal(body.detail, "content_empty");
+  assert.equal(stats.anthropic, 0, "an empty first state never buys a model call");
+  assert.equal(stats.post, 0, "and never writes a row");
+});
+
+// The evidentiary chain. A chip open receipt records which receipt it continues, in
+// open_run.continues, so inspect → steer → compare → receipt is one stated lineage rather
+// than four artifacts that happen to share a hash. open_run is embedded verbatim
+// downstream, and this proves the reference survives that hop instead of being dropped at
+// it — which is the only thing that makes it evidence rather than a client-side note.
+test("a continues reference on the open run survives into the paired receipt and its record", async () => {
+  const parent = buildOpenReceipt();
+  const receipt = buildOpenReceipt();
+  receipt.open_run.continues = {
+    receipt_schema_version: parent.schema_version,
+    content_hash: parent.integrity.content_hash,
+    request_id: parent.open_run.provenance.request_id,
+    generated_at: parent.generated_at,
+  };
+  receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
+
+  // The added field is inside the hashed envelope, so the receipt still verifies.
+  assert.equal(verifyReceiptIntegrity(receipt), true, "an additive open_run field stays inside the hash");
+  assert.deepEqual(validateOpenReceipt(receipt), { ok: true }, "and the structural gate accepts it");
+
+  const { status, body } = await runPaired({ receipt });
+  assert.equal(status, 200);
+  assert.deepEqual(
+    body.receipt.open_run.continues,
+    receipt.open_run.continues,
+    "the reference travels verbatim into the paired receipt",
+  );
+  assert.equal(body.receipt.open_run.continues.content_hash, parent.integrity.content_hash);
+  // The paired receipt hashes over its own contents, reference included.
+  assert.equal(sha256Hex(canonicalizeForHash(body.receipt)), body.receipt.integrity.content_hash);
+});
+
+// The other half of the same contract: nothing downstream enumerates open_run's keys, so
+// an open receipt WITHOUT the reference is unchanged by its existence. This is what makes
+// the field additive rather than a schema migration.
+test("an open run with no continues reference is unaffected", async () => {
+  const receipt = buildOpenReceipt();
+  assert.ok(!("continues" in receipt.open_run));
+  const { status, body } = await runPaired({ receipt });
+  assert.equal(status, 200);
+  assert.equal(body.receipt.schema_version, RECEIPT_SCHEMA_VERSION, "no version change was needed to add it");
+  assert.ok(!("continues" in body.receipt.open_run), "and nothing invents one");
+});
+
 test("verifyReceiptIntegrity fails once the signed receipt is tampered with", () => {
   const r = buildOpenReceipt();
   assert.equal(verifyReceiptIntegrity(r), true);

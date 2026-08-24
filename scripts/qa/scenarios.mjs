@@ -2192,7 +2192,7 @@ export const SCENARIOS = {
     drivable: true,
     state: "The chip lane opened from a findings-bearing inspection by pressing the door on the result",
     expected:
-      "The lane heads itself, offers the way back to the inspection by name, and states what it was opened over — the question, never the answer body. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing. The lane's own first answer box stands empty and no source paste box is restored beside it, and the inspection's own count and marks are still in the document above it.",
+      "The lane heads itself, offers the way back to the inspection by name, and states what it was opened over. The origin block names the question and never the answer body, because the answer body is held once below it: the lane's own first answer field carries the inspected answer, read-only, so the text a person is about to steer is the text that was measured. No second editable copy of it stands anywhere on the page, and the inspection's own count and marks are still in the document above it. The follow-up chips render under the sentence that says the person is choosing them and Imbas has determined nothing.",
     routes: { "/api/read": singleReadPayload },
     steps: DRIVE_CHIPS_FROM_INSPECTION,
     assertText: [

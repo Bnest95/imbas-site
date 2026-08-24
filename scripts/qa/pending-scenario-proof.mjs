@@ -98,8 +98,11 @@ const PROBE = `(() => {
   //
   // The lane's OWN compose editors are supposed to be there — the first answer box is the
   // surface the whole lane exists to offer, and chip-arrival already photographs it. So
-  // the check on those is not presence but content: the lane must not have been seeded
-  // with anything carried over from the inspection.
+  // the check on those is not presence but writability. Over an inspection the first box
+  // carries the inspected answer, read-only, off receipt.open_run.answer: that is the
+  // architecture and steering the answer that was measured depends on it. What must never
+  // appear is an EDITABLE box holding carried-over text, because a person could change it
+  // and then be steering an answer nothing inspected.
   const SOURCE_EDITOR = ".wb-reader-v2__fields, .wb-reader-v2__field, .wb-reader-v2__reveal";
   const sourceInLane = lane ? [...lane.querySelectorAll(SOURCE_EDITOR)] : [];
   const laneEditors = lane ? [...lane.querySelectorAll("textarea, input:not([type=hidden]), [contenteditable='true']")] : [];
@@ -140,7 +143,7 @@ const PROBE = `(() => {
 
     sourceEditorsInLane: sourceInLane.map((e) => "." + String(e.className).split(/\\s+/)[0]),
     laneEditors: laneEditors.map(describe),
-    laneSeeded: laneEditors.filter((e) => typeof e.value === "string" && e.value.length > 0).length,
+    laneSeeded: laneEditors.filter((e) => !e.readOnly && typeof e.value === "string" && e.value.length > 0).length,
 
     findingRows: document.querySelectorAll(".wb-measure__list li.wb-measure__finding").length,
     checkCards: document.querySelectorAll(".wb-checks__list li").length,
@@ -260,7 +263,7 @@ function report(name, viewName, { failures, probe, afterReturn, vp }) {
   log(`      question "${probe.originQuestion}"`);
   log(`      note     "${probe.originNote}"`);
   log(`  ${check(probe.sourceEditorsInLane.length === 0, `a source paste box is inside the lane: ${probe.sourceEditorsInLane.join(", ")}`)}  no source paste box restored into the lane — ${probe.sourceEditorsInLane.length} found`);
-  log(`  ${check(probe.laneSeeded === 0, `the lane was seeded with carried-over text in ${probe.laneSeeded} field(s)`)}  the lane's own compose fields stand empty — ${probe.laneEditors.length} field(s), none seeded`);
+  log(`  ${check(probe.laneSeeded === 0, `the lane carried text into ${probe.laneSeeded} editable field(s)`)}  no editable field carries text into the lane — ${probe.laneEditors.length} field(s), ${probe.laneSeeded} seeded`);
   for (const e of probe.laneEditors) {
     log(`      ${e.tag.padEnd(8)} ${String(e.label || "—").padEnd(30)} ${String(e.chars)} chars${e.readOnly ? " (read-only)" : ""}`);
   }
