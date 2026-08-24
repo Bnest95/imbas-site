@@ -48,7 +48,12 @@ import {
 } from "../reader-span-selection.js";
 import { READER_SPAN_BANK, SPAN_MODES, defaultSpanEntry } from "../reader-span-bank.js";
 import { SCENARIOS } from "../scripts/qa/scenarios.mjs";
-import { PROVENANCE_RESEAL_RULE } from "../scripts/qa/ember-census.mjs";
+import {
+  POPULATION_RESEAL_EVIDENCE_KEYS,
+  POPULATION_RESEAL_RULE,
+  PROVENANCE_RESEAL_RULE,
+  SOURCE_RESEAL_EVIDENCE_KEYS,
+} from "../scripts/qa/ember-census.mjs";
 
 const SRC = readFileSync(
   process.env.WORKBENCH_APP_JSX || fileURLToPath(new URL("../workbench-app.jsx", import.meta.url)),
@@ -404,33 +409,163 @@ test("the reseal rule is recorded with the measurement governance it governs", (
   assert.match(PROVENANCE_RESEAL_RULE.standing_instruction, /Never reseal because a custody seal in the suite went red/);
 });
 
-test("the committed census carries its reseal, and the reseal's own evidence holds", () => {
+test("every recorded source reseal proves a hash that moved", () => {
   const reseals = CENSUS.provenance && CENSUS.provenance.reseals;
   assert.ok(Array.isArray(reseals) && reseals.length >= 1, "the artifact must carry the reseal log");
   assert.deepEqual(CENSUS.provenance.reseal_rule.ruling.text, PROVENANCE_RESEAL_RULE.ruling.text);
 
-  const r = reseals[reseals.length - 1];
-  assert.equal(r.measured_state_moved, false, "a reseal is only ever recorded over unmoved measurement");
-  assert.equal(r.counts_identical, true);
-  assert.equal(r.free_alpha_inventory_identical, true);
-  assert.deepEqual(r.counts_after, r.counts_before);
-  assert.deepEqual([...r.free_alpha_inventory_after].sort(), [...r.free_alpha_inventory_before].sort());
-
-  // The fingerprint the reseal claims to have produced is the one the artifact carries.
-  assert.equal(r.fingerprint_after, CENSUS.coverage_fingerprint.sha256);
-  assert.notEqual(r.fingerprint_before, r.fingerprint_after);
-
-  // Every source the reseal names as moved is a source the artifact hashes, and it ends
-  // where the reseal says it ends.
   const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
-  assert.ok(r.authorized_edits.length >= 1, "a reseal must name what moved the hash");
-  for (const e of r.authorized_edits) {
-    assert.equal(byPath.get(e.source), e.sha256_after, `${e.source}: the artifact must hold the after-hash`);
-    assert.notEqual(e.sha256_before, e.sha256_after);
-    assert.ok(e.edit && e.edit.length > 20, `${e.source}: the edit must be described, not merely named`);
+  for (const r of reseals) {
+    assert.equal(r.measured_state_moved, false, "a reseal is only ever recorded over unmoved measurement");
+    assert.equal(r.counts_identical, true);
+    assert.equal(r.free_alpha_inventory_identical, true);
+    assert.deepEqual(r.counts_after, r.counts_before);
+    assert.deepEqual([...r.free_alpha_inventory_after].sort(), [...r.free_alpha_inventory_before].sort());
+    assert.notEqual(r.fingerprint_before, r.fingerprint_after);
+
+    // A source reseal's whole case is a hash that moved. No fabricated delta survives this:
+    // the after-hash has to be the one the artifact currently holds.
+    assert.ok(r.authorized_edits.length >= 1, "a source reseal must name what moved the hash");
+    for (const e of r.authorized_edits) {
+      assert.equal(byPath.get(e.source), e.sha256_after, `${e.source}: the artifact must hold the after-hash`);
+      assert.notEqual(e.sha256_before, e.sha256_after);
+      assert.ok(e.edit && e.edit.length > 20, `${e.source}: the edit must be described, not merely named`);
+    }
+    // And every source the reseal says did NOT move is still sitting at its unchanged hash.
+    for (const e of r.edits_that_moved_no_governed_source || []) {
+      assert.equal(byPath.get(e.source), e.sha256_unchanged, `${e.source}: recorded as unmoved, so it must be unmoved`);
+    }
   }
-  // And every source the reseal says did NOT move is still sitting at its unchanged hash.
-  for (const e of r.edits_that_moved_no_governed_source || []) {
-    assert.equal(byPath.get(e.source), e.sha256_unchanged, `${e.source}: recorded as unmoved, so it must be unmoved`);
+});
+
+// ── 7. Ruling of 2026-08-23 — the population reseal ──────────────────────────
+// The fingerprint hashes sources AND the driven scenario population, and until this ruling
+// only source movement had a rule. A population change arriving at the source rule can only
+// pass by naming an edit that did not happen, so the second event got its own route.
+
+test("the population-reseal rule is recorded with the eligibility it turns on", () => {
+  assert.equal(POPULATION_RESEAL_RULE.ruling.date, "2026-08-23");
+  assert.equal(POPULATION_RESEAL_RULE.ruling.authority, "founder");
+  const text = POPULATION_RESEAL_RULE.ruling.text;
+  assert.match(text, /conflates two distinct provenance events inside one fingerprint/);
+  assert.match(text, /governed source movement and governed scenario-population movement/);
+  assert.match(text, /existing reseal rule remains unchanged and governs the first/);
+  assert.match(text, /not permission to loosen the census/);
+  assert.match(text, /Do not fabricate an authorized source edit where no governed source hash moved/);
+  assert.equal(POPULATION_RESEAL_RULE.ruling.eligibility.length, 8, "all eight conditions, recorded");
+  assert.match(POPULATION_RESEAL_RULE.standing_instruction, /neither may satisfy the other/);
+
+  // The ruling left the source rule alone, and the artifact has to show that it did.
+  assert.equal(PROVENANCE_RESEAL_RULE.ruling.date, "2026-08-22");
+  assert.deepEqual(CENSUS.provenance.population_reseal_rule.ruling.text, POPULATION_RESEAL_RULE.ruling.text);
+});
+
+test("every recorded population reseal proves a population that moved and nothing else", () => {
+  const reseals = CENSUS.provenance.population_reseals;
+  assert.ok(Array.isArray(reseals) && reseals.length >= 1, "the artifact must carry the population-reseal log");
+
+  const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
+  for (const r of reseals) {
+    // The instrument's own verdict, recomputed at write time against the live measurement.
+    assert.deepEqual(r.failures, [], `${r.date}: a recorded population reseal must have been eligible`);
+    assert.equal(r.eligible, true);
+
+    // (1) No governed source moved — and each named hash is the one the artifact holds.
+    assert.equal(r.source_hashes_identical, true);
+    assert.equal(r.sources_unchanged.length, CENSUS.source_extraction.length, "every governed source accounted for");
+    for (const s of r.sources_unchanged) {
+      assert.equal(byPath.get(s.path), s.sha256, `${s.path}: recorded as unmoved, so it must be unmoved`);
+    }
+    // (2, 3) Measurement stood still.
+    assert.equal(r.measured_state_moved, false);
+    assert.equal(r.counts_identical, true);
+    assert.equal(r.free_alpha_inventory_identical, true);
+    assert.deepEqual(r.counts_after, r.counts_before);
+    assert.deepEqual([...r.free_alpha_inventory_after].sort(), [...r.free_alpha_inventory_before].sort());
+    // (4) The population is the only fingerprint input that moved — demonstrated by
+    // recomputation at write time, not asserted.
+    assert.equal(r.population_is_the_only_moved_input, true);
+    assert.equal(r.fingerprint_before_recomputed, r.fingerprint_before);
+    assert.equal(r.fingerprint_after_recomputed, r.fingerprint_after);
+    assert.notEqual(r.fingerprint_before, r.fingerprint_after);
+    // (5) The delta is enumerated and matches what the instrument observed.
+    assert.equal(r.population_delta_matches_record, true);
+    assert.deepEqual([...r.scenarios_added].sort(), r.scenarios_added_observed);
+    assert.deepEqual([...r.scenarios_removed].sort(), r.scenarios_removed_observed);
+    assert.ok(r.scenarios_added.length || r.scenarios_removed.length, "a population reseal must move a population");
+    // (6) Every addition's region disposition is recorded and measured true.
+    assert.equal(r.added_scenario_dispositions_hold, true);
+    assert.deepEqual(r.added_scenario_dispositions.map((d) => d.scenario).sort(), [...r.scenarios_added].sort());
+    for (const d of r.added_scenario_dispositions) {
+      assert.equal(typeof d.renders_region, "boolean", `${d.scenario}: the disposition is a measured fact`);
+      assert.equal(CENSUS.scenarios_rendering_region.includes(d.scenario), d.renders_region);
+    }
+    // (7) Tied to a named change.
+    assert.ok(r.authorizing_change && r.authorizing_change.length > 20, "the authorizing change must be described");
+    // (8) Nothing existing left or changed classification quietly.
+    assert.equal(r.retained_scenarios_unchanged, true);
+    assert.deepEqual(r.population_after, CENSUS.coverage_fingerprint.scenarios);
+    assert.deepEqual(r.region_rendering_after, CENSUS.scenarios_rendering_region);
+  }
+});
+
+test("the two reseal routes carry disjoint evidence, so neither can satisfy the other", () => {
+  // A record that carried both key sets would pass whichever check ran first. Both
+  // directions are asserted, because the route-around works in both directions.
+  for (const r of CENSUS.provenance.reseals) {
+    assert.deepEqual(r.carries_population_evidence, [], `${r.date}: a source reseal may not claim population evidence`);
+    assert.ok(r.authorized_edits, `${r.date}: a source reseal is identified by the hash it moved`);
+  }
+  for (const r of CENSUS.provenance.population_reseals) {
+    for (const k of SOURCE_RESEAL_EVIDENCE_KEYS) {
+      assert.equal(k in r, false, `${r.date}: a population reseal may not claim source evidence (${k})`);
+    }
+    for (const k of POPULATION_RESEAL_EVIDENCE_KEYS) {
+      assert.ok(k in r, `${r.date}: a population reseal must carry ${k}`);
+    }
+  }
+  // The key sets themselves stay disjoint, or the check above measures nothing.
+  for (const k of SOURCE_RESEAL_EVIDENCE_KEYS) {
+    assert.equal(POPULATION_RESEAL_EVIDENCE_KEYS.includes(k), false, `${k} cannot belong to both routes`);
+  }
+});
+
+test("the fingerprint the artifact carries is the end of an unbroken reseal chain", () => {
+  // Every reseal, both routes, linked before-to-after. A record whose before-hash nothing
+  // produced, or a fork where two records claim the same start, breaks the walk — which is
+  // how a reseal quietly inserted over an unrecorded fingerprint gets caught.
+  const all = [
+    ...CENSUS.provenance.reseals.map((r) => ({ ...r, route: "source" })),
+    ...CENSUS.provenance.population_reseals.map((r) => ({ ...r, route: "population" })),
+  ];
+  const afters = new Set(all.map((r) => r.fingerprint_after));
+  const heads = all.filter((r) => !afters.has(r.fingerprint_before));
+  assert.equal(heads.length, 1, "the chain has exactly one starting point");
+
+  const byBefore = new Map();
+  for (const r of all) {
+    assert.equal(byBefore.has(r.fingerprint_before), false, `two reseals claim to start at ${r.fingerprint_before}`);
+    byBefore.set(r.fingerprint_before, r);
+  }
+
+  const walked = [];
+  let cursor = heads[0];
+  while (cursor) {
+    walked.push(cursor);
+    cursor = byBefore.get(cursor.fingerprint_after);
+  }
+  assert.equal(walked.length, all.length, "the walk reaches every recorded reseal");
+  assert.equal(walked[walked.length - 1].fingerprint_after, CENSUS.coverage_fingerprint.sha256,
+    "the chain must end at the fingerprint the artifact actually carries");
+
+  // And the terminal record proved its case on its own route, not the other one.
+  const terminal = walked[walked.length - 1];
+  if (terminal.route === "source") {
+    assert.ok(terminal.authorized_edits.length >= 1, "a source reseal produced this fingerprint, so a hash must have moved");
+    assert.deepEqual(terminal.carries_population_evidence, []);
+  } else {
+    assert.equal(terminal.eligible, true, "a population reseal produced this fingerprint, so it must have been eligible");
+    assert.equal(terminal.source_hashes_identical, true, "no source hash moved, or this was the wrong route");
+    assert.deepEqual(terminal.population_after, CENSUS.coverage_fingerprint.scenarios);
   }
 });
