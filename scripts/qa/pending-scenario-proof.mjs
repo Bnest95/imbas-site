@@ -32,8 +32,23 @@
 // a scenario keeps this proof after it becomes a board member. The board photographs a
 // rectangle; proofs 2 and 4 are an absence and a round trip, and no frame can hold either.
 // The promotion is what makes the frame available, not what makes these checks redundant.
+//
+// ── Where the per-scenario expectations come from ────────────────────────────
+// CHIP_LANE_TERMINAL in scenarios.mjs, and nowhere else in this file. There are no counts
+// or selectors written down here — this reads the declaration, and test/chip-lane-return
+// holds the drive to the same one. That is the whole of the arrangement: one declaration,
+// two consumers, so the shape cannot drift between the thing that measures it and the
+// thing that asserts it. The state described below is generic to the lane; everything
+// specific to a scenario is looked up.
 
-import { PENDING_SCENARIOS, SCENARIOS, resolvePayloads } from "./scenarios.mjs";
+import {
+  CHIP_LANE_INSPECTION,
+  CHIP_LANE_SURFACES,
+  CHIP_LANE_TERMINAL,
+  PENDING_SCENARIOS,
+  SCENARIOS,
+  resolvePayloads,
+} from "./scenarios.mjs";
 import {
   BOARD_VIEWPORTS,
   CDP,
@@ -66,7 +81,13 @@ const arg = (name) => {
 // inspection still holds its marks" are both invisible to a render assertion: the first
 // passes trivially when the thing is missing, and the second passes trivially when the
 // thing is present but empty. Both are counted here against the live DOM.
-const PROBE = `(() => {
+//
+// Built per scenario out of CHIP_LANE_TERMINAL, so the selectors it queries and the frame
+// rectangles it measures are the ones that scenario declares. Nothing here is a constant.
+const probeSource = (want) => `(() => {
+  const SURFACES = ${JSON.stringify(CHIP_LANE_SURFACES)};
+  const INSPECTION = ${JSON.stringify(CHIP_LANE_INSPECTION)};
+  const FRAME = ${JSON.stringify(want.frame)};
   const lane = document.getElementById("wb-chip-lane");
   const door = document.querySelector(".wb-chip-door");
   const rect = (el) => {
@@ -138,15 +159,38 @@ const PROBE = `(() => {
     originSeen: seen(one(".wb-chip__origin")),
     originRect: rect(one(".wb-chip__origin")),
 
-    chipCount: document.querySelectorAll("#wb-chip-lane .wb-chip__row .wb-chip__pick").length,
-    chipRowRect: rect(one("#wb-chip-lane .wb-chip__row")),
+    chipPicks: document.querySelectorAll(SURFACES.chipPick).length,
+
+    // The lane's terminal surfaces, one reading each. Present-or-absent is the question,
+    // and the disclosure's open state is a third fact about the one that has it.
+    surfaces: {
+      chipRow: !!one(SURFACES.chipRow),
+      reveal: !!one(SURFACES.reveal),
+      held: !!one(SURFACES.held),
+      boundary: !!one(SURFACES.boundary),
+    },
+    heldOpen: (() => { const d = one(SURFACES.held); return d ? d.open === true : null; })(),
 
     sourceEditorsInLane: sourceInLane.map((e) => "." + String(e.className).split(/\\s+/)[0]),
     laneEditors: laneEditors.map(describe),
     laneSeeded: laneEditors.filter((e) => !e.readOnly && typeof e.value === "string" && e.value.length > 0).length,
 
-    findingRows: document.querySelectorAll(".wb-measure__list li.wb-measure__finding").length,
-    checkCards: document.querySelectorAll(".wb-checks__list li").length,
+    // SCOPED TO THE INSPECTION, not to the document. Once a comparison has run, the lane
+    // carries a finding list of its own under .wb-act2__delta — the "What changed" rows —
+    // and a document-wide count sums the two. That reads as marks appearing in an
+    // inspection that has not moved, which is the opposite of what this check is for.
+    inspection: (() => {
+      const region = one(INSPECTION.region);
+      return {
+        mounted: !!region,
+        findingRows: region ? region.querySelectorAll(INSPECTION.findingRow).length : 0,
+        registerCards: region ? region.querySelectorAll(INSPECTION.registerCard).length : 0,
+      };
+    })(),
+    findingRowsInLane: lane ? lane.querySelectorAll(INSPECTION.findingRow).length : 0,
+
+    // Measured off the scenario's own frame declaration rather than a fixed list.
+    frame: FRAME.map((f) => ({ ...f, rect: rect(one(f.selector)) })),
 
     viewport: { width: window.innerWidth, height: window.innerHeight },
     scrollY: Math.round(window.scrollY),
@@ -156,7 +200,7 @@ const PROBE = `(() => {
 
 const inFrame = (r, vp) => (r ? r.bottom > 0 && r.top < vp.height && r.width > 0 : false);
 
-async function drive(cdp, origin, scenario, viewName) {
+async function drive(cdp, origin, scenario, viewName, want) {
   const vp = VIEWPORTS[viewName];
   const stub = await cdp.send("Page.addScriptToEvaluateOnNewDocument", {
     source: buildStubScript(resolvePayloads(scenario)),
@@ -205,7 +249,7 @@ async function drive(cdp, origin, scenario, viewName) {
   if (!scrolled.ok) failures.push(`cannot scroll to focus ${focus}: ${scrolled.why}`);
   await settle(cdp);
 
-  const probe = await evaluate(cdp, PROBE);
+  const probe = await evaluate(cdp, probeSource(want));
 
   // LAST, because it leaves the state the frame describes. The origin note promises "What
   // you pasted is still here. Going back opens it as you left it." That is a claim about
@@ -223,11 +267,14 @@ async function drive(cdp, origin, scenario, viewName) {
     `(() => {
       const box = document.querySelector(${JSON.stringify(ANSWER_SEL)});
       const lane = document.getElementById("wb-chip-lane");
+      const region = document.querySelector(${JSON.stringify(CHIP_LANE_INSPECTION.region)});
       return {
         laneHidden: lane ? lane.hidden === true : null,
         answerMounted: !!box,
         answerValue: box ? box.value : null,
-        findingRows: document.querySelectorAll(".wb-measure__list li.wb-measure__finding").length,
+        // Scoped for the same reason as above: after a comparison the lane's own delta
+        // list is still in the document, hidden with the lane rather than unmounted.
+        findingRows: region ? region.querySelectorAll(${JSON.stringify(CHIP_LANE_INSPECTION.findingRow)}).length : 0,
       };
     })()`,
   );
@@ -240,7 +287,16 @@ async function drive(cdp, origin, scenario, viewName) {
   return { failures, probe, afterReturn, vp };
 }
 
-function report(name, viewName, { failures, probe, afterReturn, vp }) {
+// What the scenario declared, in one line, so the reading below is read against the state
+// it was supposed to reach rather than against the reader's memory of another scenario.
+const SURFACE_WORDS = {
+  chipRow: ["the six-chip bank rendered", "the bank is gone, replaced by the compose surface"],
+  reveal: ["the comparison is revealed", "no comparison is revealed"],
+  held: ["the first answer is held on the surface", "no held answer, which is right before one is chosen"],
+  boundary: ["the boundary block stands", "no boundary block"],
+};
+
+function report(name, viewName, want, { failures, probe, afterReturn, vp }) {
   const problems = [...failures];
   const check = (ok, msg) => {
     if (!ok) problems.push(msg);
@@ -252,9 +308,22 @@ function report(name, viewName, { failures, probe, afterReturn, vp }) {
   log(
     `  window ${probe.viewport.height}px at scroll ${probe.scrollY} of a ${probe.documentHeight}px document`,
   );
+  log(`  the state it declares: ${want.what}`);
   log("");
   log(`  ${check(probe.laneMounted && probe.laneHidden === false, "the lane is not open")}  stage is CHIPS and open — #wb-chip-lane mounted, hidden=${probe.laneHidden}, door aria-expanded=${probe.doorExpanded}`);
-  log(`  ${check(probe.chipCount === 6, `expected six chips, found ${probe.chipCount}`)}  the six-chip bank rendered — ${probe.chipCount} chips`);
+
+  // The terminal shape, surface by surface, against what this scenario declares. Absence
+  // is asserted as hard as presence: a delta surface standing in the state before a chip
+  // is chosen is as wrong as one missing from the state after.
+  for (const [key, expected] of Object.entries(want.surfaces)) {
+    const got = probe.surfaces[key];
+    const [whenPresent, whenAbsent] = SURFACE_WORDS[key];
+    log(`  ${check(got === expected, `${key}: declared ${expected ? "present" : "absent"} at this state, found ${got ? "present" : "absent"}`)}  ${expected ? whenPresent : whenAbsent} — ${CHIP_LANE_SURFACES[key]}`);
+  }
+  log(`  ${check(probe.chipPicks === want.chipPicks, `expected ${want.chipPicks} chip(s) in the bank, found ${probe.chipPicks}`)}  the bank holds what it should — ${probe.chipPicks} chip(s)`);
+  if (want.heldOpen !== null) {
+    log(`  ${check(probe.heldOpen === want.heldOpen, `the held answer is ${probe.heldOpen ? "open" : "closed"}, declared ${want.heldOpen ? "open" : "closed"}`)}  the held answer is ${want.heldOpen ? "open" : "closed"}, which is the state this scenario is named for`);
+  }
   log(`  ${check(probe.headingFocusable === -1 && probe.headingSeen, "the heading is not a visible focus target")}  the heading is a focus target and painted — tabIndex ${probe.headingFocusable}, "${probe.headingText}"`);
   log(`  ${check(probe.returnCount === 1 && probe.returnSeen, `expected one visible return control, found ${probe.returnCount}`)}  one visible return control — "${probe.returnText}"`);
   log(`  ${check(/Back to your inspection/.test(probe.returnText || ""), "the return control is not in its from-an-inspection form")}  it names the inspection, not the Reader`);
@@ -267,25 +336,26 @@ function report(name, viewName, { failures, probe, afterReturn, vp }) {
   for (const e of probe.laneEditors) {
     log(`      ${e.tag.padEnd(8)} ${String(e.label || "—").padEnd(30)} ${String(e.chars)} chars${e.readOnly ? " (read-only)" : ""}`);
   }
-  log(`  ${check(probe.findingRows === 2, `expected the inspection's two marks, found ${probe.findingRows}`)}  the inspection underneath still holds its marks — ${probe.findingRows} finding rows, ${probe.checkCards} register cards`);
+  log(`  ${check(probe.inspection.mounted, "the inspection region is not in the document")}  the inspection underneath is still in the document — ${CHIP_LANE_INSPECTION.region}`);
+  log(`  ${check(probe.inspection.findingRows === want.inspection.findingRows, `expected the inspection's ${want.inspection.findingRows} marks, found ${probe.inspection.findingRows}`)}  the inspection underneath still holds its marks — ${probe.inspection.findingRows} finding rows, ${probe.inspection.registerCards} register cards`);
+  log(`  ${check(probe.inspection.registerCards === want.inspection.registerCards, `expected ${want.inspection.registerCards} register card(s) in the inspection, found ${probe.inspection.registerCards}`)}  and its register cards — ${probe.inspection.registerCards}`);
+  if (probe.findingRowsInLane) {
+    log(`      the lane carries ${probe.findingRowsInLane} finding row(s) of its own; they are the comparison's and are counted separately`);
+  }
   log("");
   log(`  inside the captured rectangle at this viewport:`);
-  for (const [label, r, required] of [
-    ["heading", probe.headingRect, true],
-    ["return control", probe.returnRect, true],
-    ["origin reference", probe.originRect, true],
-    ["chip row", probe.chipRowRect, false],
-  ]) {
-    const yes = inFrame(r, probe.viewport);
-    log(`    ${yes ? "in frame " : "below    "} ${label.padEnd(17)} top ${String(r ? r.top : "—").padStart(5)}  height ${String(r ? r.height : "—").padStart(4)}`);
-    if (!yes && required) problems.push(`${label} is outside the captured rectangle at ${viewName}`);
+  for (const f of probe.frame) {
+    const yes = inFrame(f.rect, probe.viewport);
+    const mark = yes ? "in frame " : f.required ? "OUTSIDE  " : "below    ";
+    log(`    ${mark} ${f.label.padEnd(17)} top ${String(f.rect ? f.rect.top : "—").padStart(5)}  height ${String(f.rect ? f.rect.height : "—").padStart(4)}`);
+    if (!yes && f.required) problems.push(`${f.label} is outside the captured rectangle at ${viewName}`);
   }
 
   log("");
   log(`  pressing the way back, after the frame was measured:`);
   log(`    ${check(afterReturn.laneHidden === true, "the lane did not close on return")}  the lane closed — hidden=${afterReturn.laneHidden}`);
   log(`    ${check(afterReturn.answerMatches, `what was pasted did not come back intact — ${afterReturn.answerChars} of ${afterReturn.expectedChars} chars`)}  what was pasted came back byte-for-byte — ${afterReturn.answerChars} of ${afterReturn.expectedChars} chars`);
-  log(`    ${check(afterReturn.findingRows === 2, `the marks did not survive the round trip — ${afterReturn.findingRows}`)}  the marks survived the round trip — ${afterReturn.findingRows} finding rows`);
+  log(`    ${check(afterReturn.findingRows === want.inspection.findingRows, `the marks did not survive the round trip — ${afterReturn.findingRows} of ${want.inspection.findingRows}`)}  the marks survived the round trip — ${afterReturn.findingRows} finding rows`);
   return problems;
 }
 
@@ -312,13 +382,24 @@ async function main() {
   const origin = `http://127.0.0.1:${port}`;
 
   const problems = [];
+  const skipped = [];
   try {
     await installInterception(cdp, []);
     for (const name of names) {
       const scenario = PENDING_SCENARIOS[name] || SCENARIOS[name];
       if (!scenario) throw new Error(`no such scenario: ${name}`);
+      // The composed state this file measures is the chip lane's. A scenario that never
+      // reaches it is named and skipped rather than driven, because reading a homepage
+      // through a lane probe reports failures against a state nobody claimed. Skipped is
+      // not proved: `home-hero` is still an unproved pending scenario, and that standing
+      // debt is a later pass's, recorded here rather than papered over.
+      const want = CHIP_LANE_TERMINAL[name];
+      if (!want) {
+        skipped.push(name);
+        continue;
+      }
       for (const viewName of BOARD_VIEWPORTS) {
-        problems.push(...report(name, viewName, await drive(cdp, origin, scenario, viewName)));
+        problems.push(...report(name, viewName, want, await drive(cdp, origin, scenario, viewName, want)));
       }
     }
   } finally {
@@ -329,6 +410,11 @@ async function main() {
 
   log("");
   log(`Renderer: ${version}`);
+  if (skipped.length) {
+    log("");
+    log(`  not measured, because this proof reads the chip lane's composed state: ${skipped.join(", ")}`);
+    log(`  they are unproved rather than passing. Standing instrument debt, for a later pass.`);
+  }
   if (problems.length) {
     log("");
     for (const p of problems) log(`  FAIL  ${p}`);
@@ -337,8 +423,18 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  const measured = names.filter((n) => !skipped.includes(n));
+  if (!measured.length) {
+    // A run that proved nothing is not a passing run. Skipping a scenario this probe cannot
+    // read keeps the home-hero debt honest — it is named as unproved rather than asserted
+    // against — but the exit code must not turn that silence into a green.
+    log("");
+    log("Nothing was measured. Name a chip-lane scenario with --name.");
+    process.exitCode = 1;
+    return;
+  }
   log(
-    `${names.length === 1 ? names[0] : "Every scenario checked"} reaches the state it claims ` +
+    `${measured.length === 1 ? measured[0] : "Every scenario measured"} reaches the state it claims ` +
       `at both board viewports. No baseline was read for acceptance and none was written.`,
   );
 }

@@ -600,6 +600,38 @@ export const R14_ADJUDICATION = {
     ],
   },
 
+  // Who the ruling above adjudicates, and why that question is answered from the record
+  // rather than from the measurement. Recorded here because the derivation used to answer it
+  // from a live-measured property, and that is exactly what failed.
+  membership_ruling: {
+    date: "2026-08-25",
+    authority: "founder",
+    recorded_against: "Pass 4, PR #138 — chip-delta-held joined the board population",
+    text:
+      "R14 adjudication membership comes from the ruling's named selector set, never from a " +
+      "live-measured property. A selector named in the 2026-08-22 R14 ruling remains an " +
+      "adjudication subject permanently. Measured scope is evidence recorded against each " +
+      "subject, not the membership filter.",
+    ruled_against_this_failure:
+      "subjects was derived as freeSpends.filter(r => r.scope === 'region-only'), which equates " +
+      "'currently region-only' with 'covered by the standing R14 adjudication'. Adding the " +
+      "chip-delta-held scenario made the chip lane's delta reveal a driven surface, and the lane " +
+      "mounts outside .wb-reader-v2__result — so .wb-loop__panel--second and .wb-loop__tag were " +
+      "truthfully reclassified region-only → also-outside and fell straight out of the subject " +
+      "list. Both are named in the 2026-08-22 ruling as declarations not to be touched. The " +
+      "census --write accepted it, because the reseal conditions govern counts and inventory " +
+      "lines and neither moved; only the pinned test caught it. A measured property must never " +
+      "again decide whether a ruled subject is adjudicated.",
+    membership_source:
+      "per_subject_notes. Its keys are the adjudicated set: every selector the 2026-08-22 ruling " +
+      "reached, each carrying the founder-authored note that records what was adjudicated about " +
+      "it. Declared, not measured, so it cannot move when a scenario joins the board.",
+    when_a_subject_is_no_longer_measured:
+      "It stays a subject and is recorded with measured: false. A ruled subject that vanished " +
+      "from the measurement is a finding to surface, not a row to drop — dropping it is how the " +
+      "record ends up protecting something that is no longer there.",
+  },
+
   // What the ruling means for anyone who opens this file with a diff in hand.
   standing_instruction:
     "A free alpha in this region is not a defect to be closed. Only two things license a " +
@@ -701,6 +733,44 @@ export const R14_ADJUDICATION = {
   ],
 };
 
+// ── Who the R14 adjudication covers ──────────────────────────────────────────
+// Membership is DECLARED, per the founder ruling of 2026-08-25 recorded above. The subject
+// set is the keys of per_subject_notes — every selector the 2026-08-22 ruling reached — and
+// nothing a run measures can add to it or take from it.
+//
+// The predicate this replaced was `freeSpends.filter(r => r.scope === "region-only")`, which
+// read a live-measured property as if it were the membership record. It held only while every
+// ruled selector happened to paint inside the region and nowhere else. chip-delta-held ended
+// that: the chip lane mounts outside .wb-reader-v2__result, so driving the lane's delta reveal
+// reclassified .wb-loop__panel--second and .wb-loop__tag to also-outside — truthfully — and
+// silently dropped two selectors the ruling names from the adjudication.
+//
+// So scope is now recorded ON each subject instead of selecting it, which is what the ruling
+// asks for and is also the more useful record: the reader sees that a ruled declaration paints
+// outside the region as well as inside, rather than seeing it disappear.
+export function r14Subjects(freeSpends) {
+  const spends = freeSpends || [];
+  return Object.keys(R14_ADJUDICATION.per_subject_notes).flatMap((selector) => {
+    const note = R14_ADJUDICATION.per_subject_notes[selector];
+    const measured = spends.filter((r) => r.selector === selector);
+    // A ruled subject the measurement no longer reaches stays in the record and says so.
+    // Dropping it is the failure this whole derivation was rewritten to prevent.
+    if (!measured.length) {
+      return [{ selector, property: null, value: null, resting_paint: null, scope: null, measured: false, note }];
+    }
+    return measured.map((r) => ({
+      selector: r.selector,
+      property: r.property,
+      value: r.value,
+      resting_paint: !r.pseudo_state_only,
+      // Evidence, not filter. This is the field whose movement used to delete the row.
+      scope: r.scope,
+      measured: true,
+      note,
+    }));
+  });
+}
+
 // ── The provenance-reseal rule ───────────────────────────────────────────────
 // The coverage fingerprint hashes the region selector, the driven scenarios, the driven
 // viewports, and the sha256 of every governed source. So ANY authorized edit to a governed
@@ -730,6 +800,89 @@ export const PROVENANCE_RESEAL_RULE = {
       "name the authorized edit that moved the source hash;",
       "show the before-and-after governed counts and inventory as identical.",
     ],
+  },
+
+  // The source route closed on ITS second use, in the same shape the population route closed
+  // in and for the same reason: every recorded entry was asked to reproduce today's source
+  // extraction, which only the last one can. Ruled 2026-08-25. Verbatim.
+  source_chain_amendment: {
+    date: "2026-08-25",
+    authority: "founder",
+    recorded_against: "Pass 4 — the Reader steering recenter, second governed source movement",
+    text:
+      "A source reseal proves the transition it actually recorded. A superseded source reseal " +
+      "is judged against the source state it claims to have produced, never against today's " +
+      "live extraction. Continuity chained per governed source/path: where two reseals concern " +
+      "the same source, the later record's before-hash must equal the earlier record's produced " +
+      "after-hash. A reseal that does not move a given governed source hands that source's " +
+      "state through unchanged; continuity for untouched sources must not silently vanish. " +
+      "Only the terminal produced state per governed source must equal current live source " +
+      "extraction. Live governed-source movement with no valid terminal record makes --write " +
+      "refuse. Append-only. No historical record deleted, moved, or rewritten. Population and " +
+      "region semantics do not move.",
+
+    // Which records the source dimension is chained over, and why it is not just the source
+    // reseals. Both routes STATE governed source hashes — a source reseal in authorized_edits
+    // and edits_that_moved_no_governed_source, a population reseal in sources_unchanged — and
+    // a population reseal's whole first condition is that no source moved across it. Walk only
+    // the source reseals and a population reseal sitting between two of them becomes a hole
+    // the chain cannot see through. The union has a proven total order already: the
+    // fingerprint walk, one head, no forks, ending at the fingerprint the artifact carries.
+    //
+    // This reads a population record's existing field for continuity. It is not the route
+    // crossing the ruling forbids: route separation governs which evidence proves a record's
+    // OWN eligibility, and no population record becomes eligible here.
+    chained_over:
+      "Both routes' records, ordered by the fingerprint walk. A record states a source hash, or " +
+      "it is silent and hands the carried state through. The terminal record answers to live.",
+
+    derivation:
+      "statedSourceState(record) = one hash per governed path the record names — sha256_after " +
+      "from authorized_edits, sha256_unchanged from edits_that_moved_no_governed_source, " +
+      "sha256 from sources_unchanged. A path the record does not name is carried, not lost.",
+
+    // The same shape as the region dimension's deliberate closure: a real gap, recorded as
+    // law rather than papered over by the next pass that meets it.
+    deliberate_closure:
+      "The head of the walk has no predecessor, so its source claims are anchored only by its " +
+      "own recorded fingerprint_before, which nothing produced. That is inherent to a genesis " +
+      "record and is true of the population dimension too. It is not closed by inventing a " +
+      "record before the first one.",
+
+    // Why no superseded entry is asked about live source state — the founder's own warning,
+    // recorded where the check would otherwise be written. Scoped exactly as the region
+    // dimension's vanished-scenario check is scoped.
+    why_no_superseded_live_source_check:
+      "A superseded record checked against its own claimed produced state is self-satisfying. " +
+      "The evidence content lives in (a) eligibility conditions that do not depend on live " +
+      "state and (b) the handoff links plus the terminal live check. Do not write a " +
+      "self-satisfying check and present it as validation; scope per-record live checks to the " +
+      "newest entry and let the chain carry the rest.",
+
+    // Asked at the gate: does any live-anchored check over a superseded record remain anywhere
+    // in the instrument? The answer is stated here rather than in a report, because the answer
+    // is no when it is about SOURCE state and yes when it is about MEASURED state, and the
+    // second half is a live latent defect of the same shape as the one just repaired. Recorded
+    // as a standing finding, not repaired: repairing it means loosening a live-anchored
+    // eligibility condition, and that is a founder ruling, not an implementation detail.
+    live_anchored_checks_over_superseded_records:
+      "NOT CLOSED, and the residue is named. CLOSED for source state: after this amendment no " +
+      "superseded record is judged against live source extraction anywhere — population " +
+      "condition (1) is scoped to isSourceTerminal, condition (4) recomputes from the record's " +
+      "own sources_unchanged, and a source reseal's authorized_edits_hold_live and " +
+      "sources_recorded_unmoved_hold_live are null off the terminal record. OPEN for measured " +
+      "state: population conditions (2) counts and (3) free-alpha inventory still compare every " +
+      "entry's recorded before-state against the live measurement, and both gate --write. They " +
+      "are the same defect one input over. The first authorized source edit that legitimately " +
+      "moves a governed count or an inventory line will make every superseded population reseal " +
+      "ineligible with nothing wrong in it, exactly as the second source movement did to " +
+      "condition (1). It has not fired yet because this pass's source movement moved no count " +
+      "and no inventory line. Also live-read but not a judgement of a record: condition (4) " +
+      "takes region and viewports from the live run for every entry, neither of which has a " +
+      "reseal route. Also live-anchored over every source reseal but NOT gating --write, so " +
+      "descriptive only: counts_identical, free_alpha_inventory_identical, measured_state_moved " +
+      "on provenance.reseals[]. Bring the (2)/(3) finding to the gate when it fires. Do not " +
+      "pre-emptively loosen either one to make this pass quieter.",
   },
 
   what_this_is_not:
@@ -787,6 +940,82 @@ export const PROVENANCE_RESEALS = [
     // The measured state as the committed baseline held it, typed from that file. buildArtifact
     // compares the live measurement against these and publishes the verdict, so a wrong
     // transcription here fails visibly instead of passing quietly.
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
+
+  // The second governed source movement, and the one that closed the source route the way the
+  // second population movement closed that one. Read source_chain_amendment above for the law
+  // this entry is the first to be written under: it is no longer asked to reproduce today's
+  // extraction on its own, and the record after it is what carries it forward.
+  {
+    date: "2026-08-25",
+    reason:
+      "Pass 4, PR #138, branch claude/reader-steering-recenter — the Reader steering recenter. " +
+      "The founder ruling of 2026-08-25 left the professional cue standing at the proactive " +
+      "entry door and removed its terminal post-comparison rendering. One governed source " +
+      "moved: workbench.css, whose comment above .wb-chip__pro-cue described the two " +
+      "placements and now describes the one. The ruling's other edit removed the terminal cue " +
+      "from workbench-app.jsx, which is governed by extracted CSS template literals only and " +
+      "did not move. No ember-bearing declaration was added, removed or altered by either edit.",
+    fingerprint_before: "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6",
+    fingerprint_after: "ee59a9000aeb41bfa89238b1510aec2aa6fd0c5dfd6c715ec36db25ab48e1b34",
+    authorized_edits: [
+      {
+        source: "workbench.css",
+        extraction: "whole file",
+        sha256_before: "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+        sha256_after: "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+        edit:
+          "corrected the comment above .wb-chip__pro-cue to record the single placement the " +
+          "founder ruling of 2026-08-25 leaves standing. Comment text only — the " +
+          ".wb-chip__pro-cue, .wb-chip__pro-line, .wb-chip__pro-link and .wb-chip__pro-link:hover " +
+          "rules are byte-identical and all four are still reached, by the entry cue's class pair " +
+          "wb-chip__pro-cue wb-chip-entry__cue. No declaration moved, so no declared-token spend, " +
+          "free alpha or literal hue moved.",
+      },
+    ],
+    // The same discipline the 2026-08-22 entry records: the pass edited workbench-app.jsx and
+    // its governed extraction did not move, so a later reader does not have to infer that from
+    // a diff. This is also the claim the chain reads to hand the path forward.
+    edits_that_moved_no_governed_source: [
+      {
+        source: "workbench-app.jsx",
+        extraction:
+          "CSS template literals: WORKBENCH_A11Y_CSS, WORKBENCH_RESULT_GAP_CSS, " +
+          "WORKBENCH_RESULT_LAYOUT_CSS, WORKBENCH_FLOW_CSS, WORKBENCH_TERMS_CSS",
+        sha256_unchanged: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+        edit:
+          "removed the terminal post-comparison rendering of the professional cue, leaving the " +
+          "proactive entry door as its only placement, and left a comment in its place recording " +
+          "that the line belongs to the door that means it. JSX markup only: this census governs " +
+          "workbench-app.jsx by its five extracted CSS template literals, none of which was " +
+          "touched, so the extraction is byte-identical at " +
+          "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146.",
+      },
+    ],
+    // styles.css appears in neither list because the pass did not edit it at all. The chain
+    // carries it through this record by silence, which is rule three of the amendment.
     counts_before: {
       declared_token_spends: 33,
       free_alpha_spends: 13,
@@ -1087,6 +1316,88 @@ export const POPULATION_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+
+  // The board's 44th scenario. This entry FOLLOWS the 2026-08-25 source reseal in the walk and
+  // is the terminal record of both dimensions, so it is the one that answers to today's
+  // extraction — its sources_unchanged is a live-verified statement of all three governed
+  // hashes, including workbench.css at the value the source reseal above it produced.
+  {
+    date: "2026-08-25",
+    authorizing_change:
+      "Pass 4, PR #138, branch claude/reader-steering-recenter — chip-delta-held registered the " +
+      "chip lane's delta state on the acceptance board, the one loop stage the board had never " +
+      "photographed. governedScenarios() is the board registry, so the census population grew " +
+      "with it. It drives /reader.html through inspection, chip, second answer, disclosure and " +
+      "compare, and it renders the .wb-reader-v2__result region because the inspection stands " +
+      "above the lane inside it. It authors no new ember-bearing rule: the region's authored " +
+      "rows and the resting paint rows are identical to chips-from-inspection at both " +
+      "viewports. Nothing under this census's source list was edited after the source reseal " +
+      "this entry follows.",
+    fingerprint_before: "ee59a9000aeb41bfa89238b1510aec2aa6fd0c5dfd6c715ec36db25ab48e1b34",
+    fingerprint_after: "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c",
+    population_before: [
+      "advisory-boundaries", "advisory-masthead", "chip-arrival", "chips-from-inspection",
+      "claim-authorized-match", "claim-authorized-mismatch", "claim-client-declaration",
+      "claim-unrecognized-source", "curated-readout", "deposit-fixture", "export-paired",
+      "export-single", "first-load", "home-archive-preview", "home-experience",
+      "input-integrity-intake", "input-integrity-sample", "input-integrity-zero", "paired-empty",
+      "paired-legacy", "paired-legacy-rows", "paired-matched", "paired-rejected-snippet",
+      "paired-unmatched", "provenance-complete", "provenance-partial", "public-example",
+      "public-example-provenance", "read-capacity", "read-error", "read-in-flight",
+      "register-overflow", "register-overflow-expanded", "share-consent", "share-legacy",
+      "share-not-found", "share-paired-no-model", "share-receipt", "share-single",
+      "share-single-empty", "single-empty", "single-empty-read", "single-findings",
+    ],
+    scenarios_added: ["chip-delta-held"],
+    scenarios_removed: [],
+    added_scenario_dispositions: [
+      {
+        scenario: "chip-delta-held",
+        renders_region: true,
+        note:
+          "/reader.html driven to the chip lane's delta: an inspection, a chip, a second answer, " +
+          "the same-model and edits disclosure, then the comparison. Renders the " +
+          ".wb-reader-v2__result region, because the inspection that opened the loop stands above " +
+          "the lane inside it. The first answer is held in a closed <details>, so the frame " +
+          "photographs the held state as a user meets it.",
+      },
+    ],
+    region_rendering_before: [
+      "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "deposit-fixture", "export-paired",
+      "export-single", "paired-empty", "paired-legacy", "paired-legacy-rows", "paired-matched",
+      "paired-rejected-snippet", "paired-unmatched", "provenance-complete", "provenance-partial",
+      "read-capacity", "read-error", "register-overflow", "register-overflow-expanded",
+      "share-consent", "single-empty", "single-empty-read", "single-findings",
+    ],
+    sources_unchanged: [
+      { path: "styles.css", extraction: "whole file", sha256: "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d" },
+      { path: "workbench.css", extraction: "whole file", sha256: "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b" },
+      { path: "workbench-app.jsx", extraction: "CSS template literals only", sha256: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146" },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── THE SECOND POPULATION MOVE FOUND THE ROUTE CLOSED, 2026-08-24 ────────────────
@@ -1210,6 +1521,153 @@ export function populationResealChain(records, livePopulation, liveRegion) {
   return { dimensions: ["population", "region"], links, intact: failures.length === 0, failures };
 }
 
+// ── The source dimension, chained ────────────────────────────────────────────
+// The population route's defect, in the other input to the same fingerprint. Every recorded
+// reseal was asked to reproduce today's source extraction, which only the last one can, so
+// the second governed source movement closed the route exactly as the second population
+// movement had. Ruled 2026-08-25; read PROVENANCE_RESEAL_RULE.source_chain_amendment for the
+// text, and the three functions below for the mechanics.
+//
+// One hash per governed path, per record, out of fields the records already carry. Nothing
+// new is stored. A record that does not name a path is SILENT about it, not authoritative
+// over it — the carried state passes through and the chain writes the carry down.
+export function statedSourceState(record) {
+  const stated = new Map();
+  // A source reseal states a path two ways: the hash it moved, and the hash it explicitly
+  // recorded as unmoved. Both are a claim about the state this record produced.
+  for (const e of record.authorized_edits || []) {
+    stated.set(e.source, { before: e.sha256_before, after: e.sha256_after, kind: "moved" });
+  }
+  for (const e of record.edits_that_moved_no_governed_source || []) {
+    stated.set(e.source, { before: e.sha256_unchanged, after: e.sha256_unchanged, kind: "held" });
+  }
+  // A population reseal states every governed path at once, because "no governed source
+  // moved" is its first eligibility condition. Read here for continuity only; it makes no
+  // population record eligible, which is what keeps the two routes separate.
+  for (const s of record.sources_unchanged || []) {
+    stated.set(s.path, { before: s.sha256, after: s.sha256, kind: "held" });
+  }
+  return stated;
+}
+
+// The total order the source dimension is walked in: the fingerprint walk over BOTH routes.
+// One head, no forks, every record reached. The same walk test/finding-continuation-ruling
+// already asserts, lifted into the instrument so --write can refuse on it.
+export function resealWalkOrder(records) {
+  const failures = [];
+  const afters = new Set(records.map((r) => r.fingerprint_after));
+  const heads = records.filter((r) => !afters.has(r.fingerprint_before));
+
+  const byBefore = new Map();
+  for (const r of records) {
+    if (byBefore.has(r.fingerprint_before)) {
+      failures.push({ link: `${r.date}`, path: "(walk)", detail: `two reseals claim to start at ${r.fingerprint_before}` });
+      continue;
+    }
+    byBefore.set(r.fingerprint_before, r);
+  }
+  if (heads.length !== 1) {
+    failures.push({ link: "(head)", path: "(walk)", detail: `the reseal walk has ${heads.length} starting points, not one` });
+    return { order: [], failures };
+  }
+
+  const order = [];
+  const seen = new Set();
+  let cursor = heads[0];
+  while (cursor && !seen.has(cursor.fingerprint_before)) {
+    seen.add(cursor.fingerprint_before);
+    order.push(cursor);
+    cursor = byBefore.get(cursor.fingerprint_after);
+  }
+  if (order.length !== records.length) {
+    failures.push({
+      link: "(walk)",
+      path: "(walk)",
+      detail: `the walk reaches ${order.length} of ${records.length} recorded reseals`,
+    });
+  }
+  return { order, failures };
+}
+
+// Per governed source, link by link, and the last link to the live extraction. The sibling
+// of populationResealChain in shape and in job: a superseded record stops being asked about
+// the present, and what ties it to the present is the record after it starting where it
+// finished. A live source move with no appended record breaks the terminal link rather than
+// passing silently, which is the whole of rule five.
+export function sourceResealChain(sourceReseals, populationReseals, liveSources) {
+  const records = [
+    ...sourceReseals.map((r) => ({ ...r, route: "source" })),
+    ...populationReseals.map((r) => ({ ...r, route: "population" })),
+  ];
+  const { order, failures } = resealWalkOrder(records);
+  const links = [];
+  const live = new Map(liveSources.map((s) => [s.path, s.sha256]));
+  // Route-qualified, because this walk is the one place two routes are interleaved and a
+  // date alone stops identifying a record the moment both routes move on the same day —
+  // which is exactly what this pass does. An append-only receipt has to stay readable.
+  const stamp = (r) => `${r.date}/${r.route}`;
+  const stated = order.map(statedSourceState);
+  const paths = [...new Set([...live.keys(), ...stated.flatMap((m) => [...m.keys()])])].sort();
+  const terminal = order.length ? order[order.length - 1] : null;
+
+  for (const path of paths) {
+    let carried = null;
+    order.forEach((r, i) => {
+      const claim = stated[i].get(path);
+      // The genesis record has no predecessor to hand off from. It seeds the walk; its own
+      // claims are anchored by the fingerprint it recorded, not by a record before it.
+      if (i === 0) {
+        if (claim) carried = claim.after;
+        return;
+      }
+      const link = `${stamp(order[i - 1])} → ${stamp(r)}`;
+      if (!claim) {
+        // Rule three: silence hands the state through, and the pass-through is written down
+        // rather than left to be inferred from a gap in the links.
+        links.push({ link, path, route: r.route, kind: "carried", started_from: carried, produced: carried, holds: true });
+        return;
+      }
+      const holds = carried === null || claim.before === carried;
+      links.push({ link, path, route: r.route, kind: claim.kind, started_from: carried, produced: claim.after, holds });
+      if (!holds) {
+        failures.push({
+          link,
+          path,
+          detail:
+            `the record before produced ${carried} and this one starts from ${claim.before}; ` +
+            "they are not the same source state",
+        });
+      }
+      carried = claim.after;
+    });
+
+    if (!terminal) continue;
+    const link = `${stamp(terminal)} → live`;
+    const liveSha = live.get(path) || null;
+    const holds = carried === liveSha;
+    links.push({ link, path, route: terminal.route, kind: "terminal", produced: carried, live: liveSha, holds });
+    if (!holds) {
+      failures.push({
+        link,
+        path,
+        detail:
+          carried === null
+            ? `no recorded reseal states ${path}; the instrument extracts ${liveSha} and nothing produced it`
+            : `the terminal record produces ${carried} and the instrument extracts ${liveSha}; ` +
+              "a governed source moved with no appended record",
+      });
+    }
+  }
+
+  return {
+    paths,
+    terminal: terminal ? { route: terminal.route, date: terminal.date, fingerprint_after: terminal.fingerprint_after } : null,
+    links,
+    intact: failures.length === 0,
+    failures,
+  };
+}
+
 // A population reseal's whole case. Each of the ruling's eight conditions gets its own
 // verdict and its own failure line, so a refused reseal says which condition refused it.
 // Pure and renderer-free: the negative fixture drives it directly with populations that
@@ -1235,7 +1693,12 @@ export function populationResealChain(records, livePopulation, liveRegion) {
 //
 // isNewest defaults true, so a caller checking a single record in isolation gets the
 // live-anchored reading unchanged, in both dimensions.
-export function populationResealEvidence(record, live, { isNewest = true } = {}) {
+// isNewest governs the POPULATION and REGION dimensions: newest among the population reseals.
+// isSourceTerminal governs the SOURCE dimension and is a different question with a different
+// answer — the reseal walk interleaves both routes, so the last population reseal need not be
+// the last record overall. Two flags because they are two facts; collapsing them would make
+// one of the two dimensions answer for a state it did not produce.
+export function populationResealEvidence(record, live, { isNewest = true, isSourceTerminal = isNewest } = {}) {
   const failures = [];
   const fail = (condition, detail) => failures.push({ condition, detail });
   const sorted = (a) => [...(a || [])].sort();
@@ -1250,17 +1713,36 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
 
   // (1) Every governed source hash byte-identical. The record names one hash per source, not
   // a delta, and every source the instrument hashes has to appear.
+  //
+  // WHICH SOURCE STATE THIS IS ASKED AGAINST — founder ruling of 2026-08-25, the same shape
+  // as the 2026-08-24 population and region rulings and written for the same failure. This
+  // condition read live.sources for EVERY entry, so the first governed source movement after
+  // a population reseal made every superseded population receipt ineligible and refused
+  // --write. The terminal record of the reseal walk answers to today's extraction. A
+  // superseded one answers for its own era: its claims must be well formed, they must
+  // reproduce its own recorded fingerprints in condition 4, and its link to today is
+  // sourceResealChain(). See PROVENANCE_RESEAL_RULE.source_chain_amendment.
   const liveHashes = new Map(live.sources.map((s) => [s.path, s.sha256]));
-  const recordedHashes = new Map((record.sources_unchanged || []).map((s) => [s.path, s.sha256]));
-  const movedSources = [...liveHashes].filter(([p, h]) => recordedHashes.get(p) !== h).map(([p]) => p);
-  const unnamedSources = [...liveHashes.keys()].filter((p) => !recordedHashes.has(p));
-  const sourceHashesIdentical = movedSources.length === 0 && unnamedSources.length === 0 && recordedHashes.size === liveHashes.size;
+  const named = record.sources_unchanged || [];
+  const recordedHashes = new Map(named.map((s) => [s.path, s.sha256]));
+  const malformed = named.length === 0 || named.length !== recordedHashes.size;
+  const movedSources = isSourceTerminal
+    ? [...liveHashes].filter(([p, h]) => recordedHashes.get(p) !== h).map(([p]) => p)
+    : [];
+  const unnamedSources = isSourceTerminal ? [...liveHashes.keys()].filter((p) => !recordedHashes.has(p)) : [];
+  const sourceHashesIdentical =
+    !malformed &&
+    movedSources.length === 0 &&
+    unnamedSources.length === 0 &&
+    (!isSourceTerminal || recordedHashes.size === liveHashes.size);
   if (!sourceHashesIdentical) {
     fail(
       "1 — governed source hashes unchanged",
-      movedSources.length
-        ? `source hash moved: ${movedSources.join(", ")} — the source rule governs this, not the population rule`
-        : `governed sources not accounted for: ${unnamedSources.join(", ") || "record names sources the instrument does not hash"}`,
+      malformed
+        ? "the record states no governed source, or names one twice"
+        : movedSources.length
+          ? `source hash moved: ${movedSources.join(", ")} — the source rule governs this, not the population rule`
+          : `governed sources not accounted for: ${unnamedSources.join(", ") || "record names sources the instrument does not hash"}`,
     );
   }
 
@@ -1283,12 +1765,22 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
   // viewport or a source had also moved, neither end would come back. Both ends come from
   // the record's own populations, so the demonstration is about the move the record claims
   // rather than about whatever the board holds today.
+  //
+  // THE SOURCES USED HERE ARE THE RECORD'S OWN, not the live ones — founder ruling of
+  // 2026-08-25. Feeding live sources in made this condition unsatisfiable for every
+  // superseded entry the moment a stylesheet moved, and it also meant the record's own
+  // source claims never entered the recomputation at all. Reading them from the record is
+  // both truer to what the record claims and strictly more evidence: a fabricated source
+  // hash now fails to reproduce the fingerprint the record recorded. It is not
+  // self-satisfying, because the region and the viewports still come from the live run and
+  // because condition 1 ties the terminal record's source claims to the live extraction.
   const claimedAfter = producedPopulation(record);
+  const claimedSources = record.sources_unchanged || [];
   const fpBefore = coverageFingerprint({
-    region: live.region, scenarios: record.population_before || [], viewports: live.viewports, sources: live.sources,
+    region: live.region, scenarios: record.population_before || [], viewports: live.viewports, sources: claimedSources,
   }).sha256;
   const fpAfter = coverageFingerprint({
-    region: live.region, scenarios: claimedAfter, viewports: live.viewports, sources: live.sources,
+    region: live.region, scenarios: claimedAfter, viewports: live.viewports, sources: claimedSources,
   }).sha256;
   const populationIsOnlyMovedInput = fpBefore === record.fingerprint_before && fpAfter === record.fingerprint_after;
   if (!populationIsOnlyMovedInput) {
@@ -1400,6 +1892,10 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
     // The population this entry produced, which for the newest is the one just measured.
     population_after: claimedAfter,
     is_newest_entry: isNewest,
+    // Whether this record is the last one in the reseal walk across both routes, which is a
+    // different question from being the newest population reseal and is the one the source
+    // dimension turns on.
+    is_terminal_source_record: isSourceTerminal,
     scenarios_added_observed: addedObserved,
     scenarios_removed_observed: removedObserved,
     // The region state this entry produced, on the same terms.
@@ -1500,6 +1996,16 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
   const inventoryNow = freeAlphaInventory.map(inventoryLine).sort();
   const regionScenarios = [...new Set(regionStates.map((s) => s.scenario))].sort();
 
+  // The source dimension, walked once and read from in three places: the source reseals'
+  // own evidence, the population reseals' source conditions, and the chain written into the
+  // artifact. One walk, so those three cannot disagree about which record is terminal.
+  const sourceChain = sourceResealChain(PROVENANCE_RESEALS, POPULATION_RESEALS, inv.sources);
+  const liveSourceHashes = new Map(inv.sources.map((s) => [s.path, s.sha256]));
+  // Identity by fingerprint_after, not by date: resealWalkOrder has already refused a fork,
+  // so the after-hash is unique across both routes where a date need not be.
+  const isTerminalSourceRecord = (r) =>
+    !!sourceChain.terminal && sourceChain.terminal.fingerprint_after === r.fingerprint_after;
+
   return {
     instrument: "scripts/qa/ember-census.mjs",
     rule: "R14 — ember spends only against the standing role registry",
@@ -1517,6 +2023,11 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
         const before = [...r.free_alpha_inventory_before].sort();
         const inventoryIdentical =
           before.length === inventoryNow.length && before.every((k, i) => k === inventoryNow[i]);
+        // Only the last record in the reseal walk answers to today's extraction — founder
+        // ruling of 2026-08-25. A superseded source reseal's after-hash is answered for by
+        // the record that follows it, in source_reseal_chain, and null here says the
+        // question was not asked rather than that it was asked and passed.
+        const terminal = isTerminalSourceRecord(r);
         return {
           ...r,
           counts_after: counts,
@@ -1524,6 +2035,15 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
           free_alpha_inventory_after: inventoryNow,
           free_alpha_inventory_identical: inventoryIdentical,
           measured_state_moved: !(countsIdentical && inventoryIdentical),
+          is_terminal_source_record: terminal,
+          authorized_edits_hold_live: terminal
+            ? (r.authorized_edits || []).every((e) => liveSourceHashes.get(e.source) === e.sha256_after)
+            : null,
+          sources_recorded_unmoved_hold_live: terminal
+            ? (r.edits_that_moved_no_governed_source || []).every(
+                (e) => liveSourceHashes.get(e.source) === e.sha256_unchanged,
+              )
+            : null,
           // The mirror of the population route's route-separation check. A source reseal
           // that reached for population evidence would be claiming the other rule's ground.
           carries_population_evidence: POPULATION_RESEAL_EVIDENCE_KEYS.filter((k) => k in r),
@@ -1542,13 +2062,18 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
             counts,
             inventory: inventoryNow,
           },
-          { isNewest: i === POPULATION_RESEALS.length - 1 },
+          { isNewest: i === POPULATION_RESEALS.length - 1, isSourceTerminal: isTerminalSourceRecord(r) },
         ),
       ),
       // What ties the superseded entries to today: link by link in both dimensions, and the
       // last link to the live measurement. Written into the artifact so the chain is a
       // receipt, not a claim — every link it walked, not just the ones that failed.
       population_reseal_chain: populationResealChain(POPULATION_RESEALS, [...scenarios].sort(), regionScenarios),
+      // The same receipt for the other fingerprint input: every governed source, every
+      // hand-off it was carried through, and the last link to the extraction this run made.
+      // Sibling to the population chain rather than folded into it — they are different
+      // dimensions over different record sets and a failure has to say which one broke.
+      source_reseal_chain: sourceChain,
     },
     source_extraction: inv.sources.map((s) => ({ path: s.path, extraction: s.extraction, sha256: s.sha256 })),
     declared_ramp: {
@@ -1572,15 +2097,8 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
     resting_computed_free_alpha: restingPaint,
     r14_adjudication: {
       ...R14_ADJUDICATION,
-      subjects: freeSpends
-        .filter((r) => r.scope === "region-only")
-        .map((r) => ({
-          selector: r.selector,
-          property: r.property,
-          value: r.value,
-          resting_paint: !r.pseudo_state_only,
-          note: R14_ADJUDICATION.per_subject_notes[r.selector] || null,
-        })),
+      // Declared membership, measured evidence. See r14Subjects and the membership ruling.
+      subjects: r14Subjects(freeSpends),
     },
     in_region: inRegion,
   };
@@ -1666,7 +2184,15 @@ async function main() {
     const refused = artifact.provenance.population_reseals.filter((r) => !r.eligible);
     const crossed = artifact.provenance.reseals.filter((r) => r.carries_population_evidence.length);
     const chain = artifact.provenance.population_reseal_chain;
-    if (refused.length || crossed.length || !chain.intact) {
+    // The source dimension refuses on the same terms as the population one: a broken hand-off
+    // anywhere, or a terminal record whose named hashes are not the ones just extracted. The
+    // second is what makes live source movement with no appended record a refusal rather than
+    // a silent pass — founder ruling of 2026-08-25, rule five.
+    const sourceChain = artifact.provenance.source_reseal_chain;
+    const staleTerminal = artifact.provenance.reseals.filter(
+      (r) => r.is_terminal_source_record && (r.authorized_edits_hold_live === false || r.sources_recorded_unmoved_hold_live === false),
+    );
+    if (refused.length || crossed.length || !chain.intact || !sourceChain.intact || staleTerminal.length) {
       log("\n  ✗ refusing to write: a recorded reseal does not hold against this measurement.");
       for (const r of refused) {
         log(`      population reseal ${r.date} — ${r.failures.length} condition(s) refused it:`);
@@ -1674,6 +2200,12 @@ async function main() {
       }
       for (const f of chain.failures) {
         log(`      population reseal chain broken at ${f.link} (${f.dimension}): ${f.detail}`);
+      }
+      for (const f of sourceChain.failures) {
+        log(`      source reseal chain broken at ${f.link} (${f.path}): ${f.detail}`);
+      }
+      for (const r of staleTerminal) {
+        log(`      source reseal ${r.date} is terminal and its named hashes are not the ones extracted`);
       }
       for (const r of crossed) {
         log(`      source reseal ${r.date} carries population evidence: ${r.carries_population_evidence.join(", ")}`);

@@ -53,6 +53,9 @@ import {
   POPULATION_RESEAL_RULE,
   PROVENANCE_RESEAL_RULE,
   SOURCE_RESEAL_EVIDENCE_KEYS,
+  coverageFingerprint,
+  producedPopulation,
+  sourceResealChain,
 } from "../scripts/qa/ember-census.mjs";
 
 const SRC = readFileSync(
@@ -423,19 +426,124 @@ test("every recorded source reseal proves a hash that moved", () => {
     assert.deepEqual([...r.free_alpha_inventory_after].sort(), [...r.free_alpha_inventory_before].sort());
     assert.notEqual(r.fingerprint_before, r.fingerprint_after);
 
-    // A source reseal's whole case is a hash that moved. No fabricated delta survives this:
-    // the after-hash has to be the one the artifact currently holds.
+    // A source reseal's whole case is a hash that moved. No fabricated delta survives this.
     assert.ok(r.authorized_edits.length >= 1, "a source reseal must name what moved the hash");
     for (const e of r.authorized_edits) {
-      assert.equal(byPath.get(e.source), e.sha256_after, `${e.source}: the artifact must hold the after-hash`);
       assert.notEqual(e.sha256_before, e.sha256_after);
       assert.ok(e.edit && e.edit.length > 20, `${e.source}: the edit must be described, not merely named`);
     }
-    // And every source the reseal says did NOT move is still sitting at its unchanged hash.
-    for (const e of r.edits_that_moved_no_governed_source || []) {
-      assert.equal(byPath.get(e.source), e.sha256_unchanged, `${e.source}: recorded as unmoved, so it must be unmoved`);
+
+    // WHICH SOURCE STATE THIS ENTRY ANSWERS FOR — founder ruling of 2026-08-25, the same
+    // shape as the population and region rulings of 2026-08-24 and written for the identical
+    // failure. This test asked EVERY entry for the hash the artifact holds today, so the
+    // second governed source movement made the first reseal false and closed the route. The
+    // terminal record of the reseal walk answers to today's extraction; a superseded one is
+    // answered for by the record that follows it, in source_reseal_chain.
+    assert.equal(typeof r.is_terminal_source_record, "boolean", `${r.date}: the artifact records who answers for today`);
+    if (r.is_terminal_source_record) {
+      assert.equal(r.authorized_edits_hold_live, true, `${r.date}: the terminal record's after-hashes are the live ones`);
+      for (const e of r.authorized_edits) {
+        assert.equal(byPath.get(e.source), e.sha256_after, `${e.source}: the artifact must hold the after-hash`);
+      }
+      // And every source the reseal says did NOT move is still sitting at its unchanged hash.
+      assert.equal(r.sources_recorded_unmoved_hold_live, true, `${r.date}: recorded as unmoved, so they must be unmoved`);
+      for (const e of r.edits_that_moved_no_governed_source || []) {
+        assert.equal(byPath.get(e.source), e.sha256_unchanged, `${e.source}: recorded as unmoved, so it must be unmoved`);
+      }
+    } else {
+      // Recorded as not-asked rather than asked-and-passed. A superseded entry that carried
+      // a `true` here would be claiming a comparison the instrument never made.
+      assert.equal(r.authorized_edits_hold_live, null, `${r.date}: a superseded entry is not asked about live`);
+      assert.equal(r.sources_recorded_unmoved_hold_live, null);
     }
   }
+
+  // Exactly one record across both routes answers to the live extraction.
+  const terminals = [...reseals, ...CENSUS.provenance.population_reseals].filter((r) => r.is_terminal_source_record);
+  assert.equal(terminals.length, 1, "the source dimension has exactly one terminal record");
+  assert.equal(terminals[0].fingerprint_after, CENSUS.provenance.source_reseal_chain.terminal.fingerprint_after);
+});
+
+test("the source-chain amendment is recorded with the failure it was ruled against", () => {
+  const a = PROVENANCE_RESEAL_RULE.source_chain_amendment;
+  assert.equal(a.date, "2026-08-25");
+  assert.equal(a.authority, "founder");
+  assert.match(a.text, /A source reseal proves the transition it actually recorded/);
+  assert.match(a.text, /never against today's live extraction/);
+  assert.match(a.text, /the later record's before-hash must equal the earlier record's produced after-hash/);
+  assert.match(a.text, /continuity for untouched sources must not silently vanish/);
+  assert.match(a.text, /Only the terminal produced state per governed source must equal current live source extraction/);
+  assert.match(a.text, /Live governed-source movement with no valid terminal record makes --write refuse/);
+  assert.match(a.text, /Population and region semantics do not move/);
+  // The reason the superseded live check is absent, recorded where it would have been written.
+  assert.match(a.why_no_superseded_live_source_check, /self-satisfying/);
+  assert.match(a.why_no_superseded_live_source_check, /the handoff links plus the terminal live check/);
+  // And the gap it deliberately leaves open, named rather than routed around.
+  assert.match(a.deliberate_closure, /The head of the walk has no predecessor/);
+
+  // The class this amendment was asked to close, answered in the record rather than in a
+  // report. It closes for SOURCE state and stays open for MEASURED state, and the open half
+  // is a live latent defect of the same shape. Pinned here so the answer cannot quietly
+  // become "closed" without the checks that would make it true.
+  const residue = a.live_anchored_checks_over_superseded_records;
+  assert.match(residue, /^NOT CLOSED, and the residue is named\./);
+  assert.match(residue, /CLOSED for source state/);
+  assert.match(residue, /OPEN for measured state/);
+  assert.match(residue, /population conditions \(2\) counts and \(3\) free-alpha inventory/);
+  assert.match(residue, /Bring the \(2\)\/\(3\) finding to the gate when it fires/);
+  // The closed half is checkable against the instrument, so it is checked rather than taken
+  // on the record's word: no population reseal that is not the terminal source record carries
+  // a live source verdict against it.
+  for (const r of CENSUS.provenance.population_reseals) {
+    if (r.is_terminal_source_record) continue;
+    assert.equal(r.source_hashes_identical, true, `${r.date}: a superseded entry is not judged against live sources`);
+  }
+
+  // The rulings it does not disturb.
+  assert.equal(PROVENANCE_RESEAL_RULE.ruling.date, "2026-08-22");
+  assert.equal(POPULATION_RESEAL_RULE.ruling.date, "2026-08-23");
+  assert.equal(POPULATION_RESEAL_RULE.region_amendment.date, "2026-08-24");
+  assert.deepEqual(CENSUS.provenance.reseal_rule.source_chain_amendment.text, a.text);
+});
+
+test("every governed source is carried to the live extraction by an unbroken chain", () => {
+  // The same walk the instrument refuses to write without, asserted against what it wrote:
+  // every governed path, every hand-off it was carried through, and the last link to the
+  // extraction this run made. Sibling to population_reseal_chain, never folded into it.
+  const chain = CENSUS.provenance.source_reseal_chain;
+  assert.equal(chain.intact, true);
+  assert.deepEqual(chain.failures, []);
+  assert.ok(chain.links.every((l) => l.holds), "an intact chain records every link it walked");
+
+  // Every source the fingerprint hashes is in the walk, and nothing else is.
+  const governed = CENSUS.source_extraction.map((s) => s.path).sort();
+  assert.deepEqual([...chain.paths].sort(), governed, "every governed source is walked, and only those");
+
+  const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
+  // Route-qualified: this pass appends a source record and a population record on the same
+  // date, so a bare date stops naming one record.
+  const terminalLink = `${chain.terminal.date}/${chain.terminal.route} → live`;
+  for (const path of governed) {
+    const walked = chain.links.filter((l) => l.path === path);
+    const last = walked[walked.length - 1];
+    assert.equal(last.link, terminalLink, `${path}: the terminal record answers to the instrument`);
+    assert.equal(last.kind, "terminal");
+    assert.equal(last.live, byPath.get(path), `${path}: the live end of the link is the extracted hash`);
+    assert.equal(last.produced, byPath.get(path), `${path}: the terminal record produces what was extracted`);
+
+    // Continuity for an untouched source is written down, not inferred from a gap.
+    for (const l of walked.slice(0, -1)) {
+      assert.ok(["moved", "held", "carried"].includes(l.kind), `${path}: ${l.link} names how it was carried`);
+      if (l.kind === "carried") assert.equal(l.started_from, l.produced, `${path}: a carry moves nothing`);
+      if (l.started_from !== null) assert.equal(l.holds, true);
+    }
+  }
+
+  // The chain ends where the fingerprint chain ends. Both routes, one walk.
+  const all = [...CENSUS.provenance.reseals, ...CENSUS.provenance.population_reseals];
+  assert.equal(all.some((r) => r.fingerprint_after === chain.terminal.fingerprint_after), true);
+  assert.equal(chain.terminal.fingerprint_after, CENSUS.coverage_fingerprint.sha256,
+    "the terminal source record is the one that produced the fingerprint the artifact carries");
 });
 
 // ── 7. Ruling of 2026-08-23 — the population reseal ──────────────────────────
@@ -465,17 +573,49 @@ test("every recorded population reseal proves a population that moved and nothin
   assert.ok(Array.isArray(reseals) && reseals.length >= 1, "the artifact must carry the population-reseal log");
 
   const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
+  const sourceChain = CENSUS.provenance.source_reseal_chain;
+  // The branch below turns on which record answers to today's sources, so the flag it turns
+  // on is checked before it is used: exactly one record across both routes carries it.
+  const terminals = [...CENSUS.provenance.reseals, ...reseals].filter((r) => r.is_terminal_source_record);
+  assert.equal(terminals.length, 1, "the source dimension has exactly one terminal record");
+
   for (const [i, r] of reseals.entries()) {
     const isNewest = i === reseals.length - 1;
     // The instrument's own verdict, recomputed at write time against the live measurement.
     assert.deepEqual(r.failures, [], `${r.date}: a recorded population reseal must have been eligible`);
     assert.equal(r.eligible, true);
 
-    // (1) No governed source moved — and each named hash is the one the artifact holds.
+    // (1) No governed source moved, and every governed source is named rather than skipped.
     assert.equal(r.source_hashes_identical, true);
     assert.equal(r.sources_unchanged.length, CENSUS.source_extraction.length, "every governed source accounted for");
+
+    // WHICH SOURCE STATE THIS ENTRY ANSWERS FOR — founder ruling of 2026-08-25, the source-
+    // chain amendment. This loop asked EVERY entry to name the hashes the artifact holds
+    // today. That is right for the record that produced today's state and a category error
+    // for a superseded one: the first governed source movement after a population reseal
+    // makes an old, correct receipt false, and since the array is append-only and --write
+    // refuses on any failing entry, it closes the route for good. Same failure the 2026-08-24
+    // rulings fixed in the population and region dimensions, in the third dimension.
+    //
+    // A superseded entry's source truth is established two ways instead, neither of them
+    // live: its own fingerprint evidence — conditions (4) below recompute both ends of its
+    // claimed move from the hashes THIS record names, so a fabricated source hash stops
+    // reproducing the fingerprints the record recorded — and the hand-off in
+    // source_reseal_chain, asserted here per path so a broken link is attributed to the
+    // record that broke it rather than to the walk as a whole.
+    assert.equal(typeof r.is_terminal_source_record, "boolean", `${r.date}: the artifact records who answers for today`);
     for (const s of r.sources_unchanged) {
-      assert.equal(byPath.get(s.path), s.sha256, `${s.path}: recorded as unmoved, so it must be unmoved`);
+      if (r.is_terminal_source_record) {
+        assert.equal(byPath.get(s.path), s.sha256, `${s.path}: the terminal record answers to the live extraction`);
+        continue;
+      }
+      const onward = sourceChain.links.filter(
+        (l) => l.path === s.path && l.link.startsWith(`${r.date}/population → `),
+      );
+      assert.equal(onward.length, 1, `${r.date}/${s.path}: a superseded entry hands its source state on exactly once`);
+      assert.equal(onward[0].started_from, s.sha256,
+        `${s.path}: the record after ${r.date} starts from the hash this one recorded`);
+      assert.equal(onward[0].holds, true, `${s.path}: the hand-off out of ${r.date} holds`);
     }
     // (2, 3) Measurement stood still.
     assert.equal(r.measured_state_moved, false);
@@ -544,6 +684,65 @@ test("every recorded population reseal proves a population that moved and nothin
     chain.links.find((l) => l.dimension === "region" && l.link === terminalLink).produced,
     CENSUS.scenarios_rendering_region.length,
   );
+});
+
+test("a superseded population reseal still cannot fabricate the source state it hands on", () => {
+  // The negative control for the check above. A superseded entry stopped being asked to name
+  // today's hashes, and the whole question is whether what replaced that has teeth or is an
+  // unconditional pass wearing a branch. Two anchors replaced the live comparison, so both
+  // are attacked here, against the records the artifact actually carries.
+  const source = CENSUS.provenance.reseals;
+  const population = CENSUS.provenance.population_reseals;
+  const live = CENSUS.source_extraction.map((s) => ({ path: s.path, sha256: s.sha256 }));
+  const forged = "0".repeat(64);
+
+  // Control first: as recorded, the walk is clean. A test that only proves tampering fails
+  // proves nothing if the honest case fails too.
+  const clean = sourceResealChain(source, population, live);
+  assert.equal(clean.intact, true);
+  assert.deepEqual(clean.failures, []);
+
+  const superseded = population.filter((r) => !r.is_terminal_source_record);
+  assert.ok(superseded.length >= 1, "this ruling only bites once a population reseal has been superseded");
+
+  // ANCHOR ONE — the hand-off. Rewriting the source state a superseded record recorded breaks
+  // the link either into the record after it or, if nothing else states that path, the
+  // terminal link to live. It is refused at the link where it broke, and the refusal names
+  // the path.
+  for (const r of superseded) {
+    for (const s of r.sources_unchanged) {
+      const tampered = population.map((p) =>
+        p !== r
+          ? p
+          : { ...p, sources_unchanged: p.sources_unchanged.map((x) => (x.path === s.path ? { ...x, sha256: forged } : x)) },
+      );
+      const broken = sourceResealChain(source, tampered, live);
+      assert.equal(broken.intact, false, `${r.date}: a forged ${s.path} in a superseded record must not walk clean`);
+      assert.ok(broken.failures.some((f) => f.path === s.path), `${r.date}: the refusal names ${s.path}`);
+    }
+  }
+
+  // ANCHOR TWO — the record's own fingerprint evidence. Condition (4) recomputes both ends of
+  // the claimed move from the hashes THIS record names, so a forged source hash stops
+  // reproducing the fingerprints the record recorded. Recomputed here rather than read off
+  // r.fingerprint_before_recomputed, because the point is that the arithmetic refuses.
+  const fp = (scenarios, sources) =>
+    coverageFingerprint({
+      region: CENSUS.coverage_fingerprint.region_selector,
+      scenarios,
+      viewports: CENSUS.coverage_fingerprint.viewports,
+      sources,
+    }).sha256;
+  for (const r of superseded) {
+    assert.equal(fp(r.population_before, r.sources_unchanged), r.fingerprint_before,
+      `${r.date}: the record's own source claims reproduce the fingerprint it started from`);
+    assert.equal(fp(producedPopulation(r), r.sources_unchanged), r.fingerprint_after,
+      `${r.date}: and the one it produced`);
+    const lied = r.sources_unchanged.map((s, i) => (i === 0 ? { ...s, sha256: forged } : s));
+    assert.notEqual(fp(r.population_before, lied), r.fingerprint_before,
+      `${r.date}: a forged source hash cannot reproduce the fingerprint the record recorded`);
+    assert.notEqual(fp(producedPopulation(r), lied), r.fingerprint_after);
+  }
 });
 
 test("the two reseal routes carry disjoint evidence, so neither can satisfy the other", () => {

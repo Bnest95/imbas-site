@@ -5687,9 +5687,10 @@
 }
 
 /* Professional cue — one quiet line pointing a professional user at the receipt, set
-   off by a subtle top rule. The trailing label is a real anchor to /advisory.html, at
-   the proactive entry door and again at the end of the loop. The border and padding
-   below undo the global `a` underline rule from styles.css: this reads as one sentence
+   off by a subtle top rule. The trailing label is a real anchor to /advisory.html. It
+   renders at the proactive entry door and nowhere else (founder ruling, 2026-08-25);
+   .wb-chip-entry__cue below drops the spacing this base rule carries. The border and
+   padding below undo the global `a` underline rule from styles.css: this reads as one sentence
    with a link at the end of it, not as a bordered control, and the in-product link
    idiom already shipped in the Reader (privacy-full, post-privacy) carries no border
    either. Focus is the shared .wb-focus outline, the same as every other in-product

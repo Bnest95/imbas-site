@@ -3,7 +3,13 @@
 // One: the professional cue. `For professional work →` shipped as a <span>. It had the
 // shape of a link, the arrow of a link, and none of the function of one — a person who
 // clicked it got nothing, and a person navigating by keyboard could not reach it at all.
-// It is now a real anchor at both places it appears, and this file is what keeps it one.
+// It is now a real anchor, and this file is what keeps it one.
+//
+// It renders in exactly ONE place: under the proactive door. It also rendered at the end of
+// the loop until the founder ruling of 2026-08-25 removed that. Two reasons, both about who
+// receives the sentence: a proactive user met it twice in a single loop, and reactive and
+// direct-standing users met it terminally having never chosen the framing it speaks for.
+// The tests below hold the single placement, so re-adding the second one goes red.
 //
 // Two: the held state. The standing rule adopted in this pass is that EVERY stage claiming
 // a state is held must render the state it claims to hold, or point unambiguously at it.
@@ -44,34 +50,49 @@ test("the cue's two sentences are the ratified copy", () => {
   assert.equal(CHIP_UI.professional_cue.link, "For professional work →");
 });
 
-test("both cues are anchors to the advisory page, and nothing is left as a span", () => {
+test("the cue is an anchor to the advisory page, and nothing is left as a span", () => {
   const anchors = [...JSX.matchAll(/<a className="wb-chip__pro-link[^"]*" href="([^"]*)">/g)].map((m) => m[1]);
-  assert.deepEqual(anchors, ["/advisory.html", "/advisory.html"], "two real anchors, both to the advisory page");
+  assert.deepEqual(anchors, ["/advisory.html"], "one real anchor, to the advisory page");
   assert.ok(
     !/<span className="wb-chip__pro-link/.test(JSX),
     "no cue label is left as a span, which is what shipped and went nowhere",
   );
-  assert.equal(countOf(JSX, "CHIP_UI.professional_cue.link"), 2, "the label is the constant at both places");
-  assert.equal(countOf(JSX, "CHIP_UI.professional_cue.line"), 2, "and so is the sentence above it");
+  assert.equal(countOf(JSX, "CHIP_UI.professional_cue.link"), 1, "the label is the constant, used once");
+  assert.equal(countOf(JSX, "CHIP_UI.professional_cue.line"), 1, "and so is the sentence above it");
 });
 
-// The two never co-occur: the entry cue renders where an inspection has finished and the
-// lane is closed, the terminal cue renders inside the lane at the delta. A person sees one
-// or the other, never the sentence twice on one screen.
-test("the entry cue and the terminal cue are at opposite ends of the loop", () => {
+// The placement contract, founder ruling of 2026-08-25. The cue belongs to the door that
+// means it. A reactive or direct-standing user never chose the professional framing, so
+// they must not be handed its sentence at the end of a loop they entered another way — and
+// a proactive user must not be handed it twice.
+test("the cue stands under the proactive door and nowhere else", () => {
   const entry = JSX.indexOf('className="wb-chip__pro-cue wb-chip-entry__cue"');
-  const terminal = JSX.indexOf('<div className="wb-chip__pro-cue">');
   assert.ok(entry > 0, "the entry cue stands under the proactive door");
-  assert.ok(terminal > 0, "and the terminal cue stands at the end of the loop");
-  assert.notEqual(entry, terminal);
+  assert.equal(countOf(JSX, "wb-chip__pro-cue"), 1, "exactly one cue block in the whole surface");
+  assert.ok(
+    !/<div className="wb-chip__pro-cue">/.test(JSX),
+    "the terminal post-comparison cue is gone and must not come back",
+  );
   // The entry block is inside the door control, which only renders with the lane closed.
   const doorBlock = JSX.slice(JSX.indexOf('<div className="wb-chip-entry"'), entry + 200);
   assert.match(doorBlock, /CHIP_UI\.entry\.proactive/, "the cue belongs to the proactive door, not to the block");
 });
 
-test("each cue is keyboard reachable by the app's own focus idiom", () => {
+// The terminal surface keeps its boundary block. Removing the cue removed a marketing line,
+// not the evidence boundary — those are different sentences doing different work, and the
+// ratified boundary copy reaches all three origins regardless of how the lane was entered.
+test("removing the cue left the terminal boundary block standing", () => {
+  const boundary = JSX.indexOf('<div className="wb-reader-result__trust wb-chip__boundary" role="note">');
+  assert.ok(boundary > 0, "the terminal boundary block still renders");
+  const block = JSX.slice(boundary, boundary + 400);
+  assert.match(block, /\{RECEIPT_BOUNDARY\}/, "the locked Reader boundary sentence, verbatim");
+  assert.match(block, /\{CHIP_UI\.boundary\}/, "and the chip lane's user-attribution line beneath it");
+  assert.ok(!block.includes("professional_cue"), "with no cue left inside it");
+});
+
+test("the cue is keyboard reachable by the app's own focus idiom", () => {
   const anchors = [...JSX.matchAll(/<a className="(wb-chip__pro-link[^"]*)"[^>]*>/g)].map((m) => m[1]);
-  assert.equal(anchors.length, 2);
+  assert.equal(anchors.length, 1);
   for (const cls of anchors) {
     assert.ok(cls.includes("wb-focus"), `${cls} carries the shared focus outline`);
   }
@@ -79,9 +100,9 @@ test("each cue is keyboard reachable by the app's own focus idiom", () => {
   assert.match(JSX, /\.wb-focus:focus-visible \{ outline: 2px solid \$\{C\.accent\}; outline-offset: 2px; \}/);
 });
 
-test("nothing removes the cue anchors from the tab order", () => {
+test("nothing removes the cue anchor from the tab order", () => {
   const cueMarkup = [...JSX.matchAll(/<a className="wb-chip__pro-link[^>]*>/g)].map((m) => m[0]);
-  assert.equal(cueMarkup.length, 2);
+  assert.equal(cueMarkup.length, 1);
   for (const tag of cueMarkup) {
     for (const forbidden of ["tabIndex", "aria-hidden", "role="]) {
       assert.ok(!tag.includes(forbidden), `an anchor must not carry ${forbidden}`);

@@ -5901,15 +5901,12 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
         <p className="wb-chip__boundary-attr">{CHIP_UI.boundary}</p>
       </div>
 
-      {/* The same cue that stands under the proactive door, at the other end of the loop.
-          It is a real anchor at both places: an arrow that went nowhere was the shape of a
-          link and none of the function, and this is the moment a professional has just
-          finished the work the sentence is about. */}
-      <div className="wb-chip__pro-cue">
-        <span className="wb-chip__pro-line">{CHIP_UI.professional_cue.line}</span>
-        <a className="wb-chip__pro-link wb-focus" href="/advisory.html">{CHIP_UI.professional_cue.link}</a>
-      </div>
-
+      {/* The professional cue does NOT render here. It stands under the proactive door and
+          nowhere else — founder ruling of 2026-08-25. Rendering it again at the end meant a
+          proactive user met the same sentence twice in one loop, while reactive and
+          direct-standing users met it terminally having never chosen the framing it speaks
+          for. The line belongs to the door that means it. Do not re-add it here or anywhere
+          else on this surface. */}
       <ReaderReceiptActions
         receipt={chip.receipt}
         formatter={formatChipPairedReceiptText}
