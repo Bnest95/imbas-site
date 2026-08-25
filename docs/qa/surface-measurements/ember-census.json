@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "4db382fa26dc70fbb897f8aaa23a46607c9662ae",
+  "measured_at_master": "083b16f64acbee603feb5771606ca405cb4c06f4",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -198,6 +198,15 @@
           "no entry is deleted, moved, or rewritten."
         ],
         "chain_continuity": "Each entry's population_before equals the population produced by the entry before it, and the newest entry's produced population equals the live one. populationResealChain() asserts both from the fields the records already carry."
+      },
+      "region_amendment": {
+        "date": "2026-08-24",
+        "authority": "founder",
+        "recorded_against": "the region dimension of the reseal law — superseded receipts asked about live region state",
+        "text": "Apply the ratified historical-receipt semantics to the region dimension. The newest entry keeps every live-anchored region check unchanged: dispositions measured against live, retained-scenario reclassification checked against live, produced region state equal to live.scenariosRenderingRegion. A superseded entry is not asked about live region state anywhere: not in condition 6, not in condition 8, not in any test. The chain carries it: each entry's region_rendering_before must equal the prior entry's producedRegion, and the newest producedRegion must equal live. The array remains append-only. The ratified population semantics do not move.",
+        "derivation": "producedRegion(record) = region_rendering_before, minus scenarios_removed, plus each added scenario whose recorded renders_region disposition is true, canonicalized.",
+        "deliberate_closure": "A retained scenario's region reclassification is not expressible by any record field, and you will not invent one. When a real reclassification first happens, the chain breaks at that link, --write refuses, and the finding comes to the gate for a ruling that will define how such a transition is enumerated, against the real case. That is intended instrument behavior, not a defect.",
+        "why_no_superseded_reclassification_check": "It would be vacuous. A superseded entry's produced region agrees with its own region_rendering_before on every retained scenario by construction, so the check would compare a value with itself. The cross-record question is the chain's."
       },
       "what_this_is_not": "This is not a second way to reach the same door. A population reseal carries no authority over a measured value and none over a source hash. If a governed source moved, this is the wrong route and the source rule governs; if any count or inventory line moved, neither route is open and the difference is a finding to report.",
       "standing_instruction": "The two routes are told apart by the evidence they carry, and neither may satisfy the other. A record that carries both is refused rather than read twice. Before recording a population reseal, run --check and confirm the fingerprint line stands alone; then confirm which of its inputs moved, because a fingerprint line alone still does not say which rule governs."
@@ -699,6 +708,40 @@
       }
     ],
     "population_reseal_chain": {
+      "dimensions": [
+        "population",
+        "region"
+      ],
+      "links": [
+        {
+          "link": "2026-08-23 → 2026-08-24",
+          "dimension": "population",
+          "produced": 39,
+          "started_from": 39,
+          "holds": true
+        },
+        {
+          "link": "2026-08-23 → 2026-08-24",
+          "dimension": "region",
+          "produced": 24,
+          "started_from": 24,
+          "holds": true
+        },
+        {
+          "link": "2026-08-24 → live",
+          "dimension": "population",
+          "produced": 43,
+          "started_from": 43,
+          "holds": true
+        },
+        {
+          "link": "2026-08-24 → live",
+          "dimension": "region",
+          "produced": 24,
+          "started_from": 24,
+          "holds": true
+        }
+      ],
       "intact": true,
       "failures": []
     }

@@ -39,6 +39,7 @@ import {
   populationResealChain,
   populationResealEvidence,
   producedPopulation,
+  producedRegion,
   readEmberRamp,
   recomputeAuthored,
   stripSelectorPart,
@@ -581,6 +582,10 @@ test("census fixture: a population reseal is refused when a scenario disappears 
   // live value so condition 4 has nothing to say — no longer works: the record's enumerated
   // delta and its recorded fingerprint now have to agree with each other, and here they do
   // not. The honest-fingerprint variant is refused too, by the checks that answer for today.
+  //
+  // beta rendered the region, so its disappearance moves the region state as well as the
+  // population, and the region amendment's newest-entry check reports that separately. This
+  // record is the newest by default, so every live-anchored check is asked of it.
   const scenarios = ["alpha", "delta", "gamma"];
   const live = popLive({ scenarios, scenariosRenderingRegion: ["alpha"] });
   const record = popRecord({ fingerprint_after: popFingerprint(scenarios, live) });
@@ -588,6 +593,7 @@ test("census fixture: a population reseal is refused when a scenario disappears 
     "4 — population is the only moved fingerprint input",
     "4 — the newest entry reproduces the live population",
     "8 — no silent disappearance or reclassification",
+    "8 — the newest entry reproduces the live region state",
   ]);
 
   // Same disappearance, recorded by an operator whose fingerprint matches their own claim.
@@ -595,6 +601,7 @@ test("census fixture: a population reseal is refused when a scenario disappears 
   assert.deepEqual(refusals(honest, live), [
     "4 — the newest entry reproduces the live population",
     "8 — no silent disappearance or reclassification",
+    "8 — the newest entry reproduces the live region state",
   ]);
   const e = populationResealEvidence(honest, live);
   assert.match(e.failures.find((f) => f.condition.startsWith("8")).detail, /gone without being enumerated: beta/);
@@ -603,17 +610,24 @@ test("census fixture: a population reseal is refused when a scenario disappears 
 
 test("census fixture: a population reseal is refused when a retained scenario changes classification", () => {
   // The region count holds at two while beta drops out and gamma takes its place. A count
-  // would see nothing here; the recorded region list is what catches the swap.
+  // would see nothing here; the recorded region list is what catches the swap. The whole-set
+  // check reports the same move once more, which is why the count is not what either reads.
   const live = popLive({ scenariosRenderingRegion: ["alpha", "gamma"] });
   const e = populationResealEvidence(popRecord(), live);
-  assert.deepEqual(e.failures.map((f) => f.condition), ["8 — no silent disappearance or reclassification"]);
+  assert.deepEqual(e.failures.map((f) => f.condition), [
+    "8 — no silent disappearance or reclassification",
+    "8 — the newest entry reproduces the live region state",
+  ]);
   assert.match(e.failures[0].detail, /region disposition changed: beta, gamma/);
 });
 
 test("census fixture: a population reseal is refused when an addition's region disposition is wrong", () => {
   const record = popRecord({ added_scenario_dispositions: [{ scenario: "delta", renders_region: true }] });
   const e = populationResealEvidence(record, popLive());
-  assert.deepEqual(e.failures.map((f) => f.condition), ["6 — each addition's region disposition recorded"]);
+  assert.deepEqual(e.failures.map((f) => f.condition), [
+    "6 — each addition's region disposition recorded",
+    "8 — the newest entry reproduces the live region state",
+  ]);
   assert.match(e.failures[0].detail, /delta: recorded renders_region=true, measured false/);
 });
 
@@ -644,42 +658,73 @@ test("census fixture: a population reseal is refused when nothing names the auth
 // second one would pass a two-entry fixture and close again on the third. Synthetic
 // throughout, and nothing below reads the committed artifact.
 
+// The region dimension moves across these three too, per the region amendment of 2026-08-24:
+// delta joins the region on the first move, epsilon does not on the second, zeta joins on the
+// third. A chain whose region state never moved would report intact for the wrong reason.
 const CHAIN_P0 = ["alpha", "beta", "gamma"];
 const CHAIN_P1 = ["alpha", "beta", "delta", "gamma"];
 const CHAIN_P2 = ["alpha", "beta", "delta", "epsilon", "gamma"];
 const CHAIN_P3 = ["alpha", "beta", "delta", "epsilon", "gamma", "zeta"];
 
-const chainLive = (over = {}) => popLive({ scenarios: CHAIN_P3, ...over });
+const CHAIN_R0 = ["alpha", "beta"];
+const CHAIN_R1 = ["alpha", "beta", "delta"];
+const CHAIN_R2 = ["alpha", "beta", "delta"];
+const CHAIN_R3 = ["alpha", "beta", "delta", "zeta"];
 
-const chainRecord = (date, before, added, over = {}) =>
+const chainLive = (over = {}) => popLive({ scenarios: CHAIN_P3, scenariosRenderingRegion: CHAIN_R3, ...over });
+
+const chainRecord = (date, before, added, regionBefore, rendersRegion = [], over = {}) =>
   popRecord({
     date,
     fingerprint_before: popFingerprint(before, chainLive()),
     fingerprint_after: popFingerprint([...before, ...added].sort(), chainLive()),
     population_before: before,
     scenarios_added: added,
-    added_scenario_dispositions: added.map((s) => ({ scenario: s, renders_region: false })),
+    added_scenario_dispositions: added.map((s) => ({ scenario: s, renders_region: rendersRegion.includes(s) })),
+    region_rendering_before: regionBefore,
     ...over,
   });
 
 const chainRecords = () => [
-  chainRecord("2026-01-01", CHAIN_P0, ["delta"]),
-  chainRecord("2026-02-01", CHAIN_P1, ["epsilon"]),
-  chainRecord("2026-03-01", CHAIN_P2, ["zeta"]),
+  chainRecord("2026-01-01", CHAIN_P0, ["delta"], CHAIN_R0, ["delta"]),
+  chainRecord("2026-02-01", CHAIN_P1, ["epsilon"], CHAIN_R1),
+  chainRecord("2026-03-01", CHAIN_P2, ["zeta"], CHAIN_R2, ["zeta"]),
 ];
 
 const judge = (records, live = chainLive()) =>
   records.map((r, i) => populationResealEvidence(r, live, { isNewest: i === records.length - 1 }));
+
+const chainOf = (records, live = chainLive()) =>
+  populationResealChain(records, live.scenarios, live.scenariosRenderingRegion);
+
+const broke = (chain) => chain.failures.map((f) => [f.link, f.dimension]);
 
 test("census fixture: three stacked population moves all validate, so a third move cannot re-close the route", () => {
   const records = chainRecords();
   const verdicts = judge(records);
   assert.deepEqual(verdicts.map((v) => v.eligible), [true, true, true]);
   assert.deepEqual(verdicts.flatMap((v) => v.failures), []);
-  // Each entry reports the population it produced, not the one measured today.
+  // Each entry reports the state it produced, not the one measured today — both dimensions.
   assert.deepEqual(verdicts.map((v) => v.population_after), [CHAIN_P1, CHAIN_P2, CHAIN_P3]);
+  assert.deepEqual(verdicts.map((v) => v.region_rendering_after), [CHAIN_R1, CHAIN_R2, CHAIN_R3]);
   assert.deepEqual(verdicts.map((v) => v.is_newest_entry), [false, false, true]);
-  assert.deepEqual(populationResealChain(records, CHAIN_P3), { intact: true, failures: [] });
+
+  // The chain walks both dimensions across every link and records what it walked, so an
+  // intact chain is a receipt rather than an absence of complaints.
+  const chain = chainOf(records);
+  assert.equal(chain.intact, true);
+  assert.deepEqual(chain.failures, []);
+  assert.deepEqual(chain.dimensions, ["population", "region"]);
+  assert.deepEqual(chain.links.map((l) => [l.link, l.dimension, l.holds]), [
+    ["2026-01-01 → 2026-02-01", "population", true],
+    ["2026-01-01 → 2026-02-01", "region", true],
+    ["2026-02-01 → 2026-03-01", "population", true],
+    ["2026-02-01 → 2026-03-01", "region", true],
+    ["2026-03-01 → live", "population", true],
+    ["2026-03-01 → live", "region", true],
+  ]);
+  // And the region state really moved, twice, so those links mean something.
+  assert.deepEqual(chain.links.filter((l) => l.dimension === "region").map((l) => l.produced), [3, 3, 4]);
 });
 
 test("census fixture: the old live-anchored reading is what closed the route, and it still would", () => {
@@ -696,7 +741,7 @@ test("census fixture: the old live-anchored reading is what closed the route, an
 test("census fixture: a superseded entry still cannot claim a move it did not make", () => {
   // The amendment moved which population a condition asks about. It did not stop asking.
   const records = chainRecords();
-  records[0] = chainRecord("2026-01-01", CHAIN_P0, ["delta"], { fingerprint_after: "9".repeat(64) });
+  records[0] = chainRecord("2026-01-01", CHAIN_P0, ["delta"], CHAIN_R0, ["delta"], { fingerprint_after: "9".repeat(64) });
   const v = judge(records)[0];
   assert.equal(v.eligible, false);
   assert.deepEqual(v.failures.map((f) => f.condition), ["4 — population is the only moved fingerprint input"]);
@@ -706,7 +751,7 @@ test("census fixture: a superseded entry still cannot claim a move it did not ma
   // because the population it produced really is CHAIN_P2. Only the enumerated delta lies,
   // and condition 5 is the one thing left that can catch that.
   const mislabelled = chainRecords();
-  mislabelled[1] = chainRecord("2026-02-01", CHAIN_P1, ["epsilon"], {
+  mislabelled[1] = chainRecord("2026-02-01", CHAIN_P1, ["epsilon"], CHAIN_R1, [], {
     scenarios_added: ["epsilon", "gamma"],
     added_scenario_dispositions: [
       { scenario: "epsilon", renders_region: false },
@@ -717,7 +762,7 @@ test("census fixture: a superseded entry still cannot claim a move it did not ma
   assert.equal(w.eligible, false);
   assert.deepEqual(w.failures.map((f) => f.condition), ["5 — additions and removals enumerated"]);
   assert.match(w.failures[0].detail, /observed added \[epsilon\].*record says added \[epsilon, gamma\]/);
-  assert.equal(populationResealChain(mislabelled, CHAIN_P3).intact, true);
+  assert.equal(chainOf(mislabelled).intact, true);
 });
 
 test("census fixture: the chain catches a scenario that disappears between two records", () => {
@@ -726,11 +771,13 @@ test("census fixture: the chain catches a scenario that disappears between two r
   // gap; the chain is what closes it.
   const records = chainRecords();
   const gapped = CHAIN_P1.filter((s) => s !== "gamma");
-  records[1] = chainRecord("2026-02-01", gapped, ["epsilon"]);
-  records[2] = chainRecord("2026-03-01", [...gapped, "epsilon"].sort(), ["zeta"]);
-  const chain = populationResealChain(records, [...gapped, "epsilon", "zeta"].sort());
+  records[1] = chainRecord("2026-02-01", gapped, ["epsilon"], CHAIN_R1);
+  records[2] = chainRecord("2026-03-01", [...gapped, "epsilon"].sort(), ["zeta"], CHAIN_R2, ["zeta"]);
+  const chain = chainOf(records, chainLive({ scenarios: [...gapped, "epsilon", "zeta"].sort() }));
   assert.equal(chain.intact, false);
-  assert.deepEqual(chain.failures.map((f) => f.link), ["2026-01-01 → 2026-02-01"]);
+  // Only the population dimension of that one link. gamma never rendered the region, so the
+  // region walk is untouched — the failure names which dimension broke.
+  assert.deepEqual(broke(chain), [["2026-01-01 → 2026-02-01", "population"]]);
   assert.match(chain.failures[0].detail, /not the same population/);
 });
 
@@ -739,9 +786,9 @@ test("census fixture: a live population move with no appended record breaks the 
   // moved past them, and the last link is where that shows.
   const records = chainRecords();
   const moved = [...CHAIN_P3, "omega"].sort();
-  const chain = populationResealChain(records, moved);
+  const chain = chainOf(records, chainLive({ scenarios: moved }));
   assert.equal(chain.intact, false);
-  assert.deepEqual(chain.failures.map((f) => f.link), ["2026-03-01 → live"]);
+  assert.deepEqual(broke(chain), [["2026-03-01 → live", "population"]]);
   assert.match(chain.failures[0].detail, /no appended record/);
   // And the newest entry says so on its own too, which is why both checks exist.
   const v = populationResealEvidence(records[2], chainLive({ scenarios: moved }), { isNewest: true });
@@ -756,4 +803,108 @@ test("census fixture: a produced population is exactly before, less removed, plu
   );
   // No new field carries this. A record with none of the three produces nothing.
   assert.deepEqual(producedPopulation({}), []);
+});
+
+// ── 9. The region dimension, on the same terms ───────────────────────────────
+//
+// Founder ruling of 2026-08-24, the second one that day. The amendment above fixed which
+// population a condition asks about and left the identical defect standing in the region
+// dimension: conditions 6 and 8 went on measuring every recorded entry against today's
+// governed region set. A superseded entry whose added scenario later reclassified —
+// legitimately, because the product changed — would have become ineligible and closed the
+// route a second time, for a reason nobody could record.
+//
+// The fixtures below are the region twins of section 8, plus the one case that has no twin:
+// a retained scenario reclassifying is expressible in no record field, so the chain's region
+// link is the only thing that can catch it, and it is meant to REFUSE and go to the gate.
+
+test("census fixture: a superseded entry is eligible though the live region set has moved since its era", () => {
+  // beta stopped rendering the region some time after the first two moves were recorded.
+  const live = chainLive({ scenariosRenderingRegion: ["alpha", "delta", "zeta"] });
+  const verdicts = judge(chainRecords(), live);
+  assert.deepEqual(verdicts.map((v) => v.eligible), [true, true, false]);
+  assert.deepEqual(verdicts.slice(0, 2).flatMap((v) => v.failures), []);
+  // Superseded entries still report their own era's region state, not today's.
+  assert.deepEqual(verdicts.map((v) => v.region_rendering_after), [CHAIN_R1, CHAIN_R2, CHAIN_R3]);
+
+  // Refusal appears where it belongs: at the newest entry, and at the final chain link.
+  assert.deepEqual(verdicts[2].failures.map((f) => f.condition), [
+    "8 — no silent disappearance or reclassification",
+    "8 — the newest entry reproduces the live region state",
+  ]);
+  assert.match(verdicts[2].failures[0].detail, /region disposition changed: beta/);
+  assert.deepEqual(broke(chainOf(chainRecords(), live)), [["2026-03-01 → live", "region"]]);
+});
+
+test("census fixture: a superseded entry is eligible though its own added scenario has since reclassified", () => {
+  // The condition-6 twin. The 2026-01-01 entry recorded delta as rendering the region, and
+  // it did; delta has since stopped. Holding that receipt to today's answer is what would
+  // close the route, because nothing about that entry was ever wrong.
+  const live = chainLive({ scenariosRenderingRegion: ["alpha", "beta", "zeta"] });
+  const verdicts = judge(chainRecords(), live);
+  assert.equal(verdicts[0].eligible, true);
+  assert.deepEqual(verdicts[0].failures, []);
+  assert.equal(verdicts[0].added_scenario_dispositions_hold, true);
+
+  // The check did not disappear; it moved. Judged as though it answered for today — the
+  // pre-ruling reading — the same entry is refused by exactly condition 6.
+  const asNewest = populationResealEvidence(chainRecords()[0], live, { isNewest: true });
+  assert.ok(asNewest.failures.some((f) => f.condition === "6 — each addition's region disposition recorded"));
+  assert.match(asNewest.failures.find((f) => f.condition.startsWith("6")).detail, /delta: recorded renders_region=true, measured false/);
+
+  // A superseded entry must still enumerate a disposition for every addition. That half of
+  // condition 6 is structural, not a live measurement, so it is asked of every entry.
+  const uncovered = chainRecords();
+  uncovered[0] = chainRecord("2026-01-01", CHAIN_P0, ["delta"], CHAIN_R0, ["delta"], { added_scenario_dispositions: [] });
+  assert.deepEqual(judge(uncovered)[0].failures.map((f) => f.condition), ["6 — each addition's region disposition recorded"]);
+});
+
+test("census fixture: an unrecorded region transition breaks the chain at the link where it happened", () => {
+  // THE DELIBERATE CLOSURE, exercised. delta quietly stops rendering the region between the
+  // first entry and the second. No record field can say that, and none is invented here.
+  // Every per-record verdict is clean and the chain still refuses, naming the link — which
+  // is the instrument working as ruled, not a defect to route around.
+  const records = chainRecords();
+  const dropped = ["alpha", "beta"];
+  records[1] = chainRecord("2026-02-01", CHAIN_P1, ["epsilon"], dropped);
+  records[2] = chainRecord("2026-03-01", CHAIN_P2, ["zeta"], dropped, ["zeta"]);
+  const live = chainLive({ scenariosRenderingRegion: ["alpha", "beta", "zeta"] });
+
+  assert.deepEqual(judge(records, live).map((v) => v.eligible), [true, true, true]);
+  const chain = chainOf(records, live);
+  assert.equal(chain.intact, false);
+  assert.deepEqual(broke(chain), [["2026-01-01 → 2026-02-01", "region"]]);
+  assert.match(chain.failures[0].detail, /not the same region state/);
+  // And that is what --write reads: eligible records, broken chain, refuse.
+  assert.deepEqual(chain.links.filter((l) => !l.holds).map((l) => l.dimension), ["region"]);
+});
+
+test("census fixture: the newest entry's produced region state must reproduce the live one", () => {
+  // zeta is recorded as joining the region and did not. Refused by its own condition and by
+  // the final chain link — the region twin of the newest-entry population check.
+  const live = chainLive({ scenariosRenderingRegion: CHAIN_R2 });
+  const v = judge(chainRecords(), live)[2];
+  assert.equal(v.eligible, false);
+  assert.deepEqual(v.failures.map((f) => f.condition), [
+    "6 — each addition's region disposition recorded",
+    "8 — the newest entry reproduces the live region state",
+  ]);
+  assert.match(v.failures[1].detail, /produces 4 region-rendering scenarios and the instrument measures 3/);
+  assert.deepEqual(broke(chainOf(chainRecords(), live)), [["2026-03-01 → live", "region"]]);
+});
+
+test("census fixture: a produced region is exactly before, less removed, plus added-with-true-disposition", () => {
+  assert.deepEqual(producedRegion(chainRecords()[0]), CHAIN_R1);
+  // epsilon was added with renders_region false, so the region state stands still.
+  assert.deepEqual(producedRegion(chainRecords()[1]), CHAIN_R2);
+  assert.deepEqual(
+    producedRegion({
+      region_rendering_before: ["a", "b"],
+      scenarios_removed: ["b"],
+      added_scenario_dispositions: [{ scenario: "c", renders_region: true }, { scenario: "d", renders_region: false }],
+    }),
+    ["a", "c"],
+  );
+  // No new field carries this either.
+  assert.deepEqual(producedRegion({}), []);
 });

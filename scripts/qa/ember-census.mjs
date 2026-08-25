@@ -878,6 +878,41 @@ export const POPULATION_RESEAL_RULE = {
       "asserts both from the fields the records already carry.",
   },
 
+  // The amendment above fixed one dimension and left the same defect standing in the other:
+  // conditions 6 and 8 went on asking every entry about today's governed-region state. Verbatim.
+  region_amendment: {
+    date: "2026-08-24",
+    authority: "founder",
+    recorded_against: "the region dimension of the reseal law — superseded receipts asked about live region state",
+    text:
+      "Apply the ratified historical-receipt semantics to the region dimension. The newest " +
+      "entry keeps every live-anchored region check unchanged: dispositions measured against " +
+      "live, retained-scenario reclassification checked against live, produced region state " +
+      "equal to live.scenariosRenderingRegion. A superseded entry is not asked about live " +
+      "region state anywhere: not in condition 6, not in condition 8, not in any test. The " +
+      "chain carries it: each entry's region_rendering_before must equal the prior entry's " +
+      "producedRegion, and the newest producedRegion must equal live. The array remains " +
+      "append-only. The ratified population semantics do not move.",
+    derivation:
+      "producedRegion(record) = region_rendering_before, minus scenarios_removed, plus each " +
+      "added scenario whose recorded renders_region disposition is true, canonicalized.",
+    // Recorded as law, not as a gap to be closed by the next pass that trips over it.
+    deliberate_closure:
+      "A retained scenario's region reclassification is not expressible by any record field, " +
+      "and you will not invent one. When a real reclassification first happens, the chain " +
+      "breaks at that link, --write refuses, and the finding comes to the gate for a ruling " +
+      "that will define how such a transition is enumerated, against the real case. That is " +
+      "intended instrument behavior, not a defect.",
+    // Why no superseded reclassification check ships: for a valid record an addition cannot
+    // already be in population_before (condition 5 refuses it), so producedRegion agrees with
+    // region_rendering_before on every retained scenario. Checking a superseded entry against
+    // its own produced region would assert nothing. Scoped to isNewest exactly as vanished is.
+    why_no_superseded_reclassification_check:
+      "It would be vacuous. A superseded entry's produced region agrees with its own " +
+      "region_rendering_before on every retained scenario by construction, so the check would " +
+      "compare a value with itself. The cross-record question is the chain's.",
+  },
+
   what_this_is_not:
     "This is not a second way to reach the same door. A population reseal carries no authority " +
     "over a measured value and none over a source hash. If a governed source moved, this is the " +
@@ -1110,43 +1145,69 @@ export function producedPopulation(record) {
   return [...new Set([...kept, ...(record.scenarios_added || [])])].sort();
 }
 
+// The region state a record claims to have produced, derived the same way and from fields it
+// already carries: what rendered the region before, less what it removed, plus each addition
+// whose own recorded disposition says it renders. An addition recorded renders_region=false
+// contributes nothing, which is why the four homepage and Advisory scenarios moved the
+// population without moving the region state at all.
+export function producedRegion(record) {
+  const removed = new Set(record.scenarios_removed || []);
+  const kept = (record.region_rendering_before || []).filter((s) => !removed.has(s));
+  const added = (record.added_scenario_dispositions || []).filter((d) => d.renders_region).map((d) => d.scenario);
+  return [...new Set([...kept, ...added])].sort();
+}
+
 // The chain that carries the guarantee across every recorded move: each entry starts from
-// the population the entry before it produced, and the last entry produces the population
-// the instrument measures today. Nothing can be smuggled between two links, and a live move
+// the state the entry before it produced, and the last entry produces the state the
+// instrument measures today. Nothing can be smuggled between two links, and a live move
 // with no appended record breaks the final link rather than passing silently.
 //
 // This is what lets a superseded entry stop being asked about the present. Its own case is
-// checked against the population it claims; its connection to today is this chain.
-export function populationResealChain(records, livePopulation) {
+// checked against what it claims; its connection to today is this chain.
+//
+// TWO DIMENSIONS since the region amendment of 2026-08-24. Population and region are walked
+// the same way and reported the same way, and a failure names which dimension broke. The
+// region links are load-bearing in a way the population links are not: a retained scenario's
+// reclassification is expressible in no record field, so the region link is the ONLY thing
+// that can catch it. See POPULATION_RESEAL_RULE.region_amendment.deliberate_closure — when
+// that break first happens it is a finding for the gate, not a defect to route around.
+export function populationResealChain(records, livePopulation, liveRegion) {
   const failures = [];
+  const links = [];
   const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+  const canon = (a) => [...new Set(a || [])].sort();
+
+  const noun = { population: "population", region: "region state" };
+  const walk = (link, dimension, produced, startedFrom, terminal) => {
+    const holds = same(produced, startedFrom);
+    links.push({ link, dimension, produced: produced.length, started_from: startedFrom.length, holds });
+    if (holds) return;
+    failures.push({
+      link,
+      dimension,
+      detail: terminal
+        ? `the newest entry produces ${produced.length} and the instrument measures ` +
+          `${startedFrom.length}; a ${noun[dimension]} move with no appended record`
+        : `the entry before produced ${produced.length} and this one starts from ` +
+          `${startedFrom.length}; they are not the same ${noun[dimension]}`,
+    });
+  };
+
   records.forEach((r, i) => {
     if (i === 0) return;
-    const handedOver = producedPopulation(records[i - 1]);
-    const startedFrom = [...(r.population_before || [])].sort();
-    if (!same(handedOver, startedFrom)) {
-      failures.push({
-        link: `${records[i - 1].date} → ${r.date}`,
-        detail:
-          `the ${records[i - 1].date} entry produced ${handedOver.length} scenarios and the ` +
-          `${r.date} entry starts from ${startedFrom.length}; they are not the same population`,
-      });
-    }
+    const prev = records[i - 1];
+    const link = `${prev.date} → ${r.date}`;
+    walk(link, "population", producedPopulation(prev), canon(r.population_before), false);
+    walk(link, "region", producedRegion(prev), canon(r.region_rendering_before), false);
   });
+
   const last = records[records.length - 1];
   if (last) {
-    const produced = producedPopulation(last);
-    const measured = [...livePopulation].sort();
-    if (!same(produced, measured)) {
-      failures.push({
-        link: `${last.date} → live`,
-        detail:
-          `the newest entry produces ${produced.length} scenarios and the instrument measures ` +
-          `${measured.length}; a population move with no appended record`,
-      });
-    }
+    const link = `${last.date} → live`;
+    walk(link, "population", producedPopulation(last), canon(livePopulation), true);
+    walk(link, "region", producedRegion(last), canon(liveRegion), true);
   }
-  return { intact: failures.length === 0, failures };
+  return { dimensions: ["population", "region"], links, intact: failures.length === 0, failures };
 }
 
 // A population reseal's whole case. Each of the ruling's eight conditions gets its own
@@ -1165,8 +1226,15 @@ export function populationResealChain(records, livePopulation) {
 // array stays append-only. Nothing is loosened — a record still cannot claim a move it did
 // not make, and populationResealChain() pins every entry to the next and the last to today.
 //
+// AND IN THE REGION DIMENSION — founder ruling of 2026-08-24, the same day and the same
+// category error. Conditions 6 and 8 went on measuring every entry against today's governed
+// region set, so a superseded entry whose added scenario later reclassified, legitimately,
+// would become ineligible and close the route a second time. Same fix, same shape: the
+// newest entry keeps every live-anchored region check, a superseded entry is asked about
+// live region state nowhere, and the chain's region link carries the continuity.
+//
 // isNewest defaults true, so a caller checking a single record in isolation gets the
-// live-anchored reading unchanged.
+// live-anchored reading unchanged, in both dimensions.
 export function populationResealEvidence(record, live, { isNewest = true } = {}) {
   const failures = [];
   const fail = (condition, detail) => failures.push({ condition, detail });
@@ -1257,11 +1325,14 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
     );
   }
 
-  // (6) Each added scenario's governed-region disposition, recorded and true.
+  // (6) Each added scenario's governed-region disposition, recorded and true. Recorded is
+  // asked of every entry; TRUE is asked only of the newest, per the region amendment. A
+  // superseded entry's addition may since have legitimately reclassified, and holding its
+  // receipt to today's answer would close the route exactly the way (4) and (5) did.
   const liveRegion = new Set(live.scenariosRenderingRegion);
   const dispositions = record.added_scenario_dispositions || [];
   const dispositionsCoverAdditions = same(sorted(dispositions.map((d) => d.scenario)), sorted(record.scenarios_added));
-  const wrongDispositions = dispositions.filter((d) => d.renders_region !== liveRegion.has(d.scenario));
+  const wrongDispositions = isNewest ? dispositions.filter((d) => d.renders_region !== liveRegion.has(d.scenario)) : [];
   const dispositionsHold = dispositionsCoverAdditions && wrongDispositions.length === 0;
   if (!dispositionsHold) {
     fail(
@@ -1286,12 +1357,20 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
   // that entry's own produced population answers itself. So for superseded entries the
   // question is carried by populationResealChain(), which pins each entry's starting
   // population to the one before it and catches exactly the same disappearance.
+  //
+  // Reclassification is scoped the same way, and for the same reason (region amendment,
+  // 2026-08-24). Against a superseded entry's own produced region the check is a tautology:
+  // an addition cannot already be in population_before or (5) refuses it, so producedRegion
+  // agrees with region_rendering_before on every retained scenario. A vacuous check that
+  // never refuses is worse than no check, because it reads as coverage. The cross-record
+  // question is the chain's region link, and that link is the only thing in the instrument
+  // that can catch a retained scenario reclassifying.
   const declaredRemoved = new Set(record.scenarios_removed || []);
   const retained = (record.population_before || []).filter((s) => !declaredRemoved.has(s));
   const liveSet = new Set(live.scenarios);
   const vanished = isNewest ? retained.filter((s) => !liveSet.has(s)) : [];
   const regionBefore = new Set(record.region_rendering_before || []);
-  const reclassified = retained.filter((s) => after.has(s) && regionBefore.has(s) !== liveRegion.has(s));
+  const reclassified = isNewest ? retained.filter((s) => after.has(s) && regionBefore.has(s) !== liveRegion.has(s)) : [];
   const retainedUnchanged = vanished.length === 0 && reclassified.length === 0;
   if (!retainedUnchanged) {
     fail(
@@ -1303,6 +1382,19 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
     );
   }
 
+  // And the region twin of the newest entry's population check: the region state this entry
+  // produced has to be the one the instrument just measured. Per-scenario, (6) and (8) above
+  // cover the additions and the retained; this covers the whole set at once, so a region
+  // measurement that moved in a way no per-scenario question reaches still refuses the write.
+  const claimedRegion = producedRegion(record);
+  if (isNewest && !same(claimedRegion, [...live.scenariosRenderingRegion].sort())) {
+    fail(
+      "8 — the newest entry reproduces the live region state",
+      `it produces ${claimedRegion.length} region-rendering scenarios and the instrument ` +
+        `measures ${live.scenariosRenderingRegion.length}`,
+    );
+  }
+
   return {
     ...record,
     // The population this entry produced, which for the newest is the one just measured.
@@ -1310,7 +1402,8 @@ export function populationResealEvidence(record, live, { isNewest = true } = {})
     is_newest_entry: isNewest,
     scenarios_added_observed: addedObserved,
     scenarios_removed_observed: removedObserved,
-    region_rendering_after: [...live.scenariosRenderingRegion].sort(),
+    // The region state this entry produced, on the same terms.
+    region_rendering_after: claimedRegion,
     counts_after: live.counts,
     free_alpha_inventory_after: inventoryAfter,
     fingerprint_before_recomputed: fpBefore,
@@ -1452,9 +1545,10 @@ export function buildArtifact({ inv, states, browserVersion, scenarios, viewport
           { isNewest: i === POPULATION_RESEALS.length - 1 },
         ),
       ),
-      // What ties the superseded entries to today: link by link, and the last link to the
-      // live population. Written into the artifact so the chain is a receipt, not a claim.
-      population_reseal_chain: populationResealChain(POPULATION_RESEALS, [...scenarios].sort()),
+      // What ties the superseded entries to today: link by link in both dimensions, and the
+      // last link to the live measurement. Written into the artifact so the chain is a
+      // receipt, not a claim — every link it walked, not just the ones that failed.
+      population_reseal_chain: populationResealChain(POPULATION_RESEALS, [...scenarios].sort(), regionScenarios),
     },
     source_extraction: inv.sources.map((s) => ({ path: s.path, extraction: s.extraction, sha256: s.sha256 })),
     declared_ramp: {
@@ -1579,7 +1673,7 @@ async function main() {
         for (const f of r.failures) log(`        ${f.condition}: ${f.detail}`);
       }
       for (const f of chain.failures) {
-        log(`      population reseal chain broken at ${f.link}: ${f.detail}`);
+        log(`      population reseal chain broken at ${f.link} (${f.dimension}): ${f.detail}`);
       }
       for (const r of crossed) {
         log(`      source reseal ${r.date} carries population evidence: ${r.carries_population_evidence.join(", ")}`);
