@@ -270,8 +270,17 @@ snippets: exactly two entries, one per artifact_role, using those two role names
 estimate_rationale: one line; state that you counted only material deltas, not the second answer's added length.`;
 
 // Version tag of the user-chip analysis prompt. CHIP_PAIRED_METHOD_VERSION
-// (chip.1.0, in reader-paired.js) covers this prompt; a fingerprint test pins the
-// prompt to that version so a silent edit fails QA.
+// (chip.1.0, in reader-paired.js) covers this prompt, and test/reader-chip-prompt-version
+// pins the prompt to that tag by SHA-256: editing CHIP_PAIRED_SYSTEM_PROMPT without
+// bumping the version and registering the new fingerprint fails `npm test`.
+//
+// That claim stood in this comment before the test existed, which is the worst state a
+// governance note can be in — it read as a guarantee and was an intention. The test is
+// what makes the sentence above true, and the sentence is written to fail with it.
+//
+// It is exported to the receipt path, not just held here: the tag reaches the chip
+// receipt as paired_analysis.paired_prompt_version, so an exported artifact names the
+// prompt its delta items were read under.
 export const CHIP_PAIRED_PROMPT_VERSION = CHIP_PAIRED_METHOD_VERSION;
 
 // ── VERBATIM user-chip analysis system prompt. Do not rewrite, summarize, or
@@ -588,6 +597,9 @@ export function parseChipMeasurement(raw) {
     delta_items,
     delta_count: delta_items.length,
     paired_method_version: CHIP_PAIRED_METHOD_VERSION,
+    // Stamped where the measurement is parsed, so the tag on the record is the tag of
+    // the prompt this very call ran under, not one read back from a constant later.
+    paired_prompt_version: CHIP_PAIRED_PROMPT_VERSION,
     unvalidated: true,
   };
 }
@@ -687,6 +699,10 @@ function buildChipPairedPayload(chipAnalysis, receipt, opts = {}) {
     delta_count: delta_items.length,
     targeted_prompt: ca.targeted_prompt || "",
     paired_method_version: ca.paired_method_version || CHIP_PAIRED_METHOD_VERSION,
+    // No fallback. A replayed row reports the prompt version it was written under, and
+    // a row written before this field existed reports nothing — filling it with today's
+    // tag would claim a prompt that row was never read under.
+    paired_prompt_version: ca.paired_prompt_version || "",
     unvalidated: true,
     idempotent: !!opts.idempotent,
     // Same placement as the inspection payload: a sibling of the analysis, not a
@@ -1119,6 +1135,13 @@ function reconstructChipFromRecord(recordFields, embed, declarations = []) {
     targeted_answer_hash: embed.answerHash,
     delta_items,
     paired_method_version: f["Paired Method Version"] || CHIP_PAIRED_METHOD_VERSION,
+    // Read off the row's OWN stamp, not off today's constant. CHIP_PAIRED_PROMPT_VERSION
+    // is assigned from CHIP_PAIRED_METHOD_VERSION and the fingerprint test holds the two
+    // together, so the version a row was stamped with is the version of the prompt it was
+    // read under. The Reader Paired Analyses table persists no separate prompt column and
+    // none is being added, so a row written before this field existed reports nothing
+    // here rather than borrowing the current tag.
+    paired_prompt_version: f["Paired Method Version"] || "",
   };
   const receipt = buildChipPairedReceipt({
     generatedAt: new Date().toISOString(),
@@ -1519,6 +1542,7 @@ export function createReadPairedHandler(deps = {}) {
         targeted_answer_hash: answerHash,
         delta_items: pm.delta_items,
         paired_method_version: CHIP_PAIRED_METHOD_VERSION,
+        paired_prompt_version: CHIP_PAIRED_PROMPT_VERSION,
       };
       receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declarations: declared.declarations });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));

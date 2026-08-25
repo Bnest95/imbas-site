@@ -146,9 +146,17 @@ test("the door tells assistive technology what it controls, and names the lane b
 // verb promised that the page would stay put. The closed label now names where the press
 // goes. "Checks" went with it — the lane's own copy says Imbas has not determined that
 // any of these problems are present, and a check is something an instrument runs.
+//
+// AMENDED AGAIN — the steering recenter. This pair is now the STANDING door's pair: the
+// compose surface, where no inspection stands behind the control, and the open lane's own
+// way back out. Where an inspection HAS run, the same control renders as two framed ways
+// in ("Something's off." / "Make it better.") over the identical bank, and the section at
+// the end of this file governs those. The pair below is still one ternary on the live lane
+// state; it moved out of the button, which now takes whatever label its caller hands it, so
+// that both shapes share one button and cannot drift apart.
 test("the door's two labels name the operation, and neither promises mere disclosure", () => {
-  const pair = doorMarkup().match(/\{lane === LANE_CHIPS \? "([^"]+)" : "([^"]+)"\}/);
-  assert.ok(pair, "the door must take its label from one ternary on the live lane state");
+  const pair = JSX.match(/lane === LANE_CHIPS \? "([^"]+)" : "([^"]+)",?\n/);
+  assert.ok(pair, "the standing door must take its label from one ternary on the live lane state");
   const [, whenOpen, whenClosed] = pair;
   assert.equal(
     whenClosed,
@@ -235,11 +243,17 @@ test("both mount points drive the same lane state, so a close from either one ke
   // it is the same control rendered somewhere else, and `lane` remains the only thing
   // either mount toggles.
   const door = doorMarkup();
-  assert.match(door, /onClick=\{lane === LANE_CHIPS \? closeChipLane : openChipLane\}/, "one handler pair for both mount points");
+  // AMENDED — openChipLane now takes the door the press came through, so the handler is a
+  // call rather than a bare reference. Still one handler pair, still one lane state.
+  assert.match(
+    door,
+    /onClick=\{lane === LANE_CHIPS \? closeChipLane : \(\) => openChipLane\(via\)\}/,
+    "one handler pair for every mount point and every framing",
+  );
   assert.match(JSX, /const closeChipLane = \(\) => setLane\(LANE_INSPECT\);/, "closing only moves the lane back; it clears nothing");
   assert.match(
     JSX,
-    /const openChipLane = [\s\S]{0,400}?setChipMounted\(true\)/,
+    /const openChipLane = [\s\S]{0,500}?setChipMounted\(true\)/,
     "opening latches the mount; it does not remount a fresh lane",
   );
   assert.equal(

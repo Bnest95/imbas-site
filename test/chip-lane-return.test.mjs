@@ -133,7 +133,9 @@ test("the heading is a real focus target and names the lane's own region", () =>
 // ── Getting back out ────────────────────────────────────────────────────────
 
 test("the reading position is captured before the state change, not after", () => {
-  const open = block("const openChipLane = () => {", "\n  };");
+  // AMENDED — the open takes the door the press came through, so the signature carries a
+  // parameter. What it does with the reading position is unchanged.
+  const open = block("const openChipLane = (via) => {", "\n  };");
   const capture = open.indexOf("laneReturnRef.current = window.scrollY;");
   const setLane = open.indexOf("setLane(LANE_CHIPS)");
   assert.ok(capture !== -1, "the open must record the position it was made from");
@@ -160,8 +162,64 @@ test("closing restores the position and puts focus on the control at it", () => 
     /window\.scrollTo\(\{ top, behavior: prefersReducedMotion\(\) \? "auto" : "smooth" \}\)/,
     "reduced motion is respected on the way back too",
   );
-  assert.match(JSX, /ref=\{chipDoorRef\}/, "the door carries the ref the close path focuses");
-  assert.equal(countOf(JSX, "ref={chipDoorRef}"), 1, "one door element holds it");
+  // AMENDED — the steering recenter puts two framed doors on the page where an inspection
+  // has run, and the close path still focuses ONE control: the one the person pressed. The
+  // ref is therefore seated through doorRefFor rather than written on the element, and the
+  // "one door element holds it" invariant becomes a claim about that function.
+  assert.match(JSX, /ref=\{doorRefFor\(via\)\}/, "the door carries the ref the close path focuses");
+  assert.equal(countOf(JSX, "ref={doorRefFor(via)}"), 1, "one button is written, so one place can hold it");
+  assert.equal(countOf(JSX, "ref={chipDoorRef}"), 0, "the ref is seated by the selector, never written on an element");
+
+  // The selector itself: exactly one door can receive it. With a single door it is that
+  // door; with two it is the one the recorded entry names, and every other door gets null.
+  const selector = block("const doorRefFor = (via) => {", "\n  };");
+  assert.match(selector, /if \(!twoDoors\) return chipDoorRef;/, "one door on the page is the door that holds the ref");
+  assert.match(selector, /return via === seated \? chipDoorRef : null;/, "at most one of two doors holds it");
+  assert.equal(countOf(selector, "chipDoorRef"), 2, "the selector is the only thing that hands out the ref");
+});
+
+// The ref follows the press. Focus on close belongs on the control the person opened from,
+// and with two framings on the page that is a different element depending on which one they
+// chose — so the selector reads the recorded entry, not a fixed door.
+test("with two framings on the page, the ref follows the door that was pressed", () => {
+  const CHIP_ENTRY_VIA = {
+    INSPECTION_REACTIVE: "inspection_reactive",
+    INSPECTION_PROACTIVE: "inspection_proactive",
+    DIRECT_STANDING: "direct_standing",
+  };
+  const chipDoorRef = { current: null };
+  // The shipped selector, transcribed. Pinned against source above so it cannot drift.
+  const doorRefFor = (via, twoDoors, chipEntry) => {
+    if (!twoDoors) return chipDoorRef;
+    const seated = chipEntry === CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      ? CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      : CHIP_ENTRY_VIA.INSPECTION_REACTIVE;
+    return via === seated ? chipDoorRef : null;
+  };
+  const seatedCount = (twoDoors, chipEntry) =>
+    [CHIP_ENTRY_VIA.INSPECTION_REACTIVE, CHIP_ENTRY_VIA.INSPECTION_PROACTIVE]
+      .filter((via) => doorRefFor(via, twoDoors, chipEntry) === chipDoorRef).length;
+
+  // Whatever was recorded — including nothing yet — exactly one door holds the ref.
+  for (const chipEntry of [null, ...Object.values(CHIP_ENTRY_VIA)]) {
+    assert.equal(seatedCount(true, chipEntry), 1, `two doors, entry ${chipEntry}: exactly one holds the ref`);
+  }
+  // And it is the door that was pressed.
+  assert.equal(
+    doorRefFor(CHIP_ENTRY_VIA.INSPECTION_PROACTIVE, true, CHIP_ENTRY_VIA.INSPECTION_PROACTIVE),
+    chipDoorRef,
+    "a proactive press returns focus to the proactive door",
+  );
+  assert.equal(
+    doorRefFor(CHIP_ENTRY_VIA.INSPECTION_REACTIVE, true, CHIP_ENTRY_VIA.INSPECTION_REACTIVE),
+    chipDoorRef,
+    "a reactive press returns focus to the reactive door",
+  );
+  // Before any press, the first door holds it — which is where a keyboard reaching this
+  // block lands anyway, so focus never goes nowhere.
+  assert.equal(doorRefFor(CHIP_ENTRY_VIA.INSPECTION_REACTIVE, true, null), chipDoorRef);
+  // The standing door is one control and always holds it.
+  assert.equal(doorRefFor(CHIP_ENTRY_VIA.DIRECT_STANDING, false, CHIP_ENTRY_VIA.DIRECT_STANDING), chipDoorRef);
 });
 
 test("the return control is inside the lane, closes it, and is the only one", () => {
@@ -448,7 +506,13 @@ test("no source paste box can be restored into the lane, structurally", () => {
 
 test("the lane reads its held first answer off the inspection receipt, and owns only a draft", () => {
   const lane = block("function ChipLane({", "\n}\n");
-  assert.match(lane, /function ChipLane\(\{ headingRef, onReturn, openedFrom, heldReceipt \}\)/);
+  // AMENDED — the steering recenter hands the lane one more prop, enteredVia, which records
+  // which door was pressed. It is provenance about the entry, not about the held state, and
+  // the held-state contract below is unchanged by it.
+  assert.match(
+    lane,
+    /function ChipLane\(\{ headingRef, onReturn, openedFrom, heldReceipt, enteredVia \}\)/,
+  );
   assert.match(
     lane,
     /const heldAnswer = \(heldReceipt && heldReceipt\.open_run && heldReceipt\.open_run\.answer\) \|\| "";/,
@@ -510,7 +574,14 @@ test("the frame is aimed at the head block, so the three surfaces are in it", ()
 
 test("the chip open receipt records which receipt it continues", () => {
   const fn = block("async function buildChipOpenReceipt(", "\n}\n");
-  assert.match(fn, /async function buildChipOpenReceipt\(firstAnswer, generatedAt, parentReceipt\)/);
+  // AMENDED — the steering recenter adds a fourth argument, the door the lane was entered
+  // by. It sits beside continues in open_run and answers a different question: entered_via
+  // is where the person came from, continues is what the run continues. A standing-door run
+  // over a pasted answer has an entry origin and continues nothing.
+  assert.match(
+    fn,
+    /async function buildChipOpenReceipt\(firstAnswer, generatedAt, parentReceipt, enteredVia\)/,
+  );
   assert.match(fn, /continues: parentHash\s*\?/, "the reference is minted from the parent's own content hash");
   assert.match(fn, /content_hash: parentHash,/);
   assert.match(fn, /request_id: \(parentProv && parentProv\.request_id\) \|\| "",/);
@@ -536,8 +607,11 @@ test("the lane passes the receipt it read the held answer from, and nothing else
     "the parent is the receipt the held answer came from, or an honest null in draft mode",
   );
   const client = block("async function runChipPairedReader(", "\n}\n");
-  assert.match(client, /parentReceipt \}\)/, "and the client threads it");
-  assert.match(client, /buildChipOpenReceipt\(firstAnswer, new Date\(\)\.toISOString\(\), parentReceipt\)/);
+  assert.match(client, /parentReceipt, enteredVia \}\)/, "and the client threads it");
+  assert.match(
+    client,
+    /buildChipOpenReceipt\(firstAnswer, new Date\(\)\.toISOString\(\), parentReceipt, enteredVia\)/,
+  );
 });
 
 // ── The authored failure that had no way of being seen ──────────────────────

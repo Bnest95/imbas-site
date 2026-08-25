@@ -288,7 +288,12 @@ test("closing the chip lane hides it instead of unmounting its answers", () => {
 });
 
 test("the chip lane's first answer goes read-only as soon as its second box appears", () => {
-  const block = tagBlock("CHIP_UI.compose.first_answer_label", "PasteField");
+  // AMENDED — the same label now names two things: the entry box at the compose step and
+  // the read-only disclosure of the held answer at the delta, which renders EARLIER in the
+  // file. Anchoring on the bare constant found the disclosure and walked back to the wrong
+  // element. The anchor is the PasteField's own attribute form, which only the entry box
+  // has, so this still resolves to the one input the rule is about.
+  const block = tagBlock("label={CHIP_UI.compose.first_answer_label}", "PasteField");
   assert.ok(
     /readOnly=\{held \|\| !!entry\}/.test(block),
     "picking a follow-up opens a second box; the first must stop competing for keystrokes",
