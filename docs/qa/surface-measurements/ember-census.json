@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "083b16f64acbee603feb5771606ca405cb4c06f4",
+  "measured_at_master": "4bb9281a6820e1057f5fafcf9f96c82fd365ac72",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -17,6 +17,7 @@
       "advisory-boundaries",
       "advisory-masthead",
       "chip-arrival",
+      "chip-delta-held",
       "chips-from-inspection",
       "claim-authorized-match",
       "claim-authorized-mismatch",
@@ -73,10 +74,10 @@
       },
       {
         "path": "workbench.css",
-        "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
+        "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
       }
     ],
-    "sha256": "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6"
+    "sha256": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c"
   },
   "provenance": {
     "reseal_rule": {
@@ -91,6 +92,17 @@
           "name the authorized edit that moved the source hash;",
           "show the before-and-after governed counts and inventory as identical."
         ]
+      },
+      "source_chain_amendment": {
+        "date": "2026-08-25",
+        "authority": "founder",
+        "recorded_against": "Pass 4 — the Reader steering recenter, second governed source movement",
+        "text": "A source reseal proves the transition it actually recorded. A superseded source reseal is judged against the source state it claims to have produced, never against today's live extraction. Continuity chained per governed source/path: where two reseals concern the same source, the later record's before-hash must equal the earlier record's produced after-hash. A reseal that does not move a given governed source hands that source's state through unchanged; continuity for untouched sources must not silently vanish. Only the terminal produced state per governed source must equal current live source extraction. Live governed-source movement with no valid terminal record makes --write refuse. Append-only. No historical record deleted, moved, or rewritten. Population and region semantics do not move.",
+        "chained_over": "Both routes' records, ordered by the fingerprint walk. A record states a source hash, or it is silent and hands the carried state through. The terminal record answers to live.",
+        "derivation": "statedSourceState(record) = one hash per governed path the record names — sha256_after from authorized_edits, sha256_unchanged from edits_that_moved_no_governed_source, sha256 from sources_unchanged. A path the record does not name is carried, not lost.",
+        "deliberate_closure": "The head of the walk has no predecessor, so its source claims are anchored only by its own recorded fingerprint_before, which nothing produced. That is inherent to a genesis record and is true of the population dimension too. It is not closed by inventing a record before the first one.",
+        "why_no_superseded_live_source_check": "A superseded record checked against its own claimed produced state is self-satisfying. The evidence content lives in (a) eligibility conditions that do not depend on live state and (b) the handoff links plus the terminal live check. Do not write a self-satisfying check and present it as validation; scope per-record live checks to the newest entry and let the chain carry the rest.",
+        "live_anchored_checks_over_superseded_records": "NOT CLOSED, and the residue is named. CLOSED for source state: after this amendment no superseded record is judged against live source extraction anywhere — population condition (1) is scoped to isSourceTerminal, condition (4) recomputes from the record's own sources_unchanged, and a source reseal's authorized_edits_hold_live and sources_recorded_unmoved_hold_live are null off the terminal record. OPEN for measured state: population conditions (2) counts and (3) free-alpha inventory still compare every entry's recorded before-state against the live measurement, and both gate --write. They are the same defect one input over. The first authorized source edit that legitimately moves a governed count or an inventory line will make every superseded population reseal ineligible with nothing wrong in it, exactly as the second source movement did to condition (1). It has not fired yet because this pass's source movement moved no count and no inventory line. Also live-read but not a judgement of a record: condition (4) takes region and viewports from the live run for every entry, neither of which has a reseal route. Also live-anchored over every source reseal but NOT gating --write, so descriptive only: counts_identical, free_alpha_inventory_identical, measured_state_moved on provenance.reseals[]. Bring the (2)/(3) finding to the gate when it fires. Do not pre-emptively loosen either one to make this pass quieter."
       },
       "what_this_is_not": "This is provenance maintenance, not baseline acceptance. A reseal carries no authority over a measured value. If any count or any free-alpha inventory line differs, the condition for a reseal is absent and the difference is a finding to report, whatever the test output looks like.",
       "standing_instruction": "Before resealing, run --check and read WHICH lines it printed. A fingerprint line alone is the reseal condition. A fingerprint line accompanied by any count or inventory line is not — reseal nothing, and report the measurement. Never reseal because a custody seal in the suite went red: the red seal is the prompt to look, and the proof is the instrument's own --check output, never the test result."
@@ -165,6 +177,83 @@
         ],
         "free_alpha_inventory_identical": true,
         "measured_state_moved": false,
+        "is_terminal_source_record": false,
+        "authorized_edits_hold_live": null,
+        "sources_recorded_unmoved_hold_live": null,
+        "carries_population_evidence": []
+      },
+      {
+        "date": "2026-08-25",
+        "reason": "Pass 4, PR #138, branch claude/reader-steering-recenter — the Reader steering recenter. The founder ruling of 2026-08-25 left the professional cue standing at the proactive entry door and removed its terminal post-comparison rendering. One governed source moved: workbench.css, whose comment above .wb-chip__pro-cue described the two placements and now describes the one. The ruling's other edit removed the terminal cue from workbench-app.jsx, which is governed by extracted CSS template literals only and did not move. No ember-bearing declaration was added, removed or altered by either edit.",
+        "fingerprint_before": "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6",
+        "fingerprint_after": "ee59a9000aeb41bfa89238b1510aec2aa6fd0c5dfd6c715ec36db25ab48e1b34",
+        "authorized_edits": [
+          {
+            "source": "workbench.css",
+            "extraction": "whole file",
+            "sha256_before": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+            "sha256_after": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+            "edit": "corrected the comment above .wb-chip__pro-cue to record the single placement the founder ruling of 2026-08-25 leaves standing. Comment text only — the .wb-chip__pro-cue, .wb-chip__pro-line, .wb-chip__pro-link and .wb-chip__pro-link:hover rules are byte-identical and all four are still reached, by the entry cue's class pair wb-chip__pro-cue wb-chip-entry__cue. No declaration moved, so no declared-token spend, free alpha or literal hue moved."
+          }
+        ],
+        "edits_that_moved_no_governed_source": [
+          {
+            "source": "workbench-app.jsx",
+            "extraction": "CSS template literals: WORKBENCH_A11Y_CSS, WORKBENCH_RESULT_GAP_CSS, WORKBENCH_RESULT_LAYOUT_CSS, WORKBENCH_FLOW_CSS, WORKBENCH_TERMS_CSS",
+            "sha256_unchanged": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+            "edit": "removed the terminal post-comparison rendering of the professional cue, leaving the proactive entry door as its only placement, and left a comment in its place recording that the line belongs to the door that means it. JSX markup only: this census governs workbench-app.jsx by its five extracted CSS template literals, none of which was touched, so the extraction is byte-identical at 2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "is_terminal_source_record": false,
+        "authorized_edits_hold_live": null,
+        "sources_recorded_unmoved_hold_live": null,
         "carries_population_evidence": []
       }
     ],
@@ -385,6 +474,7 @@
           "single-findings"
         ],
         "is_newest_entry": false,
+        "is_terminal_source_record": false,
         "scenarios_added_observed": [
           "input-integrity-intake",
           "input-integrity-sample",
@@ -637,7 +727,8 @@
           "single-empty-read",
           "single-findings"
         ],
-        "is_newest_entry": true,
+        "is_newest_entry": false,
+        "is_terminal_source_record": false,
         "scenarios_added_observed": [
           "advisory-boundaries",
           "advisory-masthead",
@@ -705,6 +796,246 @@
         "retained_scenarios_unchanged": true,
         "eligible": true,
         "failures": []
+      },
+      {
+        "date": "2026-08-25",
+        "authorizing_change": "Pass 4, PR #138, branch claude/reader-steering-recenter — chip-delta-held registered the chip lane's delta state on the acceptance board, the one loop stage the board had never photographed. governedScenarios() is the board registry, so the census population grew with it. It drives /reader.html through inspection, chip, second answer, disclosure and compare, and it renders the .wb-reader-v2__result region because the inspection stands above the lane inside it. It authors no new ember-bearing rule: the region's authored rows and the resting paint rows are identical to chips-from-inspection at both viewports. Nothing under this census's source list was edited after the source reseal this entry follows.",
+        "fingerprint_before": "ee59a9000aeb41bfa89238b1510aec2aa6fd0c5dfd6c715ec36db25ab48e1b34",
+        "fingerprint_after": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c",
+        "population_before": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "chip-arrival",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "home-archive-preview",
+          "home-experience",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "scenarios_added": [
+          "chip-delta-held"
+        ],
+        "scenarios_removed": [],
+        "added_scenario_dispositions": [
+          {
+            "scenario": "chip-delta-held",
+            "renders_region": true,
+            "note": "/reader.html driven to the chip lane's delta: an inspection, a chip, a second answer, the same-model and edits disclosure, then the comparison. Renders the .wb-reader-v2__result region, because the inspection that opened the loop stands above the lane inside it. The first answer is held in a closed <details>, so the frame photographs the held state as a user meets it."
+          }
+        ],
+        "region_rendering_before": [
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "sources_unchanged": [
+          {
+            "path": "styles.css",
+            "extraction": "whole file",
+            "sha256": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d"
+          },
+          {
+            "path": "workbench.css",
+            "extraction": "whole file",
+            "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
+          },
+          {
+            "path": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146"
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "population_after": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "chip-arrival",
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "home-archive-preview",
+          "home-experience",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "is_newest_entry": true,
+        "is_terminal_source_record": true,
+        "scenarios_added_observed": [
+          "chip-delta-held"
+        ],
+        "scenarios_removed_observed": [],
+        "region_rendering_after": [
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "fingerprint_before_recomputed": "ee59a9000aeb41bfa89238b1510aec2aa6fd0c5dfd6c715ec36db25ab48e1b34",
+        "fingerprint_after_recomputed": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c",
+        "source_hashes_identical": true,
+        "counts_identical": true,
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "population_is_the_only_moved_input": true,
+        "population_delta_matches_record": true,
+        "added_scenario_dispositions_hold": true,
+        "retained_scenarios_unchanged": true,
+        "eligible": true,
+        "failures": []
       }
     ],
     "population_reseal_chain": {
@@ -728,17 +1059,182 @@
           "holds": true
         },
         {
-          "link": "2026-08-24 → live",
+          "link": "2026-08-24 → 2026-08-25",
           "dimension": "population",
           "produced": 43,
           "started_from": 43,
           "holds": true
         },
         {
-          "link": "2026-08-24 → live",
+          "link": "2026-08-24 → 2026-08-25",
           "dimension": "region",
           "produced": 24,
           "started_from": 24,
+          "holds": true
+        },
+        {
+          "link": "2026-08-25 → live",
+          "dimension": "population",
+          "produced": 44,
+          "started_from": 44,
+          "holds": true
+        },
+        {
+          "link": "2026-08-25 → live",
+          "dimension": "region",
+          "produced": 25,
+          "started_from": 25,
+          "holds": true
+        }
+      ],
+      "intact": true,
+      "failures": []
+    },
+    "source_reseal_chain": {
+      "paths": [
+        "styles.css",
+        "workbench-app.jsx",
+        "workbench.css"
+      ],
+      "terminal": {
+        "route": "population",
+        "date": "2026-08-25",
+        "fingerprint_after": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c"
+      },
+      "links": [
+        {
+          "link": "2026-08-22/source → 2026-08-23/population",
+          "path": "styles.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": null,
+          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-23/population → 2026-08-24/population",
+          "path": "styles.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-24/population → 2026-08-25/source",
+          "path": "styles.css",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/source → 2026-08-25/population",
+          "path": "styles.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/population → live",
+          "path": "styles.css",
+          "route": "population",
+          "kind": "terminal",
+          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "live": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-22/source → 2026-08-23/population",
+          "path": "workbench-app.jsx",
+          "route": "population",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-08-23/population → 2026-08-24/population",
+          "path": "workbench-app.jsx",
+          "route": "population",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-08-24/population → 2026-08-25/source",
+          "path": "workbench-app.jsx",
+          "route": "source",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/source → 2026-08-25/population",
+          "path": "workbench-app.jsx",
+          "route": "population",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/population → live",
+          "path": "workbench-app.jsx",
+          "route": "population",
+          "kind": "terminal",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "live": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-08-22/source → 2026-08-23/population",
+          "path": "workbench.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+          "produced": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-23/population → 2026-08-24/population",
+          "path": "workbench.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+          "produced": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+          "holds": true
+        },
+        {
+          "link": "2026-08-24/population → 2026-08-25/source",
+          "path": "workbench.css",
+          "route": "source",
+          "kind": "moved",
+          "started_from": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d",
+          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/source → 2026-08-25/population",
+          "path": "workbench.css",
+          "route": "population",
+          "kind": "held",
+          "started_from": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "holds": true
+        },
+        {
+          "link": "2026-08-25/population → live",
+          "path": "workbench.css",
+          "route": "population",
+          "kind": "terminal",
+          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "live": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
           "holds": true
         }
       ],
@@ -755,7 +1251,7 @@
     {
       "path": "workbench.css",
       "extraction": "whole file",
-      "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
+      "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
     },
     {
       "path": "workbench-app.jsx",
@@ -808,6 +1304,7 @@
     ]
   },
   "scenarios_rendering_region": [
+    "chip-delta-held",
     "chips-from-inspection",
     "claim-authorized-match",
     "claim-authorized-mismatch",
@@ -930,7 +1427,7 @@
       "property": "border-left",
       "value": "2px solid rgba(var(--ember-rgb), 0.55)",
       "media": [],
-      "scope": "region-only",
+      "scope": "also-outside",
       "pseudo_state_only": false,
       "alphas": [
         "0.55"
@@ -942,7 +1439,7 @@
       "property": "border-left",
       "value": "2px solid rgba(var(--ember-rgb), 0.55)",
       "media": [],
-      "scope": "region-only",
+      "scope": "also-outside",
       "pseudo_state_only": false,
       "alphas": [
         "0.55"
@@ -1179,7 +1676,7 @@
       "tokens": [
         "--ember-trace"
       ],
-      "scope": "region-only"
+      "scope": "also-outside"
     },
     {
       "source": "workbench.css",
@@ -1188,7 +1685,7 @@
       "tokens": [
         "--ember-pulse"
       ],
-      "scope": "region-only"
+      "scope": "also-outside"
     },
     {
       "source": "workbench.css",
@@ -1206,7 +1703,7 @@
       "tokens": [
         "--ember-glow"
       ],
-      "scope": "region-only"
+      "scope": "also-outside"
     },
     {
       "source": "workbench.css",
@@ -1287,7 +1784,7 @@
       "tokens": [
         "--ember-glow"
       ],
-      "scope": "region-only"
+      "scope": "also-outside"
     },
     {
       "source": "workbench.css",
@@ -1726,6 +2223,15 @@
         "the census numbers remain whatever the committed instrument measures; do not normalize them to any prior target, including 26/4/4."
       ]
     },
+    "membership_ruling": {
+      "date": "2026-08-25",
+      "authority": "founder",
+      "recorded_against": "Pass 4, PR #138 — chip-delta-held joined the board population",
+      "text": "R14 adjudication membership comes from the ruling's named selector set, never from a live-measured property. A selector named in the 2026-08-22 R14 ruling remains an adjudication subject permanently. Measured scope is evidence recorded against each subject, not the membership filter.",
+      "ruled_against_this_failure": "subjects was derived as freeSpends.filter(r => r.scope === 'region-only'), which equates 'currently region-only' with 'covered by the standing R14 adjudication'. Adding the chip-delta-held scenario made the chip lane's delta reveal a driven surface, and the lane mounts outside .wb-reader-v2__result — so .wb-loop__panel--second and .wb-loop__tag were truthfully reclassified region-only → also-outside and fell straight out of the subject list. Both are named in the 2026-08-22 ruling as declarations not to be touched. The census --write accepted it, because the reseal conditions govern counts and inventory lines and neither moved; only the pinned test caught it. A measured property must never again decide whether a ruled subject is adjudicated.",
+      "membership_source": "per_subject_notes. Its keys are the adjudicated set: every selector the 2026-08-22 ruling reached, each carrying the founder-authored note that records what was adjudicated about it. Declared, not measured, so it cannot move when a scenario joins the board.",
+      "when_a_subject_is_no_longer_measured": "It stays a subject and is recorded with measured: false. A ruled subject that vanished from the measurement is a finding to surface, not a row to drop — dropping it is how the record ends up protecting something that is no longer there."
+    },
     "standing_instruction": "A free alpha in this region is not a defect to be closed. Only two things license a change to the spends listed under subjects: a semantic-role finding under R14 — that the ember is spent in a role the standing registry does not authorize — or a founder rule on alpha-token consolidation, which does not exist today. Reducing the count is not a reason. If a future pass proposes touching one of these declarations, it must name which of those two licenses it holds.",
     "rule_text": "R14 — Ember spends only against the standing role registry. 'Every ember use must map to a role already authorized by the standing accent law.' Seed registry: 1. evidence signal/mark, including its numeral; 2. one ruled keyword within a heading where explicitly authorized; 3. a consequential gap/figure where explicitly ruled; 4. a mono/status pill where appropriate and ruled; 5. the primary CTA/action. 'New ember roles require founder ruling. No numeric ceiling is claimed by research.'",
     "what_r14_governs": "R14 governs WHICH ROLE may receive ember. It does not require that an ember spend route through a declared custom property, it names no permitted alpha set, and it closes with 'No numeric ceiling is claimed by research.' So an authored rgba() at an alpha the ramp does not declare is not, by itself, an R14 violation. Free alpha is a token-hygiene finding. This census reports it; R14 does not adjudicate it. AFFIRMED by the ruling above.",
@@ -1764,6 +2270,8 @@
         "property": "background",
         "value": "rgba(var(--ember-rgb), 0.12) !important",
         "resting_paint": false,
+        "scope": "region-only",
+        "measured": true,
         "note": "Not named in the brief. Region-only, pseudo-state-only: the dimmed rendering of the primary action while it cannot be pressed. Role 5 is the least contested reading in the whole subject list, and it carries no 'where ruled' qualifier."
       },
       {
@@ -1771,6 +2279,8 @@
         "property": "border-color",
         "value": "rgba(248, 168, 102, 0.22) !important",
         "resting_paint": false,
+        "scope": "region-only",
+        "measured": true,
         "note": "Not named in the brief. Region-only, pseudo-state-only: the dimmed rendering of the primary action while it cannot be pressed. Role 5 is the least contested reading in the whole subject list, and it carries no 'where ruled' qualifier."
       },
       {
@@ -1778,6 +2288,8 @@
         "property": "border-left",
         "value": "2px solid rgba(var(--ember-rgb), 0.55)",
         "resting_paint": true,
+        "scope": "also-outside",
+        "measured": true,
         "note": "A 2px ember left-rule on the second of the two evidence panels in the delta reveal. It discriminates which answer a panel holds. Candidate role 1 (evidence signal/mark) or 3 (a consequential gap/figure) — and role 3 reads 'where explicitly ruled'."
       },
       {
@@ -1785,6 +2297,8 @@
         "property": "border-left",
         "value": "2px solid rgba(var(--ember-rgb), 0.55)",
         "resting_paint": true,
+        "scope": "also-outside",
+        "measured": true,
         "note": "The same 2px left-rule on the construct tag, a paragraph of reveal prose. Prose is the weakest fit of the five seed roles."
       },
       {
@@ -1792,6 +2306,8 @@
         "property": "border-left",
         "value": "2px solid rgba(var(--ember-rgb), 0.55)",
         "resting_paint": true,
+        "scope": "region-only",
+        "measured": true,
         "note": "The same 2px left-rule on the unmatched-conditions note. The authored comment states the intent — 'Ember left-rule, same idiom as the return strip — a mark, not a fill' — which is a claim of role 1. Not named in the brief; the census found it carrying the identical declaration, which is why the three named selectors could not have been fixed as a set."
       },
       {
@@ -1799,6 +2315,8 @@
         "property": "border-color",
         "value": "rgba(222, 111, 56, 0.5)",
         "resting_paint": false,
+        "scope": "region-only",
+        "measured": true,
         "note": "Named in the brief as a region-scoped spend. It is region-scoped, but the census classifies it PSEUDO-STATE-ONLY: it is hover feedback and paints nothing on the resting surface. It is also off the declared ramp's channel token, authored as a literal rgba(222, 111, 56, 0.5)."
       },
       {
@@ -1806,6 +2324,8 @@
         "property": "background",
         "value": "rgba(var(--ember-rgb), 0.16) !important",
         "resting_paint": true,
+        "scope": "region-only",
+        "measured": true,
         "note": "Not named in the brief. Region-only resting free alpha on the share-consent confirm button — background 0.16, border 0.55. Candidate role 5 (the primary CTA/action), which carries no 'where ruled' qualifier."
       },
       {
@@ -1813,6 +2333,8 @@
         "property": "border-color",
         "value": "rgba(248, 168, 102, 0.55) !important",
         "resting_paint": true,
+        "scope": "region-only",
+        "measured": true,
         "note": "Not named in the brief. Region-only resting free alpha on the share-consent confirm button — background 0.16, border 0.55. Candidate role 5 (the primary CTA/action), which carries no 'where ruled' qualifier."
       },
       {
@@ -1820,6 +2342,8 @@
         "property": "border",
         "value": "1px solid rgba(248, 168, 102, 0.22)",
         "resting_paint": true,
+        "scope": "region-only",
+        "measured": true,
         "note": "Not named in the brief. Region-only resting free alpha, a 1px 0.22 border on the consent panel. A container edge fits none of the five seed roles."
       }
     ]
@@ -1841,6 +2365,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -1907,6 +2433,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -1973,6 +2501,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2039,6 +2569,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2105,6 +2637,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2171,6 +2705,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2305,6 +2841,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2375,6 +2913,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2445,6 +2985,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2507,6 +3049,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2565,6 +3109,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2623,6 +3169,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2681,6 +3229,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2739,6 +3289,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2797,6 +3349,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2853,6 +3407,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2909,6 +3465,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -2965,6 +3523,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3021,6 +3581,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3077,6 +3639,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3201,7 +3765,7 @@
       "media": [],
       "pseudo_state_only": false,
       "resting": true,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [
         "--ember-trace"
       ],
@@ -3245,7 +3809,7 @@
       "media": [],
       "pseudo_state_only": false,
       "resting": true,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [
         "--ember-pulse"
       ],
@@ -3289,7 +3853,7 @@
       "media": [],
       "pseudo_state_only": false,
       "resting": true,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [],
       "free_alphas": [
         {
@@ -3333,7 +3897,7 @@
       "media": [],
       "pseudo_state_only": false,
       "resting": true,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [],
       "free_alphas": [
         {
@@ -3429,6 +3993,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3479,7 +4045,7 @@
       "media": [],
       "pseudo_state_only": false,
       "resting": true,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [
         "--ember-glow"
       ],
@@ -3487,6 +4053,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3545,6 +4113,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3601,6 +4171,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3657,6 +4229,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3717,6 +4291,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3775,6 +4351,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3833,6 +4411,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3891,6 +4471,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -3949,6 +4531,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -4011,6 +4595,8 @@
         }
       ],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -4069,6 +4655,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -4127,7 +4715,7 @@
       "media": [],
       "pseudo_state_only": true,
       "resting": false,
-      "scope": "region-only",
+      "scope": "also-outside",
       "declared_tokens": [
         "--ember-glow"
       ],
@@ -4135,6 +4723,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -4269,6 +4859,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
@@ -4327,6 +4919,8 @@
       "literal_hues": [],
       "adjacent_hues": [],
       "states": [
+        "chip-delta-held@desktop",
+        "chip-delta-held@mobile",
         "chips-from-inspection@desktop",
         "chips-from-inspection@mobile",
         "claim-authorized-match@desktop",
