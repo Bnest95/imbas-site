@@ -5645,8 +5645,56 @@
   line-height: 1.5;
 }
 
+/* The first answer, held open at the comparison. Closed by default and quiet: the
+   comparison is the surface, and this is the evidence under it. pre-wrap because a pasted
+   answer keeps its own line breaks and a collapsed one would misrepresent what was read. */
+.wb-chip__held {
+  margin: 0.9rem 0 0;
+}
+
+.wb-chip__held-summary {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.5;
+  color: rgba(205, 192, 176, 0.72);
+  list-style: none;
+}
+
+.wb-chip__held-summary::-webkit-details-marker {
+  display: none;
+}
+
+.wb-chip__held-summary::after {
+  content: " ⌄";
+  opacity: 0.7;
+}
+
+.wb-chip__held[open] .wb-chip__held-summary::after {
+  content: " ⌃";
+}
+
+.wb-chip__held-body {
+  margin: 0.5rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border-left: 2px solid var(--line-strong);
+  font-family: inherit;
+  font-size: max(0.8125rem, 13px);
+  line-height: 1.6;
+  color: rgba(205, 192, 176, 0.82);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* Professional cue — one quiet line pointing a professional user at the receipt, set
-   off by a subtle top rule. Rendered as plain text (no link target ships in this lane). */
+   off by a subtle top rule. The trailing label is a real anchor to /advisory.html. It
+   renders at the proactive entry door and nowhere else (founder ruling, 2026-08-25);
+   .wb-chip-entry__cue below drops the spacing this base rule carries. The border and
+   padding below undo the global `a` underline rule from styles.css: this reads as one sentence
+   with a link at the end of it, not as a bordered control, and the in-product link
+   idiom already shipped in the Reader (privacy-full, post-privacy) carries no border
+   either. Focus is the shared .wb-focus outline, the same as every other in-product
+   anchor in this app. */
 .wb-chip__pro-cue {
   display: block;
   margin-top: 0.85rem;
@@ -5666,6 +5714,68 @@
   font-family: inherit;
   font-size: max(0.8125rem, 13px);
   color: rgba(200, 168, 150, 0.95);
+  border-bottom: 0;
+  padding-bottom: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* The hover literal of .wb-explain__method-link, which is the same link at the same
+   base colour. A near-identical second tint would be a new colour for no reason. */
+.wb-chip__pro-link:hover {
+  color: rgba(216, 186, 166, 1);
+  border-bottom-color: transparent;
+}
+
+/* The two ways into steering, at the end of an inspection. One bank behind both; the
+   framing is the only thing that differs, and the entry is recorded. Stacked on narrow
+   viewports, side by side where there is room. No new colour: the doors are the
+   .wb-demo-trigger.wb-chip-door treatment already shipped, unchanged. */
+.wb-chip-entry {
+  display: block;
+}
+
+.wb-chip-entry__heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-mono);
+  font-size: max(0.6875rem, 11px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(205, 192, 176, 0.62);
+}
+
+.wb-chip-entry__ways {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.1rem;
+  align-items: flex-start;
+}
+
+.wb-chip-entry__way {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+/* The cue is subordinate to the door above it, not to the block. It keeps the shared
+   .wb-chip__pro-cue type and drops that rule's top rule and spacing, which are sized for
+   a full-width terminal block. */
+.wb-chip-entry__cue {
+  margin: 0;
+  padding-top: 0;
+  border-top: 0;
+  max-width: 34ch;
+}
+
+@media (max-width: 560px) {
+  .wb-chip-entry__ways {
+    flex-direction: column;
+  }
+  .wb-chip-entry__cue {
+    max-width: none;
+  }
 }
 
 /* Return flow (Reader v2 R1, item 3). A slim re-entry strip for a visitor whose own

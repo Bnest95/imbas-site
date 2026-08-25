@@ -2,7 +2,7 @@
   "instrument": "scripts/qa/blocks-ratchet.mjs",
   "rule": "R2",
   "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
-  "measured_at_master": "4db382fa26dc70fbb897f8aaa23a46607c9662ae",
+  "measured_at_master": "4bb9281a6820e1057f5fafcf9f96c82fd365ac72",
   "browser": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "target_selectors": [
@@ -13,6 +13,7 @@
       "advisory-boundaries",
       "advisory-masthead",
       "chip-arrival",
+      "chip-delta-held",
       "chips-from-inspection",
       "claim-authorized-match",
       "claim-authorized-mismatch",
@@ -65,16 +66,16 @@
       },
       {
         "path": "scripts/qa/scenarios.mjs",
-        "sha256": "68660988f29c5a88"
+        "sha256": "f28592225a75e306"
       }
     ],
-    "sha256": "c5fbaf483726cfd6b24555f6fc9ee038f7015f4cdb5dee03a39530d6f5e715e5"
+    "sha256": "7f75df55219fc710238bbf9c0aa7dfda8db5355a5af85938610178ae0b92d25b"
   },
   "sources": [
     {
       "path": "scripts/qa/scenarios.mjs",
       "extraction": "whole file",
-      "sha256": "68660988f29c5a88"
+      "sha256": "f28592225a75e306"
     },
     {
       "path": "scripts/qa/comprehension.mjs",
@@ -83,12 +84,50 @@
     }
   ],
   "counts": {
-    "governed_states": 60,
-    "governed_scenarios": 30,
+    "governed_states": 62,
+    "governed_scenarios": 31,
     "ungoverned_scenarios": 13,
     "max_blocks_before": 9
   },
   "ceilings": [
+    {
+      "scenario": "chip-delta-held",
+      "view": 390,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 6,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
+    {
+      "scenario": "chip-delta-held",
+      "view": 1440,
+      "composition": "runner",
+      "region": ".wb-reader-v2__result",
+      "boundary": "answer",
+      "blocks_before": 8,
+      "blocks_above_region": 6,
+      "block_classes": [
+        "wb-result-hero__estimate",
+        "wb-result-hero__summary",
+        "wb-capstrip__label",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-capstrip__item",
+        "wb-source__body"
+      ]
+    },
     {
       "scenario": "chips-from-inspection",
       "view": 390,

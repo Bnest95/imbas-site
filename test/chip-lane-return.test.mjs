@@ -41,7 +41,13 @@ import { fileURLToPath } from "node:url";
 import { stageView, STAGE_CHIPS, LANE_CHIPS, LANE_INSPECT } from "../reader-stage.js";
 import { CHIP_UI } from "../reader-paired.js";
 import { lintChipString } from "../reader-check-vocab.js";
-import { PENDING_SCENARIOS, SCENARIOS, resolvePayloads } from "../scripts/qa/scenarios.mjs";
+import {
+  CHIP_LANE_SURFACES,
+  CHIP_LANE_TERMINAL,
+  PENDING_SCENARIOS,
+  SCENARIOS,
+  resolvePayloads,
+} from "../scripts/qa/scenarios.mjs";
 import { FINDING_CLASSES, normalizeClass } from "../reader-result.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -133,7 +139,9 @@ test("the heading is a real focus target and names the lane's own region", () =>
 // ── Getting back out ────────────────────────────────────────────────────────
 
 test("the reading position is captured before the state change, not after", () => {
-  const open = block("const openChipLane = () => {", "\n  };");
+  // AMENDED — the open takes the door the press came through, so the signature carries a
+  // parameter. What it does with the reading position is unchanged.
+  const open = block("const openChipLane = (via) => {", "\n  };");
   const capture = open.indexOf("laneReturnRef.current = window.scrollY;");
   const setLane = open.indexOf("setLane(LANE_CHIPS)");
   assert.ok(capture !== -1, "the open must record the position it was made from");
@@ -160,8 +168,64 @@ test("closing restores the position and puts focus on the control at it", () => 
     /window\.scrollTo\(\{ top, behavior: prefersReducedMotion\(\) \? "auto" : "smooth" \}\)/,
     "reduced motion is respected on the way back too",
   );
-  assert.match(JSX, /ref=\{chipDoorRef\}/, "the door carries the ref the close path focuses");
-  assert.equal(countOf(JSX, "ref={chipDoorRef}"), 1, "one door element holds it");
+  // AMENDED — the steering recenter puts two framed doors on the page where an inspection
+  // has run, and the close path still focuses ONE control: the one the person pressed. The
+  // ref is therefore seated through doorRefFor rather than written on the element, and the
+  // "one door element holds it" invariant becomes a claim about that function.
+  assert.match(JSX, /ref=\{doorRefFor\(via\)\}/, "the door carries the ref the close path focuses");
+  assert.equal(countOf(JSX, "ref={doorRefFor(via)}"), 1, "one button is written, so one place can hold it");
+  assert.equal(countOf(JSX, "ref={chipDoorRef}"), 0, "the ref is seated by the selector, never written on an element");
+
+  // The selector itself: exactly one door can receive it. With a single door it is that
+  // door; with two it is the one the recorded entry names, and every other door gets null.
+  const selector = block("const doorRefFor = (via) => {", "\n  };");
+  assert.match(selector, /if \(!twoDoors\) return chipDoorRef;/, "one door on the page is the door that holds the ref");
+  assert.match(selector, /return via === seated \? chipDoorRef : null;/, "at most one of two doors holds it");
+  assert.equal(countOf(selector, "chipDoorRef"), 2, "the selector is the only thing that hands out the ref");
+});
+
+// The ref follows the press. Focus on close belongs on the control the person opened from,
+// and with two framings on the page that is a different element depending on which one they
+// chose — so the selector reads the recorded entry, not a fixed door.
+test("with two framings on the page, the ref follows the door that was pressed", () => {
+  const CHIP_ENTRY_VIA = {
+    INSPECTION_REACTIVE: "inspection_reactive",
+    INSPECTION_PROACTIVE: "inspection_proactive",
+    DIRECT_STANDING: "direct_standing",
+  };
+  const chipDoorRef = { current: null };
+  // The shipped selector, transcribed. Pinned against source above so it cannot drift.
+  const doorRefFor = (via, twoDoors, chipEntry) => {
+    if (!twoDoors) return chipDoorRef;
+    const seated = chipEntry === CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      ? CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      : CHIP_ENTRY_VIA.INSPECTION_REACTIVE;
+    return via === seated ? chipDoorRef : null;
+  };
+  const seatedCount = (twoDoors, chipEntry) =>
+    [CHIP_ENTRY_VIA.INSPECTION_REACTIVE, CHIP_ENTRY_VIA.INSPECTION_PROACTIVE]
+      .filter((via) => doorRefFor(via, twoDoors, chipEntry) === chipDoorRef).length;
+
+  // Whatever was recorded — including nothing yet — exactly one door holds the ref.
+  for (const chipEntry of [null, ...Object.values(CHIP_ENTRY_VIA)]) {
+    assert.equal(seatedCount(true, chipEntry), 1, `two doors, entry ${chipEntry}: exactly one holds the ref`);
+  }
+  // And it is the door that was pressed.
+  assert.equal(
+    doorRefFor(CHIP_ENTRY_VIA.INSPECTION_PROACTIVE, true, CHIP_ENTRY_VIA.INSPECTION_PROACTIVE),
+    chipDoorRef,
+    "a proactive press returns focus to the proactive door",
+  );
+  assert.equal(
+    doorRefFor(CHIP_ENTRY_VIA.INSPECTION_REACTIVE, true, CHIP_ENTRY_VIA.INSPECTION_REACTIVE),
+    chipDoorRef,
+    "a reactive press returns focus to the reactive door",
+  );
+  // Before any press, the first door holds it — which is where a keyboard reaching this
+  // block lands anyway, so focus never goes nowhere.
+  assert.equal(doorRefFor(CHIP_ENTRY_VIA.INSPECTION_REACTIVE, true, null), chipDoorRef);
+  // The standing door is one control and always holds it.
+  assert.equal(doorRefFor(CHIP_ENTRY_VIA.DIRECT_STANDING, false, CHIP_ENTRY_VIA.DIRECT_STANDING), chipDoorRef);
 });
 
 test("the return control is inside the lane, closes it, and is the only one", () => {
@@ -408,6 +472,174 @@ test("the scenario pins that the underlying result keeps its findings", () => {
   );
 });
 
+// ── chip-delta-held — the delta, with the first answer still held ────────────
+// The stage above stops where the lane opens. `chip-delta-held` is the stage after it:
+// a follow-up chosen, a second answer pasted, the disclosure made, the comparison run —
+// and the answer the loop started from still on the surface, closed. Approved by founder
+// ruling of 2026-08-25 as the one loop stage the board had never photographed.
+//
+// These assertions hold the scenario's CONTRACT in the suite. The visual harness enforces
+// assertSelector and every assertText at capture time, but only when a board run happens;
+// a scenario gutted between runs would photograph a state nobody asked for and the board
+// would call it a pass. This is what fails first instead.
+
+const delta = () => {
+  const s = SCENARIOS["chip-delta-held"] || PENDING_SCENARIOS["chip-delta-held"];
+  assert.ok(s, "chip-delta-held is in neither registry");
+  return s;
+};
+
+test("chip-delta-held composes the delta on top of the opened-from-inspection drive", () => {
+  const s = delta();
+  const base = composed();
+
+  // Not a parallel drive: it continues the one the lane already proves. The prefix is the
+  // whole of chips-from-inspection, so a change there cannot leave this scenario arriving
+  // at the delta through a door the other test no longer describes.
+  assert.deepEqual(
+    s.steps.slice(0, base.steps.length),
+    base.steps,
+    "chip-delta-held must extend the chips-from-inspection drive, not restate it",
+  );
+  assert.ok(s.steps.length > base.steps.length, "and it must go further than the stage it extends");
+  assert.ok(!s.query, "no arrival query; this scenario composes the state rather than arriving at it");
+});
+
+test("chip-delta-held drives through the disclosure to a real comparison", () => {
+  const steps = JSON.stringify(delta().steps);
+
+  // A follow-up is actually picked, and a second answer actually pasted.
+  assert.match(steps, /"click":"#wb-chip-lane \.wb-chip__row \.wb-chip__pick"/, "a chip is chosen");
+  assert.match(steps, /"fill":"\.wb-chip__instruction textarea"/, "a second answer is pasted");
+
+  // The disclosure is answered rather than skipped — the comparison is not offered until
+  // both questions are, so a drive that reached the delta without them proves nothing.
+  assert.match(steps, /wb-act2__capture-opt/, "the same-model and edits disclosure is answered");
+
+  // And the comparison is run through the shipped control, once it is enabled.
+  assert.match(steps, /"waitFor":"\.wb-act2__test-cta button:not\(\[disabled\]\)"/, "it waits for the CTA to enable");
+  assert.match(steps, /"click":"\.wb-act2__test-cta button"/, "and presses it");
+});
+
+// ── The terminal shape, declared once ────────────────────────────────────────
+// CHIP_LANE_TERMINAL in scenarios.mjs is the declaration. This file holds the DRIVE to it;
+// scripts/qa/pending-scenario-proof.mjs measures the same shape off a rendered page. The
+// two used to state it separately, and the probe's copy was hardcoded to
+// `chips-from-inspection` — so pointing it at `chip-delta-held` reported failures against
+// a state that was correct. Both read the declaration now, so a change to one of them
+// cannot leave the other asserting a shape the product no longer reaches.
+const wanted = (name) => {
+  const w = CHIP_LANE_TERMINAL[name];
+  assert.ok(w, `${name} declares no terminal shape in CHIP_LANE_TERMINAL`);
+  return w;
+};
+
+// A selector for a regex over JSON.stringify(steps).
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+test("chip-delta-held pins the surfaces its terminal shape declares", () => {
+  const s = delta();
+  const steps = JSON.stringify(s.steps);
+  const want = wanted("chip-delta-held");
+
+  // The ruling named reveal, held and boundary by hand and the declaration carries them.
+  // Only one assertSelector exists per scenario, so the rest are held as waitFor steps —
+  // a stronger claim, not a weaker one: waitFor requires a non-zero box AND
+  // checkVisibility. Absence is driven from the same declaration, so a surface that is
+  // supposed to be gone by this point cannot be quietly waited on either.
+  for (const [key, present] of Object.entries(want.surfaces)) {
+    const sel = CHIP_LANE_SURFACES[key];
+    assert.ok(sel, `${key} has no selector in CHIP_LANE_SURFACES`);
+    const waited = new RegExp(`"waitFor":"${escape(sel)}"`).test(steps);
+    assert.equal(waited, present, `${key}: declared ${present ? "present" : "absent"}, ${waited ? "" : "not "}waited on`);
+  }
+  assert.equal(s.assertSelector, CHIP_LANE_SURFACES.held, "the held answer is what must be visibly painted");
+  assert.equal(s.focus, "#wb-chip-lane .wb-chip__held", "and the frame is aimed at it");
+
+  // The frame declaration aims at the same thing rather than at a fourth opinion of it.
+  const aimed = want.frame.find((f) => f.selector === s.assertSelector);
+  assert.ok(aimed && aimed.required, "the assertSelector's surface is required inside the captured rectangle");
+});
+
+test("chip-delta-held photographs the held answer closed, which is the state it is named for", () => {
+  const s = delta();
+  const steps = JSON.stringify(s.steps);
+  const want = wanted("chip-delta-held");
+
+  // Closed by default is the product ruling, and the declaration is where it is written
+  // down. A drive that opened it would photograph a wall of pasted text and prove the
+  // opposite of what the scenario claims.
+  assert.equal(want.heldOpen, false, "the declared terminal state is a CLOSED held answer");
+  assert.ok(
+    !/wb-chip__held-summary/.test(steps),
+    "the drive must not open the held answer — closed is the state under test",
+  );
+  assert.ok(
+    !/wb-chip__held-body/.test(steps),
+    "and it must not wait on the body, which is only reachable once it is open",
+  );
+
+  // The summary label is asserted, because a <details> with no summary text would satisfy
+  // every selector above and show the person nothing.
+  assert.ok((s.assertText || []).includes(CHIP_UI.compose.first_answer_label), "the held answer names itself");
+});
+
+test("the two chip-lane scenarios declare different terminal shapes, and each is the state it is named for", () => {
+  // The failure that produced this declaration was one scenario's expectations applied to
+  // the other. So the thing asserted is that they DIFFER where the product differs, which
+  // is what a single hardcoded set could never say.
+  const open = wanted("chips-from-inspection");
+  const held = wanted("chip-delta-held");
+
+  // Before a chip is chosen: the bank stands and no delta surface exists.
+  assert.equal(open.surfaces.chipRow, true, "the bank is the surface chips-from-inspection photographs");
+  assert.ok(open.chipPicks > 0, "and it holds chips");
+  assert.equal(open.heldOpen, null, "there is no held disclosure before a follow-up is chosen");
+  for (const key of ["reveal", "held", "boundary"]) {
+    assert.equal(open.surfaces[key], false, `${key} cannot stand before a comparison has been run`);
+  }
+
+  // After: choosing a chip replaces the bank with the compose surface, so the row is gone
+  // rather than missing, and every delta surface stands.
+  assert.equal(held.surfaces.chipRow, false, "the bank is replaced once a follow-up is chosen");
+  assert.equal(held.chipPicks, 0, "so no chip remains in a row that is not there");
+  for (const key of ["reveal", "held", "boundary"]) {
+    assert.equal(held.surfaces[key], true, `${key} stands at the delta`);
+  }
+
+  // What does NOT differ: both drive the same inspection underneath, and the count each
+  // declares is the count that fixture produces. This is the number the probe used to read
+  // document-wide, summing the inspection's marks with the lane's own delta rows.
+  const findings = resolvePayloads(SCENARIOS["single-findings"])["/api/read"].measurement.findings.length;
+  for (const [name, w] of [["chips-from-inspection", open], ["chip-delta-held", held]]) {
+    assert.equal(w.inspection.findingRows, findings,
+      `${name}: the declared mark count must be the count single-findings produces`);
+    assert.ok(w.inspection.registerCards >= 1, `${name}: the register card count is declared`);
+  }
+
+  // Every declared frame surface is a real selector with a stated requirement, and the
+  // three the lane exists to show are required in both.
+  for (const [name, w] of [["chips-from-inspection", open], ["chip-delta-held", held]]) {
+    const required = w.frame.filter((f) => f.required).map((f) => f.label);
+    for (const label of ["heading", "return control", "origin reference"]) {
+      assert.ok(required.includes(label), `${name}: ${label} must be required inside the captured rectangle`);
+    }
+    for (const f of w.frame) assert.ok(f.selector && f.label, `${name}: every frame entry names a selector and a label`);
+  }
+});
+
+test("chip-delta-held reuses the fixtures the board already carries", () => {
+  // Same discipline as chips-from-inspection: identity on the builder, not equality on a
+  // resolved payload, which would pass for a copied fixture too.
+  const s = delta();
+  assert.equal(
+    s.routes["/api/read"],
+    SCENARIOS["single-findings"].routes["/api/read"],
+    "the inspection under the lane must be the findings builder the board already drives",
+  );
+  assert.ok(s.routes["/api/read-paired"], "and the comparison must be answered by a paired fixture");
+});
+
 test("no source paste box can be restored into the lane, structurally", () => {
   // The absence a render assertion cannot express. The source boxes live in
   // .wb-reader-v2__field wrappers; the lane's markup contains no such wrapper and the
@@ -448,7 +680,13 @@ test("no source paste box can be restored into the lane, structurally", () => {
 
 test("the lane reads its held first answer off the inspection receipt, and owns only a draft", () => {
   const lane = block("function ChipLane({", "\n}\n");
-  assert.match(lane, /function ChipLane\(\{ headingRef, onReturn, openedFrom, heldReceipt \}\)/);
+  // AMENDED — the steering recenter hands the lane one more prop, enteredVia, which records
+  // which door was pressed. It is provenance about the entry, not about the held state, and
+  // the held-state contract below is unchanged by it.
+  assert.match(
+    lane,
+    /function ChipLane\(\{ headingRef, onReturn, openedFrom, heldReceipt, enteredVia \}\)/,
+  );
   assert.match(
     lane,
     /const heldAnswer = \(heldReceipt && heldReceipt\.open_run && heldReceipt\.open_run\.answer\) \|\| "";/,
@@ -510,7 +748,14 @@ test("the frame is aimed at the head block, so the three surfaces are in it", ()
 
 test("the chip open receipt records which receipt it continues", () => {
   const fn = block("async function buildChipOpenReceipt(", "\n}\n");
-  assert.match(fn, /async function buildChipOpenReceipt\(firstAnswer, generatedAt, parentReceipt\)/);
+  // AMENDED — the steering recenter adds a fourth argument, the door the lane was entered
+  // by. It sits beside continues in open_run and answers a different question: entered_via
+  // is where the person came from, continues is what the run continues. A standing-door run
+  // over a pasted answer has an entry origin and continues nothing.
+  assert.match(
+    fn,
+    /async function buildChipOpenReceipt\(firstAnswer, generatedAt, parentReceipt, enteredVia\)/,
+  );
   assert.match(fn, /continues: parentHash\s*\?/, "the reference is minted from the parent's own content hash");
   assert.match(fn, /content_hash: parentHash,/);
   assert.match(fn, /request_id: \(parentProv && parentProv\.request_id\) \|\| "",/);
@@ -536,8 +781,11 @@ test("the lane passes the receipt it read the held answer from, and nothing else
     "the parent is the receipt the held answer came from, or an honest null in draft mode",
   );
   const client = block("async function runChipPairedReader(", "\n}\n");
-  assert.match(client, /parentReceipt \}\)/, "and the client threads it");
-  assert.match(client, /buildChipOpenReceipt\(firstAnswer, new Date\(\)\.toISOString\(\), parentReceipt\)/);
+  assert.match(client, /parentReceipt, enteredVia \}\)/, "and the client threads it");
+  assert.match(
+    client,
+    /buildChipOpenReceipt\(firstAnswer, new Date\(\)\.toISOString\(\), parentReceipt, enteredVia\)/,
+  );
 });
 
 // ── The authored failure that had no way of being seen ──────────────────────

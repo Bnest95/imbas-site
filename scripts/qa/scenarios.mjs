@@ -42,6 +42,9 @@ import {
   PAIR_CAPTURE_UI,
   PAIR_SAME_MODEL,
   PAIR_EDITS,
+  CHIP_UI,
+  CHIP_LOOP_STATE_COPY,
+  CHIP_LOOP_STATE_NOT_VISIBLE,
 } from "../../reader-paired.js";
 import { buildCheckRegister } from "../../reader-checks.js";
 import { PUBLIC_EXAMPLE, PUBLIC_EXAMPLE_UI } from "../../reader-public-example.js";
@@ -1165,6 +1168,39 @@ const DRIVE_CHIPS_FROM_INSPECTION = [
   { waitFor: ".wb-chip__return-btn" },
 ];
 
+// The same lane, carried to the far end of the loop. `chips-from-inspection` above stops
+// where the lane opens; everything after that press was unphotographed, and the delta is
+// where the pass's held-state rule has to be true or it is not a rule.
+//
+// The two paste boxes leave with the compose phase, so at the delta the only thing that
+// can make "what you pasted is still here" true is the held disclosure. That claim was
+// made on a surface that showed a caption and no text. This drive reaches the state where
+// the claim and the evidence for it are on screen together.
+//
+// It reuses the same two payloads the board already carries — `singleReadPayload` for the
+// inspection under it, `pairedReadPayload` for the comparison — so nothing here is a new
+// fixture. The comparison runs against /api/read-paired on the user_chip path, which is
+// the endpoint the chip lane has always called.
+//
+// The three waits at the end are three separate claims: the delta panel rendered, the
+// held first answer is on the page, and the boundary block is still carried at the far
+// end of the loop. The professional cue is deliberately not among them — it renders at
+// the proactive door and nowhere else (founder ruling, 2026-08-25), and a wait on it
+// here would pin the placement this pass removed.
+const DRIVE_CHIP_DELTA_HELD = [
+  ...DRIVE_CHIPS_FROM_INSPECTION,
+  { click: "#wb-chip-lane .wb-chip__row .wb-chip__pick" },
+  { waitFor: ".wb-chip__instruction textarea" },
+  { fill: ".wb-chip__instruction textarea", text: SYNTHETIC_SECOND_ANSWER },
+  { clickText: ".wb-act2__capture-opt", text: PAIR_CAPTURE_UI.same_model.options[PAIR_SAME_MODEL.YES] },
+  { clickText: ".wb-act2__capture-opt", text: PAIR_CAPTURE_UI.edits.options[PAIR_EDITS.NONE] },
+  { waitFor: ".wb-act2__test-cta button:not([disabled])" },
+  { click: ".wb-act2__test-cta button" },
+  { waitFor: "#wb-chip-lane .wb-loop__reveal" },
+  { waitFor: ".wb-chip__held" },
+  { waitFor: ".wb-chip__boundary" },
+];
+
 // The Act 2 paste-back flow, appended to the single-mode read that produces the
 // receipt it needs. Written now because Pass 2B-A2 changed what the paired surface
 // renders from, and a change to a surface nobody can photograph is a change nobody
@@ -2218,6 +2254,64 @@ export const SCENARIOS = {
     focus: "#wb-chip-lane .wb-reader-result__head",
   },
 
+  // The far end of that same loop. `chips-from-inspection` photographs the lane opening;
+  // this photographs the state it opens onto, after the person has picked a follow-up,
+  // pasted the second answer, disclosed the conditions, and pressed compare.
+  //
+  // WHY IT IS A FRAME AND NOT ONLY A TEST. This pass adopted a standing rule: every stage
+  // claiming a state is held must render the state it claims to hold. The delta stage was
+  // the one place the rule was live and false — the head said "what you pasted is still
+  // here" and the comparison captioned a first-answer panel, while both paste boxes had
+  // already left with the compose phase, so not one word of the answer was on the page.
+  // The repair is a disclosure element, and a disclosure is a composition question: it has
+  // to sit above the comparison without burying it, and it has to read as a reference
+  // rather than as a control. No string assertion settles that. A frame does.
+  //
+  // CLOSED BY DEFAULT, and the frame holds that. The comparison is what the person came
+  // back for; a wall of pasted text above it would bury the thing it is evidence for. So
+  // what the picture shows is the summary line and the delta beneath it, which is the
+  // whole design claim. `waitFor` on `.wb-chip__held` is satisfied by the <details>
+  // element itself — the summary gives it a box a reader can see — and would NOT be
+  // satisfied by `.wb-chip__held-body`, which is exactly the distinction the harness's
+  // visibility test was written for.
+  //
+  // Region disposition: renders_region TRUE. The chip lane sits OUTSIDE
+  // `.wb-reader-v2__result`, but the inspection this lane was opened from stands above it
+  // and is still in the document, so the census region is present in this state. Measured,
+  // not assumed: swept with the census's own match function at both viewports against
+  // `chips-from-inspection`, this state contributes zero new in-region authored rows and
+  // zero new resting paint rows. It moves the governed population and nothing else.
+  //
+  // No new fixture: the same `singleReadPayload` under it and the same `pairedReadPayload`
+  // the paired scenarios already use.
+  "chip-delta-held": {
+    name: "chip-delta-held",
+    drivable: true,
+    state: "The chip lane at the delta, after a follow-up was compared, with the first answer still held",
+    expected:
+      "The comparison is rendered and the answer the person started with is still on the page above it, in a disclosure that is closed by default and read-only. The head's claim that the pasted text is still here is now something a reader can check rather than take on trust. The lane's boundary block is carried at this end of the loop exactly as it reads at every other: the locked Reader sentence, with the user-attribution line beneath it. The professional cue does NOT render here — it stands at the proactive entry door and nowhere else.",
+    routes: { "/api/read": singleReadPayload, "/api/read-paired": pairedReadPayload },
+    steps: DRIVE_CHIP_DELTA_HELD,
+    capture: { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NONE },
+    secondAnswer: SYNTHETIC_SECOND_ANSWER,
+    assertText: [
+      // The held state, labelled in the same plain words the compose step used.
+      CHIP_UI.compose.first_answer_label,
+      // The head's claim, which the disclosure above is the evidence for.
+      "What you pasted is still here. Going back opens it as you left it.",
+      // The comparison itself.
+      CHIP_LOOP_STATE_COPY[CHIP_LOOP_STATE_NOT_VISIBLE].headline,
+      // The boundary, both lines, at the far end of the loop.
+      RECEIPT_BOUNDARY,
+      CHIP_UI.boundary,
+    ],
+    assertSelector: ".wb-chip__held",
+    // The held disclosure, so the frame carries the summary line with the delta headline
+    // below it. Centring the reveal instead would push the disclosure out of the captured
+    // rectangle at 375x812, and the disclosure is the state this scenario exists for.
+    focus: "#wb-chip-lane .wb-chip__held",
+  },
+
   // ── Input Integrity ────────────────────────────────────────────────────────
   //
   // A different KIND of surface from everything above it, and the difference is what
@@ -2521,6 +2615,93 @@ export const PENDING_SCENARIOS = {
     // viewport tall, so centring it lands the frame on the top of the page and keeps
     // the sticky header in the picture, which is where the navigation is proved.
     focus: ".hero__center",
+  },
+};
+
+// ── The chip lane's terminal shape, per scenario ─────────────────────────────
+//
+// ONE declaration, two consumers. `test/chip-lane-return.test.mjs` holds the DRIVE to it —
+// every surface declared present must be waited on before the frame is taken, and every
+// surface declared absent must not be — and `scripts/qa/pending-scenario-proof.mjs`
+// measures the same shape off the live page. Neither states it independently, so the
+// terminal shape cannot drift between them.
+//
+// WHY IT EXISTS. The probe carried `chips-from-inspection`'s terminal state as inline
+// constants and pointed them at whatever scenario it was handed. Running it over
+// `chip-delta-held` therefore reported three failures against a state that was correct:
+// it asked for six chips, when choosing a follow-up is what replaces the bank with the
+// compose surface, and it counted finding rows across the whole document, which sums the
+// inspection's marks with the lane's own "What changed" list. Measured at both board
+// viewports: the inspection's list holds two rows before the lane opens, at the terminal
+// state and after the way back, in every case, and the lane's delta list is a second list
+// inside `#wb-chip-lane` under `.wb-act2__delta`. Nothing about the product had moved. So
+// the expectations became per-scenario and declared, and the counts became scoped.
+//
+// It lives in this file, beside the scenarios it describes, for two reasons: both
+// consumers already import from here, and `scripts/qa/blocks-ratchet.mjs` hashes this file
+// whole — so a quiet edit to a terminal contract moves the ratchet fingerprint and is
+// caught, which a free-standing unsealed file would not be.
+
+// The lane's surfaces, named once. The probe queries these and the drive test requires
+// them in `waitFor` steps, so a renamed class breaks both together rather than leaving one
+// of them silently passing against markup that no longer exists.
+export const CHIP_LANE_SURFACES = {
+  reveal: "#wb-chip-lane .wb-loop__reveal",
+  held: ".wb-chip__held",
+  boundary: ".wb-chip__boundary",
+  chipRow: "#wb-chip-lane .wb-chip__row",
+  chipPick: "#wb-chip-lane .wb-chip__row .wb-chip__pick",
+};
+
+// The inspection underneath, which is a different document region from the lane and is
+// counted separately. `.wb-reader-v2__result` is the census's governed region and the lane
+// mounts outside it, so scoping here is the same boundary the census measures.
+export const CHIP_LANE_INSPECTION = {
+  region: ".wb-reader-v2__result",
+  findingRow: ".wb-measure__list li.wb-measure__finding",
+  registerCard: ".wb-checks__list li",
+};
+
+export const CHIP_LANE_TERMINAL = {
+  "chips-from-inspection": {
+    what:
+      "the lane opened over an inspection and offered the bank. Nothing has been chosen yet, " +
+      "so the delta surfaces do not exist and the six-chip row is the surface under test.",
+    chipPicks: 6,
+    // Present at the terminal state, or not. Every `true` is required in the drive as a
+    // waitFor; every `false` must not appear in it.
+    surfaces: { chipRow: true, reveal: false, held: false, boundary: false },
+    // null where there is no held disclosure to be open or closed.
+    heldOpen: null,
+    inspection: { findingRows: 2, registerCards: 1 },
+    // Where each surface sits relative to the captured rectangle. `required` is what the
+    // frame would be worthless without; the rest is described and not judged. The chip row
+    // is informational because it lands below the fold at both board viewports, which is a
+    // measured fact about this frame rather than a relaxation.
+    frame: [
+      { label: "heading", selector: "#wb-chip-heading", required: true },
+      { label: "return control", selector: ".wb-chip__return-btn", required: true },
+      { label: "origin reference", selector: ".wb-chip__origin", required: true },
+      { label: "chip row", selector: "#wb-chip-lane .wb-chip__row", required: false },
+    ],
+  },
+
+  "chip-delta-held": {
+    what:
+      "a follow-up chosen, a second answer pasted and compared, and the answer the loop " +
+      "started from still on the surface, closed. Choosing a chip replaces the bank with the " +
+      "compose surface, so the six-chip row is gone by this point rather than missing.",
+    chipPicks: 0,
+    surfaces: { chipRow: false, reveal: true, held: true, boundary: true },
+    // Closed by default is the product ruling this scenario is named for.
+    heldOpen: false,
+    inspection: { findingRows: 2, registerCards: 1 },
+    frame: [
+      { label: "heading", selector: "#wb-chip-heading", required: true },
+      { label: "return control", selector: ".wb-chip__return-btn", required: true },
+      { label: "origin reference", selector: ".wb-chip__origin", required: true },
+      { label: "held answer", selector: ".wb-chip__held", required: true },
+    ],
   },
 };
 

@@ -53,6 +53,8 @@ import {
   PAIRED_EMPTY_CLOSE,
   PAIRED_METHOD_VERSION,
   PAIR_INITIATOR,
+  CHIP_ENTRY_VIA,
+  normalizeChipEntryVia,
   CHIP_UI,
   CHIP_LOOP_STATES,
   CHIP_LOOP_STATE_COPY,
@@ -2254,7 +2256,20 @@ async function sha256HexClient(str) {
 // Null when there is no parent: the standing chip door, ?start=chips, and a degraded run
 // that returned no receipt all open the lane over nothing. A stated null is the honest
 // record that this open run continues no inspection.
-async function buildChipOpenReceipt(firstAnswer, generatedAt, parentReceipt) {
+//
+// `enteredVia` is the other provenance fact, and it answers a different question. See
+// CHIP_ENTRY_VIA in reader-paired.js for why the two cannot be folded into one: continues
+// is about the RECORD this run extends, entered_via is about the ENTRY the person made.
+// Both inspection doors produce a continuation, so continues alone cannot tell a reactive
+// steer from a proactive one. It sits inside open_run for the same reason continues does —
+// the downstream envelope embeds open_run verbatim and drops nothing else.
+//
+// Normalized here rather than trusted: an unrecognized value resolves to the direct
+// origin, which asserts no inspection. The field is self-reported by construction (only
+// the client knows which button was pressed) and rides a hash that is integrity, not
+// authentication — so the guarantee is that a malformed value cannot become a stronger
+// claim than the truth, never that the value is attested.
+async function buildChipOpenReceipt(firstAnswer, generatedAt, parentReceipt, enteredVia) {
   const answerHex = await sha256HexClient(firstAnswer);
   const parent = parentReceipt && typeof parentReceipt === "object" ? parentReceipt : null;
   const parentRun = (parent && parent.open_run) || null;
@@ -2268,6 +2283,7 @@ async function buildChipOpenReceipt(firstAnswer, generatedAt, parentReceipt) {
       question: "",
       answer: firstAnswer,
       provenance: { request_id: answerHex.slice(0, 16) },
+      entered_via: normalizeChipEntryVia(enteredVia),
       continues: parentHash
         ? {
             receipt_schema_version: parent.schema_version || "",
@@ -2287,8 +2303,8 @@ async function buildChipOpenReceipt(firstAnswer, generatedAt, parentReceipt) {
 // user-chip provenance the server needs to look the instruction up in the FROZEN bank:
 // the server never trusts client-supplied instruction text, only chip_id +
 // instruction_version. Builds the open receipt on the way out.
-async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion, declaration, parentReceipt }) {
-  const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString(), parentReceipt);
+async function runChipPairedReader({ firstAnswer, targetedAnswer, chipId, instructionVersion, declaration, parentReceipt, enteredVia }) {
+  const openReceipt = await buildChipOpenReceipt(firstAnswer, new Date().toISOString(), parentReceipt, enteredVia);
   const res = await fetch(READER_PAIRED_API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -5885,11 +5901,12 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
         <p className="wb-chip__boundary-attr">{CHIP_UI.boundary}</p>
       </div>
 
-      <div className="wb-chip__pro-cue">
-        <span className="wb-chip__pro-line">{CHIP_UI.professional_cue.line}</span>
-        <span className="wb-chip__pro-link">{CHIP_UI.professional_cue.link}</span>
-      </div>
-
+      {/* The professional cue does NOT render here. It stands under the proactive door and
+          nowhere else — founder ruling of 2026-08-25. Rendering it again at the end meant a
+          proactive user met the same sentence twice in one loop, while reactive and
+          direct-standing users met it terminally having never chosen the framing it speaks
+          for. The line belongs to the door that means it. Do not re-add it here or anywhere
+          else on this surface. */}
       <ReaderReceiptActions
         receipt={chip.receipt}
         formatter={formatChipPairedReceiptText}
@@ -5943,7 +5960,7 @@ function ChipDeltaView({ chip, entry, capture, onReset }) {
 // at all (api/read.js fallback()), so there is nothing held there either. Held-ness is
 // therefore read off the answer and never off the question — a fallback run has a question
 // and no answer to hold.
-function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt }) {
+function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt, enteredVia }) {
   const [draftAnswer, setDraftAnswer] = useState("");
   const heldAnswer = (heldReceipt && heldReceipt.open_run && heldReceipt.open_run.answer) || "";
   const held = !!heldAnswer.trim();
@@ -6045,6 +6062,9 @@ function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt }) {
         // The receipt the held answer was read from, or null in draft mode. Passed whole
         // so the open receipt names the inspection it continues.
         parentReceipt: held ? heldReceipt : null,
+        // The door this steering run was entered through. Independent of the line above:
+        // that one says which record is continued, this one says where the person pressed.
+        enteredVia,
       });
       setChipResult(data);
     } catch (err) {
@@ -6105,6 +6125,22 @@ function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt }) {
     return (
       <section className="wb-reader-result is-agent wb-act2 wb-chip wb-scroll-anchor" aria-labelledby="wb-chip-heading">
         {head}
+        {/* The first answer, still here at the far end of the loop. Until this, the head
+            said the text was still here and the comparison below captioned a first-answer
+            panel, and neither of them showed a word of it — the paste box that held it
+            leaves with the compose phase. A stage that says it holds a state renders the
+            state, and this is the reference that makes both claims true.
+
+            Closed by default because the comparison is what the person came back for, and
+            a wall of pasted text above it would bury the thing it is evidence for. It is
+            read-only wherever it came from: a held answer belongs to the inspection that
+            produced it, and a drafted one has already been run. */}
+        {firstAnswer.trim() ? (
+          <details className="wb-chip__held">
+            <summary className="wb-chip__held-summary">{CHIP_UI.compose.first_answer_label}</summary>
+            <p className="wb-chip__held-body">{firstAnswer}</p>
+          </details>
+        ) : null}
         <ChipDeltaView chip={chipResult} entry={entry} capture={capture} onReset={reset} />
       </section>
     );
@@ -6600,6 +6636,14 @@ function ReaderWorkbench() {
   // the render tree cannot derive on its own; every other stage input is already here.
   const [lane, setLane] = useState(() => parseArrival(window.location).lane);
   const [chipMounted, setChipMounted] = useState(() => parseArrival(window.location).lane === LANE_CHIPS);
+  // Which door the steering run was entered through — set at the press, read at the
+  // receipt. A ?start=chips arrival is already through a door by the time this mounts,
+  // and the door it came through is the standing one: nothing was inspected, and the
+  // origin that claims the least is the truthful one to seed with. Null until a press
+  // on any other arrival, because before the press there is no entry to record.
+  const [chipEntry, setChipEntry] = useState(() =>
+    parseArrival(window.location).lane === LANE_CHIPS ? CHIP_ENTRY_VIA.DIRECT_STANDING : null
+  );
   // The product rerun (?rerun=<shareId>). True once a published question has been
   // carried over, which is the only thing it carries: the answer box stays empty
   // because the point is the answer you get today, and Imbas asks nothing on anyone's
@@ -7007,12 +7051,13 @@ function ReaderWorkbench() {
   // half-typed answer is still there when the person opens it again. Latching is what
   // keeps chip_row_rendered honest — the lane is not mounted until it is opened, so the
   // event still means "the follow-up choices were shown".
-  const openChipLane = () => {
+  const openChipLane = (via) => {
     if (lane === LANE_CHIPS) return;
     // Read before the state changes: this is the reading position the person opened
     // from, and the only moment it is still on the page to read.
     laneReturnRef.current = window.scrollY;
     advance();
+    setChipEntry(normalizeChipEntryVia(via));
     setChipMounted(true);
     setLane(LANE_CHIPS);
   };
@@ -7035,6 +7080,43 @@ function ReaderWorkbench() {
   // mount toggles. That matters more than the placement does — the lane is hidden rather
   // than unmounted precisely so a half-typed answer survives a close, and moving it
   // under a new parent would unmount it and throw that answer away.
+  //
+  // Two framings, one bank, one lane. Where an inspection stands behind the door, the
+  // control renders as two ways in rather than one, because the two reasons a person
+  // steers are not the same reason and a single neutral label served neither. They open
+  // the identical lane over the identical bank; what differs is the entry recorded.
+  // Everywhere else — the standing compose-surface door, and the open lane's own way
+  // back out — one control stands, with the labels it has always carried.
+  const twoDoors = lane !== LANE_CHIPS && !!readerResult;
+  // The focus ref follows the door that was actually pressed. chipDoorRef is what returns
+  // a closing person to the control they opened from, and with two controls on the page
+  // only one of them is that control. chipEntry holds which, so the ref seats there and
+  // nowhere else; before any press it seats on the first, which is where a keyboard
+  // arriving at this block lands anyway.
+  const doorRefFor = (via) => {
+    if (!twoDoors) return chipDoorRef;
+    const seated = chipEntry === CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      ? CHIP_ENTRY_VIA.INSPECTION_PROACTIVE
+      : CHIP_ENTRY_VIA.INSPECTION_REACTIVE;
+    return via === seated ? chipDoorRef : null;
+  };
+  const chipDoorButton = (via, label) => (
+    <button
+      type="button"
+      ref={doorRefFor(via)}
+      className="wb-demo-trigger wb-chip-door"
+      onClick={lane === LANE_CHIPS ? closeChipLane : () => openChipLane(via)}
+      aria-expanded={lane === LANE_CHIPS}
+      /* The lane is not in the DOM until the door is first opened, so naming it
+         unconditionally points assistive technology at an id that does not exist on
+         an ordinary first visit. The name is carried once the lane is real and
+         withheld before that. `hidden` is not absence: a closed-but-mounted lane is
+         still a real element, so it is still named. aria-expanded stands either way. */
+      aria-controls={chipMounted ? "wb-chip-lane" : undefined}
+    >
+      {label}
+    </button>
+  );
   const chipDoorControl = () => (
     /* One id across both mount points, which is safe because the two are mutually
        exclusive by construction: the early mount is exactly STAGE_FOLLOWUP and the
@@ -7043,32 +7125,49 @@ function ReaderWorkbench() {
       id={RESULT_CAPABILITY_ANCHORS.followUp}
       className="wb-reader-v2__follow wb-reader-v2__follow--chip-door wb-scroll-anchor"
     >
-      <button
-        type="button"
-        ref={chipDoorRef}
-        className="wb-demo-trigger wb-chip-door"
-        onClick={lane === LANE_CHIPS ? closeChipLane : openChipLane}
-        aria-expanded={lane === LANE_CHIPS}
-        /* The lane is not in the DOM until the door is first opened, so naming it
-           unconditionally points assistive technology at an id that does not exist on
-           an ordinary first visit. The name is carried once the lane is real and
-           withheld before that. `hidden` is not absence: a closed-but-mounted lane is
-           still a real element, so it is still named. aria-expanded stands either way. */
-        aria-controls={chipMounted ? "wb-chip-lane" : undefined}
-      >
-        {/* The closed label names where the press goes, not what appears. Activation
-            derives STAGE_CHIPS, and that stage's view drops pasteBox, result and act2,
-            so the source text and the result leave the stage. "Show" promised mere
-            disclosure and described the wrong operation. "Your own" is the line the
-            lane's own copy already holds — the person chooses this follow-up and the
-            inspection did not generate it — and the closed label is where it is needed,
-            because the follow-up stage carries the act-2 offer at the same time.
-            Hide stays on the open side, and not Close: the lane is hidden rather than
-            unmounted and keeps whatever was typed in it. That label renders on
-            STAGE_CHIPS alone, where the lane may be holding a comparison rather than a
-            row of choices, so it names the follow-up and never the choices. */}
-        {lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up"}
-      </button>
+      {twoDoors ? (
+        <div className="wb-chip-entry" role="group" aria-labelledby="wb-chip-entry-heading">
+          {/* The step named. Steering is what the Reader does after it reads, and until
+              this line the page offered it without ever saying what it was. */}
+          <p className="wb-chip-entry__heading" id="wb-chip-entry-heading">{CHIP_UI.entry.heading}</p>
+          <div className="wb-chip-entry__ways">
+            <div className="wb-chip-entry__way">
+              {chipDoorButton(CHIP_ENTRY_VIA.INSPECTION_REACTIVE, CHIP_UI.entry.reactive)}
+            </div>
+            <div className="wb-chip-entry__way">
+              {chipDoorButton(CHIP_ENTRY_VIA.INSPECTION_PROACTIVE, CHIP_UI.entry.proactive)}
+              {/* The cue sits under this door and not the other one. A person improving a
+                  draft is the person about to put their name on it, and that is the only
+                  one of the two entries where the sentence is about them. It is not a
+                  finding and it claims nothing about the answer above it. */}
+              <p className="wb-chip__pro-cue wb-chip-entry__cue">
+                <span className="wb-chip__pro-line">{CHIP_UI.professional_cue.line}</span>
+                <a className="wb-chip__pro-link wb-focus" href="/advisory.html">{CHIP_UI.professional_cue.link}</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* The closed label names where the press goes, not what appears. Activation
+           derives STAGE_CHIPS, and that stage's view drops pasteBox, result and act2,
+           so the source text and the result leave the stage. "Show" promised mere
+           disclosure and described the wrong operation. "Your own" is the line the
+           lane's own copy already holds — the person chooses this follow-up and the
+           inspection did not generate it — and the closed label is where it is needed,
+           because the follow-up stage carries the act-2 offer at the same time.
+           Hide stays on the open side, and not Close: the lane is hidden rather than
+           unmounted and keeps whatever was typed in it. That label renders on
+           STAGE_CHIPS alone, where the lane may be holding a comparison rather than a
+           row of choices, so it names the follow-up and never the choices.
+
+           This branch is the standing door: the compose surface, where nothing has been
+           inspected, and the open lane's own way back out. Its press carries the direct
+           origin, which is the truthful one — no inspection stands behind it. */
+        chipDoorButton(
+          CHIP_ENTRY_VIA.DIRECT_STANDING,
+          lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up",
+        )
+      )}
     </div>
   );
 
@@ -7695,6 +7794,7 @@ function ReaderWorkbench() {
               onReturn={closeChipLane}
               openedFrom={readerResult ? (mode === "guided" ? sel.openPrompt : question).trim() : ""}
               heldReceipt={readerResult ? readerResult.receipt || null : null}
+              enteredVia={chipEntry}
             />
           </div>
         ) : null}

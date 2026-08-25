@@ -951,6 +951,43 @@ export const PAIR_INITIATOR = {
   LEGACY_UNKNOWN: "legacy_unknown",
 };
 
+// Entry provenance for a steering run: which door the person came through. Three
+// origins, and they answer a question no other field on the receipt answers.
+//
+// NOT the same question as open_run.continues, and the two must never be folded into
+// one. `continues` says whether this steering run continues an inspection receipt —
+// a fact about the RECORD, and the thing that makes a chip receipt part of a chain.
+// entered_via says where the person pressed — a fact about the ENTRY. Both
+// inspection origins carry a continuation; the direct origin carries none; and a
+// receipt that recorded only one of the two could not tell a reactive steer from a
+// proactive one, which is precisely the distinction the two doors exist to make.
+//
+// Not a chip fact either. The bank is one flat set and every follow-up in it is
+// reachable from either door; the framing is the reason a person arrived, and it is
+// recorded where reasons for a run are recorded.
+export const CHIP_ENTRY_VIA = {
+  // Pressed at the end of an inspection, under the framing that something is off.
+  INSPECTION_REACTIVE: "inspection_reactive",
+  // Pressed at the end of an inspection, under the framing of improving a draft.
+  INSPECTION_PROACTIVE: "inspection_proactive",
+  // The standing door and the ?start=chips arrival: no inspection stands behind it,
+  // the person supplies the first answer themselves, and nothing was measured.
+  DIRECT_STANDING: "direct_standing",
+};
+
+export const CHIP_ENTRY_VIA_VALUES = Object.freeze([
+  CHIP_ENTRY_VIA.INSPECTION_REACTIVE,
+  CHIP_ENTRY_VIA.INSPECTION_PROACTIVE,
+  CHIP_ENTRY_VIA.DIRECT_STANDING,
+]);
+
+// Normalize an entry origin to the enum. An unrecognized, absent, or malformed value
+// falls to the direct origin, which is the one that claims the least: it asserts no
+// inspection behind the run. Provenance is never promoted toward a stronger claim.
+export function normalizeChipEntryVia(via) {
+  return CHIP_ENTRY_VIA_VALUES.includes(via) ? via : CHIP_ENTRY_VIA.DIRECT_STANDING;
+}
+
 // Normalize an initiator to the enum. Only the two named provenances pass through;
 // an absent, unknown, or malformed value falls to legacy_unknown — it is never
 // promoted to inspection_followup. The one shipped write path stamps its own value
@@ -1153,6 +1190,20 @@ export const CHIP_UI = {
   meaning_panel_line:
     "This comparison follows a user-selected instruction, not an inspection-generated follow-up. It shows what changed under the recorded conditions; it does not establish that the second answer is correct, complete, or better supported. Absence of a visible difference is not an all-clear.",
   boundary: "User-directed follow-up. No Imbas inspection finding asserted.",
+  // The two ways in, at the end of an inspection. Two framings over ONE bank: every
+  // follow-up in SECOND_QUESTION_BANK is reachable from either line, and neither line
+  // filters, gates, or reorders it. What differs is the reason a person arrives — one
+  // came because something read wrong, one came to push a draft further — and that
+  // reason is recorded as entry provenance, not as a property of any chip.
+  //
+  // Neither line asserts a finding. "Something's off." is the reader's own reading of
+  // their answer, offered as the thing they can act on; it does not say Imbas found
+  // anything, and the lane's boundary line above says so outright once they are inside.
+  entry: {
+    heading: "Steer the next answer",
+    reactive: "Something's off.",
+    proactive: "Make it better.",
+  },
   professional_cue: {
     line: "AI made the draft. Your name still goes on it.",
     link: "For professional work →",

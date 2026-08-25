@@ -331,9 +331,13 @@ test("expected is the registry projection, so it does not move when a run does",
   // /index.html and /advisory.html on the board — four scenarios at two viewports. Those
   // eight are the first states this instrument counts for pages that are not the Reader.
   // This instrument counts what the board is supposed to photograph, so the count can move
-  // before the baselines do; at 86 it does not, because all 86 are committed.
+  // before the baselines do. It moved from 86 to 88 when chip-delta-held was accepted onto
+  // the board — one scenario at two viewports, the terminal state of the steering loop with
+  // a second answer compared and the first still held. Authorized 2026-08-25. At 88 the
+  // count does not run ahead of the baselines, because all 88 are committed: the full board
+  // compares 88 snapshots and 88 images and matches every one.
   const drivable = Object.keys(SCENARIOS).filter((n) => SCENARIOS[n].drivable);
-  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 86);
+  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 88);
 });
 
 test("the inventory refuses a name the registry does not register", () => {

@@ -58,4 +58,4 @@ p "Run the same check on another answer."
 button "Test another question" disabled=false
 p "This inspection wasn't published to our reviewed archive. See ."
 a "what deletion means" href="/retention.html"
-button "Choose your own follow-up" disabled=false expanded=false
+p "Steer the next answer"

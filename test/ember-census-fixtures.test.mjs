@@ -27,6 +27,7 @@ import { platformLayout, resolveBrowser } from "../scripts/qa/visual-acceptance.
 import {
   BASELINE_PATH,
   MATCH_FN_SOURCE,
+  R14_ADJUDICATION,
   REGION,
   REPO_ROOT,
   SOURCE_PATHS,
@@ -40,8 +41,12 @@ import {
   populationResealEvidence,
   producedPopulation,
   producedRegion,
+  r14Subjects,
   readEmberRamp,
   recomputeAuthored,
+  resealWalkOrder,
+  sourceResealChain,
+  statedSourceState,
   stripSelectorPart,
 } from "../scripts/qa/ember-census.mjs";
 
@@ -236,25 +241,54 @@ test("census baseline: the counts equal their own inventories", () => {
   assert.deepEqual(ARTIFACT.distinct_free_alphas, alphas);
 });
 
-// The R14 adjudication carries every region-only free-alpha spend, and a subject nobody
-// wrote down is an exception preserved silently. The subject list is built from the
-// measurement, so a new region-only spend joins it on its own — this asserts the other
-// half, that joining it obliges somebody to say what it is.
-test("census baseline: every R14 subject is a region-only spend, and every one is adjudicated", () => {
+// AMENDED 2026-08-25. This test used to read `subjects must be exactly the region-only
+// free-alpha spends`, which made membership a live-measured property. chip-delta-held moved
+// .wb-loop__panel--second and .wb-loop__tag from region-only to also-outside — a truthful
+// reclassification — and under the old predicate both silently left the adjudication. The
+// founder ruled membership comes from the ruling's named selector set and never from a
+// measured property; measured scope is evidence recorded against each subject, not the filter.
+// So this now pins membership against the declaration, and pins the measurement as evidence.
+test("census baseline: the R14 subjects are the declared set, each carrying its own measurement", () => {
   const adj = ARTIFACT.r14_adjudication;
-  const measured = ARTIFACT.free_alpha_inventory.filter((r) => r.scope === "region-only");
+  const inventory = ARTIFACT.free_alpha_inventory;
+
   assert.deepEqual(
-    adj.subjects.map((s) => `${s.selector}|${s.property}`).sort(),
-    measured.map((r) => `${r.selector}|${r.property}`).sort(),
-    "the subjects must be exactly the region-only free-alpha spends",
+    [...new Set(adj.subjects.map((s) => s.selector))],
+    Object.keys(R14_ADJUDICATION.per_subject_notes),
+    "membership is the declared selector set, in its recorded order",
   );
   for (const s of adj.subjects) {
     assert.ok(s.note, `${s.selector} ${s.property} is carried with no recorded rationale`);
   }
+
+  // Scope and resting paint are evidence, so each must answer to the measurement it came from
+  // — including the two subjects whose scope is now also-outside.
   for (const s of adj.subjects) {
-    const m = measured.find((r) => r.selector === s.selector && r.property === s.property);
+    const m = inventory.find((r) => r.selector === s.selector && r.property === s.property);
+    if (!s.measured) {
+      assert.ok(!m, `${s.selector} ${s.property} is recorded unmeasured but the inventory holds it`);
+      assert.equal(s.scope, null, `${s.selector} ${s.property}: an unmeasured subject claims no scope`);
+      continue;
+    }
+    assert.ok(m, `${s.selector} ${s.property} is recorded measured but the inventory does not hold it`);
+    assert.equal(s.scope, m.scope, `${s.selector} ${s.property} disagrees with its own measured scope`);
     assert.equal(s.resting_paint, !m.pseudo_state_only, `${s.selector} disagrees with its own measurement`);
   }
+  assert.ok(
+    adj.subjects.some((s) => s.scope === "also-outside" && s.measured),
+    "the reclassification the ruling was written against must still be visible in the record",
+  );
+
+  // The half of the old test that survives the ruling. Membership no longer widens on its own,
+  // so a region-only spend nobody adjudicated is not a silent pass — it is a question for the
+  // founder, and it fails here rather than disappearing. Today that set is empty.
+  const declared = new Set(adj.subjects.map((s) => `${s.selector}|${s.property}`));
+  const unadjudicated = inventory
+    .filter((r) => r.scope === "region-only")
+    .map((r) => `${r.selector}|${r.property}`)
+    .filter((k) => !declared.has(k));
+  assert.deepEqual(unadjudicated, [], "a region-only spend the ruling never reached needs a founder ruling, not a default");
+
   assert.match(adj.changed_in_this_lane, /^No CSS\./);
 });
 
@@ -291,8 +325,96 @@ test("census baseline: the founder ruling is carried verbatim and every named se
     assert.match(therefore, new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")), `the ruling must name ${sel}`);
     assert.ok(
       subjects.some((s) => s.startsWith(sel)),
-      `${sel} is named in the ruling but is no longer a measured subject`,
+      `${sel} is named in the ruling but is no longer an adjudication subject`,
     );
+  }
+});
+
+// ── R14 membership, after the founder ruling of 2026-08-25 ───────────────────
+// Membership is declared, not measured. These drive r14Subjects directly with synthetic
+// spends, because the whole point of the ruling is that the answer must not depend on what a
+// board run happens to observe — and a test that reads only the committed artifact would pass
+// again the moment the predicate regressed and the artifact was rewritten under it.
+
+const spend = (selector, property, scope, extra = {}) => ({
+  selector, property, scope, value: "2px solid rgba(var(--ember-rgb), 0.55)", pseudo_state_only: false, ...extra,
+});
+
+test("census fixture: the R14 membership ruling is recorded with the failure it was ruled against", () => {
+  const m = R14_ADJUDICATION.membership_ruling;
+  assert.equal(m.date, "2026-08-25");
+  assert.equal(m.authority, "founder");
+  assert.match(m.text, /membership comes from the ruling's named selector set, never from a live-measured property/);
+  assert.match(m.text, /remains an adjudication subject permanently/);
+  assert.match(m.text, /Measured scope is evidence recorded against each subject, not the membership filter/);
+
+  // The failure itself, so nobody re-derives the predicate without meeting it.
+  assert.match(m.ruled_against_this_failure, /scope === 'region-only'/);
+  assert.match(m.ruled_against_this_failure, /\.wb-loop__panel--second and \.wb-loop__tag/);
+  assert.match(m.ruled_against_this_failure, /region-only → also-outside/);
+  assert.match(m.ruled_against_this_failure, /only the pinned test caught it/);
+
+  // And it must survive into the artifact, or it is a comment rather than a record.
+  assert.deepEqual(ARTIFACT.r14_adjudication.membership_ruling, m);
+});
+
+test("census fixture: a ruled subject stays adjudicated when its measured scope becomes also-outside", () => {
+  // The exact movement chip-delta-held produced, in miniature: the selector is unchanged, the
+  // declaration is unchanged, and only the scope classification moves.
+  const before = r14Subjects([spend(".wb-loop__panel--second", "border-left", "region-only")]);
+  const after = r14Subjects([spend(".wb-loop__panel--second", "border-left", "also-outside")]);
+
+  const pick = (rows) => rows.find((s) => s.selector === ".wb-loop__panel--second" && s.property === "border-left");
+  assert.ok(pick(before), "region-only must be a subject");
+  assert.ok(pick(after), "and also-outside must still be a subject — this is the regression the ruling forbids");
+
+  // The scope is recorded as evidence rather than consumed as a filter.
+  assert.equal(pick(before).scope, "region-only");
+  assert.equal(pick(after).scope, "also-outside");
+  assert.equal(pick(after).measured, true);
+
+  // Everything else about the row is untouched by the reclassification.
+  assert.equal(pick(before).value, pick(after).value);
+  assert.equal(pick(before).note, pick(after).note);
+  assert.equal(pick(before).resting_paint, pick(after).resting_paint);
+});
+
+test("census fixture: every selector the ruling adjudicated is a subject even when nothing is measured", () => {
+  // The empty measurement is the strongest form of the claim: membership cannot come from the
+  // spends, because there are none.
+  const rows = r14Subjects([]);
+  const named = Object.keys(R14_ADJUDICATION.per_subject_notes);
+  assert.deepEqual(rows.map((s) => s.selector), named, "the subject set is per_subject_notes, in its recorded order");
+  for (const r of rows) {
+    assert.equal(r.measured, false, `${r.selector} must be recorded as unmeasured, not dropped`);
+    assert.equal(r.scope, null);
+    assert.ok(r.note, "an unmeasured subject still carries the note that adjudicated it");
+  }
+});
+
+test("census fixture: membership does not broaden to selectors the ruling never reached", () => {
+  // A free spend that is region-only and off the ruling's list must not be admitted by being
+  // measured. The old predicate would have taken it purely because of its scope.
+  const rows = r14Subjects([
+    spend(".wb-loop__panel--second", "border-left", "region-only"),
+    spend(".wb-some-unruled-thing", "border-left", "region-only"),
+  ]);
+  assert.ok(!rows.some((s) => s.selector === ".wb-some-unruled-thing"), "an unruled selector must not become a subject");
+  assert.ok(rows.some((s) => s.selector === ".wb-loop__panel--second"));
+});
+
+test("census fixture: a subject measured more than once keeps a row per declaration", () => {
+  // .wb-btn--primary:disabled and the share-consent confirm each spend on two properties, so
+  // collapsing to one row per selector would lose half the evidence.
+  const rows = r14Subjects([
+    spend(".wb-btn--primary:disabled", "background", "region-only", { pseudo_state_only: true }),
+    spend(".wb-btn--primary:disabled", "border-color", "region-only", { pseudo_state_only: true }),
+  ]);
+  const mine = rows.filter((s) => s.selector === ".wb-btn--primary:disabled");
+  assert.deepEqual(mine.map((s) => s.property), ["background", "border-color"]);
+  for (const r of mine) {
+    assert.equal(r.measured, true);
+    assert.equal(r.resting_paint, false, "pseudo-state-only spends do not paint at rest");
   }
 });
 
@@ -533,15 +655,19 @@ test("census fixture: a population reseal is refused when a governed source hash
   // The source's after-hash is not the one the record swears it is still sitting at.
   const moved = [POP_SOURCES[0], { ...POP_SOURCES[1], sha256: "9".repeat(64) }];
   const live = popLive({ sources: moved });
-  // Fingerprints recomputed against the moved world, so condition 4 has no complaint and
-  // condition 1 has to be the one that refuses. This is the careful operator's version of
-  // the mistake, and it still does not get through.
+  // Fingerprints recomputed against the moved world. This is the careful operator's version
+  // of the mistake, and it still does not get through — on two conditions rather than one
+  // since the 2026-08-25 ruling. Condition 1 refuses because the terminal record's named
+  // hashes are not the ones extracted. Condition 4 refuses because the record is internally
+  // inconsistent: it swears the sources sit at the OLD hashes while recording a fingerprint
+  // that only the NEW ones produce, and condition 4 now recomputes from the record's own
+  // claimed sources rather than from live. Two independent refusals of one lie.
   const record = popRecord({
     fingerprint_before: popFingerprint(POP_BEFORE, live),
     fingerprint_after: popFingerprint(POP_AFTER, live),
   });
   const got = refusals(record, live);
-  assert.deepEqual(got, ["1 — governed source hashes unchanged"]);
+  assert.deepEqual(got, ["1 — governed source hashes unchanged", "4 — population is the only moved fingerprint input"]);
   assert.equal(populationResealEvidence(record, live).eligible, false);
 });
 
@@ -907,4 +1033,267 @@ test("census fixture: a produced region is exactly before, less removed, plus ad
   );
   // No new field carries this either.
   assert.deepEqual(producedRegion({}), []);
+});
+
+// ── 10. The source dimension, on the same terms ──────────────────────────────
+// The population route closed on its second use because every recorded entry was asked to
+// reproduce today's population. The source route closed on ITS second use for the identical
+// reason in the other fingerprint input. Founder ruling of 2026-08-25; these fixtures are the
+// six the ruling named, in a world whose right answer is fixed.
+//
+// Two governed sources, because one cannot show that a movement of one leaves the other's
+// receipts alone, and that is fixture C.
+
+const S_A = "a.css";
+const S_B = "b.css";
+const A0 = "a0".repeat(32);
+const A1 = "a1".repeat(32);
+const A2 = "a2".repeat(32);
+const B0 = "b0".repeat(32);
+const B1 = "b1".repeat(32);
+const F0 = "f0".repeat(32);
+const F1 = "f1".repeat(32);
+const F2 = "f2".repeat(32);
+const F3 = "f3".repeat(32);
+
+const srcLive = (a = A2, b = B1) => [
+  { path: S_A, extraction: "whole file", sha256: a },
+  { path: S_B, extraction: "whole file", sha256: b },
+];
+
+// A source reseal in the shape the real ones have. The chain reads the hashes; the
+// fingerprints only have to link, because the walk that orders the records is by fingerprint.
+const srcRecord = (date, before, after, moved = [], held = []) => ({
+  date,
+  reason: `a fixture source edit on ${date}, named at more than the minimum length`,
+  fingerprint_before: before,
+  fingerprint_after: after,
+  authorized_edits: moved.map(([source, sha256_before, sha256_after]) => ({
+    source,
+    extraction: "whole file",
+    sha256_before,
+    sha256_after,
+    edit: "a fixture edit that moved a governed hash, described at more than the minimum length",
+  })),
+  ...(held.length
+    ? {
+        edits_that_moved_no_governed_source: held.map(([source, sha256_unchanged]) => ({
+          source,
+          extraction: "whole file",
+          sha256_unchanged,
+          edit: "a fixture edit that moved no governed extraction, described at more than the minimum length",
+        })),
+      }
+    : {}),
+  counts_before: POP_COUNTS,
+  free_alpha_inventory_before: POP_INVENTORY,
+});
+
+// Three sequential movements. R1 moves a.css and records b.css as touched-but-unmoved; R2
+// moves a.css again and is silent about b.css; R3 moves b.css and is silent about a.css.
+const SRC_R1 = srcRecord("2026-01-01", F0, F1, [[S_A, A0, A1]], [[S_B, B0]]);
+const SRC_R2 = srcRecord("2026-01-02", F1, F2, [[S_A, A1, A2]]);
+const SRC_R3 = srcRecord("2026-01-03", F2, F3, [[S_B, B0, B1]]);
+
+const srcLinks = (chain, path_) => chain.links.filter((l) => l.path === path_);
+const srcBroke = (chain) => chain.failures.map((f) => [f.link, f.path]);
+
+// A — the first reseal does not become false because live advanced past it.
+test("census fixture: a second and third source movement leave the first reseal standing", () => {
+  const two = sourceResealChain([SRC_R1, SRC_R2], [], srcLive(A2, B0));
+  assert.deepEqual(two.failures, []);
+  assert.equal(two.intact, true);
+  assert.equal(two.terminal.date, "2026-01-02");
+
+  const three = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive(A2, B1));
+  assert.deepEqual(three.failures, []);
+  assert.equal(three.intact, true);
+  assert.equal(three.terminal.date, "2026-01-03");
+
+  // The record itself is byte-identical across both walks. Append-only means the first entry
+  // is the same object after the third move as it was after the first.
+  assert.deepEqual(statedSourceState(SRC_R1).get(S_A), { before: A0, after: A1, kind: "moved" });
+});
+
+test("census fixture: the old live-anchored source reading is what closed the route, and it still would", () => {
+  // The check the 2026-08-25 ruling removed: every recorded entry's after-hash equal to the
+  // live extraction. Against a world that has moved twice, only the last one can satisfy it —
+  // the same arithmetic that closed the population route on its second use.
+  const live = new Map(srcLive().map((s) => [s.path, s.sha256]));
+  const asLive = [SRC_R1, SRC_R2, SRC_R3].map((r) =>
+    (r.authorized_edits || []).every((e) => live.get(e.source) === e.sha256_after),
+  );
+  assert.deepEqual(asLive, [false, true, true]);
+  // And the chain, which is what shipped instead, holds all three.
+  assert.equal(sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive()).intact, true);
+});
+
+// B — a later movement of the same source starts from the hash the prior movement produced.
+test("census fixture: a later source movement starts from the hash the prior movement produced", () => {
+  const chain = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive());
+  const handoff = srcLinks(chain, S_A).find((l) => l.link === "2026-01-01/source → 2026-01-02/source");
+  assert.deepEqual(
+    { started_from: handoff.started_from, produced: handoff.produced, kind: handoff.kind, holds: handoff.holds },
+    { started_from: A1, produced: A2, kind: "moved", holds: true },
+  );
+});
+
+// C — movements of different sources do not corrupt each other's receipts.
+test("census fixture: a movement of one governed source leaves the other's receipts alone", () => {
+  const chain = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive());
+  // b.css was stated by R1, carried silently through R2, and moved by R3. The carry is
+  // written down rather than left as a gap: continuity for an untouched source must not
+  // silently vanish.
+  assert.deepEqual(
+    srcLinks(chain, S_B).map((l) => [l.link, l.kind, l.started_from, l.produced]),
+    [
+      ["2026-01-01/source → 2026-01-02/source", "carried", B0, B0],
+      ["2026-01-02/source → 2026-01-03/source", "moved", B0, B1],
+      ["2026-01-03/source → live", "terminal", undefined, B1],
+    ].map((l) => (l[1] === "terminal" ? [l[0], l[1], undefined, l[3]] : l)),
+  );
+  // And a.css is untouched by R3 in exactly the same way, in the other direction.
+  const aTail = srcLinks(chain, S_A).find((l) => l.link === "2026-01-02/source → 2026-01-03/source");
+  assert.deepEqual([aTail.kind, aTail.started_from, aTail.produced, aTail.holds], ["carried", A2, A2, true]);
+});
+
+// D — a broken hand-off for one source is refused, and only for that source.
+test("census fixture: a broken source hand-off is refused at the link where it broke", () => {
+  // R2 claims a.css started at A0. R1 produced A1. Nothing produced A0 at that point.
+  const lying = srcRecord("2026-01-02", F1, F2, [[S_A, A0, A2]]);
+  const chain = sourceResealChain([SRC_R1, lying, SRC_R3], [], srcLive());
+  assert.equal(chain.intact, false);
+  assert.deepEqual(srcBroke(chain), [["2026-01-01/source → 2026-01-02/source", S_A]]);
+  assert.match(chain.failures[0].detail, /the record before produced .* and this one starts from/);
+  // Scoped: b.css's own walk is untouched by a.css's broken link.
+  assert.equal(srcLinks(chain, S_B).every((l) => l.holds), true);
+});
+
+// E — live source movement with no appended terminal record is refused.
+test("census fixture: a live source move with no appended record breaks the terminal link", () => {
+  const moved = "a9".repeat(32);
+  const chain = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive(moved, B1));
+  assert.equal(chain.intact, false);
+  assert.deepEqual(srcBroke(chain), [["2026-01-03/source → live", S_A]]);
+  assert.match(chain.failures[0].detail, /a governed source moved with no appended record/);
+});
+
+test("census fixture: a governed source no record states at all breaks the terminal link", () => {
+  // The other half of rule five. A third source appears in the live extraction and no record
+  // ever produced it, so nothing hands it to today.
+  const live = [...srcLive(), { path: "c.css", extraction: "whole file", sha256: "c0".repeat(32) }];
+  const chain = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], live);
+  assert.equal(chain.intact, false);
+  assert.deepEqual(srcBroke(chain), [["2026-01-03/source → live", "c.css"]]);
+  assert.match(chain.failures[0].detail, /nothing produced it/);
+});
+
+// F — the newest record is the only one asked about live, and a superseded one is not.
+test("census fixture: the newest source record is refused for a movement live does not show", () => {
+  const live = new Map(srcLive(A2, B1).map((s) => [s.path, s.sha256]));
+  const terminalHolds = (r) => (r.authorized_edits || []).every((e) => live.get(e.source) === e.sha256_after);
+  // The terminal record claims b.css ended somewhere live does not hold.
+  const overclaiming = srcRecord("2026-01-03", F2, F3, [[S_B, B0, "bb".repeat(32)]]);
+  assert.equal(terminalHolds(overclaiming), false);
+  assert.equal(sourceResealChain([SRC_R1, SRC_R2, overclaiming], [], srcLive(A2, B1)).intact, false);
+});
+
+test("census fixture: a superseded source reseal is not asked whether live still holds its hash", () => {
+  // SRC_R1 produced A1 and live holds A2. Under the reading the ruling removed that made R1
+  // false; under the chain it is answered for by R2 starting at A1. The founder's own
+  // instruction: for superseded records, a false claim is caught by the hand-off, never by an
+  // uncheckable live comparison.
+  const chain = sourceResealChain([SRC_R1, SRC_R2, SRC_R3], [], srcLive());
+  assert.equal(chain.intact, true);
+  assert.equal(srcLinks(chain, S_A).every((l) => l.holds), true);
+  assert.equal(chain.failures.some((f) => f.link.endsWith("→ live") && f.path === S_A), false);
+});
+
+// The walk both routes are ordered by, and the cross-route carry the real artifact needs.
+test("census fixture: the reseal walk has one head, no forks, and reaches every record", () => {
+  const ok = resealWalkOrder([SRC_R2, SRC_R3, SRC_R1]);
+  assert.deepEqual(ok.failures, []);
+  assert.deepEqual(ok.order.map((r) => r.date), ["2026-01-01", "2026-01-02", "2026-01-03"]);
+
+  const forked = resealWalkOrder([SRC_R1, SRC_R2, srcRecord("2026-01-04", F1, F3, [[S_A, A1, A2]])]);
+  assert.equal(forked.failures.length > 0, true);
+  assert.match(forked.failures[0].detail, /two reseals claim to start at/);
+});
+
+test("census fixture: a population reseal between two source reseals hands the source state through", () => {
+  // This is the shape the real artifact has: a source reseal, two population reseals, then a
+  // source reseal. A population reseal states every governed source at once in
+  // sources_unchanged, and reading it for continuity makes no population record eligible —
+  // it is the chain's business, not the population rule's.
+  const between = popRecord({
+    date: "2026-01-15",
+    fingerprint_before: F1,
+    fingerprint_after: F2,
+    sources_unchanged: [
+      { path: S_A, extraction: "whole file", sha256: A1 },
+      { path: S_B, extraction: "whole file", sha256: B0 },
+    ],
+  });
+  const after = srcRecord("2026-02-01", F2, F3, [[S_A, A1, A2]]);
+  const chain = sourceResealChain([SRC_R1, after], [between], srcLive(A2, B0));
+  assert.deepEqual(chain.failures, []);
+  assert.equal(chain.intact, true);
+  assert.equal(chain.terminal.route, "source");
+  assert.equal(chain.terminal.date, "2026-02-01");
+  // b.css was never moved by any source reseal after R1. The population reseal carried it,
+  // and the last source reseal was silent about it, so the terminal state is the one R1 left.
+  const bTerminal = srcLinks(chain, S_B).find((l) => l.kind === "terminal");
+  assert.deepEqual([bTerminal.produced, bTerminal.live, bTerminal.holds], [B0, B0, true]);
+
+  // And a population reseal that misstates a source hash breaks the chain at its own link.
+  const lying = popRecord({
+    date: "2026-01-15",
+    fingerprint_before: F1,
+    fingerprint_after: F2,
+    sources_unchanged: [
+      { path: S_A, extraction: "whole file", sha256: A2 },
+      { path: S_B, extraction: "whole file", sha256: B0 },
+    ],
+  });
+  // Both sides of it. A record inserted mid-walk holding a hash nothing produced fails the
+  // link into it AND the link out of it, because the next record says it started somewhere
+  // else. A lie in the middle of an append-only chain has two neighbours to answer to.
+  assert.deepEqual(srcBroke(sourceResealChain([SRC_R1, after], [lying], srcLive(A2, B0))), [
+    ["2026-01-01/source → 2026-01-15/population", S_A],
+    ["2026-01-15/population → 2026-02-01/source", S_A],
+  ]);
+});
+
+test("census fixture: a superseded population reseal survives a source movement that came after it", () => {
+  // The failure this whole amendment exists for, stated as a fixture. Condition 1 read the
+  // live source extraction for every entry, so the first stylesheet edit after a population
+  // reseal made that reseal ineligible and --write refused with nothing wrong in it.
+  const live = popLive({ sources: [{ path: "a.css", sha256: "9".repeat(64) }] });
+  const record = popRecord({ sources_unchanged: POP_SOURCES.map((s) => ({ ...s, extraction: "whole file" })) });
+
+  // As the terminal record it still answers for today, and it still refuses.
+  const asTerminal = populationResealEvidence(record, live, { isNewest: true, isSourceTerminal: true });
+  assert.equal(asTerminal.failures.some((f) => f.condition === "1 — governed source hashes unchanged"), true);
+
+  // Superseded on the source dimension, it is not asked. Its own claims still have to hold
+  // together — condition 4 recomputes both fingerprints from the sources the record names.
+  const superseded = populationResealEvidence(record, live, { isNewest: true, isSourceTerminal: false });
+  assert.deepEqual(superseded.failures, []);
+  assert.equal(superseded.eligible, true);
+  assert.equal(superseded.is_terminal_source_record, false);
+  assert.equal(superseded.population_is_the_only_moved_input, true);
+});
+
+test("census fixture: a superseded population reseal still cannot fabricate a source hash", () => {
+  // The tautology the founder warned about, closed. A superseded entry is off the live check,
+  // so the check that has to bite is one that does not depend on live: its recorded
+  // fingerprints must be reproducible from the sources it names.
+  const record = popRecord({
+    sources_unchanged: [
+      { path: "a.css", extraction: "whole file", sha256: "9".repeat(64) },
+      { path: "b.css", extraction: "whole file", sha256: POP_SOURCES[1].sha256 },
+    ],
+  });
+  const e = populationResealEvidence(record, popLive(), { isNewest: true, isSourceTerminal: false });
+  assert.deepEqual(e.failures.map((f) => f.condition), ["4 — population is the only moved fingerprint input"]);
 });

@@ -346,6 +346,13 @@ export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, dec
       targeted_answer_hash: ca.targeted_answer_hash || "",
       delta_items: deltaItems,
       paired_method_version: ca.paired_method_version || "",
+      // The analysis prompt this run was read under. paired_method_version already
+      // covers the deterministic construction rule, and a reader could reasonably
+      // assume it covered the prompt too — but nothing on the artifact said which
+      // prompt produced the delta items above it, so the assumption rested on the
+      // reader. Stated here, pinned by fingerprint in test/reader-chip-prompt-version,
+      // and empty on a replayed legacy row rather than backfilled with today's tag.
+      paired_prompt_version: ca.paired_prompt_version || "",
       unvalidated: true,
     },
     run_declarations: Array.isArray(declarations) ? declarations : [],
