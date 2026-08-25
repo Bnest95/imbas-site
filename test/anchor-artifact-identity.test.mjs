@@ -757,8 +757,22 @@ test("H: NON-REGRESSION — every committed anchor still resolves against the ar
   // at all, so its payload holds no findings and therefore no spans. The health
   // assertion above this one is the one that guards the boundary, and all 952 resolved
   // against the artifact each of them names on the first run.
-  assert.equal(records, 40, "the audit counted 40 records carrying anchors");
-  assert.equal(anchors, 984, "the audit counted 984 anchors");
+  //
+  // 40→42 and 984→1032 when chip-delta-held was accepted onto the board. Authorized
+  // 2026-08-25. Its two committed snapshots carry 24 anchors apiece: +2 records and +48
+  // anchors. The check that they are the RIGHT 24 is the Shape B split. Each carries
+  // Shape B = 12, which is byte-identical in profile to the established paired class —
+  // paired-matched, paired-unmatched, export-paired, provenance-complete and all four
+  // claim-* scenarios each carry 24 with Shape B = 12. That is the correct result and not
+  // a novel shape: chip-delta-held pastes a second answer and compares it, so it produces
+  // a paired record, and it should look like every other paired record. chips-from-inspection
+  // sits at 16 with Shape B = 4 — identical to single-findings — because it only opens the
+  // lane and never composes a comparison, so the difference between the two chip scenarios
+  // is exactly the comparison. Roles remained original_answer / targeted_answer, no new role
+  // appeared, and all 1032 resolved against the artifact each of them names on the first run.
+  // What moved is the size of the corpus, not its health.
+  assert.equal(records, 42, "the audit counted 42 records carrying anchors");
+  assert.equal(anchors, 1032, "the audit counted 1032 anchors");
   assert.ok(shapeB > 0, "a collector that finds no Shape B anchor is skipping the paired surface");
   assert.deepEqual([...roles].sort(), [ARTIFACT_ORIGINAL, ARTIFACT_TARGETED]);
 });
