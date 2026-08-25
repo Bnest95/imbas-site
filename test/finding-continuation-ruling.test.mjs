@@ -465,7 +465,8 @@ test("every recorded population reseal proves a population that moved and nothin
   assert.ok(Array.isArray(reseals) && reseals.length >= 1, "the artifact must carry the population-reseal log");
 
   const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
-  for (const r of reseals) {
+  for (const [i, r] of reseals.entries()) {
+    const isNewest = i === reseals.length - 1;
     // The instrument's own verdict, recomputed at write time against the live measurement.
     assert.deepEqual(r.failures, [], `${r.date}: a recorded population reseal must have been eligible`);
     assert.equal(r.eligible, true);
@@ -504,9 +505,25 @@ test("every recorded population reseal proves a population that moved and nothin
     assert.ok(r.authorizing_change && r.authorizing_change.length > 20, "the authorizing change must be described");
     // (8) Nothing existing left or changed classification quietly.
     assert.equal(r.retained_scenarios_unchanged, true);
-    assert.deepEqual(r.population_after, CENSUS.coverage_fingerprint.scenarios);
     assert.deepEqual(r.region_rendering_after, CENSUS.scenarios_rendering_region);
+
+    // Which population this entry answers for — founder ruling of 2026-08-24. The newest
+    // entry answers for today and has to produce exactly what the instrument measured. A
+    // superseded entry answers for its own move, and its link to today is the next entry
+    // starting where it finished. Asking every entry to reproduce the live population is
+    // what closed this route on its second use, and re-imposing it here would close it
+    // again with the instrument standing open.
+    assert.equal(r.is_newest_entry, isNewest, `${r.date}: the artifact records which entry answers for today`);
+    if (isNewest) {
+      assert.deepEqual(r.population_after, CENSUS.coverage_fingerprint.scenarios);
+    } else {
+      assert.deepEqual(r.population_after, [...reseals[i + 1].population_before].sort(),
+        `${r.date}: a superseded entry hands its population to the entry after it`);
+    }
   }
+
+  // The same walk the instrument refuses to write without, asserted against what it wrote.
+  assert.deepEqual(CENSUS.provenance.population_reseal_chain, { intact: true, failures: [] });
 });
 
 test("the two reseal routes carry disjoint evidence, so neither can satisfy the other", () => {

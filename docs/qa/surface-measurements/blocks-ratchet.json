@@ -2,7 +2,7 @@
   "instrument": "scripts/qa/blocks-ratchet.mjs",
   "rule": "R2",
   "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
-  "measured_at_master": "58c2665af9b009fa8b1ce3589174fc81172d836e",
+  "measured_at_master": "4db382fa26dc70fbb897f8aaa23a46607c9662ae",
   "browser": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "target_selectors": [
@@ -10,6 +10,8 @@
       ".wb-reader-v2__result"
     ],
     "scenarios": [
+      "advisory-boundaries",
+      "advisory-masthead",
       "chip-arrival",
       "chips-from-inspection",
       "claim-authorized-match",
@@ -21,6 +23,8 @@
       "export-paired",
       "export-single",
       "first-load",
+      "home-archive-preview",
+      "home-experience",
       "input-integrity-intake",
       "input-integrity-sample",
       "input-integrity-zero",
@@ -61,16 +65,16 @@
       },
       {
         "path": "scripts/qa/scenarios.mjs",
-        "sha256": "8948bc4c8323bcaf"
+        "sha256": "68660988f29c5a88"
       }
     ],
-    "sha256": "0d0a14fa9eae4863cebc0a1d54458c762b906101799ebfade63c9b0c53e12cb4"
+    "sha256": "c5fbaf483726cfd6b24555f6fc9ee038f7015f4cdb5dee03a39530d6f5e715e5"
   },
   "sources": [
     {
       "path": "scripts/qa/scenarios.mjs",
       "extraction": "whole file",
-      "sha256": "8948bc4c8323bcaf"
+      "sha256": "68660988f29c5a88"
     },
     {
       "path": "scripts/qa/comprehension.mjs",
@@ -81,7 +85,7 @@
   "counts": {
     "governed_states": 60,
     "governed_scenarios": 30,
-    "ungoverned_scenarios": 9,
+    "ungoverned_scenarios": 13,
     "max_blocks_before": 9
   },
   "ceilings": [
@@ -1209,9 +1213,13 @@
     }
   ],
   "ungoverned_scenarios": [
+    "advisory-boundaries",
+    "advisory-masthead",
     "chip-arrival",
     "curated-readout",
     "first-load",
+    "home-archive-preview",
+    "home-experience",
     "input-integrity-intake",
     "input-integrity-sample",
     "input-integrity-zero",
