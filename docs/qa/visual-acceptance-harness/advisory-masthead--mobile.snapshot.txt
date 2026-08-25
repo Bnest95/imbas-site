@@ -1,0 +1,32 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 3
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .adv-masthead
+image_diff: enabled
+locale: en-US
+mobile_emulation: true
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 0
+timezone: UTC
+url: /advisory.html
+viewport: 375x812
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+button "Menu" disabled=false expanded=false
+h1 "Get found. Get faster. Don’t fly blind."
+p "I help businesses use AI to win more customers, remove expensive repetitive work, and let the same team do more. Then I put checks around the parts where blindly trusting AI gets expensive."
+p "AI is changing both sides of the business at once: how customers find you, and how the work gets done once they do. I help with both, and with the parts you shouldn’t trust blindly."
+h2 "Get found"
+p "When someone nearby asks Google, or asks an AI, who they should hire, your business should have the best possible shot at being the answer. I audit where you show up and where you’re invisible: your Google Business Profile, local search, service and location pages, reviews, structured data, your site’s writing, and what ChatGPT, Claude, Gemini, and Perplexity actually say when buyers ask. Then I fix what’s fixable and show you what actually moved."

@@ -326,11 +326,14 @@ test("expected is the registry projection, so it does not move when a run does",
   // chips-from-inspection was promoted — one scenario at two viewports, and the pending
   // registry is empty behind it again. It moved from 72 to 78 when input-integrity-intake,
   // input-integrity-sample and input-integrity-zero registered the /input-integrity.html
-  // route on the board — three scenarios at two viewports. Those six states are expected
-  // here and have no committed baseline yet: this instrument counts what the board is
-  // supposed to photograph, which is exactly why the count moves before the baselines do.
+  // route on the board — three scenarios at two viewports. It moved from 78 to 86 when
+  // home-experience, home-archive-preview, advisory-masthead and advisory-boundaries put
+  // /index.html and /advisory.html on the board — four scenarios at two viewports. Those
+  // eight are the first states this instrument counts for pages that are not the Reader.
+  // This instrument counts what the board is supposed to photograph, so the count can move
+  // before the baselines do; at 86 it does not, because all 86 are committed.
   const drivable = Object.keys(SCENARIOS).filter((n) => SCENARIOS[n].drivable);
-  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 78);
+  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 86);
 });
 
 test("the inventory refuses a name the registry does not register", () => {

@@ -9,11 +9,13 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "451e7a591ced3f86a3fa583550ff06ea0b3ff23c",
+  "measured_at_master": "083b16f64acbee603feb5771606ca405cb4c06f4",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
     "scenarios": [
+      "advisory-boundaries",
+      "advisory-masthead",
       "chip-arrival",
       "chips-from-inspection",
       "claim-authorized-match",
@@ -25,6 +27,8 @@
       "export-paired",
       "export-single",
       "first-load",
+      "home-archive-preview",
+      "home-experience",
       "input-integrity-intake",
       "input-integrity-sample",
       "input-integrity-zero",
@@ -72,7 +76,7 @@
         "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
       }
     ],
-    "sha256": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967"
+    "sha256": "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6"
   },
   "provenance": {
     "reseal_rule": {
@@ -181,6 +185,28 @@
           "the population movement tied to an explicit founder-authorized product or QA change;",
           "no existing scenario disappears or changes classification silently."
         ]
+      },
+      "amendment": {
+        "date": "2026-08-24",
+        "authority": "founder",
+        "recorded_against": "the homepage and Advisory board coverage — the stacked population move",
+        "text": "A superseded population reseal is validated against the population it claims to have produced (population_before + scenarios_added − scenarios_removed). Only the newest entry must reproduce the live population. The array stays append-only.",
+        "guarantees_that_survive": [
+          "a record cannot claim a move it did not make;",
+          "the newest entry must reproduce the live population exactly;",
+          "--write still refuses population movement that has no appended record;",
+          "no entry is deleted, moved, or rewritten."
+        ],
+        "chain_continuity": "Each entry's population_before equals the population produced by the entry before it, and the newest entry's produced population equals the live one. populationResealChain() asserts both from the fields the records already carry."
+      },
+      "region_amendment": {
+        "date": "2026-08-24",
+        "authority": "founder",
+        "recorded_against": "the region dimension of the reseal law — superseded receipts asked about live region state",
+        "text": "Apply the ratified historical-receipt semantics to the region dimension. The newest entry keeps every live-anchored region check unchanged: dispositions measured against live, retained-scenario reclassification checked against live, produced region state equal to live.scenariosRenderingRegion. A superseded entry is not asked about live region state anywhere: not in condition 6, not in condition 8, not in any test. The chain carries it: each entry's region_rendering_before must equal the prior entry's producedRegion, and the newest producedRegion must equal live. The array remains append-only. The ratified population semantics do not move.",
+        "derivation": "producedRegion(record) = region_rendering_before, minus scenarios_removed, plus each added scenario whose recorded renders_region disposition is true, canonicalized.",
+        "deliberate_closure": "A retained scenario's region reclassification is not expressible by any record field, and you will not invent one. When a real reclassification first happens, the chain breaks at that link, --write refuses, and the finding comes to the gate for a ruling that will define how such a transition is enumerated, against the real case. That is intended instrument behavior, not a defect.",
+        "why_no_superseded_reclassification_check": "It would be vacuous. A superseded entry's produced region agrees with its own region_rendering_before on every retained scenario by construction, so the check would compare a value with itself. The cross-record question is the chain's."
       },
       "what_this_is_not": "This is not a second way to reach the same door. A population reseal carries no authority over a measured value and none over a source hash. If a governed source moved, this is the wrong route and the source rule governs; if any count or inventory line moved, neither route is open and the difference is a finding to report.",
       "standing_instruction": "The two routes are told apart by the evidence they carry, and neither may satisfy the other. A record that carries both is refused rather than read twice. Before recording a population reseal, run --check and confirm the fingerprint line stands alone; then confirm which of its inputs moved, because a fingerprint line alone still does not say which rule governs."
@@ -358,6 +384,7 @@
           "single-empty-read",
           "single-findings"
         ],
+        "is_newest_entry": false,
         "scenarios_added_observed": [
           "input-integrity-intake",
           "input-integrity-sample",
@@ -424,8 +451,300 @@
         "retained_scenarios_unchanged": true,
         "eligible": true,
         "failures": []
+      },
+      {
+        "date": "2026-08-24",
+        "authorizing_change": "Branch claude/practical-elion-94731d — the homepage and Advisory registered four states on the acceptance board ahead of their structural rebuilds, so a rebuild reseals a named frame rather than discovering the old one was never photographed. governedScenarios() is the board registry, so the census population grew with it. All four are document surfaces on index.html and advisory.html; neither page mounts the workbench, so none of them renders a .wb-reader-v2__result region and none contributes ember spend to measure. Nothing under this census's source list was edited: styles.css, workbench.css and workbench-app.jsx are byte-identical to the hashes the previous entry recorded.",
+        "fingerprint_before": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+        "fingerprint_after": "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6",
+        "population_before": [
+          "chip-arrival",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "scenarios_added": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "home-archive-preview",
+          "home-experience"
+        ],
+        "scenarios_removed": [],
+        "added_scenario_dispositions": [
+          {
+            "scenario": "advisory-boundaries",
+            "renders_region": false,
+            "note": "advisory.html, the governance and commercial-boundary region — advisory.html mounts no workbench, so the Reader result region is not on this page."
+          },
+          {
+            "scenario": "advisory-masthead",
+            "renders_region": false,
+            "note": "advisory.html, the masthead, lede and thesis — same page, same absence."
+          },
+          {
+            "scenario": "home-archive-preview",
+            "renders_region": false,
+            "note": "index.html, the archive preview above the featured case — the homepage links to the Reader and does not embed its result region."
+          },
+          {
+            "scenario": "home-experience",
+            "renders_region": false,
+            "note": "index.html, the Your Experience region — it carries the route into the Reader, not the Reader itself."
+          }
+        ],
+        "region_rendering_before": [
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "sources_unchanged": [
+          {
+            "path": "styles.css",
+            "extraction": "whole file",
+            "sha256": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d"
+          },
+          {
+            "path": "workbench.css",
+            "extraction": "whole file",
+            "sha256": "5241926ea97f88d52dd5fe9b703152cca4c229d17e484f9b74ba11c6d588822d"
+          },
+          {
+            "path": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146"
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "population_after": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "chip-arrival",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "home-archive-preview",
+          "home-experience",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "is_newest_entry": true,
+        "scenarios_added_observed": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "home-archive-preview",
+          "home-experience"
+        ],
+        "scenarios_removed_observed": [],
+        "region_rendering_after": [
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "fingerprint_before_recomputed": "6ac3134106ac7de7c823b53d4ea86bd49fd7cf507192d7649cab208ece773967",
+        "fingerprint_after_recomputed": "c3b0c9bcf58638c30c0eab560c065e31e7b58eea7df5654c1c98f028f0e9d9a6",
+        "source_hashes_identical": true,
+        "counts_identical": true,
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "population_is_the_only_moved_input": true,
+        "population_delta_matches_record": true,
+        "added_scenario_dispositions_hold": true,
+        "retained_scenarios_unchanged": true,
+        "eligible": true,
+        "failures": []
       }
-    ]
+    ],
+    "population_reseal_chain": {
+      "dimensions": [
+        "population",
+        "region"
+      ],
+      "links": [
+        {
+          "link": "2026-08-23 → 2026-08-24",
+          "dimension": "population",
+          "produced": 39,
+          "started_from": 39,
+          "holds": true
+        },
+        {
+          "link": "2026-08-23 → 2026-08-24",
+          "dimension": "region",
+          "produced": 24,
+          "started_from": 24,
+          "holds": true
+        },
+        {
+          "link": "2026-08-24 → live",
+          "dimension": "population",
+          "produced": 43,
+          "started_from": 43,
+          "holds": true
+        },
+        {
+          "link": "2026-08-24 → live",
+          "dimension": "region",
+          "produced": 24,
+          "started_from": 24,
+          "holds": true
+        }
+      ],
+      "intact": true,
+      "failures": []
+    }
   },
   "source_extraction": [
     {

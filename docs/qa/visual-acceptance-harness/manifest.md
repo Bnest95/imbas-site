@@ -8,7 +8,7 @@ Generation reads no browser, starts no server, captures no pixel and moves no ba
 
 **This manifest governs both committed baseline layers: the `.png` images and the `.snapshot.txt` files beside them.** Both are checksummed. There is one row per image, and it carries the sha256 and byte count of the image and of its paired snapshot. Nothing else in `docs/qa/visual-acceptance-harness/` is governed here.
 
-The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 39 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 78 images and 78 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
+The inventory is complete by construction rather than by inspection. `scripts/qa/scenarios.mjs` registers 43 drivable scenarios and the board is kept at 2 viewports, `desktop` (1440x900 @ dsf 2) and `mobile` (375x812 @ dsf 3) — so 86 images and 86 snapshots are registered, and every one of them is listed below. Generation stops rather than emit a partial record: a registered baseline missing from disk fails, and a baseline on disk that the registry does not register fails too.
 
 **What it does not attest.** This manifest is a statement about byte identity as the tree stands, and nothing else. It does not attest the capture session that produced any image — not when the shutter fired, not which working tree was checked out, not which commit the capture ran against. It records no browser environment beyond the version string each snapshot carries for its own image, and no machine, path or operating system. It attests no review, approval or acceptance event, and no baseline-acceptance provenance: that an image is listed here means its bytes are on disk and hash to the value shown, not that anyone signed off on them. It carries no historical capture SHA and no history of any kind. Those facts are real and are kept, elsewhere and deliberately — each snapshot's `## environment` block holds the conditions its own capture ran under, `git log` on an image file holds when those bytes last moved and which commit moved them, and `docs/qa/HARNESS-HISTORY.md` holds the removed historical record of this document's own pre-generated era. None of them is this file, and a reader needing any of them should not look here.
 
@@ -52,12 +52,76 @@ A board that lists only what it covers reads as complete. These are the result s
 - **A route that returns an unparseable body** — The harness can now inject failures — `httpFailure` and `neverResolves` in `scripts/qa/scenarios.mjs` — and `read-error`, `read-capacity` and `read-in-flight` photograph the three states that matter. A malformed body is the one failure left unphotographed: the client maps it to `bad_json`, which renders the same banner as the `no_key` and `disabled` configuration states already covered in wording by `read-error`'s frame. Injecting it is one line whenever a reviewer wants the image.
 - **The curated case result panel, after a visitor pastes** — The board photographs the curated console at its first screen (`curated-readout`), which is one step before this. The panel is where the retired score gauge and the retired CLOSED GAP / PARTIALLY SURFACED / GAP HELD badge both sat, so it is the frame a reviewer most wants. It is not photographed because `runDate` is built from `new Date()` at run time and reaches the share text inside the panel, which would make the baseline change every day and turn a real regression into noise nobody reads. Pinning the clock is a harness capability, and the removal is held meanwhile by `test/reader-no-allclear-vocabulary.test.mjs`, which asserts at source level that no badge builder, verdict label table or tone class survives, and that the one sentence standing there is read off the stored case rather than computed from the paste.
 - **The correction chips after a person has corrected the reading** — Every board state captures the default reading. The two corrected states change a headline and add a call to action (`LOOP_STATE_STILL_MISSING`, `LOOP_STATE_NOT_CLEAR` in `workbench-app.jsx`). They are reachable by one more drive step and are the most obvious next scenarios to add.
-- **The Check Register above its top-N line, and the chip lane's own front door** — `register-overflow`, `register-overflow-expanded` and `chip-arrival` are written and complete — real payloads through the real assemblers, drive steps, DOM assertions, a state and an expectation — and they pass the same shape check the board runs over its own members. They sit in `PENDING_SCENARIOS` in `scripts/qa/scenarios.mjs` rather than in `SCENARIOS`, because membership in `SCENARIOS` is what obliges a committed baseline and the surface-finish lane holds every baseline until the founder gives the go-ahead after its mid-lane checkpoint. This is not the fixture-only lane: fixture-only means a scenario has no drive steps and cannot be photographed at all, and these can be photographed the moment they are allowed to be. Promotion is one move — cut the entry into `SCENARIOS`, run `--update <name>` — and the board tests then hold it like any other state. Until then the states are held by execution coverage in `test/register-overflow-contract.test.mjs`.
 - **The mobile-tall viewport** — Declared in VIEWPORTS and not part of the default board. It exists to re-test a reported blank-compositor claim at 375x812, not to double every baseline; running it by default would triple the image set to re-photograph the same states.
+- **The homepage's first viewport** — The scenario is written and sits in `PENDING_SCENARIOS` in `scripts/qa/scenarios.mjs`, which carries the measurements in full. Short version: at the board's desktop viewport `Page.captureScreenshot` does not return — 60s, 180s and 420s budgets all expired with the renderer at 98.5-99.7% CPU and RSS flat near 145MB, so the frame is compute-bound in software raster rather than waiting on anything. The cost is `.film-grain`, a fixed full-viewport feTurbulence layer, composited over `.hero__monolith-text`, a gradient masked through `background-clip: text` at up to 18.7rem; hiding either one alone lets the same frame capture in 1.3-1.7s. Pixel count, CSS filters, the sticky header and the nav breakpoint at 1280px were each ruled out by their own control. The other three homepage frames photograph normally, including one further down the same page at the same geometry, so this is one frame's blocker and not the page's. Nothing here is a product defect this lane may repair: both elements are in `styles.css`, and buying the frame by hiding one of them at capture time would make the baseline stop being what a reader sees.
 
 ## Images
 
-78 images, 78 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+86 images, 86 snapshots, ordered by filename. Every checksum below is of the committed bytes as they stand in this tree.
+
+### `advisory-boundaries--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `5e4d08a9155e1bb477e5df3bebc54a1a75a7a2851f4100a7787db9077608bcd0` |
+| bytes | 378959 |
+| snapshot | `advisory-boundaries--desktop.snapshot.txt` |
+| snapshot sha256 | `4f2b5d209f340c7d02a104ed63f6649b33f7f6363f6d430482a2a1d65d7f8776` |
+| snapshot bytes | 2356 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/advisory.html`, query `(none)` |
+| framed on | `.adv-practice` at scroll offset 2116 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Advisory, the practice terms — the three commitments, including the wall between advisory work and published measurement |
+| expected behaviour | Three statements, and the third is the one that matters most to the rest of the tree: advisory clients do not influence Imbas's public methods, measurements, or findings, and a business under advice is not published into measurement work without separate consent. The other two say what is not promised and what stays confidential. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
+
+### `advisory-boundaries--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `42f31275324ca5b9aafff6c4bc0703526113cf8a23b803f95562922f7e576db0` |
+| bytes | 327310 |
+| snapshot | `advisory-boundaries--mobile.snapshot.txt` |
+| snapshot sha256 | `ad229aa812cde57445c34faa0ca23f14d0fde253aedfa93c868a55cc2404fd62` |
+| snapshot bytes | 1997 |
+| viewport | 375x812@3x (mobile) |
+| url | `/advisory.html`, query `(none)` |
+| framed on | `.adv-practice` at scroll offset 3392 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Advisory, the practice terms — the three commitments, including the wall between advisory work and published measurement |
+| expected behaviour | Three statements, and the third is the one that matters most to the rest of the tree: advisory clients do not influence Imbas's public methods, measurements, or findings, and a business under advice is not published into measurement work without separate consent. The other two say what is not promised and what stays confidential. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
+
+### `advisory-masthead--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `d327e3cf324a7f605a78e7902a7c126c851c1ff4cdfbe1014a11c7cbc06853de` |
+| bytes | 458826 |
+| snapshot | `advisory-masthead--desktop.snapshot.txt` |
+| snapshot sha256 | `84005ec32bb701cfa7d5d077a8b61cca44deba9de2ea0c54b42d2b3158a96e90` |
+| snapshot bytes | 2283 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/advisory.html`, query `(none)` |
+| framed on | `.adv-masthead` at scroll offset 0 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Advisory, the masthead — the heading, the lede, and the thesis under it |
+| expected behaviour | The proposition the page opens with, in three parts: the heading, the sentence naming what the advisory work is for, and the thesis that says why both halves belong on one page. A later Advisory restructure changes this first, so it is framed on its own. |
+
+### `advisory-masthead--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `b16287e5ece9f71655b42c7845fbe8a8f3f4ce743be75994a0580ef32b5f0bff` |
+| bytes | 318905 |
+| snapshot | `advisory-masthead--mobile.snapshot.txt` |
+| snapshot sha256 | `cacae89949e7ecbe3ce4658a73516d8751090fcb4ff1d757ef73ae47d663520e` |
+| snapshot bytes | 1504 |
+| viewport | 375x812@3x (mobile) |
+| url | `/advisory.html`, query `(none)` |
+| framed on | `.adv-masthead` at scroll offset 0 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | Advisory, the masthead — the heading, the lede, and the thesis under it |
+| expected behaviour | The proposition the page opens with, in three parts: the heading, the sentence naming what the advisory work is for, and the thesis that says why both halves belong on one page. A later Advisory restructure changes this first, so it is framed on its own. |
 
 ### `chip-arrival--desktop.png`
 
@@ -410,6 +474,70 @@ A board that lists only what it covers reads as complete. These are the result s
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The workbench on arrival — the paste box, before anything is pasted |
 | expected behaviour | The paste box leads. The intro says what the Reader does and does not promise a verdict: paste an AI answer, the Reader inspects what it might be missing. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind. |
+
+### `home-archive-preview--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `e10338e7e5fc2d08571c675cc7ee9d36a743a7723ad3d123a3c691e2a5dd430f` |
+| bytes | 752038 |
+| snapshot | `home-archive-preview--desktop.snapshot.txt` |
+| snapshot sha256 | `8bd83f74ebe2c4bd241e6d7a11cd9a616ee45aca5409ca878209028ac2873824` |
+| snapshot bytes | 1423 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/index.html`, query `(none)` |
+| framed on | `.hp-arc-intro` at scroll offset 7695 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The homepage's archive preview — what the record claims about itself, above the featured case |
+| expected behaviour | The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product. |
+
+### `home-archive-preview--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `12059fa5c8c25460a2459853eebc7bf05b00af301284f49e17fa06cd8524e6ff` |
+| bytes | 787746 |
+| snapshot | `home-archive-preview--mobile.snapshot.txt` |
+| snapshot sha256 | `f0acbbf1f3b5e614a8f2b6dc1f6ee98d22dffd223d4050189969c726cb9809b6` |
+| snapshot bytes | 1117 |
+| viewport | 375x812@3x (mobile) |
+| url | `/index.html`, query `(none)` |
+| framed on | `.hp-arc-intro` at scroll offset 6889 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The homepage's archive preview — what the record claims about itself, above the featured case |
+| expected behaviour | The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product. |
+
+### `home-experience--desktop.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `1219cd3338641147129847188c67cb9e191d32584e9bacdc56e93ddd90ece972` |
+| bytes | 642644 |
+| snapshot | `home-experience--desktop.snapshot.txt` |
+| snapshot sha256 | `8e70cdb80c721c9529e9b0fe2247d384089c13606ccff72b7ff62baf141bfdee` |
+| snapshot bytes | 2139 |
+| viewport | 1440x900@2x (desktop) |
+| url | `/index.html`, query `(none)` |
+| framed on | `.your-experience__layout` at scroll offset 1917 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The homepage's experience region — the loop described in prose beside the two ways into it |
+| expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page. |
+
+### `home-experience--mobile.png`
+
+| field | value |
+| --- | --- |
+| sha256 | `7c70f0446db1efff9b647327f82ae783731dbe35d0665a4d72b0799bf95fb3e6` |
+| bytes | 544913 |
+| snapshot | `home-experience--mobile.snapshot.txt` |
+| snapshot sha256 | `e5e92b50b110328bcd132812b57bbc8c9b5253ce2d0604e702cdf3a05b2785ad` |
+| snapshot bytes | 1392 |
+| viewport | 375x812@3x (mobile) |
+| url | `/index.html`, query `(none)` |
+| framed on | `.your-experience__layout` at scroll offset 1568 |
+| browser | `HeadlessChrome/148.0.7778.96` |
+| state captured | The homepage's experience region — the loop described in prose beside the two ways into it |
+| expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page. |
 
 ### `input-integrity-intake--desktop.png`
 

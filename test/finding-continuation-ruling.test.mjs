@@ -465,7 +465,8 @@ test("every recorded population reseal proves a population that moved and nothin
   assert.ok(Array.isArray(reseals) && reseals.length >= 1, "the artifact must carry the population-reseal log");
 
   const byPath = new Map(CENSUS.source_extraction.map((s) => [s.path, s.sha256]));
-  for (const r of reseals) {
+  for (const [i, r] of reseals.entries()) {
+    const isNewest = i === reseals.length - 1;
     // The instrument's own verdict, recomputed at write time against the live measurement.
     assert.deepEqual(r.failures, [], `${r.date}: a recorded population reseal must have been eligible`);
     assert.equal(r.eligible, true);
@@ -493,20 +494,56 @@ test("every recorded population reseal proves a population that moved and nothin
     assert.deepEqual([...r.scenarios_added].sort(), r.scenarios_added_observed);
     assert.deepEqual([...r.scenarios_removed].sort(), r.scenarios_removed_observed);
     assert.ok(r.scenarios_added.length || r.scenarios_removed.length, "a population reseal must move a population");
-    // (6) Every addition's region disposition is recorded and measured true.
+    // (6) Every addition's region disposition is recorded — and, for the newest entry only,
+    // measured true. The region amendment of 2026-08-24 moved the live measurement off the
+    // superseded entries: an addition that has since legitimately reclassified would other-
+    // wise make an old, correct receipt ineligible and close the route a second time.
     assert.equal(r.added_scenario_dispositions_hold, true);
     assert.deepEqual(r.added_scenario_dispositions.map((d) => d.scenario).sort(), [...r.scenarios_added].sort());
     for (const d of r.added_scenario_dispositions) {
       assert.equal(typeof d.renders_region, "boolean", `${d.scenario}: the disposition is a measured fact`);
-      assert.equal(CENSUS.scenarios_rendering_region.includes(d.scenario), d.renders_region);
+      if (isNewest) assert.equal(CENSUS.scenarios_rendering_region.includes(d.scenario), d.renders_region);
     }
     // (7) Tied to a named change.
     assert.ok(r.authorizing_change && r.authorizing_change.length > 20, "the authorizing change must be described");
     // (8) Nothing existing left or changed classification quietly.
     assert.equal(r.retained_scenarios_unchanged, true);
-    assert.deepEqual(r.population_after, CENSUS.coverage_fingerprint.scenarios);
-    assert.deepEqual(r.region_rendering_after, CENSUS.scenarios_rendering_region);
+
+    // Which state this entry answers for — founder rulings of 2026-08-24, both of them. The
+    // newest entry answers for today and has to produce exactly what the instrument
+    // measured, in both dimensions. A superseded entry answers for its own move, and its
+    // link to today is the next entry starting where it finished. Asking every entry to
+    // reproduce the live state is what closed this route on its second use, and re-imposing
+    // it here would close it again with the instrument standing open.
+    assert.equal(r.is_newest_entry, isNewest, `${r.date}: the artifact records which entry answers for today`);
+    if (isNewest) {
+      assert.deepEqual(r.population_after, CENSUS.coverage_fingerprint.scenarios);
+      assert.deepEqual(r.region_rendering_after, CENSUS.scenarios_rendering_region);
+    } else {
+      assert.deepEqual(r.population_after, [...reseals[i + 1].population_before].sort(),
+        `${r.date}: a superseded entry hands its population to the entry after it`);
+      assert.deepEqual(r.region_rendering_after, [...reseals[i + 1].region_rendering_before].sort(),
+        `${r.date}: and hands its region state to the entry after it`);
+    }
   }
+
+  // The same walk the instrument refuses to write without, asserted against what it wrote:
+  // every link in both dimensions, and the last of each to the live measurement.
+  const chain = CENSUS.provenance.population_reseal_chain;
+  assert.equal(chain.intact, true);
+  assert.deepEqual(chain.failures, []);
+  assert.deepEqual(chain.dimensions, ["population", "region"]);
+  assert.ok(chain.links.every((l) => l.holds), "an intact chain records every link it walked");
+  const terminalLink = `${reseals[reseals.length - 1].date} → live`;
+  for (const dimension of chain.dimensions) {
+    const walked = chain.links.filter((l) => l.dimension === dimension);
+    assert.equal(walked.length, reseals.length, `${dimension}: one link per hand-off, plus the live one`);
+    assert.equal(walked[walked.length - 1].link, terminalLink, `${dimension}: the newest entry answers to the instrument`);
+  }
+  assert.equal(
+    chain.links.find((l) => l.dimension === "region" && l.link === terminalLink).produced,
+    CENSUS.scenarios_rendering_region.length,
+  );
 });
 
 test("the two reseal routes carry disjoint evidence, so neither can satisfy the other", () => {

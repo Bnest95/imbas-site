@@ -2313,9 +2313,117 @@ export const SCENARIOS = {
     ],
     assertSelector: "#result",
   },
+
+  // ── Homepage and Advisory ──────────────────────────────────────────────────
+  //
+  // These two pages carry the company's framing and its commercial boundary, and
+  // until now neither was on the board. Both are plain documents: no API, no mount,
+  // nothing fetched at load. So they carry `canned: true` with no routes, for the same
+  // reason Input Integrity does — there is no route to stub because there is no route.
+  // The one thing that arrives after first paint is the shared header's "More" control,
+  // and that is held by the readiness rule for the page rather than by any scenario.
+  //
+  // FOUR FRAMES, NOT FOURTEEN. The homepage has fourteen sections and photographing all
+  // of them would produce a wall of images nobody could attribute a change to. Each frame
+  // below is anchored on one named element, so when a section is rebuilt the rebuild
+  // reseals the frame that names it and leaves the others untouched. That is the whole
+  // point of framing on a selector rather than screenshotting a page.
+  //
+  // A fifth frame, `home-hero`, was written for the first viewport and is NOT here. It
+  // waits in `PENDING_SCENARIOS` below, which carries the measurements: its desktop frame
+  // cannot be rastered inside any shutter budget.
+  //
+  // What these frames are NOT is an endorsement of the copy inside them. They record the
+  // state as it stands so that the structural work coming next has something to diff
+  // against.
+
+  "home-experience": {
+    name: "home-experience",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage's experience region — the loop described in prose beside the two ways into it",
+    expected:
+      "The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page.",
+    routes: {},
+    steps: [{ waitFor: ".your-experience__layout" }],
+    // Both-viewport text only. "Suggest an investigation" and "Reviewed, not published
+    // automatically." are inside the block mobile hides, so asserting them here would
+    // fail the mobile frame for a difference the frames are supposed to record.
+    assertText: [
+      "Your Experience",
+      "Bring that answer to the Reader.",
+      "Open the Reader",
+      "Run a live inspection now.",
+    ],
+    assertSelector: ".experience-intake",
+    focus: ".your-experience__layout",
+  },
+
+  "home-archive-preview": {
+    name: "home-archive-preview",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage's archive preview — what the record claims about itself, above the featured case",
+    expected:
+      "The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product.",
+    routes: {},
+    steps: [{ waitFor: ".hp-arc-intro" }],
+    assertText: [
+      "Case Archive",
+      "Across ChatGPT, Claude, Gemini, and Grok",
+      "Cases are scored from 0 to 3 on the Volunteer Gap scale.",
+    ],
+    assertSelector: ".hp-arc-stat-strip",
+    focus: ".hp-arc-intro",
+  },
+
+  "advisory-masthead": {
+    name: "advisory-masthead",
+    page: "/advisory.html",
+    drivable: true,
+    canned: true,
+    state: "Advisory, the masthead — the heading, the lede, and the thesis under it",
+    expected:
+      "The proposition the page opens with, in three parts: the heading, the sentence naming what the advisory work is for, and the thesis that says why both halves belong on one page. A later Advisory restructure changes this first, so it is framed on its own.",
+    routes: {},
+    steps: [{ waitFor: ".adv-masthead" }],
+    assertText: [
+      "Get found. Get faster.",
+      "I help businesses use AI to win more customers, remove expensive repetitive work, and let the same team do more.",
+      "AI is changing both sides of the business at once",
+    ],
+    assertSelector: ".adv-masthead",
+    focus: ".adv-masthead",
+  },
+
+  "advisory-boundaries": {
+    name: "advisory-boundaries",
+    page: "/advisory.html",
+    drivable: true,
+    canned: true,
+    state: "Advisory, the practice terms — the three commitments, including the wall between advisory work and published measurement",
+    expected:
+      "Three statements, and the third is the one that matters most to the rest of the tree: advisory clients do not influence Imbas's public methods, measurements, or findings, and a business under advice is not published into measurement work without separate consent. The other two say what is not promised and what stays confidential. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose.",
+    routes: {},
+    steps: [{ waitFor: ".adv-practice" }],
+    assertText: [
+      "No promises about rankings or AI answers. Nobody honestly controls those.",
+      "Your material stays yours.",
+      "Advisory clients do not influence Imbas",
+      "are not included in published Imbas measurement work without separate consent and governance.",
+    ],
+    assertSelector: ".adv-practice",
+    focus: ".adv-practice",
+  },
 };
 
-// ── The waiting room, empty again ────────────────────────────────────────────
+// ── The waiting room, holding one ────────────────────────────────────────────
+//
+// It held nothing between the chips-from-inspection promotion and 2026-08-24, and the
+// entry now in it waits for a reason the room has not seen before. Read the block on
+// `home-hero` at the bottom of this comment before moving it anywhere.
 //
 // This room has now filled and emptied twice, and both times for the same reason:
 // membership in SCENARIOS obliges a committed image and snapshot,
@@ -2342,7 +2450,79 @@ export const SCENARIOS = {
 // waiting here has steps and can be photographed the moment it is allowed to be.
 // Promotion is one move — cut an entry into SCENARIOS, run `--update <name>` — and the
 // board tests then hold it exactly as they hold every other state.
-export const PENDING_SCENARIOS = {};
+//
+// ── A THIRD REASON TO WAIT, 2026-08-24 ───────────────────────────────────────
+//
+// The four entries before this one waited on permission. `home-hero` waits on a
+// measurement: at the board's desktop viewport its frame does not raster. That is a
+// different kind of hold and the paragraph above does not cover it, so it is written
+// out here rather than folded into the older reason.
+//
+// WHAT WAS MEASURED. `Page.captureScreenshot` never returns for the homepage's first
+// viewport at 1440x900 @2x. It is not slowness: budgets of 60s, 180s and 420s all
+// expired, and the call was still outstanding at each. Sampling the renderer through a
+// stall reads 98.5-99.7% CPU on one process with RSS flat near 145MB, so the work is
+// compute-bound software raster rather than a stall, a deadlock or a machine under
+// memory pressure. Everything else in the run is healthy: `readyState` is complete at
+// ~530ms and the scroll lands at ~1.9s.
+//
+// WHAT IT IS. Two elements, and the cost is in their composite rather than in either
+// alone. `.film-grain` is a fixed full-viewport layer at `opacity: 0.07` whose
+// background is a tiled feTurbulence SVG. It sits over `.hero__monolith-text`, a
+// `linear-gradient` masked through `-webkit-background-clip: text` at
+// `clamp(5.35rem, 15.2vw, 18.7rem)`. Hiding either ONE of them lets the identical frame
+// capture in 1.3-1.7s. Both live in `styles.css`; neither is this lane's to change.
+//
+// WHAT WAS RULED OUT, each by its own control. Total pixel count: the mobile-tall
+// viewport is 5.4Mpx and captures, while 1360x900 @2x is 4.9Mpx and does not. CSS
+// filters: injecting `filter: none; backdrop-filter: none` over everything changes
+// nothing. The sticky header: hiding it changes nothing. The nav breakpoint that ends
+// at 1280px: 1281 and 1300 both capture, and forcing that query's rules on at 1360 does
+// not help. Scroll position on the same page at the same geometry: `home-archive-preview`
+// captures in ~910ms, which is why this is one frame's problem and not the page's.
+//
+// WHERE THE EDGE IS. 1300x900 @2x captures in ~1.86s. 1360x900 @2x does not complete.
+// Below the edge the frame is stable, not merely obtainable: three runs at 1280 @2x
+// produced byte-identical output, so the region itself is deterministic and it is the
+// shutter that cannot be paid for.
+//
+// WHAT A RULING WOULD DECIDE. Either the `.film-grain` over `.hero__monolith-text`
+// composite changes so the frame rasters — a design change, and a design lane's call,
+// not a QA one — or the homepage's first viewport is accepted as a board-absent state
+// carrying execution coverage only. Two doors are already shut and neither should be
+// reopened quietly. Registering the scenario anyway obliges a desktop baseline that
+// cannot be rendered, which reds the board rather than covering anything. Hiding
+// `.film-grain` at capture time would buy the frame by making the baseline stop being
+// what a reader sees, and `scripts/qa/raster-policy.mjs` records that any tolerance at
+// all is a founder ruling rather than a code change. Dropping the desktop viewport to
+// @1x, where this frame captures in 441ms, would reseal every committed desktop
+// baseline in the repository and is not on the table for one frame's sake.
+export const PENDING_SCENARIOS = {
+  "home-hero": {
+    name: "home-hero",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage as it first arrives — header, the instrument line, the monolith, and the one action",
+    expected:
+      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the line that says what Imbas is; the IMBAS monolith and the sentence under it; and one action, Test your AI, with the sentence that says what pressing it involves. If a rebuild moves the action, drops the instrument line, or changes the navigation, this frame moves.",
+    routes: {},
+    // The hero markup ships complete, so the only step is the wait that proves the
+    // composition is on screen when the frame is taken. The header's injected control
+    // is waited on by the page readiness rule before any step runs.
+    steps: [{ waitFor: ".hero__center" }],
+    assertText: [
+      "The Inspection Layer for AI",
+      "Test your AI",
+      "Paste an answer. See what surfaced, what was missing, and how it was shaped.",
+    ],
+    assertSelector: ".hero__capture-block",
+    // Framed on the centre column rather than the whole hero: the hero is a full
+    // viewport tall, so centring it lands the frame on the top of the page and keeps
+    // the sticky header in the picture, which is where the navigation is proved.
+    focus: ".hero__center",
+  },
+};
 
 // Resolve a scenario's route table to concrete payloads.
 export function resolvePayloads(scenario) {

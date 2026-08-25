@@ -1,0 +1,60 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .your-experience__layout
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 1917
+timezone: UTC
+url: /index.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Case Archive" href="/archive.html"
+a "The Reader" href="/reader.html"
+a "For Institutions" href="/institutions.html"
+a "For Readers" href="/for-readers.html"
+a "AI Advisory" href="/advisory.html"
+button "More" disabled=false expanded=false
+span "▾"
+span "Your Experience"
+p "The AI output: not wrong, exactly. But off. Maybe it was you instead of answering you."
+span "managing"
+p "Something important is missing, or weirdly one-sided. It’s hedging like a lawyer instead of being a genuine thought partner."
+p "Bring that answer to the Reader. Imbas hands you a direct Second Question, the one that tests what the first answer may have left out. Ask it, bring the second answer back, and see them side by side."
+p "What showed up only after you asked directly? What changed? What still does not hold up? Keep the record before you decide what to trust, use, or send."
+a href="/reader.html?reader=1"
+span "Open the Reader"
+span "→"
+p "Run a live inspection now."
+p "Suggest an investigation"
+p "For cases we should investigate later."
+label "Topic"
+input disabled=false readonly=false type=text value_len=0
+label "AI answer"
+textarea disabled=false readonly=false value_len=0
+label "Contact"
+input disabled=false readonly=false type=email value_len=0
+span "Leave blank"
+input disabled=false readonly=false type=text value_len=0
+button disabled=false
+span "Suggest investigation"
+span "→"
+p "Reviewed, not published automatically."
