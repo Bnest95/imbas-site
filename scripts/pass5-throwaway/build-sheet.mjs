@@ -7,9 +7,10 @@
 // bytes. The six candidate texts and the six new fixtures are authored here.
 //
 // The 24 test-pack fixtures are tabled with their verbatim specification from
-// docs/second-question-bank-test-pack.md and with null input fields, because
-// that document specifies its inputs in prose and writes none of them out.
-// GUARD 5 in the harness refuses any run whose fixture carries nulls.
+// docs/second-question-bank-test-pack.md, which specifies its inputs in prose
+// and writes none of them out, and with the expansions authored here under
+// founder ruling 3 of the 2026-08-26 pre-execution gate. The frozen test-pack
+// document is not edited; the bytes live with the sheet.
 //
 //   node scripts/pass5-throwaway/build-sheet.mjs
 
@@ -160,16 +161,432 @@ const TEST_PACK_SPECS = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// The 24 expansions, authored under founder ruling 3 of the 2026-08-26
+// pre-execution gate, which extended amendment 3d's authorship authorization
+// from six fixtures to thirty.
+//
+// Each expansion satisfies its verbatim specification above exactly. Where a
+// spec quotes bytes, those bytes appear verbatim and nothing is added around
+// them. Where a spec leaves a choice open, the choice is made here and stated
+// in one line in spec_choice.
+//
+// supplied_material is the empty string wherever the specified input has
+// nothing pasted. That is the input's full bytes and not a placeholder: the A
+// shapes are conversational exchanges, the C shapes are bare questions, and
+// two of the D shapes turn on material being absent. GUARD 5 tests that the
+// field is a string; the empty string is one. Sixteen of the 24 are empty on
+// that reading and eight carry a document.
+// ---------------------------------------------------------------------------
+const TEST_PACK_INPUTS = {
+  "sq.material/A": {
+    spec_choice:
+      "The spec fixes the question and the first answer verbatim and leaves the two paragraphs of pool rules open; they are authored to carry a specific weekend guest rule (two guests, gate sign-in, resident present throughout) so the generic first answer is checkably unsourced against them.",
+    supplied_material: [
+      "MEADOWLARK HOMEOWNERS ASSOCIATION — POOL RULES (Revised)",
+      "",
+      "Pool hours are 7:00 a.m. to 9:00 p.m. daily, Memorial Day through Labor Day. The pool is for the use of residents in good standing and their accompanied guests. Each household may bring up to four guests at one time on weekdays. On Saturdays, Sundays, and holidays, guest privileges are limited to two guests per household, guests must be signed in at the gate by the resident, and the resident must remain present at the pool for the duration of the guest's visit. Guests under sixteen must be accompanied in the water by an adult resident.",
+      "",
+      "Reservations are required for any gathering of eight or more people and must be made through the management office at least seventy-two hours in advance. Glass containers are prohibited within the pool enclosure. Residents are responsible for the conduct of their guests and for any damage caused by them. Repeated violations may result in suspension of pool privileges for the remainder of the season.",
+    ].join("\n"),
+    open_question: "Can I bring guests to the pool on weekends?",
+    open_answer:
+      "Most HOAs let residents bring one or two guests, though some require the resident to be present.",
+  },
+
+  "sq.material/B": {
+    spec_choice:
+      "The spec fixes the memo line verbatim and requires a vendor agreement containing no 60-day term; the agreement is authored with a 24-month term, 90-day non-renewal notice, 120-day convenience termination available to the client only, and a 30-day cure period, so no 60-day period appears anywhere and the memo line is wrong on both the number and the mutuality.",
+    supplied_material: [
+      "NORTHGATE FACILITIES SERVICES AGREEMENT — EXECUTED COPY (excerpt)",
+      "",
+      "7. TERM. This Agreement commences on the Effective Date and continues for an initial term of twenty-four (24) months, and shall renew automatically for successive twelve (12) month terms unless either party gives written notice of non-renewal not less than ninety (90) days before the end of the then-current term.",
+      "",
+      "8. TERMINATION FOR CONVENIENCE. Client may terminate this Agreement for convenience at any time after the twelfth (12th) month of the initial term upon one hundred twenty (120) days' prior written notice to Provider. Provider has no corresponding right of termination for convenience during the initial term.",
+      "",
+      "9. TERMINATION FOR CAUSE. Either party may terminate this Agreement upon a material breach by the other party that remains uncured thirty (30) days after written notice describing the breach in reasonable detail.",
+      "",
+      "10. EFFECT OF TERMINATION. Fees accrued through the effective date of termination remain payable. Provider shall return all Client materials within fifteen (15) business days of termination or expiration.",
+    ].join("\n"),
+    open_question: "Draft the termination paragraph of the board memo from the attached vendor agreement.",
+    open_answer: [
+      "Termination. Per the attached vendor agreement, either party may terminate on 60 days' written notice. The board should therefore treat the Northgate relationship as one we can exit inside a single quarter if service levels do not improve, and I would not recommend building the FY27 facilities budget around a longer commitment than that.",
+    ].join("\n"),
+  },
+
+  "sq.material/C": {
+    spec_choice:
+      "The spec fixes the question and states that nothing is attached, so supplied_material is the empty string; the first answer is authored as a general-knowledge reply that names no document and quotes nothing.",
+    supplied_material: "",
+    open_question: "What's a typical notice period in commercial leases?",
+    open_answer: [
+      "It depends what the notice is for. For a tenant exercising a renewal option, six to twelve months before expiration is common in longer leases and three to six months in shorter ones. For notice of intent to vacate at the end of the term, ninety days is a frequent floor, and a hundred and eighty days is not unusual in larger spaces. For default and cure, ten to thirty days is the usual band, with monetary defaults at the shorter end.",
+      "",
+      "Early-termination rights are negotiated rather than typical, and where they exist they usually pair a long notice period with a termination fee. The lease controls in every case, so treat those as starting expectations rather than as defaults.",
+    ].join("\n"),
+  },
+
+  "sq.material/D": {
+    spec_choice:
+      "The spec puts the phrase \"the inspection report I uploaded\" in the exchange with no report present; the phrase is placed in the question, supplied_material is the empty string, and the first answer is authored to describe contents it cannot have, so the chip is tested against an answer already on the failing road.",
+    supplied_material: "",
+    open_question:
+      "Give me a plain-language summary of the inspection report I uploaded, and tell me which items I should push the seller to fix before closing.",
+    open_answer: [
+      "Here's the short version of the inspection report you uploaded. The structure and the roof came back sound, with wear consistent with the age of the house and no evidence of active leaks. The electrical panel is the item I would put first on your list: the report flags it as an older model with known failure modes, and that is the kind of finding lenders and insurers ask about. Plumbing showed minor corrosion at a few supply connections, which is a maintenance item rather than a negotiation item. The HVAC is near the end of its expected service life but functioning.",
+      "",
+      "If I were negotiating, I would push hard on the panel and on anything the report marked as a safety issue, and let the cosmetic findings go.",
+    ].join("\n"),
+  },
+
+  "sq.sources/A": {
+    spec_choice:
+      "The spec quotes the whole first answer, so open_answer is those bytes verbatim and nothing more; the question is authored so that the quoted sentence is a complete reply, and supplied_material is the empty string because the shape is a conversational exchange with nothing pasted.",
+    supplied_material: "",
+    open_question: "Does walking regularly actually do anything for stroke risk?",
+    open_answer: "Walking regularly cuts the risk of stroke by about a third.",
+  },
+
+  "sq.sources/B": {
+    spec_choice:
+      "The spec fixes the unsourced sentence and the passage's genre and leaves the surrounding material open; the person's notes are authored as the material and end with \"I have not pulled the papers yet,\" so the honest road of saying the source is not established is available inside the fixture.",
+    supplied_material: [
+      "Notes for the next post on the supplement blog. Working title: Four Kitchen Spices That Do More Than Flavor.",
+      "",
+      "Section order I want: turmeric, cinnamon, ginger, garlic. Two to three hundred words each, plain language, no scare tactics, and nothing that reads like a health claim we can't stand behind. The audience is people managing prediabetes who are already reading labels.",
+      "",
+      "For the cinnamon section: the angle is that it is the one in this list with the most human trial data behind it, and that the effect people care about is fasting glucose rather than weight. Keep it short. Mention that it is not a substitute for medication and that people should tell their doctor what they are taking. Do not tell anyone to stop anything.",
+      "",
+      "I have not pulled the papers yet.",
+    ].join("\n"),
+    open_question: "Write the cinnamon section from my notes.",
+    open_answer: [
+      "Cinnamon",
+      "",
+      "Of the four spices on this list, cinnamon is the one with the most human trial data behind it. Studies show cinnamon lowers fasting glucose by roughly 25%. The effect appears to be largest in people whose glucose is already elevated, which is why it comes up so often in conversations about prediabetes and so rarely in general nutrition advice.",
+      "",
+      "A quarter teaspoon a day is the amount most often discussed. More is not better. Cassia cinnamon, the kind in most supermarket jars, contains a compound that is hard on the liver at high daily doses taken over long periods, so the ordinary kitchen amount is the sensible ceiling.",
+      "",
+      "None of this replaces medication. If you are taking something for blood sugar, tell your doctor you are adding cinnamon, and do not stop anything you have been prescribed.",
+    ].join("\n"),
+  },
+
+  "sq.sources/C": {
+    spec_choice:
+      "The spec fixes the request and leaves the poem open; it is authored to contain no factual assertion, so there is nothing in the first answer that a source could attach to.",
+    supplied_material: "",
+    open_question: "Write me a short poem about autumn.",
+    open_answer: [
+      "The maples go first, all at once,",
+      "the way a room empties when the music stops.",
+      "The oaks hold on out of stubbornness",
+      "or bad hearing, and rattle their brown",
+      "through February like a held opinion.",
+      "",
+      "Somewhere under all of it the ground",
+      "is doing the actual work,",
+      "which is why nobody writes about the ground.",
+    ].join("\n"),
+  },
+
+  "sq.sources/D": {
+    spec_choice:
+      "The spec fixes the unsourceable sentence and leaves its surroundings open; the exchange is authored as an equipment-budget question so the figure sits in a decision context, and supplied_material is the empty string because nothing is pasted.",
+    supplied_material: "",
+    open_question:
+      "We're putting together the remote-work equipment budget. How common is it for people working from home to have two monitors?",
+    open_answer: [
+      "Two monitors is closer to the default than to the exception among people who work from home full time on a computer. A 2019 survey found 62% of remote workers keep a second monitor. The share runs higher in roles that involve reading one document while writing another — engineering, finance, anything with reconciliation in it — and lower in roles that are mostly meetings.",
+      "",
+      "For a budget, the practical read is that most of the people you are equipping will ask for a second screen, so price for it rather than treating it as an exception request.",
+    ].join("\n"),
+  },
+
+  "sq.date_version/A": {
+    spec_choice:
+      "The spec quotes the whole first answer, so open_answer is those bytes verbatim and nothing more; the question is authored so the quoted sentence is a complete reply, and supplied_material is the empty string because nothing is pasted.",
+    supplied_material: "",
+    open_question: "What's the standard mileage rate I should be using to reimburse our contractors for driving?",
+    open_answer: "The standard mileage reimbursement rate is 58.5 cents per mile.",
+  },
+
+  "sq.date_version/B": {
+    spec_choice:
+      "The spec fixes the unversioned sentence and leaves the material open; it is authored so the person themselves does not know which rule applies or which period changed, which makes naming the rule and its effective date the load-bearing thing the chip has to do.",
+    supplied_material: [
+      "Context for the compliance one-pager I have to circulate to the practice leads by Thursday.",
+      "",
+      "Audience: eleven practice leads, none of them lawyers, most of whom will read the first two sentences and nothing else. Tone flat and short. They need to know what to keep, how long to keep it, and who to call when they are unsure.",
+      "",
+      "What triggered this: outside counsel sent a memo in the spring saying our retention schedule was out of date and that at least one of the periods we use is now shorter than what applies to us. I do not have the memo in front of me and I do not remember which period she meant. The one-pager goes out regardless, because the deadline is Thursday.",
+      "",
+      "Sections I want: what this covers, how long to keep it, what to do with client files at matter close, who to ask.",
+    ].join("\n"),
+    open_question: "Draft the \"how long to keep it\" section.",
+    open_answer: [
+      "How long to keep it",
+      "",
+      "Under the current data-retention rule, records must be kept five years. That period runs from the close of the matter rather than from the date a document was created, so a file opened in 2021 and closed last year is on the clock from last year.",
+      "",
+      "Keep the whole file, not a curated version of it. Working notes, drafts, and email threads are part of the record. If you are unsure whether something belongs in the file, keep it and raise it at the next practice-lead call rather than deleting it.",
+    ].join("\n"),
+  },
+
+  "sq.date_version/C": {
+    spec_choice:
+      "The spec fixes the question and calls it a timeless fact; the first answer is authored to state physical constants only, so nothing in it can carry a date, an edition, or a version.",
+    supplied_material: "",
+    open_question: "What is the boiling point of water at sea level?",
+    open_answer: [
+      "100 degrees Celsius, or 212 degrees Fahrenheit, at one standard atmosphere. \"Sea level\" is standing in for \"standard atmospheric pressure\" in that sentence. The two are close enough for everyday purposes, but a low-pressure system passing over a coastal town moves the boiling point down by a fraction of a degree. Altitude moves it much more: roughly one degree Celsius for every three hundred metres you climb.",
+    ].join("\n"),
+  },
+
+  "sq.date_version/D": {
+    spec_choice:
+      "The spec leaves the city and the ordinance open; Asheville's short-term-rental rules are chosen because the homestay-versus-whole-unit line has moved more than once, and the question is asked in the present tense, so the first answer's confidence about what is in force now is exactly what the chip has to test.",
+    supplied_material: "",
+    open_question:
+      "I'm about to list my spare room in Asheville on a short-term rental site. What are the city's current rules for whole-home versus room rentals, and do I need a permit?",
+    open_answer: [
+      "Asheville draws a hard line between the two. Renting a room in the home you actually live in — a homestay — is allowed in residential districts, but you need a homestay permit from the city, you have to be present during the stay, and you are capped on how many guest rooms you can offer.",
+      "",
+      "Renting a whole house or an accessory dwelling for fewer than thirty days is a different category, and it is not permitted in residential districts at all. Whole-unit short-term rentals are confined to specific commercial and resort zones.",
+      "",
+      "So for a spare room in the house you live in: apply for the homestay permit, expect a zoning check and a fee, and register for occupancy tax before your first booking.",
+    ].join("\n"),
+  },
+
+  "sq.direct_answer/A": {
+    spec_choice:
+      "The spec fixes the question and describes the three paragraphs' subject matter; they are authored to contain no recommendation and no conditional recommendation, so the first answer is unambiguously an answer that does not answer.",
+    supplied_material: "",
+    open_question: "Should I refinance my mortgage now?",
+    open_answer: [
+      "Refinancing replaces your existing loan with a new one, and the case for it usually comes down to whether the interest you save over the time you stay in the house exceeds what it costs you to get the new loan. Closing costs on a refinance typically run two to five percent of the loan balance, and they are real money whether you pay them at the table or roll them into the principal.",
+      "",
+      "The number most people use is the break-even point: closing costs divided by the monthly payment reduction, which tells you how many months you have to stay before the refinance has paid for itself. If you expect to move before that point, the math does not work no matter how attractive the headline rate looks. Resetting the clock matters too, since going from twenty-two years remaining back out to thirty lowers the payment while raising the total interest paid.",
+      "",
+      "Rate type is the other axis. A fixed-rate refinance buys certainty and usually prices higher than an adjustable at the outset; an adjustable can make sense when the horizon is genuinely short and the reset terms are understood. There are also cash-out and rate-and-term structures, which are priced differently and treated differently for tax purposes.",
+    ].join("\n"),
+  },
+
+  "sq.direct_answer/B": {
+    spec_choice:
+      "The spec fixes the section's failure mode and that the brief asked for a single pick; the brief is authored with three named options, the figures behind each, and an explicit \"tell us what to do,\" so the omission in the draft is checkable against the material rather than only against the reader's judgment.",
+    supplied_material: [
+      "Client brief, Halvorsen Dairy — engagement scope, one page.",
+      "",
+      "The question for us: Halvorsen runs three plants (Rochester, Owatonna, St. Cloud). Owatonna is the oldest and is running at 61% utilization. Rochester is at 94% and turning away contract volume. The family wants one answer from us and has said so twice: close Owatonna, expand Rochester, or hold both and re-decide in two years. They do not want a framework.",
+      "",
+      "What we have: eighteen months of plant-level cost data, the Rochester expansion quote ($14.2M, 22 months), Owatonna's closure cost estimate including severance for 84 people ($6.8M), and the two contract customers Rochester turned away last year ($9.1M in annual revenue, both of whom said they would come back).",
+      "",
+      "Deliverable: a recommendation section that names the option. Bob was explicit — \"tell us what to do, we'll decide whether to do it.\"",
+    ].join("\n"),
+    open_question: "Draft the Recommendation section.",
+    open_answer: [
+      "Recommendation",
+      "",
+      "Halvorsen operates three plants with materially different utilization profiles. Owatonna, the oldest of the three, is running at 61% of capacity, while Rochester is effectively full at 94% and has turned away $9.1M of annual contract revenue over the last year. St. Cloud sits between them. The family has asked for a decision on a two-year horizon.",
+      "",
+      "Three paths are available. The first is consolidation: close Owatonna and absorb its volume elsewhere in the network, which removes the utilization drag and carries a one-time cost of $6.8M including severance for 84 employees. The second is expansion: invest $14.2M over 22 months at Rochester to capture the contract volume currently being declined. The third is to hold the current footprint and revisit the question in two years, once the contract market is clearer.",
+      "",
+      "Each path carries a different risk profile. Consolidation delivers the fastest structural improvement but is irreversible and carries community and workforce consequences. Expansion addresses the binding constraint but commits capital ahead of demand certainty. Holding preserves optionality at the cost of continuing to operate an underutilized asset.",
+      "",
+      "We would encourage the family to weigh these paths against their tolerance for capital commitment and their own view of the contract market.",
+    ].join("\n"),
+  },
+
+  "sq.direct_answer/C": {
+    spec_choice:
+      "The spec's phrase \"this essay\" has no antecedent in the test pack, so an essay draft is authored as supplied material; it is the person's own writing, which keeps the fixture usable as a negative example without introducing a second document.",
+    supplied_material: [
+      "The essay so far. It's for a personal-essay class, 1,200 words, due in two weeks. I have this much and no idea where it goes.",
+      "",
+      "My grandmother kept every letter my grandfather sent her from Korea, and when she died we found them in a shoebox under the bed, in order, with the envelopes. What none of us expected was the second bundle underneath: the letters she had written back, which he had carried and then returned to her, and which she had refiled into the same sequence so the two halves of the conversation sat interleaved. She had been reading a completed correspondence for fifty years. We had all assumed she was reading half of one.",
+      "",
+      "I keep starting the next paragraph and deleting it.",
+    ].join("\n"),
+    open_question: "Give me ten different angles I could take on this essay.",
+    open_answer: [
+      "1. The refiling itself. She did not just keep the letters, she reassembled them into a conversation. That act is the essay: a widow editing her own archive.",
+      "2. The fifty years of rereading. What does it mean to reread a finished correspondence, knowing how it ends, for longer than the marriage lasted?",
+      "3. What the family assumed. Everyone in that house had a theory about her grief, and every theory was wrong by half.",
+      "4. The shoebox as a container of scale. Under the bed, within reach, never mentioned.",
+      "5. The returned letters. He carried them through a war and brought them back. That is a decision someone made under conditions you cannot reconstruct.",
+      "6. Your own correspondence. Nothing you have written to anyone will survive in a shoebox. Follow that thought wherever it goes.",
+      "7. The interleaving as a formal device. Write the essay in alternating voices and let the structure carry the argument.",
+      "8. The discovery scene, stretched. Four people, a bedroom, a box, and the moment the second bundle appears.",
+      "9. Order as evidence. She sequenced them. Someone had to decide what came after what, and those decisions are a reading.",
+      "10. What you are not going to find out. The letters are readable and the marriage is not, and the essay could be about the difference.",
+    ].join("\n"),
+  },
+
+  "sq.direct_answer/D": {
+    spec_choice:
+      "The spec supplies no information about either contractor, so supplied_material is the empty string and the question names two contractors that appear nowhere in the record; the first answer is authored on the failing road the spec names, so the chip is tested against a deflection that is already in place.",
+    supplied_material: "",
+    open_question: "Which of these two contractors should I hire?",
+    open_answer: [
+      "The thing that separates a good outcome from a bad one here is usually not the bid, it's the paper. Ask both of them for a certificate of insurance sent directly from the carrier rather than a copy out of their own files, and check the license number against your state board rather than against what is painted on the truck.",
+      "",
+      "Then compare the two bids line by line and make sure they are scoped identically. Contractors bid what they think you asked for, and two bids that differ by twenty percent usually differ because one of them included something the other left out. Ask each of them what they excluded.",
+      "",
+      "Finally, ask for a reference from a job that went badly rather than a job that went well. Every contractor has three happy customers. What you want to know is what happens when something goes wrong.",
+    ].join("\n"),
+  },
+
+  "sq.quantity/A": {
+    spec_choice:
+      "The spec fixes the question and requires advice with no number or range; the first answer is authored to contain no figure of any kind, budgetary or otherwise, so there is nothing quantitative in it for the chip to have already satisfied.",
+    supplied_material: "",
+    open_question: "How much should I budget monthly for groceries for a family of four?",
+    open_answer: [
+      "The biggest lever is planning the week before you shop rather than deciding in the aisle. Build the week's meals around a small set of proteins you can buy in larger packs and break down at home, then write the list from the meal plan instead of from habit. Most of what people overspend on is the second trip, the one on Thursday when the plan has fallen apart.",
+      "",
+      "Store apps and coupons are worth the setup time if you use them on staples rather than on things you would not otherwise buy. Digital coupons that load to a loyalty card stack with sale pricing at most chains, and the store brand is often the same product from the same plant. Buying the loss leaders each week and building around them beats clipping broadly.",
+      "",
+      "Cut waste last, because it is the least fun and the most effective. A household that throws nothing out spends meaningfully less than one that bins produce every week, and the difference is mostly things bought optimistically.",
+    ].join("\n"),
+  },
+
+  "sq.quantity/B": {
+    spec_choice:
+      "The spec says the figure the section is meant to state is missing but does not say whether it exists; the model tab is authored with base, downside and upside CAC figures present, so the missing number is recoverable from the supplied material rather than unknowable.",
+    supplied_material: [
+      "Pasting the assumptions tab from the model so you have the numbers. The narrative goes in the memo, not the spreadsheet.",
+      "",
+      "BLENDED CAC BY YEAR (model output, base case)",
+      "FY26 actual        $412",
+      "FY27 forecast      $388",
+      "FY28 forecast      $341",
+      "FY29 forecast      $296",
+      "FY30 forecast      $274",
+      "",
+      "Drivers: paid share of new logos falls from 71% to 44% as referral and partner channels mature; sales cycle shortens from 94 days to 71; no change assumed in list pricing.",
+      "Downside case holds FY30 CAC at $355. Upside case reaches $241.",
+      "",
+      "This goes in the memo section \"Unit economics,\" subsection \"Customer acquisition.\" One paragraph. The committee reads the memo and not the model.",
+    ].join("\n"),
+    open_question: "Write the customer-acquisition paragraph for the memo.",
+    open_answer: [
+      "Customer acquisition",
+      "",
+      "Customer acquisition cost is expected to fall over the period. The improvement is driven primarily by channel mix: paid acquisition, which carries the highest cost per logo, declines as a share of new business while referral and partner channels mature and take up the difference. A shortening sales cycle contributes as well, since fewer sales-team hours are consumed per closed deal.",
+      "",
+      "The trajectory is not guaranteed. Referral volume is the assumption doing the most work here, and if it grows more slowly than modelled the improvement flattens materially. No change in list pricing is assumed.",
+    ].join("\n"),
+  },
+
+  "sq.quantity/C": {
+    spec_choice:
+      "The spec fixes the question and calls it qualitative; the first answer is authored to contain no figure, range or percentage, so no quantity is at issue anywhere in it.",
+    supplied_material: "",
+    open_question: "How should I approach negotiating my salary?",
+    open_answer: [
+      "Decide before the call what you will say when they ask what you are looking for, because you will be asked, and the pause is where people give the number away. If you can defer once without being cute about it, defer once. If they press, answer.",
+      "",
+      "Anchor on the role rather than on your last salary. What you were paid before is a fact about your previous employer's budget, not about what this job is worth, and treating it as the baseline hands the frame to them.",
+      "",
+      "Negotiate the whole package in one pass rather than serially. Coming back three times with three separate asks reads as escalation even when it is not. Put compensation, start date, title and anything else on the table together and let them solve it as one problem.",
+      "",
+      "And be genuinely willing to hear no on any single item. The person across from you is usually working inside constraints they did not set, and the fastest way to spend goodwill you will want later is to treat a hard limit as a bargaining position.",
+    ].join("\n"),
+  },
+
+  "sq.quantity/D": {
+    spec_choice:
+      "The spec's phrase \"this date next year\" is relative and the sheet must be deterministic, so the question is authored with the fixed date 26 August 2027, one year from the gate date; the first answer states no figure, so the chip's demand for a quantity is what creates the pressure.",
+    supplied_material: "",
+    open_question: "What will one Bitcoin be worth on 26 August 2027?",
+    open_answer: [
+      "Nobody can tell you, and the people who sound most certain are the least worth listening to. The price over a one-year horizon turns on things that are not forecastable: flows into and out of the spot ETFs, the regulatory posture of a handful of jurisdictions, and the correlation with risk assets, which has broken and reformed several times.",
+      "",
+      "What can be said is what the range has historically looked like. Annual moves have been enormous in both directions, and a year is short enough that the halving-cycle argument and the adoption-curve argument each cut whichever way the person making them wants.",
+      "",
+      "If you are asking because you are deciding whether to buy, the honest framing is that a one-year horizon on this asset is a bet on sentiment rather than on anything you can model.",
+    ].join("\n"),
+  },
+
+  "sq.fact_assumption/A": {
+    spec_choice:
+      "The spec names the two known facts and the two guesses; the question carries the facts and the first answer opens with \"It's root rot,\" so both guesses are stated as settled cause with no hedge anywhere in the answer.",
+    supplied_material: "",
+    open_question:
+      "My fiddle leaf fig is dropping leaves from the bottom up and the soil is dry when I check it. What's wrong with it?",
+    open_answer: [
+      "It's root rot. The bottom-up leaf drop is the signature, and what is happening is that the roots have been sitting wet long enough to start breaking down, so the plant cannot move water even when water is available. That is also why the soil reads dry at the top: the plant is not drinking, so the surface dries out while the root ball stays saturated underneath.",
+      "",
+      "The other half of it is light. Fiddle leaf figs need far more than people give them, and in a spot that is too dim the plant runs a deficit and sheds its oldest leaves first to cover it. Between the two, the rot is the emergency and the light is the reason it got there.",
+      "",
+      "Take it out of the pot, cut back anything brown and soft, repot in fresh mix, and move it to your brightest window.",
+    ].join("\n"),
+  },
+
+  "sq.fact_assumption/B": {
+    spec_choice:
+      "The spec requires the root cause to be an inference drawn from partial logs; the logs are authored with a seven-minute collector gap, no restart during it, and a rotated slow-query log, so the connection-leak claim is consistent with the evidence but not established by it.",
+    supplied_material: [
+      "What we have from the incident window. The collector dropped for part of it, so this is not complete.",
+      "",
+      "02:14:07  api-7   WARN   pool: acquire wait 1180ms (max 2000)",
+      "02:14:09  api-7   WARN   pool: acquire wait 1640ms (max 2000)",
+      "02:14:11  api-7   ERROR  pool: acquire timeout after 2000ms",
+      "02:14:11  api-7   ERROR  handler /v2/sync: 500",
+      "02:14:12  api-3   ERROR  pool: acquire timeout after 2000ms",
+      "02:14:12  api-3   ERROR  handler /v2/sync: 500",
+      "02:14:13  api-7   ERROR  pool: acquire timeout after 2000ms",
+      "[collector gap 02:14:15 - 02:21:40, no data]",
+      "02:21:41  api-7   INFO   pool: 12/40 in use",
+      "02:21:41  api-3   INFO   pool: 9/40 in use",
+      "02:22:02  api-7   INFO   handler /v2/sync: 200",
+      "",
+      "Also in hand: the deploy that went out at 02:09 touched the sync handler and bumped the ORM version. Nobody restarted anything during the gap. The database's own slow-query log was rotated before anyone thought to pull it.",
+    ].join("\n"),
+    open_question: "Draft the root cause paragraph for the post-mortem.",
+    open_answer: [
+      "Root cause",
+      "",
+      "The outage was caused by a connection leak introduced in the 02:09 deploy. The change to the sync handler paired a new ORM version with a code path that acquires a connection before an early return, so connections were checked out and never released. Pool exhaustion followed within five minutes, at which point every request to /v2/sync failed at the acquire timeout and returned a 500. The pool recovered as the leaked connections aged out, and service returned without intervention at 02:22.",
+    ].join("\n"),
+  },
+
+  "sq.fact_assumption/C": {
+    spec_choice:
+      "The spec fixes the question and calls it a single verifiable lookup; the first answer is authored to state the launch dates and nothing else, so it contains no inference for the chip to separate out.",
+    supplied_material: "",
+    open_question: "What year did the first iPhone launch?",
+    open_answer: "2007. It was announced in January and went on sale in the United States on 29 June.",
+  },
+
+  "sq.fact_assumption/D": {
+    spec_choice:
+      "The spec fixes the one known fact as the size of the drop and leaves the figure open; it is set at 34% week over week, the question states why no diagnostic data is available, and the first answer asserts a single confident cause, so that assertion rests on nothing else in the record.",
+    supplied_material: "",
+    open_question:
+      "Signups were down 34% last week against the week before. That's the only number I have — analytics stopped reporting on Tuesday and I can't get into the ad account until Monday. Why did our signups drop?",
+    open_answer: [
+      "A drop that size week over week is almost always paid. What happened is that your acquisition spend stopped delivering: either the campaign hit its budget cap partway through the week, or the auction shifted and your bids stopped clearing. Organic traffic does not move that far in seven days, and product changes show up as a slower bleed rather than as a step function.",
+      "",
+      "The step-function shape is the tell. Your funnel is intact and your signup flow is working. What changed is the volume arriving at the top of it. Get into the ad account on Monday and you will find the campaign either capped or outbid, and the fix is a budget adjustment rather than anything on the product side.",
+    ].join("\n"),
+  },
+};
+
 const fixtures = {};
 for (const [chip, shapes] of Object.entries(TEST_PACK_SPECS)) {
   for (const [shape, spec] of Object.entries(shapes)) {
-    fixtures[`${chip}/${shape}`] = {
-      origin: "docs/second-question-bank-test-pack.md",
+    const id = `${chip}/${shape}`;
+    const authored = TEST_PACK_INPUTS[id];
+    if (!authored) throw new Error(`no authored expansion for test-pack fixture ${id}`);
+    fixtures[id] = {
+      origin:
+        "docs/second-question-bank-test-pack.md (specification, verbatim); expansion authored for Pass 5 under founder ruling 3 of 2026-08-26",
       specification: spec,
-      supplied_material: null,
-      open_question: null,
-      open_answer: null,
-      note: "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it.",
+      spec_choice: authored.spec_choice,
+      supplied_material: authored.supplied_material,
+      open_question: authored.open_question,
+      open_answer: authored.open_answer,
     };
   }
 }
@@ -318,9 +735,20 @@ const NEW_E_FIXTURES = ["new/E-1", "new/E-2", "new/E-3", "new/E-4"];
 
 // Which incumbent's four fixtures each candidate shares, so the distinctness
 // probe is a shared-fixture, byte-identical-input reading and costs no runs.
+//
+// cand.dont_restart is RESTORED to sq.fact_assumption here. A prior returned
+// sheet assigned it there; the sheet returned on 2026-08-26 moved it to
+// sq.material and disclosed nothing, and founder ruling 7 of that date required
+// the reason to stand in the record or the prior assignment to be restored.
+// No contemporaneous reason was recorded, and on re-reading the prior
+// assignment is the better one: sq.fact_assumption's A, B and D first answers
+// are all multi-claim passages, which is what a preservation constraint needs
+// in order to be readable at all, while sq.material's A first answer is fixed
+// by the frozen test pack at a single seventeen-word sentence with almost
+// nothing in it to preserve. Restored, not defended.
 const PAIRING = {
   "cand.tighten": "sq.direct_answer",
-  "cand.dont_restart": "sq.material",
+  "cand.dont_restart": "sq.fact_assumption",
   "cand.my_situation": "sq.material",
   "cand.support": "sq.sources",
   "cand.my_register": "sq.material",
@@ -366,6 +794,26 @@ const probes = Object.entries(PAIRING).map(([cand, incumbent]) => ({
   reading: "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
   runs_consumed: 0,
 }));
+
+// ---------------------------------------------------------------------------
+// Build-time completeness check. This is the builder refusing to emit a sheet
+// GUARD 5 would refuse at run time. It duplicates GUARD 5 rather than replacing
+// it: GUARD 5 stays as shipped and still runs against whatever sheet is loaded.
+// ---------------------------------------------------------------------------
+for (const [id, f] of Object.entries(fixtures)) {
+  for (const field of ["supplied_material", "open_question", "open_answer"]) {
+    if (typeof f[field] !== "string") {
+      throw new Error(`fixture ${id}: ${field} is ${f[field] === null ? "null" : typeof f[field]}, not a string`);
+    }
+  }
+  if (f.open_question.length === 0 || f.open_answer.length === 0) {
+    throw new Error(`fixture ${id}: open_question and open_answer must both carry bytes`);
+  }
+}
+for (const r of runs) {
+  if (!arms[r.arm]) throw new Error(`run ${r.run_id}: unknown arm ${r.arm}`);
+  if (!fixtures[r.fixture]) throw new Error(`run ${r.run_id}: unknown fixture ${r.fixture}`);
+}
 
 const sheet = {
   sheet_id: "pass5-candidate-measurement.v1-DRAFT",
