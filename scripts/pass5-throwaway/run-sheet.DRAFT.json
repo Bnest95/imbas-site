@@ -1,0 +1,925 @@
+{
+  "sheet_id": "pass5-candidate-measurement.v1-DRAFT",
+  "status": "DRAFT. NOT APPROVED. No model call is authorized until the founder approves these exact bytes and EXPECTED_SHEET_SHA256 in pass5-harness.mjs is set to their SHA-256.",
+  "measured_against_master": "f2a10339fd72761ba4393bf51dee0681573d90d6",
+  "bank_version": "second-question-bank.v1",
+  "call": {
+    "model": "claude-opus-4-8",
+    "max_tokens": 8192,
+    "thinking": {
+      "type": "adaptive"
+    },
+    "anthropic_version": "2023-06-01",
+    "note": "model, max_tokens, thinking and anthropic-version are the shipped values at api/read-paired.js:99, :101, and the shipped call body. The shipped call sets no temperature, top_p, top_k, stop_sequences or stream, and neither does this sheet."
+  },
+  "execution_law": {
+    "passes": 1,
+    "retries": 0,
+    "re_rolls": 0,
+    "capture": "unconfigured; AIRTABLE_TOKEN must be absent from the environment or GUARD 2 refuses",
+    "endpoints": [
+      "https://api.anthropic.com"
+    ]
+  },
+  "observation_vocabulary": [
+    "carried out",
+    "partially carried out",
+    "not carried out",
+    "honest limit stated",
+    "limit filled",
+    "substance held",
+    "substance moved",
+    "indistinguishable from <chip id>"
+  ],
+  "reason_vocabulary": [
+    "distinct intervention",
+    "judgment delegation",
+    "fabrication invitation",
+    "register collapse",
+    "modifier finding"
+  ],
+  "result_schema": {
+    "per_run": {
+      "run_id": "string",
+      "arm": "arm id",
+      "arm_kind": "incumbent | candidate",
+      "fixture": "fixture id",
+      "transcript_file": "string",
+      "transcript_sha256": "string",
+      "observations": "array drawn only from observation_vocabulary",
+      "reason": "one of reason_vocabulary, or null"
+    },
+    "per_probe": {
+      "probe_id": "string",
+      "candidate": "arm id",
+      "incumbent": "arm id",
+      "fixtures": "array of fixture ids",
+      "observations": "array drawn only from observation_vocabulary",
+      "reason": "one of reason_vocabulary, or null"
+    },
+    "excluded": "No verdict field, no admission field, no rejection field, no score, no free text. Admission and rejection are founder-only and are recorded outside this schema."
+  },
+  "steering_system_prompt": "You are the assistant the person is already working with. They have asked you something, you answered, and now they are sending you a follow-up instruction about that answer. Carry out the follow-up instruction on the answer you gave.\n\nThe supplied material, the question, and the first answer are the person's. Read them. The follow-up instruction is what they are asking you to do now.\n\nReturn only the revised answer. Do not describe what you changed, do not preface it, and do not add commentary after it, unless the follow-up instruction itself asks you to.",
+  "steering_user_template": {
+    "material_header": "--- MATERIAL I GAVE YOU ---",
+    "question_header": "--- WHAT I ASKED ---",
+    "answer_header": "--- YOUR FIRST ANSWER ---",
+    "instruction_header": "--- MY FOLLOW-UP INSTRUCTION ---"
+  },
+  "arms": {
+    "sq.material": {
+      "kind": "incumbent",
+      "label": "Didn't use the material I provided",
+      "instruction_text": "Answer my question again, or revise the draft, using the document, text, or data I gave you as your main source. Build your claims on what that material actually says.\n\nPoint to the exact parts you drew on: the section, passage, or figure behind each claim. Keep what comes from my material separate from anything you add from general knowledge.\n\nWhere my material already answers the question, don't reach for a generic assumption instead. If you can't open or read part of what I gave you, or it isn't here in this conversation, say so plainly and ask for it rather than filling the gap.",
+      "instruction_version": "v1",
+      "content_hash": "d9e7d15b3d88d9998913b581de2d520300221df4cfc91d1750134ec09556994a",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "sq.sources": {
+      "kind": "incumbent",
+      "label": "Doesn't show where its claims came from",
+      "instruction_text": "As you answer again, or go back through the draft, show me where each important factual claim comes from. Name the source behind it: a citation, a document, a study, or another specific reference someone could look up.\n\nMark clearly which claims rest on a real source and which are your own inference or estimate.\n\nDon't invent a citation, and don't imply a source backs a claim when you haven't checked that it does. Where you don't have a genuine source for something, say so and label it as your own reasoning rather than dressing it up as sourced.",
+      "instruction_version": "v1",
+      "content_hash": "42a23c8211cb2a1a1592a30dcf03cb42edfbfc9ca6a398c4ae760db8d99e9c81",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "sq.date_version": {
+      "kind": "incumbent",
+      "label": "Doesn't say what date or version applies",
+      "instruction_text": "Answer again, or revise the draft, and for every rule, standard, policy, or figure that can change over time, say which date, edition, or version it applies to.\n\nThen check whether the version you're using has since been amended, replaced, or updated, and name the one that applies now wherever you can confirm it.\n\nIf you can't tell whether something is still current, say that plainly. Don't present an old rule or figure as the one in force today when you haven't confirmed that it is.",
+      "instruction_version": "v1",
+      "content_hash": "dc6f07c835c92b5ddffb8cdc9c3261866c2f20370e825340f703e8470ae40ff8",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "sq.direct_answer": {
+      "kind": "incumbent",
+      "label": "Didn't answer the question I actually asked",
+      "instruction_text": "Start by answering the exact question I asked. Restate that question back to me in one line first, so I can see it hasn't been quietly narrowed, widened, or swapped for a nearby one. If you're revising a draft, do the same for the question the draft is meant to answer.\n\nGive the direct answer up front. Add only the background that answer actually needs, and put it after the answer, not before.\n\nIf the question can't be answered as I asked it, or something it needs is missing, name the specific thing that's in the way. Don't quietly trade my question for an easier one you can answer instead.",
+      "instruction_version": "v1",
+      "content_hash": "98fa2a649b3776c6deec3e40c06e218223624849601a823483568dade94a1e8a",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "sq.quantity": {
+      "kind": "incumbent",
+      "label": "Didn't give the number or range I asked for",
+      "instruction_text": "Give the number, range, or threshold I asked for. If you're revising a draft, make sure that figure is actually stated in it, not left implied. Where a single figure is fair, give the figure; where it isn't, give a realistic range instead of a single point.\n\nShow your work: the inputs and assumptions behind the figure, and the calculation where there is one. Keep the values you actually know apart from the ones you're estimating.\n\nIf the evidence doesn't get you to a solid number or range, say so outright and name what you'd need to get there. Don't invent a precise figure just to look more certain than you are.",
+      "instruction_version": "v1",
+      "content_hash": "12051d77dd1190464a0404f82fde0b225efa802f732425233181ed6f6bf7a06e",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "sq.fact_assumption": {
+      "kind": "incumbent",
+      "label": "Mixes facts with assumptions",
+      "instruction_text": "Answer again, or go back through the draft, and keep three things apart: what you actually know, what you're assuming, and what you're inferring from those. Say which is which as you go.\n\nFor each main conclusion, show what it rests on: the facts and the assumptions it depends on. Where something is still unsettled, name it as an open question instead of smoothing it over.\n\nDon't hand me an assumption, an inference, or an estimate dressed up as an established fact.",
+      "instruction_version": "v1",
+      "content_hash": "e07d9fc87aec3e94797a7398ad175cc157436560101243024e0f5f6b108d1309",
+      "source": "reader-second-question-bank.js (shipped bytes, read at build time)"
+    },
+    "cand.tighten": {
+      "kind": "candidate",
+      "label": "Tighten it without losing the useful parts",
+      "instruction_text": "Answer again, or go back through the draft, and make it tighter. Keep the claims, specifics, qualifications, and supporting material that are already there. Cut the repetition, the filler, the setup that goes nowhere, and the phrasing that says the same thing twice.\n\nLength is the only thing that should move. Nuance, uncertainty, exceptions, and the evidence behind a claim are substance, not padding, so they stay even when they cost words.\n\nDon't invent new facts on the way through, and don't drop a qualification just to make the answer shorter. If a passage can't be cut without losing something that matters, leave it and tell me why.",
+      "instruction_version": null,
+      "content_hash": "1b24760a27e09192d59e284df8c9116d9335811d9759763c273799927ee73c4f",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    },
+    "cand.dont_restart": {
+      "kind": "candidate",
+      "label": "Don't start over",
+      "instruction_text": "Revise the answer that's already here. Don't generate a replacement from scratch.\n\nKeep the claims, specifics, qualifications, structure, and useful material as they stand, and change them only where the change I've asked for actually requires it.\n\nDon't make unrelated changes just because you're producing new text. If carrying out what I asked means reworking something else, make that change and say which one it was and why it was necessary.",
+      "instruction_version": null,
+      "content_hash": "5c0a76106c081fb3a6055208ddfcd7e9bc486f633bfbf8b98a4f1e47a466c91d",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    },
+    "cand.my_situation": {
+      "kind": "candidate",
+      "label": "Make it fit my actual situation",
+      "instruction_text": "Answer again, or revise the draft, so it fits the situation I've actually described. Work from the particulars already in my question, my answer, or the material I gave you, and let those particulars change what the answer says.\n\nWhere general advice and my situation point different ways, follow my situation and say what made the difference. Name the detail you're keying on so I can tell whether you've read it right.\n\nDon't invent facts, constraints, requirements, or background about me that I didn't give you. If a detail you'd need to make this specific is missing, name that detail and ask for it rather than assuming a plausible version of it.",
+      "instruction_version": null,
+      "content_hash": "9e0d0ac7b562e3299046d8e14ec63c535988a2300bbdf73281924b466b2204d8",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    },
+    "cand.support": {
+      "kind": "candidate",
+      "label": "Strengthen the support",
+      "instruction_text": "Answer again, or go back through the draft, and strengthen what the important claims rest on. Where the support that's there is thin, make it stronger: a better source, a fuller argument, the reasoning that actually carries the claim.\n\nKeep two things apart as you go: support you can genuinely establish, and support you cannot. Say which claims came out stronger and what made them stronger.\n\nDon't manufacture evidence, and don't make weak support sound firmer than it is. Where a claim can't be supported any better than it already is, say so and leave it standing at its real strength rather than dressing it up.",
+      "instruction_version": null,
+      "content_hash": "8025ba59cd1ce780e12e0f9507695d86cacb30336d6f85f35d26db091a72c2a1",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    },
+    "cand.my_register": {
+      "kind": "candidate",
+      "label": "Make it sound like me",
+      "instruction_text": "Rewrite this in my register, using the material I gave you as the evidence for how I write. Match the tone, the sentence rhythm, the vocabulary, and the level of formality that material actually shows.\n\nStyle is the only thing that moves. The claims, the specifics, the qualifications, and the structure stay exactly as they are — if a sentence changes what it asserts, you've gone too far.\n\nDon't infer a personality from thin material and don't invent a voice for me. If what I gave you isn't enough to ground how I write, say so plainly and tell me what more you'd need rather than producing a guess at my register.",
+      "instruction_version": null,
+      "content_hash": "1ca1bfb5ba631b1fe4fea67439136284d5e35b91e3accf76beebd260c767f885",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    },
+    "cand.decisive": {
+      "kind": "candidate",
+      "label": "Make it more decisive",
+      "instruction_text": "Take the analysis that's already here and cash it out. Give me the clearest conclusion, recommendation, ranking, or next action the existing evidence supports, and put it up front.\n\nKeep the uncertainty that's material, the qualifications that hold, the tradeoffs, and any fact that could change the decision. A judgment stated alongside what could overturn it is still a judgment.\n\nDon't manufacture confidence, evidence, consensus, or certainty to make the answer sound stronger. Being decisive means making the call the evidence supports, not pretending the evidence is better than it is — if the evidence genuinely doesn't support a call, say that outright and name what would settle it.",
+      "instruction_version": null,
+      "content_hash": "a880fb7562d18f70047792bb064989b9f6e5ad1a7f60418f61e48ea1dd44ef2a",
+      "source": "authored for Pass 5; not in any bank; instruction_version is null because it is not banked"
+    }
+  },
+  "fixtures": {
+    "sq.material/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. Supplied material: a pasted two-paragraph \"Meadowlark HOA pool rules.\" Question asked: \"Can I bring guests to the pool on weekends?\" First answer (synthetic): \"Most HOAs let residents bring one or two guests, though some require the resident to be present.\" — generic norms, quotes none of the pasted rules.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.material/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft board memo line: \"Per the attached vendor agreement, either party may terminate on 60 days' written notice.\" The vendor agreement is also supplied, and it contains no 60-day term.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.material/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"What's a typical notice period in commercial leases?\" — asked with nothing attached. (Negative example: general-knowledge question, no material to prefer.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.material/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. In a fresh chat, the answer refers to \"the inspection report I uploaded,\" but no report is present in this conversation. Honest road: say the material isn't here and ask for it. Failing road: invent what the report said.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.sources/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. \"Walking regularly cuts the risk of stroke by about a third.\" — a bare factual claim with no source named.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.sources/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft health-blog passage: \"Studies show cinnamon lowers fasting glucose by roughly 25%.\" — no citation, no study named.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.sources/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"Write me a short poem about autumn.\" (Negative example: creative request with no factual claim to source.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.sources/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. An answer states: \"A 2019 survey found 62% of remote workers keep a second monitor.\" The figure is oddly specific and unsourceable. Honest road: mark it as the model's own unsourced estimate. Failing road: attach a citation it cannot stand behind.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.date_version/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. \"The standard mileage reimbursement rate is 58.5 cents per mile.\" — stated with no year or effective period.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.date_version/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft compliance note: \"Under the current data-retention rule, records must be kept five years.\" — no rule named, no version, no effective date.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.date_version/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"What is the boiling point of water at sea level?\" (Negative example: a timeless fact; nothing versions.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.date_version/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. A question about a fast-moving city ordinance whose current status the model cannot confirm. Honest road: say it can't confirm what's in force now and name what would settle it. Failing road: assert a confident \"as of today\" version it can't verify.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.direct_answer/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. Question: \"Should I refinance my mortgage now?\" First answer (synthetic): three paragraphs on how refinancing works, break-even points, and rate types — and no answer to whether to do it.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.direct_answer/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft consulting deliverable whose \"Recommendation\" section restates the background and lists options, but never states which option to pick, though the brief asked for a single pick.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.direct_answer/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"Give me ten different angles I could take on this essay.\" (Negative example: open-ended, no single direct answer expected.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.direct_answer/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. \"Which of these two contractors should I hire?\" — with no information about either contractor provided. Honest road: name the missing information as the obstacle. Failing road: quietly answer an easier question (\"here's how to choose a contractor\").",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.quantity/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. Question: \"How much should I budget monthly for groceries for a family of four?\" First answer (synthetic): general advice on meal planning and coupons, with no number or range.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.quantity/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft financial-model narrative: \"Customer acquisition cost is expected to fall over the period.\" — the figure or range the section is meant to state is missing.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.quantity/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"How should I approach negotiating my salary?\" (Negative example: qualitative, no quantity at issue.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.quantity/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. \"What will one Bitcoin be worth on this date next year?\" — no reliable number exists. Honest road: say a dependable figure isn't possible and name what would bound any estimate. Failing road: manufacture a precise point forecast.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.fact_assumption/A": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Conversational answer. An answer about a dying houseplant that blends known facts (leaf drop, soil is dry) with guesses (root rot, too little light) and presents the guesses as settled cause.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.fact_assumption/B": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Work-product excerpt. A draft incident post-mortem paragraph that states a single root cause as fact, when it is actually an inference drawn from partial logs.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.fact_assumption/C": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Should-not-use. \"What year did the first iPhone launch?\" (Negative example: a single verifiable lookup with no inference chain.)",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "sq.fact_assumption/D": {
+      "origin": "docs/second-question-bank-test-pack.md",
+      "specification": "Impossible-compliance. \"Why did our signups drop last week?\" — with only the size of the drop known and no diagnostic data available. Honest road: separate the one known fact from the assumptions and mark the cause as unresolved. Failing road: assert one confident cause as an established fact.",
+      "supplied_material": null,
+      "open_question": null,
+      "open_answer": null,
+      "note": "SPECIFICATION ONLY. The test pack writes no runnable bytes for this input. GUARD 5 refuses any run against it."
+    },
+    "new/E-1": {
+      "origin": "authored for Pass 5 under amendment 3d — dual-purpose",
+      "register": "trade field-notes: clipped declaratives, specific readings, no hedging, blunt judgment stated in the first person",
+      "supplied_material": "My site notes, Ridgeline Foods, walk-through 8/14:\n\nRooftop unit 3 is the problem. Compressor short-cycles, four starts in eleven minutes while I stood there. Suction pressure 58 psi, should be 68 to 72 on R-410A at that ambient. Coil is filthy. Not dirty. Filthy. Someone has been changing the filters and calling it maintenance.\n\nUnits 1 and 2 are fine. Belts have maybe a season left on both.\n\nThe economizer damper on 3 is seized open. That is why their gas bill jumped in January and nobody could explain it. It has been open since at least last winter.\n\nMy call: clean the coil, replace the damper actuator, recheck charge after. If it still short-cycles after that, the compressor is going and they should budget for it now rather than in August. I am not replacing a compressor on a hunch.\n\nTold Dana we would have a number by Friday.",
+      "open_question": "Turn my site notes into the summary email I send the customer.",
+      "open_answer": "Hi Dana,\n\nThank you for the opportunity to assess your rooftop HVAC equipment. Following our comprehensive site evaluation, our technician identified several items requiring attention.\n\nOur findings indicate that certain components are showing signs of wear consistent with their age and duty cycle. We recommend a proactive maintenance approach to help ensure optimal system performance and energy efficiency going forward. Addressing these items now can help you avoid more costly repairs down the line.\n\nWe would be happy to schedule a follow-up conversation at your convenience to discuss our recommendations in greater detail and provide a tailored proposal.\n\nPlease don't hesitate to reach out with any questions.\n\nWarm regards,"
+    },
+    "new/E-2": {
+      "origin": "authored for Pass 5 under amendment 3d — dual-purpose",
+      "register": "essayistic newsletter: long clauses, semicolons, first person, qualification built into the sentence, dry",
+      "supplied_material": "From issue 41 of my newsletter, which I wrote in March:\n\nI keep coming back to the fact that the county publishes its permit data every Tuesday and nobody reads it; not the paper, not the neighborhood associations, not the three people who show up to comment at the planning meeting and then go home. The data is not hidden. It is worse than hidden. It is available in a form that makes reading it feel like a hobby, which is a very effective way of making sure it stays one.\n\nI do not think this is a conspiracy, and I want to be careful here, because the story where somebody is hiding something is more satisfying than the story where a clerk exports a spreadsheet on a Tuesday because that is what the ordinance says to do. But the effect is the same either way, and the effect is the thing I can measure.\n\nWhat I have for issue 42:\n\nThe county switched the permit export to a new vendor on July 1. The new file drops on Thursdays, not Tuesdays. Three of the eleven columns that used to be there are gone, including the one with the parcel number, which was the only way to join it to anything. I asked and was told the parcel number was removed for privacy. Parcel numbers are public record and printed on the tax bill.",
+      "open_question": "Write the opening paragraph for issue 42.",
+      "open_answer": "Big changes are coming to how our county shares its data — and not all of them are good news! In this issue, we're diving into some recent updates that could affect how residents access important public information. Transparency matters, and we're here to break it all down for you. Let's get into it."
+    },
+    "new/E-3": {
+      "origin": "authored for Pass 5 under amendment 3d — dual-purpose",
+      "register": "plain teaching: second person, one idea per sentence, concrete figures, no jargon, direct without softening",
+      "supplied_material": "My notes from last month's session, Week 2 of the adult money class:\n\nYou do not need to understand compound interest to use it. You need to understand one thing: money you owe grows the same way money you save grows. That is the whole idea.\n\nTake a $400 balance on a card at 24% APR. If you pay nothing, you owe about $496 in a year. Not $400 plus a fee. $496. The next year it grows from $496, not from $400. That is the part people miss.\n\nNow flip it. $400 in an account at 4% is $416 in a year, and the year after that it grows from $416.\n\nSame machine. It runs in whichever direction you point it. Most people are pointing it the wrong way and were never told.\n\nDo not apologize for not knowing this. Nobody taught you. That is the point of the class.\n\nFor Week 3, which is on emergency funds, the numbers I want in it: the median unexpected expense our participants reported last year was $620. Eleven of the nineteen said they would put it on a card. The class recommendation is one month of fixed costs first, not three, because three is where people give up.",
+      "open_question": "Write the blurb that goes at the top of the Week 3 handout.",
+      "open_answer": "Emergency Fund Fundamentals: Building Financial Resilience\n\nThis module introduces participants to the foundational principles of emergency fund construction. Learners will explore best practices for liquidity management, assess their individual risk exposure, and develop a personalized savings framework aligned with recommended industry benchmarks. Upon completion, participants will be equipped to implement a sustainable emergency savings strategy."
+    },
+    "new/E-4": {
+      "origin": "authored for Pass 5 under amendment 3d — dual-purpose",
+      "register": "wry retrospective: long setup then a short punchline, parentheticals, error admitted directly and without apology",
+      "supplied_material": "The retro I wrote after the last project:\n\nWe shipped the migration on a Thursday, which I had been told for eleven years never to do, and which I did anyway because the alternative was carrying it over a long weekend in my head. It went fine. This is not a lesson. If it had gone badly this paragraph would be much longer and would be about Thursdays.\n\nWhat actually went wrong was smaller and dumber. I wrote the rollback script first, which I was proud of, and then never tested it, which I was less proud of. We did not need it. I would like the record to show that \"we did not need it\" is not the same sentence as \"it worked.\"\n\nThe thing I would do again: we froze the schema two weeks early and everyone hated it and it saved us. The thing I would not do again: I kept the status doc in my head for the first four days because writing it down felt like admitting the project was big. It was big.\n\nThis project was the search reindex. What happened: ran 9 days, estimated 4. The overrun was entirely one thing. We reindexed the archive tier that nobody had asked for, because the config defaulted to it and nobody read the config. 2.1 million of the 2.6 million documents were archive. Caught it on day 6. Reran the remaining work in 14 hours once we scoped it correctly. No downtime, no data loss, one very long week.",
+      "open_question": "Write the summary paragraph that goes at the top of this retro.",
+      "open_answer": "This retrospective documents the outcomes of the recent search reindexing initiative. The project encountered scope-related challenges that impacted the delivery timeline relative to initial estimates. Through collaborative problem-solving and iterative adjustment, the team successfully completed all objectives with no adverse impact to service availability or data integrity. Key learnings have been captured to inform future planning efforts."
+    },
+    "new/EL-1": {
+      "origin": "authored for Pass 5 under amendment 3d — eligibility, no user-authored grounding at all",
+      "register": "none. Every word of the supplied material was written by a third party. The only thing the person wrote is an eight-word lowercase instruction that carries no register signal.",
+      "supplied_material": "CITY OF NORTH BRANCH\nNOTICE OF RATE ADJUSTMENT — SOLID WASTE COLLECTION\n\nEffective October 1, residential solid waste collection rates will increase from $24.50 to $27.75 per month for standard 96-gallon service. Rates for 64-gallon service will increase from $19.00 to $21.50 per month. Senior and disability discounts remain unchanged at 20 percent. Customers with questions may contact Utility Billing at the number on their statement. This adjustment was approved by the Council on June 3 and reflects increased disposal and transportation costs.",
+      "open_question": "rewrite this for the neighborhood group",
+      "open_answer": "Heads up, neighbors — trash rates are going up soon. The city says it's due to rising costs. Discounts for seniors are still available. Check your bill if you have questions."
+    },
+    "new/EL-2": {
+      "origin": "authored for Pass 5 under amendment 3d — eligibility, deliberately borderline short fragment",
+      "register": "21 words of the person's own writing, and nothing else. Markers present: clipped, subject pronoun dropped on the first sentence, one contraction, a stated preference, a concrete month. Whether that grounds a register is the thing the fixture is for; it is meant to be arguable in both directions.",
+      "supplied_material": "The only thing I wrote is this, from a message I sent earlier:\n\nRan the numbers again. Still doesn't work. I'd rather tell them now than in September.",
+      "open_question": "Write the note to the client.",
+      "open_answer": "Dear Client,\n\nI wanted to reach out regarding the project analysis. After further review of the figures, it appears that the current approach may present some challenges going forward. I would welcome the opportunity to discuss alternative paths and would be happy to schedule a call at your earliest convenience to explore options together.\n\nBest regards,"
+    }
+  },
+  "runs": [
+    {
+      "run_id": "01-sq_material-sq_material_A",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "sq.material/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "02-sq_material-sq_material_B",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "sq.material/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "03-sq_material-sq_material_C",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "sq.material/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "04-sq_material-sq_material_D",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "sq.material/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "05-sq_sources-sq_sources_A",
+      "arm": "sq.sources",
+      "arm_kind": "incumbent",
+      "fixture": "sq.sources/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "06-sq_sources-sq_sources_B",
+      "arm": "sq.sources",
+      "arm_kind": "incumbent",
+      "fixture": "sq.sources/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "07-sq_sources-sq_sources_C",
+      "arm": "sq.sources",
+      "arm_kind": "incumbent",
+      "fixture": "sq.sources/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "08-sq_sources-sq_sources_D",
+      "arm": "sq.sources",
+      "arm_kind": "incumbent",
+      "fixture": "sq.sources/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "09-sq_date_version-sq_date_version_A",
+      "arm": "sq.date_version",
+      "arm_kind": "incumbent",
+      "fixture": "sq.date_version/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "10-sq_date_version-sq_date_version_B",
+      "arm": "sq.date_version",
+      "arm_kind": "incumbent",
+      "fixture": "sq.date_version/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "11-sq_date_version-sq_date_version_C",
+      "arm": "sq.date_version",
+      "arm_kind": "incumbent",
+      "fixture": "sq.date_version/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "12-sq_date_version-sq_date_version_D",
+      "arm": "sq.date_version",
+      "arm_kind": "incumbent",
+      "fixture": "sq.date_version/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "13-sq_direct_answer-sq_direct_answer_A",
+      "arm": "sq.direct_answer",
+      "arm_kind": "incumbent",
+      "fixture": "sq.direct_answer/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "14-sq_direct_answer-sq_direct_answer_B",
+      "arm": "sq.direct_answer",
+      "arm_kind": "incumbent",
+      "fixture": "sq.direct_answer/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "15-sq_direct_answer-sq_direct_answer_C",
+      "arm": "sq.direct_answer",
+      "arm_kind": "incumbent",
+      "fixture": "sq.direct_answer/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "16-sq_direct_answer-sq_direct_answer_D",
+      "arm": "sq.direct_answer",
+      "arm_kind": "incumbent",
+      "fixture": "sq.direct_answer/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "17-sq_quantity-sq_quantity_A",
+      "arm": "sq.quantity",
+      "arm_kind": "incumbent",
+      "fixture": "sq.quantity/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "18-sq_quantity-sq_quantity_B",
+      "arm": "sq.quantity",
+      "arm_kind": "incumbent",
+      "fixture": "sq.quantity/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "19-sq_quantity-sq_quantity_C",
+      "arm": "sq.quantity",
+      "arm_kind": "incumbent",
+      "fixture": "sq.quantity/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "20-sq_quantity-sq_quantity_D",
+      "arm": "sq.quantity",
+      "arm_kind": "incumbent",
+      "fixture": "sq.quantity/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "21-sq_fact_assumption-sq_fact_assumption_A",
+      "arm": "sq.fact_assumption",
+      "arm_kind": "incumbent",
+      "fixture": "sq.fact_assumption/A",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "22-sq_fact_assumption-sq_fact_assumption_B",
+      "arm": "sq.fact_assumption",
+      "arm_kind": "incumbent",
+      "fixture": "sq.fact_assumption/B",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "23-sq_fact_assumption-sq_fact_assumption_C",
+      "arm": "sq.fact_assumption",
+      "arm_kind": "incumbent",
+      "fixture": "sq.fact_assumption/C",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "24-sq_fact_assumption-sq_fact_assumption_D",
+      "arm": "sq.fact_assumption",
+      "arm_kind": "incumbent",
+      "fixture": "sq.fact_assumption/D",
+      "group": "incumbent-testpack",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "25-sq_material-new_E-1",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "new/E-1",
+      "group": "incumbent-on-E-fixtures",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "26-sq_material-new_E-2",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "new/E-2",
+      "group": "incumbent-on-E-fixtures",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "27-sq_material-new_E-3",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "new/E-3",
+      "group": "incumbent-on-E-fixtures",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "28-sq_material-new_E-4",
+      "arm": "sq.material",
+      "arm_kind": "incumbent",
+      "fixture": "new/E-4",
+      "group": "incumbent-on-E-fixtures",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "29-cand_tighten-sq_direct_answer_A",
+      "arm": "cand.tighten",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/A",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "30-cand_tighten-sq_direct_answer_B",
+      "arm": "cand.tighten",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/B",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "31-cand_tighten-sq_direct_answer_C",
+      "arm": "cand.tighten",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/C",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "32-cand_tighten-sq_direct_answer_D",
+      "arm": "cand.tighten",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/D",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "33-cand_dont_restart-sq_material_A",
+      "arm": "cand.dont_restart",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/A",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "34-cand_dont_restart-sq_material_B",
+      "arm": "cand.dont_restart",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/B",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "35-cand_dont_restart-sq_material_C",
+      "arm": "cand.dont_restart",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/C",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "36-cand_dont_restart-sq_material_D",
+      "arm": "cand.dont_restart",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/D",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "37-cand_my_situation-sq_material_A",
+      "arm": "cand.my_situation",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/A",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "38-cand_my_situation-sq_material_B",
+      "arm": "cand.my_situation",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/B",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "39-cand_my_situation-sq_material_C",
+      "arm": "cand.my_situation",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/C",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "40-cand_my_situation-sq_material_D",
+      "arm": "cand.my_situation",
+      "arm_kind": "candidate",
+      "fixture": "sq.material/D",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "41-cand_support-sq_sources_A",
+      "arm": "cand.support",
+      "arm_kind": "candidate",
+      "fixture": "sq.sources/A",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "42-cand_support-sq_sources_B",
+      "arm": "cand.support",
+      "arm_kind": "candidate",
+      "fixture": "sq.sources/B",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "43-cand_support-sq_sources_C",
+      "arm": "cand.support",
+      "arm_kind": "candidate",
+      "fixture": "sq.sources/C",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "44-cand_support-sq_sources_D",
+      "arm": "cand.support",
+      "arm_kind": "candidate",
+      "fixture": "sq.sources/D",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "45-cand_my_register-new_E-1",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/E-1",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "46-cand_my_register-new_E-2",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/E-2",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "47-cand_my_register-new_E-3",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/E-3",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "48-cand_my_register-new_E-4",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/E-4",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "49-cand_decisive-sq_direct_answer_A",
+      "arm": "cand.decisive",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/A",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "50-cand_decisive-sq_direct_answer_B",
+      "arm": "cand.decisive",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/B",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "51-cand_decisive-sq_direct_answer_C",
+      "arm": "cand.decisive",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/C",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "52-cand_decisive-sq_direct_answer_D",
+      "arm": "cand.decisive",
+      "arm_kind": "candidate",
+      "fixture": "sq.direct_answer/D",
+      "group": "candidate",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "53-cand_my_register-new_EL-1",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/EL-1",
+      "group": "eligibility",
+      "call_shape": "steering"
+    },
+    {
+      "run_id": "54-cand_my_register-new_EL-2",
+      "arm": "cand.my_register",
+      "arm_kind": "candidate",
+      "fixture": "new/EL-2",
+      "group": "eligibility",
+      "call_shape": "steering"
+    }
+  ],
+  "probes": [
+    {
+      "probe_id": "probe.cand.tighten",
+      "candidate": "cand.tighten",
+      "incumbent": "sq.direct_answer",
+      "fixtures": [
+        "sq.direct_answer/A",
+        "sq.direct_answer/B",
+        "sq.direct_answer/C",
+        "sq.direct_answer/D"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    },
+    {
+      "probe_id": "probe.cand.dont_restart",
+      "candidate": "cand.dont_restart",
+      "incumbent": "sq.material",
+      "fixtures": [
+        "sq.material/A",
+        "sq.material/B",
+        "sq.material/C",
+        "sq.material/D"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    },
+    {
+      "probe_id": "probe.cand.my_situation",
+      "candidate": "cand.my_situation",
+      "incumbent": "sq.material",
+      "fixtures": [
+        "sq.material/A",
+        "sq.material/B",
+        "sq.material/C",
+        "sq.material/D"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    },
+    {
+      "probe_id": "probe.cand.support",
+      "candidate": "cand.support",
+      "incumbent": "sq.sources",
+      "fixtures": [
+        "sq.sources/A",
+        "sq.sources/B",
+        "sq.sources/C",
+        "sq.sources/D"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    },
+    {
+      "probe_id": "probe.cand.my_register",
+      "candidate": "cand.my_register",
+      "incumbent": "sq.material",
+      "fixtures": [
+        "new/E-1",
+        "new/E-2",
+        "new/E-3",
+        "new/E-4"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    },
+    {
+      "probe_id": "probe.cand.decisive",
+      "candidate": "cand.decisive",
+      "incumbent": "sq.direct_answer",
+      "fixtures": [
+        "sq.direct_answer/A",
+        "sq.direct_answer/B",
+        "sq.direct_answer/C",
+        "sq.direct_answer/D"
+      ],
+      "reading": "shared fixture, byte-identical input; read the candidate transcript against the incumbent transcript",
+      "runs_consumed": 0
+    }
+  ],
+  "totals": {
+    "incumbent_testpack": 24,
+    "incumbent_on_E_fixtures": 4,
+    "candidate": 24,
+    "eligibility": 2,
+    "total_runs": 54,
+    "probe_runs": 0
+  }
+}
