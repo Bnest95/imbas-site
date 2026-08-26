@@ -151,8 +151,29 @@ test("neither framing changes which chips are offered", () => {
   assert.ok(row.length > 100, "the lane maps the bank to render the choices");
   assert.ok(!row.includes("enteredVia"), "the door must not filter, order, or gate the row");
   assert.ok(!/SECOND_QUESTION_BANK\.filter\(/.test(JSX), "and nothing anywhere renders a subset of the bank");
-  // enteredVia is read in exactly one place inside the lane: the run it hands to the server.
-  assert.equal(countOf(lane, "enteredVia"), 2, "once in the props, once in the run — never in the render");
+  // Every read of enteredVia inside the lane is classified, and the classification is the
+  // guard — not the number. This assertion used to pin a bare count of 2, which the
+  // 2026-08-25 founder ruling adding entered_via to the chip_row_rendered and chip_selected
+  // emitters would have failed. Bumping the number to 4 would have bought the ruling at the
+  // price of the law: any later read at all would then pass so long as two others were
+  // removed. So the shape is pinned instead. A read that is not the prop, the run, or an
+  // event dimension fails here whatever the total, and that includes any read reaching the
+  // row of choices.
+  const kinds = lane
+    .split("\n")
+    .filter((l) => l.includes("enteredVia"))
+    .map((l) => {
+      const t = l.trim();
+      if (t.startsWith("function ChipLane({")) return "prop";
+      if (t === "enteredVia,") return "run";
+      if (/entered_via: normalizeChipEntryVia\(enteredVia\)/.test(t)) return "event";
+      return `unclassified: ${t}`;
+    });
+  assert.deepEqual(
+    kinds,
+    ["prop", "event", "event", "run"],
+    "the lane takes the door as a prop, reports it as an event dimension twice, and hands it to the server once",
+  );
 });
 
 // ── The held state is shown, not merely claimed ─────────────────────────────

@@ -353,6 +353,14 @@ export function buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, dec
       // reader. Stated here, pinned by fingerprint in test/reader-chip-prompt-version,
       // and empty on a replayed legacy row rather than backfilled with today's tag.
       paired_prompt_version: ca.paired_prompt_version || "",
+      // The governed bank version the selected instruction came from. chip_id,
+      // instruction_version, paired_prompt_version, and this are four independent
+      // facts: which intent, that intent's wording, the analysis prompt, and the SET
+      // the intent was drawn from. No one of them derives another. Two bank versions
+      // can ship the same id with byte-identical text, so a receipt that omitted this
+      // could not say which bank a stored pair belongs to. Empty on a replayed row
+      // written before the field existed, never backfilled with today's constant.
+      bank_version: ca.bank_version || "",
       unvalidated: true,
     },
     run_declarations: Array.isArray(declarations) ? declarations : [],

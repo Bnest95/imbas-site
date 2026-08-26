@@ -493,6 +493,56 @@ Anthropic usage. None require user content:
 
 No dashboard ships in this pass — these are definitions for when transmission is approved.
 
+### Steering measurement architecture (dark — nothing transmits)
+
+Seven frozen measurements evaluate whether the Reader's steering loop works as a product. All
+seven are satisfied by events the client **already emits**; this pass added segmentation
+dimensions and wrote down semantics, and added no new emitter. **Nothing transmits.** There is no
+aggregation endpoint, `config.enabled` is absent everywhere, and `shouldTransmitTelemetry` is
+therefore `false` on every path.
+
+| Frozen measurement | Local event | Semantics that are not obvious from the name |
+|--------------------|-------------|----------------------------------------------|
+| `inspection_completed` | `run_completed` | **Excludes `source: "fallback"`.** A capacity fallback returns instruction-only text with no paid read behind it; counting it as a completed inspection would inflate the top of the funnel with runs that never measured anything |
+| `steering_offer_seen` | `chip_row_rendered` | **A render proxy — see the limitation below** |
+| `steering_started` | `chip_selected` | Fires on selection, not on submission |
+| `instruction_copied` | `chip_instruction_copied` | Fires on a successful clipboard write; a failed copy emits nothing |
+| `second_answer_supplied` | `chip_pair_initiated` | The person has pasted a second answer and pressed compare |
+| `comparison_rendered` | `chip_pair_completed` | **Excludes `idempotent === true`.** A replay returns a stored analysis without a model call; counting it would let one comparison register several times |
+| `receipt_exported` | `card_exported` | Discriminated through the existing `chip` prop — a chip export carries one, an inspection export does not. No new lane taxonomy |
+
+**`steering_offer_seen` is a render proxy, and the name overstates it.** It is operationally
+measured when `ChipLane` mounts, which means the offer was **put into the document**. It is not
+evidence the row entered the viewport, that anyone looked at it, or that anyone read it. Nothing
+observes intersection, focus, or dwell, and by founder ruling of 2026-08-25 nothing will: the
+weaker measurement stated plainly was accepted over a stronger one inferred from machinery that
+watches people. Read every count derived from this event as "the offer rendered", never "the offer
+was seen" — including the funnel step between `inspection_completed` and `steering_started`, whose
+denominator is therefore renders, not sightings. `test/reader-chip-entry-provenance.test.mjs` holds
+the limitation in the source and fails if a later pass adds the observers.
+
+**Three segmentation dimensions were added to the allowlist** (`reader-telemetry.js`), all ids or
+enums, all under the 64-character cap, none content and none identity:
+
+- `entered_via` — `inspection_reactive` | `inspection_proactive` | `direct_standing`, read through
+  `normalizeChipEntryVia` so the event speaks the same vocabulary as the receipt. Wired onto
+  `chip_row_rendered` and `chip_selected`. The doors are entry framing, never a partition of the
+  bank: the lane renders `SECOND_QUESTION_BANK` whole and the door never reaches the row of choices.
+- `bank_version` — the governed set (e.g. `second-question-bank.v1`). Distinct from
+  `instruction_version`, which versions one entry's wording. Without it a series segmented by chip
+  alone silently pools runs from different banks.
+- `paired_prompt_version` — the pinned analysis prompt (e.g. `chip.1.0`), so a prompt change does
+  not read as a behavior change.
+
+**Raw local event lifetime, as shipped, in concrete units.** The browser-local stream is
+**count-bounded and has no time expiry**. `workbench-app.jsx` keeps the newest `READER_EVENTS_CAP`
+= **500** events under `localStorage` key `imbas_reader_events`, trimming the oldest on each write.
+An event therefore survives until 500 newer events displace it, or until the person clears site
+data — which for a light user can be indefinitely, and is **not** the "existing transient window"
+that server-side rate-limit state expires on. Any statement that raw behavioral events expire on a
+time window would be false of this tree today. Changing it is a separate ruling; this entry exists
+so the fact is written down rather than assumed.
+
 ## Reader Runs capture fields (provenance)
 
 `POST /api/read` writes one row per read to **Reader Runs** (`tblqmHiOCQ5YSXBN3`, base
@@ -553,6 +603,49 @@ schema-version bump — and does not change the deterministic `content_hash` rul
 (`canonicalizeForHash` is unchanged; the hash simply recomputes over the present fields).
 Backward-compatible: older receipts verify against their own stored hash unchanged. Proven by
 `test/reader-condition-fingerprint.test.mjs`.
+
+## Reader Paired Analyses — chip provenance fields
+
+`POST /api/read-paired` writes one row per **new** analysis to **Reader Paired Analyses** (base
+`appfxHraqlcpP1AAP`). A replay writes nothing: `findExistingPaired` short-circuits on
+`(Open Run ID, Targeted Answer Hash, Targeted Prompt Hash)` and reconstructs the payload from the
+stored row. The chip branch of the write carries four provenance columns, all **single line text**:
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `Initiator` | `PAIR_INITIATOR.USER_CHIP` | Separates a user-steered pair from an inspection follow-up |
+| `Chip ID` | the selected bank entry's `id` (e.g. `sq.sources`) | Which governed intent the person chose |
+| `Instruction Version` | that entry's `instruction_version` (e.g. `v1`) | Versions **one entry's wording** |
+| `Bank Version` | `SECOND_QUESTION_BANK_VERSION` (e.g. `second-question-bank.v1`) | Versions **the set** the entry was drawn from |
+
+### `Bank Version` is a blocking deploy dependency
+
+**Create the `Bank Version` column (single line text) on Reader Paired Analyses before deploying
+`api/read-paired.js`.** Airtable's `typecast: true` coerces values but does not create fields, so a
+POST naming a column that does not exist returns **HTTP 422 `UNKNOWN_FIELD_NAME`** and fails the
+whole row. The read still returns — `capturePaired` is fail-open and flags `capture_uncertain` on
+the response — so the symptom is not an error anyone sees. It is chip rows quietly ceasing to
+persist. Verify after deploy by running one controlled chip comparison and confirming the newest
+row carries all four columns, then filtering the function logs for `capture_succeeded`.
+
+### Why a fourth column, when three already name the chip
+
+Because none of the other three can answer "which bank produced this", and neither can anything
+else on the row. An entry carried forward into a later bank keeps its `id`, keeps its
+`instruction_version`, and — because its `content_hash` is a hash of its `instruction_text` — hashes
+identically in both versions. `Targeted Prompt Hash` is that same instruction text hashed, so it is
+byte-identical too. Every candidate discriminator collapses at once. Only a stamp written at the
+moment of the run can distinguish the two, which is why the row carries one.
+
+**No backfill, in either direction.** A fresh write stamps the constant from the tree. A replay
+reads the row's own `Bank Version` and reports it. A row written before the column existed
+reconstructs as `bank_version: ""` — a recorded gap in the historical record, not a claim, and not
+how a new row behaves. The receipt never substitutes today's constant, the request body, the chip
+id, or the instruction version for a missing stamp. Proven by `test/reader-chip-bank-version.test.mjs`.
+
+**The join key did not move.** `Bank Version` is written and read, never queried. Had it entered the
+idempotency formula, a `v2` rerun of a `v1` pair would look like a new pair and buy a second model
+call. The receipt location is `paired_analysis.bank_version`; the Review Record is unchanged.
 
 ## Case lineage + review-state fields
 

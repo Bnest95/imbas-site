@@ -78,7 +78,7 @@ import {
   readDeclarationHistory,
   DECLARATION_WRITE,
 } from "../reader-declaration-log.js";
-import { SECOND_QUESTION_BANK } from "../reader-second-question-bank.js";
+import { SECOND_QUESTION_BANK, SECOND_QUESTION_BANK_VERSION } from "../reader-second-question-bank.js";
 import { extractJson } from "../reader-json.js";
 import {
   ANCHOR_STATUS,
@@ -936,11 +936,17 @@ export async function capturePaired(record, ctx, deps = {}) {
     // / Rubric Version / Signal Patterns). The inspection branch below is byte-
     // identical to before.
     //
-    // DEPLOY DEPENDENCY: the three provenance columns (Initiator, Chip ID,
-    // Instruction Version) must exist on the Reader Paired Analyses table before a
+    // DEPLOY DEPENDENCY: the four provenance columns (Initiator, Chip ID, Instruction
+    // Version, Bank Version) must exist on the Reader Paired Analyses table before a
     // chip write can succeed. Until they are added, a chip capture fails on Airtable
     // UNKNOWN_FIELD_NAME and the flow stays fail-open — capture_uncertain is flagged
     // on the response and the analysis still returns, but no chip row is persisted.
+    //
+    // Bank Version is the newest of the four and the one this tree does NOT yet have.
+    // Create it (single line text) on the Reader Paired Analyses table BEFORE deploying
+    // this file, or every chip capture stops persisting the moment it ships. The read
+    // itself keeps working; the record is what goes missing, and it goes missing
+    // silently apart from capture_uncertain.
     const fields = isChip
       ? {
           "Open Run ID": record.openRunId,
@@ -955,6 +961,7 @@ export async function capturePaired(record, ctx, deps = {}) {
           Initiator: record.initiator,
           "Chip ID": record.chipId || "",
           "Instruction Version": record.instructionVersion || "",
+          "Bank Version": record.bankVersion || "",
           Created: new Date().toISOString(),
         }
       : {
@@ -1142,6 +1149,15 @@ function reconstructChipFromRecord(recordFields, embed, declarations = []) {
     // none is being added, so a row written before this field existed reports nothing
     // here rather than borrowing the current tag.
     paired_prompt_version: f["Paired Method Version"] || "",
+    // The row's OWN Bank Version, with no fallback of any kind. The request's chip id
+    // is not a fallback (one id can live in several bank versions), the instruction
+    // version is not a fallback (it versions one entry's wording, not the set), the
+    // prompt hash is not a fallback (an unchanged instruction_text hashes the same in
+    // v1 and v2), and the current constant is not a fallback (that is the silent
+    // upgrade this whole path exists to refuse). A row written before the column
+    // existed reports "" — a recorded gap in the historical record, and not how a new
+    // row behaves.
+    bank_version: f["Bank Version"] || "",
   };
   const receipt = buildChipPairedReceipt({
     generatedAt: new Date().toISOString(),
@@ -1543,6 +1559,13 @@ export function createReadPairedHandler(deps = {}) {
         delta_items: pm.delta_items,
         paired_method_version: CHIP_PAIRED_METHOD_VERSION,
         paired_prompt_version: CHIP_PAIRED_PROMPT_VERSION,
+        // The governed SET the chosen instruction came from, stamped from the tree on
+        // every fresh write. chip_id names which intent, instruction_version names that
+        // intent's wording, and neither one identifies the bank version: the same id
+        // carrying byte-identical instruction_text can ship in two bank versions, so the
+        // content hash cannot discriminate them either. Nothing else on the receipt can
+        // answer "which bank produced this", which is why the row stores it.
+        bank_version: SECOND_QUESTION_BANK_VERSION,
       };
       receipt = buildChipPairedReceipt({ generatedAt, openRun, chipAnalysis, declarations: declared.declarations });
       receipt.integrity.content_hash = sha256Hex(canonicalizeForHash(receipt));
@@ -1551,6 +1574,7 @@ export function createReadPairedHandler(deps = {}) {
         initiator: PAIR_INITIATOR.USER_CHIP,
         chipId: body.chip_id,
         instructionVersion: chipEntry.instruction_version,
+        bankVersion: SECOND_QUESTION_BANK_VERSION,
         openRunId,
         targetedPrompt,
         targetedPromptHash,
