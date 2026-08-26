@@ -5978,11 +5978,23 @@ function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt, enteredVia })
   const [runError, setRunError] = useState("");
   const rowSeenRef = useRef(false);
 
-  // chip_row_rendered fires once: the person has been shown the follow-up choices.
+  // chip_row_rendered fires once, on mount, carrying the door the person came through.
+  //
+  // A RENDER PROXY, and it claims nothing more. It records that this lane mounted and
+  // put the follow-up choices in the document. It is not evidence the row entered the
+  // viewport, that anyone looked at it, or that anyone read it. Nothing here observes
+  // intersection, focus, or dwell, and nothing here is going to: a weaker measurement
+  // stated plainly beats a stronger one inferred from machinery that watches people.
+  // Read every count derived from this event as "the offer rendered", never "the offer
+  // was seen".
+  //
+  // entered_via is captured at mount for the same reason the effect has no deps: the
+  // door is a fact about the entry that made this lane exist, so it is fixed by the
+  // time the row renders and cannot drift underneath the event.
   useEffect(() => {
     if (rowSeenRef.current) return;
     rowSeenRef.current = true;
-    emitReaderEvent(READER_EVENTS.CHIP_ROW_RENDERED, {});
+    emitReaderEvent(READER_EVENTS.CHIP_ROW_RENDERED, { entered_via: normalizeChipEntryVia(enteredVia) });
   }, []);
 
   const entry = SECOND_QUESTION_BANK.find((e) => e.id === chipId) || null;
@@ -6022,10 +6034,18 @@ function ChipLane({ headingRef, onReturn, openedFrom, heldReceipt, enteredVia })
     setCopied(false);
   };
 
+  // entered_via rides on the selection too, not just on the row. Which intents people
+  // reach for under "Something's off." and under "Make it better." is the question the
+  // two doors were built to answer, and a chip id with no door attached cannot answer
+  // it. The bank is not partitioned by door; the segmentation lives in the event.
   const pickChip = (e) => {
     setChipId(e.id);
     clearErrors();
-    emitReaderEvent(READER_EVENTS.CHIP_SELECTED, { chip: e.id, instruction_version: e.instruction_version });
+    emitReaderEvent(READER_EVENTS.CHIP_SELECTED, {
+      chip: e.id,
+      instruction_version: e.instruction_version,
+      entered_via: normalizeChipEntryVia(enteredVia),
+    });
   };
 
   const copyInstruction = async () => {

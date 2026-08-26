@@ -286,6 +286,48 @@ test("the origin the lane runs under is the origin the workbench recorded", () =
   assert.equal(countOf(JSX, "enteredVia={"), 1, "and no second, differently derived, origin prop");
 });
 
+// ── The origin as a product-event dimension ─────────────────────────────────
+// Added 2026-08-25 by founder ruling. The doors exist to answer which intents people reach
+// for under which framing, and a chip id with no door attached cannot answer it. So the
+// origin rides on the two chip events as a dimension. It is the same enum the receipt
+// carries, read through the same normalizer, and it is still not a chip fact: the bank is
+// one flat set and the door never touches the row of choices.
+
+test("the two chip events carry the origin, and nothing derives a second one", () => {
+  assert.match(
+    JSX,
+    /emitReaderEvent\(READER_EVENTS\.CHIP_ROW_RENDERED, \{ entered_via: normalizeChipEntryVia\(enteredVia\) \}\);/,
+    "the row event names the door",
+  );
+  assert.match(
+    JSX,
+    /emitReaderEvent\(READER_EVENTS\.CHIP_SELECTED, \{\s*\n\s*chip: e\.id,\s*\n\s*instruction_version: e\.instruction_version,\s*\n\s*entered_via: normalizeChipEntryVia\(enteredVia\),\s*\n\s*\}\);/,
+    "and so does the selection event, beside the chip it selected",
+  );
+  // One emit apiece. A second emitter for either event would double every count derived
+  // from it, and the two would drift the moment one of them was edited.
+  assert.equal(countOf(JSX, "READER_EVENTS.CHIP_ROW_RENDERED"), 1);
+  assert.equal(countOf(JSX, "READER_EVENTS.CHIP_SELECTED"), 1);
+});
+
+// The limitation, held in the source it qualifies. chip_row_rendered fires when the lane
+// mounts, which means the offer was PUT IN THE DOCUMENT — not that it entered the viewport,
+// not that anyone looked at it. The founder ruling of 2026-08-25 accepted the weaker
+// measurement and refused the machinery that would strengthen it. This test is what stops a
+// later pass from quietly adding that machinery and leaving the counts named the same.
+test("the row event is a stated render proxy, and observes no one", () => {
+  const lane = JSX.slice(JSX.indexOf("function ChipLane({"), JSX.indexOf("function ChipLane({") + 30000);
+  const effect = lane.slice(lane.indexOf("chip_row_rendered fires"), lane.indexOf("READER_EVENTS.CHIP_ROW_RENDERED"));
+  // Comment wrapping is not the subject here, so flatten it and read the prose.
+  const prose = effect.replace(/^\s*\/\/ ?/gm, "").replace(/\s+/g, " ");
+  assert.match(prose, /RENDER PROXY/, "the effect says what it is measuring");
+  assert.match(prose, /not evidence the row entered the viewport/, "and names what it does not measure");
+  assert.match(prose, /never "the offer was seen"/, "and says how to read every count derived from it");
+  for (const api of ["IntersectionObserver", "requestIdleCallback", "visibilitychange", "document.hasFocus"]) {
+    assert.ok(!lane.includes(api), `the lane must not reach for ${api} to strengthen the metric`);
+  }
+});
+
 // ── Standing guards this pass must not have moved ───────────────────────────
 
 // §8 of the brief: presentation and entry framing only. The bank itself is untouched.

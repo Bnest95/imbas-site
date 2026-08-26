@@ -9,6 +9,7 @@ import {
   shouldTransmitTelemetry,
   prepareTelemetryBatch,
 } from "../reader-telemetry.js";
+import { CHIP_ENTRY_VIA_VALUES } from "../reader-paired.js";
 
 // ── Content-minimal by construction ───────────────────────────────────────────
 
@@ -55,6 +56,57 @@ test("sanitizeEventProps caps string length so an id cannot smuggle a payload", 
 test("sanitizeEventProps drops non-finite numbers, objects, and arrays", () => {
   const out = sanitizeEventProps({ gap: Infinity, state: { nested: 1 }, run: ["a"] });
   assert.deepEqual(out, {});
+});
+
+// ── The three segmentation dimensions ─────────────────────────────────────────
+// Added 2026-08-25. Each one segments a series that would otherwise pool runs it should
+// not: which door the person came through, which governed bank the chip came from, and
+// which pinned prompt read the comparison. All three are ids or enums. None is content,
+// and none identifies a person.
+
+test("the three segmentation dimensions survive sanitization", () => {
+  const out = sanitizeEventProps({
+    entered_via: "inspection_reactive",
+    bank_version: "second-question-bank.v1",
+    paired_prompt_version: "chip.1.0",
+    chip: "sq.sources",
+  });
+  assert.deepEqual(out, {
+    entered_via: "inspection_reactive",
+    bank_version: "second-question-bank.v1",
+    paired_prompt_version: "chip.1.0",
+    chip: "sq.sources",
+  });
+});
+
+// The dimension has to speak the receipt's vocabulary or the two records disagree about
+// the same run. This reads the enum from reader-paired.js rather than restating it, so a
+// door added there without a matching thought about the series fails here.
+test("entered_via carries the receipt's own door enum, unchanged", () => {
+  for (const via of CHIP_ENTRY_VIA_VALUES) {
+    assert.equal(sanitizeEventProps({ entered_via: via }).entered_via, via, `${via} passes through intact`);
+    assert.ok(via.length <= 64, `${via} fits under the string cap without truncation`);
+  }
+  assert.equal(CHIP_ENTRY_VIA_VALUES.length, 3);
+});
+
+// The new keys widen the allowlist, so the thing worth proving is that they widened it by
+// exactly three and carried no content in with them.
+test("the new dimensions admit no content beside them", () => {
+  const out = sanitizeEventProps({
+    entered_via: "direct_standing",
+    bank_version: "second-question-bank.v1",
+    instruction_text: "Show me where each claim came from.",
+    targeted_answer: "the second answer, in full",
+    targeted_prompt_hash: "a".repeat(64),
+    receipt_hash: "b".repeat(64),
+  });
+  assert.deepEqual(out, { entered_via: "direct_standing", bank_version: "second-question-bank.v1" });
+});
+
+test("a free-text value forced into a dimension is capped like any other id", () => {
+  const out = sanitizeEventProps({ bank_version: "y".repeat(500) });
+  assert.equal(out.bank_version.length, 64);
 });
 
 // ── Event building ────────────────────────────────────────────────────────────

@@ -10,13 +10,17 @@
 // instruction that gets sent. The instruction is model-facing, but the person reads
 // it and chooses it, so it is written as a plain, direct request, never a rubric.
 //
-// STANDALONE BY CONTRACT. This module is a data bank and nothing more. It is NOT
-// imported by workbench-app.jsx, the bundle, or api/** in this change; the UI that
-// renders these chips, the endpoint that sends them, and the schema that records the
-// resulting pair all belong to a later implementation lane. Pure JS, exactly like
-// reader-paired.js / reader-explain-panel.js: no node: imports, no crypto, no DOM —
-// so a Node test exercises the exports directly and the browser can import them
-// unchanged later. The hashing primitive lives with the test, not here.
+// PURE-JS BY CONTRACT. This module is a data bank and nothing more: no node: imports,
+// no crypto, no DOM, exactly like reader-paired.js / reader-explain-panel.js. That
+// purity is what lets three consumers read the same bytes — workbench-app.jsx renders
+// the entries, api/read-paired.js resolves the selected instruction server-side, and a
+// Node test exercises the exports directly. The hashing primitive lives with the test,
+// not here.
+//
+// This paragraph used to say the module was imported by none of them. That described
+// the staging of one change rather than a contract, and all three lanes it deferred
+// have since shipped. The rule above is the standing one: the bank holds data and
+// exports it, and it never reaches for a runtime that only one consumer has.
 //
 // EVERY TEMPLATE IS ANCHOR-FREE BY NECESSITY. The instrument's captured cases each
 // name a specific thing an answer left out — a named study, a dated rule, a specific

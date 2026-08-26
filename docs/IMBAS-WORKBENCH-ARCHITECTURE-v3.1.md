@@ -59,6 +59,62 @@ Four decisions hold under pressure. **Two depths, not two products** — resolvi
 
 **Later roadmap (recorded, not built):** chip-class content/SEO pages (each chip is a named failure class with real search demand); "tell me when this model updates" email hook; a consented import path by which a user may nominate a re-run as candidate material.
 
+### Imbas Workbench Architecture Amendment — Fixed Intent Bank
+
+2026-08-25. Frozen founder input for Pass 5. Consolidates the founder ruling, red-team findings F1–F3, the bank philosophy, and the anti-shrink law. Rev 2, same date: implementation-boundary sentence added under the anti-shrink law by founder ruling. Frozen; this document does not change again before Pass 5 runs. After #138 merges, the only permitted update is the mechanical tree check: exact chip IDs, current bank syntax, final population. Not a reinterpretation opportunity.
+
+**The amendment**
+
+The existing architecture prohibition on "new chip classes" remains in force.
+Its purpose is to prevent mechanism creep: AI-generated chips, dynamic or unbounded vocabularies, new behavioral classes that escape the existing per-chip governance path, or separate chip systems with different rules.
+It is not a permanent freeze on the number of fixed human-authored intents in the governed bank.
+A new chip is permitted when all of the following remain true:
+
+* it is another fixed instance of the existing governed chip mechanism;
+* it uses the same bank, schema, rendering machinery, server lookup, receipt path, and review process as the existing entries;
+* its instruction text is human-authored and fixed;
+* its metadata, misuse analysis, content hash, instruction version, and review state are recorded under the same contract;
+* it is tested with the rest of the bank under the pinned paired-analysis prompt before the new bank version ships;
+* overlap with existing intents is adjudicated rather than hidden by adding synonyms;
+* the user still supplies the first state; no intention-only entry is created.
+
+Admission is a founder ruling. Sessions propose candidates with overlap analysis, misuse analysis, and test evidence; only the founder admits an intent to the governed bank. No session self-adjudicates admission.
+This amendment does NOT authorize:
+
+* a `family` or `category` field used to create separate governed chip classes;
+* reactive and proactive banks as separate registries;
+* door-gated chip subsets;
+* AI-suggested chips;
+* generated or open-ended chip vocabulary;
+* open-vocabulary steering;
+* instruction text generated dynamically for the bank;
+* different evidence or receipt rules for different intents.
+
+The two Reader doors are entry framing, not chip taxonomy.
+`Something's off.` and `Make it better.` describe why the user entered steering. They do not partition the bank. Entry provenance belongs in the receipt; chip identity remains the governed intent the user selected.
+The bank may grow when a real steering intent is not adequately covered. It does not grow to make two visually balanced families or to fill a quota.
+A bank version is sealed by its test. `second-question-bank.v2` ships as one set, tested together under the pinned prompt. Nothing is added to v2 after its bounded test; a later intent means a v3 and a new test. No incremental drift inside a shipped version.
+This amendment authorizes a `second-question-bank.v2` candidate set containing the existing governed entries plus any new fixed intents that survive overlap review and bounded testing.
+The prior "new chip classes" prohibition remains governing law under this interpretation.
+
+**Philosophy**
+
+The bank is bounded, not conceptually closed.
+Fixed vocabulary is an implementation and evidence discipline. It is not a claim that human judgment consists of six or eight operations. As we observe real ways people exert agency over model output, the vocabulary can expand under evidence and governance.
+
+**Anti-shrink law**
+
+Standing law. Governs this document, the measurement boundary, the candidate pool, and every Pass 5 session decision.
+Precision is not permission to shrink the product thesis.
+Governance exists to keep Imbas honest about what its mechanics support, not to reduce the company to the mechanics already shipped. Distinguish unsupported claims from unbuilt territory. The first is prohibited; the second is part of the product frontier.
+Do not resolve ambiguity by automatically choosing the narrower interpretation of Imbas. When a proposed capability extends the agency-and-receipt thesis without contradicting existing evidence boundaries, preserve it as a candidate and test it.
+The company is not a six-chip inspection tool. The current bank is one bounded implementation of a larger problem: helping people protect and improve their judgment, direct machine output deliberately, preserve authorship, and retain evidence of what they did.
+A current implementation boundary is not a company boundary unless the founder explicitly rules it one.
+
+**Repo landing**
+
+This text lands verbatim in the architecture doc in the repo. The session inserts it; the content is founder-authored. Law does not exist only in chat.
+
 ## E. DEFAULT PRODUCT RULING
 
 - **Inspection-first: YES.** The read is the default spine.

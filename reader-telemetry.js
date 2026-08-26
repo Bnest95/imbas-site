@@ -110,6 +110,19 @@ const ALLOWED_PROP_KEYS = [
   "conditions", // user_chip: matched | unmatched | unverified (paste-back segmentation)
   "ms", // operational latency, integer milliseconds (never content)
   "reason", // operational cause enum: timeout | network | ceiling | api_error | disabled | no_key | bad_json
+  // Entry provenance: which door the person came through (reader-paired.js
+  // CHIP_ENTRY_VIA) — inspection_reactive | inspection_proactive | direct_standing. A
+  // fact about the entry, not about the chip; the bank is one flat set and every entry
+  // in it is reachable from all three origins.
+  "entered_via",
+  // The governed SET the chip came from (e.g. second-question-bank.v1). Distinct from
+  // instruction_version, which versions ONE entry's wording. Two bank versions can
+  // carry the same id with byte-identical text, so a series segmented by chip alone
+  // silently pools runs from different banks.
+  "bank_version",
+  // The pinned chip analysis prompt a comparison was read under (e.g. chip.1.0).
+  // Segmenting on it is what stops a prompt change from reading as a behavior change.
+  "paired_prompt_version",
 ];
 const ALLOWED_PROP_SET = new Set(ALLOWED_PROP_KEYS);
 const STRING_PROP_CAP = 64;
