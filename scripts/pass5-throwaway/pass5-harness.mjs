@@ -42,7 +42,7 @@ let modelCallsMade = 0;
 // GUARD 3 — expected run-sheet hash. SHIPS EMPTY. Set only after founder
 // approval, to the bytes of the approved sheet.
 // ---------------------------------------------------------------------------
-const EXPECTED_SHEET_SHA256 = "";
+const EXPECTED_SHEET_SHA256 = "d42555a398f54f0365f6f04f75a711ab2bb1b5de0583e21a601e1f15d28be874";
 
 // ---------------------------------------------------------------------------
 // GUARD 4 — the single reachable endpoint.
