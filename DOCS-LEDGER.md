@@ -23,6 +23,7 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 | `CLAUDE.md` | Operating contract. Self-governing. |
 | `IMBAS-CANON.md` | Canon (cross-model state). Self-governing. |
 | `AGENT-DOCTRINE.md` | Doctrine. Self-governing. Tracked here as of 2026-07-24. |
+| `IMBAS-ETHOS.md` | What Imbas is, in the founder's words. Rewrite rule: founder-reviewed; quotes never paraphrased; sections may be added; existing founder quotations are never edited except by the founder. Coverage held by `scripts/qa/ethos-coverage.mjs` (runs with `npm test`). Registered 2026-09-08. |
 
 ## FROZEN — frozen artifacts, never moved or rewritten (canon rule 5)
 
