@@ -1039,6 +1039,111 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+
+  // The third governed source movement, and the first to move styles.css. It follows the
+  // 2026-08-25 population reseal, which stated styles.css at 210fd6d5 in sources_unchanged and
+  // is what this record's before-hash hands off from.
+  {
+    date: "2026-09-08",
+    reason:
+      "Site information architecture pass, branch claude/site-map-a-stranger-can-read — the " +
+      "homepage proof strip was deleted whole under a brief that named its CSS with it. One " +
+      "governed source moved: styles.css, which lost the 84 rules that existed only for that " +
+      "strip. Nothing else under this census's source list was edited; workbench.css and " +
+      "workbench-app.jsx were not touched at all, so the chain carries them through by silence.",
+    fingerprint_before: "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c",
+    fingerprint_after: "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+        sha256_after: "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+        edit:
+          "removed every rule whose selector named .proof-strip, the @keyframes " +
+          "proof-strip-dot-pulse it animated with, and the .hero:has(+ .proof-strip--landing) " +
+          "rules that compressed the hero above it — 84 rules and their two explanatory " +
+          "comments, leaving no occurrence of the token in the file. No selector list was " +
+          "mixed, so nothing outside the strip lost a declaration. The removed rules declared " +
+          "no ember token, no rgba(var(--ember-rgb), …) and no literal ramp hue, so no " +
+          "declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is " +
+          "byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
+  {
+    date: "2026-09-08",
+    reason:
+      "authorized source edit on branch claude/site-map-stranger-can-read: the hero compression " +
+      "the proof strip used to trigger was restored as standalone rules. One governed source " +
+      "moved: styles.css. workbench.css and workbench-app.jsx were not touched, so the chain " +
+      "carries them through by silence.",
+    fingerprint_before: "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a",
+    fingerprint_after: "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+        sha256_after: "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+        edit:
+          "restored the 16 hero-compression rules that the previous reseal recorded as removed " +
+          "with the strip. They are re-declared with the same declarations, in the same source " +
+          "positions, with the strip condition :has(+ .proof-strip--landing) replaced by " +
+          ":has(> .hero__stage), which is always true for the landing hero and carries the same " +
+          "one-class specificity — so the cascade weight and order that produced the compressed " +
+          "geometry are reproduced rather than re-tuned. The rules declare only min-height, " +
+          "display, padding-bottom and margin-bottom. They name no ember token, no " +
+          "rgba(var(--ember-rgb), …) and no literal ramp hue, so no declared-token spend, free " +
+          "alpha or adjacent hue moved. All 13 free-alpha spends live in workbench.css, which " +
+          "this edit does not touch. The :root ember ramp is byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────

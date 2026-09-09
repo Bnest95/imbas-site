@@ -1,6 +1,6 @@
 (function () {
   var FALLBACK = 77;
-  var MORE_PAGES = ['/field-notes', '/methodology.html', '/public-interest.html', '/faq.html', '/contact.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html', '/exploration-pack.html', '/input-integrity.html'];
+  var MORE_PAGES = ['/field-notes', '/volunteer-gap.html', '/how-it-works.html', '/reader.html', '/whitepaper.html', '/institutions.html', '/for-readers.html', '/methodology.html', '/public-interest.html', '/faq.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html', '/exploration-pack.html', '/input-integrity.html'];
 
   function isFieldNotesPath(path) {
     return path === '/field-notes' || path.indexOf('/field-notes/') === 0;
@@ -107,6 +107,12 @@
 
     [
       { href: '/field-notes/', label: 'Field Notes', fieldNotes: true, desktopOnly: true },
+      { href: '/volunteer-gap.html', label: 'The Volunteer Gap' },
+      { href: '/how-it-works.html', label: 'How It Works' },
+      { href: '/reader.html', label: 'The Reader' },
+      { href: '/whitepaper.html', label: 'Whitepaper' },
+      { href: '/institutions.html', label: 'For Institutions' },
+      { href: '/for-readers.html', label: 'For Readers' },
       { href: '/methodology.html', label: 'Methodology' },
       { href: '/input-integrity.html', label: 'Input Integrity' },
       { href: '/glossary.html', label: 'Glossary' },
@@ -114,8 +120,7 @@
       { href: '/public-interest.html', label: 'Public Interest' },
       { href: '/independence.html', label: 'Independence' },
       { href: '/challenge.html', label: 'Challenge' },
-      { href: '/faq.html', label: 'FAQ' },
-      { href: '/contact.html', label: 'Contact' }
+      { href: '/faq.html', label: 'FAQ' }
     ].forEach(function (item) {
       var li = document.createElement('li');
       li.setAttribute('role', 'none');
