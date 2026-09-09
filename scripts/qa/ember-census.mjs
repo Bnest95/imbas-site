@@ -1093,6 +1093,57 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-09-08",
+    reason:
+      "authorized source edit on branch claude/site-map-stranger-can-read: the hero compression " +
+      "the proof strip used to trigger was restored as standalone rules. One governed source " +
+      "moved: styles.css. workbench.css and workbench-app.jsx were not touched, so the chain " +
+      "carries them through by silence.",
+    fingerprint_before: "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a",
+    fingerprint_after: "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+        sha256_after: "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+        edit:
+          "restored the 16 hero-compression rules that the previous reseal recorded as removed " +
+          "with the strip. They are re-declared with the same declarations, in the same source " +
+          "positions, with the strip condition :has(+ .proof-strip--landing) replaced by " +
+          ":has(> .hero__stage), which is always true for the landing hero and carries the same " +
+          "one-class specificity — so the cascade weight and order that produced the compressed " +
+          "geometry are reproduced rather than re-tuned. The rules declare only min-height, " +
+          "display, padding-bottom and margin-bottom. They name no ember token, no " +
+          "rgba(var(--ember-rgb), …) and no literal ramp hue, so no declared-token spend, free " +
+          "alpha or adjacent hue moved. All 13 free-alpha spends live in workbench.css, which " +
+          "this edit does not touch. The :root ember ramp is byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────
