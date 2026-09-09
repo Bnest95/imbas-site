@@ -2152,227 +2152,36 @@ body:has(main > section.hero) .nav__menu-btn {
   }
 }
 
-/* =============================================================
-   PASS 10 — PROOF STRIP: archive stats (homepage landing placement)
-   ============================================================= */
-.proof-strip {
-  padding: var(--space-4) clamp(1.25rem, 4vw, 3rem);
-  background: var(--bg-base);
-  border-bottom: 1px solid var(--line-faint);
-}
-.proof-strip--landing {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-3);
-  border-top: none;
-  border-bottom: 1px solid var(--line-faint);
-  background: transparent;
-}
-.hero:has(+ .proof-strip--landing) {
-  min-height: auto;
-}
-.hero:has(+ .proof-strip--landing) .hero__horizon {
-  display: none;
-}
-.hero:has(+ .proof-strip--landing) .hero__capture-block {
-  margin-bottom: calc(var(--space-3) + 0.75rem);
-}
-.hero:has(+ .proof-strip--landing) .hero__stage {
-  min-height: auto;
-  padding-bottom: clamp(1.15rem, 2.4vh, 1.65rem);
-}
-.hero + .proof-strip--landing {
-  margin-top: 0;
-}
-@media (max-width: 900px) {
-  .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: clamp(1rem, 2.2vh, 1.5rem);
-  }
-  .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: calc(var(--space-2) + 0.5rem);
-  }
-  .hero + .proof-strip--landing {
-    padding-top: var(--space-3);
-  }
-}
-@media (max-width: 520px) {
-  .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: var(--space-2);
-  }
-  .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: var(--space-3);
-  }
-  .hero + .proof-strip--landing {
-    padding-top: var(--space-2);
-    padding-bottom: var(--space-3);
-  }
-}
-.proof-strip--landing .proof-strip__meta {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  row-gap: 0.6rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0;
-  line-height: 1;
-  text-align: center;
-  color: rgba(203, 196, 190, 0.97);
-}
-.proof-strip--landing .proof-strip__metrics {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  column-gap: 1.4em;
-  row-gap: 0.4rem;
-  line-height: 1.15;
-  transform: translateY(-4px);
-}
-.proof-strip--landing .proof-strip__lead {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 10px;
-}
-.proof-strip--landing .proof-strip__lead .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ember);
-  flex-shrink: 0;
-  align-self: center;
-  box-shadow: 0 0 8px var(--ember-glow);
-  animation: proof-strip-dot-pulse 6.5s ease-in-out infinite;
-}
-@keyframes proof-strip-dot-pulse {
-  0%, 100% {
-    opacity: 0.58;
-    box-shadow: 0 0 6px var(--ember-glow);
-  }
-  50% {
-    opacity: 0.92;
-    box-shadow: 0 0 12px var(--ember-pulse), 0 0 3px rgba(var(--ember-rgb), 0.22);
-  }
-}
-.proof-strip--landing .proof-strip__metric {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5em;
-  white-space: nowrap;
-}
-.proof-strip--landing .proof-strip__num {
-  line-height: 1;
-  flex-shrink: 0;
-}
-.proof-strip--landing .proof-strip__desc {
-  color: var(--ink-muted);
-  font-weight: 400;
-  text-transform: lowercase;
-  letter-spacing: 0.18em;
-}
-.proof-strip--landing .proof-strip__metric--scope {
-  white-space: nowrap;
-}
-.proof-strip--landing .proof-strip__scope {
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  line-height: 1.4;
-  text-transform: none;
-  color: var(--ink-soft);
-}
-/* Two layouts and nothing between them.
 
-   Below the switch each pair takes a line of its own and the line break does the
-   separating. Above it all three stand on one row and the middots do. There is no
-   middle state on purpose: the middot is a flex item of .proof-strip__metrics, so
-   a wrap can strand one at the end of a row or the start of the next, and a row
-   that wraps without them is the run-on this rule exists to stop.
 
-   1200px is where the switch goes because 1130px is where the row stops fitting:
-   1034px of content (279 + 11 + 329 + 11 + 329, measured at meta 13.44px / label
-   21.6px) inside 96px of strip padding. The 70px left over absorbs a scrollbar and
-   the width a fallback face takes before the webfont lands. Lengthen any of the six
-   strings and that margin is what gets spent, so measure again before you do.
 
-   Neither layout may break a pair. .proof-strip__metric holds white-space: nowrap
-   at every width, and the copy is cut to clear the narrowest one. */
-.proof-strip--landing .proof-strip__metrics > .proof-strip__lead,
-.proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
-  flex: 0 0 100%;
-  justify-content: center;
-}
-.proof-strip--landing .proof-strip__sep {
-  display: none;
-}
-@media (min-width: 1200px) {
-  .proof-strip--landing .proof-strip__metrics {
-    flex-wrap: nowrap;
-  }
-  .proof-strip--landing .proof-strip__metrics > .proof-strip__lead,
-  .proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
-    flex: 0 0 auto;
-  }
-  .proof-strip--landing .proof-strip__sep {
-    display: inline;
-    color: var(--ink-muted);
-  }
-}
-.proof-strip--landing .proof-strip__metric::after {
-  content: none;
-}
-.proof-strip--landing .proof-strip__metrics > .proof-strip__metric:last-child::after {
-  content: none;
-}
-.proof-strip__meta {
-  font-family: var(--font-mono);
-  font-size: 0.84rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--ink-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin: 0 auto;
-  max-width: var(--container-wide);
-  text-align: center;
-}
-.proof-strip__num {
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-  color: var(--ink-luminous);
-  text-transform: none;
-}
-.proof-strip__meta .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ember);
-  box-shadow: 0 0 10px var(--ember-glow);
-  flex-shrink: 0;
-}
-@media (max-width: 520px) {
-  .proof-strip__meta {
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 0.35rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
-  }
-  .proof-strip--landing .proof-strip__metrics {
-    column-gap: 0.45em;
-    row-gap: 0.45rem;
-  }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* =============================================================
    WHAT IMBAS TRACKS — categories (still, scannable)
@@ -4919,11 +4728,7 @@ body:has(main > section.hero) .nav__menu-btn {
   .roadmap__label-dot { animation: none !important; opacity: 0.75 !important; }
   .cat:hover .cat__mark { animation: none !important; }
   .value__beats::after { transform: scaleX(1) !important; }
-  .proof-strip--landing .proof-strip__lead .dot {
-    animation: none !important;
-    opacity: 0.85;
-    box-shadow: 0 0 8px var(--ember-glow) !important;
-  }
+
 }
 
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 3px; border-radius: 1px; }
@@ -9072,7 +8877,7 @@ main, .site-footer { position: relative; z-index: 2; }
 .hero__microcopy { font-size: max(0.9375rem, var(--text-min)); }
 .hero__secondary { font-size: max(0.8125rem, var(--mono-min)); }
 
-.proof-strip__meta { font-size: max(0.84rem, var(--mono-min)); }
+
 
 .gap__link { font-size: max(0.74rem, var(--mono-min)); }
 .divergence__label { font-size: max(0.62rem, var(--mono-min)); }
@@ -9105,7 +8910,7 @@ main, .site-footer { position: relative; z-index: 2; }
 .archive--home-preview .hp-arc-record__tail-label { font-size: max(0.8125rem, var(--mono-min)); }
 
 @media (max-width: 520px) {
-  .proof-strip__meta { font-size: max(0.75rem, var(--mono-min)); }
+
   .hero__capture button { font-size: max(0.8rem, var(--mono-min)); }
   .hero__meta { font-size: 0.6rem; }
   .hero__subhead-line { font-size: clamp(0.94rem, 3.54vw, 1.43rem); }
@@ -9115,13 +8920,8 @@ main, .site-footer { position: relative; z-index: 2; }
    MOBILE POST-HERO SCALE — landing hierarchy below hero (≤768px)
    ============================================================= */
 @media (max-width: 768px) {
-  .proof-strip--landing .proof-strip__meta {
-    font-size: max(0.72rem, 0.735rem);
-    letter-spacing: 0.19em;
-  }
-  .proof-strip--landing .proof-strip__num {
-    font-size: 1.19rem;
-  }
+
+
 
   .stakes.stakes--context-lead .exists-bridge__heading {
     font-size: clamp(0.94rem, 3.5vw, 1.06rem);
@@ -9173,10 +8973,7 @@ main, .site-footer { position: relative; z-index: 2; }
    solid, so the panel's step is the same at the top of the band as at the
    bottom; only connective bands ramp.
    ============================================================= */
-main > .hero + .proof-strip--landing {
-  background: var(--bg-deep);
-  border-top: 1px solid var(--line-faint);
-}
+
 main > .your-experience {
   background:
     radial-gradient(ellipse 52% 42% at 18% 14%, rgba(var(--ember-rgb), 0.055), transparent 70%),
@@ -9603,9 +9400,7 @@ main > .close::before {
     padding-top: clamp(0.85rem, 2.5vh, 1.15rem);
     padding-bottom: 0.5rem;
   }
-  main > .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: 0.4rem;
-  }
+
   main > .hero .hero__meta--instrument {
     font-size: max(0.625rem, var(--mono-min));
     letter-spacing: 0.15em;
@@ -9638,9 +9433,7 @@ main > .close::before {
     margin-bottom: 0.2rem;
     max-width: min(420px, calc(100vw - 2rem));
   }
-  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: 0.28rem;
-  }
+
   main > .hero .hero__capture button {
     padding: 0.72rem 1.55rem;
     font-size: max(0.78rem, var(--mono-min));
@@ -9654,55 +9447,16 @@ main > .close::before {
     color: rgba(252, 248, 236, 0.68);
   }
 
-  main > .hero + .proof-strip--landing {
-    padding-top: 0.4rem;
-    padding-bottom: 0.48rem;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__meta {
-    font-size: max(0.6rem, var(--mono-min));
-    letter-spacing: 0.1em;
-    line-height: 1.2;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__metrics {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: baseline;
-    row-gap: 0.12rem;
-    column-gap: 0.32em;
-    line-height: 1.15;
-    transform: none;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__num {
-    font-size: 0.88rem;
-    font-weight: 500;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__desc {
-    letter-spacing: 0.08em;
-    font-size: 0.88em;
-    color: var(--ink-muted);
-  }
-  main > .hero + .proof-strip--landing .proof-strip__metric--scope {
-    flex: 0 0 100%;
-    justify-content: center;
-    margin-top: 0.08rem;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__scope {
-    font-size: max(0.6rem, var(--mono-min));
-    letter-spacing: 0.02em;
-    color: var(--ink-muted);
-    font-weight: 400;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__lead {
-    gap: 6px;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__lead .dot {
-    width: 4px;
-    height: 4px;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__metric::after {
-    color: var(--ink-muted);
-  }
+
+
+
+
+
+
+
+
+
+
 }
 
 /* Proof-strip lead+subline items on narrow viewports (≤699px). The stacking is the
@@ -9715,22 +9469,7 @@ main > .close::before {
    the real risk it was answering, so the answer moved to the copy: the longest pair
    measures 252px against 280px of room at 320px, the narrowest width the strip is
    held to. Fitting is now the copy's job and nowrap is absolute. */
-@media (max-width: 699px) {
-  main > .hero + .proof-strip--landing .proof-strip__metrics {
-    row-gap: 0.5rem;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__lead,
-  main > .hero + .proof-strip--landing .proof-strip__metrics > .proof-strip__metric {
-    flex: 0 0 100%;
-    justify-content: center;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__metric {
-    justify-content: center;
-  }
-  main > .hero + .proof-strip--landing .proof-strip__metric::after {
-    content: none;
-  }
-}
+
 
 /* =============================================================
    HOMEPAGE MOBILE LANDING FINAL TUNE — roadmap trust + scan density
@@ -9809,18 +9548,14 @@ main > .close::before {
    Index hero + proof + Why Imbas only; desktop unchanged (≤680px).
    ============================================================= */
 @media (max-width: 699px) {
-  main > .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: 0.72rem;
-  }
+
 
   main > .hero .hero__capture-block {
     margin-top: 0.32rem;
     margin-bottom: 0.38rem;
   }
 
-  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: 0.52rem;
-  }
+
 
   main > .hero .hero__microcopy {
     margin-top: 0.88rem;
@@ -9829,23 +9564,13 @@ main > .close::before {
     max-width: 28ch;
   }
 
-  main > .hero + .proof-strip--landing {
-    padding-top: 0.58rem;
-    padding-bottom: 0.68rem;
-  }
 
-  main > .hero + .proof-strip--landing .proof-strip__metrics {
-    row-gap: 0.16rem;
-  }
 
-  main > .hero + .proof-strip--landing .proof-strip__metric--scope {
-    margin-top: 0.12rem;
-  }
 
-  main > .proof-strip--landing + .stakes.stakes--context-lead {
-    margin-top: 0.55rem;
-    padding-top: clamp(2.15rem, 7.2vw, 2.65rem);
-  }
+
+
+
+
 
   main > .stakes.stakes--context-lead .exists-bridge__thesis {
     font-size: clamp(1.2rem, 4.4vw, 1.4rem);
@@ -10142,17 +9867,13 @@ main > .close::before {
    Index hero flow only; desktop unchanged (≤680px). IMBAS scale untouched.
    ============================================================= */
 @media (max-width: 699px) {
-  main > .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: 0.88rem;
-  }
+
 
   main > .hero .hero__capture-block {
     margin-bottom: 0.48rem;
   }
 
-  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: 0.68rem;
-  }
+
 
   main > .hero .hero__capture button {
     margin-bottom: 0.08rem;
@@ -10167,16 +9888,9 @@ main > .close::before {
     color: rgba(252, 248, 236, 0.64);
   }
 
-  main > .hero + .proof-strip--landing {
-    margin-top: 0.12rem;
-    padding-top: 0.74rem;
-    padding-bottom: 0.82rem;
-  }
 
-  main > .proof-strip--landing + .stakes.stakes--context-lead {
-    margin-top: 0.95rem;
-    padding-top: clamp(2.5rem, 8.5vw, 3.05rem);
-  }
+
+
 
   main > .stakes.stakes--context-lead .exists-bridge__heading {
     margin-bottom: 0.55rem;
@@ -10240,9 +9954,7 @@ main > .close::before {
     margin-bottom: 0.95rem;
   }
 
-  main > .hero:has(+ .proof-strip--landing) .hero__capture-block {
-    margin-bottom: 1.08rem;
-  }
+
 
   /* 4. TEST YOUR AI → microcopy */
   main > .hero .hero__capture button {
@@ -10255,21 +9967,12 @@ main > .close::before {
   }
 
   /* 5. Microcopy → proof strip */
-  main > .hero:has(+ .proof-strip--landing) .hero__stage {
-    padding-bottom: 1.42rem;
-  }
 
-  main > .hero + .proof-strip--landing {
-    margin-top: 0.48rem;
-    padding-top: 1.28rem;
-    padding-bottom: 1.18rem;
-  }
+
+
 
   /* 6. Proof strip → Why Imbas Exists — modest transition; avoid empty band in stakes bg */
-  main > .proof-strip--landing + .stakes.stakes--context-lead {
-    margin-top: 1rem;
-    padding-top: clamp(2rem, 7vw, 2.65rem);
-  }
+
 }
 
 
@@ -10282,52 +9985,12 @@ main > .close::before {
     font-size: clamp(5.15rem, 25.2vw, 7.85rem);
   }
 
-  main > .proof-strip--landing + .stakes.stakes--context-lead {
-    margin-top: 0.75rem;
-    padding-top: clamp(1.5rem, 5.25vw, 2rem);
-  }
+
 }
 
 
-/* =============================================================
-   HOMEPAGE MOBILE PROOF STRIP EDGE BLEND — soft band, no hard shelf
-   Index proof-strip presentation only; hero/Why Imbas/desktop unchanged (≤680px).
-   ============================================================= */
-@media (max-width: 699px) {
-  main > .hero + .proof-strip.proof-strip--landing {
-    position: relative;
-    overflow: visible;
-    background: transparent;
-    border-top: none;
-    border-bottom: none;
-    box-shadow: none;
-  }
 
-  main > .hero + .proof-strip.proof-strip--landing::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -14px;
-    bottom: -14px;
-    pointer-events: none;
-    z-index: 0;
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      rgba(var(--bg-deep-rgb), 0.38) 16%,
-      rgba(var(--bg-deep-rgb), 0.68) 38%,
-      rgba(var(--bg-deep-rgb), 0.68) 62%,
-      rgba(var(--bg-deep-rgb), 0.38) 84%,
-      transparent 100%
-    );
-  }
 
-  main > .hero + .proof-strip.proof-strip--landing .proof-strip__meta {
-    position: relative;
-    z-index: 1;
-  }
-}
 
 
 /* Reader styles live in /workbench.css, which reader.html AND inspection.html both load.

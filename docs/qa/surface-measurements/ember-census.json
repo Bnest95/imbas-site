@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "4bb9281a6820e1057f5fafcf9f96c82fd365ac72",
+  "measured_at_master": "bba6c9210c10ffe843fff694811fa78286f1350c",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -66,7 +66,7 @@
     "sources": [
       {
         "path": "styles.css",
-        "sha256": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d"
+        "sha256": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45"
       },
       {
         "path": "workbench-app.jsx",
@@ -77,7 +77,7 @@
         "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
       }
     ],
-    "sha256": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c"
+    "sha256": "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a"
   },
   "provenance": {
     "reseal_rule": {
@@ -254,6 +254,72 @@
         "is_terminal_source_record": false,
         "authorized_edits_hold_live": null,
         "sources_recorded_unmoved_hold_live": null,
+        "carries_population_evidence": []
+      },
+      {
+        "date": "2026-09-08",
+        "reason": "Site information architecture pass, branch claude/site-map-a-stranger-can-read — the homepage proof strip was deleted whole under a brief that named its CSS with it. One governed source moved: styles.css, which lost the 84 rules that existed only for that strip. Nothing else under this census's source list was edited; workbench.css and workbench-app.jsx were not touched at all, so the chain carries them through by silence.",
+        "fingerprint_before": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c",
+        "fingerprint_after": "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a",
+        "authorized_edits": [
+          {
+            "source": "styles.css",
+            "extraction": "whole file",
+            "sha256_before": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+            "sha256_after": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+            "edit": "removed every rule whose selector named .proof-strip, the @keyframes proof-strip-dot-pulse it animated with, and the .hero:has(+ .proof-strip--landing) rules that compressed the hero above it — 84 rules and their two explanatory comments, leaving no occurrence of the token in the file. No selector list was mixed, so nothing outside the strip lost a declaration. The removed rules declared no ember token, no rgba(var(--ember-rgb), …) and no literal ramp hue, so no declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is byte-identical."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "is_terminal_source_record": true,
+        "authorized_edits_hold_live": true,
+        "sources_recorded_unmoved_hold_live": true,
         "carries_population_evidence": []
       }
     ],
@@ -970,7 +1036,7 @@
           "single-findings"
         ],
         "is_newest_entry": true,
-        "is_terminal_source_record": true,
+        "is_terminal_source_record": false,
         "scenarios_added_observed": [
           "chip-delta-held"
         ],
@@ -1097,9 +1163,9 @@
         "workbench.css"
       ],
       "terminal": {
-        "route": "population",
-        "date": "2026-08-25",
-        "fingerprint_after": "2baa2a6251b7e5ce10a64c77f5a5e575e5968da00ec4ffb55f412ea5e88cf85c"
+        "route": "source",
+        "date": "2026-09-08",
+        "fingerprint_after": "5e9523a7d731b657a8f68c6d00c473b9f7dc685c86ba6547ec5b48a3ac13943a"
       },
       "links": [
         {
@@ -1139,12 +1205,21 @@
           "holds": true
         },
         {
-          "link": "2026-08-25/population → live",
+          "link": "2026-08-25/population → 2026-09-08/source",
           "path": "styles.css",
-          "route": "population",
+          "route": "source",
+          "kind": "moved",
+          "started_from": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "produced": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+          "holds": true
+        },
+        {
+          "link": "2026-09-08/source → live",
+          "path": "styles.css",
+          "route": "source",
           "kind": "terminal",
-          "produced": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
-          "live": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d",
+          "produced": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
+          "live": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45",
           "holds": true
         },
         {
@@ -1184,9 +1259,18 @@
           "holds": true
         },
         {
-          "link": "2026-08-25/population → live",
+          "link": "2026-08-25/population → 2026-09-08/source",
           "path": "workbench-app.jsx",
-          "route": "population",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-09-08/source → live",
+          "path": "workbench-app.jsx",
+          "route": "source",
           "kind": "terminal",
           "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
           "live": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
@@ -1229,9 +1313,18 @@
           "holds": true
         },
         {
-          "link": "2026-08-25/population → live",
+          "link": "2026-08-25/population → 2026-09-08/source",
           "path": "workbench.css",
-          "route": "population",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "holds": true
+        },
+        {
+          "link": "2026-09-08/source → live",
+          "path": "workbench.css",
+          "route": "source",
           "kind": "terminal",
           "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
           "live": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
@@ -1246,7 +1339,7 @@
     {
       "path": "styles.css",
       "extraction": "whole file",
-      "sha256": "210fd6d5d1ffad0c4ce520251877c93ce6ff2b1595235507c3805c47d862b48d"
+      "sha256": "a9799531084808ecf88a31cf028e0b0d24048b03d6324b2cfdd5567bda387f45"
     },
     {
       "path": "workbench.css",
