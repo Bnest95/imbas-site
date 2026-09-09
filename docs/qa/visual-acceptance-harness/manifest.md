@@ -63,11 +63,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5e4d08a9155e1bb477e5df3bebc54a1a75a7a2851f4100a7787db9077608bcd0` |
-| bytes | 378959 |
+| sha256 | `ee78dac8e72bd08e9c8e82de508886dc2b17b1164169f2561860d995e57c5715` |
+| bytes | 362377 |
 | snapshot | `advisory-boundaries--desktop.snapshot.txt` |
-| snapshot sha256 | `4f2b5d209f340c7d02a104ed63f6649b33f7f6363f6d430482a2a1d65d7f8776` |
-| snapshot bytes | 2356 |
+| snapshot sha256 | `a2463e6c88a15b2f3fa7ac8114ea12ca510a681de6508bca7099304837bd12cb` |
+| snapshot bytes | 2189 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
 | framed on | `.adv-practice` at scroll offset 2116 |
@@ -95,11 +95,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d327e3cf324a7f605a78e7902a7c126c851c1ff4cdfbe1014a11c7cbc06853de` |
-| bytes | 458826 |
+| sha256 | `fbfa3c38301c1f1f8644d2c04c35847ad8355b0e221eec4a27b8553b933bcdfa` |
+| bytes | 442958 |
 | snapshot | `advisory-masthead--desktop.snapshot.txt` |
-| snapshot sha256 | `84005ec32bb701cfa7d5d077a8b61cca44deba9de2ea0c54b42d2b3158a96e90` |
-| snapshot bytes | 2283 |
+| snapshot sha256 | `2db10052fe08201a91bd86d1d430723f0bc32e13c45991c418ef3c53043a75f7` |
+| snapshot bytes | 2116 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
 | framed on | `.adv-masthead` at scroll offset 0 |
@@ -127,11 +127,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7e9b8cbcecde6106c0ed57cf1e8fd37426ec257711cbfe02c1806c4d38af5813` |
-| bytes | 482581 |
+| sha256 | `71ebac05e9604d189d6b3055f4287ef94959bdb603c059666eccbdebf1a27a1c` |
+| bytes | 466947 |
 | snapshot | `chip-arrival--desktop.snapshot.txt` |
-| snapshot sha256 | `2a12ab4aa318f2574238137b19c298e39e4db0e6f8ad695727a58642925f191e` |
-| snapshot bytes | 2034 |
+| snapshot sha256 | `0b0151bcbc4c95f3a6ddc8a527de80892d0ccf26491b20388992a7d5d6a2bef5` |
+| snapshot bytes | 1867 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `?start=chips` |
 | framed on | `#wb-chip-lane` at scroll offset 290 |
@@ -159,11 +159,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `92b9762c81bf55abcf82032dcbc4a72acda41fbd476630fa01bb06a486f8ebee` |
-| bytes | 552086 |
+| sha256 | `65c07ee75fad327fd64f31d8dcb80b3c9e2fbd2b3f01b055d12a5d3674e9d84a` |
+| bytes | 533736 |
 | snapshot | `chip-delta-held--desktop.snapshot.txt` |
-| snapshot sha256 | `ca65db39fdb3b7cd6bf20cd33513926612c3ad427752d7ab9249918f9594da19` |
-| snapshot bytes | 53294 |
+| snapshot sha256 | `5708600ba0f1f68cd3570ad35a245857723dc2ea668cbf3d16faf5003ea60892` |
+| snapshot bytes | 53127 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `#wb-chip-lane .wb-chip__held` at scroll offset 4085 |
@@ -191,11 +191,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `39d03e5d18e3628c07c115642699b4a4164e2a4de8c00059cd9fb661fe3b435d` |
-| bytes | 524417 |
+| sha256 | `30a5cfa9e5cc43fc47fe7fdc014c1728828b4f5c2d45f8a53981ced801532557` |
+| bytes | 506820 |
 | snapshot | `chips-from-inspection--desktop.snapshot.txt` |
-| snapshot sha256 | `3c7ea2c87ff0a28c15381bdbf823baa32773239e87b0512a8be4dacc422fa1de` |
-| snapshot bytes | 29650 |
+| snapshot sha256 | `1d6a4776d0ce2326a4ee8b38badf3028d0e262923e466bb97bc777e6675df1bf` |
+| snapshot bytes | 29483 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `#wb-chip-lane .wb-reader-result__head` at scroll offset 4008 |
@@ -223,11 +223,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `60872e08e9f5ee63e90f2e212dbd4827df3c0ca0889ce49d8509b372a178eb0a` |
-| bytes | 792929 |
+| sha256 | `56e70e1b8d109cdbe1309cbeb9c9732adfa3c1bdaebbd6700a496a0bbb3b78d0` |
+| bytes | 774306 |
 | snapshot | `claim-authorized-match--desktop.snapshot.txt` |
-| snapshot sha256 | `b3fbd6a8d5977646cfab56e3a137618417b7e3bde4bce32834758e490024ed54` |
-| snapshot bytes | 52878 |
+| snapshot sha256 | `47fccf93c53f7a10e9d6f7d34321789ca5a75699cdb3d74d31d1520de0d0d999` |
+| snapshot bytes | 52711 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-claim` at scroll offset 5146 |
@@ -255,11 +255,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `c6a8d73bf99c0e50cb0790d2954bf79a68af914cd1b78869d2ec20fe7d916729` |
-| bytes | 761737 |
+| sha256 | `c66c4f9b0dc8112d7db537f388e6568b454c696857119a5e35a7efcefe7c6fc6` |
+| bytes | 744994 |
 | snapshot | `claim-authorized-mismatch--desktop.snapshot.txt` |
-| snapshot sha256 | `4f643b6b64d0db0b04e377b291fe26d3075a4bcad7296ed909ecee94a1434067` |
-| snapshot bytes | 52850 |
+| snapshot sha256 | `2678752beffd47ff2cd51a752eb80bfc0df27b6b61d4806e6d5e3f7512174db0` |
+| snapshot bytes | 52683 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-claim` at scroll offset 5156 |
@@ -287,11 +287,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `2a102d14dc3a340516b5823a602db7a82ddf33617f2316943582faf290c20887` |
-| bytes | 786955 |
+| sha256 | `8d4069aee9d47d4ee7a35b6371d4dcd6af47dec35ee1cdb141838134a28e97b8` |
+| bytes | 768558 |
 | snapshot | `claim-client-declaration--desktop.snapshot.txt` |
-| snapshot sha256 | `d1d90123442b9376edbad8d4b09044bbb90b7ac739b7d4a152793ab68356e6ec` |
-| snapshot bytes | 52845 |
+| snapshot sha256 | `a76f54aafe01ca1bedd797ec1e74843f1131d1db7134cc0654a9aadd8f8b49aa` |
+| snapshot bytes | 52678 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-claim` at scroll offset 5146 |
@@ -319,11 +319,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `640fb1bc2fe222ed5807c04941b4e8d420f305caff0b8c67fae6c7a62f339b20` |
-| bytes | 768245 |
+| sha256 | `e0a774f8754e1f3232f07bab2842ff6af3f5ff0eb5db7b20c76065331d8f8c65` |
+| bytes | 751095 |
 | snapshot | `claim-unrecognized-source--desktop.snapshot.txt` |
-| snapshot sha256 | `4f09ad566e2036d1a7c431a7e48fe71142b1812d7c7ad7a760ad1f5e35cdea45` |
-| snapshot bytes | 52842 |
+| snapshot sha256 | `f5738ad9dd0db6809478b28a584cfdb9cef43d1a42278e33e4be96c3329bb2b1` |
+| snapshot bytes | 52675 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-claim` at scroll offset 5156 |
@@ -351,11 +351,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `16f706d9cd6864acf203bd6e27149c20feed8f316d77a7a3b6eb49692eb909c5` |
-| bytes | 471843 |
+| sha256 | `349c8b89b07f2ff8ff13dc0d267231cc51aaa02a841cba4806dfa1a0fd10ce0d` |
+| bytes | 454989 |
 | snapshot | `curated-readout--desktop.snapshot.txt` |
-| snapshot sha256 | `a0acd05b86d510365f34175c9621838f8a708641d5bb120eb998749882f5c4e1` |
-| snapshot bytes | 2430 |
+| snapshot sha256 | `3524771c86fcb7406c48626881e0603a8a299e3238562e8484732040e25f4435` |
+| snapshot bytes | 2263 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `?reader=0` |
 | framed on | `.wb-readout` at scroll offset 205 |
@@ -383,11 +383,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `a10cb6a9081c875f742f1457d4ccea877a6a31b12d5484194820fa6b7a1dca6a` |
-| bytes | 782517 |
+| sha256 | `3fd50ac4d3372f6f9ec9feb6dbaa022bbc436edcd81fca1a3871f174c2cdfa09` |
+| bytes | 766882 |
 | snapshot | `deposit-fixture--desktop.snapshot.txt` |
-| snapshot sha256 | `6235d8133336c0cdc22ff7e76d16cfe62b6f985192ea7e7ae68240406ccdda03` |
-| snapshot bytes | 51957 |
+| snapshot sha256 | `1f81bf704e076ca056ef19e442aad027ab97a8bc35e9d78aa6119b158baf2a3a` |
+| snapshot bytes | 51790 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-measure__source mark.wb-source__mark` at scroll offset 1394 |
@@ -415,11 +415,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d670b2aa80c419bffb41b6eb6a2ed72cbf7db7173a6a3f8790fc4b3a15b5eaf3` |
-| bytes | 751251 |
+| sha256 | `1384bca6fc3f28ea8433de203124dff7c43373cc542c7f92a22c06d77a3bb72a` |
+| bytes | 737167 |
 | snapshot | `export-paired--desktop.snapshot.txt` |
-| snapshot sha256 | `941e2134432616dcbeb4f924b59a818c0e84a96152f632219932deae91acee0d` |
-| snapshot bytes | 52620 |
+| snapshot sha256 | `41f5f1d5c67fe048e99d99d75c3b4c3ef4b79e829f10b60cc9e40b776fb2f720` |
+| snapshot bytes | 52453 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-checks__export--paired` at scroll offset 7090 |
@@ -447,11 +447,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e0e25d9ed112751465aabf35e873f5fd1632e4d078c3a8297dd4cf8dcc9d7ccd` |
-| bytes | 630887 |
+| sha256 | `a3dc28a88d1117c2788ea2e5af74fbc95ea8714cfa964ba77111518e5a4da239` |
+| bytes | 613612 |
 | snapshot | `export-single--desktop.snapshot.txt` |
-| snapshot sha256 | `8cdcf788282951c258af111a1ee335300d2129dcb4a31e0070b68a3b2c81e4ba` |
-| snapshot bytes | 29510 |
+| snapshot sha256 | `584e6f3ccf59132b0a56157be4355c1bbb69885c35074db4ba067375faa34137` |
+| snapshot bytes | 29343 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-checks__export--single` at scroll offset 3750 |
@@ -479,11 +479,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `10c3e151bd359cfe3aa82708898b458e0e4990153594bd40e6605d44ab57bb73` |
-| bytes | 424760 |
+| sha256 | `a73f92f6fee08d23237520b9aa118f6dbc19b767fa43b6c54dc5f26e26266b66` |
+| bytes | 407521 |
 | snapshot | `first-load--desktop.snapshot.txt` |
-| snapshot sha256 | `02dfb7f9354197d62bb686051095d4fdc7893e0bea0cdf5bf8100842f885271f` |
-| snapshot bytes | 2356 |
+| snapshot sha256 | `ad7eb38b75ed3a89ab29402bfa39121be0c1e229057a4bd341e112686e33cbad` |
+| snapshot bytes | 2189 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__fields` at scroll offset 141 |
@@ -511,14 +511,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e10338e7e5fc2d08571c675cc7ee9d36a743a7723ad3d123a3c691e2a5dd430f` |
-| bytes | 752038 |
+| sha256 | `9d01a8e85fc323616295225268b7eb7444f45a35b63fb9254bc48076d7d19922` |
+| bytes | 546723 |
 | snapshot | `home-archive-preview--desktop.snapshot.txt` |
-| snapshot sha256 | `8bd83f74ebe2c4bd241e6d7a11cd9a616ee45aca5409ca878209028ac2873824` |
-| snapshot bytes | 1423 |
+| snapshot sha256 | `f3756c3f4c7e42c99f9bda672345d1f23276b8e72db682a023812a79b222d3a0` |
+| snapshot bytes | 1256 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.hp-arc-intro` at scroll offset 7695 |
+| framed on | `.hp-arc-intro` at scroll offset 6838 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's archive preview — what the record claims about itself, above the featured case |
 | expected behaviour | The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product. |
@@ -527,14 +527,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `12059fa5c8c25460a2459853eebc7bf05b00af301284f49e17fa06cd8524e6ff` |
-| bytes | 787746 |
+| sha256 | `e7e2fd184214c010a0a8cb1b1eecf0c79c2efe3ea989b1eb57b62d4a3822a74d` |
+| bytes | 787280 |
 | snapshot | `home-archive-preview--mobile.snapshot.txt` |
-| snapshot sha256 | `f0acbbf1f3b5e614a8f2b6dc1f6ee98d22dffd223d4050189969c726cb9809b6` |
+| snapshot sha256 | `9db31351958548745a95e9bc7cea0438217a8706a195d3c08a0801e18a5b03dc` |
 | snapshot bytes | 1117 |
 | viewport | 375x812@3x (mobile) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.hp-arc-intro` at scroll offset 6889 |
+| framed on | `.hp-arc-intro` at scroll offset 5655 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's archive preview — what the record claims about itself, above the featured case |
 | expected behaviour | The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product. |
@@ -543,14 +543,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1219cd3338641147129847188c67cb9e191d32584e9bacdc56e93ddd90ece972` |
-| bytes | 642644 |
+| sha256 | `3758421959ee530bbd962c292119336140dd3361fba1d88e2627adb8d65716d8` |
+| bytes | 636670 |
 | snapshot | `home-experience--desktop.snapshot.txt` |
-| snapshot sha256 | `8e70cdb80c721c9529e9b0fe2247d384089c13606ccff72b7ff62baf141bfdee` |
-| snapshot bytes | 2139 |
+| snapshot sha256 | `87810d3f1b83598647ad1483dc463543d6580d8e7dee50ddedcaebb28637d9fa` |
+| snapshot bytes | 2033 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.your-experience__layout` at scroll offset 1917 |
+| framed on | `.your-experience__layout` at scroll offset 2286 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's experience region — the loop described in prose beside the two ways into it |
 | expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page. |
@@ -559,14 +559,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7c70f0446db1efff9b647327f82ae783731dbe35d0665a4d72b0799bf95fb3e6` |
-| bytes | 544913 |
+| sha256 | `c7916f0b2c08e8683abcd3de10dd071e1be285213ed3c8c1204bfae5c44dfa7d` |
+| bytes | 535554 |
 | snapshot | `home-experience--mobile.snapshot.txt` |
-| snapshot sha256 | `e5e92b50b110328bcd132812b57bbc8c9b5253ce2d0604e702cdf3a05b2785ad` |
-| snapshot bytes | 1392 |
+| snapshot sha256 | `2c58e9e4ffd6805c4a58e3f1d3e92bd1a6646c6be824b62565131d14b9e42aea` |
+| snapshot bytes | 1428 |
 | viewport | 375x812@3x (mobile) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.your-experience__layout` at scroll offset 1568 |
+| framed on | `.your-experience__layout` at scroll offset 1801 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's experience region — the loop described in prose beside the two ways into it |
 | expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page. |
@@ -575,11 +575,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7b3f4a35349d0be79a28bd6a69a80584c0506a65e828851ff0f4d6b4ac21e71d` |
-| bytes | 217431 |
+| sha256 | `9e3d95c8a5d814045417268a3ee66accfe44456ea4997927fe407c403086cbab` |
+| bytes | 202736 |
 | snapshot | `input-integrity-intake--desktop.snapshot.txt` |
-| snapshot sha256 | `8fb056a239d61a34eb2bfc15a678f4f06fa448d815ddc5fbed9ed79730415dad` |
-| snapshot bytes | 1682 |
+| snapshot sha256 | `af084b5c99c26ec5e1495d532b3f66f84565aa394c4323516964fd6a4ed35f30` |
+| snapshot bytes | 1515 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/input-integrity.html`, query `(none)` |
 | framed on | `#intake` at scroll offset 258 |
@@ -607,11 +607,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `ae52960b5f0dcab882ec407b0e34cfd12746312b6967ed812acb914a21e30004` |
-| bytes | 231265 |
+| sha256 | `38893bb49a6f5a8c89322b611e1e93890babd8ec97120b22fe1da8a00f2d023e` |
+| bytes | 214557 |
 | snapshot | `input-integrity-sample--desktop.snapshot.txt` |
-| snapshot sha256 | `266eb65db7428d74679267ce19176a196fc528e8672288d53ae9d8f3ad4e657c` |
-| snapshot bytes | 2140 |
+| snapshot sha256 | `3a4e0e7c4349465a023fded90b1728098074cf5262b25854aaca10cf87b1ac8b` |
+| snapshot bytes | 1973 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/input-integrity.html`, query `(none)` |
 | framed on | `.ii-contrast__canvas` at scroll offset 1403 |
@@ -639,11 +639,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1958b4a5303069ae522329318555b7b1e168355d364db309330118fa003103c6` |
-| bytes | 211526 |
+| sha256 | `34ee068cb559d7db84230e7a8f1134cd5d60e78db53bc8cbb09edc9797212264` |
+| bytes | 193862 |
 | snapshot | `input-integrity-zero--desktop.snapshot.txt` |
-| snapshot sha256 | `9a9a130e34e89571917e42390d4d249212e64e388b594939dd91a6a16e707213` |
-| snapshot bytes | 2070 |
+| snapshot sha256 | `1904978a5de0b84cf187022bbc56945fa2cbe6d73fe8d9edf4f194e287212bf8` |
+| snapshot bytes | 1903 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/input-integrity.html`, query `(none)` |
 | framed on | `#result` at scroll offset 863 |
@@ -671,11 +671,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b245f5718030e743fa14961fac9b47b6c1feec00620111ffcde1143dbc524bbe` |
-| bytes | 764423 |
+| sha256 | `d2910938fe44363ecdf30800bf97269ce57f0cd6678ddcac10ae265c83d7cb14` |
+| bytes | 748590 |
 | snapshot | `paired-empty--desktop.snapshot.txt` |
-| snapshot sha256 | `ad2eef7340d0c9017f6dee834dca7b27d613591c3e344ccdd078956a7dc526e0` |
-| snapshot bytes | 44854 |
+| snapshot sha256 | `c70ae5f2f53c6cdca12ee87c9ba9f47e705f9f1f73bab3406e39f2e8546dc86e` |
+| snapshot bytes | 44687 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__delta` at scroll offset 5892 |
@@ -703,11 +703,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `2cb49852641048174f1a288e67d059207072d9a213216a07464814032458aaba` |
-| bytes | 698989 |
+| sha256 | `7e57fcac5e3340a9f2291545d9b0e437ab12452013dc6f908bd96137395d110d` |
+| bytes | 681519 |
 | snapshot | `paired-legacy--desktop.snapshot.txt` |
-| snapshot sha256 | `8dab50f7f5819af2ac658de4905d7d6484cb1efe9862d2439ff46d27f8e52dea` |
-| snapshot bytes | 41848 |
+| snapshot sha256 | `62551b8a98b939bf15b6e759ed7b2cd72ddb95edd06242ec42029ceacc4921b9` |
+| snapshot bytes | 41681 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__notice--legacy` at scroll offset 5001 |
@@ -735,11 +735,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9943e8c4a1f8cc3f31c899942468662030f1c9bae36ac9d902b8a86bf20bc06b` |
-| bytes | 718443 |
+| sha256 | `4f2b8b720e15ca30ac8f9dacd1c1db0e545377b95d9df003387591c7c1abf0c6` |
+| bytes | 699350 |
 | snapshot | `paired-legacy-rows--desktop.snapshot.txt` |
-| snapshot sha256 | `7e2d3ca4ace4d254bc219142daa80ce9a6e9974d84abed1d225195e1da9664d4` |
-| snapshot bytes | 41717 |
+| snapshot sha256 | `a905acd5475a1446331792fe39b5d246c1be9267caac68536cbf304f1a8afb3a` |
+| snapshot bytes | 41550 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 5598 |
@@ -767,11 +767,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `dd37c7b8db5aeeac6ea6dc2184a9e930e623802a6b0e701d3d47e6e422998d5d` |
-| bytes | 641110 |
+| sha256 | `20cbb9e5786d7e3201aa7259a7c6e8c4e1ec7fa205bd4a9de8dac0ddd6ee7be9` |
+| bytes | 624409 |
 | snapshot | `paired-matched--desktop.snapshot.txt` |
-| snapshot sha256 | `000f1a0edad72c879a68c88c2fb0be7e69e805ea3e9cb48a36a93b1bebc464c3` |
-| snapshot bytes | 52623 |
+| snapshot sha256 | `937d03716158598b41430202ead9534573a9bb2ab5916cdc73585974fb2baf43` |
+| snapshot bytes | 52456 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 6090 |
@@ -799,11 +799,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `47a0203fad8d429f7d278b98b6211dc6c4c0d2e77a83f12b772416b3c93ca60b` |
-| bytes | 691343 |
+| sha256 | `f27648ebbadef975150468e7aed9d8b92860bae722525322b7b6e71eccc0a0fd` |
+| bytes | 673977 |
 | snapshot | `paired-rejected-snippet--desktop.snapshot.txt` |
-| snapshot sha256 | `67ac00225ab0fa88ff68d638428c59379d4b50ba50c94ac22cb7492ab4fbede2` |
-| snapshot bytes | 52068 |
+| snapshot sha256 | `17220493f03f2e43c6a9c25ec3fafa4fe053519107e11891b19952054d57122f` |
+| snapshot bytes | 51901 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 6003 |
@@ -831,11 +831,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `dd0cd6b5d551d913ff31658ee19d8e36db4561e7efda33709bd6b423535719b2` |
-| bytes | 634733 |
+| sha256 | `624ab273ef9fa8a2dc7c2e2a255a84f74fe715bed06b23e472143df42d10a2be` |
+| bytes | 618606 |
 | snapshot | `paired-unmatched--desktop.snapshot.txt` |
-| snapshot sha256 | `f78aabb52d159c632bf7d3e9d545fdd90b0b0f08131117b7afd953fec75a815e` |
-| snapshot bytes | 52623 |
+| snapshot sha256 | `4691298f4d438a8d2a6b4168c1856148dacaaacb7505af61de98f2e4b49fbe06` |
+| snapshot bytes | 52456 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-act2__delta .wb-measure__list` at scroll offset 6144 |
@@ -863,11 +863,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `04d6aae7c45c5a6da1aa8a3942d5398f92c64eb13b09f6edd28249b4d82a672c` |
-| bytes | 770907 |
+| sha256 | `d6a9a83ba23b65171ec661d256c71a41d63493eac1a8934d25307a370a534452` |
+| bytes | 753301 |
 | snapshot | `provenance-complete--desktop.snapshot.txt` |
-| snapshot sha256 | `7abfa9974d5aa747007461710a1a318c87eb7861a1106c43af04f5e3ae6f526b` |
-| snapshot bytes | 52787 |
+| snapshot sha256 | `a5d511753dd0f68c1b8c915d6c06a308af12bc7e0c4193b72e0fcc47f24ace16` |
+| snapshot bytes | 52620 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5457 |
@@ -895,11 +895,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d3d027223332db38340a07e7f049ebe533e93eb634f483177839f8b6e4f636fe` |
-| bytes | 731109 |
+| sha256 | `f5ec0c8448c7afe8179d3451264ed604881af29b287bdc26545b77db6ef07912` |
+| bytes | 712204 |
 | snapshot | `provenance-partial--desktop.snapshot.txt` |
-| snapshot sha256 | `665b223ff0aabc543226f953ec137d1228fbc7c08ee4100dcc932c1ba10c373d` |
-| snapshot bytes | 52739 |
+| snapshot sha256 | `065ee627715bbc4f200d69946c513d0f8622fa4b759321b1caa740723db0a744` |
+| snapshot bytes | 52572 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-loop__reveal .wb-prov` at scroll offset 5478 |
@@ -927,11 +927,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d29e43a44e7eaecf4c0cd6a292dcb2bc16b6c18b89bfb4084336bb4916e5f797` |
-| bytes | 666193 |
+| sha256 | `f478cdc7234474f4926721c34d10c9c2fdf5636db8ddffac7cc1f836feb48791` |
+| bytes | 649893 |
 | snapshot | `public-example--desktop.snapshot.txt` |
-| snapshot sha256 | `cca0fa5065ce2e00edb86a4fe9cff265608915b2785d20ecd20a4d5db8106920` |
-| snapshot bytes | 2744 |
+| snapshot sha256 | `f981ff671f8ad2521090d0d16fb9d8e9b97741cdff8114eed03ec90b85e7c80c` |
+| snapshot bytes | 2577 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-demo` at scroll offset 1252 |
@@ -959,11 +959,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `7d9d444b61b2785bc1cacd6c414df1b2d427d2d6a9092502c237a9740a95c413` |
-| bytes | 496811 |
+| sha256 | `9c26a2182973b0ab341c76f73f17ece004343b416f7dc8a275faf5f55fd2c3c3` |
+| bytes | 480508 |
 | snapshot | `public-example-provenance--desktop.snapshot.txt` |
-| snapshot sha256 | `80dd8b2658f2c405401738d4c3f74b65eeb3fbcf90f27f188ecb024169ae0db6` |
-| snapshot bytes | 3000 |
+| snapshot sha256 | `c7aebdf5e14ebb687bfe29602e388f8aa21e94281079501349a0f3ecb497532d` |
+| snapshot bytes | 2833 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-demo__prov` at scroll offset 1744 |
@@ -991,11 +991,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `169f29e35fd543a8395b9b2b2c77f74634636a0af45d20037532f657a07a859e` |
-| bytes | 444037 |
+| sha256 | `c4be9a68d875a2e0a41468dee6ccaca9368190801b81a11de1752be7da9977c5` |
+| bytes | 427278 |
 | snapshot | `read-capacity--desktop.snapshot.txt` |
-| snapshot sha256 | `b2bb46c480ac3cfa0a2aff0184c6b307a6f131f9a304fe5186ca56f4bcc7abd8` |
-| snapshot bytes | 2725 |
+| snapshot sha256 | `3e17a7edf5661cb7e695ce24d8124a849a9ad5e9d9e80d4db557b4e417eced85` |
+| snapshot bytes | 2558 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1097 |
@@ -1023,11 +1023,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1da755a0da8038ccf5bd3ca81059fcd325f1a88f77eb14673765156b911bc92d` |
-| bytes | 419433 |
+| sha256 | `e0106d73c6cc3cba97f74f507339051094cf124688fcf2cb22e357f40b598e32` |
+| bytes | 401244 |
 | snapshot | `read-error--desktop.snapshot.txt` |
-| snapshot sha256 | `1ef1451f94c6442de668e237f2d47ad75cb9257f2c1a0e56b4e0641c5d9e807f` |
-| snapshot bytes | 2722 |
+| snapshot sha256 | `d0480aa69961c79da9ff55465fceb7700166d95c32a84c6f4ea30e9fbfc930c2` |
+| snapshot bytes | 2555 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1088 |
@@ -1055,11 +1055,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d1ec5e5afe192fa2ef6712aaa558cc29a87f4596289c1d2490cb84cd9b7a86c0` |
-| bytes | 312133 |
+| sha256 | `d6d262f20995fe37f352c41ff819e6d03831c89f88e03dafdf224550771baac8` |
+| bytes | 295115 |
 | snapshot | `read-in-flight--desktop.snapshot.txt` |
-| snapshot sha256 | `387305895b7033925494123db79b1fc77d71497220ae3fda712faf867d4bdb57` |
-| snapshot bytes | 2591 |
+| snapshot sha256 | `b3b2eb08af82a813c8306e0a8175621063332f7af807418679c7b5ae0bba1559` |
+| snapshot bytes | 2424 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__action-row` at scroll offset 762 |
@@ -1087,11 +1087,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `8234acc0c6493f76160fd8bcdf99c206dc5c3baf3a5a481beea6c1bb6541e53a` |
-| bytes | 785987 |
+| sha256 | `f832e108f5bb2ee87d2f7b9d51771553a8c5ac2e70da7f223c806b521e5c39a8` |
+| bytes | 767047 |
 | snapshot | `register-overflow--desktop.snapshot.txt` |
-| snapshot sha256 | `f44bd782b644934c6f5e12c8edaf7d45cadc7af6f050431587d067986f638598` |
-| snapshot bytes | 73502 |
+| snapshot sha256 | `a2b2266c197333c2dc9c7ea9ffeeae42107b5759f5332e2464819a4e9a45bb98` |
+| snapshot bytes | 73335 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-checks` at scroll offset 5049 |
@@ -1119,11 +1119,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `0285706b63d3fc84a77b91a3d4ee1db86b51200f522626c6977fc334f9a6a835` |
-| bytes | 819935 |
+| sha256 | `2b487321e93564a78fdef8301f8447a6b9cb57fa4671d0f979c3d9abaad49289` |
+| bytes | 801383 |
 | snapshot | `register-overflow-expanded--desktop.snapshot.txt` |
-| snapshot sha256 | `88d7523e7ff7835fe8f8414a6c7471118d655cd5d68f701e2d8ab628e34f7973` |
-| snapshot bytes | 73535 |
+| snapshot sha256 | `a0f6fb7551973e7c71e646e1664d9710a8e5ed6c084c708d2fdd7a568a129fdf` |
+| snapshot bytes | 73368 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-checks` at scroll offset 5561 |
@@ -1151,11 +1151,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `1ef6756e7b70ae17ec0bee240a03a3e77ac67a71f38cb31c728e57c66978d91b` |
-| bytes | 458212 |
+| sha256 | `27d719d5e92827ec5e18a70690d3c818d5722e199e1cdb9ddaae94ad5d828c96` |
+| bytes | 441492 |
 | snapshot | `share-consent--desktop.snapshot.txt` |
-| snapshot sha256 | `8f861997f5836ad2425ff08bb9a023760b1d0a8f1eddb03895323efac7e40fd8` |
-| snapshot bytes | 30782 |
+| snapshot sha256 | `bf000da3454c0fa3f202ba6be62d70b00bd20aaa9a1f1b98d28e6afb329c38e3` |
+| snapshot bytes | 30615 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-share-consent__panel` at scroll offset 1317 |
@@ -1183,11 +1183,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `819b47b1cb19c638570ce1097962b9c9d10cdf41b392ea2937f9cd4ba3e14f0c` |
-| bytes | 339500 |
+| sha256 | `0f497c13ae779fa9c884afc9947595aeeece8edf2fc67b0e68ce1338cb492046` |
+| bytes | 324042 |
 | snapshot | `share-legacy--desktop.snapshot.txt` |
-| snapshot sha256 | `0de20e14824c741db18d31b3811566d0e75f2f4749f7160ea8e3abd7faab5388` |
-| snapshot bytes | 6619 |
+| snapshot sha256 | `5ebdb5548ad1e40742c33ce3030aa03fda8f0597c91ccc6d7a784f0a7eac9908` |
+| snapshot bytes | 6452 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.wb-reader-result__archival-notice` at scroll offset 0 |
@@ -1215,11 +1215,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `4581922b6718d1ef1f3896513233d2eaac8c758fada92f24a7608799f6395353` |
-| bytes | 440602 |
+| sha256 | `c517c61e8a44ff74eda24534a3dc3cff833b13957d3eb6c8a24c55cf1a94c7fb` |
+| bytes | 421939 |
 | snapshot | `share-not-found--desktop.snapshot.txt` |
-| snapshot sha256 | `e6e9e1672dd1233494ae7d4b080d8ae6f9426c214930214d5348e189076a435b` |
-| snapshot bytes | 2277 |
+| snapshot sha256 | `bfeef2dc2f54cdc5c0ff6737d4e450411af5754f22dbaed950b049494e2bfd14` |
+| snapshot bytes | 2202 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-error` at scroll offset 0 |
@@ -1231,11 +1231,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `0774c4d7a878c6850adfbc662a9e7bc66e5e7a2033cfe7bf0275ac8c3b93e6db` |
-| bytes | 190568 |
+| sha256 | `35d2e26454c69b84ada6d0541f913beda427980b1239b365ceaae31269d18352` |
+| bytes | 185662 |
 | snapshot | `share-not-found--mobile.snapshot.txt` |
-| snapshot sha256 | `e106f9d962d4a8027f382235f07cf0bd06d191a5643e30d63c091542093bae46` |
-| snapshot bytes | 1536 |
+| snapshot sha256 | `56b0b8c5020949e3ab37c6f77efd5bad643c898bf6707ccca4013b234331b81d` |
+| snapshot bytes | 1501 |
 | viewport | 375x812@3x (mobile) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-error` at scroll offset 0 |
@@ -1247,11 +1247,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `55b4da617be3ddc7caae466f2ff7f02566dbea3d0d12cf92b6e09084783f30b8` |
-| bytes | 338384 |
+| sha256 | `8ee2abb54c9148604abb7b66023059e4f4e88cf25dbcd6b49f3dfca67a09495b` |
+| bytes | 322917 |
 | snapshot | `share-paired-no-model--desktop.snapshot.txt` |
-| snapshot sha256 | `265960e92cb476a0dc6530e0e297b28a4e59dc05470715d0300d17a3798761aa` |
-| snapshot bytes | 6557 |
+| snapshot sha256 | `e1fcfa9c4f371818386801e07ebc627a88f090f0d7205a8b72904d25f4a6c180` |
+| snapshot bytes | 6390 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-record__anchor` at scroll offset 0 |
@@ -1279,11 +1279,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `f5eaf8f2d7203f00a0f1834d7ab21fbbf1d88150d11d20dc12941115f8618b5e` |
-| bytes | 350958 |
+| sha256 | `1673f76bdd704c370445ecb9c2e4f94af4783513ee60d9c3f3c2caef4f881d07` |
+| bytes | 333861 |
 | snapshot | `share-receipt--desktop.snapshot.txt` |
-| snapshot sha256 | `364475b8df1c7b717691531024f09672f62749b27f488e522f9a92171f88a6d3` |
-| snapshot bytes | 7127 |
+| snapshot sha256 | `0fbd1dde3e8cd56321da46392cce74ad4192eae906336a458ba0a910b4cd2c4c` |
+| snapshot bytes | 6960 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-receipt` at scroll offset 812 |
@@ -1311,11 +1311,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9e8e26c66dc050787a710b49cca05b172e80ee4d2f842f1d120a379dc55085fa` |
-| bytes | 315684 |
+| sha256 | `0a7fdc29886cdd09945840bb8897dde57dcbaf7e1bd62172af3526d8911239f6` |
+| bytes | 300013 |
 | snapshot | `share-single--desktop.snapshot.txt` |
-| snapshot sha256 | `e90564c1360255b5e547fe5c979d03de5427516867595d3b760c50ef4513a168` |
-| snapshot bytes | 6722 |
+| snapshot sha256 | `83600350b3203218fb1bc89295d8f328db62384f7b3483a6379284fe9aeff9b6` |
+| snapshot bytes | 6555 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.insp-glance__count` at scroll offset 0 |
@@ -1343,11 +1343,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `15997837230cb557bfd880272ff269dba8906733007399e75db0d8e4a32bfe38` |
-| bytes | 320984 |
+| sha256 | `bb2b6f9859d62e22110c2ccee4d6c596d8fb4a1aaa17f604025eeea0210999ff` |
+| bytes | 304314 |
 | snapshot | `share-single-empty--desktop.snapshot.txt` |
-| snapshot sha256 | `11cf3b9220a063d8fa9bddb63bde2937096bd7d2a70107c28139b85818744aa9` |
-| snapshot bytes | 6006 |
+| snapshot sha256 | `91a5e8215eb773702282b306ad64a55a2cdbbddc42a35654a3603e0408044efa` |
+| snapshot bytes | 5839 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/inspection.html`, query `?share=Ab3xQ7zK9mNpR2sTuV4w` |
 | framed on | `.wb-measure__findings` at scroll offset 4 |
@@ -1375,11 +1375,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3c7867a46acd5038f81ed005b1fa547ad15521791e9d5319296721e65e6c5935` |
-| bytes | 589463 |
+| sha256 | `90fdded2d9cd398055b2fbcfa2d49f7811d224ccbc964a01f05196beb8289b3d` |
+| bytes | 572627 |
 | snapshot | `single-empty--desktop.snapshot.txt` |
-| snapshot sha256 | `83095f09f4916cf9c6460da3c2b6f51f46aa587de50baf3c26d6693edae66009` |
-| snapshot bytes | 12957 |
+| snapshot sha256 | `f2d52f985b964a2b20e1f625fa7d65f4e4c1a8d0438885a32a07c1e43ea09d6e` |
+| snapshot bytes | 12790 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-measure__findings` at scroll offset 1456 |
@@ -1407,11 +1407,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `c45bb50ea801b920d6741d4327444fd9ff10dc962c99462f94b471c3cbd06627` |
-| bytes | 491539 |
+| sha256 | `78e08303e88dccf73b478f8a7ba12586eb42347e11b3352525f801df5ed2ca63` |
+| bytes | 475775 |
 | snapshot | `single-empty-read--desktop.snapshot.txt` |
-| snapshot sha256 | `f3d68246cfbed39ca6d758505a3b022e45771b53359b212e876fa0199734dd82` |
-| snapshot bytes | 12556 |
+| snapshot sha256 | `b30db5b71a5360be1b8014e0eb4af3bebd61acd45d3826639b84621ed957cd65` |
+| snapshot bytes | 12389 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result__section--left-out` at scroll offset 2022 |
@@ -1439,11 +1439,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `46a6ff0facf7df072971b7769d2b675693f8a30974fc6dd599f1274f2100baa8` |
-| bytes | 649861 |
+| sha256 | `b84dc0711fe6b7bee164aea55b8943d8dcfc4fc3a748e0f398090f69e1d4cc48` |
+| bytes | 632187 |
 | snapshot | `single-findings--desktop.snapshot.txt` |
-| snapshot sha256 | `2e378277b67286ed1213239a390916c44c9f04d074d238a3303ddef3edfe19b6` |
-| snapshot bytes | 30255 |
+| snapshot sha256 | `86f21a39ab27c94ccd1abc606efc3c1316004aa6068179ed03849236286718b1` |
+| snapshot bytes | 30088 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-measure__list li.wb-measure__finding` at scroll offset 1587 |

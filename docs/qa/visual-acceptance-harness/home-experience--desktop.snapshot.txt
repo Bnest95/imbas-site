@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1917
+scroll_offset: 2286
 timezone: UTC
 url: /index.html
 viewport: 1440x900
@@ -24,14 +24,11 @@ viewport: 1440x900
 ## render
 a href="/"
 span "Imbas"
-a "The Volunteer Gap" href="/volunteer-gap.html"
-a "How It Works" href="/how-it-works.html"
-a "Whitepaper" href="/whitepaper.html"
-a "Case Archive" href="/archive.html"
-a "The Reader" href="/reader.html"
-a "For Institutions" href="/institutions.html"
-a "For Readers" href="/for-readers.html"
+a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
+a "Evidence" href="/archive.html"
+a "About" href="/about.html"
+a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
 span "Your Experience"
@@ -44,6 +41,8 @@ a href="/reader.html?reader=1"
 span "Open the Reader"
 span "→"
 p "Run a live inspection now."
+a "Or inspect a PDF" href="/input-integrity.html"
+span "→"
 p "Suggest an investigation"
 p "For cases we should investigate later."
 label "Topic"
