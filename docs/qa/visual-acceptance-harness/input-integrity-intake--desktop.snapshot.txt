@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 258
+scroll_offset: 355
 timezone: UTC
 url: /input-integrity.html
 viewport: 1440x900
@@ -26,12 +26,12 @@ a href="/"
 span "Imbas"
 a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
-a "Evidence" href="/archive.html"
+a "Research" href="/research.html"
 a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "A PDF's structure can carry more than its pages render. This reads that structure in your browser and reports what the file instructs, with the evidence beside every statement."
+p "Example: a supplier's proposal could contain text that doesn't appear on the page, telling an AI assistant to favour its offer when comparing bids."
 p "This reads the file's own structure and reports what it instructs."
 p "It does not scan for viruses, audit security, or make any claim about the file's safety. It reaches no verdict on the document or its author."
 p "Drop a PDF here, or choose one."
@@ -40,4 +40,4 @@ button "Choose a PDF" disabled=false
 p "Your browser reads the file. The file does not leave this machine."
 button "Inspect a sample file" disabled=false
 p "A constructed demonstration file, not a document found in the wild."
-p "Imbas measures how frontier AI systems surface information."
+p "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work."

@@ -1,0 +1,43 @@
+# imbas-visual-snapshot/1
+
+## environment
+browser_version: HeadlessChrome/148.0.7778.96
+capture_region: viewport (state scrolled into it)
+color_scheme: light
+device_scale_factor: 2
+font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
+framed_on: .tool-card--reader h3
+image_diff: enabled
+locale: en-US
+mobile_emulation: false
+query_parameters: (none)
+reduced_motion: reduce
+screenshot_format: png
+scroll_offset: 652
+timezone: UTC
+url: /index.html
+viewport: 1440x900
+
+## payload
+{}
+
+## render
+a href="/"
+span "Imbas"
+a "Tools" href="/tools.html"
+a "AI Advisory" href="/advisory.html"
+a "Research" href="/research.html"
+a "About" href="/about.html"
+a "Contact" href="/contact.html"
+button "More" disabled=false expanded=false
+span "▾"
+p "The Reader is free. Check an answer or choose what you want your AI to do differently."
+span "Tools"
+h2 "Free to use."
+figcaption "Real run · what the first answer left out"
+p "The Reader"
+h3 "Check your AI’s answer and steer what comes next."
+p "Paste an AI answer to check what may be missing."
+p "You can also choose what you want it to do differently: use the material you provided, show its sources, answer your actual question, or separate facts from assumptions. The Reader gives you an instruction to copy back into your AI. Bring back the reply to compare what changed."
+a "Open the Reader" href="/reader.html?reader=1"
+span "→"

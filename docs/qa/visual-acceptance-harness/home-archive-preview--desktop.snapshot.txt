@@ -13,9 +13,9 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 6838
+scroll_offset: 5257
 timezone: UTC
-url: /index.html
+url: /research.html
 viewport: 1440x900
 
 ## payload
@@ -26,7 +26,7 @@ a href="/"
 span "Imbas"
 a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
-a "Evidence" href="/archive.html"
+a "Research" href="/research.html"
 a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false

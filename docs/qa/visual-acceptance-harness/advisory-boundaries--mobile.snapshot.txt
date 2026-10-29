@@ -6,14 +6,14 @@ capture_region: viewport (state scrolled into it)
 color_scheme: light
 device_scale_factor: 3
 font_strategy: webfonts fetched once into .qa-cache/, served from disk, document.fonts.ready awaited
-framed_on: .adv-practice
+framed_on: .adv-terms
 image_diff: enabled
 locale: en-US
 mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 3392
+scroll_offset: 5946
 timezone: UTC
 url: /advisory.html
 viewport: 375x812
@@ -25,9 +25,20 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "Show me how your business works. I’ll tell you where I think AI can actually help, where it probably can’t, and whether there’s enough value to justify doing anything. If there’s nothing useful, I’ll say so."
-li "No promises about rankings or AI answers. Nobody honestly controls those. What I can do is measure where you show up, improve the signals that are actually improvable, and report what changed."
-li "Your material stays yours. Client documents, workflows, and outputs are confidential by default, and nothing becomes public research without your explicit consent."
-li "Advisory clients do not influence Imbas’s public methods, measurements, or findings, and businesses I advise are not included in published Imbas measurement work without separate consent and governance. The states that boundary in full, and names the part of it I have not written yet."
-a "independence policy" href="/independence.html"
-p "I’m Brendan Nestor. I build Imbas, where people inspect what AI surfaces, what it leaves out, and how that changes over time. Before that I ran a service business, and I’ve worked in product, growth, and operations at a startup. I’ve used AI for software, research, writing, operations, and situations where a sloppy answer wasn’t good enough. I care less about what looks impressive in a demo than whether it holds up when somebody has to rely on it."
+h2 "Tell me what’s slowing you down."
+p "A few lines about what you want to improve and how you handle it now are enough to start."
+a "Email me" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me"
+span "→"
+p "brendan@imbaslabs.com"
+p "Your material stays confidential and never enters Imbas research without your written consent. Advisory clients don’t influence Imbas’s public methods, measurements, or findings. ."
+a "Independence policy" href="/independence.html"
+p "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work."
+a "Home" href="/"
+a "Tools" href="/tools.html"
+a "AI Advisory" href="/advisory.html"
+a "About" href="/about.html"
+a "The Volunteer Gap" href="/volunteer-gap.html"
+a "How It Works" href="/how-it-works.html"
+a "Methodology" href="/methodology.html"
+a "Whitepaper" href="/whitepaper.html"
+a "Research" href="/research.html"

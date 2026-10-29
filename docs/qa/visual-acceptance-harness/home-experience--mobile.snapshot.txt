@@ -13,9 +13,9 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1801
+scroll_offset: 527
 timezone: UTC
-url: /index.html
+url: /research.html
 viewport: 375x812
 
 ## payload
@@ -25,7 +25,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-span "Drift"
+button "Test your AI" disabled=false
 span "Your Experience"
 p "The AI output: not wrong, exactly. But off. Maybe it was you instead of answering you."
 span "managing"
