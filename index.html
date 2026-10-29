@@ -157,8 +157,7 @@
           </form>
           <a class="hero2-adv" href="/advisory.html">AI advisory <span aria-hidden="true">&rarr;</span></a>
         </div>
-        <p class="hero__microcopy hero2-micro">The Reader is free. Paste an AI answer to check what it may have missed.</p>
-        </div>
+        <p class="hero__microcopy hero2-micro">The Reader is free. Check an answer or choose what you want your AI to do differently.</p>
 
       </div>
 
@@ -186,19 +185,25 @@
       .tool-card__shot img { display: block; width: 100%; height: auto; }
       .tool-card__shot figcaption { font-family: var(--font-mono); font-size: max(0.6875rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); padding: 0.55rem 0.8rem; border-top: 1px solid var(--line-faint); }
       @media (max-width: 860px) { .tool-card { display: flex; flex-direction: column; gap: 0; padding: var(--space-3); } .tool-card__body { display: contents; } .tool-card__name { order: 1; } .tool-card h3 { order: 2; } .tool-card__shot { order: 3; margin-bottom: var(--space-3); } .tool-card__body > p:not(.tool-card__name), .tool-card__btn { order: 4; } .tool-card:nth-child(even) .tool-card__shot { order: 3; } .tools-band .tools-band__inner { padding: 0 var(--space-3); } .tool-card__btn { width: 100%; justify-content: center; } }
+      /* The Reader's second use, shown full width under the first row at the size it was captured, so the six options and the instruction stay legible. */
+      .tool-card__shot--steer { grid-column: 1 / -1; justify-self: center; width: 100%; max-width: 746px; }
+      .tool-card__shot--steer picture { display: block; }
+      @media (max-width: 860px) { .tool-card .tool-card__shot--steer { order: 5; max-width: none; } .tool-card--reader .tool-card__btn { order: 6; } }
     </style>
     <div class="tools-band__inner">
       <span class="section-label section-label--named"><span>Tools</span></span>
       <h2 id="tools-h2">Free to use.</h2>
       <div class="tools-grid">
-        <article class="tool-card">
+        <article class="tool-card tool-card--reader">
           <figure class="tool-card__shot"><img src="/advisory-assets/tool-reader.png" width="652" height="565" alt="A real Reader run: an AI answer about Montana employment law, and what it left out." loading="lazy"><figcaption>Real run &middot; what the first answer left out</figcaption></figure>
           <div class="tool-card__body">
           <p class="tool-card__name">The Reader</p>
-          <h3>Check what an AI answer may have missed.</h3>
-          <p>Paste an AI answer. The Reader flags what may be missing and gives you a follow-up question to ask. Bring back the reply and compare the answers before deciding what to use.</p>
+          <h3>Check your AI&rsquo;s answer and steer what comes next.</h3>
+          <p>Paste an AI answer to check what may be missing.</p>
+          <p>You can also choose what you want it to do differently: use the material you provided, show its sources, answer your actual question, or separate facts from assumptions. The Reader gives you an instruction to copy back into your AI. Bring back the reply to compare what changed.</p>
           <a class="tool-card__btn" href="/reader.html?reader=1">Open the Reader <span aria-hidden="true">&rarr;</span></a>
           </div>
+          <figure class="tool-card__shot tool-card__shot--steer"><picture><source media="(max-width: 600px)" srcset="/advisory-assets/tool-reader-steer-mobile.png" width="312" height="1211"><img src="/advisory-assets/tool-reader-steer.png" width="746" height="651" alt="The Reader&rsquo;s six follow-up choices, with &ldquo;Doesn&rsquo;t show where its claims came from&rdquo; selected and its instruction shown in full, ready to copy into your AI." loading="lazy"></picture><figcaption>Choose what you want the next answer to do differently.</figcaption></figure>
         </article>
         <article class="tool-card">
           <figure class="tool-card__shot"><img src="/advisory-assets/tool-ii.png" width="720" height="590" alt="Input Integrity result on its sample file: the rendered page is blank, and the file&rsquo;s structure contains the text INVISIBLE-MODE3." loading="lazy"><figcaption>Sample file &middot; blank page, hidden text</figcaption></figure>
