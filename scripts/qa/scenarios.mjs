@@ -2624,7 +2624,7 @@ export const PENDING_SCENARIOS = {
     canned: true,
     state: "The homepage as it first arrives — header, the eyebrow line, the monolith, and the two actions",
     expected:
-      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the eyebrow line that says what Imbas does; the IMBAS monolith and the sentence under it; and two actions, Try the Reader and AI advisory, with the sentence that says what the Reader offers. The v4.4 refresh rebuilt this viewport, and these assertions describe the rebuilt one. If a rebuild moves the actions, drops the eyebrow line, or changes the navigation, this frame moves.",
+      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the eyebrow line that says what Imbas does; the IMBAS monolith and the sentence under it; and two actions, Try the Reader and AI advisory. The v4.4 refresh rebuilt this viewport, and its correction pass removed the line that sat under the actions; these assertions describe the corrected one. If a rebuild moves the actions, drops the eyebrow line, or changes the navigation, this frame moves.",
     routes: {},
     // The hero markup ships complete, so the only step is the wait that proves the
     // composition is on screen when the frame is taken. The header's injected control
@@ -2633,7 +2633,8 @@ export const PENDING_SCENARIOS = {
     assertText: [
       "Tools, research and advisory",
       "Try the Reader",
-      "The Reader is free. Check an answer or choose what you want your AI to do differently.",
+      "AI advisory",
+      "AI ought to make people more capable.",
     ],
     assertSelector: ".hero__capture-block",
     // Framed on the centre column rather than the whole hero: the hero is a full

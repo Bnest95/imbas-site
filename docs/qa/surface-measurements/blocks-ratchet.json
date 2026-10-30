@@ -2,7 +2,7 @@
   "instrument": "scripts/qa/blocks-ratchet.mjs",
   "rule": "R2",
   "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
-  "measured_at_master": "a8e0fc54f7f08e914d6a190166850e5a6c990f4e",
+  "measured_at_master": "abe9a09533aff05275eee27ab1ccf1492816ac56",
   "browser": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "target_selectors": [
@@ -67,16 +67,16 @@
       },
       {
         "path": "scripts/qa/scenarios.mjs",
-        "sha256": "563f4c3e34d8a0d7"
+        "sha256": "cf76da832b891dd3"
       }
     ],
-    "sha256": "0a844dd44954f86d7519c8bf4a14e98b7e44376fad38e1e877ea408ff258b2f2"
+    "sha256": "3e04abacb129e961a6c8dd81e01a365b5fe4fe44530e96edd04c24b832f7e6fb"
   },
   "sources": [
     {
       "path": "scripts/qa/scenarios.mjs",
       "extraction": "whole file",
-      "sha256": "563f4c3e34d8a0d7"
+      "sha256": "cf76da832b891dd3"
     },
     {
       "path": "scripts/qa/comprehension.mjs",
