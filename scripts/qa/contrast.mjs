@@ -155,24 +155,23 @@ export const STYLES = [
   // refresh registers its own text styles here. The small orange labels and the outlined
   // buttons come first because those are the pairings the refresh brief asked about.
   ".tool-card__name",
-  ".tool-card__btn",
+  ".home-band__btn",
   // .hero2-adv, the hero's outlined "AI advisory" link, is measured out of band and NOT
   // registered here. The hero's height follows the viewport, and the full-document capture
   // stretches the viewport, so the link moves after its rect is read: at 1440 it moved 44px
   // and the sample landed on the filled "Try the Reader" button beside it (#de6f38), which
   // printed 1.68 for a link that is not on that colour. A viewport capture with the glyphs
   // hidden measured it at 6.21 modal / 5.75 worst band at 1440 and 7.07 / 6.31 at 390.
-  ".adv-band__btn",
   ".adv-work span",
   ".adv-built__label",
   ".adv-textlink",
   ".tool-card__note",
   ".tool-card__shot figcaption",
   ".tool-card__body > p:not([class])",
-  ".hero2-explain",
-  ".adv-band__card li",
+  ".adv-band__examples li",
+  ".res-teaser__map a",
   ".adv-btn",
-  ".adv-built__cap",
+  ".adv-stats span",
   ".adv-quotes cite",
   ".adv-terms",
   ".adv-close__addr",

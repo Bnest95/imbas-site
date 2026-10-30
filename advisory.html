@@ -29,12 +29,12 @@
   <link rel="stylesheet" href="styles.css?v=adv-v1">
   <script src="/site-header.js" defer></script>
   <style>
-    /* Advisory page mockup. Tokens only, no new colors. */
+    /* Advisory page. Tokens only, no new colours. */
     .adv { background: var(--bg-base); }
     .adv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
     .adv-label { margin-bottom: var(--space-3); }
 
-    /* 1. Hero */
+    /* Masthead (unchanged) */
     .adv-hero { position: relative; overflow: hidden; padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--line-faint); }
     .adv-hero::before { content: ""; position: absolute; inset: -20% -10% auto -10%; height: 140%;
       background: radial-gradient(ellipse 55% 45% at 30% 40%, rgba(var(--ember-rgb), 0.16), transparent 70%),
@@ -43,7 +43,6 @@
     .adv-hero .adv-wrap { position: relative; }
     .adv-hero h1 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous);
       font-size: clamp(2.4rem, 5.4vw, 4.6rem); line-height: 1.04; letter-spacing: -0.015em; max-width: 21ch; margin: 0 0 var(--space-3); }
-    .adv-hero h1 .ember { color: var(--ember); }
     .adv-hero__lede { font-family: var(--font-display); font-size: clamp(1.15rem, 1.9vw, 1.4rem); line-height: 1.5; color: var(--ink-soft); max-width: 60ch; margin: 0 0 var(--space-4); }
     .adv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
     .adv-btn { display: inline-flex; align-items: center; gap: 0.6rem; background: var(--ember); color: var(--bg-deep); border: 1px solid var(--ember);
@@ -54,64 +53,72 @@
       color: var(--ink-primary); text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 3px; }
     .adv-textlink:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
 
-    /* 2. Proof */
-    .adv-proof { padding: var(--space-6) 0; background: var(--bg-deep); border-bottom: 1px solid var(--line-faint); }
-    .adv-proof__grid { display: grid; grid-template-columns: 5fr 7fr; gap: var(--space-5); align-items: start; }
-    .adv-proof h2, .adv-section h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous);
-      font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }
-    .adv-creds { list-style: none; margin: 0; padding: 0; }
-    .adv-creds li { padding: var(--space-2) 0; border-top: 1px solid var(--line-soft); }
-    .adv-creds li:last-child { border-bottom: 1px solid var(--line-soft); }
-    .adv-creds__num { display: block; font-family: var(--font-mono); font-size: clamp(1.25rem, 2vw, 1.55rem); color: var(--ember-bright); letter-spacing: 0.02em; margin-bottom: 0.2rem; }
-    .adv-creds__txt { display: block; font-size: 1rem; line-height: 1.5; color: var(--ink-soft); }
-    .adv-exhibit { margin: 0; border: 1px solid var(--line-soft); background: var(--bg-base); border-radius: 4px; overflow: hidden; }
-    .adv-exhibit__bar { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem 1rem; border-bottom: 1px solid var(--line-faint);
-      font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-secondary); }
-    .adv-exhibit__bar b { color: var(--ember-soft); font-weight: 500; }
-    .adv-exhibit img { display: block; width: 100%; height: auto; } .adv-exhibit picture { display:block; border-bottom: 1px solid var(--line-faint); }
-    .adv-exhibit figcaption { padding: var(--space-2) 1.1rem var(--space-3); font-size: 1rem; line-height: 1.55; color: var(--ink-soft); border-top: 1px solid var(--line-faint); }
-    .adv-exhibit figcaption .adv-actions { margin-top: var(--space-2); gap: var(--space-3); }
+    /* Bands. Warm bands stand on the page ground; cool bands reuse the original homepage's
+       two cool grounds exactly: the Thesis slate (.compounding) and the Case Archive navy. */
+    .adv-band { position: relative; overflow: hidden; isolation: isolate; padding: var(--space-6) 0; background: var(--bg-base); }
+    .adv-band .adv-wrap { position: relative; z-index: 2; }
+    .band-cool {
+      --bg-deep: var(--bg-deep-cool); --bg-base: var(--bg-base-cool); --bg-surface: var(--bg-surface-cool);
+      --bg-elevated: var(--bg-elevated-cool); --bg-lift: var(--bg-lift-cool);
+      --bg-deep-rgb: var(--bg-deep-cool-rgb); --bg-base-rgb: var(--bg-base-cool-rgb); --bg-surface-rgb: var(--bg-surface-cool-rgb);
+      --bg-elevated-rgb: var(--bg-elevated-cool-rgb); --bg-lift-rgb: var(--bg-lift-cool-rgb);
+    }
+    .band-cool::before, .band-cool::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+    .band-cool::after { z-index: 1;
+      background: linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.46) 0%, rgba(var(--bg-base-rgb), 0.18) 12%, transparent 16%),
+                  linear-gradient(0deg, rgba(var(--bg-surface-rgb), 0.42) 0%, rgba(var(--bg-base-rgb), 0.12) 11%, transparent 15%); }
+    .band-cool--slate { background: var(--bg-surface); }
+    .band-cool--slate::before { background: radial-gradient(ellipse 48% 58% at 76% 52%, var(--slate-bloom), transparent 68%); opacity: 0.48; }
+    .band-cool--navy { background: radial-gradient(ellipse 70% 42% at 50% 100%, var(--slate-bloom), transparent 68%), var(--bg-base); }
+    .band-cool--navy::before { background: radial-gradient(ellipse 82% 46% at 50% 108%, var(--slate-bloom), transparent 66%), radial-gradient(ellipse 48% 32% at 18% 18%, var(--slate-deeper), transparent 74%); opacity: 0.68; }
 
-    /* 3. What I help with */
-    .adv-section { padding: var(--space-6) 0; border-bottom: 1px solid var(--line-faint); }
-    .adv-section__intro { font-family: var(--font-display); font-size: clamp(1.1rem, 1.7vw, 1.3rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-4); }
-    .adv-help { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line-faint); }
-    .adv-help li { position: relative; padding: var(--space-3) var(--space-3) var(--space-3) 2.4rem; border-bottom: 1px solid var(--line-faint); font-size: 1.0625rem; line-height: 1.5; color: var(--ink-primary); }
-    .adv-help li:nth-child(odd) { border-right: 1px solid var(--line-faint); }
-    .adv-help li::before { content: ""; position: absolute; left: 0.9rem; top: 2.05rem; width: 8px; height: 8px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 10px rgba(var(--ember-rgb), 0.45); }
+    .adv-band h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }
+    .adv-intro { font-family: var(--font-display); font-size: clamp(1.1rem, 1.7vw, 1.3rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-5); }
 
-    /* 4. Approach */
-    .adv-approach { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line-faint); margin-bottom: var(--space-5); }
-    .adv-approach article { padding: var(--space-3); border-right: 1px solid var(--line-faint); border-bottom: 1px solid var(--line-faint); }
-    .adv-approach article:last-child { border-right: none; }
-    .adv-approach h3 { font-family: var(--font-mono); font-weight: 500; font-size: max(0.8125rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember-soft); margin: 0 0 var(--space-2); }
-    .adv-approach p { margin: 0; font-size: 1rem; line-height: 1.55; color: var(--ink-soft); }
+    /* What I take on */
+    .adv-work { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-5); max-width: 1040px; }
+    .adv-work li { display: grid; grid-template-columns: 10.5rem 1fr; gap: var(--space-2); }
+    .adv-work span { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ember-soft); padding-top: 0.3rem; }
+    .adv-work p { margin: 0; font-size: 1.0625rem; line-height: 1.55; color: var(--ink-primary); }
+
+    /* Who you'd work with */
+    .adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
+    .adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
+    .adv-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
+    .adv-stats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.1; color: var(--ink-luminous); margin-bottom: 0.35rem; }
+    .adv-stats span { display: block; font-size: 0.95rem; line-height: 1.4; color: var(--ink-secondary); }
+    .adv-built { margin: var(--space-6) 0 0; max-width: 820px; }
+    .adv-built__label { display: block; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember-soft); margin: 0 0 var(--space-3); }
+    .adv-built ul { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
+    .adv-built li { margin: 0 0 var(--space-3); font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); }
+    .adv-built li b { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; color: var(--ink-luminous); }
+    .adv-built li .adv-textlink { margin-left: 0.4rem; white-space: nowrap; }
+
+    /* Reviews */
+    .adv-quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); max-width: 1040px; }
+    .adv-quotes blockquote { margin: 0; }
+    .adv-quotes p { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 1.2rem; line-height: 1.5; color: var(--ink-luminous); }
+    .adv-quotes cite { font-style: normal; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+
+    /* How I work */
     .adv-engage { display: grid; grid-template-columns: 5fr 7fr; gap: var(--space-5); align-items: start; }
     .adv-engage h3 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.4rem, 2.2vw, 1.75rem); line-height: 1.2; color: var(--ink-luminous); margin: 0; }
     .adv-engage p { margin: 0 0 var(--space-2); font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); max-width: 60ch; }
 
-    /* 5. Founder */
-    .adv-founder__grid { display: grid; grid-template-columns: 4fr 8fr; gap: var(--space-5); align-items: start; }
-    .adv-founder__id { border-left: 2px solid rgba(var(--ember-rgb), 0.55); padding-left: var(--space-3); }
-    .adv-founder__name { font-family: var(--font-display); font-size: clamp(1.6rem, 2.6vw, 2.1rem); color: var(--ink-luminous); line-height: 1.1; margin: 0 0 0.5rem; }
-    .adv-founder__role { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-secondary); line-height: 1.7; margin: 0; }
-    .adv-founder p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-2); max-width: 62ch; }
-    .adv-founder p strong { color: var(--ink-primary); font-weight: 500; }
-    .adv-founder .adv-actions { margin-top: var(--space-3); }
-
-    /* 6. Close */
-    .adv-close { position: relative; overflow: hidden; padding: var(--space-7) 0 var(--space-6); text-align: center; }
-    .adv-close::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 50% 60% at 50% 55%, rgba(var(--ember-rgb), 0.14), transparent 70%); pointer-events: none; }
-    .adv-close .adv-wrap { position: relative; }
-    .adv-close h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
+    /* Close */
+    .adv-close { padding: var(--space-7) 0 var(--space-6); text-align: center; }
+    .adv-close h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
+    .adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
     .adv-close .adv-actions { justify-content: center; }
+    .adv-close__addr { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.06em; color: var(--ink-primary); user-select: all; }
     .adv-terms { max-width: 64ch; margin: var(--space-5) auto 0; font-size: 0.875rem; line-height: 1.6; color: var(--ink-secondary); }
     .adv-terms a { color: var(--ink-primary); }
 
-    @media (max-width: 900px) {
-      .adv-proof__grid, .adv-engage, .adv-founder__grid { grid-template-columns: 1fr; gap: var(--space-4); }
-      .adv-approach { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .adv-approach article:nth-child(2) { border-right: none; }
+    @media (max-width: 860px) {
+      .adv-work, .adv-quotes { grid-template-columns: 1fr; }
+      .adv-work li { grid-template-columns: 1fr; gap: 0.4rem; }
+      .adv-who, .adv-engage { grid-template-columns: 1fr; gap: var(--space-4); }
+      .adv-built { margin-top: var(--space-5); }
     }
     @media (max-width: 600px) {
       .adv-wrap { padding: 0 var(--space-3); }
@@ -119,58 +126,9 @@
       .adv-hero h1 { font-size: 2.35rem; }
       .adv-hero__lede { font-size: 1.1rem; margin-bottom: var(--space-3); }
       .adv-btn { width: 100%; justify-content: center; }
-      .adv-help { grid-template-columns: 1fr; }
-      .adv-help li:nth-child(odd) { border-right: none; }
-      .adv-approach { grid-template-columns: 1fr; }
-      .adv-approach article { border-right: none; }
-      .adv-proof, .adv-section { padding: var(--space-5) 0; }
+      .adv-band { padding: var(--space-5) 0; }
       .adv-close { padding: var(--space-6) 0 var(--space-5); }
     }
-    .adv-readout { padding: var(--space-3) 1.1rem; background: var(--bg-surface); border-bottom: 1px solid var(--line-faint); }
-    .adv-readout__meta, .adv-readout__label { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-secondary); margin: 0 0 0.6rem; }
-    .adv-readout__label { color: var(--ink-primary); }
-    .adv-readout__q { margin: 0 0 var(--space-3); padding: 0.85rem 1rem; background: var(--bg-deep); border: 1px solid var(--line-soft); border-left: 2px solid rgba(var(--ember-rgb), 0.6); border-radius: 3px; font-family: var(--font-display); font-size: 1.0625rem; color: var(--ink-luminous); }
-    .adv-readout__finding { margin: 0; font-family: var(--font-display); font-size: clamp(1.1rem, 1.6vw, 1.3rem); line-height: 1.5; color: var(--ink-luminous); }
-    .adv-approach--3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-    @media (max-width: 900px) { .adv-approach--3 { grid-template-columns: 1fr; } .adv-approach--3 article { border-right: none; } }
-    .adv-help--odd { grid-template-columns: 1fr; max-width: 860px; }
-    .adv-help--odd li:nth-child(odd) { border-right: none; }
-    .adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
-    .adv-help li strong { color: var(--ink-luminous); font-weight: 500; }
-    .adv-quotes { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-3); }
-    .adv-quotes blockquote { margin: 0; padding: var(--space-3); border: 1px solid var(--line-soft); border-left: 2px solid rgba(var(--ember-rgb),0.6); background: var(--bg-surface); border-radius: 3px; }
-    .adv-quotes p { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 1.15rem; line-height: 1.5; color: var(--ink-luminous); }
-    .adv-quotes cite { font-style: normal; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
-    @media (max-width: 760px) { .adv-quotes { grid-template-columns: 1fr; } }
-  .adv-work { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:var(--space-5); border-top:1px solid var(--line-faint); max-width:1040px; }
-    .adv-work li { display:grid; grid-template-columns:9.5rem 1fr; gap:var(--space-2); padding:var(--space-3) 0; border-bottom:1px solid var(--line-faint); }
-    .adv-work span { font-family:var(--font-mono); font-size:max(0.75rem,var(--mono-min)); letter-spacing:0.14em; text-transform:uppercase; color:var(--ember-soft); padding-top:0.3rem; }
-    .adv-work p { margin:0; font-size:1.0625rem; line-height:1.5; color:var(--ink-primary); }
-    .adv-who { display:grid; grid-template-columns:6fr 5fr; gap:var(--space-5); align-items:end; }
-    .adv-stats { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line-soft); }
-    .adv-stats li { padding:var(--space-3) var(--space-2) var(--space-3) 0; border-bottom:1px solid var(--line-soft); }
-    .adv-stats b { display:block; font-family:var(--font-display); font-weight:400; font-size:clamp(1.6rem,2.6vw,2.1rem); line-height:1.1; color:var(--ink-luminous); margin-bottom:0.35rem; }
-    .adv-stats span { display:block; font-size:0.95rem; line-height:1.4; color:var(--ink-secondary); }
-    .adv-built { margin:var(--space-6) 0 0; display:grid; grid-template-columns:4fr 7fr; gap:var(--space-5); align-items:center; }
-    .adv-built__label { display:block; font-family:var(--font-mono); font-size:max(0.75rem,var(--mono-min)); letter-spacing:0.16em; text-transform:uppercase; color:var(--ember-soft); margin-bottom:var(--space-2); }
-    .adv-built h3 { font-family:var(--font-display); font-weight:400; font-size:clamp(1.5rem,2.4vw,1.9rem); color:var(--ink-luminous); margin:0 0 var(--space-2); }
-    .adv-built p { font-size:1.0625rem; line-height:1.55; color:var(--ink-soft); margin:0 0 var(--space-3); }
-    .adv-built img { display:block; width:100%; height:auto; border:1px solid var(--line-soft); border-radius:4px; box-shadow:0 20px 50px rgba(0,0,0,0.35); }
-    @media (max-width: 860px) {
-      .adv-work { grid-template-columns:1fr; }
-      .adv-work li { grid-template-columns:1fr; gap:0.4rem; }
-      .adv-who, .adv-built { grid-template-columns:1fr; gap:var(--space-4); }
-      .adv-built { margin-top:var(--space-5); }
-    }
-    .adv-quotes blockquote:last-child:nth-child(odd) { grid-column: 1 / -1; }
-    .adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem,1.6vw,1.25rem); line-height:1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
-    .adv-tool { padding: var(--space-3) 0; border-top: 1px solid var(--line-faint); }
-    .adv-tool h3 { font-size: clamp(1.25rem,2vw,1.5rem) !important; margin: 0 0 0.4rem !important; }
-    .adv-tool p { margin: 0 0 var(--space-2) !important; }
-    .adv-built__cap { margin: var(--space-2) 0 0 !important; font-family: var(--font-mono); font-size: max(0.6875rem, var(--mono-min)) !important; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary) !important; }
-    .adv-close__addr { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.06em; color: var(--ink-primary); user-select: all; }
-    .adv-built { align-items: start !important; } .adv-built__shot { padding-top: var(--space-5); }
-    @media (max-width: 860px) { .adv-built__shot { padding-top: 0; } }
   </style>
   <script type="application/ld+json">
   {
@@ -261,23 +219,25 @@
     </div>
   </section>
 
-  <section class="adv-section" aria-labelledby="adv-help-h2">
+  <!-- BLUE: the Thesis slate -->
+  <section class="adv-band band-cool band-cool--slate" aria-labelledby="adv-help-h2">
     <div class="adv-wrap">
       <h2 id="adv-help-h2">What I take on</h2>
-      <p class="adv-section__intro">I research the options, build what&rsquo;s needed, put it in place and train the people who&rsquo;ll use it.</p>
+      <p class="adv-intro">I research the options, build what&rsquo;s needed, put it in place and train the people who&rsquo;ll use it.</p>
       <ul class="adv-work" role="list">
-        <li><span>Quoting</span><p>A tool for preparing quotes using your services, prices and the details of the job.</p></li>
-        <li><span>Your documents</span><p>Find answers across your documents, with the source passages alongside them.</p></li>
-        <li><span>Reporting</span><p>Regular reports from the records you already keep, with figures you can check.</p></li>
-        <li><span>Follow-up</span><p>Customer inquiries and follow-ups in one place, each with a next step and someone responsible for it.</p></li>
-        <li><span>Research</span><p>A comparison of your options, backed by research into the market, suppliers or competitors.</p></li>
-        <li><span>Positioning</span><p>A clearer offer, based on what customers value and what stops them from buying.</p></li>
+        <li><span>AI adoption</span><p>Where AI can save your team time, where its work needs checking, and where it isn&rsquo;t worth using yet.</p></li>
+        <li><span>Custom tools</span><p>A quoting tool built around your services and prices, a searchable reference from your own documents, or reports prepared from the records you already keep.</p></li>
+        <li><span>Implementation</span><p>Putting the new tool or process into daily use, connected to the software and records you already have.</p></li>
         <li><span>Training</span><p>Training using your team&rsquo;s own tasks, so people know how to use the tools, check the results and handle exceptions.</p></li>
+        <li><span>Research</span><p>A comparison of your options, backed by research into the market, suppliers or competitors.</p></li>
+        <li><span>Customer research</span><p>Conversations with your customers and a review of their questions and feedback, so you know why they choose you and why some don&rsquo;t.</p></li>
+        <li><span>Positioning</span><p>A clearer offer, based on what customers value and what stops them from buying.</p></li>
       </ul>
     </div>
   </section>
 
-  <section class="adv-proof" id="adv-proof" aria-labelledby="adv-proof-h2">
+  <!-- BROWN -->
+  <section class="adv-band" id="adv-proof" aria-labelledby="adv-proof-h2">
     <div class="adv-wrap">
       <div class="adv-who">
         <div>
@@ -287,39 +247,27 @@
         </div>
         <ul class="adv-stats" role="list">
           <li><b>Head of Growth</b><span>Employee four at a startup backed by tier-1 VCs</span></li>
-          <li><b>6,000+</b><span>Newsletter subscribers, grown from zero</span></li>
-          <li><b>40,000+</b><span>Twitter followers, grown from zero</span></li>
-          <li><b>101</b><span>Five-star client reviews</span></li>
+          <li><b>6,000+</b><span>Newsletter subscribers that startup grew from zero</span></li>
+          <li><b>40,000+</b><span>Twitter followers that startup grew from zero</span></li>
+          <li><b>101</b><span>Five-star client reviews from my earlier service business</span></li>
         </ul>
       </div>
-      <figure class="adv-built">
-        <figcaption>
-          <span class="adv-built__label">Tools I&rsquo;ve built</span>
-          <div class="adv-tool">
-            <h3>The Reader</h3>
-            <p>Check what an AI answer may have missed. Choose an instruction to ask it to use your material, show its sources or answer your actual question, then compare the replies.</p>
-            <a class="adv-textlink" href="/reader.html?reader=1">Open the Reader</a>
-          </div>
-          <div class="adv-tool">
-            <h3>Input Integrity</h3>
-            <p>Check a PDF for hidden text an AI may read but you wouldn&rsquo;t see, with evidence behind each finding.</p>
-            <a class="adv-textlink" href="/input-integrity.html">Inspect a PDF</a>
-          </div>
-          <a class="adv-textlink" href="/research.html">The research</a>
-        </figcaption>
-        <div class="adv-built__shot"><picture>
-          <source media="(max-width: 600px)" srcset="/advisory-assets/reader-ui-mobile.png" width="652" height="870">
-          <img src="/advisory-assets/reader-ui-desktop.png" width="1468" height="654" alt="The Imbas Reader interface showing a real run: an ordinary question about Montana employment law, and what the first AI answer left out.">
-        </picture>
-        <p class="adv-built__cap">Example output from the Reader</p></div>
-      </figure>
+      <div class="adv-built">
+        <p class="adv-built__label">Tools I&rsquo;ve built</p>
+        <ul role="list">
+          <li><b>The Reader.</b> Check what an AI answer may have missed. Choose an instruction to ask it to use your material, show its sources or answer your actual question, then compare the replies. <a class="adv-textlink" href="/reader.html?reader=1">Open the Reader</a></li>
+          <li><b>Input Integrity.</b> Check a PDF&rsquo;s content and structure, including text that doesn&rsquo;t appear on the page but an AI may still read, with evidence behind each finding. <a class="adv-textlink" href="/input-integrity.html">Inspect a PDF</a></li>
+        </ul>
+        <a class="adv-textlink" href="/research.html">The research</a>
+      </div>
     </div>
   </section>
 
-  <section class="adv-section adv-reviews" aria-labelledby="adv-rev-h2">
+  <!-- BLUE: the Thesis slate -->
+  <section class="adv-band band-cool band-cool--slate adv-reviews" aria-labelledby="adv-rev-h2">
     <div class="adv-wrap">
       <h2 id="adv-rev-h2">What clients say about working with me</h2>
-      <p class="adv-section__intro">Reviews from my earlier service work.</p>
+      <p class="adv-intro">Reviews from my earlier service work.</p>
       <div class="adv-quotes">
         <blockquote><p>&ldquo;Total professional. No problems. Just solutions.&rdquo;</p><cite>Client review, Nov 2024</cite></blockquote>
         <blockquote><p>&ldquo;Super helpful, super resourceful and a great problem solver!&rdquo;</p><cite>Client review, Aug 2024</cite></blockquote>
@@ -330,7 +278,8 @@
     </div>
   </section>
 
-  <section class="adv-section" aria-labelledby="adv-approach-h2">
+  <!-- BROWN -->
+  <section class="adv-band" aria-labelledby="adv-approach-h2">
     <div class="adv-wrap adv-engage">
       <div>
         <span class="section-label section-label--named adv-label"><span>How I work</span></span>
@@ -344,7 +293,8 @@
     </div>
   </section>
 
-  <section class="adv-close" aria-labelledby="adv-close-h2">
+  <!-- BLUE: the Case Archive navy -->
+  <section class="adv-band band-cool band-cool--navy adv-close" aria-labelledby="adv-close-h2">
     <div class="adv-wrap">
       <h2 id="adv-close-h2">Tell me what&rsquo;s slowing you down.</h2>
       <p class="adv-close__note">A few lines about what you want to improve and how you handle it now are enough to start.</p>
@@ -352,7 +302,7 @@
         <a class="adv-btn" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me">Email me <span aria-hidden="true">&rarr;</span></a>
       </div>
       <p class="adv-close__addr">brendan@imbaslabs.com</p>
-      <p class="adv-terms">Your material stays confidential and never enters Imbas research without your written consent. Advisory clients don&rsquo;t influence Imbas&rsquo;s public methods, measurements, or findings. <a href="/independence.html">Independence policy</a>.</p>
+      <p class="adv-terms">Your material stays confidential. Nothing from client work enters the Imbas public record without your written consent and separate governance. Advisory clients don&rsquo;t influence Imbas&rsquo;s public methods, measurements, or findings. <a href="/independence.html">Independence policy</a>.</p>
     </div>
   </section>
 
