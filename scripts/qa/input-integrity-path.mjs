@@ -125,6 +125,9 @@ const EXPECTED_REQUEST_INVENTORY = [
   "GET /input-integrity.css",
   "GET /input-integrity.html",
   "GET /input-integrity.js",
+  // The worker imports this before pdf.js so browsers without Map/WeakMap upsert can read
+  // a PDF at all. A same-origin static module; it carries nothing from the file.
+  "GET /map-upsert-polyfill.js",
   "GET /site-header.js",
   "GET /styles.css",
   // pdf.js in fake-worker mode: the module worker imports the library, which then pulls

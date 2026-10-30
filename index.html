@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imbas — Inspect what your AI answer surfaces and leaves out</title>
-  <meta name="description" content="Imbas is the inspection layer for AI answers. Paste an answer, ask the direct Second Question, and see what the first answer left out and what changed.">
+  <title>Imbas — Tools, research and AI advisory</title>
+  <meta name="description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <link rel="canonical" href="https://www.imbaslabs.com/">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -15,15 +15,15 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.imbaslabs.com/">
   <meta property="og:site_name" content="Imbas">
-  <meta property="og:title" content="Imbas — Inspect what your AI answer surfaces and leaves out">
-  <meta property="og:description" content="Imbas is the inspection layer for AI answers. Paste an answer, ask the direct Second Question, and see what the first answer left out and what changed.">
+  <meta property="og:title" content="Imbas — Tools, research and AI advisory">
+  <meta property="og:description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Imbas — Inspect what your AI answer surfaces and leaves out">
-  <meta name="twitter:description" content="Imbas is the inspection layer for AI answers. Paste an answer, ask the direct Second Question, and see what the first answer left out and what changed.">
+  <meta name="twitter:title" content="Imbas — Tools, research and AI advisory">
+  <meta name="twitter:description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
   <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
 
@@ -50,7 +50,7 @@
           "height": 991
         },
         "email": "brendan@imbaslabs.com",
-        "description": "Independent AI inspection layer and public evidence system focused on observable answer behavior.",
+        "description": "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work.",
         "knowsAbout": { "@id": "https://www.imbaslabs.com/volunteer-gap.html#volunteer-gap" }
       },
       {
@@ -69,6 +69,87 @@
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
+<style>
+  .hero2-actions { display: flex !important; max-width: 640px !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem 1.25rem; }
+  .hero2-adv { display: inline-flex; align-items: center; gap: .6rem; border: 1px solid var(--ember); color: var(--ember-bright); background: rgba(var(--ember-rgb), .08); font-family: var(--font-mono); font-size: max(.875rem, var(--mono-min)); letter-spacing: .16em; text-transform: uppercase; padding: 1.1rem 2rem; text-decoration: none; border-radius: 2px; }
+  .hero2-adv:hover { background: rgba(var(--ember-rgb), .18); color: var(--ink-luminous); }
+  @media (max-width: 600px) { .hero2-actions > * { width: 100%; } .hero2-actions .hero__capture button, .hero2-adv { width: 100%; justify-content: center; } .hero2-actions .hero__capture { display: flex; } }
+
+  /* Home bands. The original homepage already had two cool grounds: the Thesis slate
+     (.compounding) and the Case Archive navy (.archive--home-preview). The new Tools and
+     Research bands reuse them exactly, so the sections below the hero alternate cool and warm.
+     Scoped to this page. */
+  .band-cool {
+    --bg-deep: var(--bg-deep-cool); --bg-base: var(--bg-base-cool); --bg-surface: var(--bg-surface-cool);
+    --bg-elevated: var(--bg-elevated-cool); --bg-lift: var(--bg-lift-cool);
+    --bg-deep-rgb: var(--bg-deep-cool-rgb); --bg-base-rgb: var(--bg-base-cool-rgb); --bg-surface-rgb: var(--bg-surface-cool-rgb);
+    --bg-elevated-rgb: var(--bg-elevated-cool-rgb); --bg-lift-rgb: var(--bg-lift-cool-rgb);
+    border-top: 1px solid var(--line-faint);
+  }
+  .band-cool::before, .band-cool::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+  .band-cool::after { z-index: 1;
+    background: linear-gradient(180deg, rgba(var(--bg-deep-rgb), 0.46) 0%, rgba(var(--bg-base-rgb), 0.18) 12%, transparent 16%),
+                linear-gradient(0deg, rgba(var(--bg-surface-rgb), 0.42) 0%, rgba(var(--bg-base-rgb), 0.12) 11%, transparent 15%); }
+  .band-cool--slate { background: var(--bg-surface); }
+  .band-cool--slate::before { background: radial-gradient(ellipse 48% 58% at 76% 52%, var(--slate-bloom), transparent 68%); opacity: 0.48; }
+  .band-cool--navy { background: radial-gradient(ellipse 70% 42% at 50% 100%, var(--slate-bloom), transparent 68%), var(--bg-base); }
+  .band-cool--navy::before { background: radial-gradient(ellipse 82% 46% at 50% 108%, var(--slate-bloom), transparent 66%), radial-gradient(ellipse 48% 32% at 18% 18%, var(--slate-deeper), transparent 74%); opacity: 0.68; }
+
+  .home-band__inner { position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); text-align: left; }
+  .home-band__inner .section-label { margin-bottom: var(--space-3); }
+  .home-band__inner h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.1; margin: 0 0 var(--space-4); }
+  .home-band__btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 0.6rem; border: 1px solid var(--ember); color: var(--ember-bright); background: rgba(var(--ember-rgb), 0.08);
+    font-family: var(--font-mono); font-size: max(0.8125rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; padding: 0.9rem 1.6rem; min-height: 48px; border-radius: 2px; text-decoration: none; }
+  .home-band__btn:hover { background: rgba(var(--ember-rgb), 0.18); color: var(--ink-luminous); }
+
+  /* Tools: text and a real output side by side, no card around either. */
+  .tools-grid { display: grid; gap: clamp(var(--space-5), 7vw, var(--space-7)); }
+  .tool-card { display: grid; grid-template-columns: 5fr 6fr; gap: clamp(var(--space-4), 5vw, var(--space-6)); align-items: center; }
+  .tool-card__body { display: flex; flex-direction: column; }
+  .tool-card p.tool-card__name { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember-bright); margin: 0 0 var(--space-2); }
+  .tool-card h3 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1.2; color: var(--ink-luminous); margin: 0 0 var(--space-3); }
+  .tool-card p { font-size: 1.0625rem; line-height: 1.55; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 46ch; }
+  .tool-card p.tool-card__note { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-secondary); }
+  .tool-card__shot { margin: 0; border: 1px solid var(--line-soft); border-radius: 4px; background: var(--bg-deep); overflow: hidden; box-shadow: 0 18px 44px rgba(0,0,0,0.35); }
+  .tool-card__shot img { display: block; width: 100%; height: auto; }
+  .tool-card__shot figcaption { font-family: var(--font-mono); font-size: max(0.6875rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); padding: 0.55rem 0.8rem; border-top: 1px solid var(--line-faint); }
+  @media (max-width: 860px) {
+    .tool-card { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .tool-card__body { display: contents; }
+    .tool-card p.tool-card__name { order: 1; } .tool-card h3 { order: 2; }
+    .tool-card__shot { order: 3; margin-bottom: var(--space-3); }
+    .tool-card__body > p:not(.tool-card__name), .tool-card .home-band__btn { order: 4; }
+    .tool-card .home-band__btn { width: 100%; justify-content: center; }
+  }
+
+  /* Advisory: the warm ground of the original advisory band, copy beside a plain list. */
+  .adv-band .home-band__inner { display: grid; grid-template-columns: 7fr 5fr; gap: var(--space-5); align-items: center; }
+  .adv-band .home-band__inner h2 { margin-bottom: var(--space-3); max-width: 18ch; }
+  .adv-band p { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: var(--ink-soft); max-width: 48ch; margin: 0 0 var(--space-4); }
+  .adv-band p.adv-band__examples-label { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-secondary); margin: 0 0 var(--space-2); }
+  .adv-band__examples ul { list-style: none; margin: 0; padding: 0; }
+  .adv-band__examples li { position: relative; padding: 0.55rem 0 0.55rem 1.5rem; font-size: 1.0625rem; line-height: 1.45; color: var(--ink-primary); }
+  .adv-band__examples li::before { content: ""; position: absolute; left: 0.2rem; top: 1.1rem; width: 7px; height: 7px; border-radius: 50%; background: var(--ember); }
+  @media (max-width: 860px) { .adv-band .home-band__inner { grid-template-columns: 1fr; gap: var(--space-4); } .adv-band .home-band__btn { width: 100%; justify-content: center; } }
+
+  /* Research: where each section that moved now lives. */
+  .res-teaser p { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: var(--ink-soft); margin: 0 0 var(--space-4); max-width: 52ch; }
+  .res-teaser__map { list-style: none; margin: 0 0 var(--space-5); padding: 0; max-width: 52rem; columns: 2; column-gap: var(--space-5); }
+  .res-teaser__map li { break-inside: avoid; padding: 0.4rem 0; }
+  .res-teaser__map a { font-family: var(--font-display); font-size: 1.0625rem; line-height: 1.4; color: var(--ink-primary); text-decoration: underline; text-decoration-color: rgba(var(--ember-rgb), 0.5); text-underline-offset: 0.2em; }
+  .res-teaser__map a:hover { color: var(--ember-bright); }
+  .res-teaser__links { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  @media (max-width: 600px) { .res-teaser__map { columns: 1; } }
+</style>
+  <script>
+    // Every id that exists on /research.html but not on this page (moved in the v4.4 refresh).
+    // Keeps old /#fragment links working. Regenerate if either page's ids change.
+    (function () {
+      var moved = ["archive", "archive-featured-title", "archive-h2", "cat-h2", "ephemeral-h2", "experience-answer", "experience-capture-confirm", "experience-capture-error", "experience-capture-form", "experience-email", "experience-label", "experience-topic", "gap-h2", "public-interest-h2", "record-compounds-h2", "value-h2"];
+      var id = location.hash.slice(1);
+      if (id && moved.indexOf(id) !== -1 && !document.getElementById(id)) location.replace("/research.html#" + id);
+    })();
+  </script>
 </head>
 <body>
 
@@ -89,7 +170,7 @@
     <nav class="nav" id="primary-nav" aria-label="Primary">
       <a href="/tools.html">Tools</a>
       <a href="/advisory.html">AI Advisory</a>
-      <a href="/archive.html">Evidence</a>
+      <a href="/research.html">Research</a>
       <a href="/about.html">About</a>
       <a href="/contact.html">Contact</a>
     </nav>
@@ -117,7 +198,7 @@
     <div class="hero__stage">
 
       <div class="hero__meta hero__meta--instrument reveal">
-        <span class="hero__meta-copy">The Inspection Layer for AI</span>
+        <span class="hero__meta-copy">Tools, research and advisory</span>
       </div>
 
       <div class="hero__center">
@@ -127,15 +208,15 @@
         </div>
 
         <h1 class="hero__subhead" id="hero-h1">
-          <span class="hero__subhead-line">Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out.</span>
+          <span class="hero__subhead-line">AI ought to make people more capable.</span>
         </h1>
 
-        <div class="hero__capture-block">
+        <div class="hero__capture-block hero2-actions">
           <form class="hero__capture" action="/reader.html" method="get">
             <input type="hidden" name="reader" value="1">
-            <button type="submit">Test your AI</button>
+            <button type="submit">Try the Reader</button>
           </form>
-          <p class="hero__microcopy">Paste an answer. See what surfaced, what was missing, and how it was shaped.</p>
+          <a class="hero2-adv" href="/advisory.html">AI advisory <span aria-hidden="true">&rarr;</span></a>
         </div>
 
       </div>
@@ -143,16 +224,77 @@
     </div>
   </section>
 
-  <!-- AI ADVISORY -->
-  <section class="stakes section-scene" aria-labelledby="advisory-h2" data-reveal-section>
-    <div class="stakes__inner">
-      <span class="section-label section-label--named reveal" data-stagger="label"><span>AI advisory</span></span>
-      <h2 id="advisory-h2" class="bridge__thesis reveal" data-stagger="heading">Get found. Get faster. Don&rsquo;t fly blind.</h2>
-      <p class="stakes__copy reveal" data-stagger="body">AI is changing both sides of the business at once: how customers find you, and how the work gets done once they do. I help with both, and with the parts you shouldn&rsquo;t trust blindly.</p>
-      <a href="/advisory.html" class="gap__link reveal" data-stagger="support">
-        <span>AI advisory</span>
-        <span class="arrow" aria-hidden="true">&rarr;</span>
-      </a>
+  <!-- TOOLS — cool, the Thesis slate -->
+  <section class="stakes section-scene band-cool band-cool--slate tools-band" aria-labelledby="tools-h2">
+    <div class="home-band__inner">
+      <span class="section-label section-label--named"><span>Tools</span></span>
+      <h2 id="tools-h2">Free to use.</h2>
+      <div class="tools-grid">
+        <article class="tool-card tool-card--reader">
+          <div class="tool-card__body">
+            <p class="tool-card__name">The Reader</p>
+            <h3>Check your AI&rsquo;s answer and steer what comes next.</h3>
+            <p>Paste an AI answer to check what may be missing.</p>
+            <p>You can also choose what you want it to do differently: use the material you provided, show its sources, answer your actual question, or separate facts from assumptions. The Reader gives you an instruction to copy back into your AI. Bring back the reply to compare what changed.</p>
+            <a class="home-band__btn" href="/reader.html?reader=1">Open the Reader <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <figure class="tool-card__shot"><img src="/advisory-assets/tool-reader.png" width="652" height="565" alt="A real Reader run: an AI answer about Montana employment law, and what it left out." loading="lazy"><figcaption>Real run &middot; what the first answer left out</figcaption></figure>
+        </article>
+        <article class="tool-card tool-card--ii">
+          <div class="tool-card__body">
+            <p class="tool-card__name">Input Integrity</p>
+            <h3>Check a PDF before you give it to AI.</h3>
+            <p>A PDF can carry text you don&rsquo;t see on the page but an AI assistant may read. If that text contains instructions, they can shape what the AI tells you. Input Integrity inspects the file&rsquo;s content and structure, including text that doesn&rsquo;t appear on the rendered page, and shows the evidence for each finding.</p>
+            <p class="tool-card__note">Free to use. Your file stays on your device.</p>
+            <a class="home-band__btn" href="/input-integrity.html">Inspect a PDF <span aria-hidden="true">&rarr;</span></a>
+          </div>
+          <figure class="tool-card__shot"><img src="/advisory-assets/tool-ii.png" width="720" height="590" alt="Input Integrity result on its sample file: the rendered page is blank, and the file&rsquo;s structure contains the text INVISIBLE-MODE3." loading="lazy"><figcaption>Sample file &middot; blank page, text in its structure</figcaption></figure>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ADVISORY — warm, the original advisory band's ground -->
+  <section class="stakes section-scene adv-band" aria-labelledby="advisory-h2">
+    <div class="home-band__inner">
+      <div>
+        <span class="section-label section-label--named"><span>AI advisory</span></span>
+        <h2 id="advisory-h2">Work out what&rsquo;s worth changing.</h2>
+        <p>You may have a process that takes too long, a question about your customers, or an idea you haven&rsquo;t had time to test. I investigate it with you, weigh the options and help put the decision into practice. AI is part of what I bring, alongside research and experience running a business.</p>
+        <a href="/advisory.html" class="home-band__btn">Work with me <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      <div class="adv-band__examples">
+        <p class="adv-band__examples-label">For example</p>
+        <ul role="list">
+          <li>A quoting tool built around your services</li>
+          <li>A searchable reference from your own documents</li>
+          <li>Reports prepared from the records you already keep</li>
+          <li>Positioning and customer research</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESEARCH — cool, the Case Archive navy. Every section that moved to /research.html is linked here. -->
+  <section class="stakes section-scene band-cool band-cool--navy res-teaser" aria-labelledby="research-h2">
+    <div class="home-band__inner">
+      <span class="section-label section-label--named"><span>The research</span></span>
+      <h2 id="research-h2">Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out.</h2>
+      <p>Imbas turns invisible AI behavior into a measurable record. The full argument, the method and the case archive are on the research page:</p>
+      <ul class="res-teaser__map" role="list">
+        <li><a href="/research.html#experience-label">Your Experience</a></li>
+        <li><a href="/research.html#ephemeral-h2">The answer appears. You read it. It&rsquo;s gone.</a></li>
+        <li><a href="/research.html#gap-h2">The Volunteer Gap</a></li>
+        <li><a href="/research.html#cat-h2">Three signal patterns Imbas tracks.</a></li>
+        <li><a href="/research.html#value-h2">How Imbas Works.</a></li>
+        <li><a href="/research.html#public-interest-h2">A public record keeps decisions anchored.</a></li>
+        <li><a href="/research.html#record-compounds-h2">Why This Compounds</a></li>
+        <li><a href="/research.html#archive">Case Archive</a></li>
+      </ul>
+      <div class="res-teaser__links">
+        <a href="/research.html" class="gap__link"><span>Explore the research</span><span class="arrow" aria-hidden="true">&rarr;</span></a>
+        <a href="/reader.html?reader=1" class="gap__link"><span>Try the Reader</span><span class="arrow" aria-hidden="true">&rarr;</span></a>
+      </div>
     </div>
   </section>
 
@@ -231,381 +373,6 @@
     </div>
   </section>
 
-  <!-- YOUR EXPERIENCE — felt drift, local capture -->
-  <section class="your-experience section-scene" data-reveal-section aria-labelledby="experience-label">
-    <div class="your-experience__inner">
-      <div class="your-experience__layout">
-        <div class="your-experience__stakes">
-          <span class="section-label section-label--named reveal" data-stagger="label" id="experience-label"><span>Your Experience</span></span>
-          <div class="your-experience__copy reveal" data-stagger="body">
-            <p class="your-experience__p">The AI output: not wrong, exactly. But off. Maybe it was <span class="ember">managing</span> you instead of answering you.</p>
-            <p class="your-experience__p">Something important is missing, or weirdly one-sided. It&rsquo;s hedging like a lawyer instead of being a genuine thought partner.</p>
-            <p class="your-experience__p">Bring that answer to the Reader. Imbas hands you a direct Second Question, the one that tests what the first answer may have left out. Ask it, bring the second answer back, and see them side by side.</p>
-            <p class="your-experience__p">What showed up only after you asked directly? What changed? What still does not hold up? Keep the record before you decide what to trust, use, or send.</p>
-          </div>
-        </div>
-        <aside class="experience-intake reveal" data-stagger="support" aria-label="Reader and investigation intake">
-          <div class="experience-intake__primary">
-            <a href="/reader.html?reader=1" class="experience-intake__reader-cta">
-              <span>Open the Reader</span>
-              <span class="arrow" aria-hidden="true">&rarr;</span>
-            </a>
-            <p class="experience-intake__tier-hint">Run a live inspection now.</p>
-            <a class="page__cta-link" href="/input-integrity.html">Or inspect a PDF <span class="arrow" aria-hidden="true">&rarr;</span></a>
-          </div>
-          <div class="experience-intake__secondary">
-            <p class="experience-intake__form-label">Suggest an investigation</p>
-            <p class="experience-intake__tier-hint experience-intake__tier-hint--secondary">For cases we should investigate later.</p>
-            <form class="experience-capture" id="experience-capture-form" novalidate>
-            <div class="experience-capture__row">
-              <label class="experience-capture__label" for="experience-topic">Topic</label>
-              <input
-                type="text"
-                id="experience-topic"
-                name="topic"
-                class="experience-capture__field"
-                placeholder="The topic or question"
-                maxlength="500"
-                autocomplete="off"
-                required
-              >
-            </div>
-            <div class="experience-capture__row experience-capture__row--evidence">
-              <label class="experience-capture__label" for="experience-answer">AI answer</label>
-              <textarea
-                id="experience-answer"
-                name="ai_answer"
-                class="experience-capture__field experience-capture__field--area"
-                placeholder="What the AI told you"
-                maxlength="12000"
-                rows="5"
-                required
-              ></textarea>
-            </div>
-            <div class="experience-capture__row">
-              <label class="experience-capture__label" for="experience-email">Contact</label>
-              <input
-                type="email"
-                id="experience-email"
-                name="email"
-                class="experience-capture__field"
-                placeholder="Email — so we can tell you what we find"
-                maxlength="254"
-                autocomplete="email"
-                required
-              >
-            </div>
-            <label class="subscribe__hp" aria-hidden="true">
-              <span>Leave blank</span>
-              <input type="text" name="hp" tabindex="-1" autocomplete="off" value="">
-            </label>
-            <div class="experience-capture__actions">
-              <button type="submit" class="experience-capture__submit">
-                <span>Suggest investigation</span>
-                <span class="arrow" aria-hidden="true">&rarr;</span>
-              </button>
-            </div>
-            <p class="experience-capture__trust">Reviewed, not published automatically.</p>
-          </form>
-          </div>
-          <p class="experience-capture__error" id="experience-capture-error" role="alert" aria-live="polite" aria-atomic="true" hidden>Something didn&rsquo;t go through. Try again in a moment.</p>
-          <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
-        </aside>
-      </div>
-    </div>
-  </section>
-
-  <!-- EPHEMERAL BY DEFAULT — uncaptured answers beat -->
-  <section class="stakes section-scene" data-reveal-section aria-labelledby="ephemeral-h2">
-    <div class="stakes__inner">
-      <span class="section-label section-label--named reveal" data-stagger="label"><span>Ephemeral by default</span></span>
-      <h2 id="ephemeral-h2" class="bridge__thesis ephemeral-headline"><span class="ephemeral-line"><span class="ephemeral-word ephemeral-word--scroll">The</span> <span class="ephemeral-word ephemeral-word--scroll">answer</span> <span class="ephemeral-word ephemeral-word--scroll">appears.</span> <span class="ephemeral-word ephemeral-word--scroll">You</span> <span class="ephemeral-word ephemeral-word--scroll">read</span> <span class="ephemeral-word ephemeral-word--scroll">it.</span></span> <span class="ephemeral-line ephemeral-line--trace"><span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">It&rsquo;s</span> <span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">gone.</span></span></h2>
-      <p class="stakes__copy ephemeral-copy">An open question returns one answer, then disappears off the screen the moment you move on. What the model surfaced &#8239;&mdash;&#8239; and what it left out &#8239;&mdash;&#8239; leaves no trace. Imbas records it.</p>
-    </div>
-  </section>
-
-  <!-- VOLUNTEER GAP — core wedge, promoted early -->
-  <section class="gap section-scene" aria-labelledby="gap-h2">
-    <div class="aurora-field aurora-field--cool" aria-hidden="true">
-      <span class="aurora-field__layer aurora-field__layer--a"></span>
-      <span class="aurora-field__layer aurora-field__layer--b"></span>
-    </div>
-    <div class="gap__inner">
-      <div class="gap__sequence">
-        <p class="gap__line gap__line--knows gap__line--scroll">What the model knows.</p>
-        <p class="gap__line gap__line--surfaces gap__line--scroll">What it surfaces.</p>
-        <p class="gap__line gap__line--leaves gap__line--scroll">What it leaves out.</p>
-        <p class="gap__line gap__line--resolution gap__line--scroll">That difference is the <strong>Volunteer Gap</strong>.</p>
-      </div>
-
-      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures what changes once a missing issue is named directly. It helps us examine what users see, what was left out, and how the answer may have been shaped.</p>
-
-      <p class="gap__support gap__thesis reveal" style="--reveal-delay: 900ms;">We study how AI &ldquo;thinks.&rdquo; Volunteer Gap is the first behavior we measure. As AI systems become more capable, we need to learn how they behave, what patterns persist, and how those behaviors change over time. The full method and the v1 study are written up in the <a href="/whitepaper.html">Imbas whitepaper</a>.</p>
-
-      <a href="/volunteer-gap.html" class="gap__link reveal" style="--reveal-delay: 1000ms;">
-        <span>How Imbas measures it</span>
-        <span class="arrow" aria-hidden="true">&rarr;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- CATEGORIES -->
-  <section class="categories section-scene" aria-labelledby="cat-h2" data-reveal-section>
-    <div class="categories__head">
-      <span class="section-label section-label--named reveal" data-stagger="label"><span>Signal categories</span></span>
-      <h2 id="cat-h2" class="reveal" data-stagger="heading">Three signal patterns Imbas tracks.</h2>
-    </div>
-
-    <div class="categories__grid">
-      <article class="cat reveal" data-stagger="support">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <line x1="5" y1="10" x2="27" y2="10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>
-          <rect x="5" y="14.4" width="22" height="3.2" rx="1.6" fill="currentColor"/>
-          <line x1="5" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>
-        </svg>
-        <div class="cat__id">01 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Omission</h3>
-        <p>A named mechanism available under targeted inspection but not surfaced in the open answer.</p>
-      </article>
-
-      <article class="cat reveal" data-stagger="support">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <line x1="4" y1="9" x2="28" y2="9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-          <line x1="6" y1="16" x2="26" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
-          <line x1="4" y1="23" x2="28" y2="23" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
-          <circle cx="6" cy="16" r="1" fill="currentColor"/>
-          <circle cx="26" cy="14" r="1" fill="currentColor"/>
-        </svg>
-        <div class="cat__id">02 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Framing Drift</h3>
-        <p>Information present, but sourced or attributed in a one-sided way.</p>
-      </article>
-
-      <article class="cat reveal" data-stagger="support">
-        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 6 L13 11 L13 21 L6 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-        <div class="cat__id">03 &nbsp;&middot;&nbsp; Category</div>
-        <h3>Deflection</h3>
-        <p>Redirects away from the underlying concern before addressing the specific context.</p>
-      </article>
-    </div>
-  </section>
-
-  <!-- VALUE FLOW — horizontal process sequence -->
-  <section class="value value--flow section-scene" aria-labelledby="value-h2" data-reveal-section>
-    <div class="value__inner">
-      <div class="value__head">
-        <h2 id="value-h2" class="value__title reveal" data-stagger="heading">How Imbas Works.</h2>
-      </div>
-      <ol class="value__beats">
-        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Ask &mdash; Start with an open, unsteered prompt.</li>
-        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Inspect &mdash; Ask the targeted follow-up and see what the open answer left out.</li>
-        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Compare &mdash; Line up what each frontier model surfaced or missed.</li>
-        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Measure &mdash; Score the distance on the 0&ndash;3 Volunteer Gap scale.</li>
-        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Record &mdash; Preserve the prompts, answers, models, date, and gap as a case.</li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- PUBLIC INTEREST — why capturing this is a public good -->
-  <section class="stakes section-scene" aria-labelledby="public-interest-h2" data-reveal-section>
-    <div class="stakes__inner">
-      <span class="section-label section-label--named reveal" data-stagger="label"><span>Public interest</span></span>
-      <h2 id="public-interest-h2" class="bridge__thesis reveal" data-stagger="heading">A public record keeps decisions <span class="ember">anchored.</span></h2>
-      <p class="stakes__copy reveal" data-stagger="body">What gets measured gets better. A public record of what AI surfaces &#8239;&mdash;&#8239; and what it omits &#8239;&mdash;&#8239; keeps the decisions built on it anchored to what&rsquo;s true, instead of drifting with the model.</p>
-      <a href="/public-interest.html" class="gap__link reveal" data-stagger="support">
-        <span>Why this is public-interest work</span>
-        <span class="arrow" aria-hidden="true">&rarr;</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- COMPOUNDING RECORD — validated record → future inspection agent -->
-  <section class="record-compounds section-scene" aria-labelledby="record-compounds-h2" data-reveal-section>
-    <div class="record-compounds__inner">
-      <header class="record-compounds__head">
-        <span class="section-label section-label--named reveal" data-stagger="label"><span>Compounding Record</span></span>
-        <h2 id="record-compounds-h2" class="record-compounds__title reveal" data-stagger="heading">Why This Compounds</h2>
-      </header>
-
-      <div class="record-compounds__body">
-        <p class="record-compounds__lead reveal" data-stagger="body">Imbas does not only preserve AI answers. It builds the record that can make the inspection layer smarter.</p>
-        <p class="reveal" data-stagger="body">Each Reader run, scored case, null result, reviewer disagreement, rejected case, and raw capture teaches the system something: what real omissions look like, where the Reader overreaches, which patterns repeat across models, and which findings do not survive review.</p>
-        <p class="reveal" data-stagger="body">Over time, that validated record can become the training substrate for a specialized inspection agent: not another model to trust, but a system trained to notice what AI answers surface, miss, and reframe.</p>
-      </div>
-
-      <ol class="record-compounds__progression reveal" data-stagger="support" aria-label="Record progression">
-        <li><span class="record-compounds__step">Reader runs</span></li>
-        <li><span class="record-compounds__step">Scored cases</span></li>
-        <li><span class="record-compounds__step">Nulls + disagreements</span></li>
-        <li><span class="record-compounds__step">Validated record</span></li>
-        <li><span class="record-compounds__step">Trained inspection agent</span></li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- CASE ARCHIVE -->
-  <section id="archive" class="archive archive--home-preview section-scene" aria-labelledby="archive-h2" data-reveal-section>
-    <div class="aurora-field aurora-field--cool" aria-hidden="true">
-      <span class="aurora-field__layer aurora-field__layer--a"></span>
-      <span class="aurora-field__layer aurora-field__layer--b"></span>
-    </div>
-    <div class="archive__inner">
-      <header class="archive__head">
-        <div>
-          <span class="section-label section-label--named reveal" data-stagger="label"><span>Archive</span></span>
-          <h2 id="archive-h2" class="reveal" data-stagger="heading">Case Archive</h2>
-        </div>
-      </header>
-
-      <div class="hp-arc-intro">
-        <div class="hp-arc-stat-strip reveal" data-stagger="support">
-          <ul class="hp-arc-metrics" role="list">
-            <li class="hp-arc-metrics__item">
-              <span class="hp-arc-metrics__value">Responses</span>
-              <span class="hp-arc-metrics__label hp-arc-metrics__desc">preserved</span>
-            </li>
-            <li class="hp-arc-metrics__item">
-              <span class="hp-arc-metrics__value">Review</span>
-              <span class="hp-arc-metrics__label hp-arc-metrics__desc">methods documented</span>
-            </li>
-            <li class="hp-arc-metrics__item hp-arc-metrics__item--scope">
-              <span class="hp-arc-metrics__scope">Across ChatGPT, Claude, Gemini, and Grok</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="hp-arc-rubric reveal" data-stagger="support">
-          <p class="hp-arc-rubric__lead">Cases are scored from 0 to 3 on the Volunteer Gap scale.</p>
-          <div class="hp-arc-rubric__scale">
-            <span class="hp-arc-rubric__end hp-arc-rubric__end--low"><strong>0</strong> means no meaningful gap.</span>
-            <span class="hp-arc-rubric__end hp-arc-rubric__end--high"><strong>3</strong> means major information was left out of the open answer.</span>
-          </div>
-        </div>
-      </div>
-
-      <article class="hp-arc-featured reveal" data-stagger="support" data-example-placement="archiveFeatured" aria-labelledby="archive-featured-title">
-        <span class="hp-arc-featured__label">Featured case</span>
-        <h3 class="hp-arc-featured__title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h3>
-        <dl class="hp-arc-featured__meta">
-          <div class="hp-arc-featured__meta-item">
-            <dt>Date</dt>
-            <dd>2026.05.16</dd>
-          </div>
-          <div class="hp-arc-featured__meta-item">
-            <dt>Type</dt>
-            <dd>hypothesis &middot; Omission</dd>
-          </div>
-          <div class="hp-arc-featured__meta-item">
-            <dt>Gap</dt>
-            <dd>2.50</dd>
-          </div>
-        </dl>
-        <div class="hp-arc-featured__body">
-          <div class="hp-arc-featured__prompts">
-            <div class="hp-arc-prompt-field">
-              <span class="hp-arc-prompt-field__label">Open prompt</span>
-              <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
-            </div>
-            <div class="hp-arc-prompt-field">
-              <span class="hp-arc-prompt-field__label">Targeted prompt</span>
-              <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
-            </div>
-          </div>
-          <div class="hp-arc-featured__finding">
-            <span class="hp-arc-featured__finding-label">Volunteer Gap &middot; 2.50</span>
-            <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &#8239;&mdash;&#8239; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
-          </div>
-        </div>
-        <!--imbas:placement homeFeaturedReadLink-->
-        <a href="/case/005.html" class="hp-arc-featured__link">
-          <span>Read Case 005</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
-        </a>
-        <!--/imbas:placement-->
-      </article>
-
-      <div class="hp-arc-ledger-wrap reveal" data-stagger="support">
-        <div class="hp-arc-ledger">
-          <div class="hp-arc-ledger__head" role="presentation">
-            <span>Date</span>
-            <span>Case</span>
-            <span>Subject</span>
-            <span>Type</span>
-            <span class="hp-arc-ledger__gap-col">Gap</span>
-          </div>
-          <ul class="hp-arc-ledger__list" role="list" data-case-record>
-            <li class="hp-arc-record hp-arc-record--hypothesis hp-arc-record--lead hp-arc-record--public">
-              <a href="/case/005.html" class="hp-arc-record__link">
-                <span class="hp-arc-record__date">2026.05.16</span>
-                <span class="hp-arc-record__id">CASE 005</span>
-                <span class="hp-arc-record__main">
-                  <span class="hp-arc-record__title">Buybacks &amp; SEC Rule 10b-18</span>
-                </span>
-                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
-                <span class="hp-arc-record__gap">2.50 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
-              </a>
-            </li>
-            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
-              <a href="/case/018.html" class="hp-arc-record__link">
-                <span class="hp-arc-record__date">2026.05.19</span>
-                <span class="hp-arc-record__id">CASE 018</span>
-                <span class="hp-arc-record__main">
-                  <span class="hp-arc-record__title">FDA review &amp; PDUFA industry fees</span>
-                </span>
-                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
-                <span class="hp-arc-record__gap">2.50 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
-              </a>
-            </li>
-            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
-              <a href="/case/003.html" class="hp-arc-record__link">
-                <span class="hp-arc-record__date">2026.05.16</span>
-                <span class="hp-arc-record__id">CASE 003</span>
-                <span class="hp-arc-record__main">
-                  <span class="hp-arc-record__title">Palantir &amp; ICE contracts</span>
-                </span>
-                <span class="hp-arc-record__type">hypothesis &middot; Framing Drift</span>
-                <span class="hp-arc-record__gap">2.00 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
-              </a>
-            </li>
-            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
-              <a href="/case/021.html" class="hp-arc-record__link">
-                <span class="hp-arc-record__date">2026.05.21</span>
-                <span class="hp-arc-record__id">CASE 021</span>
-                <span class="hp-arc-record__main">
-                  <span class="hp-arc-record__title">PFAS &amp; DuPont / 3M</span>
-                </span>
-                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
-                <span class="hp-arc-record__gap">2.00 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
-              </a>
-            </li>
-            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
-              <a href="/case/013.html" class="hp-arc-record__link">
-                <span class="hp-arc-record__date">2026.05.17</span>
-                <span class="hp-arc-record__id">CASE 013</span>
-                <span class="hp-arc-record__main">
-                  <span class="hp-arc-record__title">OxyContin &amp; the Sacklers</span>
-                </span>
-                <span class="hp-arc-record__type">control &middot; Omission</span>
-                <span class="hp-arc-record__gap">0.75 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="archive__foot reveal" data-stagger="support">
-        <p class="archive__bridge">Review the record, then test an answer in the Reader.</p>
-        <a href="/archive.html" class="archive__cta">
-          <span>Explore Case Archive</span>
-          <span class="arrow" aria-hidden="true">&rarr;</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
   <!-- CLOSE — origin inscription -->
   <section class="close section-scene" aria-label="The name" data-reveal-section>
     <div class="aurora-field aurora-field--warm" aria-hidden="true">
@@ -626,7 +393,7 @@
 
 <footer class="site-footer">
   <div class="site-footer__inner">
-    <p class="site-footer__about">Imbas measures how frontier AI systems surface information.</p>
+    <p class="site-footer__about">Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work.</p>
     <nav class="site-footer__links" aria-label="Site">
       <a href="/">Home</a>
       <a href="/tools.html">Tools</a>
@@ -636,8 +403,9 @@
       <a href="/how-it-works.html">How It Works</a>
       <a href="/methodology.html">Methodology</a>
       <a href="/whitepaper.html">Whitepaper</a>
-      <a href="/archive.html">Evidence</a>
+      <a href="/research.html">Research</a>
       <a href="/reader.html">The Reader</a>
+      <a href="/input-integrity.html">Input Integrity</a>
       <!--imbas:placement footerDefaultPublicExample--><a href="/archive.html#archive-featured-title" data-example-placement="defaultPublicExample">Featured case</a><!--/imbas:placement-->
       <a href="/institutions.html">For Institutions</a>
       <a href="/for-readers.html">For Readers</a>

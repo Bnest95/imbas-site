@@ -82,6 +82,7 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 | `docs-archive/INSTITUTIONS_VALUE_BRIDGE_P1_QA.md` | `INSTITUTIONS_VALUE_BRIDGE_P1_QA.md` | `institutions.html` (live) + `STATE.md`. Completed pass-1 QA record. |
 | `docs-archive/OBJECTION-BANK.md` | `grant-engine/OBJECTION-BANK.md` | `grant-engine/OBJECTION-CANON.md` (CLAUDE.md-designated governing objections doc). BANK objections 4–6 ported verbatim into CANON 2026-07-08. |
 | `docs-archive/imbas-landing-cursor-passes.md` | `imbas-landing-cursor-passes.md` | Workflow retired 2026-07-08 — passes now run through the committed repo and Code sessions. |
+| `docs-archive/SUPERSEDED-SITE-COPY-2026-10-29.md` | Live copy in `index.html` (hero, AI advisory band) and `advisory.html` at `0c78ee9` | The 2026-10 refresh of `index.html` and `advisory.html`. Holds the replaced copy verbatim; the retired advisory offer must not be republished as current. |
 
 ## REVIEW — none open
 

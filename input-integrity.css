@@ -15,6 +15,20 @@
 
 /* ── Boundary ──────────────────────────────────────────────────────────────── */
 
+/* An illustration under the lede, set apart from the page's own claims by the
+   ember-bordered aside the document pages use. */
+.ii-example {
+  max-width: 62ch;
+  margin: var(--space-3) 0 0;
+  padding: 0.8rem 1.15rem;
+  border-left: 2px solid rgba(var(--ember-rgb), 0.4);
+  background: rgba(var(--ember-rgb), 0.05);
+  border-radius: 0 4px 4px 0;
+  color: var(--ink-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
 .ii-boundary {
   max-width: 62ch;
   margin: var(--space-3) 0 var(--space-5);

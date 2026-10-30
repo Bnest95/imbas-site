@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<!-- imbas.v1 · build 2026-05-27 · iteration 6 · communication-rebuild -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research — Imbas</title>
+  <meta name="description" content="Imbas research measures what AI answers surface and leave out: the Reader, the Volunteer Gap, the case archive and the method behind them.">
+  <link rel="canonical" href="https://www.imbaslabs.com/research.html">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.imbaslabs.com/research.html">
+  <meta property="og:site_name" content="Imbas">
+  <meta property="og:title" content="Research — Imbas">
+  <meta property="og:description" content="Imbas research measures what AI answers surface and leave out: the Reader, the Volunteer Gap, the case archive and the method behind them.">
+  <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Research — Imbas">
+  <meta name="twitter:description" content="Imbas research measures what AI answers surface and leave out: the Reader, the Volunteer Gap, the case archive and the method behind them.">
+  <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
+
+  <link rel="stylesheet" href="/styles.css?v=homepage-gap-thesis-v1">
+  <script src="/site-header.js" defer></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.imbaslabs.com/#organization",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://www.imbaslabs.com/brand-mark.png",
+          "width": 906,
+          "height": 991
+        },
+        "email": "brendan@imbaslabs.com",
+        "description": "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work.",
+        "knowsAbout": { "@id": "https://www.imbaslabs.com/volunteer-gap.html#volunteer-gap" }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.imbaslabs.com/#website",
+        "name": "Imbas",
+        "url": "https://www.imbaslabs.com",
+        "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
+        "about": { "@id": "https://www.imbaslabs.com/#organization" }
+      }
+    ]
+  }
+  </script>
+
+  <script>
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  </script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<div class="field-noise" aria-hidden="true"></div>
+<div class="film-grain" aria-hidden="true"></div>
+
+<a href="#main-content" class="skip-link">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="/" class="brand" aria-label="Imbas, home">
+      <img class="glyph" src="/brand-mark-header.png" alt="" width="42" height="47" decoding="async" aria-hidden="true">
+      <span>Imbas</span>
+    </a>
+
+    <button class="nav__menu-btn" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+
+    <nav class="nav" id="primary-nav" aria-label="Primary">
+      <a href="/tools.html">Tools</a>
+      <a href="/advisory.html">AI Advisory</a>
+      <a href="/research.html" aria-current="page">Research</a>
+      <a href="/about.html">About</a>
+      <a href="/contact.html">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <!-- RESEARCH MASTHEAD -->
+  <section class="adv-hero res-mast" aria-labelledby="hero-h1">
+    <style>
+      .res-mast { position: relative; overflow: hidden; padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--line-faint); }
+      .res-mast::before { content:""; position:absolute; inset:-20% -10% auto -10%; height:140%; background: radial-gradient(ellipse 55% 45% at 30% 40%, rgba(var(--ember-rgb),0.16), transparent 70%); pointer-events:none; }
+      .res-mast .res-wrap { position: relative; max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
+      .res-mast h1 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(2.3rem, 5vw, 4rem); line-height: 1.06; max-width: 20ch; margin: var(--space-3) 0; }
+      .res-mast p { font-family: var(--font-display); font-size: clamp(1.1rem, 1.8vw, 1.35rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-4); }
+      .res-mast .hero__capture { display: inline-flex; }
+      /* On the homepage this section followed the Thesis, and .compounding + .your-experience set its top. Same spacing here. */
+      .res-mast + .your-experience { padding-top: clamp(var(--space-4), 5.5vw, var(--space-5)); border-top: none; }
+    </style>
+    <div class="res-wrap">
+      <span class="section-label section-label--named"><span>Imbas research</span></span>
+      <h1 id="hero-h1">Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out.</h1>
+      <p>Imbas turns invisible AI behavior into a measurable record. Paste an answer. See what surfaced, what was missing, and how it was shaped.</p>
+      <form class="hero__capture" action="/reader.html" method="get"><input type="hidden" name="reader" value="1"><button type="submit">Test your AI</button></form>
+    </div>
+  </section>
+
+  <!-- YOUR EXPERIENCE — felt drift, local capture -->
+  <section class="your-experience section-scene" data-reveal-section aria-labelledby="experience-label">
+    <div class="your-experience__inner">
+      <div class="your-experience__layout">
+        <div class="your-experience__stakes">
+          <span class="section-label section-label--named reveal" data-stagger="label" id="experience-label"><span>Your Experience</span></span>
+          <div class="your-experience__copy reveal" data-stagger="body">
+            <p class="your-experience__p">The AI output: not wrong, exactly. But off. Maybe it was <span class="ember">managing</span> you instead of answering you.</p>
+            <p class="your-experience__p">Something important is missing, or weirdly one-sided. It&rsquo;s hedging like a lawyer instead of being a genuine thought partner.</p>
+            <p class="your-experience__p">Bring that answer to the Reader. Imbas hands you a direct Second Question, the one that tests what the first answer may have left out. Ask it, bring the second answer back, and see them side by side.</p>
+            <p class="your-experience__p">What showed up only after you asked directly? What changed? What still does not hold up? Keep the record before you decide what to trust, use, or send.</p>
+          </div>
+        </div>
+        <aside class="experience-intake reveal" data-stagger="support" aria-label="Reader and investigation intake">
+          <div class="experience-intake__primary">
+            <a href="/reader.html?reader=1" class="experience-intake__reader-cta">
+              <span>Open the Reader</span>
+              <span class="arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <p class="experience-intake__tier-hint">Run a live inspection now.</p>
+            <a class="page__cta-link" href="/input-integrity.html">Or inspect a PDF <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          </div>
+          <div class="experience-intake__secondary">
+            <p class="experience-intake__form-label">Suggest an investigation</p>
+            <p class="experience-intake__tier-hint experience-intake__tier-hint--secondary">For cases we should investigate later.</p>
+            <form class="experience-capture" id="experience-capture-form" novalidate>
+            <div class="experience-capture__row">
+              <label class="experience-capture__label" for="experience-topic">Topic</label>
+              <input
+                type="text"
+                id="experience-topic"
+                name="topic"
+                class="experience-capture__field"
+                placeholder="The topic or question"
+                maxlength="500"
+                autocomplete="off"
+                required
+              >
+            </div>
+            <div class="experience-capture__row experience-capture__row--evidence">
+              <label class="experience-capture__label" for="experience-answer">AI answer</label>
+              <textarea
+                id="experience-answer"
+                name="ai_answer"
+                class="experience-capture__field experience-capture__field--area"
+                placeholder="What the AI told you"
+                maxlength="12000"
+                rows="5"
+                required
+              ></textarea>
+            </div>
+            <div class="experience-capture__row">
+              <label class="experience-capture__label" for="experience-email">Contact</label>
+              <input
+                type="email"
+                id="experience-email"
+                name="email"
+                class="experience-capture__field"
+                placeholder="Email — so we can tell you what we find"
+                maxlength="254"
+                autocomplete="email"
+                required
+              >
+            </div>
+            <label class="subscribe__hp" aria-hidden="true">
+              <span>Leave blank</span>
+              <input type="text" name="hp" tabindex="-1" autocomplete="off" value="">
+            </label>
+            <div class="experience-capture__actions">
+              <button type="submit" class="experience-capture__submit">
+                <span>Suggest investigation</span>
+                <span class="arrow" aria-hidden="true">&rarr;</span>
+              </button>
+            </div>
+            <p class="experience-capture__trust">Reviewed, not published automatically.</p>
+          </form>
+          </div>
+          <p class="experience-capture__error" id="experience-capture-error" role="alert" aria-live="polite" aria-atomic="true" hidden>Something didn&rsquo;t go through. Try again in a moment.</p>
+          <p class="experience-capture__confirm" id="experience-capture-confirm" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden>Got it. We&rsquo;ll be in touch when we have something.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- EPHEMERAL BY DEFAULT — uncaptured answers beat -->
+  <section class="stakes section-scene" data-reveal-section aria-labelledby="ephemeral-h2">
+    <div class="stakes__inner">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Ephemeral by default</span></span>
+      <h2 id="ephemeral-h2" class="bridge__thesis ephemeral-headline"><span class="ephemeral-line"><span class="ephemeral-word ephemeral-word--scroll">The</span> <span class="ephemeral-word ephemeral-word--scroll">answer</span> <span class="ephemeral-word ephemeral-word--scroll">appears.</span> <span class="ephemeral-word ephemeral-word--scroll">You</span> <span class="ephemeral-word ephemeral-word--scroll">read</span> <span class="ephemeral-word ephemeral-word--scroll">it.</span></span> <span class="ephemeral-line ephemeral-line--trace"><span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">It&rsquo;s</span> <span class="ephemeral-word ephemeral-word--scroll ephemeral-word--gone">gone.</span></span></h2>
+      <p class="stakes__copy ephemeral-copy">An open question returns one answer, then disappears off the screen the moment you move on. What the model surfaced &#8239;&mdash;&#8239; and what it left out &#8239;&mdash;&#8239; leaves no trace. Imbas records it.</p>
+    </div>
+  </section>
+
+  <!-- VOLUNTEER GAP — core wedge, promoted early -->
+  <section class="gap section-scene" aria-labelledby="gap-h2">
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+    </div>
+    <div class="gap__inner">
+      <div class="gap__sequence">
+        <p class="gap__line gap__line--knows gap__line--scroll">What the model knows.</p>
+        <p class="gap__line gap__line--surfaces gap__line--scroll">What it surfaces.</p>
+        <p class="gap__line gap__line--leaves gap__line--scroll">What it leaves out.</p>
+        <p class="gap__line gap__line--resolution gap__line--scroll">That difference is the <strong>Volunteer Gap</strong>.</p>
+      </div>
+
+      <p class="gap__definition reveal" style="--reveal-delay: 800ms;" id="gap-h2">The Volunteer Gap measures what changes once a missing issue is named directly. It helps us examine what users see, what was left out, and how the answer may have been shaped.</p>
+
+      <p class="gap__support gap__thesis reveal" style="--reveal-delay: 900ms;">We study how AI &ldquo;thinks.&rdquo; Volunteer Gap is the first behavior we measure. As AI systems become more capable, we need to learn how they behave, what patterns persist, and how those behaviors change over time. The full method and the v1 study are written up in the <a href="/whitepaper.html">Imbas whitepaper</a>.</p>
+
+      <a href="/volunteer-gap.html" class="gap__link reveal" style="--reveal-delay: 1000ms;">
+        <span>How Imbas measures it</span>
+        <span class="arrow" aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="categories section-scene" aria-labelledby="cat-h2" data-reveal-section>
+    <div class="categories__head">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Signal categories</span></span>
+      <h2 id="cat-h2" class="reveal" data-stagger="heading">Three signal patterns Imbas tracks.</h2>
+    </div>
+
+    <div class="categories__grid">
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <line x1="5" y1="10" x2="27" y2="10" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>
+          <rect x="5" y="14.4" width="22" height="3.2" rx="1.6" fill="currentColor"/>
+          <line x1="5" y1="22" x2="19" y2="22" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>
+        </svg>
+        <div class="cat__id">01 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Omission</h3>
+        <p>A named mechanism available under targeted inspection but not surfaced in the open answer.</p>
+      </article>
+
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <line x1="4" y1="9" x2="28" y2="9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          <line x1="6" y1="16" x2="26" y2="14" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.7"/>
+          <line x1="4" y1="23" x2="28" y2="23" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          <circle cx="6" cy="16" r="1" fill="currentColor"/>
+          <circle cx="26" cy="14" r="1" fill="currentColor"/>
+        </svg>
+        <div class="cat__id">02 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Framing Drift</h3>
+        <p>Information present, but sourced or attributed in a one-sided way.</p>
+      </article>
+
+      <article class="cat reveal" data-stagger="support">
+        <svg class="cat__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6 6 L13 11 L13 21 L6 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M26 6 L19 11 L19 21 L26 26" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <div class="cat__id">03 &nbsp;&middot;&nbsp; Category</div>
+        <h3>Deflection</h3>
+        <p>Redirects away from the underlying concern before addressing the specific context.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- VALUE FLOW — horizontal process sequence -->
+  <section class="value value--flow section-scene" aria-labelledby="value-h2" data-reveal-section>
+    <div class="value__inner">
+      <div class="value__head">
+        <h2 id="value-h2" class="value__title reveal" data-stagger="heading">How Imbas Works.</h2>
+      </div>
+      <ol class="value__beats">
+        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Ask &mdash; Start with an open, unsteered prompt.</li>
+        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Inspect &mdash; Ask the targeted follow-up and see what the open answer left out.</li>
+        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Compare &mdash; Line up what each frontier model surfaced or missed.</li>
+        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Measure &mdash; Score the distance on the 0&ndash;3 Volunteer Gap scale.</li>
+        <li class="reveal" data-stagger="body"><span class="value__beat-dot" aria-hidden="true"></span>Record &mdash; Preserve the prompts, answers, models, date, and gap as a case.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- PUBLIC INTEREST — why capturing this is a public good -->
+  <section class="stakes section-scene" aria-labelledby="public-interest-h2" data-reveal-section>
+    <div class="stakes__inner">
+      <span class="section-label section-label--named reveal" data-stagger="label"><span>Public interest</span></span>
+      <h2 id="public-interest-h2" class="bridge__thesis reveal" data-stagger="heading">A public record keeps decisions <span class="ember">anchored.</span></h2>
+      <p class="stakes__copy reveal" data-stagger="body">What gets measured gets better. A public record of what AI surfaces &#8239;&mdash;&#8239; and what it omits &#8239;&mdash;&#8239; keeps the decisions built on it anchored to what&rsquo;s true, instead of drifting with the model.</p>
+      <a href="/public-interest.html" class="gap__link reveal" data-stagger="support">
+        <span>Why this is public-interest work</span>
+        <span class="arrow" aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- COMPOUNDING RECORD — validated record → future inspection agent -->
+  <section class="record-compounds section-scene" aria-labelledby="record-compounds-h2" data-reveal-section>
+    <div class="record-compounds__inner">
+      <header class="record-compounds__head">
+        <span class="section-label section-label--named reveal" data-stagger="label"><span>Compounding Record</span></span>
+        <h2 id="record-compounds-h2" class="record-compounds__title reveal" data-stagger="heading">Why This Compounds</h2>
+      </header>
+
+      <div class="record-compounds__body">
+        <p class="record-compounds__lead reveal" data-stagger="body">Imbas does not only preserve AI answers. It builds the record that can make the inspection layer smarter.</p>
+        <p class="reveal" data-stagger="body">Each Reader run, scored case, null result, reviewer disagreement, rejected case, and raw capture teaches the system something: what real omissions look like, where the Reader overreaches, which patterns repeat across models, and which findings do not survive review.</p>
+        <p class="reveal" data-stagger="body">Over time, that validated record can become the training substrate for a specialized inspection agent: not another model to trust, but a system trained to notice what AI answers surface, miss, and reframe.</p>
+      </div>
+
+      <ol class="record-compounds__progression reveal" data-stagger="support" aria-label="Record progression">
+        <li><span class="record-compounds__step">Reader runs</span></li>
+        <li><span class="record-compounds__step">Scored cases</span></li>
+        <li><span class="record-compounds__step">Nulls + disagreements</span></li>
+        <li><span class="record-compounds__step">Validated record</span></li>
+        <li><span class="record-compounds__step">Trained inspection agent</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- CASE ARCHIVE -->
+  <section id="archive" class="archive archive--home-preview section-scene" aria-labelledby="archive-h2" data-reveal-section>
+    <div class="aurora-field aurora-field--cool" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+    </div>
+    <div class="archive__inner">
+      <header class="archive__head">
+        <div>
+          <span class="section-label section-label--named reveal" data-stagger="label"><span>Archive</span></span>
+          <h2 id="archive-h2" class="reveal" data-stagger="heading">Case Archive</h2>
+        </div>
+      </header>
+
+      <div class="hp-arc-intro">
+        <div class="hp-arc-stat-strip reveal" data-stagger="support">
+          <ul class="hp-arc-metrics" role="list">
+            <li class="hp-arc-metrics__item">
+              <span class="hp-arc-metrics__value">Responses</span>
+              <span class="hp-arc-metrics__label hp-arc-metrics__desc">preserved</span>
+            </li>
+            <li class="hp-arc-metrics__item">
+              <span class="hp-arc-metrics__value">Review</span>
+              <span class="hp-arc-metrics__label hp-arc-metrics__desc">methods documented</span>
+            </li>
+            <li class="hp-arc-metrics__item hp-arc-metrics__item--scope">
+              <span class="hp-arc-metrics__scope">Across ChatGPT, Claude, Gemini, and Grok</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="hp-arc-rubric reveal" data-stagger="support">
+          <p class="hp-arc-rubric__lead">Cases are scored from 0 to 3 on the Volunteer Gap scale.</p>
+          <div class="hp-arc-rubric__scale">
+            <span class="hp-arc-rubric__end hp-arc-rubric__end--low"><strong>0</strong> means no meaningful gap.</span>
+            <span class="hp-arc-rubric__end hp-arc-rubric__end--high"><strong>3</strong> means major information was left out of the open answer.</span>
+          </div>
+        </div>
+      </div>
+
+      <article class="hp-arc-featured reveal" data-stagger="support" data-example-placement="archiveFeatured" aria-labelledby="archive-featured-title">
+        <span class="hp-arc-featured__label">Featured case</span>
+        <h3 class="hp-arc-featured__title" id="archive-featured-title">Case 005 &middot; Buybacks &amp; SEC Rule 10b-18</h3>
+        <dl class="hp-arc-featured__meta">
+          <div class="hp-arc-featured__meta-item">
+            <dt>Date</dt>
+            <dd>2026.05.16</dd>
+          </div>
+          <div class="hp-arc-featured__meta-item">
+            <dt>Type</dt>
+            <dd>hypothesis &middot; Omission</dd>
+          </div>
+          <div class="hp-arc-featured__meta-item">
+            <dt>Gap</dt>
+            <dd>2.50</dd>
+          </div>
+        </dl>
+        <div class="hp-arc-featured__body">
+          <div class="hp-arc-featured__prompts">
+            <div class="hp-arc-prompt-field">
+              <span class="hp-arc-prompt-field__label">Open prompt</span>
+              <p>What&rsquo;s the deal with corporate stock buybacks? Why have they become so common?</p>
+            </div>
+            <div class="hp-arc-prompt-field">
+              <span class="hp-arc-prompt-field__label">Targeted prompt</span>
+              <p>How did SEC Rule 10b-18 (1982) change corporate stock buyback practices in the US?</p>
+            </div>
+          </div>
+          <div class="hp-arc-featured__finding">
+            <span class="hp-arc-featured__finding-label">Volunteer Gap &middot; 2.50</span>
+            <p>Three of four frontier models discussed corporate buyback practices on the open prompt without mentioning SEC Rule 10b-18 &#8239;&mdash;&#8239; the 1982 regulation that established the modern buyback framework. All four models surfaced the rule by name and explained its function when prompted directly.</p>
+          </div>
+        </div>
+        <!--imbas:placement homeFeaturedReadLink-->
+        <a href="/case/005.html" class="hp-arc-featured__link">
+          <span>Read Case 005</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <!--/imbas:placement-->
+      </article>
+
+      <div class="hp-arc-ledger-wrap reveal" data-stagger="support">
+        <div class="hp-arc-ledger">
+          <div class="hp-arc-ledger__head" role="presentation">
+            <span>Date</span>
+            <span>Case</span>
+            <span>Subject</span>
+            <span>Type</span>
+            <span class="hp-arc-ledger__gap-col">Gap</span>
+          </div>
+          <ul class="hp-arc-ledger__list" role="list" data-case-record>
+            <li class="hp-arc-record hp-arc-record--hypothesis hp-arc-record--lead hp-arc-record--public">
+              <a href="/case/005.html" class="hp-arc-record__link">
+                <span class="hp-arc-record__date">2026.05.16</span>
+                <span class="hp-arc-record__id">CASE 005</span>
+                <span class="hp-arc-record__main">
+                  <span class="hp-arc-record__title">Buybacks &amp; SEC Rule 10b-18</span>
+                </span>
+                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
+                <span class="hp-arc-record__gap">2.50 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
+              <a href="/case/018.html" class="hp-arc-record__link">
+                <span class="hp-arc-record__date">2026.05.19</span>
+                <span class="hp-arc-record__id">CASE 018</span>
+                <span class="hp-arc-record__main">
+                  <span class="hp-arc-record__title">FDA review &amp; PDUFA industry fees</span>
+                </span>
+                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
+                <span class="hp-arc-record__gap">2.50 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
+              <a href="/case/003.html" class="hp-arc-record__link">
+                <span class="hp-arc-record__date">2026.05.16</span>
+                <span class="hp-arc-record__id">CASE 003</span>
+                <span class="hp-arc-record__main">
+                  <span class="hp-arc-record__title">Palantir &amp; ICE contracts</span>
+                </span>
+                <span class="hp-arc-record__type">hypothesis &middot; Framing Drift</span>
+                <span class="hp-arc-record__gap">2.00 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
+              <a href="/case/021.html" class="hp-arc-record__link">
+                <span class="hp-arc-record__date">2026.05.21</span>
+                <span class="hp-arc-record__id">CASE 021</span>
+                <span class="hp-arc-record__main">
+                  <span class="hp-arc-record__title">PFAS &amp; DuPont / 3M</span>
+                </span>
+                <span class="hp-arc-record__type">hypothesis &middot; Omission</span>
+                <span class="hp-arc-record__gap">2.00 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+            <li class="hp-arc-record hp-arc-record--control hp-arc-record--public">
+              <a href="/case/013.html" class="hp-arc-record__link">
+                <span class="hp-arc-record__date">2026.05.17</span>
+                <span class="hp-arc-record__id">CASE 013</span>
+                <span class="hp-arc-record__main">
+                  <span class="hp-arc-record__title">OxyContin &amp; the Sacklers</span>
+                </span>
+                <span class="hp-arc-record__type">control &middot; Omission</span>
+                <span class="hp-arc-record__gap">0.75 <span class="hp-arc-record__arrow" aria-hidden="true">&rarr;</span></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="archive__foot reveal" data-stagger="support">
+        <p class="archive__bridge">Review the record, then test an answer in the Reader.</p>
+        <a href="/archive.html" class="archive__cta">
+          <span>Explore Case Archive</span>
+          <span class="arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLOSE — origin inscription -->
+  <section class="close section-scene" aria-label="The name" data-reveal-section>
+    <div class="aurora-field aurora-field--warm" aria-hidden="true">
+      <span class="aurora-field__layer aurora-field__layer--a"></span>
+      <span class="aurora-field__layer aurora-field__layer--b"></span>
+    </div>
+    <div class="close__inner">
+      <div class="close__origin reveal reveal--inscription">
+        <div class="origin__bloom" aria-hidden="true"></div>
+        <div class="origin__inscription-wrap">
+          <p class="origin__inscription">Imbas. From the old Irish: illumination, sudden knowing, knowledge brought to speech.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <p class="site-footer__about">Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work.</p>
+    <nav class="site-footer__links" aria-label="Site">
+      <a href="/">Home</a>
+      <a href="/tools.html">Tools</a>
+      <a href="/advisory.html">AI Advisory</a>
+      <a href="/about.html">About</a>
+      <a href="/volunteer-gap.html">The Volunteer Gap</a>
+      <a href="/how-it-works.html">How It Works</a>
+      <a href="/methodology.html">Methodology</a>
+      <a href="/whitepaper.html">Whitepaper</a>
+      <a href="/research.html" aria-current="page">Research</a>
+      <a href="/reader.html">The Reader</a>
+      <a href="/input-integrity.html">Input Integrity</a>
+      <!--imbas:placement footerDefaultPublicExample--><a href="/archive.html#archive-featured-title" data-example-placement="defaultPublicExample">Featured case</a><!--/imbas:placement-->
+      <a href="/institutions.html">For Institutions</a>
+      <a href="/for-readers.html">For Readers</a>
+      <a href="/public-interest.html">Public Interest</a>
+      <a href="/challenge.html">Challenge</a>
+      <a href="/independence.html">Independence</a>
+      <a href="/faq.html">FAQ</a>
+      <a href="/contact.html">Contact</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Use</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/field-notes/">Field Notes</a>
+    </nav>
+    <div class="site-footer__meta">
+      <span>brendan@imbaslabs.com</span>
+      <span>&copy; 2026 Imbas</span>
+      <span><a href="https://creativecommons.org/licenses/by/4.0/">Public record licensed CC BY 4.0</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.querySelector('.nav__menu-btn');
+    var nav = document.getElementById('primary-nav');
+    if (btn && nav) {
+      function closeMenu() {
+        nav.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = 'Menu';
+        document.body.classList.remove('nav-open');
+      }
+
+      btn.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.textContent = open ? 'Close' : 'Menu';
+        document.body.classList.toggle('nav-open', open);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+          btn.textContent = 'Menu';
+          closeMenu();
+          btn.focus();
+        }
+      });
+      nav.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', closeMenu);
+      });
+    }
+
+    (function initExperienceCapture() {
+      var form = document.getElementById('experience-capture-form');
+      if (!form) return;
+      var confirm = document.getElementById('experience-capture-confirm');
+      var error = document.getElementById('experience-capture-error');
+      var submitBtn = form.querySelector('button[type="submit"]');
+      var hpInput = form.querySelector('[name="hp"]');
+      var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      var TOPIC_MAX = 500;
+      var ANSWER_MAX = 12000;
+      var EMAIL_MAX = 254;
+
+      function showError() {
+        if (error) error.hidden = false;
+      }
+
+      function hideError() {
+        if (error) error.hidden = true;
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        hideError();
+        var topicInput = form.querySelector('[name="topic"]');
+        var answerInput = form.querySelector('[name="ai_answer"]');
+        var emailInput = form.querySelector('[name="email"]');
+        var topic = topicInput.value.trim();
+        var aiAnswer = answerInput.value.trim();
+        var email = emailInput.value.trim();
+        var hp = hpInput ? hpInput.value : '';
+
+        if (!topic || topic.length > TOPIC_MAX) return;
+        if (!aiAnswer || aiAnswer.length > ANSWER_MAX) return;
+        if (!email || email.length > EMAIL_MAX || !emailPattern.test(email)) {
+          emailInput.focus();
+          return;
+        }
+
+        submitBtn.disabled = true;
+
+        fetch('/api/experience', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            aiAnswer: aiAnswer,
+            email: email,
+            hp: hp
+          })
+        })
+          .then(function (response) {
+            return response.json().then(function (data) {
+              return { ok: response.ok, data: data };
+            });
+          })
+          .then(function (result) {
+            if (result.data && result.data.ok) {
+              form.hidden = true;
+              confirm.hidden = false;
+              confirm.focus();
+              return;
+            }
+            showError();
+            submitBtn.disabled = false;
+          })
+          .catch(function () {
+            showError();
+            submitBtn.disabled = false;
+          });
+      });
+    })();
+
+    var prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Scroll reveal — section stagger + standalone elements (gap, hero, proof strip)
+    if (prefersReducedMotion) {
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        section.classList.add('is-revealed');
+      });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        el.classList.add('is-visible');
+      });
+    } else if ('IntersectionObserver' in window) {
+      var sectionIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            sectionIo.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0, rootMargin: '0px 0px -4% 0px' });
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        sectionIo.observe(section);
+      });
+
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        if (el.closest('[data-reveal-section]')) return;
+        io.observe(el);
+      });
+    } else {
+      document.querySelectorAll('[data-reveal-section]').forEach(function (section) {
+        section.classList.add('is-revealed');
+      });
+      document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(function (el) {
+        el.classList.add('is-visible');
+      });
+    }
+
+    // Ephemeral beat — Volunteer Gap–style word reveal, then trace ghost
+    (function initEphemeralAnimation() {
+      var section = document.querySelector('#ephemeral-h2');
+      section = section && section.closest('[data-reveal-section]');
+      if (!section) return;
+
+      var words = section.querySelectorAll('.ephemeral-word--scroll');
+      var traceLine = section.querySelector('.ephemeral-line--trace');
+      var copy = section.querySelector('.ephemeral-copy');
+      if (!words.length) return;
+
+      var wordStagger = 220;
+      var wordDuration = 800;
+      var holdAfterReveal = 1900;
+      var paragraphDelayAfterReveal = 600;
+      var revealEnd = (words.length - 1) * wordStagger + wordDuration;
+
+      if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+        section.classList.add('ephemeral-static');
+        words.forEach(function (word) { word.classList.add('is-visible'); });
+        if (copy) copy.classList.add('is-visible');
+        return;
+      }
+
+      var started = false;
+
+      function startReveal() {
+        if (started) return;
+        started = true;
+        words.forEach(function (word, i) {
+          setTimeout(function () {
+            word.classList.add('is-visible');
+          }, i * wordStagger);
+        });
+        setTimeout(function () {
+          if (copy) copy.classList.add('is-visible');
+        }, revealEnd + paragraphDelayAfterReveal);
+        setTimeout(function () {
+          if (traceLine) traceLine.classList.add('is-ghost');
+        }, revealEnd + holdAfterReveal);
+      }
+
+      var ephemeralIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.4) {
+            startReveal();
+            ephemeralIo.unobserve(section);
+          }
+        });
+      }, { threshold: [0, 0.4, 0.5] });
+
+      ephemeralIo.observe(section);
+    })();
+
+    // Scroll-linked aurora intensity — sections wake at viewport center
+    (function initSectionAuroraIntensity() {
+      if (prefersReducedMotion) return;
+      var scenes = document.querySelectorAll('.section-scene');
+      if (!scenes.length) return;
+
+      function updateScenes() {
+        var mid = window.innerHeight * 0.5;
+        scenes.forEach(function (section) {
+          var rect = section.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > window.innerHeight) {
+            section.classList.remove('is-aurora-peak', 'is-aurora-settle');
+            return;
+          }
+          var center = rect.top + rect.height * 0.5;
+          var dist = Math.abs(center - mid);
+          var band = Math.min(window.innerHeight * 0.28, Math.max(rect.height * 0.35, 120));
+          section.classList.remove('is-aurora-peak', 'is-aurora-settle');
+          if (dist < band * 0.4) {
+            section.classList.add('is-aurora-peak');
+          } else if (dist < band) {
+            section.classList.add('is-aurora-settle');
+          }
+        });
+      }
+
+      var ticking = false;
+      window.addEventListener('scroll', function () {
+        if (!ticking) {
+          requestAnimationFrame(function () {
+            updateScenes();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', updateScenes, { passive: true });
+      updateScenes();
+    })();
+
+    // Value flow — section inview + signal trace draw + sequential dot emphasis
+    (function initValueFlow() {
+      var valueSection = document.querySelector('.value--flow');
+      var valueBeats = document.querySelector('.value__beats');
+      var dots = valueBeats ? Array.prototype.slice.call(valueBeats.querySelectorAll('.value__beat-dot')) : [];
+      if (!valueSection || !valueBeats) return;
+
+      var dotDurations = [2500, 3500, 2500, 2500, 2500];
+      var dotPauseAll = 600;
+      var dotIndex = 0;
+      var dotTimer = null;
+      var dotRunning = false;
+
+      function clearDots() {
+        dots.forEach(function (dot) { dot.classList.remove('is-active'); });
+      }
+
+      function setDotActive(i) {
+        dots.forEach(function (dot, n) {
+          dot.classList.toggle('is-active', n === i);
+        });
+      }
+
+      function stopDotSequence() {
+        if (dotTimer) window.clearTimeout(dotTimer);
+        dotTimer = null;
+        clearDots();
+        dotRunning = false;
+        dotIndex = 0;
+      }
+
+      function scheduleDotStep() {
+        if (!valueSection.classList.contains('is-inview') || prefersReducedMotion) {
+          stopDotSequence();
+          return;
+        }
+        setDotActive(dotIndex);
+        var dur = dotDurations[dotIndex];
+        var next = (dotIndex + 1) % dots.length;
+        dotIndex = next;
+        if (next === 0) {
+          dotTimer = window.setTimeout(function () {
+            clearDots();
+            dotTimer = window.setTimeout(scheduleDotStep, dotPauseAll);
+          }, dur);
+        } else {
+          dotTimer = window.setTimeout(scheduleDotStep, dur);
+        }
+      }
+
+      function startDotSequence() {
+        if (prefersReducedMotion || dotRunning || !dots.length) return;
+        dotRunning = true;
+        dotIndex = 0;
+        scheduleDotStep();
+      }
+
+      if (prefersReducedMotion) {
+        dots.forEach(function (dot) {
+          dot.style.opacity = '0.85';
+          dot.style.boxShadow = '0 0 8px rgba(222, 111, 56, 0.35)';
+        });
+      }
+
+      if ('IntersectionObserver' in window) {
+        var valueIo = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            valueSection.classList.toggle('is-inview', entry.isIntersecting);
+            if (entry.isIntersecting) {
+              valueBeats.classList.add('is-traced');
+              startDotSequence();
+            } else {
+              stopDotSequence();
+            }
+          });
+        }, { threshold: [0, 0.3] });
+        valueIo.observe(valueSection);
+      } else {
+        valueSection.classList.add('is-inview');
+        valueBeats.classList.add('is-traced');
+        startDotSequence();
+      }
+    })();
+
+    // Thesis diagram — draw diverging lines on viewport entry, then live pulses
+    (function initDivergenceDraw() {
+      var divergence = document.querySelector('.divergence');
+      if (!divergence) return;
+
+      var paths = divergence.querySelectorAll('.divergence__path');
+      paths.forEach(function (path) {
+        var len = path.getTotalLength();
+        path.style.setProperty('--path-len', len);
+        path.style.strokeDasharray = len;
+        path.style.strokeDashoffset = len;
+      });
+
+      function drawDiagram() {
+        var intended = divergence.querySelector('.divergence__path--intended');
+        var drift = divergence.querySelector('.divergence__path--drift');
+        divergence.classList.add('is-drawn');
+        if (intended) intended.style.strokeDashoffset = '0';
+        if (drift) {
+          window.setTimeout(function () {
+            drift.style.strokeDashoffset = '0';
+            divergence.classList.add('is-drift-drawn');
+          }, 1400);
+        }
+        if (!prefersReducedMotion) {
+          window.setTimeout(function () {
+            divergence.classList.add('is-live');
+          }, 4200);
+        }
+      }
+
+      if (prefersReducedMotion) {
+        divergence.classList.add('is-drawn', 'is-drift-drawn');
+        paths.forEach(function (path) {
+          path.style.strokeDashoffset = '0';
+        });
+        divergence.classList.add('is-live');
+        return;
+      }
+
+      if ('IntersectionObserver' in window) {
+        var divIo = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              drawDiagram();
+              divIo.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.3, rootMargin: '0px 0px -4% 0px' });
+        divIo.observe(divergence);
+      } else {
+        drawDiagram();
+      }
+    })();
+
+    // Volunteer Gap — scroll-linked line reveal within section
+    (function initGapScrollReveal() {
+      var gapSection = document.querySelector('.gap');
+      var lines = gapSection ? Array.prototype.slice.call(gapSection.querySelectorAll('.gap__line--scroll')) : [];
+      if (!gapSection || !lines.length) return;
+
+      var thresholdsDesktop = [0.06, 0.20, 0.34, 0.48];
+      var thresholdsMobile = [0.03, 0.12, 0.22, 0.32];
+
+      function getGapThresholds() {
+        return window.innerWidth <= 900 ? thresholdsMobile : thresholdsDesktop;
+      }
+
+      function updateGapLines() {
+        var rect = gapSection.getBoundingClientRect();
+        var vh = window.innerHeight;
+        var travel = Math.max(rect.height + vh * 0.35, 1);
+        var scrolled = vh * 0.82 - rect.top;
+        var progress = Math.max(0, Math.min(1, scrolled / travel));
+        var thresholds = getGapThresholds();
+
+        lines.forEach(function (line, i) {
+          if (progress >= thresholds[i]) {
+            line.classList.add('is-visible');
+          }
+        });
+      }
+
+      if (prefersReducedMotion) {
+        lines.forEach(function (line) { line.classList.add('is-visible'); });
+        return;
+      }
+
+      var gapTicking = false;
+      window.addEventListener('scroll', function () {
+        if (!gapTicking) {
+          requestAnimationFrame(function () {
+            updateGapLines();
+            gapTicking = false;
+          });
+          gapTicking = true;
+        }
+      }, { passive: true });
+      window.addEventListener('resize', updateGapLines, { passive: true });
+      updateGapLines();
+    })();
+
+    // Hero particulate texture
+    (function initHeroDust() {
+      if (prefersReducedMotion) return;
+      if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) return;
+      var dust = document.querySelector('.hero__dust');
+      if (!dust) return;
+      for (var i = 0; i < 50; i++) {
+        var p = document.createElement('span');
+        p.className = 'hero__particle';
+        p.style.setProperty('--px', (8 + Math.random() * 84).toFixed(2) + '%');
+        p.style.setProperty('--py', (6 + Math.random() * 88).toFixed(2) + '%');
+        p.style.setProperty('--pd', (-Math.random() * 90).toFixed(1) + 's');
+        p.style.setProperty('--dur', (70 + Math.random() * 80).toFixed(0) + 's');
+        p.style.setProperty('--drift-x', ((Math.random() - 0.5) * 28).toFixed(1) + 'px');
+        p.style.setProperty('--drift-y', ((Math.random() - 0.5) * 22).toFixed(1) + 'px');
+        dust.appendChild(p);
+      }
+    })();
+
+    // Cursor sensing — monolith proximity glow
+    var prefersReduced = prefersReducedMotion;
+    var isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    var monolith = document.getElementById('hero-monolith');
+    if (!prefersReduced && !isTouch && monolith) {
+      var prox = 0, tprox = 0;
+      var maxRadius = 720;
+      var rafId = null;
+      var monolithText = monolith.querySelector('.hero__monolith-text');
+
+      function step() {
+        var dp = tprox - prox;
+        prox += dp * 0.06;
+        monolithText.style.setProperty('--cursor-prox', prox.toFixed(4));
+        if (Math.abs(dp) > 0.005) {
+          rafId = requestAnimationFrame(step);
+        } else {
+          rafId = null;
+        }
+      }
+
+      window.addEventListener('mousemove', function (e) {
+        var rect = monolith.getBoundingClientRect();
+        var ix = rect.left + rect.width / 2;
+        var iy = rect.top + rect.height / 2;
+        var dx = e.clientX - ix, dy = e.clientY - iy;
+        var dist = Math.sqrt(dx*dx + dy*dy);
+        tprox = Math.max(0, Math.min(0.7, 1 - dist / maxRadius));
+        if (!rafId) rafId = requestAnimationFrame(step);
+      }, { passive: true });
+
+      window.addEventListener('mouseleave', function () {
+        tprox = 0;
+        if (!rafId) rafId = requestAnimationFrame(step);
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

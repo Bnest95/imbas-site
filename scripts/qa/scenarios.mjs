@@ -2431,14 +2431,18 @@ export const SCENARIOS = {
   // state as it stands so that the structural work coming next has something to diff
   // against.
 
+  // The v4.4 refresh (2026-10-29) moved Your Experience through Case Archive off the
+  // homepage and onto /research.html verbatim. The two frames that photographed them follow
+  // the regions to their new page and keep their names, so each frame's history stays one
+  // continuous record rather than ending on one page and restarting under a new name.
   "home-experience": {
     name: "home-experience",
-    page: "/index.html",
+    page: "/research.html",
     drivable: true,
     canned: true,
-    state: "The homepage's experience region — the loop described in prose beside the two ways into it",
+    state: "The experience region, on the research page since the v4.4 refresh — the loop described in prose beside the two ways into it",
     expected:
-      "The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This is the surface a later homepage rebuild is most likely to replace outright, so it is framed on its own rather than folded into a picture of the whole page.",
+      "The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This was the surface a homepage rebuild was most likely to replace, and the v4.4 refresh moved it to /research.html unchanged, so it is framed on its own rather than folded into a picture of the whole page.",
     routes: {},
     steps: [{ waitFor: ".your-experience__layout" }],
     // Both-viewport text only. "Suggest an investigation" and "Reviewed, not published
@@ -2456,12 +2460,12 @@ export const SCENARIOS = {
 
   "home-archive-preview": {
     name: "home-archive-preview",
-    page: "/index.html",
+    page: "/research.html",
     drivable: true,
     canned: true,
-    state: "The homepage's archive preview — what the record claims about itself, above the featured case",
+    state: "The archive preview, on the research page since the v4.4 refresh — what the record claims about itself, above the featured case",
     expected:
-      "The strip where the archive describes its own extent and the rubric that says how a case is read. This is the homepage surface the numbers custody correction governs: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product.",
+      "The strip where the archive describes its own extent and the rubric that says how a case is read. This is the surface the numbers custody correction governs, on whichever page carries it: it is where a count would go if one were put back, and it currently states extent without one. A third frame is justified here and nowhere else on this page because this is the only region whose content is an assertion about the record rather than an explanation of the product.",
     routes: {},
     steps: [{ waitFor: ".hp-arc-intro" }],
     assertText: [
@@ -2478,18 +2482,19 @@ export const SCENARIOS = {
     page: "/advisory.html",
     drivable: true,
     canned: true,
-    state: "Advisory, the masthead — the heading, the lede, and the thesis under it",
+    state: "Advisory, the hero — the heading, the lede, and the two ways to act under it",
     expected:
-      "The proposition the page opens with, in three parts: the heading, the sentence naming what the advisory work is for, and the thesis that says why both halves belong on one page. A later Advisory restructure changes this first, so it is framed on its own.",
+      "The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Email me and the link down to what the work covers. A later Advisory restructure changes this first, so it is framed on its own.",
     routes: {},
-    steps: [{ waitFor: ".adv-masthead" }],
+    steps: [{ waitFor: ".adv-hero" }],
     assertText: [
-      "Get found. Get faster.",
-      "I help businesses use AI to win more customers, remove expensive repetitive work, and let the same team do more.",
-      "AI is changing both sides of the business at once",
+      "make a difference in your business.",
+      "I start by understanding what you",
+      "Email me",
+      "What I take on",
     ],
-    assertSelector: ".adv-masthead",
-    focus: ".adv-masthead",
+    assertSelector: ".adv-hero",
+    focus: ".adv-hero",
   },
 
   "advisory-boundaries": {
@@ -2497,19 +2502,39 @@ export const SCENARIOS = {
     page: "/advisory.html",
     drivable: true,
     canned: true,
-    state: "Advisory, the practice terms — the three commitments, including the wall between advisory work and published measurement",
+    state: "Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement",
     expected:
-      "Three statements, and the third is the one that matters most to the rest of the tree: advisory clients do not influence Imbas's public methods, measurements, or findings, and a business under advice is not published into measurement work without separate consent. The other two say what is not promised and what stays confidential. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose.",
+      "The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose.",
     routes: {},
-    steps: [{ waitFor: ".adv-practice" }],
+    steps: [{ waitFor: ".adv-terms" }],
     assertText: [
-      "No promises about rankings or AI answers. Nobody honestly controls those.",
-      "Your material stays yours.",
-      "Advisory clients do not influence Imbas",
-      "are not included in published Imbas measurement work without separate consent and governance.",
+      "Your material stays confidential",
+      "Advisory clients don",
+      "public methods, measurements, or findings",
+      "Independence policy",
     ],
-    assertSelector: ".adv-practice",
-    focus: ".adv-practice",
+    assertSelector: ".adv-terms",
+    focus: ".adv-terms",
+  },
+
+  "home-tools": {
+    name: "home-tools",
+    page: "/index.html",
+    drivable: true,
+    canned: true,
+    state: "The homepage's Tools section — the Reader card, with both of the Reader's uses described",
+    expected:
+      "The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the two paragraphs (check an answer; choose what the next answer should do differently), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here.",
+    routes: {},
+    steps: [{ waitFor: ".tool-card--reader" }],
+    assertText: [
+      "Free to use.",
+      "steer what comes next.",
+      "Paste an AI answer to check what may be missing.",
+      "Open the Reader",
+    ],
+    assertSelector: ".tool-card--reader",
+    focus: ".tool-card--reader h3",
   },
 };
 
@@ -2597,18 +2622,19 @@ export const PENDING_SCENARIOS = {
     page: "/index.html",
     drivable: true,
     canned: true,
-    state: "The homepage as it first arrives — header, the instrument line, the monolith, and the one action",
+    state: "The homepage as it first arrives — header, the eyebrow line, the monolith, and the two actions",
     expected:
-      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the line that says what Imbas is; the IMBAS monolith and the sentence under it; and one action, Test your AI, with the sentence that says what pressing it involves. If a rebuild moves the action, drops the instrument line, or changes the navigation, this frame moves.",
+      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the eyebrow line that says what Imbas does; the IMBAS monolith and the sentence under it; and two actions, Try the Reader and AI advisory. The v4.4 refresh rebuilt this viewport, and its correction pass removed the line that sat under the actions; these assertions describe the corrected one. If a rebuild moves the actions, drops the eyebrow line, or changes the navigation, this frame moves.",
     routes: {},
     // The hero markup ships complete, so the only step is the wait that proves the
     // composition is on screen when the frame is taken. The header's injected control
     // is waited on by the page readiness rule before any step runs.
     steps: [{ waitFor: ".hero__center" }],
     assertText: [
-      "The Inspection Layer for AI",
-      "Test your AI",
-      "Paste an answer. See what surfaced, what was missing, and how it was shaped.",
+      "Tools, research and advisory",
+      "Try the Reader",
+      "AI advisory",
+      "AI ought to make people more capable.",
     ],
     assertSelector: ".hero__capture-block",
     // Framed on the centre column rather than the whole hero: the hero is a full

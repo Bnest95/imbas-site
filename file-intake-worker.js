@@ -38,6 +38,7 @@
 // than run a bar off a timer — which measures the clock and calls it the file — this
 // posts the stage it actually entered and lets the surface show an indeterminate state.
 
+import "./map-upsert-polyfill.js";
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
 import { readPdf } from "./file-intake-pdfjs.js";
 import { detectFileFindings } from "./file-detectors.js";

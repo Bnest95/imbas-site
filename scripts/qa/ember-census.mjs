@@ -1503,6 +1503,90 @@ export const POPULATION_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+
+  // The board's 45th scenario. This entry follows the two 2026-09-08 source reseals in the
+  // walk; nothing under this census's source list was edited after them, so it carries the
+  // three governed hashes as today's extraction measures them.
+  {
+    date: "2026-10-29",
+    authorizing_change:
+      "Site refresh v4.4, PR #209, branch claude/site-refresh-v4-4 — implementation brief section " +
+      "3 item 6 (founder-authorized): point the frames for sections that moved at research.html " +
+      "and add one for the homepage's new Tools section. home-tools registers that section on the " +
+      "acceptance board. governedScenarios() is the board registry, so the census population grew " +
+      "with it. index.html mounts no workbench; the Tools section shows a capture of the Reader's " +
+      "chooser as an image and links to the Reader, so it renders no .wb-reader-v2__result region " +
+      "and contributes no ember spend to measure. The same change repointed four retained " +
+      "scenarios without changing a name or a classification: home-experience and " +
+      "home-archive-preview now drive /research.html, where their regions moved verbatim, and " +
+      "advisory-masthead and advisory-boundaries drive the rewritten advisory.html; none of those " +
+      "pages mounts the workbench, so all four stay outside the region, as recorded on 2026-08-24. " +
+      "The branch edited workbench-app.jsx outside its CSS template literals only, so no governed " +
+      "source hash moved.",
+    fingerprint_before: "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af",
+    fingerprint_after: "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c",
+    population_before: [
+      "advisory-boundaries", "advisory-masthead", "chip-arrival", "chip-delta-held",
+      "chips-from-inspection", "claim-authorized-match", "claim-authorized-mismatch",
+      "claim-client-declaration", "claim-unrecognized-source", "curated-readout",
+      "deposit-fixture", "export-paired", "export-single", "first-load", "home-archive-preview",
+      "home-experience", "input-integrity-intake", "input-integrity-sample", "input-integrity-zero",
+      "paired-empty", "paired-legacy", "paired-legacy-rows", "paired-matched",
+      "paired-rejected-snippet", "paired-unmatched", "provenance-complete", "provenance-partial",
+      "public-example", "public-example-provenance", "read-capacity", "read-error",
+      "read-in-flight", "register-overflow", "register-overflow-expanded", "share-consent",
+      "share-legacy", "share-not-found", "share-paired-no-model", "share-receipt", "share-single",
+      "share-single-empty", "single-empty", "single-empty-read", "single-findings",
+    ],
+    scenarios_added: ["home-tools"],
+    scenarios_removed: [],
+    added_scenario_dispositions: [
+      {
+        scenario: "home-tools",
+        renders_region: false,
+        note:
+          "index.html, the Tools section under the hero, framed on the Reader card's headline. The " +
+          "homepage does not mount the workbench: the Reader's chooser appears there as a static " +
+          "capture, so the Reader result region is not on this page.",
+      },
+    ],
+    region_rendering_before: [
+      "chip-delta-held", "chips-from-inspection", "claim-authorized-match",
+      "claim-authorized-mismatch", "claim-client-declaration", "claim-unrecognized-source",
+      "deposit-fixture", "export-paired", "export-single", "paired-empty", "paired-legacy",
+      "paired-legacy-rows", "paired-matched", "paired-rejected-snippet", "paired-unmatched",
+      "provenance-complete", "provenance-partial", "read-capacity", "read-error",
+      "register-overflow", "register-overflow-expanded", "share-consent", "single-empty",
+      "single-empty-read", "single-findings",
+    ],
+    sources_unchanged: [
+      { path: "styles.css", extraction: "whole file", sha256: "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012" },
+      { path: "workbench.css", extraction: "whole file", sha256: "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b" },
+      { path: "workbench-app.jsx", extraction: "CSS template literals only", sha256: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146" },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── THE SECOND POPULATION MOVE FOUND THE ROUTE CLOSED, 2026-08-24 ────────────────
