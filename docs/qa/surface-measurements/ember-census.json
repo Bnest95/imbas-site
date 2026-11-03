@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "5becea2759734f5d5deb85576fcbb38e459653a7",
+  "measured_at_master": "a8e0fc54f7f08e914d6a190166850e5a6c990f4e",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -30,6 +30,7 @@
       "first-load",
       "home-archive-preview",
       "home-experience",
+      "home-tools",
       "input-integrity-intake",
       "input-integrity-sample",
       "input-integrity-zero",
@@ -77,7 +78,7 @@
         "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
       }
     ],
-    "sha256": "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af"
+    "sha256": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c"
   },
   "provenance": {
     "reseal_rule": {
@@ -383,9 +384,9 @@
         ],
         "free_alpha_inventory_identical": true,
         "measured_state_moved": false,
-        "is_terminal_source_record": true,
-        "authorized_edits_hold_live": true,
-        "sources_recorded_unmoved_hold_live": true,
+        "is_terminal_source_record": false,
+        "authorized_edits_hold_live": null,
+        "sources_recorded_unmoved_hold_live": null,
         "carries_population_evidence": []
       }
     ],
@@ -1101,7 +1102,7 @@
           "single-empty-read",
           "single-findings"
         ],
-        "is_newest_entry": true,
+        "is_newest_entry": false,
         "is_terminal_source_record": false,
         "scenarios_added_observed": [
           "chip-delta-held"
@@ -1168,6 +1169,249 @@
         "retained_scenarios_unchanged": true,
         "eligible": true,
         "failures": []
+      },
+      {
+        "date": "2026-10-29",
+        "authorizing_change": "Site refresh v4.4, PR #209, branch claude/site-refresh-v4-4 — implementation brief section 3 item 6 (founder-authorized): point the frames for sections that moved at research.html and add one for the homepage's new Tools section. home-tools registers that section on the acceptance board. governedScenarios() is the board registry, so the census population grew with it. index.html mounts no workbench; the Tools section shows a capture of the Reader's chooser as an image and links to the Reader, so it renders no .wb-reader-v2__result region and contributes no ember spend to measure. The same change repointed four retained scenarios without changing a name or a classification: home-experience and home-archive-preview now drive /research.html, where their regions moved verbatim, and advisory-masthead and advisory-boundaries drive the rewritten advisory.html; none of those pages mounts the workbench, so all four stay outside the region, as recorded on 2026-08-24. The branch edited workbench-app.jsx outside its CSS template literals only, so no governed source hash moved.",
+        "fingerprint_before": "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af",
+        "fingerprint_after": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c",
+        "population_before": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "chip-arrival",
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "home-archive-preview",
+          "home-experience",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "scenarios_added": [
+          "home-tools"
+        ],
+        "scenarios_removed": [],
+        "added_scenario_dispositions": [
+          {
+            "scenario": "home-tools",
+            "renders_region": false,
+            "note": "index.html, the Tools section under the hero, framed on the Reader card's headline. The homepage does not mount the workbench: the Reader's chooser appears there as a static capture, so the Reader result region is not on this page."
+          }
+        ],
+        "region_rendering_before": [
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "sources_unchanged": [
+          {
+            "path": "styles.css",
+            "extraction": "whole file",
+            "sha256": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012"
+          },
+          {
+            "path": "workbench.css",
+            "extraction": "whole file",
+            "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
+          },
+          {
+            "path": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146"
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "population_after": [
+          "advisory-boundaries",
+          "advisory-masthead",
+          "chip-arrival",
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "curated-readout",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "first-load",
+          "home-archive-preview",
+          "home-experience",
+          "home-tools",
+          "input-integrity-intake",
+          "input-integrity-sample",
+          "input-integrity-zero",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "public-example",
+          "public-example-provenance",
+          "read-capacity",
+          "read-error",
+          "read-in-flight",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "share-legacy",
+          "share-not-found",
+          "share-paired-no-model",
+          "share-receipt",
+          "share-single",
+          "share-single-empty",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "is_newest_entry": true,
+        "is_terminal_source_record": true,
+        "scenarios_added_observed": [
+          "home-tools"
+        ],
+        "scenarios_removed_observed": [],
+        "region_rendering_after": [
+          "chip-delta-held",
+          "chips-from-inspection",
+          "claim-authorized-match",
+          "claim-authorized-mismatch",
+          "claim-client-declaration",
+          "claim-unrecognized-source",
+          "deposit-fixture",
+          "export-paired",
+          "export-single",
+          "paired-empty",
+          "paired-legacy",
+          "paired-legacy-rows",
+          "paired-matched",
+          "paired-rejected-snippet",
+          "paired-unmatched",
+          "provenance-complete",
+          "provenance-partial",
+          "read-capacity",
+          "read-error",
+          "register-overflow",
+          "register-overflow-expanded",
+          "share-consent",
+          "single-empty",
+          "single-empty-read",
+          "single-findings"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "fingerprint_before_recomputed": "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af",
+        "fingerprint_after_recomputed": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c",
+        "source_hashes_identical": true,
+        "counts_identical": true,
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "population_is_the_only_moved_input": true,
+        "population_delta_matches_record": true,
+        "added_scenario_dispositions_hold": true,
+        "retained_scenarios_unchanged": true,
+        "eligible": true,
+        "failures": []
       }
     ],
     "population_reseal_chain": {
@@ -1205,14 +1449,28 @@
           "holds": true
         },
         {
-          "link": "2026-08-25 → live",
+          "link": "2026-08-25 → 2026-10-29",
           "dimension": "population",
           "produced": 44,
           "started_from": 44,
           "holds": true
         },
         {
-          "link": "2026-08-25 → live",
+          "link": "2026-08-25 → 2026-10-29",
+          "dimension": "region",
+          "produced": 25,
+          "started_from": 25,
+          "holds": true
+        },
+        {
+          "link": "2026-10-29 → live",
+          "dimension": "population",
+          "produced": 45,
+          "started_from": 45,
+          "holds": true
+        },
+        {
+          "link": "2026-10-29 → live",
           "dimension": "region",
           "produced": 25,
           "started_from": 25,
@@ -1229,9 +1487,9 @@
         "workbench.css"
       ],
       "terminal": {
-        "route": "source",
-        "date": "2026-09-08",
-        "fingerprint_after": "3f1de7e1af7f85ea79db5240b31832901af3cc6e7c196e8b7554b423d34d03af"
+        "route": "population",
+        "date": "2026-10-29",
+        "fingerprint_after": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c"
       },
       "links": [
         {
@@ -1289,9 +1547,18 @@
           "holds": true
         },
         {
-          "link": "2026-09-08/source → live",
+          "link": "2026-09-08/source → 2026-10-29/population",
           "path": "styles.css",
-          "route": "source",
+          "route": "population",
+          "kind": "held",
+          "started_from": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "produced": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "holds": true
+        },
+        {
+          "link": "2026-10-29/population → live",
+          "path": "styles.css",
+          "route": "population",
           "kind": "terminal",
           "produced": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
           "live": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
@@ -1352,9 +1619,18 @@
           "holds": true
         },
         {
-          "link": "2026-09-08/source → live",
+          "link": "2026-09-08/source → 2026-10-29/population",
           "path": "workbench-app.jsx",
-          "route": "source",
+          "route": "population",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-10-29/population → live",
+          "path": "workbench-app.jsx",
+          "route": "population",
           "kind": "terminal",
           "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
           "live": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
@@ -1415,9 +1691,18 @@
           "holds": true
         },
         {
-          "link": "2026-09-08/source → live",
+          "link": "2026-09-08/source → 2026-10-29/population",
           "path": "workbench.css",
-          "route": "source",
+          "route": "population",
+          "kind": "held",
+          "started_from": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "holds": true
+        },
+        {
+          "link": "2026-10-29/population → live",
+          "path": "workbench.css",
+          "route": "population",
           "kind": "terminal",
           "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
           "live": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",

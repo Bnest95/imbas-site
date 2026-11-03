@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 863
+scroll_offset: 960
 timezone: UTC
 url: /input-integrity.html
 viewport: 1440x900
@@ -26,7 +26,7 @@ a href="/"
 span "Imbas"
 a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
-a "Evidence" href="/archive.html"
+a "Research" href="/research.html"
 a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false

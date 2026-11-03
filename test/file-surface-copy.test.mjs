@@ -143,10 +143,10 @@ test("every exported string constant reaches the space too", () => {
   assert.deepEqual(missing, [], `these exported strings are outside the linted space: ${missing.join(", ")}`);
 });
 
-test("RECEIPT: the space is 63 strings", () => {
+test("RECEIPT: the space is 64 strings", () => {
   // Pinned on purpose. A string added without re-reading this file lands the author in
   // the receipt, which is where the decision belongs.
-  assert.equal(STRINGS.length, 63);
+  assert.equal(STRINGS.length, 64);
 });
 
 // ── (2b) this module CONSUMES the instrument's conclusions, it does not own them ─
@@ -281,15 +281,16 @@ test("the sentence in the markup EQUALS the registry value its key names", () =>
 
 // Only the strata a reader meets before choosing a file are authored here. Everything in
 // the result region is rendered by input-integrity.js out of the same registry.
-test("RECEIPT: the page carries 12 authored sentences, every one of them from the registry", () => {
+test("RECEIPT: the page carries 13 authored sentences, every one of them from the registry", () => {
   const elements = copyElements(MAIN);
-  assert.equal(elements.length, 12);
+  assert.equal(elements.length, 13);
   assert.deepEqual(
     elements.map((e) => e.key),
     [
       "MASTHEAD.eyebrow",
       "MASTHEAD.title",
       "MASTHEAD.lede",
+      "MASTHEAD.example",
       "BOUNDARY.statement",
       "BOUNDARY.denials",
       "INTAKE.prompt",

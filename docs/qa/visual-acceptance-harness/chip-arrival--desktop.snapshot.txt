@@ -26,12 +26,12 @@ a href="/"
 span "Imbas"
 a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
-a "Evidence" href="/archive.html"
+a "Research" href="/research.html"
 a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
+p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped. Or choose an instruction to steer its next response."
 button "Hide your own follow-up" disabled=false expanded=true
 h2 "Tell your AI exactly what to do next."
 button "← Back to the Reader" disabled=false

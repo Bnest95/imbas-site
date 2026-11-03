@@ -335,9 +335,12 @@ test("expected is the registry projection, so it does not move when a run does",
   // the board — one scenario at two viewports, the terminal state of the steering loop with
   // a second answer compared and the first still held. Authorized 2026-08-25. At 88 the
   // count does not run ahead of the baselines, because all 88 are committed: the full board
-  // compares 88 snapshots and 88 images and matches every one.
+  // compares 88 snapshots and 88 images and matches every one. It moved from 88 to 90 when
+  // home-tools put the homepage's Tools section on the board in the v4.4 refresh — one
+  // scenario at two viewports. The same refresh moved home-experience and
+  // home-archive-preview to /research.html with their regions, which changes no count.
   const drivable = Object.keys(SCENARIOS).filter((n) => SCENARIOS[n].drivable);
-  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 88);
+  assert.equal(expectedInventory({ names: drivable, viewports: ["desktop", "mobile"] }).length, 90);
 });
 
 test("the inventory refuses a name the registry does not register", () => {

@@ -68,6 +68,12 @@ export const MASTHEAD = Object.freeze({
   lede:
     "A PDF's structure can carry more than its pages render. This reads that structure in your browser " +
     "and reports what the file instructs, with the evidence beside every statement.",
+  // An illustration, labelled as one: a case that could happen, not a file this surface has
+  // read. The v4.4 brief's wording said "hidden text"; this lane's threat-frame rule bars
+  // "hidden", so the sentence names what the page shows instead.
+  example:
+    "Example: a supplier's proposal could contain text that doesn't appear on the page, telling an AI " +
+    "assistant to favour its offer when comparing bids.",
 });
 
 // Item 10's boundary, led by what the surface does rather than by a list of denials.

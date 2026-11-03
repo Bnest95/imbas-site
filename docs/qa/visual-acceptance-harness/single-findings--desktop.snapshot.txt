@@ -678,7 +678,7 @@ a href="/"
 span "Imbas"
 a "Tools" href="/tools.html"
 a "AI Advisory" href="/advisory.html"
-a "Evidence" href="/archive.html"
+a "Research" href="/research.html"
 a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false

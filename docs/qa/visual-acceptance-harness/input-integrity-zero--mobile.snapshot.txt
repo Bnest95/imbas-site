@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1149
+scroll_offset: 1295
 timezone: UTC
 url: /input-integrity.html
 viewport: 375x812

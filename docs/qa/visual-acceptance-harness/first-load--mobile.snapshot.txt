@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 174
+scroll_offset: 196
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -26,7 +26,7 @@ a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
 h1 "Check your AI answer."
-p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped."
+p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped. Or choose an instruction to steer its next response."
 button disabled=false
 span "Paste Your Own"
 span "Bring any AI answer."

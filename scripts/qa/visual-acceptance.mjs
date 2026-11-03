@@ -454,6 +454,12 @@ const PAGE_READINESS = {
     react: false,
     rendered: ".site-header .nav-more",
   },
+  // The research page is the same kind of document, and it carries the two regions the
+  // v4.4 refresh moved off the homepage. Same floor, for the same reason.
+  "/research.html": {
+    react: false,
+    rendered: ".site-header .nav-more",
+  },
 };
 
 export function resolveReadiness(page) {

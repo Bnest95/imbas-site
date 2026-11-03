@@ -7863,7 +7863,7 @@ function Workbench() {
               Check your AI answer.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped.
+              Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped. Or choose an instruction to steer its next response.
             </p>
             <ReaderWorkbench />
             <div className="wb-reader-v2__trust">
