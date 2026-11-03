@@ -2530,13 +2530,13 @@ export const SCENARIOS = {
     canned: true,
     state: "The homepage's Tools section — the Reader card, with both of the Reader's uses described",
     expected:
-      "The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the two paragraphs (check an answer; choose what the next answer should do differently), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here.",
+      "The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the one paragraph that carries both uses (see what surfaced; pick what should change and compare), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here.",
     routes: {},
     steps: [{ waitFor: ".tool-card--reader" }],
     assertText: [
       "Free to use.",
       "steer what comes next.",
-      "Paste an AI answer to check what may be missing.",
+      "See what surfaced, what may be missing, and how it was shaped.",
       "Open the Reader",
     ],
     assertSelector: ".tool-card--reader",
