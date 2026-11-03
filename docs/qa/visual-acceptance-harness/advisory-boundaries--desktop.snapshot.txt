@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 3737
+scroll_offset: 3657
 timezone: UTC
 url: /advisory.html
 viewport: 1440x900
@@ -36,7 +36,7 @@ p "A few lines about what you want to improve and how you handle it now are enou
 a "Email me" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me"
 span "→"
 p "brendan@imbaslabs.com"
-p "Your material stays confidential and never enters Imbas research without your written consent. Advisory clients don’t influence Imbas’s public methods, measurements, or findings. ."
+p "Your material stays confidential. Nothing from client work enters the Imbas public record without your written consent and separate governance. Advisory clients don’t influence Imbas’s public methods, measurements, or findings. ."
 a "Independence policy" href="/independence.html"
 p "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work."
 a "Home" href="/"

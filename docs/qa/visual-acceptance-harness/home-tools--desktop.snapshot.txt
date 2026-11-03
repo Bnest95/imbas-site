@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 652
+scroll_offset: 480
 timezone: UTC
 url: /index.html
 viewport: 1440x900
@@ -31,13 +31,15 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "The Reader is free. Check an answer or choose what you want your AI to do differently."
+button "Try the Reader" disabled=false
+a "AI advisory" href="/advisory.html"
+span "→"
 span "Tools"
 h2 "Free to use."
-figcaption "Real run · what the first answer left out"
 p "The Reader"
 h3 "Check your AI’s answer and steer what comes next."
 p "Paste an AI answer to check what may be missing."
 p "You can also choose what you want it to do differently: use the material you provided, show its sources, answer your actual question, or separate facts from assumptions. The Reader gives you an instruction to copy back into your AI. Bring back the reply to compare what changed."
 a "Open the Reader" href="/reader.html?reader=1"
 span "→"
+figcaption "Real run · what the first answer left out"

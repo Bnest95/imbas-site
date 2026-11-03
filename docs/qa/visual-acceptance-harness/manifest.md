@@ -63,14 +63,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `79cbfafbe8d796c6695264a52ffccc139a0aacb5e5fc88b5ae5ee7a4c2646f21` |
-| bytes | 624846 |
+| sha256 | `aee32e47d20f9736742e5b4a9080f63d72da274d190f87e8577854a25f828507` |
+| bytes | 718911 |
 | snapshot | `advisory-boundaries--desktop.snapshot.txt` |
-| snapshot sha256 | `7a2f7fccc9327c81be1bb76d7196edcb4dde73ee77a64da6fdebd9f58a2443e3` |
-| snapshot bytes | 2396 |
+| snapshot sha256 | `9c529b720baf7bcd3784f0294c24d6ccc577130b36f566bb61d9f6892951a871` |
+| snapshot bytes | 2445 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 3737 |
+| framed on | `.adv-terms` at scroll offset 3657 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -79,14 +79,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `3c4b37fd165d7c45f117a30a494a4e8b56ceaac5724c23da08a421cf9b6780c0` |
-| bytes | 553029 |
+| sha256 | `52d1e1ae6920ae5a3b309212a210c846da3a7d39547c0b4e8cc3a5fcd2d7bd3f` |
+| bytes | 608723 |
 | snapshot | `advisory-boundaries--mobile.snapshot.txt` |
-| snapshot sha256 | `b7f8e5b1e6922532cdc4beed863cc4cc2a6745889c575eac8d19be9d88903e65` |
-| snapshot bytes | 1501 |
+| snapshot sha256 | `c4c09ee877411bd8fd8bbcfa58c9d5986756155403c0ac2250265faa411a1e43` |
+| snapshot bytes | 1550 |
 | viewport | 375x812@3x (mobile) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 5946 |
+| framed on | `.adv-terms` at scroll offset 5765 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -95,11 +95,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `aeb4c91b6c75a56888f53204127602bbd405800eee1ced8c5b8d855be573eb61` |
-| bytes | 888036 |
+| sha256 | `5b5012be6b3decfe917d7b198a11d960e0aa13f276406c1d4f52807d2e37c721` |
+| bytes | 1000538 |
 | snapshot | `advisory-masthead--desktop.snapshot.txt` |
-| snapshot sha256 | `80e37083d31e8614a55c8a554e6ff60eb767cce52f5cf700c44caa1006106dbe` |
-| snapshot bytes | 1514 |
+| snapshot sha256 | `bd0a6db8a0e11e9099ba7fe8958672bd95a300673c703882496c0879dac87123` |
+| snapshot bytes | 1717 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
 | framed on | `.adv-hero` at scroll offset 0 |
@@ -111,8 +111,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5ac9ad2537d5901b74bb74232ce6d4bae8371bf47337cb70ce7787d20e06df06` |
-| bytes | 747449 |
+| sha256 | `2fb5383f2cdf885a43c5a94979de413b9447d0e1dadb037e57c1b5117c4184f7` |
+| bytes | 760862 |
 | snapshot | `advisory-masthead--mobile.snapshot.txt` |
 | snapshot sha256 | `7b1f7f2442a5de1a4184582394dc0a15cad276a683b4b82eff9a12b7e5a6259b` |
 | snapshot bytes | 1131 |
@@ -543,14 +543,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `bb8f468da5118f1dcd9066a6d6c5cb65d101d99142999167186d664b8d949be4` |
-| bytes | 610915 |
+| sha256 | `91b76ce02bac00893fcef550322ab5eb17f7be394023928f1d7a441704945d30` |
+| bytes | 634503 |
 | snapshot | `home-experience--desktop.snapshot.txt` |
-| snapshot sha256 | `2ddd97fff27fa9de91a50b3bfe882572338ec3f2917386ebd9d7d2c13e4db515` |
+| snapshot sha256 | `7305a597dcff1753e24eeb7ce8ec86d9fdf7666da209fa21456d1015297af295` |
 | snapshot bytes | 2036 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/research.html`, query `(none)` |
-| framed on | `.your-experience__layout` at scroll offset 706 |
+| framed on | `.your-experience__layout` at scroll offset 681 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The experience region, on the research page since the v4.4 refresh — the loop described in prose beside the two ways into it |
 | expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This was the surface a homepage rebuild was most likely to replace, and the v4.4 refresh moved it to /research.html unchanged, so it is framed on its own rather than folded into a picture of the whole page. |
@@ -559,14 +559,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `c192b5123b6220ec263e53e5fed692163a5be5b0aae354b71e3f4e2a42d15435` |
-| bytes | 552613 |
+| sha256 | `1eafaa5c91f6ad2c15c6b8b6cc435193810f022b15febc4202d6f588d2b5309a` |
+| bytes | 554260 |
 | snapshot | `home-experience--mobile.snapshot.txt` |
-| snapshot sha256 | `34576be947ba3bcc83cae327b12406a32c7f46b355a6e7502b23957fd0f774d4` |
+| snapshot sha256 | `56e4fa4badcb3bc4bcaf42392ba4293a9a939aef871fed3fcb056f87dfb099b3` |
 | snapshot bytes | 1454 |
 | viewport | 375x812@3x (mobile) |
 | url | `/research.html`, query `(none)` |
-| framed on | `.your-experience__layout` at scroll offset 527 |
+| framed on | `.your-experience__layout` at scroll offset 522 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The experience region, on the research page since the v4.4 refresh — the loop described in prose beside the two ways into it |
 | expected behaviour | The region that tells a reader what using Imbas is: bring an answer, get a Second Question back, ask it, and put the two side by side. Beside the prose sits the entrance — Open the Reader, under the line offering a run now. THE TWO FRAMES DIFFER HERE AND THAT IS THE POINT OF HAVING BOTH: the desktop frame also carries the suggestion form, and the mobile frame carries none of it, because `.experience-intake__secondary` is display:none under 700px and the `.experience-intake__mobile-suggest` block its stylesheet hands off to exists in no markup on this site. So the assertions below name only what both frames must show, and the desktop-only half is held by the desktop image. This was the surface a homepage rebuild was most likely to replace, and the v4.4 refresh moved it to /research.html unchanged, so it is framed on its own rather than folded into a picture of the whole page. |
@@ -575,14 +575,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `d9feecde549b7a0fc852e2ec98c19aecf36b349fb7928254d411ddc566a2d7c8` |
-| bytes | 563037 |
+| sha256 | `50ab141b077e588ed6c15c2b2181d34b453d474d96405765c503986f5881eb57` |
+| bytes | 956529 |
 | snapshot | `home-tools--desktop.snapshot.txt` |
-| snapshot sha256 | `252b380e8451e3911c64c55494c63778e6918cbb551ab9f408834f0783a6418f` |
-| snapshot bytes | 1428 |
+| snapshot sha256 | `c6971df3b791a41c112904f2bbf3aefe81cb5b57b60c2683120e9d3562537ce5` |
+| snapshot bytes | 1425 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.tool-card--reader h3` at scroll offset 652 |
+| framed on | `.tool-card--reader h3` at scroll offset 480 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's Tools section — the Reader card, with both of the Reader's uses described |
 | expected behaviour | The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the two paragraphs (check an answer; choose what the next answer should do differently), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here. |
@@ -591,14 +591,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `754fdf514c61a133436bf9223e9050068f2f9a970e7c2781cd2feccb15068c34` |
-| bytes | 494197 |
+| sha256 | `9483859a24823f9de20c125e725b33ce4fc030e7c2b4a6344c395d24fb377eb1` |
+| bytes | 718604 |
 | snapshot | `home-tools--mobile.snapshot.txt` |
-| snapshot sha256 | `7de993902ef2c773052cbc171c8e2fd16081958a9c899a57cb8f76a660cf6f0b` |
-| snapshot bytes | 946 |
+| snapshot sha256 | `c9ea236ebd65260c00237baa20eac17ede6d6e2e0f2a0fd309fcfad1314f71b0` |
+| snapshot bytes | 852 |
 | viewport | 375x812@3x (mobile) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.tool-card--reader h3` at scroll offset 616 |
+| framed on | `.tool-card--reader h3` at scroll offset 316 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's Tools section — the Reader card, with both of the Reader's uses described |
 | expected behaviour | The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the two paragraphs (check an answer; choose what the next answer should do differently), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here. |
