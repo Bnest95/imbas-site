@@ -13,8 +13,8 @@ on `/` or moved intact to `/research.html`; the preservation map in the refresh 
 
 | Element | Original (0c78ee9) | Now |
 |---|---|---|
-| Eyebrow | The Inspection Layer for AI | Tools, research and advisory |
-| Headline (`#hero-h1`) | Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out. | AI ought to make people more capable. (placeholder) |
+| Eyebrow | The Inspection Layer for AI | AI tools, research and implementation |
+| Headline (`#hero-h1`) | Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out. | Making AI work for you. (&ldquo;AI ought to make people more capable.&rdquo; now opens Why Imbas exists.) |
 | Button | Test your AI | Try the Reader · AI advisory |
 | Microcopy | Paste an answer. See what surfaced, what was missing, and how it was shaped. | (none) |
 

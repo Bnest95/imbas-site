@@ -2631,10 +2631,10 @@ export const PENDING_SCENARIOS = {
     // is waited on by the page readiness rule before any step runs.
     steps: [{ waitFor: ".hero__center" }],
     assertText: [
-      "Tools, research and advisory",
+      "AI tools, research and implementation",
       "Try the Reader",
       "AI advisory",
-      "AI ought to make people more capable.",
+      "Making AI work for you.",
     ],
     assertSelector: ".hero__capture-block",
     // Framed on the centre column rather than the whole hero: the hero is a full

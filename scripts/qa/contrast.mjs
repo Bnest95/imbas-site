@@ -164,6 +164,7 @@ export const STYLES = [
   // hidden measured it at 6.21 modal / 5.75 worst band at 1440 and 7.07 / 6.31 at 390.
   ".adv-work span",
   ".adv-built__label",
+  ".adv-built__cap",
   ".adv-textlink",
   ".tool-card__note",
   ".tool-card__shot figcaption",

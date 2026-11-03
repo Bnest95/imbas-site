@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imbas — Tools, research and AI advisory</title>
-  <meta name="description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
+  <title>Imbas — AI tools, research and implementation</title>
+  <meta name="description" content="Making AI work for you. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <link rel="canonical" href="https://www.imbaslabs.com/">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -15,15 +15,15 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.imbaslabs.com/">
   <meta property="og:site_name" content="Imbas">
-  <meta property="og:title" content="Imbas — Tools, research and AI advisory">
-  <meta property="og:description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
+  <meta property="og:title" content="Imbas — AI tools, research and implementation">
+  <meta property="og:description" content="Making AI work for you. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Imbas — Tools, research and AI advisory">
-  <meta name="twitter:description" content="AI ought to make people more capable. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
+  <meta name="twitter:title" content="Imbas — AI tools, research and implementation">
+  <meta name="twitter:description" content="Making AI work for you. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
   <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
 
@@ -74,6 +74,11 @@
   .hero2-adv { display: inline-flex; align-items: center; gap: .6rem; border: 1px solid var(--ember); color: var(--ember-bright); background: rgba(var(--ember-rgb), .08); font-family: var(--font-mono); font-size: max(.875rem, var(--mono-min)); letter-spacing: .16em; text-transform: uppercase; padding: 1.1rem 2rem; text-decoration: none; border-radius: 2px; }
   .hero2-adv:hover { background: rgba(var(--ember-rgb), .18); color: var(--ink-luminous); }
   @media (max-width: 600px) { .hero2-actions > * { width: 100%; } .hero2-actions .hero__capture button, .hero2-adv { width: 100%; justify-content: center; } .hero2-actions .hero__capture { display: flex; } }
+  /* The eyebrow needs 356px on one line at the 13px mono floor, so phones get two balanced, centred lines without the side rules. */
+  @media (max-width: 519px) {
+    main > .hero .hero__meta--instrument { text-align: center; text-wrap: balance; }
+    main > .hero .hero__meta--instrument::before, main > .hero .hero__meta--instrument::after { display: none; }
+  }
 
   /* Home bands. The original homepage already had two cool grounds: the Thesis slate
      (.compounding) and the Case Archive navy (.archive--home-preview). The new Tools and
@@ -198,7 +203,7 @@
     <div class="hero__stage">
 
       <div class="hero__meta hero__meta--instrument reveal">
-        <span class="hero__meta-copy">Tools, research and advisory</span>
+        <span class="hero__meta-copy">AI tools, research and implementation</span>
       </div>
 
       <div class="hero__center">
@@ -208,7 +213,7 @@
         </div>
 
         <h1 class="hero__subhead" id="hero-h1">
-          <span class="hero__subhead-line">AI ought to make people more capable.</span>
+          <span class="hero__subhead-line">Making AI work for you.</span>
         </h1>
 
         <div class="hero__capture-block hero2-actions">
@@ -282,14 +287,13 @@
       <h2 id="research-h2">Inspect what your AI surfaces&#8239;&mdash;&#8239;and what it leaves out.</h2>
       <p>Imbas turns invisible AI behavior into a measurable record. The full argument, the method and the case archive are on the research page:</p>
       <ul class="res-teaser__map" role="list">
-        <li><a href="/research.html#experience-label">Your Experience</a></li>
-        <li><a href="/research.html#ephemeral-h2">The answer appears. You read it. It&rsquo;s gone.</a></li>
+        <li><a href="/research.html#experience-label">Why answers disappear</a></li>
         <li><a href="/research.html#gap-h2">The Volunteer Gap</a></li>
-        <li><a href="/research.html#cat-h2">Three signal patterns Imbas tracks.</a></li>
-        <li><a href="/research.html#value-h2">How Imbas Works.</a></li>
-        <li><a href="/research.html#public-interest-h2">A public record keeps decisions anchored.</a></li>
-        <li><a href="/research.html#record-compounds-h2">Why This Compounds</a></li>
-        <li><a href="/research.html#archive">Case Archive</a></li>
+        <li><a href="/research.html#cat-h2">Three signal patterns</a></li>
+        <li><a href="/research.html#value-h2">How Imbas works</a></li>
+        <li><a href="/research.html#public-interest-h2">Why a public record</a></li>
+        <li><a href="/research.html#record-compounds-h2">Why it compounds</a></li>
+        <li><a href="/research.html#archive">The case archive</a></li>
       </ul>
       <div class="res-teaser__links">
         <a href="/research.html" class="gap__link"><span>Explore the research</span><span class="arrow" aria-hidden="true">&rarr;</span></a>
@@ -304,6 +308,7 @@
       <div class="exists-bridge">
         <h2 id="exists-heading" class="exists-bridge__heading reveal" data-stagger="label"><span class="exists-bridge__heading-prefix" aria-hidden="true">//</span><span class="exists-bridge__heading-accent">Why Imbas exists</span></h2>
         <div class="exists-bridge__label-rule" aria-hidden="true"></div>
+        <p class="exists-bridge__thesis reveal" data-stagger="heading">AI ought to make people more capable.</p>
         <p class="exists-bridge__thesis reveal" data-stagger="heading">Every answer shapes what you think, notice, and believe.</p>
         <p class="exists-bridge__problem reveal" data-stagger="heading">One answer is marginal. Across <span class="exists-bridge__scale">trillions of answers</span>, repeated patterns can reshape what people notice, believe, and act on. As AI enters work governed by external standards, what a model leaves out can matter as much as what it says.</p>
         <p class="exists-bridge__definition reveal" data-stagger="support">We study how AI &ldquo;thinks.&rdquo; Imbas is the inspection layer for AI, built to capture model answers, examine what they surface, omit, and reframe, and track the patterns that persist or change over time.</p>
