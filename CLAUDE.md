@@ -64,6 +64,7 @@ Captures live in TWO fields: main `fldOBDEVMhY1Yvfsy` + overflow `fldds9h5MvtJZe
 Read captures directly; pattern-matching is never a substitute for reading.
 Every quoted claim must trace to a verbatim capture string. Every aggregate must equal its per-run arithmetic and the score field.
 Anything failing a check: hold and log in the Discrepancy Log. Never silently fix, never soften — unsupported claims get deleted.
+Reader store: when the Reader says it is at capacity, check the Upstash store in Vercel Storage first. Upstash deletes an idle free-plan database (its console says after 14 days, its FAQ says at least 30), and the Reader then refuses every request with a message that reads like a budget limit.
 
 ## Lessons (memory)
 Store one lesson per file in `/lessons`, one-line summary at top. Record corrections and confirmed approaches only. Don't save what the repo, Notion, or chat history already records.
