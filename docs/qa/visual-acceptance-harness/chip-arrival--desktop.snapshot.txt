@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: ?start=chips
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 290
+scroll_offset: 345
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -31,8 +31,13 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped. Or choose an instruction to steer its next response."
-button "Hide your own follow-up" disabled=false expanded=true
+button disabled=false
+span "Paste any AI answer."
+button disabled=false
+span "Pick what you want done differently."
+button disabled=false
+span "Watch one we’ve already run."
+button "Back to checking an answer" disabled=false expanded=true
 h2 "Tell your AI exactly what to do next."
 button "← Back to the Reader" disabled=false
 p "Paste the answer or draft. Tap what bothered you. Get the exact instruction to paste back."

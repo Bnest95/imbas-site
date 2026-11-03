@@ -42,4 +42,4 @@ p "I research the options, build what’s needed, put it in place and train the 
 span "AI adoption"
 p "Where AI can save your team time, where its work needs checking, and where it isn’t worth using yet."
 span "Custom tools"
-p "A quoting tool built around your services and prices, a searchable reference from your own documents, reports prepared from the records you already keep, or customer inquiries and follow-ups in one place, each with a next step and someone responsible for it."
+p "A quoting tool built around your services and prices, a searchable reference from your own documents, or reports prepared from the records you already keep."

@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 960
+scroll_offset: 1058
 timezone: UTC
 url: /input-integrity.html
 viewport: 1440x900
@@ -31,7 +31,9 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "A constructed demonstration file, not a document found in the wild."
+button "Inspect a sample file" disabled=false
+button "Inspect a constructed supplier proposal" disabled=false
+p "Both samples are constructed demonstration files, not documents found in the wild."
 h2 "c9_image_only.pdf"
 p "867 bytes"
 span "Complete"
@@ -39,8 +41,7 @@ p "This run inspected 1 page, and every page was read."
 h3 "What this run establishes"
 p "This run establishes what the local parser recovered from the file's structure, and what the local renderer draws. It does not establish what any AI system, pipeline, or person received from this file."
 h2 "What surfaced"
-p "0 items surfaced."
-p "No phenomenon surfaced under the checks that ran."
+p "The checks surfaced no text on this file's pages."
 p "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file that they do not describe."
 details expanded=false
 summary "Provenance"

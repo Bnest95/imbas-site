@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1744
+scroll_offset: 1181
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -47,12 +47,14 @@ dd "Imbas produces no authoritative matched-conditions field and persists none. 
 p "Both statements this example rests on were read off MCA § 39-2-911, Montana Code Annotated 2025 edition, on <DATE>. That is a fact about <DATE>."
 button "Now try your own →" disabled=false
 button "Hide example" disabled=false
-details expanded=false
-summary "How it works"
-span "1"
-span "Paste an AI answer to see what it might be missing."
-span "2"
-span "Copy the one question Imbas builds, then ask your own AI."
-span "3"
-span "Paste its reply back and watch what surfaces."
-button "Choose your own follow-up" disabled=false expanded=false
+button disabled=false
+div "READER RUN"
+div "Montana employment law"
+button disabled=false
+div "CASE 005"
+div "Buybacks & Rule 10b-18"
+button disabled=false
+div "CASE 021"
+div "PFAS & DuPont/3M"
+p "READER RUN · Source read <DATE>"
+p "Start with an ordinary question:"

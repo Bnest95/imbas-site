@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1500
+scroll_offset: 1650
 timezone: UTC
 url: /input-integrity.html
 viewport: 1440x900
@@ -31,9 +31,10 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-h2 "Text the page's instructions do not paint"
-p "The file carries this text and the page's own operands settle that it contributes no paint."
-h3 "The page's content stream sets text render mode 3 for this run."
+h2 "On the pages"
+h3 "Text set to paint nothing"
+blockquote "INVISIBLE-MODE3"
+li "The page's content stream sets text render mode 3 for this run."
 li "A system that reads this file by extracting its text receives this text."
 li "The page's rendering instructions do not paint it."
 span "Where"

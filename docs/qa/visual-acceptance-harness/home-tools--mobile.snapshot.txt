@@ -26,7 +26,7 @@ a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
 button "Try the Reader" disabled=false
-a "AI advisory" href="/advisory.html"
+a "Work with me" href="/advisory.html"
 span "→"
 span "Tools"
 h2 "Free to use."
