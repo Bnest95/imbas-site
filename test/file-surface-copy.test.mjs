@@ -143,10 +143,12 @@ test("every exported string constant reaches the space too", () => {
   assert.deepEqual(missing, [], `these exported strings are outside the linted space: ${missing.join(", ")}`);
 });
 
-test("RECEIPT: the space is 64 strings", () => {
+test("RECEIPT: the space is 68 strings", () => {
   // Pinned on purpose. A string added without re-reading this file lands the author in
-  // the receipt, which is where the decision belongs.
-  assert.equal(STRINGS.length, 64);
+  // the receipt, which is where the decision belongs. 2026-11-03: +5 for what the checks
+  // look for, the second sample's action, the page-findings heading and the two Document
+  // details strings; -1 where the count line became the two-fixture page summary.
+  assert.equal(STRINGS.length, 68);
 });
 
 // ── (2b) this module CONSUMES the instrument's conclusions, it does not own them ─
@@ -207,8 +209,8 @@ test("this module authors no sentence that depends on run evidence", () => {
   const REPORTS_A_RESULT = [
     /\bthis run inspected\b/i,
     /\bthe parser reported\b/i,
-    /\b\d+ items? surfaced\b/i,
-    /\bno phenomenon surfaced\b/i,
+    /\bthis file carries \d+ pieces? of text\b/i,
+    /\bthe checks surfaced no text\b/i,
     /\b(?:this file|this page|page \d+)\b[^.]*\bcould not be (?:read|drawn)\b/i,
     /\bthe inspection did not start\b/i,
   ];
@@ -281,9 +283,9 @@ test("the sentence in the markup EQUALS the registry value its key names", () =>
 
 // Only the strata a reader meets before choosing a file are authored here. Everything in
 // the result region is rendered by input-integrity.js out of the same registry.
-test("RECEIPT: the page carries 13 authored sentences, every one of them from the registry", () => {
+test("RECEIPT: the page carries 15 authored sentences, every one of them from the registry", () => {
   const elements = copyElements(MAIN);
-  assert.equal(elements.length, 13);
+  assert.equal(elements.length, 15);
   assert.deepEqual(
     elements.map((e) => e.key),
     [
@@ -291,6 +293,7 @@ test("RECEIPT: the page carries 13 authored sentences, every one of them from th
       "MASTHEAD.title",
       "MASTHEAD.lede",
       "MASTHEAD.example",
+      "MASTHEAD.looks_for",
       "BOUNDARY.statement",
       "BOUNDARY.denials",
       "INTAKE.prompt",
@@ -298,6 +301,7 @@ test("RECEIPT: the page carries 13 authored sentences, every one of them from th
       "INTAKE.choose",
       "INTAKE.custody",
       "INTAKE.sample_action",
+      "INTAKE.sample_proposal_action",
       "INTAKE.sample_note",
       "INTAKE.processing",
     ],
@@ -373,8 +377,15 @@ test("the refusal reuses the stated limit with the live value set in, not a para
 });
 
 test("numerals render with the noun they actually have", () => {
-  assert.equal(COPY.surfacedCount(1), "1 item surfaced.");
-  assert.equal(COPY.surfacedCount(4), "4 items surfaced.");
+  assert.equal(
+    COPY.pageSummary(1, ["tiny_text"]),
+    "This file carries 1 piece of text set at a very small size. A system that extracts the file's text receives it.",
+  );
+  assert.equal(
+    COPY.pageSummary(2, ["tiny_text", "offpage_text"]),
+    "This file carries 2 pieces of text set off the page or at a very small size. " +
+      "A system that extracts the file's text receives them.",
+  );
   assert.equal(COPY.coverageComplete(1), "This run inspected 1 page, and every page was read.");
   assert.equal(COPY.coverageComplete(12), "This run inspected 12 pages, and every page was read.");
   assert.equal(COPY.byteSize(650), "650 bytes");

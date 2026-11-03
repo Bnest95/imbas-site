@@ -18,8 +18,18 @@
 import * as COPY from "./file-surface-copy.js";
 import { unavailableView, buildReceipt } from "./file-view.js";
 
-const SAMPLE_URL = "/vendor/sample/render-mode-3-demonstration.pdf";
-const SAMPLE_NAME = "render-mode-3-demonstration.pdf";
+// Two constructed samples. The first is the governed render-mode-3 demonstration; the
+// second is a supplier proposal built to carry one instruction four ways at once.
+const SAMPLES = Object.freeze({
+  demonstration: {
+    url: "/vendor/sample/render-mode-3-demonstration.pdf",
+    name: "render-mode-3-demonstration.pdf",
+  },
+  proposal: {
+    url: "/vendor/sample/constructed-supplier-proposal.pdf",
+    name: "constructed-supplier-proposal.pdf",
+  },
+});
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -43,6 +53,8 @@ const regions = {
 
 let worker = null;
 let currentView = null;
+// Page index → every slot waiting on that page. Two findings on one page share one
+// render request, and the drawing goes into each of their slots.
 const pendingRenders = new Map();
 
 function show(name) {
@@ -93,12 +105,13 @@ async function accept(file) {
   ensureWorker().postMessage({ type: "inspect", fileName: file.name, buffer }, [buffer]);
 }
 
-async function inspectSample() {
+async function inspectSample(which = "demonstration") {
+  const sample = SAMPLES[which];
   clearRefusal();
   show("processing");
-  const response = await fetch(SAMPLE_URL);
+  const response = await fetch(sample.url);
   const buffer = await response.arrayBuffer();
-  ensureWorker().postMessage({ type: "inspect", fileName: SAMPLE_NAME, buffer }, [buffer]);
+  ensureWorker().postMessage({ type: "inspect", fileName: sample.name, buffer }, [buffer]);
 }
 
 // ---------------------------------------------------------------------------
@@ -112,15 +125,13 @@ function onWorkerMessage(message) {
     return;
   }
   if (message.type === "page") {
-    const slot = pendingRenders.get(message.page_index);
-    if (slot) drawPage(slot, message);
+    for (const slot of pendingRenders.get(message.page_index) || []) drawPage(slot, message);
     pendingRenders.delete(message.page_index);
     return;
   }
   if (message.type === "page_failed" || message.type === "crashed") {
     const index = message.page_index;
-    const slot = pendingRenders.get(index);
-    if (slot) {
+    for (const slot of pendingRenders.get(index) || []) {
       slot.replaceChildren(el("p", "ii-contrast__unavailable", COPY.renderUnavailable()));
     }
     pendingRenders.delete(index);
@@ -157,7 +168,12 @@ function drawPage(slot, message) {
 }
 
 function requestPage(slot, pageIndex, width) {
-  pendingRenders.set(pageIndex, slot);
+  const waiting = pendingRenders.get(pageIndex);
+  if (waiting) {
+    waiting.push(slot);
+    return;
+  }
+  pendingRenders.set(pageIndex, [slot]);
   ensureWorker().postMessage({ type: "render", pageIndex, targetWidth: width });
 }
 
@@ -247,13 +263,15 @@ function renderItem(item, identity) {
   const article = el("article", "ii-item");
   article.id = item.anchor;
 
-  // The human sentence leads. The class label is evidence about which check ran, and it
-  // sits inside the evidence disclosure with the rest of the machine's record.
-  const lead = el("h3", "ii-item__lead", item.statements[0].string);
-  article.append(lead);
+  // The plain label leads, then the text itself, then the measurement. The label and
+  // every sentence under it come from the closed registry; the excerpt is the file's own
+  // text, quoted. The class label is evidence about which check ran, and it sits inside
+  // the evidence disclosure with the rest of the machine's record.
+  article.append(el("h3", "ii-item__lead", item.label || item.statements[0].string));
+  article.append(el("blockquote", "ii-item__excerpt", item.excerpt));
 
   const rest = el("ul", "ii-item__statements");
-  for (const statement of item.statements.slice(1)) rest.append(el("li", null, statement.string));
+  for (const statement of item.statements) rest.append(el("li", null, statement.string));
   if (rest.childElementCount > 0) article.append(rest);
 
   article.append(renderLocator(item.locator));
@@ -270,7 +288,6 @@ function renderSummary(view) {
   const section = el("section", "ii-summary");
   section.id = "result-summary";
   section.append(el("h2", "ii-summary__heading", COPY.RESULT.summary_label));
-  section.append(el("p", "ii-summary__count", view.surfaced_count_copy));
 
   if (view.zero_reportable) {
     const zero = el("div", "ii-zero");
@@ -280,11 +297,12 @@ function renderSummary(view) {
     return section;
   }
 
+  section.append(el("p", "ii-summary__count", view.page_summary_copy));
   const list = el("ol", "ii-summary__list");
   for (const group of view.groups) {
     for (const item of group.items) {
       const row = el("li", "ii-summary__row");
-      const link = el("a", "ii-summary__link", item.statements[0].string);
+      const link = el("a", "ii-summary__link", item.label || item.statements[0].string);
       link.href = `#${item.anchor}`;
       row.append(link);
       const where = locatorLine(item.locator);
@@ -358,17 +376,43 @@ function renderResult(view) {
   root.append(renderEstablishes(view.establishes));
   root.append(renderSummary(view));
 
-  for (const group of view.groups) {
+  // Page findings in one list, in the declared group order, so nothing reads as a
+  // ranking. The group's own heading travels as a data attribute rather than a heading:
+  // the plain label on each finding already says what it is.
+  if (view.groups.length > 0) {
     const section = el("section", "ii-group");
-    section.append(el("h2", "ii-group__heading", group.heading));
-    section.append(el("p", "ii-group__note", group.note));
-    for (const item of group.items) section.append(renderItem(item, view.identity));
+    section.append(el("h2", "ii-group__heading", COPY.RESULT.page_findings_label));
+    for (const group of view.groups) {
+      for (const item of group.items) {
+        const node = renderItem(item, view.identity);
+        node.dataset.group = group.id;
+        section.append(node);
+      }
+    }
     root.append(section);
   }
+
+  if (view.document_details.length > 0) root.append(renderDocumentDetails(view));
 
   root.append(renderProvenance(view));
   root.append(renderExport(view));
   show("result");
+}
+
+// Every field the file's metadata declares, as the file wrote it. The values are the
+// file's own text, shown as data beside their field names and never inside a sentence.
+function renderDocumentDetails(view) {
+  const section = el("section", "ii-details");
+  section.append(el("h2", "ii-details__heading", COPY.RESULT.document_details_label));
+  section.append(el("p", "ii-details__note", COPY.RESULT.document_details_note));
+  const list = el("dl", "ii-def-list ii-details__list");
+  for (const row of view.document_details) {
+    const def = definitionRow(row.field, row.value);
+    if (row.anchor) def.id = row.anchor;
+    list.append(def);
+  }
+  section.append(list);
+  return section;
 }
 
 function renderEstablishes(establishes) {
@@ -413,7 +457,8 @@ function init() {
     if (input.files && input.files[0]) accept(input.files[0]);
     input.value = "";
   });
-  $("#sample").addEventListener("click", () => inspectSample());
+  $("#sample").addEventListener("click", () => inspectSample("demonstration"));
+  $("#sample-proposal").addEventListener("click", () => inspectSample("proposal"));
 
   for (const type of ["dragenter", "dragover"]) {
     drop.addEventListener(type, (event) => {

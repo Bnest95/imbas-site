@@ -327,12 +327,15 @@ test("a conclusion whose subject lacks a required field renders nothing at all",
 });
 
 test("a value gate refuses a subject in the wrong state rather than restating it", () => {
-  // The zero-reportable sentences are gated on surfaced_count === 0. A run that
-  // surfaced four items must not be able to render "no phenomenon surfaced" merely
-  // because the field it depends on happens to be present.
-  assert.equal(renderConclusionById("zero_reportable_statement", { surfaced_count: 4 }), null);
-  assert.equal(renderConclusionById("zero_reportable_scope", { surfaced_count: 4 }), null);
-  assert.ok(renderConclusionById("zero_reportable_statement", { surfaced_count: 0 }));
+  // The zero-reportable sentences are gated on a page piece count of zero. A run with
+  // four pieces of page text must not be able to render "the checks surfaced no text"
+  // merely because the field it depends on happens to be present.
+  const four = { page_summary: { piece_count: 4, properties: ["tiny_text"] } };
+  assert.equal(renderConclusionById("zero_reportable_statement", four), null);
+  assert.equal(renderConclusionById("zero_reportable_scope", four), null);
+  assert.ok(renderConclusionById("zero_reportable_statement", { page_summary: { piece_count: 0 } }));
+  // And the summary cannot render over a zero subject, which carries no properties.
+  assert.equal(renderConclusionById("page_summary", { page_summary: { piece_count: 0 } }), null);
 
   // And coverage cannot render the wrong half of its own pair.
   const partial = { coverage: { state: "partial", page_count: 3, pages_inspected_count: 2 } };
@@ -376,7 +379,7 @@ test("the described-class count in the zero-reportable scope matches the class r
   assert.equal(DESCRIBED_CLASS_COUNT_WORD, WORDS[PHENOMENON_CLASS_IDS.length],
     `the scope sentence says "${DESCRIBED_CLASS_COUNT_WORD}" but the registry declares ` +
     `${PHENOMENON_CLASS_IDS.length} classes`);
-  const scope = renderConclusionById("zero_reportable_scope", { surfaced_count: 0 });
+  const scope = renderConclusionById("zero_reportable_scope", { page_summary: { piece_count: 0 } });
   assert.ok(scope.includes(DESCRIBED_CLASS_COUNT_WORD));
 });
 

@@ -158,15 +158,18 @@ test("the door's two labels name the operation, and neither promises mere disclo
   const pair = JSX.match(/lane === LANE_CHIPS \? "([^"]+)" : "([^"]+)",?\n/);
   assert.ok(pair, "the standing door must take its label from one ternary on the live lane state");
   const [, whenOpen, whenClosed] = pair;
+  // AMENDED 2026-11-03 — one public name. The feature is "Steer the next answer"
+  // everywhere, so the closed label is that name. The open label says where the press
+  // returns, which is still never the choices: by then the lane may hold a comparison.
   assert.equal(
     whenClosed,
-    "Choose your own follow-up",
+    "Steer the next answer",
     "the closed label names where the press goes, because the stage swaps rather than expands",
   );
   assert.equal(
     whenOpen,
-    "Hide your own follow-up",
-    "the open label names the follow-up, never the choices: by then the lane may be holding a comparison",
+    "Back to checking an answer",
+    "the open label names where the press returns, never the choices: by then the lane may be holding a comparison",
   );
   for (const label of [whenOpen, whenClosed]) {
     assert.doesNotMatch(label, /\bshow\b/i, "Show promises that content appears in place; the stage swaps instead");
@@ -174,9 +177,12 @@ test("the door's two labels name the operation, and neither promises mere disclo
   }
   // The built artifact is what a runner's browser reads, and a checked-in bundle can be
   // stale while the source is right.
+  // The closed label is also the lane's own entry heading (CHIP_UI.entry.heading), so the
+  // bundle carries it from both places; freshness is what this checks.
   for (const label of [whenOpen, whenClosed]) {
-    assert.equal(countOf(BUNDLE, label), 1, `workbench.bundle.js must carry "${label}" exactly once`);
+    assert.ok(countOf(BUNDLE, label) >= 1, `workbench.bundle.js must carry "${label}"`);
   }
+  assert.equal(countOf(BUNDLE, "your own follow-up"), 0, "the retired pair must not survive in the shipped bundle");
   assert.equal(countOf(BUNDLE, "follow-up checks"), 0, "the retired label must not survive in the shipped bundle");
 });
 
@@ -186,7 +192,7 @@ test("the door's two labels name the operation, and neither promises mere disclo
 // why one shared pair works here without a stage-aware seam: nothing in the closed label
 // is true of only some of them.
 test("the closed label carries four stages and the open label carries one", () => {
-  const labelFor = (lane) => (lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up");
+  const labelFor = (lane) => (lane === LANE_CHIPS ? "Back to checking an answer" : "Steer the next answer");
   const byStage = new Map();
   for (const lane of [LANE_INSPECT, LANE_CHIPS]) {
     for (const busy of [false, true]) {
@@ -207,11 +213,11 @@ test("the closed label carries four stages and the open label carries one", () =
   }
   const table = [...byStage.entries()].map(([stage, seen]) => [stage, [...seen].sort()]).sort();
   assert.deepEqual(table, [
-    [STAGE_CHIPS, ["Hide your own follow-up"]],
-    [STAGE_COMPOSE, ["Choose your own follow-up"]],
-    [STAGE_DELTA, ["Choose your own follow-up"]],
-    [STAGE_FOLLOWUP, ["Choose your own follow-up"]],
-    [STAGE_RESULT, ["Choose your own follow-up"]],
+    [STAGE_CHIPS, ["Back to checking an answer"]],
+    [STAGE_COMPOSE, ["Steer the next answer"]],
+    [STAGE_DELTA, ["Steer the next answer"]],
+    [STAGE_FOLLOWUP, ["Steer the next answer"]],
+    [STAGE_RESULT, ["Steer the next answer"]],
   ].sort());
 });
 
@@ -245,9 +251,12 @@ test("both mount points drive the same lane state, so a close from either one ke
   const door = doorMarkup();
   // AMENDED — openChipLane now takes the door the press came through, so the handler is a
   // call rather than a bare reference. Still one handler pair, still one lane state.
+  // AMENDED 2026-11-03 — the pair moved into pressDoor, which the Steer the next answer
+  // door above the console shares with every chip door, so there is still exactly one.
+  assert.match(door, /onClick=\{\(\) => pressDoor\(via\)\}/, "every door presses through one handler");
   assert.match(
-    door,
-    /onClick=\{lane === LANE_CHIPS \? closeChipLane : \(\) => openChipLane\(via\)\}/,
+    JSX,
+    /const pressDoor = \(via\) => \(lane === LANE_CHIPS \? closeChipLane\(\) : openChipLane\(via\)\);/,
     "one handler pair for every mount point and every framing",
   );
   assert.match(JSX, /const closeChipLane = \(\) => setLane\(LANE_INSPECT\);/, "closing only moves the lane back; it clears nothing");

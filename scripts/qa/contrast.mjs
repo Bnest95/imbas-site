@@ -150,6 +150,12 @@ export const STYLES = [
   ".ii-export__action",
   ".ii-export__note",
   ".ii-example",
+  // The plain-language pass (2026-11): what the checks cover, the quoted excerpt under
+  // each finding's label, and the Document details section.
+  ".ii-looks-for",
+  ".ii-item__excerpt",
+  ".ii-details__heading",
+  ".ii-details__note",
   // ── Site refresh v4.4 ──────────────────────────────────────────────────────
   // The homepage and Advisory reached the board before they reached this list, so the
   // refresh registers its own text styles here. The small orange labels and the outlined

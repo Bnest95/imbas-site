@@ -328,15 +328,15 @@ test("the notice names no cause, because the branch that renders it cannot tell 
 
 test("the ordinary Reader survives an unresolved carry-over instead of being replaced by the notice", () => {
   // The recovery is only real if the instruction the person now needs is still on the
-  // page. The notice is a sibling above the standing intro, never a substitute for it.
+  // page. AMENDED 2026-11-03: the repeated intro line was removed by brief (item 5), so the
+  // instruction is the paste field itself — its label and placeholder — and the notice
+  // sits above it, never in its place.
   const header = /<div className="wb-reader-v2__own-header">([\s\S]*?)<\/div>/.exec(JSX);
   assert.ok(header, "the own-mode header must be readable");
   const body = header[1];
-  assert.match(
-    body,
-    /Paste an AI answer below\. The Reader inspects what it might be missing\./,
-    "the standing intro must still render on the unresolved branch",
-  );
+  assert.match(JSX, /label="Your AI's answer"/, "the paste field still names what goes in it");
+  assert.match(JSX, /placeholder="Paste an AI answer\. Anything from ChatGPT, Gemini, Claude…"/,
+    "and still tells the person what to paste");
   assert.match(body, /\{rerunUnresolved \? \(/, "the notice is conditional on the unresolved state");
   assert.match(body, /\{RERUN_UNRESOLVED_NOTICE\}/, "the notice renders the governed constant, not a second copy");
   // The successful carry-over is untouched: it still replaces the intro with its own

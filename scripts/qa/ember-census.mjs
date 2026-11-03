@@ -1144,6 +1144,65 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-11-03",
+    reason:
+      "authorized source edit on branch claude/reader-steer-ii-readable, the Reader entry pass " +
+      "(founder brief of 2026-11-03, items 1-7): the Reader's mode row became three doors, and " +
+      "workbench.css gained the rule that stacks them on a phone. One governed source moved: " +
+      "workbench.css. workbench-app.jsx changed in markup and handlers only; its governed " +
+      "extraction, the CSS template literals, is byte-identical. styles.css was not touched.",
+    fingerprint_before: "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c",
+    fingerprint_after: "d725567c4c8b676f70fd750361886d4dd565fe017f6632ed88bd36d57c2719da",
+    authorized_edits: [
+      {
+        source: "workbench.css",
+        extraction: "whole file",
+        sha256_before: "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+        sha256_after: "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
+        edit:
+          "added one @media (max-width: 600px) block for .wb-reader-v2__modes--doors: flex " +
+          "direction, gap, alignment, text-align, and the description's display, margin, size " +
+          "and colour, rgba(150, 138, 125, 0.88), which the existing mode-description rule " +
+          "already uses. It names no ember token, no rgba(var(--ember-rgb), …) and no literal " +
+          "ramp hue, so no declared-token spend, free alpha or adjacent hue moved.",
+      },
+    ],
+    edits_that_moved_no_governed_source: [
+      {
+        source: "workbench-app.jsx",
+        extraction: "CSS template literals only",
+        sha256_unchanged: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+        edit:
+          "the three Reader doors above the console, the Imbas / READER bar kept to the legacy " +
+          "surface, the headline and subhead, the field label, the privacy line, the standing " +
+          "door's labels, and one press handler shared by every door. No CSS template literal " +
+          "changed.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────

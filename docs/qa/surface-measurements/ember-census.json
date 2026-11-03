@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "a8e0fc54f7f08e914d6a190166850e5a6c990f4e",
+  "measured_at_master": "736d0575bb2a5b85fb3e23b94a45aa0dd037d6e9",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -75,10 +75,10 @@
       },
       {
         "path": "workbench.css",
-        "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
+        "sha256": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589"
       }
     ],
-    "sha256": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c"
+    "sha256": "d725567c4c8b676f70fd750361886d4dd565fe017f6632ed88bd36d57c2719da"
   },
   "provenance": {
     "reseal_rule": {
@@ -387,6 +387,80 @@
         "is_terminal_source_record": false,
         "authorized_edits_hold_live": null,
         "sources_recorded_unmoved_hold_live": null,
+        "carries_population_evidence": []
+      },
+      {
+        "date": "2026-11-03",
+        "reason": "authorized source edit on branch claude/reader-steer-ii-readable, the Reader entry pass (founder brief of 2026-11-03, items 1-7): the Reader's mode row became three doors, and workbench.css gained the rule that stacks them on a phone. One governed source moved: workbench.css. workbench-app.jsx changed in markup and handlers only; its governed extraction, the CSS template literals, is byte-identical. styles.css was not touched.",
+        "fingerprint_before": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c",
+        "fingerprint_after": "d725567c4c8b676f70fd750361886d4dd565fe017f6632ed88bd36d57c2719da",
+        "authorized_edits": [
+          {
+            "source": "workbench.css",
+            "extraction": "whole file",
+            "sha256_before": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+            "sha256_after": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
+            "edit": "added one @media (max-width: 600px) block for .wb-reader-v2__modes--doors: flex direction, gap, alignment, text-align, and the description's display, margin, size and colour, rgba(150, 138, 125, 0.88), which the existing mode-description rule already uses. It names no ember token, no rgba(var(--ember-rgb), …) and no literal ramp hue, so no declared-token spend, free alpha or adjacent hue moved."
+          }
+        ],
+        "edits_that_moved_no_governed_source": [
+          {
+            "source": "workbench-app.jsx",
+            "extraction": "CSS template literals only",
+            "sha256_unchanged": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+            "edit": "the three Reader doors above the console, the Imbas / READER bar kept to the legacy surface, the headline and subhead, the field label, the privacy line, the standing door's labels, and one press handler shared by every door. No CSS template literal changed."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "is_terminal_source_record": true,
+        "authorized_edits_hold_live": true,
+        "sources_recorded_unmoved_hold_live": true,
         "carries_population_evidence": []
       }
     ],
@@ -1346,7 +1420,7 @@
           "single-findings"
         ],
         "is_newest_entry": true,
-        "is_terminal_source_record": true,
+        "is_terminal_source_record": false,
         "scenarios_added_observed": [
           "home-tools"
         ],
@@ -1487,9 +1561,9 @@
         "workbench.css"
       ],
       "terminal": {
-        "route": "population",
-        "date": "2026-10-29",
-        "fingerprint_after": "d9dcba5f0c5aaa4270674c28f85b8e62198468a6a4d81f11ea1e6f9829f74b6c"
+        "route": "source",
+        "date": "2026-11-03",
+        "fingerprint_after": "d725567c4c8b676f70fd750361886d4dd565fe017f6632ed88bd36d57c2719da"
       },
       "links": [
         {
@@ -1556,9 +1630,18 @@
           "holds": true
         },
         {
-          "link": "2026-10-29/population → live",
+          "link": "2026-10-29/population → 2026-11-03/source",
           "path": "styles.css",
-          "route": "population",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "produced": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "holds": true
+        },
+        {
+          "link": "2026-11-03/source → live",
+          "path": "styles.css",
+          "route": "source",
           "kind": "terminal",
           "produced": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
           "live": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
@@ -1628,9 +1711,18 @@
           "holds": true
         },
         {
-          "link": "2026-10-29/population → live",
+          "link": "2026-10-29/population → 2026-11-03/source",
           "path": "workbench-app.jsx",
-          "route": "population",
+          "route": "source",
+          "kind": "held",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-11-03/source → live",
+          "path": "workbench-app.jsx",
+          "route": "source",
           "kind": "terminal",
           "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
           "live": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
@@ -1700,12 +1792,21 @@
           "holds": true
         },
         {
-          "link": "2026-10-29/population → live",
+          "link": "2026-10-29/population → 2026-11-03/source",
           "path": "workbench.css",
-          "route": "population",
+          "route": "source",
+          "kind": "moved",
+          "started_from": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "produced": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
+          "holds": true
+        },
+        {
+          "link": "2026-11-03/source → live",
+          "path": "workbench.css",
+          "route": "source",
           "kind": "terminal",
-          "produced": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
-          "live": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b",
+          "produced": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
+          "live": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
           "holds": true
         }
       ],
@@ -1722,7 +1823,7 @@
     {
       "path": "workbench.css",
       "extraction": "whole file",
-      "sha256": "8e9a0126fec3c766a834d15fa1aec724cfc9b6f5e36832a010ad759ffc46f45b"
+      "sha256": "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589"
     },
     {
       "path": "workbench-app.jsx",

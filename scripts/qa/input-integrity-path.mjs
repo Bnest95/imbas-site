@@ -300,6 +300,7 @@ const READER_SCRIPT = `
         summary_where: all(".ii-summary__where", root).map(text),
         zero_statement: text(root.querySelector(".ii-zero__statement")),
         zero_scope: text(root.querySelector(".ii-zero__scope")),
+        detail_ids: all(".ii-details .ii-def[id]", root).map((d) => d.id),
         groups: all(".ii-group", root).map((g) => ({
           heading: text(g.querySelector(".ii-group__heading")),
           note: text(g.querySelector(".ii-group__note")),
@@ -364,6 +365,8 @@ const READER_SCRIPT = `
         byte_size: v.byte_size ?? null,
         classes: (v.items || []).map((i) => i.class_label),
         anchors: (v.items || []).map((i) => i.anchor),
+        // Metadata renders as Document details rows, apart from the page findings.
+        page_anchors: (v.items || []).filter((i) => i.class_label !== "metadata_text").map((i) => i.anchor),
         coverage: v.coverage ?? null,
         identity: v.identity ?? null,
       };
@@ -606,16 +609,16 @@ async function inspectFile(cdp, { phase, fixture, expectContrast }) {
   check(phase, "the epistemic line stands on the result", result.establishes_body, ESTABLISHES_BODY);
 
   // Every item the view holds reached the tree, with its anchor intact.
-  check(phase, "every phenomenon the parser reported has a rendered item",
-    result.items.map((i) => i.anchor), view.anchors);
+  check(phase, "every phenomenon the parser reported has a rendered item or a document-details row",
+    [...result.items.map((i) => i.anchor), ...result.detail_ids].sort(), [...view.anchors].sort());
   check(phase, "every item leads with a sentence, not a class label",
     result.items.every((i) => typeof i.lead === "string" && i.lead.length > 0 && !view.classes.includes(i.lead)),
     true);
   check(phase, "every item states where it is", result.items.every((i) => i.locator_parts.length > 0), true);
   check(phase, "every item carries a link back to the summary",
     result.items.every((i) => i.back_href === "#result-summary"), true);
-  check(phase, "the summary lists exactly the items rendered",
-    result.summary_links.map((l) => l.href.slice(1)), view.anchors);
+  check(phase, "the summary lists exactly the page items rendered",
+    result.summary_links.map((l) => l.href.slice(1)), view.page_anchors);
 
   check(phase, "a two-reading contrast is present exactly where the substrate supports one",
     result.items.some((i) => i.has_contrast), expectContrast);
@@ -759,7 +762,7 @@ async function main() {
     check("initial", "the boundary states what the surface does, then what it does not",
       initial.boundary, [BOUNDARY_STATEMENT, BOUNDARY_DENIALS]);
     check("initial", "the sample is labelled as constructed",
-      initial.sample_note, "A constructed demonstration file, not a document found in the wild.");
+      initial.sample_note, "Both samples are constructed demonstration files, not documents found in the wild.");
     check("initial", "no refusal stands unprompted", initial.refusal_hidden, true);
 
     // ── Phase 2: a file that is not a PDF ────────────────────────────────────────────
@@ -789,8 +792,8 @@ async function main() {
     check("single", "the coverage statement counts the pages it read",
       single.result.coverage_statement, "This run inspected 1 page, and every page was read.");
     check("single", "no page-level failure is claimed", single.result.coverage_pages, []);
-    check("single", "the summary counts what surfaced", single.result.summary_count,
-      `${single.view.classes.length} item${single.view.classes.length === 1 ? "" : "s"} surfaced.`);
+    check("single", "the summary counts the page text and names how it was set", single.result.summary_count,
+      "This file carries 1 piece of text set to paint nothing. A system that extracts the file's text receives it.");
 
     // ── Phase 4: summary → item → back ───────────────────────────────────────────────
     const firstAnchor = single.view.anchors[0];

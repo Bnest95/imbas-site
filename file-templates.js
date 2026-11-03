@@ -556,6 +556,176 @@ export function outputSpaceCoverage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// PLAIN LABELS — the short name a person reads first on each finding.
+//
+// The structural sentence above is the measurement, and it stays the measurement. A
+// label is the same fact said in ordinary words, so a reader knows what kind of thing
+// they are looking at before they read the operand that proves it. It lives here
+// rather than on the surface for the reason every finding sentence does: it depends on
+// the finding's own fields, and an evidence-dependent string authored on the surface
+// would sit outside the exhaustive lint.
+//
+// Same rules as the templates. CLOSED: every label that can render is written below.
+// TYPED: a label renders numbers and closed enums only; an annotation's subtype picks
+// one of a fixed set of labels and is never woven in. GATED: a label whose fields are
+// absent renders nothing. And the register law holds: a label names what the file
+// sets, never what anybody saw. "Very small text (0.5 pt)" states a size; "text too
+// small to read" would state an experience, and the lane does not hold one.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const COVERING_OBJECT_LABEL = Object.freeze({
+  filled_path: "a shape",
+  image: "an image",
+  form_xobject: "a drawing",
+});
+
+// A widget annotation is a form field; the comment-like subtypes read as comments.
+// Every other subtype gets the general label rather than a guess.
+const ANNOTATION_SUBTYPE_LABEL = Object.freeze({
+  Widget: "Text in a form field",
+  Text: "Text in a comment",
+  FreeText: "Text in a comment",
+  Popup: "Text in a comment",
+});
+
+export const PLAIN_LABEL_TEMPLATES = Object.freeze(
+  [
+    {
+      id: "invisible_render_mode.label",
+      classes: ["invisible_render_mode"],
+      requires: ["graphics_state.render_mode"],
+      render: () => "Text set to paint nothing",
+    },
+    {
+      id: "zero_alpha.label",
+      classes: ["zero_alpha"],
+      requires: ["graphics_state.fill_alpha"],
+      render: () => "Fully transparent text",
+    },
+    {
+      id: "near_zero_alpha.label",
+      classes: ["near_zero_alpha"],
+      requires: ["graphics_state.fill_alpha"],
+      render: (f) => `Nearly transparent text (opacity ${num(f.graphics_state.fill_alpha)})`,
+    },
+    {
+      id: "offpage_text.label",
+      classes: ["offpage_text"],
+      requires: ["graphics_state.text_bbox", "graphics_state.crop_box"],
+      render: () => "Text placed off the page",
+    },
+    {
+      id: "tiny_text.label",
+      classes: ["tiny_text"],
+      requires: ["extraction.effective_size_pt"],
+      render: (f) => `Very small text (${num(f.extraction.effective_size_pt)} pt)`,
+    },
+    {
+      id: "white_fill_unbacked.label",
+      classes: ["white_fill_unbacked"],
+      requires: ["graphics_state.fill_color_rgb", "graphics_state.backdrop_source"],
+      render: () => "White text with only the page behind it",
+    },
+    {
+      id: "covered_text.label",
+      classes: ["covered_text"],
+      requires: ["graphics_state.covering_object_kind"],
+      render: (f) => `Text covered by ${COVERING_OBJECT_LABEL[f.graphics_state.covering_object_kind]}`,
+    },
+    {
+      id: "annotation_text.label",
+      classes: ["annotation_text"],
+      requires: ["graphics_state.annotation_subtype"],
+      render: (f) =>
+        Object.prototype.hasOwnProperty.call(ANNOTATION_SUBTYPE_LABEL, f.graphics_state.annotation_subtype)
+          ? ANNOTATION_SUBTYPE_LABEL[f.graphics_state.annotation_subtype]
+          : "Text in an annotation",
+    },
+    {
+      id: "metadata_text.label",
+      classes: ["metadata_text"],
+      requires: ["graphics_state.metadata_key"],
+      render: () => "Text in the file's metadata",
+    },
+    {
+      id: "hidden_ocg_text.label",
+      classes: ["hidden_ocg_text"],
+      requires: ["graphics_state.container_kind", "graphics_state.ocg_default_state"],
+      render: () => "Text in a layer switched off by default",
+    },
+    {
+      id: "encoding_control_structures.zero_width.label",
+      classes: ["encoding_control_structures"],
+      requires: ["graphics_state.control_codepoints"],
+      requires_values: { "graphics_state.control_category": "zero_width" },
+      render: () => "Zero-width characters",
+    },
+    {
+      id: "encoding_control_structures.bidi_override.label",
+      classes: ["encoding_control_structures"],
+      requires: ["graphics_state.control_codepoints"],
+      requires_values: { "graphics_state.control_category": "bidi_override" },
+      render: () => "Characters that reorder text",
+    },
+    {
+      id: "encoding_control_structures.unicode_tag_block.label",
+      classes: ["encoding_control_structures"],
+      requires: ["graphics_state.control_codepoints"],
+      requires_values: { "graphics_state.control_category": "unicode_tag_block" },
+      render: () => "Unicode tag characters",
+    },
+  ].map((t) => Object.freeze({ ...t, classes: Object.freeze(t.classes), requires: Object.freeze(t.requires) })),
+);
+
+// The label for one finding: the first eligible one, or null. Never a fallback.
+export function plainLabelOf(finding) {
+  for (const template of PLAIN_LABEL_TEMPLATES) {
+    const line = renderTemplate(template, finding);
+    if (line !== null) return line;
+  }
+  return null;
+}
+
+// Fixtures the finding set does not already carry: the annotation subtypes that pick
+// a different label, so every label the registry can produce is rendered and linted.
+const LABEL_EXTRA_FIXTURES = Object.freeze(
+  ["Widget", "Text", "Link"].map((subtype) => ({
+    id: `annotation_text.${subtype}`,
+    finding: makeFinding({
+      class_label: "annotation_text",
+      extraction: span(SPAN, { page_index: 0, position: { x: 100, y: 400 } }),
+      graphics_state: { container_kind: "annotation", annotation_subtype: subtype },
+      checks_run: ["annotation_inventory"],
+      thresholds_applied: {},
+    }),
+  })),
+);
+
+// Every label the registry can render, on the same exhaustive terms as the finding
+// space: this is what test/file-vocab-lint.test.mjs lints.
+export function renderCompleteLabelSpace() {
+  const out = [];
+  for (const fixture of [...TEMPLATE_LINT_FIXTURES, ...LABEL_EXTRA_FIXTURES]) {
+    for (const template of PLAIN_LABEL_TEMPLATES) {
+      const line = renderTemplate(template, fixture.finding);
+      if (line !== null) out.push({ fixture_id: fixture.id, template_id: template.id, string: line });
+    }
+  }
+  return out;
+}
+
+export function labelSpaceCoverage() {
+  const space = renderCompleteLabelSpace();
+  const reached = new Set(space.map((r) => r.template_id));
+  const labelled = new Set(PLAIN_LABEL_TEMPLATES.flatMap((t) => t.classes));
+  return {
+    rendered_strings: space.length,
+    unreached_templates: PLAIN_LABEL_TEMPLATES.filter((t) => !reached.has(t.id)).map((t) => t.id),
+    unlabelled_classes: PHENOMENON_CLASS_IDS.filter((c) => !labelled.has(c)),
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // CONCLUSION TEMPLATES — the instrument's own statements about a run.
 //
 // FILE_TEMPLATES above holds every sentence a FINDING can produce. It cannot hold
@@ -584,11 +754,19 @@ export function outputSpaceCoverage() {
 // disclosure, a column label, a provenance attribution and an intake prompt are true
 // before any file arrives and are not conclusions; they stay in file-surface-copy.js.
 //
-// WHY THE ZERO CASE AND THE COUNT ARE THE SAME SLOT. `surfaced_count` and
+// WHY THE ZERO CASE AND THE SUMMARY ARE THE SAME SLOT. `page_summary` and
 // `zero_reportable_statement` render into the same place on the page, and the zero
-// case is not a variant of the count — it is the point where a count stops being
+// case is not a variant of the summary — it is the point where a count stops being
 // informative and the scope of the checks has to be stated instead. Both are here so
 // that neither can drift away from the other.
+//
+// WHY THE SUMMARY COUNTS PAGE TEXT ONLY. Metadata is text the file declares about
+// itself, and every PDF writer fills some of it in. Counting it as a finding made an
+// ordinary file report five items. The surface now lists metadata on its own, field by
+// field, and the summary counts the pieces of text the PAGE checks reached. It names
+// the properties those pieces were set with, and it states the extraction consequence,
+// which holds for every class. It does not say the text fails to appear: that is a
+// rendering claim this registry grants to two classes only, and a 0.5 pt run paints.
 //
 // NOTHING HERE MAY IMPLY A CLEAN DOCUMENT. The zero conclusion names what ran and
 // what that leaves unsaid. It never says safe, clean, ordinary, or verified, and
@@ -603,24 +781,49 @@ export function outputSpaceCoverage() {
 // leaving the sentence wrong.
 export const DESCRIBED_CLASS_COUNT_WORD = "eleven";
 
+// The property each page class was set with, in words, for the summary sentence. Keyed
+// by class and read in PHENOMENON_CLASS_IDS order, so the sentence never ranks them.
+// metadata_text has no entry because the summary never counts it.
+const PAGE_PROPERTY_PHRASE = Object.freeze({
+  invisible_render_mode: "to paint nothing",
+  zero_alpha: "fully transparent",
+  near_zero_alpha: "nearly transparent",
+  offpage_text: "off the page",
+  tiny_text: "at a very small size",
+  white_fill_unbacked: "in white with only the page behind it",
+  covered_text: "under an image or shape",
+  annotation_text: "in comments or form fields",
+  hidden_ocg_text: "in a layer switched off by default",
+  encoding_control_structures: "with zero-width or reordering characters",
+});
+
+function orList(items) {
+  if (items.length === 1) return items[0];
+  if (items.length === 2) return `${items[0]} or ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")}, or ${items[items.length - 1]}`;
+}
+
 export const CONCLUSION_TEMPLATES = Object.freeze(
   [
     // ── what surfaced ──────────────────────────────────────────────────────────
     {
-      id: "surfaced_count",
-      requires: ["surfaced_count"],
-      render: (r) => `${count(r.surfaced_count, "item")} surfaced.`,
+      id: "page_summary",
+      requires: ["page_summary.piece_count", "page_summary.properties"],
+      render: (r) =>
+        `This file carries ${count(r.page_summary.piece_count, "piece")} of text set ` +
+        `${orList(PHENOMENON_CLASS_IDS.filter((c) => r.page_summary.properties.includes(c)).map((c) => PAGE_PROPERTY_PHRASE[c]))}. ` +
+        `A system that extracts the file's text receives ${r.page_summary.piece_count === 1 ? "it" : "them"}.`,
     },
     {
       id: "zero_reportable_statement",
-      requires: ["surfaced_count"],
-      requires_values: { surfaced_count: 0 },
-      render: () => "No phenomenon surfaced under the checks that ran.",
+      requires: ["page_summary.piece_count"],
+      requires_values: { "page_summary.piece_count": 0 },
+      render: () => "The checks surfaced no text on this file's pages.",
     },
     {
       id: "zero_reportable_scope",
-      requires: ["surfaced_count"],
-      requires_values: { surfaced_count: 0 },
+      requires: ["page_summary.piece_count"],
+      requires_values: { "page_summary.piece_count": 0 },
       render: () =>
         `Those checks describe ${DESCRIBED_CLASS_COUNT_WORD} structural properties of a PDF. ` +
         "Other structure may exist in this file that they do not describe.",
@@ -713,9 +916,22 @@ export function renderConclusions(subject) {
 // The closed subject set that makes the conclusion output space enumerable. Numeric
 // subjects carry singular and plural where a template interpolates a count.
 export const CONCLUSION_LINT_FIXTURES = Object.freeze([
-  { id: "surfaced.singular", subject: { surfaced_count: 1 } },
-  { id: "surfaced.plural", subject: { surfaced_count: 4 } },
-  { id: "surfaced.zero", subject: { surfaced_count: 0 } },
+  { id: "page_summary.singular", subject: { page_summary: { piece_count: 1, properties: ["tiny_text"] } } },
+  {
+    id: "page_summary.two",
+    subject: { page_summary: { piece_count: 2, properties: ["offpage_text", "white_fill_unbacked"] } },
+  },
+  {
+    // Every page property at once, so every phrase in the map is rendered and linted.
+    id: "page_summary.every_property",
+    subject: {
+      page_summary: {
+        piece_count: 12,
+        properties: PHENOMENON_CLASS_IDS.filter((c) => c !== "metadata_text"),
+      },
+    },
+  },
+  { id: "page_summary.zero", subject: { page_summary: { piece_count: 0 } } },
   { id: "coverage.complete.singular", subject: { coverage: { state: "complete", page_count: 1 } } },
   { id: "coverage.complete.plural", subject: { coverage: { state: "complete", page_count: 12 } } },
   {
