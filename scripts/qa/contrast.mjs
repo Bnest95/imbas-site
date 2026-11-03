@@ -182,6 +182,7 @@ export const STYLES = [
   ".adv-quotes cite",
   ".adv-terms",
   ".adv-close__addr",
+  ".adv-close__free",
   // Round 2 (2026-11-03): the homepage Field Notes signup, restored beside the inscription.
   ".close__signup .field-notes__heading",
   ".close__signup .field-notes__caption",

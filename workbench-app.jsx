@@ -6763,7 +6763,7 @@ function ReaderWorkbench() {
   // The door is one control at one of two mount points, and the two conditions below
   // are the complement of each other, so this is true exactly when the door is on the
   // page and never counts it twice.
-  const chipDoorPresent = stage === STAGE_FOLLOWUP || view.chipDoor;
+  const chipDoorPresent = stage === STAGE_FOLLOWUP || (view.chipDoor && stage !== STAGE_COMPOSE);
 
   // What the capability strip may link to, in document order. Every entry is gated on
   // the same expression that mounts the section itself, so a link cannot outlive its
@@ -7580,7 +7580,7 @@ function ReaderWorkbench() {
                 <ReaderStatusLine state={statusState} />
                 <details className="wb-reader-v2__privacy">
                   <summary className="wb-reader-v2__privacy-line">
-                    Your text is sent to an AI model (Anthropic) to run the check. It isn't published. Don't paste anything sensitive.
+                    Your text is sent to an AI model (Anthropic) to run the check and <a href="/retention.html">kept in Imbas's records</a>. It isn't published. Don't paste anything sensitive.
                   </summary>
                   <p className="wb-reader-v2__privacy-full">
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
@@ -7809,7 +7809,10 @@ function ReaderWorkbench() {
             whole correction: the result stage is the degraded fallback path, so standing
             down there moved the door on error and capacity surfaces and nowhere a
             measurement had been taken. Its prior late-door behaviour is restored. */}
-        {view.chipDoor && stage !== STAGE_FOLLOWUP ? chipDoorControl() : null}
+        {/* RULED 2026-11-03: the late door also stands down on the compose stage. The
+            Steer the next answer door above the console is the first screen's entrance to
+            the lane, so the first screen shows the name once. */}
+        {view.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE ? chipDoorControl() : null}
         {/* Mounted on first open and never unmounted after: `hidden` takes the lane out of
             the layout, the tab order and the accessibility tree, so the one-live-input
             invariant holds while a half-typed answer survives a close and reopen. */}

@@ -81,7 +81,7 @@ const DOOR_CLASS = 'className="wb-demo-trigger wb-chip-door"';
 // The two mount conditions, verbatim. Written once here so a test cannot silently drift
 // onto a different stage than the one the file's header explains.
 const EARLY_MOUNT = "{stage === STAGE_FOLLOWUP ? chipDoorControl() : null}";
-const LATE_MOUNT = "{view.chipDoor && stage !== STAGE_FOLLOWUP ? chipDoorControl() : null}";
+const LATE_MOUNT = "{view.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE ? chipDoorControl() : null}";
 
 const countOf = (haystack, needle) => haystack.split(needle).length - 1;
 
@@ -319,7 +319,7 @@ function doorCountByStage() {
   assert.notEqual(JSX.indexOf(EARLY_MOUNT), -1, "the early mount must be present to be counted");
   assert.notEqual(JSX.indexOf(LATE_MOUNT), -1, "the late mount must be present to be counted");
   const earlyGate = (stage) => stage === STAGE_FOLLOWUP;
-  const lateGate = (stage) => !!stageView(stage).chipDoor && stage !== STAGE_FOLLOWUP;
+  const lateGate = (stage) => !!stageView(stage).chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE;
   // ALL_STAGES, not STAGE_ORDER: the chip stage sits off the funnel spine and STAGE_ORDER
   // leaves it out, which would have silently dropped ?start=chips from this count.
   const counts = {};
@@ -331,9 +331,12 @@ function doorCountByStage() {
 
 test("every stage shows exactly the doors it should, and no stage shows two", () => {
   // The founder's invariant table. RESULT is back to its prior late-door behaviour;
-  // FOLLOWUP has exactly one door and it is the early one; nothing else moved.
+  // FOLLOWUP has exactly one door and it is the early one.
+  // AMENDED 2026-11-03 by founder ruling: COMPOSE shows no chip-door control. Its entrance
+  // is the Steer the next answer door above the console, asserted just below, so the
+  // first screen names the lane once rather than twice.
   assert.deepEqual(doorCountByStage(), {
-    [STAGE_COMPOSE]: 1,
+    [STAGE_COMPOSE]: 0,
     [STAGE_INSPECTING]: 0,
     [STAGE_RESULT]: 1,
     [STAGE_FOLLOWUP]: 1,
@@ -344,15 +347,20 @@ test("every stage shows exactly the doors it should, and no stage shows two", ()
   for (const [stage, n] of Object.entries(doorCountByStage())) {
     assert.ok(n <= 1, `${stage} must never offer two competing chip entrances, found ${n}`);
   }
+  // The compose stage's entrance: the steer door in the row above the console, which
+  // presses through the same handler with the standing door's own origin.
+  assert.match(JSX, /className="wb-reader-v2__modes wb-reader-v2__modes--inline wb-reader-v2__modes--doors"/);
+  assert.match(JSX, /if \(lane !== LANE_CHIPS\) pressDoor\(CHIP_ENTRY_VIA\.DIRECT_STANDING\);/);
 });
 
-test("the late mount stands down on the follow-up stage only, and the stage table is not touched", () => {
-  // The door renders on compose, result, follow-up, delta and chips. Only the follow-up
-  // stage has an earlier mount, so only the follow-up stage suppresses this one. The gate
-  // is written here, at the mount point, and NOT in stageView — reading `view.chipDoor`
+test("the late mount stands down on the follow-up and compose stages, and the stage table is not touched", () => {
+  // The door renders on result, follow-up, delta and chips. The follow-up stage has an
+  // earlier mount, and (AMENDED 2026-11-03 by founder ruling) the compose stage has the
+  // steer door above the console, so those two stages suppress this one. The gate is
+  // written here, at the mount point, and NOT in stageView — reading `view.chipDoor`
   // still gives every stage exactly the value it shipped with.
   const late = JSX.indexOf(LATE_MOUNT);
-  assert.notEqual(late, -1, "the late mount must render on view.chipDoor, minus the follow-up stage");
+  assert.notEqual(late, -1, "the late mount must render on view.chipDoor, minus the follow-up and compose stages");
 
   const postPrivacy = element("wb-reader-v2__post-privacy");
   assert.ok(postPrivacy < late, "the late mount stays where it always was: after the whole result block");

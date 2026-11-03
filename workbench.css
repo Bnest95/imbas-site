@@ -7354,3 +7354,19 @@
   background: linear-gradient(180deg, rgba(222, 111, 56, 0.32) 0%, rgba(196, 88, 42, 0.2) 60%, rgba(32, 22, 16, 0.9) 100%);
   color: #fff8f0;
 }
+
+/* The Reader headline is two sentences. Balancing it keeps "next." from sitting alone on
+   the second line at desktop widths. */
+.wb-reader-v2__headline {
+  text-wrap: balance;
+}
+
+/* On a phone the empty answer box is shorter, so "See what might be missing" sits above
+   the fold at 390×844. :placeholder-shown holds only while the box is empty, so a pasted
+   answer gets the full height back. */
+@media (max-width: 699px) {
+  .wb-shell--reader-v2 .wb-reader-v2__field--answer textarea.wb-input:placeholder-shown {
+    height: 8rem;
+    min-height: 8rem;
+  }
+}

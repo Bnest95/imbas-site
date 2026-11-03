@@ -1203,6 +1203,63 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-11-03",
+    reason:
+      "authorized source edit on branch claude/reader-steer-ii-readable, round 3 of the founder " +
+      "brief (fix 2): the Reader headline is balanced so its last word never sits alone, and the " +
+      "empty answer box is shorter on a phone so the run button sits above the fold at 390x844. " +
+      "One governed source moved: workbench.css. workbench-app.jsx changed in markup only (the " +
+      "privacy line's link and the compose-stage door stand-down); its CSS template literals are " +
+      "byte-identical. styles.css was not touched.",
+    fingerprint_before: "d725567c4c8b676f70fd750361886d4dd565fe017f6632ed88bd36d57c2719da",
+    fingerprint_after: "039fc2fc641620481cb3c8cca92d740ba6354485413c75c033d3b5bec7c6147b",
+    authorized_edits: [
+      {
+        source: "workbench.css",
+        extraction: "whole file",
+        sha256_before: "f5ae335d236459f55e207681a12ca16fcaafff4db06b620578338c36cad50589",
+        sha256_after: "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00",
+        edit:
+          "added text-wrap: balance to .wb-reader-v2__headline, and one @media (max-width: 699px) " +
+          "rule giving the answer textarea height and min-height 8rem while :placeholder-shown. " +
+          "Neither names an ember token, an rgba(var(--ember-rgb), …) or a literal ramp hue, so no " +
+          "declared-token spend, free alpha or adjacent hue moved.",
+      },
+    ],
+    edits_that_moved_no_governed_source: [
+      {
+        source: "workbench-app.jsx",
+        extraction: "CSS template literals only",
+        sha256_unchanged: "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+        edit:
+          "the privacy line links \"kept in Imbas's records\" to /retention.html, and the late chip " +
+          "door stands down on the compose stage by founder ruling. No CSS template literal changed.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────

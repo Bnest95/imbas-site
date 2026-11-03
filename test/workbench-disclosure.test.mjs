@@ -241,7 +241,7 @@ test("the chip lane renders behind the view's own door, never unconditionally", 
   // cut moved the door on error and capacity surfaces and left the successful read — which
   // is where the buried door was measured — alone. RESULT now keeps its late door.
   assert.ok(
-    /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/.test(SRC),
+    /\{view\.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE \? chipDoorControl\(\) : null\}/.test(SRC),
     "the door is a stage decision: it closes where a paired input is live",
   );
   assert.ok(

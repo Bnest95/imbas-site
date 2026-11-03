@@ -336,7 +336,7 @@ test("the 503 state reaches the same continuation control the 429 state names", 
   // The door is one control with two mount points, and the mount that serves this stage
   // is the late one — the early mount stands down everywhere except the follow-up stage,
   // which a degraded read never reaches.
-  assert.match(SRC, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/);
+  assert.match(SRC, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE \? chipDoorControl\(\) : null\}/);
 
   // The seam is reused, not rebuilt: no failure-only recovery control exists.
   assert.doesNotMatch(SRC, /retryRead|autoRetry|recoverFrom5\d\d/i, "a 503 must not retry on the person's behalf");
