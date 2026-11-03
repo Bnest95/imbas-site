@@ -162,7 +162,7 @@ export const STYLES = [
   // buttons come first because those are the pairings the refresh brief asked about.
   ".tool-card__name",
   ".home-band__btn",
-  // .hero2-adv, the hero's outlined "AI advisory" link, is measured out of band and NOT
+  // .hero2-adv, the hero's outlined "Work with me" link, is measured out of band and NOT
   // registered here. The hero's height follows the viewport, and the full-document capture
   // stretches the viewport, so the link moves after its rect is read: at 1440 it moved 44px
   // and the sample landed on the filled "Try the Reader" button beside it (#de6f38), which
@@ -182,6 +182,10 @@ export const STYLES = [
   ".adv-quotes cite",
   ".adv-terms",
   ".adv-close__addr",
+  // Round 2 (2026-11-03): the homepage Field Notes signup, restored beside the inscription.
+  ".close__signup .field-notes__heading",
+  ".close__signup .field-notes__caption",
+  ".close__signup .subscribe__btn-text",
 ];
 
 export const STATES = [
