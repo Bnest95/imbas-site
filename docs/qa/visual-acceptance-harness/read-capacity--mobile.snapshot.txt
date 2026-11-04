@@ -36,7 +36,7 @@ button "Menu" disabled=false expanded=false
 p "The Reader didn't run."
 details expanded=false
 summary "Your text is sent to an AI model (Anthropic) to run the check and . It isn't published. Don't paste anything sensitive."
-a "kept in Imbas's records" href="/retention.html"
+a "stored by Imbas" href="/retention.html"
 p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
 a "what deletion means" href="/retention.html"
 a "privacy policy" href="/privacy.html"
