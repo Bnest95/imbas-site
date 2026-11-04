@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 355
+scroll_offset: 475
 timezone: UTC
 url: /input-integrity.html
 viewport: 1440x900
@@ -31,7 +31,7 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "Example: a supplier's proposal could contain text that doesn't appear on the page, telling an AI assistant to favour its offer when comparing bids."
+p "What it looks for: text set to paint nothing, white or see-through text, very small text, text placed off the page or covered by an image or shape, text in layers that are switched off, text in comments, form fields and the file's metadata, and zero-width or reordering characters that change how text reads."
 p "This reads the file's own structure and reports what it instructs."
 p "It does not scan for viruses, audit security, or make any claim about the file's safety. It reaches no verdict on the document or its author."
 p "Drop a PDF here, or choose one."
@@ -39,5 +39,6 @@ p "PDF only."
 button "Choose a PDF" disabled=false
 p "Your browser reads the file. The file does not leave this machine."
 button "Inspect a sample file" disabled=false
-p "A constructed demonstration file, not a document found in the wild."
+button "Inspect a constructed supplier proposal" disabled=false
+p "Both samples are constructed demonstration files, not documents found in the wild."
 p "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work."

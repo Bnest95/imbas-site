@@ -297,9 +297,11 @@ test("no degraded state renders a count, a finding row, or a result badge", () =
 test("the first-load state promises an inspection, not a verdict", () => {
   for (const vp of VIEWPORTS) {
     const render = renderOf(`first-load--${vp}.snapshot.txt`);
+    // AMENDED 2026-11-03: the intro line under the doors was removed by brief, and the
+    // subhead carries the promise now. It still promises an inspection, not a verdict.
     assert.ok(
-      render.includes("Paste an AI answer below. The Reader inspects what it might be missing."),
-      `${vp}: the front-door intro is not on the board`,
+      render.includes("See what surfaced, what may be missing, and how it was shaped."),
+      `${vp}: the front-door promise is not on the board`,
     );
     // The action is available and inert until there is something to act on, so the
     // sequence is legible before anyone commits to it.
@@ -334,7 +336,7 @@ test("the 503 state reaches the same continuation control the 429 state names", 
   // The door is one control with two mount points, and the mount that serves this stage
   // is the late one — the early mount stands down everywhere except the follow-up stage,
   // which a degraded read never reaches.
-  assert.match(SRC, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/);
+  assert.match(SRC, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE \? chipDoorControl\(\) : null\}/);
 
   // The seam is reused, not rebuilt: no failure-only recovery control exists.
   assert.doesNotMatch(SRC, /retryRead|autoRetry|recoverFrom5\d\d/i, "a 503 must not retry on the person's behalf");

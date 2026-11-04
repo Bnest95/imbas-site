@@ -39,6 +39,9 @@ import {
   renderCompleteConclusionSpace,
   conclusionSpaceCoverage,
   CONCLUSION_TEMPLATES,
+  renderCompleteLabelSpace,
+  labelSpaceCoverage,
+  PLAIN_LABEL_TEMPLATES,
 } from "../file-templates.js";
 
 // ── The list is versioned and stable ────────────────────────────────────────────
@@ -110,6 +113,37 @@ test("RECEIPT: the rendered output space is 36 strings across 16 templates and 1
 // lint. Kept as a separate space rather than folded into the output space because a
 // conclusion has no class_label and no family: the finding-space tests walk every row
 // back to a FILE_TEMPLATES id and a phenomenon class, and a conclusion has neither.
+
+// ── The plain labels (2026-11-03) ─────────────────────────────────────────────
+// Every finding now leads with a short label from PLAIN_LABEL_TEMPLATES. The labels are
+// evidence-dependent strings, so they get the same exhaustive treatment as the templates:
+// every label the registry can render is enumerated and linted, and the count is pinned.
+
+const LABEL_SPACE = renderCompleteLabelSpace();
+const LABEL_STRINGS = LABEL_SPACE.map((r) => r.string);
+
+test("EXHAUSTIVE: every plain label passes file-vocab.v1, check-vocab.v2 and chip-vocab.v1", () => {
+  assert.deepEqual(lintFileStrings(LABEL_STRINGS), [], "file-vocab.v1 violations in the labels");
+  assert.deepEqual(lintUserFacingStrings(LABEL_STRINGS), [], "check-vocab.v2 violations in the labels");
+  assert.deepEqual(lintChipStrings(LABEL_STRINGS), [], "chip-vocab.v1 violations in the labels");
+});
+
+test("the label claim is exhaustive: every label template rendered, and every class has one", () => {
+  const coverage = labelSpaceCoverage();
+  assert.deepEqual(coverage.unreached_templates, []);
+  assert.deepEqual(coverage.unlabelled_classes, []);
+});
+
+test("RECEIPT: the label space is 20 strings across 13 label templates", () => {
+  assert.equal(LABEL_STRINGS.length, 20);
+  assert.equal(PLAIN_LABEL_TEMPLATES.length, 13);
+});
+
+test("no label names an experience: the size and the colour are stated, never how they read", () => {
+  for (const label of LABEL_STRINGS) {
+    assert.doesNotMatch(label, /\b(?:too small|hard to (?:see|read)|can't be seen|unreadable|invisible)\b/i, label);
+  }
+});
 
 const CONCLUSION_SPACE = renderCompleteConclusionSpace();
 const CONCLUSION_STRINGS = CONCLUSION_SPACE.map((r) => r.string);

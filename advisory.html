@@ -83,6 +83,8 @@
 
     /* Who you'd work with */
     .adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
+    .adv-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.1rem; margin: 0 0 var(--space-3); }
+    .adv-name-row h2 { margin: 0; }
     .adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
     .adv-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
     .adv-stats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.1; color: var(--ink-luminous); margin-bottom: 0.35rem; }
@@ -112,6 +114,7 @@
     .adv-close { padding: var(--space-7) 0 var(--space-6); text-align: center; }
     .adv-close h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
     .adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
+    .adv-close__free { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-3)) auto var(--space-4); }
     .adv-close .adv-actions { justify-content: center; }
     .adv-close__addr { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.06em; color: var(--ink-primary); user-select: all; }
     .adv-terms { max-width: 64ch; margin: var(--space-5) auto 0; font-size: 0.875rem; line-height: 1.6; color: var(--ink-soft); }
@@ -229,7 +232,8 @@
       <p class="adv-intro">I research the options, build what&rsquo;s needed, put it in place and train the people who&rsquo;ll use it.</p>
       <ul class="adv-work" role="list">
         <li><span>AI adoption</span><p>Where AI can save your team time, where its work needs checking, and where it isn&rsquo;t worth using yet.</p></li>
-        <li><span>Custom tools</span><p>A quoting tool built around your services and prices, a searchable reference from your own documents, reports prepared from the records you already keep, or customer inquiries and follow-ups in one place, each with a next step and someone responsible for it.</p></li>
+        <li><span>Custom tools</span><p>A quoting tool built around your services and prices, a searchable reference from your own documents, or reports prepared from the records you already keep.</p></li>
+        <li><span>Customer follow-up</span><p>Customer inquiries and follow-ups in one place, each with a next step and someone responsible for it.</p></li>
         <li><span>Implementation</span><p>Putting the new tool or process into daily use, connected to the software and records you already have.</p></li>
         <li><span>Training</span><p>Training using your team&rsquo;s own tasks, so people know how to use the tools, check the results and handle exceptions.</p></li>
         <li><span>Research</span><p>A comparison of your options, backed by research into the market, suppliers or competitors.</p></li>
@@ -245,8 +249,11 @@
       <div class="adv-who">
         <div>
           <span class="section-label section-label--named adv-label"><span>Who you&rsquo;d work with</span></span>
-          <h2 id="adv-proof-h2">Brendan Nestor</h2>
-          <p class="adv-founder-p">I&rsquo;ve led growth at an early-stage company, managed a team across LA, New York and Europe, and built and run my own service business. At Imbas, that experience informs how I investigate problems, build useful tools and help people put them to work.</p>
+          <div class="adv-name-row">
+            <h2 id="adv-proof-h2">Brendan Nestor</h2>
+            <a class="adv-textlink" href="https://www.linkedin.com/in/brendannestor" rel="me">LinkedIn</a>
+          </div>
+          <p class="adv-founder-p">I&rsquo;ve led growth at an early-stage company, managed a team across LA, New York and Europe, and built and run my own service business. At Imbas I also measure what AI answers leave out. That&rsquo;s how I know where AI is worth using in your business, and where a person still needs to check its work.</p>
         </div>
         <ul class="adv-stats" role="list">
           <li><b>Head of Growth</b><span>Employee four at a startup backed by tier-1 VCs</span></li>
@@ -259,7 +266,7 @@
         <div>
           <p class="adv-built__label">Tools I&rsquo;ve built</p>
           <ul role="list">
-            <li><p><b>The Reader.</b> Check what an AI answer may have missed. Choose an instruction to ask it to use your material, show its sources or answer your actual question, then compare the replies.</p><a class="adv-textlink" href="/reader.html?reader=1">Open the Reader</a></li>
+            <li><p><b>The Reader.</b> Check what an AI answer may have missed, then steer the next one: ask it to use your material, show its sources or answer your actual question, and compare the replies.</p><a class="adv-textlink" href="/reader.html?reader=1">Open the Reader</a></li>
             <li><p><b>Input Integrity.</b> Check a PDF&rsquo;s content and structure, including text that doesn&rsquo;t appear on the page but an AI may still read, with evidence behind each finding.</p><a class="adv-textlink" href="/input-integrity.html">Inspect a PDF</a></li>
           </ul>
           <a class="adv-textlink" href="/research.html">The research</a>
@@ -301,6 +308,7 @@
         <p>I talk to the people doing the work and look at the tools, information and decisions involved. We try useful changes on real tasks, work through the exceptions and make sure people understand how to use what we build.</p>
         <p>Before we start, we agree what you&rsquo;ll receive. Depending on the work, that can include findings and recommendations, a working tool or process, training and instructions for your team. We also agree who controls the accounts, who maintains what we build and what support is included.</p>
         <p>Scope and fees depend on the problem. We work that out together after an initial conversation.</p>
+        <p>The first conversation is free. I work remotely, and in person in Pennsylvania. I don&rsquo;t take commissions or referral fees from AI vendors, so what I recommend isn&rsquo;t tilted toward any of them.</p>
       </div>
     </div>
   </section>
@@ -310,6 +318,7 @@
     <div class="adv-wrap">
       <h2 id="adv-close-h2">Tell me what&rsquo;s slowing you down.</h2>
       <p class="adv-close__note">A few lines about what you want to improve and how you handle it now are enough to start.</p>
+      <p class="adv-close__free">The first conversation is free.</p>
       <div class="adv-actions">
         <a class="adv-btn" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me">Email me <span aria-hidden="true">&rarr;</span></a>
       </div>

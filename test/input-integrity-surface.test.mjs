@@ -98,14 +98,23 @@ test("RECEIPT: every vendored fixture builds a view, and the corpus reaches ever
   assert.equal(zero, 17);
 });
 
-test("a group's membership is a schema fact, and the four groups partition every item", async () => {
+test("a group's membership is a schema fact, and the four groups partition every page item", async () => {
+  // AMENDED 2026-11-03: metadata is listed field by field in Document details and never
+  // counted with the page findings, so the groups partition the page items and the
+  // details list carries the metadata items, one row each, by the same anchor.
   for (const { file, view } of await allViews()) {
     for (const item of view.items) {
       assert.equal(item.group, groupOf({ class_label: item.class_label, ...findingOf(view, item) }), file);
       assert.ok(COPY.GROUP_IDS.includes(item.group), `${file}: ${item.group} is not a declared group`);
     }
     const grouped = view.groups.reduce((n, g) => n + g.items.length, 0);
-    assert.equal(grouped, view.items.length, `${file}: items were lost or duplicated across groups`);
+    const metadata = view.items.filter((i) => i.class_label === "metadata_text");
+    assert.equal(grouped + metadata.length, view.items.length, `${file}: items were lost or duplicated`);
+    assert.deepEqual(
+      view.document_details.filter((r) => r.anchor).map((r) => r.anchor),
+      metadata.map((i) => i.anchor),
+      `${file}: every metadata item is a details row`,
+    );
   }
 });
 
@@ -277,10 +286,11 @@ test("a file where nothing qualified reaches a complete state that claims nothin
   assert.deepEqual(view.items, []);
   assert.deepEqual(view.groups, []);
   assert.equal(view.coverage.state, "complete");
-  assert.equal(view.surfaced_count_copy, "0 items surfaced.");
+  assert.equal(view.page_summary_copy, null);
+  assert.deepEqual(view.page_summary, { piece_count: 0, properties: [] });
 
   const zero = view.zero_reportable;
-  assert.equal(zero.statement, "No phenomenon surfaced under the checks that ran.");
+  assert.equal(zero.statement, "The checks surfaced no text on this file's pages.");
   assert.equal(
     zero.scope,
     "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file " +

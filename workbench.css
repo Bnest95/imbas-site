@@ -2558,6 +2558,28 @@
   display: none;
 }
 
+/* The three Reader doors. On a phone they stack, one door per line, with the short
+   description beside the name rather than squeezed under it. */
+@media (max-width: 600px) {
+  .wb-reader-v2__modes--inline.wb-reader-v2__modes--doors {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .wb-reader-v2__modes--doors .wb-reader-v2__mode {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.1rem 0.55rem;
+    text-align: left;
+  }
+  .wb-reader-v2__modes--inline.wb-reader-v2__modes--doors .wb-reader-v2__mode-desc {
+    display: inline;
+    margin: 0;
+    font-size: 0.78rem;
+    color: rgba(150, 138, 125, 0.88);
+  }
+}
+
 .wb-reader-v2__modes--inline .wb-reader-v2__mode-name {
   margin-bottom: 0;
   font-size: 0.92rem;
@@ -7331,4 +7353,20 @@
   border-color: rgba(222, 111, 56, 0.82);
   background: linear-gradient(180deg, rgba(222, 111, 56, 0.32) 0%, rgba(196, 88, 42, 0.2) 60%, rgba(32, 22, 16, 0.9) 100%);
   color: #fff8f0;
+}
+
+/* The Reader headline is two sentences. Balancing it keeps "next." from sitting alone on
+   the second line at desktop widths. */
+.wb-reader-v2__headline {
+  text-wrap: balance;
+}
+
+/* On a phone the empty answer box is shorter, so "See what might be missing" sits above
+   the fold at 390×844. :placeholder-shown holds only while the box is empty, so a pasted
+   answer gets the full height back. */
+@media (max-width: 699px) {
+  .wb-shell--reader-v2 .wb-reader-v2__field--answer textarea.wb-input:placeholder-shown {
+    height: 8rem;
+    min-height: 8rem;
+  }
 }

@@ -27,7 +27,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
   <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/input-integrity.css">
+  <link rel="stylesheet" href="/input-integrity.css?v=plain-results-v1">
   <script src="/site-header.js" defer></script>
   <script type="module" src="/input-integrity.js"></script>
   <script type="application/ld+json">
@@ -122,6 +122,7 @@
     <h1 data-copy="MASTHEAD.title">What the file carries under the page</h1>
     <p class="page__lede" data-copy="MASTHEAD.lede">A PDF's structure can carry more than its pages render. This reads that structure in your browser and reports what the file instructs, with the evidence beside every statement.</p>
     <p class="ii-example" data-copy="MASTHEAD.example">Example: a supplier's proposal could contain text that doesn't appear on the page, telling an AI assistant to favour its offer when comparing bids.</p>
+    <p class="ii-looks-for" data-copy="MASTHEAD.looks_for">What it looks for: text set to paint nothing, white or see-through text, very small text, text placed off the page or covered by an image or shape, text in layers that are switched off, text in comments, form fields and the file's metadata, and zero-width or reordering characters that change how text reads.</p>
 
     <div class="ii-boundary">
       <p data-copy="BOUNDARY.statement">This reads the file's own structure and reports what it instructs.</p>
@@ -138,8 +139,11 @@
       <p class="ii-intake__refusal" id="intake-refusal" role="status" hidden></p>
       <p class="ii-intake__custody" data-copy="INTAKE.custody">Your browser reads the file. The file does not leave this machine.</p>
       <div class="ii-sample">
-        <button type="button" id="sample" class="ii-sample__action" data-copy="INTAKE.sample_action">Inspect a sample file</button>
-        <p class="ii-sample__note" data-copy="INTAKE.sample_note">A constructed demonstration file, not a document found in the wild.</p>
+        <div class="ii-sample__actions">
+          <button type="button" id="sample" class="ii-sample__action" data-copy="INTAKE.sample_action">Inspect a sample file</button>
+          <button type="button" id="sample-proposal" class="ii-sample__action" data-copy="INTAKE.sample_proposal_action">Inspect a constructed supplier proposal</button>
+        </div>
+        <p class="ii-sample__note" data-copy="INTAKE.sample_note">Both samples are constructed demonstration files, not documents found in the wild.</p>
       </div>
     </section>
 

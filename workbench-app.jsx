@@ -6763,7 +6763,7 @@ function ReaderWorkbench() {
   // The door is one control at one of two mount points, and the two conditions below
   // are the complement of each other, so this is true exactly when the door is on the
   // page and never counts it twice.
-  const chipDoorPresent = stage === STAGE_FOLLOWUP || view.chipDoor;
+  const chipDoorPresent = stage === STAGE_FOLLOWUP || (view.chipDoor && stage !== STAGE_COMPOSE);
 
   // What the capability strip may link to, in document order. Every entry is gated on
   // the same expression that mounts the section itself, so a link cannot outlive its
@@ -7120,12 +7120,15 @@ function ReaderWorkbench() {
       : CHIP_ENTRY_VIA.INSPECTION_REACTIVE;
     return via === seated ? chipDoorRef : null;
   };
+  // Every door presses through here, so the lane opens from one call site whichever
+  // control was pressed, and each press names its door.
+  const pressDoor = (via) => (lane === LANE_CHIPS ? closeChipLane() : openChipLane(via));
   const chipDoorButton = (via, label) => (
     <button
       type="button"
       ref={doorRefFor(via)}
       className="wb-demo-trigger wb-chip-door"
-      onClick={lane === LANE_CHIPS ? closeChipLane : () => openChipLane(via)}
+      onClick={() => pressDoor(via)}
       aria-expanded={lane === LANE_CHIPS}
       /* The lane is not in the DOM until the door is first opened, so naming it
          unconditionally points assistive technology at an id that does not exist on
@@ -7185,7 +7188,7 @@ function ReaderWorkbench() {
            origin, which is the truthful one — no inspection stands behind it. */
         chipDoorButton(
           CHIP_ENTRY_VIA.DIRECT_STANDING,
-          lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up",
+          lane === LANE_CHIPS ? "Back to checking an answer" : "Steer the next answer",
         )
       )}
     </div>
@@ -7229,6 +7232,24 @@ function ReaderWorkbench() {
       demoEmittedRef.current = true;
       emitReaderEvent(READER_EVENTS.RUN_STARTED, { mode: "demo", source: "demo" });
     }
+  };
+
+  // The three doors above the console. `door` is derived, never stored: the lane says
+  // whether the person is steering, and the mode says which inspect surface is up.
+  const door = lane === LANE_CHIPS ? "steer" : mode === "guided" ? "example" : "check";
+  const chooseCheck = () => {
+    if (lane === LANE_CHIPS) closeChipLane();
+    switchMode("own");
+  };
+  // The steer door above the console is the standing door's top mount point: same
+  // origin, same lane. Pressing it while the lane is already open leaves it open.
+  const chooseSteer = () => {
+    if (lane !== LANE_CHIPS) pressDoor(CHIP_ENTRY_VIA.DIRECT_STANDING);
+  };
+  const chooseExample = () => {
+    if (lane === LANE_CHIPS) closeChipLane();
+    switchMode("guided");
+    openDemo();
   };
 
   // Leave the demo and drop the visitor at the paste box, ready to run their own.
@@ -7383,43 +7404,59 @@ function ReaderWorkbench() {
         {/* The chip lane is self-contained (§D): it brings its own answer box, so the
             console has nothing to offer there. Leaving it mounted put an empty read-only
             paste box above the lane a ?start=chips visitor arrived for. */}
+        {/* Three doors, and still not tabs, for the reason the two-button row they replace
+            gave: a press swaps whole regions of the stage and discards what it leaves, so
+            there is no single panel for aria-controls to name. They sit above the console
+            rather than inside it because the steer door hides the console, and a person in
+            the lane needs the way back on the same row. The steer door is the standing chip
+            door (§D) moved to where a first-time visitor can see it; it opens the lane over
+            nothing and records the direct origin, exactly as the late door does. */}
+        <div className="wb-reader-v2__modes wb-reader-v2__modes--inline wb-reader-v2__modes--doors" role="group" aria-label="Reader">
+          <button
+            type="button"
+            aria-pressed={door === "check"}
+            className={`wb-reader-v2__mode wb-focus${door === "check" ? " is-active" : ""}`}
+            onClick={chooseCheck}
+          >
+            <span className="wb-reader-v2__mode-name">Check an answer</span>
+            <span className="wb-reader-v2__mode-desc">Paste any AI answer.</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={door === "steer"}
+            className={`wb-reader-v2__mode wb-focus${door === "steer" ? " is-active" : ""}`}
+            onClick={chooseSteer}
+          >
+            <span className="wb-reader-v2__mode-name">{CHIP_UI.entry.heading}</span>
+            <span className="wb-reader-v2__mode-desc">Pick what you want done differently.</span>
+          </button>
+          <button
+            type="button"
+            aria-pressed={door === "example"}
+            className={`wb-reader-v2__mode wb-focus${door === "example" ? " is-active" : ""}`}
+            onClick={chooseExample}
+          >
+            <span className="wb-reader-v2__mode-name">Real example</span>
+            <span className="wb-reader-v2__mode-desc">Watch one we&rsquo;ve already run.</span>
+          </button>
+        </div>
         {view.pasteBox ? (
         <div ref={stageRef} id="wb-reader-console" className="wb-console wb-reader-console wb-scroll-anchor">
           <div className="wb-console__main">
-            {/* Not tabs, and the half-built tablist that used to sit here said they were.
-                A tab controls one panel and swaps a view losslessly. These two control four
-                disjoint regions — the case grid, the confirm block's heading, the field set,
-                and the confirm block's own class — and switchMode discards the result, the
-                errors and the pasted answer on the way through. There is no single element
-                that could honestly take aria-controls, and inventing a wrapper to hold one
-                would be building interaction architecture to satisfy a pattern the UI does
-                not implement. They are what they look like: two buttons, one of them on. */}
-            <div className="wb-reader-v2__modes wb-reader-v2__modes--inline" role="group" aria-label="Reader mode">
-              <button
-                type="button"
-                aria-pressed={mode === "own"}
-                className={`wb-reader-v2__mode wb-focus${mode === "own" ? " is-active" : ""}`}
-                onClick={() => switchMode("own")}
-              >
-                <span className="wb-reader-v2__mode-name">Paste Your Own</span>
-                <span className="wb-reader-v2__mode-desc">Bring any AI answer.</span>
-              </button>
-              <button
-                type="button"
-                aria-pressed={mode === "guided"}
-                className={`wb-reader-v2__mode wb-focus${mode === "guided" ? " is-active" : ""}`}
-                onClick={() => switchMode("guided")}
-              >
-                <span className="wb-reader-v2__mode-name">Guided Case</span>
-                {/* "a measured case" described the rotation until the flagship joined it.
-                    The flagship is a Reader run on a public example, not a scored case,
-                    so the noun had to widen to what all three entries have in common. */}
-                <span className="wb-reader-v2__mode-desc">Start with an example Imbas has already run.</span>
-              </button>
-            </div>
-
             {mode === "guided" ? (
               <>
+                {/* The walkthrough and the cases share this door because both are runs
+                    Imbas has already made: one to watch, and the cases to try on your own
+                    AI. The walkthrough leads; the cases follow it. */}
+                {demoOpen ? (
+                  <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} />
+                ) : (
+                  <div className="wb-demo-trigger-row">
+                    <button type="button" className="wb-demo-trigger" onClick={openDemo} aria-expanded={false}>
+                      {PUBLIC_EXAMPLE_UI.trigger_label}
+                    </button>
+                  </div>
+                )}
                 <div className="wb-case-selector wb-reader-case-grid">
                   {CURATED.map((c) => (
                     <button
@@ -7456,9 +7493,6 @@ function ReaderWorkbench() {
                         {RERUN_UNRESOLVED_NOTICE}
                       </p>
                     ) : null}
-                    <p className="wb-reader-v2__own-intro">
-                      Paste an AI answer below. The Reader inspects what it might be missing.
-                    </p>
                   </>
                 )}
               </div>
@@ -7480,7 +7514,7 @@ function ReaderWorkbench() {
                     </div>
                     <div className="wb-reader-v2__field wb-reader-v2__field--answer">
                       <PasteField
-                        label="AI answer received"
+                        label="Your AI's answer"
                         overMaxNotice={answerOverMaxNotice}
                         value={answer}
                         onChange={touchAnswer}
@@ -7496,7 +7530,7 @@ function ReaderWorkbench() {
                   <>
                     <div className="wb-reader-v2__field wb-reader-v2__field--answer">
                       <PasteField
-                        label="AI answer received"
+                        label="Your AI's answer"
                         overMaxNotice={answerOverMaxNotice}
                         value={answer}
                         onChange={touchAnswer}
@@ -7546,7 +7580,7 @@ function ReaderWorkbench() {
                 <ReaderStatusLine state={statusState} />
                 <details className="wb-reader-v2__privacy">
                   <summary className="wb-reader-v2__privacy-line">
-                    Inspections aren't published to our reviewed archive. Don't paste anything sensitive.
+                    Your text is sent to an AI model (Anthropic) to run the check and <a href="/retention.html">kept in Imbas's records</a>. It isn't published. Don't paste anything sensitive.
                   </summary>
                   <p className="wb-reader-v2__privacy-full">
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
@@ -7592,21 +7626,9 @@ function ReaderWorkbench() {
             console that lane does not render. */}
         {view.pasteBox ? (
         <React.Fragment>
-        {/* §E: the paste box leads, and the ready example is the one quiet secondary under
-            it. The demo used to sit above the box, where it competed with the thing it was
-            meant to explain. Nothing was deleted — it moved. */}
-        <div className="wb-demo-trigger-row">
-          <button
-            type="button"
-            className="wb-demo-trigger"
-            onClick={demoOpen ? () => setDemoOpen(false) : openDemo}
-            aria-expanded={demoOpen}
-          >
-            {demoOpen ? PUBLIC_EXAMPLE_UI.close_label : PUBLIC_EXAMPLE_UI.trigger_label}
-          </button>
-        </div>
-        {demoOpen ? <ReaderDemo onTryOwn={tryOwnFromDemo} onClose={() => setDemoOpen(false)} /> : null}
-
+        {/* §E: the paste box leads. The ready example that sat under it as the quiet
+            secondary now opens from the Real example door above the console, where the
+            walkthrough and the guided cases share one place. Nothing was deleted. */}
         {/* The collapsed "How it works". Same three steps the first-run strip used to push
             above the paste box, now one tap away and available to everyone every time
             rather than to first-timers once. */}
@@ -7787,7 +7809,10 @@ function ReaderWorkbench() {
             whole correction: the result stage is the degraded fallback path, so standing
             down there moved the door on error and capacity surfaces and nowhere a
             measurement had been taken. Its prior late-door behaviour is restored. */}
-        {view.chipDoor && stage !== STAGE_FOLLOWUP ? chipDoorControl() : null}
+        {/* RULED 2026-11-03: the late door also stands down on the compose stage. The
+            Steer the next answer door above the console is the first screen's entrance to
+            the lane, so the first screen shows the name once. */}
+        {view.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE ? chipDoorControl() : null}
         {/* Mounted on first open and never unmounted after: `hidden` takes the lane out of
             the layout, the tab order and the accessibility tree, so the one-live-input
             invariant holds while a half-typed answer survives a close and reopen. */}
@@ -7850,20 +7875,26 @@ function Workbench() {
       <style>{FONT_IMPORT}</style>
       <style>{WORKBENCH_A11Y_CSS}{WORKBENCH_RESULT_GAP_CSS}{WORKBENCH_RESULT_LAYOUT_CSS}{WORKBENCH_FLOW_CSS}{WORKBENCH_TERMS_CSS}</style>
       <div className="wb-shell__frame">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
-          <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Reader</div>
-        </div>
-        <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
+        {/* The site header already names the page, so the Reader surface carries no
+            second Imbas / READER bar. The legacy surface keeps it. */}
+        {!readerOn ? (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "0.02em" }}>Imbas</div>
+              <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: C.textFaint, textTransform: "uppercase" }}>Reader</div>
+            </div>
+            <div style={{ height: 1, background: C.line, marginBottom: 22 }} />
+          </>
+        ) : null}
 
         {readerOn ? (
           <div className="wb-reader-v2__flow">
             <p className="wb-reader-v2__eyebrow">READER</p>
             <h1 ref={headingRef} className="wb-scroll-anchor wb-reader-v2__headline">
-              Check your AI answer.
+              Check your AI&rsquo;s answer. Steer what comes next.
             </h1>
             <p className="wb-reader-v2__subcopy">
-              Paste an AI answer. The Reader shows what surfaced, what might be missing, and how it was shaped. Or choose an instruction to steer its next response.
+              See what surfaced, what may be missing, and how it was shaped. Then tell your AI exactly what to do next and compare what changed.
             </p>
             <ReaderWorkbench />
             <div className="wb-reader-v2__trust">

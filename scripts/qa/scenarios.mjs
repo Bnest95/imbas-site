@@ -1239,9 +1239,11 @@ const MATCHED_CAPTURE = { same_model: PAIR_SAME_MODEL.YES, edits: PAIR_EDITS.NON
 // Opening the door is one click on the entry action, by its own label. The two
 // public-example frames share the steps and the assertions so a copy change cannot
 // leave one frame checking the door and the other checking whatever replaced it.
+// 2026-11-03: the walkthrough opens from the Real example door above the console, which
+// opens it on press, rather than from a trigger under the paste box.
 const DRIVE_PUBLIC_EXAMPLE = [
-  { waitFor: ".wb-demo-trigger" },
-  { clickText: ".wb-demo-trigger", text: PUBLIC_EXAMPLE_UI.trigger_label },
+  { waitFor: ".wb-reader-v2__modes--doors" },
+  { clickText: ".wb-reader-v2__modes--doors .wb-reader-v2__mode", text: "Real example" },
   { waitFor: ".wb-demo__prov" },
 ];
 
@@ -1854,10 +1856,14 @@ export const SCENARIOS = {
     routes: {},
     state: "The workbench on arrival — the paste box, before anything is pasted",
     expected:
-      "The paste box leads. The intro says what the Reader does and does not promise a verdict: paste an AI answer, the Reader inspects what it might be missing. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind.",
+      "The paste box leads. Three doors sit above it with Check an answer pressed, and beside it Steer the next answer and Real example, so both other ways in are one tap away and neither is the opening move. The field is labelled Your AI's answer. The status line reads 'Paste an answer to inspect it.' and the run button is present and disabled, so the sequence is legible before anyone commits to it. No result surface, no count, and no score of any kind.",
     steps: DRIVE_FIRST_LOAD,
+    // 2026-11-03: the repeated intro line under the doors was removed by brief; the doors
+    // and the field label carry what it said.
     assertText: [
-      "Paste an AI answer below. The Reader inspects what it might be missing.",
+      "Check an answer",
+      "Steer the next answer",
+      "Real example",
       "Paste an answer to inspect it.",
       "See what might be missing",
     ],
@@ -2340,14 +2346,15 @@ export const SCENARIOS = {
     canned: true,
     state: "Input Integrity, the intake state before any file has been chosen",
     expected:
-      "The page offers one way in — a file picker that takes PDFs — and beside it the sample the surface can inspect without a file, marked as a constructed demonstration rather than a document found in the wild. The boundary sits on the page before any result does: what the run establishes, and what it does not. No result region, no coverage line, no count.",
+      "The page offers one way in — a file picker that takes PDFs — and beside it the two samples the surface can inspect without a file, both marked as constructed demonstrations rather than documents found in the wild. The boundary sits on the page before any result does: what the run establishes, and what it does not. No result region, no coverage line, no count.",
     routes: {},
     // The intake region is in the document from first paint, so the only step is the
     // wait that proves it is on screen when the frame is taken.
     steps: [{ waitFor: "#intake" }],
     assertText: [
       "Inspect a sample file",
-      "A constructed demonstration file, not a document found in the wild.",
+      "Inspect a constructed supplier proposal",
+      "Both samples are constructed demonstration files, not documents found in the wild.",
     ],
     assertSelector: "#intake",
   },
@@ -2359,7 +2366,7 @@ export const SCENARIOS = {
     canned: true,
     state: "Input Integrity, the constructed sample inspected — one finding, with the rendered page beside the structure it reports",
     expected:
-      "One item surfaced, under the heading for text the page's instructions do not paint. The finding states three things in the registry's order: what the content stream sets, what a system extracting text receives, and that the rendering instructions do not paint it. Beside it the page is drawn as the renderer draws it, with the marker framing the place the structure names — the two-reading contrast, which is the whole argument of the surface and the one thing only a picture can settle. The coverage line reads complete over one page.",
+      "One piece of page text surfaced, and the summary says how it was set. The finding leads with its plain label and the text it carries, then states three things in the registry's order: what the content stream sets, what a system extracting text receives, and that the rendering instructions do not paint it. Beside it the page is drawn as the renderer draws it, with the marker framing the place the structure names — the two-reading contrast, which is the whole argument of the surface and the one thing only a picture can settle. The coverage line reads complete over one page.",
     routes: {},
     steps: [
       { click: "#sample" },
@@ -2369,8 +2376,8 @@ export const SCENARIOS = {
       { waitForText: "The page's rendering instructions do not paint it." },
     ],
     assertText: [
-      "1 item surfaced.",
-      "Text the page's instructions do not paint",
+      "This file carries 1 piece of text set to paint nothing. A system that extracts the file's text receives it.",
+      "Text set to paint nothing",
       "The page's content stream sets text render mode 3 for this run.",
       "A system that reads this file by extracting its text receives this text.",
       "The page's rendering instructions do not paint it.",
@@ -2388,7 +2395,7 @@ export const SCENARIOS = {
     canned: true,
     state: "Input Integrity, a file inspected with nothing to report — the zero-reportable state",
     expected:
-      "The run completed and surfaced nothing, and the page says so without implying the file is clean. The count reads zero, the statement names the checks that ran rather than the document, and the scope line states how many structural properties those checks describe and that other structure may exist which they do not. Coverage still reads complete over one page, because a run that found nothing and a run that could not read the file are different states and must not photograph the same.",
+      "The run completed and surfaced nothing, and the page says so without implying the file is clean. The statement says the checks surfaced no text on the pages, which names the checks rather than the document, and the scope line states how many structural properties those checks describe and that other structure may exist which they do not. Coverage still reads complete over one page, because a run that found nothing and a run that could not read the file are different states and must not photograph the same.",
     routes: {},
     steps: [
       // An image-only page: a real PDF with a picture where the text would be, which is
@@ -2397,11 +2404,10 @@ export const SCENARIOS = {
       // actually hand the surface. The fixture is in the tree and the corpus test
       // already holds it at zero findings.
       { setFile: "test/fixtures/file-intake/c9_image_only.pdf", selector: "#file-input" },
-      { waitForText: "No phenomenon surfaced under the checks that ran." },
+      { waitForText: "The checks surfaced no text on this file's pages." },
     ],
     assertText: [
-      "0 items surfaced.",
-      "No phenomenon surfaced under the checks that ran.",
+      "The checks surfaced no text on this file's pages.",
       "Those checks describe eleven structural properties of a PDF. Other structure may exist in this file that they do not describe.",
       "This run inspected 1 page, and every page was read.",
     ],
@@ -2524,13 +2530,13 @@ export const SCENARIOS = {
     canned: true,
     state: "The homepage's Tools section — the Reader card, with both of the Reader's uses described",
     expected:
-      "The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the two paragraphs (check an answer; choose what the next answer should do differently), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here.",
+      "The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the one paragraph that carries both uses (see what surfaced; pick what should change and compare), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here.",
     routes: {},
     steps: [{ waitFor: ".tool-card--reader" }],
     assertText: [
       "Free to use.",
       "steer what comes next.",
-      "Paste an AI answer to check what may be missing.",
+      "See what surfaced, what may be missing, and how it was shaped.",
       "Open the Reader",
     ],
     assertSelector: ".tool-card--reader",
@@ -2624,7 +2630,7 @@ export const PENDING_SCENARIOS = {
     canned: true,
     state: "The homepage as it first arrives — header, the eyebrow line, the monolith, and the two actions",
     expected:
-      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the eyebrow line that says what Imbas does; the IMBAS monolith and the sentence under it; and two actions, Try the Reader and AI advisory. The v4.4 refresh rebuilt this viewport, and its correction pass removed the line that sat under the actions; these assertions describe the corrected one. If a rebuild moves the actions, drops the eyebrow line, or changes the navigation, this frame moves.",
+      "The first viewport carries four things and the frame exists to hold all four together: the site header with its full navigation, including the More control the shared script appends after first paint; the eyebrow line that says what Imbas does; the IMBAS monolith and the sentence under it; and two actions, Try the Reader and Work with me. The v4.4 refresh rebuilt this viewport, and its correction pass removed the line that sat under the actions; these assertions describe the corrected one. If a rebuild moves the actions, drops the eyebrow line, or changes the navigation, this frame moves.",
     routes: {},
     // The hero markup ships complete, so the only step is the wait that proves the
     // composition is on screen when the frame is taken. The header's injected control
@@ -2633,7 +2639,7 @@ export const PENDING_SCENARIOS = {
     assertText: [
       "AI tools, research and implementation",
       "Try the Reader",
-      "AI advisory",
+      "Work with me",
       "Making AI work for you.",
     ],
     assertSelector: ".hero__capture-block",

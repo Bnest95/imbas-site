@@ -2,7 +2,7 @@
   "instrument": "scripts/qa/blocks-ratchet.mjs",
   "rule": "R2",
   "doctrine": "docs/surface/IMBAS-SURFACE-FINISH-COGNITIVE-DOCTRINE-FINAL-RECONCILIATION-CANDIDATE.md",
-  "measured_at_master": "8f492c19f3cf17372b44dc60366a8b3a2d67de51",
+  "measured_at_master": "9b6f616fbd52f8f9908587c58ff9934377db7f19",
   "browser": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "target_selectors": [
@@ -67,16 +67,16 @@
       },
       {
         "path": "scripts/qa/scenarios.mjs",
-        "sha256": "6c6ed87c842abdf5"
+        "sha256": "0bb197be84753ed2"
       }
     ],
-    "sha256": "31229ce8d95781abc63143674152d9dbf51315fcec31aa93d346f5e8391d7832"
+    "sha256": "e1542d30a9b7a50f407dfbdcd24807efd5d2ed3692c2ccda8bb1f0181bbab302"
   },
   "sources": [
     {
       "path": "scripts/qa/scenarios.mjs",
       "extraction": "whole file",
-      "sha256": "6c6ed87c842abdf5"
+      "sha256": "0bb197be84753ed2"
     },
     {
       "path": "scripts/qa/comprehension.mjs",
@@ -98,7 +98,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 6,
+      "blocks_above_region": 10,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -117,7 +117,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 6,
+      "blocks_above_region": 10,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -136,7 +136,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 6,
+      "blocks_above_region": 10,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -155,7 +155,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 6,
+      "blocks_above_region": 10,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -174,7 +174,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -194,7 +194,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -214,7 +214,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -234,7 +234,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -254,7 +254,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -274,7 +274,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -294,7 +294,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -314,7 +314,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -334,7 +334,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 6,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -351,7 +351,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 6,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -368,7 +368,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -388,7 +388,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -408,7 +408,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -428,7 +428,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -448,7 +448,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -468,7 +468,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -488,7 +488,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -508,7 +508,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -528,7 +528,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -548,7 +548,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -568,7 +568,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -588,7 +588,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -608,7 +608,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -628,7 +628,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -648,7 +648,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -668,7 +668,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -688,7 +688,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -708,7 +708,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -728,7 +728,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -748,7 +748,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -768,7 +768,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-reader-result__title",
         "wb-reader-result__fallback",
@@ -787,7 +787,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-reader-result__title",
         "wb-reader-result__fallback",
@@ -806,7 +806,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-reader-result__title",
         "wb-reader-result__fallback",
@@ -825,7 +825,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 8,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-reader-result__title",
         "wb-reader-result__fallback",
@@ -844,7 +844,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -864,7 +864,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -884,7 +884,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -904,7 +904,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -924,7 +924,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -944,7 +944,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1154,7 +1154,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 5,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1170,7 +1170,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 5,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1186,7 +1186,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 5,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1202,7 +1202,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 5,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1218,7 +1218,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 25,
+      "blocks_above_region": 23,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",
@@ -1238,7 +1238,7 @@
       "region": ".wb-reader-v2__result",
       "boundary": "answer",
       "blocks_before": 9,
-      "blocks_above_region": 30,
+      "blocks_above_region": 28,
       "block_classes": [
         "wb-result-hero__estimate",
         "wb-result-hero__summary",

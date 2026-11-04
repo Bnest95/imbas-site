@@ -81,7 +81,7 @@ const DOOR_CLASS = 'className="wb-demo-trigger wb-chip-door"';
 // The two mount conditions, verbatim. Written once here so a test cannot silently drift
 // onto a different stage than the one the file's header explains.
 const EARLY_MOUNT = "{stage === STAGE_FOLLOWUP ? chipDoorControl() : null}";
-const LATE_MOUNT = "{view.chipDoor && stage !== STAGE_FOLLOWUP ? chipDoorControl() : null}";
+const LATE_MOUNT = "{view.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE ? chipDoorControl() : null}";
 
 const countOf = (haystack, needle) => haystack.split(needle).length - 1;
 
@@ -158,15 +158,18 @@ test("the door's two labels name the operation, and neither promises mere disclo
   const pair = JSX.match(/lane === LANE_CHIPS \? "([^"]+)" : "([^"]+)",?\n/);
   assert.ok(pair, "the standing door must take its label from one ternary on the live lane state");
   const [, whenOpen, whenClosed] = pair;
+  // AMENDED 2026-11-03 — one public name. The feature is "Steer the next answer"
+  // everywhere, so the closed label is that name. The open label says where the press
+  // returns, which is still never the choices: by then the lane may hold a comparison.
   assert.equal(
     whenClosed,
-    "Choose your own follow-up",
+    "Steer the next answer",
     "the closed label names where the press goes, because the stage swaps rather than expands",
   );
   assert.equal(
     whenOpen,
-    "Hide your own follow-up",
-    "the open label names the follow-up, never the choices: by then the lane may be holding a comparison",
+    "Back to checking an answer",
+    "the open label names where the press returns, never the choices: by then the lane may be holding a comparison",
   );
   for (const label of [whenOpen, whenClosed]) {
     assert.doesNotMatch(label, /\bshow\b/i, "Show promises that content appears in place; the stage swaps instead");
@@ -174,9 +177,12 @@ test("the door's two labels name the operation, and neither promises mere disclo
   }
   // The built artifact is what a runner's browser reads, and a checked-in bundle can be
   // stale while the source is right.
+  // The closed label is also the lane's own entry heading (CHIP_UI.entry.heading), so the
+  // bundle carries it from both places; freshness is what this checks.
   for (const label of [whenOpen, whenClosed]) {
-    assert.equal(countOf(BUNDLE, label), 1, `workbench.bundle.js must carry "${label}" exactly once`);
+    assert.ok(countOf(BUNDLE, label) >= 1, `workbench.bundle.js must carry "${label}"`);
   }
+  assert.equal(countOf(BUNDLE, "your own follow-up"), 0, "the retired pair must not survive in the shipped bundle");
   assert.equal(countOf(BUNDLE, "follow-up checks"), 0, "the retired label must not survive in the shipped bundle");
 });
 
@@ -186,7 +192,7 @@ test("the door's two labels name the operation, and neither promises mere disclo
 // why one shared pair works here without a stage-aware seam: nothing in the closed label
 // is true of only some of them.
 test("the closed label carries four stages and the open label carries one", () => {
-  const labelFor = (lane) => (lane === LANE_CHIPS ? "Hide your own follow-up" : "Choose your own follow-up");
+  const labelFor = (lane) => (lane === LANE_CHIPS ? "Back to checking an answer" : "Steer the next answer");
   const byStage = new Map();
   for (const lane of [LANE_INSPECT, LANE_CHIPS]) {
     for (const busy of [false, true]) {
@@ -207,11 +213,11 @@ test("the closed label carries four stages and the open label carries one", () =
   }
   const table = [...byStage.entries()].map(([stage, seen]) => [stage, [...seen].sort()]).sort();
   assert.deepEqual(table, [
-    [STAGE_CHIPS, ["Hide your own follow-up"]],
-    [STAGE_COMPOSE, ["Choose your own follow-up"]],
-    [STAGE_DELTA, ["Choose your own follow-up"]],
-    [STAGE_FOLLOWUP, ["Choose your own follow-up"]],
-    [STAGE_RESULT, ["Choose your own follow-up"]],
+    [STAGE_CHIPS, ["Back to checking an answer"]],
+    [STAGE_COMPOSE, ["Steer the next answer"]],
+    [STAGE_DELTA, ["Steer the next answer"]],
+    [STAGE_FOLLOWUP, ["Steer the next answer"]],
+    [STAGE_RESULT, ["Steer the next answer"]],
   ].sort());
 });
 
@@ -245,9 +251,12 @@ test("both mount points drive the same lane state, so a close from either one ke
   const door = doorMarkup();
   // AMENDED — openChipLane now takes the door the press came through, so the handler is a
   // call rather than a bare reference. Still one handler pair, still one lane state.
+  // AMENDED 2026-11-03 — the pair moved into pressDoor, which the Steer the next answer
+  // door above the console shares with every chip door, so there is still exactly one.
+  assert.match(door, /onClick=\{\(\) => pressDoor\(via\)\}/, "every door presses through one handler");
   assert.match(
-    door,
-    /onClick=\{lane === LANE_CHIPS \? closeChipLane : \(\) => openChipLane\(via\)\}/,
+    JSX,
+    /const pressDoor = \(via\) => \(lane === LANE_CHIPS \? closeChipLane\(\) : openChipLane\(via\)\);/,
     "one handler pair for every mount point and every framing",
   );
   assert.match(JSX, /const closeChipLane = \(\) => setLane\(LANE_INSPECT\);/, "closing only moves the lane back; it clears nothing");
@@ -310,7 +319,7 @@ function doorCountByStage() {
   assert.notEqual(JSX.indexOf(EARLY_MOUNT), -1, "the early mount must be present to be counted");
   assert.notEqual(JSX.indexOf(LATE_MOUNT), -1, "the late mount must be present to be counted");
   const earlyGate = (stage) => stage === STAGE_FOLLOWUP;
-  const lateGate = (stage) => !!stageView(stage).chipDoor && stage !== STAGE_FOLLOWUP;
+  const lateGate = (stage) => !!stageView(stage).chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE;
   // ALL_STAGES, not STAGE_ORDER: the chip stage sits off the funnel spine and STAGE_ORDER
   // leaves it out, which would have silently dropped ?start=chips from this count.
   const counts = {};
@@ -322,9 +331,12 @@ function doorCountByStage() {
 
 test("every stage shows exactly the doors it should, and no stage shows two", () => {
   // The founder's invariant table. RESULT is back to its prior late-door behaviour;
-  // FOLLOWUP has exactly one door and it is the early one; nothing else moved.
+  // FOLLOWUP has exactly one door and it is the early one.
+  // AMENDED 2026-11-03 by founder ruling: COMPOSE shows no chip-door control. Its entrance
+  // is the Steer the next answer door above the console, asserted just below, so the
+  // first screen names the lane once rather than twice.
   assert.deepEqual(doorCountByStage(), {
-    [STAGE_COMPOSE]: 1,
+    [STAGE_COMPOSE]: 0,
     [STAGE_INSPECTING]: 0,
     [STAGE_RESULT]: 1,
     [STAGE_FOLLOWUP]: 1,
@@ -335,15 +347,20 @@ test("every stage shows exactly the doors it should, and no stage shows two", ()
   for (const [stage, n] of Object.entries(doorCountByStage())) {
     assert.ok(n <= 1, `${stage} must never offer two competing chip entrances, found ${n}`);
   }
+  // The compose stage's entrance: the steer door in the row above the console, which
+  // presses through the same handler with the standing door's own origin.
+  assert.match(JSX, /className="wb-reader-v2__modes wb-reader-v2__modes--inline wb-reader-v2__modes--doors"/);
+  assert.match(JSX, /if \(lane !== LANE_CHIPS\) pressDoor\(CHIP_ENTRY_VIA\.DIRECT_STANDING\);/);
 });
 
-test("the late mount stands down on the follow-up stage only, and the stage table is not touched", () => {
-  // The door renders on compose, result, follow-up, delta and chips. Only the follow-up
-  // stage has an earlier mount, so only the follow-up stage suppresses this one. The gate
-  // is written here, at the mount point, and NOT in stageView — reading `view.chipDoor`
+test("the late mount stands down on the follow-up and compose stages, and the stage table is not touched", () => {
+  // The door renders on result, follow-up, delta and chips. The follow-up stage has an
+  // earlier mount, and (AMENDED 2026-11-03 by founder ruling) the compose stage has the
+  // steer door above the console, so those two stages suppress this one. The gate is
+  // written here, at the mount point, and NOT in stageView — reading `view.chipDoor`
   // still gives every stage exactly the value it shipped with.
   const late = JSX.indexOf(LATE_MOUNT);
-  assert.notEqual(late, -1, "the late mount must render on view.chipDoor, minus the follow-up stage");
+  assert.notEqual(late, -1, "the late mount must render on view.chipDoor, minus the follow-up and compose stages");
 
   const postPrivacy = element("wb-reader-v2__post-privacy");
   assert.ok(postPrivacy < late, "the late mount stays where it always was: after the whole result block");

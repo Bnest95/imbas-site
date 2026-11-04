@@ -206,8 +206,8 @@ test("the strip is handed the door's two mount conditions, joined", () => {
   // The door is one control at one of two mount points, and the conditions are
   // complements, so their disjunction is "the door is on the page" exactly.
   assert.match(JSX, /\{stage === STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/);
-  assert.match(JSX, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP \? chipDoorControl\(\) : null\}/);
-  assert.match(JSX, /const chipDoorPresent = stage === STAGE_FOLLOWUP \|\| view\.chipDoor;/);
+  assert.match(JSX, /\{view\.chipDoor && stage !== STAGE_FOLLOWUP && stage !== STAGE_COMPOSE \? chipDoorControl\(\) : null\}/);
+  assert.match(JSX, /const chipDoorPresent = stage === STAGE_FOLLOWUP \|\| \(view\.chipDoor && stage !== STAGE_COMPOSE\);/);
   // And it stands down while the lane is already open, which is copy law rather than
   // a dead-anchor question: the door does render there, as the hide control.
   assert.match(JSX, /followUp: chipDoorPresent && lane !== LANE_CHIPS,/);

@@ -117,6 +117,8 @@ This text lands verbatim in the architecture doc in the repo. The session insert
 
 ## E. DEFAULT PRODUCT RULING
 
+> **FOUNDER RULING 2026-11-03 — supersedes the first-load hierarchy below.** The Reader opens on three doors above the answer box: Check an answer (the default, so the paste box still leads), Steer the next answer, and Real example. The flagship example opens from the Real example door, as the third door, rather than as a quiet secondary under the paste box. Ruled on PR #215 (branch `claude/reader-steer-ii-readable`).
+
 - **Inspection-first: YES.** The read is the default spine.
 - **Reader read = first payoff: YES**, measurement detail collapsed, receipt prompted immediately after.
 - **Act2 primary, chips secondary: YES** — with the permanent direct door and arrival deep links so the chip path is a first-class citizen reachable in one tap, just not the default's opening move.
@@ -185,7 +187,7 @@ The five sessions test exactly these; each has a force-change pattern:
 
 **Promise:** paste an AI answer and see what it may have left out — then run one follow-up and compare, side by side, what changed.
 **Default route:** /reader (served from /reader.html) — one route, one spine.
-**First action:** one paste box under "Check your AI answer"; one quiet secondary ("see it work on a ready example" → the Section P flagship).
+**First action:** one paste box under "Check your AI answer"; one quiet secondary ("see it work on a ready example" → the Section P flagship). *Superseded 2026-11-03: the example opens from the Real example door; see the Section E ruling.*
 **First payoff:** the Reader read — what may be missing, how it was shaped — measurement collapsed, receipt prompted ("Keep this").
 **Deep payoff:** the revealed comparison loop — inspection-generated question primary, user chips secondary with a permanent one-tap door — verbatim first/second quotes, matched/unmatched label, locked boundary, receipt as the primary next action.
 **Capacity-degradation state:** Reader at ceiling/slow/down → honest copy; instruction generation and external running continue; automated comparison deferred until capacity resets. The product never dead-ends and never falsely promises "free."

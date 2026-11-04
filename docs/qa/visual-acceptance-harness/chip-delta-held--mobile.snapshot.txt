@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 5852
+scroll_offset: 5955
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -1261,7 +1261,7 @@ button "Menu" disabled=false expanded=false
 p "Copy this question. Drop it in your chat. Paste what comes back."
 p "This inspection wasn't published to our reviewed archive. See ."
 a "what deletion means" href="/retention.html"
-button "Hide your own follow-up" disabled=false expanded=true
+button "Back to checking an answer" disabled=false expanded=true
 h2 "Tell your AI exactly what to do next."
 button "← Back to your inspection" disabled=false
 span "Opened from your inspection of"

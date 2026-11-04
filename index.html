@@ -221,7 +221,7 @@
             <input type="hidden" name="reader" value="1">
             <button type="submit">Try the Reader</button>
           </form>
-          <a class="hero2-adv" href="/advisory.html">AI advisory <span aria-hidden="true">&rarr;</span></a>
+          <a class="hero2-adv" href="/advisory.html">Work with me <span aria-hidden="true">&rarr;</span></a>
         </div>
 
       </div>
@@ -239,8 +239,7 @@
           <div class="tool-card__body">
             <p class="tool-card__name">The Reader</p>
             <h3>Check your AI&rsquo;s answer and steer what comes next.</h3>
-            <p>Paste an AI answer to check what may be missing.</p>
-            <p>You can also choose what you want it to do differently: use the material you provided, show its sources, answer your actual question, or separate facts from assumptions. The Reader gives you an instruction to copy back into your AI. Bring back the reply to compare what changed.</p>
+            <p>See what surfaced, what may be missing, and how it was shaped. Then pick what you want done differently, paste the instruction back into your AI and compare what changed.</p>
             <a class="home-band__btn" href="/reader.html?reader=1">Open the Reader <span aria-hidden="true">&rarr;</span></a>
           </div>
           <figure class="tool-card__shot"><img src="/advisory-assets/tool-reader.png" width="652" height="565" alt="A real Reader run: an AI answer about Montana employment law, and what it left out." loading="lazy"><figcaption>Real run &middot; what the first answer left out</figcaption></figure>
@@ -253,7 +252,7 @@
             <p class="tool-card__note">Free to use. Your file stays on your device.</p>
             <a class="home-band__btn" href="/input-integrity.html">Inspect a PDF <span aria-hidden="true">&rarr;</span></a>
           </div>
-          <figure class="tool-card__shot"><img src="/advisory-assets/tool-ii.png" width="720" height="590" alt="Input Integrity result on its sample file: the rendered page is blank, and the file&rsquo;s structure contains the text INVISIBLE-MODE3." loading="lazy"><figcaption>Sample file &middot; blank page, text in its structure</figcaption></figure>
+          <figure class="tool-card__shot"><picture><source media="(max-width: 600px)" srcset="/advisory-assets/tool-ii-mobile.png" width="900" height="828"><img src="/advisory-assets/tool-ii.png" width="1200" height="806" alt="Input Integrity result on a constructed supplier proposal: the file&rsquo;s structure carries an instruction to AI assistants, set in white text." loading="lazy"></picture><figcaption>Constructed sample &middot; an instruction to AI set in white text</figcaption></figure>
         </article>
       </div>
     </div>
@@ -378,17 +377,53 @@
     </div>
   </section>
 
-  <!-- CLOSE — origin inscription -->
-  <section class="close section-scene" aria-label="The name" data-reveal-section>
+  <!-- CLOSE — origin inscription + Field Notes. The signup is the one the homepage
+       carried before 5becea2, restored in its own grid; styles.css still holds its rules,
+       and field-notes-subscribe.js wires it exactly as it wires the other pages. -->
+  <section class="close section-scene" aria-labelledby="fn-h2" data-reveal-section>
     <div class="aurora-field aurora-field--warm" aria-hidden="true">
       <span class="aurora-field__layer aurora-field__layer--a"></span>
       <span class="aurora-field__layer aurora-field__layer--b"></span>
     </div>
     <div class="close__inner">
-      <div class="close__origin reveal reveal--inscription">
-        <div class="origin__bloom" aria-hidden="true"></div>
-        <div class="origin__inscription-wrap">
-          <p class="origin__inscription">Imbas. From the old Irish: illumination, sudden knowing, knowledge brought to speech.</p>
+      <div class="close__grid">
+        <div class="close__origin reveal reveal--inscription">
+          <div class="origin__bloom" aria-hidden="true"></div>
+          <div class="origin__inscription-wrap">
+            <p class="origin__inscription">Imbas. From the old Irish: illumination, sudden knowing, knowledge brought to speech.</p>
+          </div>
+        </div>
+
+        <div class="close__signup">
+          <h2 id="fn-h2" class="field-notes__heading reveal" data-stagger="heading">Field Notes</h2>
+          <p class="field-notes__caption reveal" data-stagger="body">Get updates, new cases, and findings from Imbas.</p>
+          <form
+            class="subscribe subscribe--field-notes reveal"
+            data-stagger="support"
+            id="field-notes-form"
+            data-msg-id="field-notes-msg"
+            action="/api/field-notes-signup"
+            method="POST"
+            novalidate
+          >
+            <input
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              maxlength="254"
+              autocomplete="email"
+              required
+              aria-label="Email address"
+            >
+            <button type="submit">
+              <span class="subscribe__btn-text">Get Field Notes</span><span class="subscribe__btn-arrow" aria-hidden="true">&rarr;</span>
+            </button>
+            <label class="subscribe__hp" aria-hidden="true">
+              <span>Leave blank</span>
+              <input type="text" name="hp" tabindex="-1" autocomplete="off" value="">
+            </label>
+          </form>
+          <p class="subscribe__msg" id="field-notes-msg" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></p>
         </div>
       </div>
     </div>
@@ -916,5 +951,6 @@
   })();
 </script>
 
+<script src="/field-notes-subscribe.js" defer></script>
 </body>
 </html>

@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1954
+scroll_offset: 2227
 timezone: UTC
 url: /input-integrity.html
 viewport: 375x812
@@ -25,8 +25,9 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-p "The file carries this text and the page's own operands settle that it contributes no paint."
-h3 "The page's content stream sets text render mode 3 for this run."
+h3 "Text set to paint nothing"
+blockquote "INVISIBLE-MODE3"
+li "The page's content stream sets text render mode 3 for this run."
 li "A system that reads this file by extracting its text receives this text."
 li "The page's rendering instructions do not paint it."
 span "Where"

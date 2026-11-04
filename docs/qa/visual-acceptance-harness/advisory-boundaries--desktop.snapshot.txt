@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 3657
+scroll_offset: 3731
 timezone: UTC
 url: /advisory.html
 viewport: 1440x900
@@ -33,6 +33,7 @@ button "More" disabled=false expanded=false
 span "▾"
 h2 "Tell me what’s slowing you down."
 p "A few lines about what you want to improve and how you handle it now are enough to start."
+p "The first conversation is free."
 a "Email me" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me"
 span "→"
 p "brendan@imbaslabs.com"

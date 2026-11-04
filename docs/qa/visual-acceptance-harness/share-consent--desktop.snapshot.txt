@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1317
+scroll_offset: 1235
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -683,6 +683,9 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
+p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
+a "what deletion means" href="/retention.html"
+a "privacy policy" href="/privacy.html"
 details expanded=false
 summary "How it works"
 span "1"

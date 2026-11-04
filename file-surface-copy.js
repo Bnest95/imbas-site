@@ -74,6 +74,14 @@ export const MASTHEAD = Object.freeze({
   example:
     "Example: a supplier's proposal could contain text that doesn't appear on the page, telling an AI " +
     "assistant to favour its offer when comparing bids.",
+  // The eleven classes in ordinary words, one phrase each, so a person knows what the
+  // checks cover before choosing a file. "Set to paint nothing" stands where a brief
+  // said "invisible", and "very small" where it said "too small to read": both of those
+  // name an experience, and this lane reports what the file sets.
+  looks_for:
+    "What it looks for: text set to paint nothing, white or see-through text, very small text, text placed " +
+    "off the page or covered by an image or shape, text in layers that are switched off, text in comments, " +
+    "form fields and the file's metadata, and zero-width or reordering characters that change how text reads.",
 });
 
 // Item 10's boundary, led by what the surface does rather than by a list of denials.
@@ -108,7 +116,8 @@ export const INTAKE = Object.freeze({
   custody: "Your browser reads the file. The file does not leave this machine.",
   processing: "Reading the file in your browser.",
   sample_action: "Inspect a sample file",
-  sample_note: "A constructed demonstration file, not a document found in the wild.",
+  sample_proposal_action: "Inspect a constructed supplier proposal",
+  sample_note: "Both samples are constructed demonstration files, not documents found in the wild.",
 });
 
 // The inspection never started — a conclusion about the run, so the sentence is
@@ -158,7 +167,7 @@ export function coverageFailed(reason) {
 // ---------------------------------------------------------------------------
 
 export function zeroReportable() {
-  const subject = { surfaced_count: 0 };
+  const subject = { page_summary: { piece_count: 0 } };
   return Object.freeze({
     statement: renderConclusionById("zero_reportable_statement", subject),
     scope: renderConclusionById("zero_reportable_scope", subject),
@@ -199,6 +208,10 @@ export const GROUP_IDS = Object.freeze(Object.keys(GROUPS));
 
 export const RESULT = Object.freeze({
   summary_label: "What surfaced",
+  page_findings_label: "On the pages",
+  document_details_label: "Document details",
+  document_details_note:
+    "The fields this file's metadata declares, with their values. They are not counted with the page findings.",
   back_to_summary: "Back to the summary",
   evidence_label: "Evidence",
   evidence_class: "Phenomenon class",
@@ -235,8 +248,10 @@ export function provenanceStatement(parserName, parserVersion, sha256) {
   return `This result came from ${parserName} ${parserVersion} over the file with sha256 ${sha256}.`;
 }
 
-export function surfacedCount(n) {
-  return renderConclusionById("surfaced_count", { surfaced_count: n });
+// The summary sentence for a run with page findings. `properties` is the list of page
+// classes present; the registry orders and words them.
+export function pageSummary(pieceCount, properties) {
+  return renderConclusionById("page_summary", { page_summary: { piece_count: pieceCount, properties } });
 }
 
 export function locator(pageNumber) {
@@ -292,9 +307,8 @@ const COPY_FUNCTION_FIXTURES = Object.freeze([
     id: "provenanceStatement",
     render: () => provenanceStatement("pdfjs-dist", "6.2.108", "0".repeat(64)),
   },
-  { id: "surfacedCount.singular", render: () => surfacedCount(1) },
-  { id: "surfacedCount.plural", render: () => surfacedCount(4) },
-  { id: "surfacedCount.zero", render: () => surfacedCount(0) },
+  { id: "pageSummary.singular", render: () => pageSummary(1, ["tiny_text"]) },
+  { id: "pageSummary.plural", render: () => pageSummary(2, ["offpage_text", "white_fill_unbacked"]) },
   { id: "locator", render: () => locator(1) },
   { id: "locatorPoint", render: () => locatorPoint(50, 100) },
   { id: "byteSize.bytes", render: () => byteSize(650) },
@@ -337,7 +351,7 @@ export const COPY_FUNCTION_NAMES = Object.freeze([
   "renderUnavailable",
   "renderedSideNote",
   "provenanceStatement",
-  "surfacedCount",
+  "pageSummary",
   "locator",
   "locatorPoint",
   "byteSize",
@@ -388,13 +402,13 @@ export const CONCLUSION_CONSUMERS = Object.freeze([
     fn: "zeroReportable.statement",
     template_id: "zero_reportable_statement",
     args: [],
-    subject: { surfaced_count: 0 },
+    subject: { page_summary: { piece_count: 0 } },
   },
   {
     fn: "zeroReportable.scope",
     template_id: "zero_reportable_scope",
     args: [],
-    subject: { surfaced_count: 0 },
+    subject: { page_summary: { piece_count: 0 } },
   },
   {
     fn: "renderUnavailable",
@@ -402,7 +416,12 @@ export const CONCLUSION_CONSUMERS = Object.freeze([
     args: [],
     subject: { render_failure: true },
   },
-  { fn: "surfacedCount", template_id: "surfaced_count", args: [4], subject: { surfaced_count: 4 } },
+  {
+    fn: "pageSummary",
+    template_id: "page_summary",
+    args: [2, ["offpage_text", "white_fill_unbacked"]],
+    subject: { page_summary: { piece_count: 2, properties: ["offpage_text", "white_fill_unbacked"] } },
+  },
 ]);
 
 // Every conclusion template the surface actually reaches. A template in the registry

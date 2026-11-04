@@ -39,6 +39,7 @@ Follow-up (2026-07-08): both REVIEW items resolved — `imbas-landing-cursor-pas
 | `STATE.md` | Current-truth file. Governs; rewritten in place. Tracked here as of 2026-07-24; the tracked copy is a redacted public copy, its private full version held outside this repository. |
 | `VOICE.md` | Voice contract. Governs all copy. Tracked here as of 2026-07-24. |
 | `docs/IMBAS-WORKBENCH-ARCHITECTURE-v3.1.md` | Workbench product architecture, adopted 2026-07-24. Governs Passes 0, 1, 2A, 2B. Ranks below STATE.md and above page bodies. |
+| `docs/IMBAS-INPUT-INTEGRITY-SCOPING-2026-11.md` | Scoping notes, not a ruling (2026-11-03): the low-contrast detection gap and a proposed class, plus three scope-only additions (instruction-phrase marker, declared origin, active-content inventory). Nothing in it is built. |
 | `README.md` | Repo readme. Matches live static site. |
 | `DEPLOY.md` | Deploy notes. Matches live build (workbench bundle, field-notes API). |
 | `CLAIMS-LEDGER.md` | Governing authority for every public claim / all copy. |

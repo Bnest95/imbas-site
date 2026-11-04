@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 584
+scroll_offset: 803
 timezone: UTC
 url: /input-integrity.html
 viewport: 375x812
@@ -32,4 +32,5 @@ p "PDF only."
 button "Choose a PDF" disabled=false
 p "Your browser reads the file. The file does not leave this machine."
 button "Inspect a sample file" disabled=false
-p "A constructed demonstration file, not a document found in the wild."
+button "Inspect a constructed supplier proposal" disabled=false
+p "Both samples are constructed demonstration files, not documents found in the wild."

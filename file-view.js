@@ -41,8 +41,8 @@
 //
 // Pure JS by contract: no node: imports, no DOM, no Date.now, no random.
 
-import { PHENOMENON_CLASSES } from "./file-result.js";
-import { renderFinding } from "./file-templates.js";
+import { PHENOMENON_CLASSES, PHENOMENON_CLASS_IDS } from "./file-result.js";
+import { renderFinding, plainLabelOf } from "./file-templates.js";
 import * as COPY from "./file-surface-copy.js";
 
 export const FILE_VIEW_VERSION = "file-view.v1";
@@ -191,11 +191,61 @@ export function unavailableView() {
 // The whole view.
 // ---------------------------------------------------------------------------
 
+// The excerpt a page finding leads with: the extracted span, whitespace collapsed, cut
+// at a length a person reads at a glance. The full span stays in the evidence and the
+// receipt; this is a quotation of it, never a paraphrase.
+export const EXCERPT_MAX_CHARS = 200;
+
+export function excerptOf(text) {
+  const flat = String(text).replace(/\s+/g, " ").trim();
+  return flat.length > EXCERPT_MAX_CHARS ? `${flat.slice(0, EXCERPT_MAX_CHARS).trimEnd()}…` : flat;
+}
+
+// Metadata is text the file declares about itself. It is listed field by field, apart
+// from the page findings, and never counted with them.
+function isPageItem(item) {
+  return item.class_label !== "metadata_text";
+}
+
+function metadataFieldName(key) {
+  return String(key).replace(/^info:/, "");
+}
+
+// The dates the information dictionary declares are not text-string entries, so the
+// metadata class does not carry them. They are still fields the file declares, so the
+// details list shows them, as the file wrote them.
+const INFO_DATE_KEYS = ["CreationDate", "ModDate"];
+
+function documentDetails(items, record) {
+  const rows = items
+    .filter((item) => item.class_label === "metadata_text")
+    .map((item) => ({
+      field: metadataFieldName(item.locator.metadata_key),
+      value: item.extraction.text,
+      anchor: item.anchor,
+    }));
+  const info = (record && record.info) || {};
+  for (const key of INFO_DATE_KEYS) {
+    if (typeof info[key] === "string" && info[key].length > 0) rows.push({ field: key, value: info[key] });
+  }
+  return rows;
+}
+
+// A piece of text is one span at one place. Two checks can reach the same run — a white
+// run can also be a small one — and the summary counts the text, not the checks.
+function pieceKey(item) {
+  const ex = item.extraction || {};
+  const at = ex.position ? `${ex.position.x},${ex.position.y}` : "";
+  return `${ex.page_index ?? ""}|${at}|${ex.text}`;
+}
+
 export function buildView({ fileName, byteSize, detection, record }) {
   const coverage = deriveCoverage(record);
   const items = detection.findings.map((finding, index) => ({
     anchor: anchorOf(finding, index),
     class_label: finding.class_label,
+    label: plainLabelOf(finding),
+    excerpt: excerptOf(finding.extraction.text),
     group: groupOf(finding),
     statements: renderFinding(finding).map((line) => ({ family: line.family, string: line.string })),
     locator: locatorOf(finding),
@@ -206,12 +256,16 @@ export function buildView({ fileName, byteSize, detection, record }) {
     thresholds_applied: finding.thresholds_applied,
   }));
 
+  const pageItems = items.filter(isPageItem);
   const groups = COPY.GROUP_IDS.map((id) => ({
     id,
     heading: COPY.GROUPS[id].heading,
     note: COPY.GROUPS[id].note,
-    items: items.filter((item) => item.group === id),
+    items: pageItems.filter((item) => item.group === id),
   })).filter((group) => group.items.length > 0);
+
+  const pieceCount = new Set(pageItems.map(pieceKey)).size;
+  const properties = PHENOMENON_CLASS_IDS.filter((c) => pageItems.some((item) => item.class_label === c));
 
   return {
     state: "read",
@@ -224,8 +278,10 @@ export function buildView({ fileName, byteSize, detection, record }) {
     items,
     groups,
     surfaced_count: items.length,
-    surfaced_count_copy: COPY.surfacedCount(items.length),
-    zero_reportable: items.length === 0 ? COPY.zeroReportable() : null,
+    page_summary: { piece_count: pieceCount, properties },
+    page_summary_copy: pieceCount > 0 ? COPY.pageSummary(pieceCount, properties) : null,
+    zero_reportable: pieceCount === 0 ? COPY.zeroReportable() : null,
+    document_details: documentDetails(items, record),
     provenance_statement: COPY.provenanceStatement(
       detection.identity.parser_name,
       detection.identity.parser_version,
