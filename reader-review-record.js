@@ -56,7 +56,17 @@ export const REVIEW_RECORD_C14N_VERSION = "review-record.c14n.v1";
 // Register emitted, so an omission-shaped run — where the register emits nothing —
 // exported a record thinner than the result the person had just read. Findings now
 // survive in the record independently of register eligibility.
-export const REVIEW_RECORD_VERSION = "review-record.v2";
+//
+// v3 is additive over v2: a paired record carries contents.paired_result, the paired
+// inspection's own canonical findings collection, beside canonical_result. Under v2 a
+// two-question record carried only the first answer's collection, so the differences
+// the page had just shown were absent and the only count of them in the file, the
+// first collection's probe_surfaced_differences, read 0. That 0 is true of a
+// single-answer collection and says nothing about the pair; paired_result is where the
+// pair's differences and their count live. A single-mode record carries no
+// paired_result, so in its canonical form the version string is the only thing that
+// moves, at equal length (proved in test/reader-review-record.test.mjs).
+export const REVIEW_RECORD_VERSION = "review-record.v3";
 export const REVIEW_RECORD_HASH_ALGORITHM = "sha256";
 
 export const RECORD_STATUSES = new Set(["open", "resolved", "dismissed"]);
@@ -113,12 +123,21 @@ export function describeReviewRecordContents({ result, pair = null } = {}) {
   const checkCount = Array.isArray(register.checks) ? register.checks.length : 0;
   const recorded = canonical && canonical.counts && canonical.counts.recorded_findings;
   const findingCount = recorded ? recorded.value : 0;
+  // The pair's own differences, named from the paired collection the record carries
+  // (v3), so the line cannot read as a record of zero differences when the page showed
+  // some. A legacy pair with no collection writes none and names none.
+  const pairedResult = paired && pair.paired_result && typeof pair.paired_result === "object" ? pair.paired_result : null;
+  const differences = pairedResult && pairedResult.counts && pairedResult.counts.probe_surfaced_differences;
+  const differenceCount = differences ? differences.value : 0;
   // The count names its own unit from the canonical block, so this line cannot
   // re-pluralize its way out of step with the collection it describes.
   const findingUnit = recorded ? (findingCount === 1 ? recorded.unit_one : recorded.unit_many) : "";
 
   const parts = [paired ? "both answers as pasted" : "the answer as pasted"];
   if (findingCount) parts.push(`${findingCount} recorded ${findingUnit}`);
+  if (differenceCount) {
+    parts.push(`${differenceCount} ${differenceCount === 1 ? differences.unit_one : differences.unit_many} the second answer surfaced`);
+  }
   if (checkCount) parts.push(`${checkCount} ${checkCount === 1 ? "check" : "checks"} with the marks you set`);
   if (paired) parts.push("the capture conditions you reported");
   parts.push("the run's provenance");
@@ -347,6 +366,12 @@ export function assembleReviewRecord({ result, checkStates = {}, createdAt, pair
     // reasons a card was suppressed. The two are not redundant: a run can record
     // findings and emit no checks at all, and the record has to say so.
     canonical_result: (result && result.result) || openRun.canonical || null,
+    // v3: the paired inspection's collection rides with a paired capture (see
+    // REVIEW_RECORD_VERSION). Spread in only when present, so a single-mode record's
+    // canonical body gains no key.
+    ...(pairRuns.length && pair.paired_result && typeof pair.paired_result === "object"
+      ? { paired_result: pair.paired_result }
+      : {}),
     resolution_evidence: [], // ResolutionEvidence is a later lane; present-but-empty here
     inspector: inspectorBlock,
     versions: {
@@ -453,7 +478,12 @@ function validateRecordSpans(c) {
   // null by construction and have nothing to prove. The anchor's role must be the
   // role of the artifact its span names — that is what makes an open/targeted
   // transposition detectable in the exported record rather than only at build time.
-  const findings = (c.canonical_result && c.canonical_result.findings) || [];
+  // The paired collection (v3) is held to the same rule: its anchors name the first
+  // and second answers, and each must reproduce from the artifact its role names.
+  const findings = [
+    ...((c.canonical_result && c.canonical_result.findings) || []),
+    ...((c.paired_result && c.paired_result.findings) || []),
+  ];
   for (const f of findings) {
     for (const anchor of (f && f.anchors) || []) {
       if (!anchor || anchor.status !== "QUOTED") continue;
@@ -642,6 +672,13 @@ export function validateReviewRecord(record) {
   }
   if (c.pair_runs.length > 0 && !c.artifacts.some((a) => a && a.role === "targeted_answer")) {
     return { ok: false, reason: "paired record must include a targeted_answer artifact (AT-12)" };
+  }
+  // v3: a paired collection belongs to a paired record, and it is a collection.
+  if (c.paired_result !== undefined) {
+    if (c.pair_runs.length === 0) return { ok: false, reason: "paired_result requires a paired record" };
+    if (!c.paired_result || typeof c.paired_result !== "object" || !Array.isArray(c.paired_result.findings)) {
+      return { ok: false, reason: "paired_result must be a findings collection" };
+    }
   }
 
   const eventIds = new Set(c.detector_events.map((e) => e && e.id).filter(Boolean));

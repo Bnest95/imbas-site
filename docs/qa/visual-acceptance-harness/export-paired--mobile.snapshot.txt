@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 10037
+scroll_offset: 10047
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -1265,7 +1265,7 @@ button "Download card" disabled=false
 button "Copy JSON" disabled=false
 button "Download receipt" disabled=false
 button "Export Review Record" disabled=false
-span "A JSON file holding both answers as pasted, 2 recorded findings, the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed."
+span "A JSON file holding both answers as pasted, 2 recorded findings, 2 differences the second answer surfaced, the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed."
 button "Share this two-question test" disabled=false
 p "How big did the difference feel?"
 button "Small" disabled=false
@@ -1273,4 +1273,3 @@ button "Noticeable" disabled=false
 button "Large" disabled=false
 button "Test another answer" disabled=false
 h2 "TEST ANOTHER QUESTION"
-p "Run the same check on another answer."

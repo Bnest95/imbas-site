@@ -52,8 +52,10 @@ import {
   validateReviewRecord,
 } from "../reader-review-record.js";
 import { buildCheckRegister } from "../reader-checks.js";
+import { buildCanonicalPaired, parsePairedMeasurement } from "../api/read-paired.js";
 import {
   ARTIFACT_ORIGINAL,
+  ARTIFACT_TARGETED,
   DISPOSITION,
   SHAPE_SINGLE_CANDIDATE,
   buildCanonicalResult,
@@ -339,14 +341,22 @@ test("digest parity: node:crypto over the canonical string agrees with the modul
 //
 // The paired fixture is pinned separately, immediately below, because that is where the
 // declarations array actually lands and where a silent reshape would otherwise pass.
+//
+// Turned over DELIBERATELY at record version v3 (2026-11-04), which lets a paired record
+// carry contents.paired_result, the paired inspection's own findings collection. None of
+// the three pinned fixtures supplies one, so the key is absent from all three, and
+// versions.record moves v2→v3 at equal length: the byte lengths HOLD at 2599 / 2609 /
+// 3411. Proved by the v2→v3 turnover test below, which substitutes v2 back and must
+// reproduce all three v2 digests byte-for-byte. The shape v3 adds is pinned on its own,
+// further down, on a paired record that carries it.
 const PINNED_V033 = {
   single_omission: {
     bytes: 2599,
-    digest: "f3c7001664bfbadcf938826b936265da96ca5ca53e25935d3cbf7ab6fa43cd0d",
+    digest: "1c44a5154844e8cf84318e822f02f4d8805c735182cd4b42a38dbb74a5ddc124",
   },
   deflection_finding: {
     bytes: 2609,
-    digest: "7971b03b410046d803963b838fe7f4390dec7a56565cfdfe1a44381741d625c0",
+    digest: "21ccb32b6ef5245661662571a15e0913bf7a2634dbcc9c4ca21258e2b49db951",
   },
 };
 
@@ -380,7 +390,7 @@ test("pinned vector: a frozen deflection-finding record matches its pinned v0.3.
 // prove about a turnover here — the discipline this pin starts is the next one's problem.
 const PINNED_V033_PAIRED = {
   bytes: 3411,
-  digest: "50413c3eef02a012a725c99035b5c8a7bab474ec4eba038ac0a60892819c1958",
+  digest: "fe55717a3c8af7408ff8fff560c5f286e8de66dd0c0b474dfcca0c789f8dc3ed",
 };
 
 test("pinned vector: a frozen paired record matches its pinned v0.3.3 digest and byte length", async () => {
@@ -411,10 +421,92 @@ test("pin turnover v0.3.2→v0.3.3 is confined to the version string in both sin
     const record = await buildReviewRecord({ result: buildResult({ findings }).result, createdAt: CREATED });
     const canonical = serializeCanonical(record);
     assert.equal(canonical.split("review-graph.v0.3.3").length - 1, 1, `${name}: version string is not unique in the canonical body`);
-    const rebuilt = canonical.replaceAll("review-graph.v0.3.3", "review-graph.v0.3.2");
+    // AMENDED 2026-11-04: the v0.3.2 digests were taken under record v2, and the record
+    // string has since moved to v3 at equal length (proved separately below), so the
+    // reconstruction restores both version strings.
+    const rebuilt = canonical
+      .replaceAll("review-graph.v0.3.3", "review-graph.v0.3.2")
+      .replaceAll("review-record.v3", "review-record.v2");
     assert.equal(byteLen(rebuilt), byteLen(canonical), `${name}: the substitution changed the byte length`);
     assert.equal(createHash("sha256").update(rebuilt, "utf8").digest("hex"), V032[name], `${name}: more than the version string moved`);
   }
+});
+
+// Record v2→v3 claims the three pinned digests moved for one reason only: an
+// equal-length record version string. Substituting v2 back must reproduce every v2
+// digest exactly, or something else moved.
+test("pin turnover record v2→v3 is confined to the record version string in all three vectors", async () => {
+  const V2 = {
+    single_omission: "f3c7001664bfbadcf938826b936265da96ca5ca53e25935d3cbf7ab6fa43cd0d",
+    deflection_finding: "7971b03b410046d803963b838fe7f4390dec7a56565cfdfe1a44381741d625c0",
+    paired: "50413c3eef02a012a725c99035b5c8a7bab474ec4eba038ac0a60892819c1958",
+  };
+  const records = {
+    single_omission: await buildReviewRecord({ result: buildResult({ findings: [FINDING] }).result, createdAt: CREATED }),
+    deflection_finding: await buildReviewRecord({ result: buildResult({ findings: [DEFLECTION_FINDING] }).result, createdAt: CREATED }),
+    paired: await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() }),
+  };
+  for (const [name, record] of Object.entries(records)) {
+    assert.equal(record.contents.versions.record, "review-record.v3", `${name}: the pin is anchored to record v3`);
+    assert.equal(record.contents.paired_result, undefined, `${name}: no pinned fixture carries a paired collection`);
+    const canonical = serializeCanonical(record);
+    assert.equal(canonical.split("review-record.v3").length - 1, 1, `${name}: record version string is not unique`);
+    const rebuilt = canonical.replaceAll("review-record.v3", "review-record.v2");
+    assert.equal(byteLen(rebuilt), byteLen(canonical), `${name}: the substitution changed the byte length`);
+    assert.equal(createHash("sha256").update(rebuilt, "utf8").digest("hex"), V2[name], `${name}: more than the record version moved`);
+  }
+});
+
+// The shape record v3 adds, pinned where it lands: a paired record whose capture carries
+// the paired inspection's collection. A reshaped collection, a dropped count, or the key
+// silently falling out of the body would all move these values.
+const PINNED_V3_PAIRED_WITH_DIFFERENCES = {
+  bytes: 5661,
+  digest: "2d1b17f0240fbe3ede758900e47f5a31647a322884284d480eb4d0fb13acc924",
+};
+
+function pairedCollection() {
+  const pm = parsePairedMeasurement({
+    differences: [
+      {
+        signal_pattern: "Omission",
+        interpretation: "The second answer names a filing deadline the first did not.",
+        snippets: [
+          { artifact_role: ARTIFACT_TARGETED, status: "PRESENT", verbatim_snippet: "a filing deadline of 2026-08-01 applies" },
+          { artifact_role: ARTIFACT_ORIGINAL, status: "ABSENT" },
+        ],
+      },
+    ],
+    gap_estimate: 1,
+    estimate_rationale: "r",
+  });
+  assert.ok(pm, "the paired fixture must parse");
+  return buildCanonicalPaired(pm, { open: ANSWER, targeted: TARGETED_ANSWER });
+}
+
+test("record v3: a paired record carries its own differences, validates, and matches its pinned digest", async () => {
+  const paired = pairedCollection();
+  const record = await buildReviewRecord({
+    result: buildResult().result,
+    createdAt: CREATED,
+    pair: { ...buildPair(), paired_result: paired },
+  });
+  assert.equal(record.contents.paired_result.counts.probe_surfaced_differences.value, 1, "the record counts the pair's difference");
+  assert.equal(record.contents.paired_result.findings[0].surface, "paired");
+  assert.deepEqual(validateReviewRecord(record), { ok: true });
+  const canonical = serializeCanonical(record);
+  assert.ok(canonical.includes('"paired_result":'), "the paired collection rides inside the hashed body");
+  assert.equal(byteLen(canonical), PINNED_V3_PAIRED_WITH_DIFFERENCES.bytes, "canonical byte length drifted from the pin");
+  assert.equal(record.integrity.digest, PINNED_V3_PAIRED_WITH_DIFFERENCES.digest, "digest drifted from the pin");
+});
+
+test("record v3: a paired collection is refused on a single-mode record, and must be a collection", async () => {
+  const single = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED });
+  const forged = { ...single, contents: { ...single.contents, paired_result: pairedCollection() } };
+  assert.equal(validateReviewRecord(forged).reason, "paired_result requires a paired record");
+  const paired = await buildReviewRecord({ result: buildResult().result, createdAt: CREATED, pair: buildPair() });
+  const bad = { ...paired, contents: { ...paired.contents, paired_result: { findings: "none" } } };
+  assert.equal(validateReviewRecord(bad).reason, "paired_result must be a findings collection");
 });
 
 test("schema v0.3.3: newly assembled single-mode and paired-mode records both emit versions.schema 0.3.3", () => {
