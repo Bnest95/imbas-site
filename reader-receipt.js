@@ -583,6 +583,14 @@ export function formatPairedReceiptText(envelope) {
   L.push("Targeted prompt (the fixed completeness probe at the recorded method version):");
   L.push((pa.targeted_prompt || "").trim());
   L.push("");
+  // The answer to that prompt, in full. paired_analysis.targeted_answer has always been
+  // in the envelope and in Copy JSON; this rendering printed only the excerpts the delta
+  // quotes from it. Same fix, same reason as the user-directed follow-up receipt below,
+  // and likewise no envelope field changes, so the schema version and content_hash hold.
+  L.push("—— THE SECOND ANSWER ——");
+  L.push("");
+  L.push((pa.targeted_answer || "").trim());
+  L.push("");
   L.push("Delta — what the second answer surfaced that the first did not:");
   const deltas = Array.isArray(pa.delta_items) ? pa.delta_items : [];
   if (deltas.length) {
