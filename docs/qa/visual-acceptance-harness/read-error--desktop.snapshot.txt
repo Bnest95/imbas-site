@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 986
+scroll_offset: 1005
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -43,7 +43,8 @@ div "Which AI did you ask? (optional)"
 select disabled=false
 p "The Reader didn't run."
 details expanded=false
-summary "Your text is sent to an AI model (Anthropic) to run the check. It isn't published. Don't paste anything sensitive."
+summary "Your text is sent to an AI model (Anthropic) to run the check and . It isn't published. Don't paste anything sensitive."
+a "kept in Imbas's records" href="/retention.html"
 p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
 a "what deletion means" href="/retention.html"
 a "privacy policy" href="/privacy.html"

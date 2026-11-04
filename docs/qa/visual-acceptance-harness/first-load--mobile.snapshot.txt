@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 178
+scroll_offset: 116
 timezone: UTC
 url: /reader.html
 viewport: 375x812
@@ -25,6 +25,7 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
+p "READER"
 h1 "Check your AI’s answer. Steer what comes next."
 p "See what surfaced, what may be missing, and how it was shaped. Then tell your AI exactly what to do next and compare what changed."
 button disabled=false
@@ -40,7 +41,8 @@ div "Your AI's answer"
 textarea disabled=false readonly=false value_len=0
 p "Paste an answer to inspect it."
 details expanded=false
-summary "Your text is sent to an AI model (Anthropic) to run the check. It isn't published. Don't paste anything sensitive."
+summary "Your text is sent to an AI model (Anthropic) to run the check and . It isn't published. Don't paste anything sensitive."
+a "kept in Imbas's records" href="/retention.html"
 p "Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See and the ."
 a "what deletion means" href="/retention.html"
 a "privacy policy" href="/privacy.html"
@@ -49,3 +51,5 @@ details expanded=false
 summary "How it works"
 span "1"
 span "Paste an AI answer to see what it might be missing."
+span "2"
+span "Copy the one question Imbas builds, then ask your own AI."
