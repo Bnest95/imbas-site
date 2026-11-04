@@ -479,11 +479,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `4f99554eb7dedb99739c0ae09b4abe788df5e16aa52854912e1c0c62659151a5` |
-| bytes | 417660 |
+| sha256 | `dc1d509aea2cb808e555590bced4fc79a00145419a4f0beafd2f50e362a147ee` |
+| bytes | 415350 |
 | snapshot | `first-load--desktop.snapshot.txt` |
-| snapshot sha256 | `36ce9aa57756c7e3a862ac83a820d01130f0e29404b72dfd7998d5a5f12a66e8` |
-| snapshot bytes | 2290 |
+| snapshot sha256 | `897f749e2a282e85ea465bd29cb3aa7970d765027afe9bf6f02343ce761945cf` |
+| snapshot bytes | 2282 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__fields` at scroll offset 87 |
@@ -495,11 +495,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `db44a482730d2e05a70d0c19756ec18dd5a36fbe786540666d5de0c574772ef7` |
-| bytes | 391684 |
+| sha256 | `df21be31c181ac7da7f36a79a3fd13a38aca64e301043af403f8d73726413c73` |
+| bytes | 390486 |
 | snapshot | `first-load--mobile.snapshot.txt` |
-| snapshot sha256 | `2e4706a8434f8a1fd4cd30c9d2ca95feba7f8aac8a8748787621d7a64d26322d` |
-| snapshot bytes | 2022 |
+| snapshot sha256 | `4105f2d1edee4144ae04d1ddddf938c4daa87b0e29cd4a8134d4f8548f0737bc` |
+| snapshot bytes | 2014 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__fields` at scroll offset 116 |
@@ -1023,11 +1023,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `f47942778ce1991da22663645e615e19065a8726f732040d77b9a5155a98ca45` |
-| bytes | 425449 |
+| sha256 | `42797dc413bc494b67d9ab20cdd97a5db6f687d9f7421b22521528052e2e19eb` |
+| bytes | 423113 |
 | snapshot | `read-capacity--desktop.snapshot.txt` |
-| snapshot sha256 | `adb5959fea612f319889e05121f61b736d151e6a06bf9920289b29aaaec06217` |
-| snapshot bytes | 2607 |
+| snapshot sha256 | `313b2fbefaa95e66cc267c14c0b3171a3df91644f2933c93654808644ee2fb91` |
+| snapshot bytes | 2599 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1015 |
@@ -1039,11 +1039,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `e99bdd47d592bfe9f164307633ef42fe071ab5af7641b1a39273c10057f4efc4` |
-| bytes | 429517 |
+| sha256 | `ec154f47bc49ec6c1c327860b17bb89c8d70bca204647c1b5caa388acad1fa97` |
+| bytes | 427289 |
 | snapshot | `read-capacity--mobile.snapshot.txt` |
-| snapshot sha256 | `413d74d156b00495eafd826cc79130a8f38108d5108ccf9f11ce7e319af75702` |
-| snapshot bytes | 2232 |
+| snapshot sha256 | `fadec43038c579bc07cf95a73541e0e9bf4ac68c0937c69727917be6af0ec349` |
+| snapshot bytes | 2224 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1148 |
@@ -1055,11 +1055,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `2dbbe488e6e1c7d0103550f5599c071829a635af78b4ab2c3116a94d0cd572af` |
-| bytes | 403014 |
+| sha256 | `e6664532541cd5c4c322f300bf34fbea8819039614f53bcb56613a859cccb97d` |
+| bytes | 400161 |
 | snapshot | `read-error--desktop.snapshot.txt` |
-| snapshot sha256 | `67a789de16fcd32b36cf27c12b0be690452a4e40085f46545a167520aaee3058` |
-| snapshot bytes | 2604 |
+| snapshot sha256 | `a23f6abfcc9dc0f1fdfff458a7a47ba236445cf1d7c06eb09a24ebd5eb2ae3b5` |
+| snapshot bytes | 2596 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1005 |
@@ -1071,11 +1071,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `b8d9484780aeebc490e4c060d17d6dfc4106355be745af6bb9ff348c914e5fc5` |
-| bytes | 392288 |
+| sha256 | `e3f4fb409eee4a6f0db7ee37bf60039ab46a0b552cb05b5d688fd68b035b51c9` |
+| bytes | 390513 |
 | snapshot | `read-error--mobile.snapshot.txt` |
-| snapshot sha256 | `8c81902c7db1c6dd7cb945d72839499827231e549330f92eae7450f9da2e9dbc` |
-| snapshot bytes | 2149 |
+| snapshot sha256 | `9c16bfe6eb9e0150be38647aca320053bdc15ae870a67cb3186cbc362ea1e087` |
+| snapshot bytes | 2141 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-result` at scroll offset 1119 |
@@ -1087,11 +1087,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `a7e0e215eb1eaa16beac86b7f302ccc25c7870924151d54e7d14816eb6861ba1` |
-| bytes | 299113 |
+| sha256 | `20c8d02fec98ffb6ba9766a152e8001c0b71d976592d46879f6931adf8ed39f5` |
+| bytes | 296564 |
 | snapshot | `read-in-flight--desktop.snapshot.txt` |
-| snapshot sha256 | `9ab178459ae4c7a687a9209c75e232917dc945a434aad5d858ede5ed403f7000` |
-| snapshot bytes | 2410 |
+| snapshot sha256 | `4285506c6da9e0d14d143917963213fd31283474be4c747fa333c08aa44c2875` |
+| snapshot bytes | 2402 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__action-row` at scroll offset 718 |
@@ -1103,11 +1103,11 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `658264ec0c18ef26c2fb059cb3e9bd219e9112766ed07eb3aa3b1f23a4658427` |
-| bytes | 280003 |
+| sha256 | `207ce849ce3bd0f1e848061e22f2e03edbe7a0b3f5281cb2f61ea70cb7829bf1` |
+| bytes | 278267 |
 | snapshot | `read-in-flight--mobile.snapshot.txt` |
-| snapshot sha256 | `6637e9ed82ab01bd05739c6783ce6766ebf93f6aa0448895deb3b1d583108436` |
-| snapshot bytes | 2105 |
+| snapshot sha256 | `17898d0a8e0bcae32a18e87526fb5b8c563dae78228f3d9da4f8f267c4dd783d` |
+| snapshot bytes | 2097 |
 | viewport | 375x812@3x (mobile) |
 | url | `/reader.html`, query `(none)` |
 | framed on | `.wb-reader-v2__action-row` at scroll offset 818 |
