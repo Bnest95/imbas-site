@@ -7580,7 +7580,7 @@ function ReaderWorkbench() {
                 <ReaderStatusLine state={statusState} />
                 <details className="wb-reader-v2__privacy">
                   <summary className="wb-reader-v2__privacy-line">
-                    Your text is sent to an AI model (Anthropic) to run the check and <a href="/retention.html">kept in Imbas's records</a>. It isn't published. Don't paste anything sensitive.
+                    Your text is sent to an AI model (Anthropic) to run the check and <a href="/retention.html">stored by Imbas</a>. It isn't published. Don't paste anything sensitive.
                   </summary>
                   <p className="wb-reader-v2__privacy-full">
                     Inputs are used for this inspection and are not automatically published to the reviewed archive. Do not paste sensitive personal, confidential, privileged, regulated, or proprietary information. Reader outputs inspect answer behavior and are not professional advice; verify factual claims before relying on them. See <a href="/retention.html">what deletion means</a> and the <a href="/privacy.html">privacy policy</a>.
