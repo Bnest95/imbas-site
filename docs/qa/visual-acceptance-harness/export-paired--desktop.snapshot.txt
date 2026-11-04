@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 7007
+scroll_offset: 7018
 timezone: UTC
 url: /reader.html
 viewport: 1440x900
@@ -1264,7 +1264,6 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-p "Export the review record, copy the record of this inspection, or test another answer with a different question or another model."
 p "The boundary stated above governs this reading too."
 a "How admission works →" href="/how-it-works.html"
 p "These are machine observations over one answer pair. Not a human-scored result, not evidence."
@@ -1275,7 +1274,7 @@ button "Download card" disabled=false
 button "Copy JSON" disabled=false
 button "Download receipt" disabled=false
 button "Export Review Record" disabled=false
-span "A JSON file holding both answers as pasted, 2 recorded findings, the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed."
+span "A JSON file holding both answers as pasted, 2 recorded findings, 2 differences the second answer surfaced, the capture conditions you reported, and the run's provenance. Every finding in it is unreviewed."
 button "Share this two-question test" disabled=false
 p "How big did the difference feel?"
 button "Small" disabled=false
