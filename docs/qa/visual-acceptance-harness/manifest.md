@@ -63,14 +63,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `593d361914401958223be03f6e2d9488dc56118306c669726db14a72c69fcf5f` |
-| bytes | 748454 |
+| sha256 | `5e072bbc27201bb68e11bf3ae1a22a60acc14efae7c82104113671b84da7f9c3` |
+| bytes | 744129 |
 | snapshot | `advisory-boundaries--desktop.snapshot.txt` |
-| snapshot sha256 | `2e2d5f97642eb92c4b2fac1764de0a8ae5e4dd7ec70c0968b4b311f22e2fb570` |
+| snapshot sha256 | `b01fa3ebdcb8dfe9355ac0cf547c2acd45d81a9a97097fca77b92ce326a9e3f1` |
 | snapshot bytes | 2477 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 3787 |
+| framed on | `.adv-terms` at scroll offset 3814 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -79,14 +79,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `27b5cee3fa727ad318692b1b01ad20c683028b7ca2b7ed15e6158fa8b7bb4713` |
-| bytes | 606972 |
+| sha256 | `ae1b7cf6888f4895b30b58da78d085d2635132fccac023a3d9f53ab2f4c4cb2e` |
+| bytes | 591880 |
 | snapshot | `advisory-boundaries--mobile.snapshot.txt` |
-| snapshot sha256 | `c20b79d54d229350876e6c95a478714c18e7f3c64b8d5afdfa898406140d5d83` |
+| snapshot sha256 | `7315b46d86c10c4c4cb6eda6c60d09dbe4f69886c0cf122f4f3ee89574ea0f88` |
 | snapshot bytes | 1586 |
 | viewport | 375x812@3x (mobile) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 6209 |
+| framed on | `.adv-terms` at scroll offset 6290 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -575,14 +575,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `9ee1d816a6b5e88f53840f06be923028a421449394bdb605ad433ec42c1443b6` |
-| bytes | 798309 |
+| sha256 | `12dc6f8c981f18f6cf573b00510828fb6e7625939e08499ed72f4841d5e290b6` |
+| bytes | 859893 |
 | snapshot | `home-tools--desktop.snapshot.txt` |
-| snapshot sha256 | `262b9b2c913ba48fcfb3f3728b862fecc52f1c35e9ddc2aa260223c66daf1f5b` |
-| snapshot bytes | 1274 |
+| snapshot sha256 | `d3b6d8065fbe41a68f0f45d46a7211479d3452d4a88ffd1220bd4b789088e6d6` |
+| snapshot bytes | 1331 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.tool-card--reader h3` at scroll offset 532 |
+| framed on | `.tool-card--reader h3` at scroll offset 494 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's Tools section — the Reader card, with both of the Reader's uses described |
 | expected behaviour | The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the one paragraph that carries both uses (see what surfaced; pick what should change and compare), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here. |
@@ -591,8 +591,8 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `0cf283fef9e058f6b8cbf40cabd94a209154ccf759c6302f2a173776fe5349a3` |
-| bytes | 718952 |
+| sha256 | `791b678c005da6d0e62910d403cb4bc90ff150a9d540c911bb3373731c8bfed5` |
+| bytes | 716715 |
 | snapshot | `home-tools--mobile.snapshot.txt` |
 | snapshot sha256 | `653ffb731dae2df8aa209afe2c16fa610051cb1c4dd39af9466b8356aabc5149` |
 | snapshot bytes | 853 |
