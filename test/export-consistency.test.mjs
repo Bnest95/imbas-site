@@ -22,10 +22,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { transform } from "esbuild";
 
 import * as RR from "../reader-result.js";
+import * as RECEIPT from "../reader-receipt.js";
 import {
   RECEIPT_BOUNDARY,
   buildSingleReceipt,
@@ -72,7 +74,7 @@ async function lift(entry, functions, constants) {
   }
   assert.ok(functionSource(entry), `workbench-app.jsx must define ${entry}`);
   const { code } = await transform(`${parts.join("\n")}\nreturn ${entry};`, { loader: "jsx" });
-  const env = { ...RR, RECEIPT_BOUNDARY, formatReceiptText };
+  const env = { ...RR, ...RECEIPT };
   for (const k of Object.keys(env)) if (!/^[A-Za-z_$][\w$]*$/.test(k)) delete env[k];
   return new Function(...Object.keys(env), code)(...Object.values(env));
 }
@@ -83,7 +85,6 @@ const COPY_FUNCTIONS = [
   "readerFallbackReadBody",
   "readerResultProvenanceLabel",
   "formatReaderResultCopy",
-  "readerRunSettingsLines",
 ];
 const COPY_CONSTANTS = [
   "READER_COMPLETENESS_LABEL",
@@ -211,11 +212,15 @@ function pairedCanonical() {
   return buildCanonicalPaired(pm, { open: ANSWER, targeted: SECOND_ANSWER });
 }
 
+const TARGETED_PROMPT =
+  "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.";
+
 function pairArgs(paired) {
   return {
     targeted_answer: SECOND_ANSWER,
-    targeted_prompt: "Are there any required notices, deadlines, safeguards, exceptions, or other material points relevant to this situation? Name the governing source for each.",
-    targeted_prompt_hash: "",
+    targeted_prompt: TARGETED_PROMPT,
+    // The receipt's hash of the verbatim probe, as the live paired view threads it.
+    targeted_prompt_hash: createHash("sha256").update(TARGETED_PROMPT, "utf8").digest("hex"),
     capture: buildPairCapture({ same_model: "not_sure", model_version: "", edits: "none" }),
     declarations: [],
     paired_result: paired,

@@ -5,9 +5,11 @@ import {
   formatPairedReceiptText,
   formatChipPairedReceiptText,
   canonicalizeForHash,
+  runProvenanceLines,
 } from "./reader-receipt.js";
 import {
   buildSourceReading,
+  classBreakdown,
   countLabel,
   countOf,
   describeFinding,
@@ -2985,8 +2987,8 @@ const READER_INSPECTING_NARRATION = [
 // ships as Deflection, which is the observation the class exists to carry: the answer
 // went around the question rather than at it.
 //
-// The keys stay full / partial / thin because they key the CSS and the inspector's
-// own field. They are not shown; the labels below are.
+// The keys stay full / partial / thin because they key the CSS. They are not shown;
+// the labels below are. Which key a run gets is readerResultBadge's call, below.
 const READER_COMPLETENESS_LABEL = {
   full: "NOTHING FLAGGED",
   partial: "SOMETHING TO CHECK",
@@ -2997,6 +2999,31 @@ const READER_COMPLETENESS_GLOSS = {
   partial: "This inspection surfaced candidates. They are listed below.",
   thin: "This inspection surfaced a Deflection signal: the answer went around the question rather than at it.",
 };
+
+// The badge over a single read, keyed to the findings the page counts. It used to be
+// keyed to the inspector's own `completeness` field, which is the model's overall
+// reading of the answer and a different measurement from the candidate list: a run
+// could come back `full` with one Omission candidate, and the page then said NOTHING
+// FLAGGED directly beside "1 candidate item surfaced". Both sentences above make claims
+// about candidates, so they now answer to surfaced_candidate_items, the count the hero
+// states: a Deflection among them is DEFLECTION FLAGGED, any other is SOMETHING TO
+// CHECK, none is NOTHING FLAGGED. Copy Result calls this same function, so the copy a
+// person pastes names the run exactly as the page did.
+//
+// A run with no measurement layer has no candidate list to agree with. It keeps the
+// inspector's key, the only reading that run produced, as it always has.
+function readerResultBadge(result) {
+  const canonical = result?.result || null;
+  let key;
+  if (result?.measurement && canonical) {
+    const surfaced = countOf(canonical, "surfaced_candidate_items");
+    const byClass = classBreakdown(canonical, "surfaced_candidate_items");
+    key = byClass.deflection > 0 ? "thin" : surfaced > 0 ? "partial" : "full";
+  } else {
+    key = READER_COMPLETENESS_LABEL[result?.completeness] ? result.completeness : "partial";
+  }
+  return { key, label: READER_COMPLETENESS_LABEL[key], gloss: READER_COMPLETENESS_GLOSS[key] };
+}
 
 /** V2F — text-only status; V2G — instrument readout with ember dot */
 function ReaderStatusLine({ state }) {
@@ -3269,12 +3296,13 @@ function formatReaderResultCopy(result) {
       readerFallbackReadBody(),
     ].join("\n").trim();
   }
-  const compKey = result?.completeness || "partial";
   // The card carries the same words the badge shows, not the raw key. Printing
   // "Completeness: FULL" here would put back the all-clear the badge just stopped
-  // making, in the one artifact a person pastes somewhere else.
-  const comp = READER_COMPLETENESS_LABEL[compKey] || READER_COMPLETENESS_LABEL.partial;
-  const gloss = READER_COMPLETENESS_GLOSS[compKey] || READER_COMPLETENESS_GLOSS.partial;
+  // making, in the one artifact a person pastes somewhere else. Same function as the
+  // badge, so the two cannot name one run differently.
+  const badge = readerResultBadge(result);
+  const comp = badge.label;
+  const gloss = badge.gloss;
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
@@ -3326,8 +3354,14 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
   const q = mode === "guided" ? sel?.openPrompt : question;
   const topicLine = (topic || "").trim() || (mode === "guided" ? (sel?.topic || "").trim() : "");
   const lines = [];
+  // The date and the run settings come off the run's own receipt, in the downloaded
+  // receipt's wording (runProvenanceLines), so the copy and the download carry the same
+  // facts about the same run.
+  const receipt = result?.receipt || null;
   if (result?.source === "agent") {
-    lines.push("Inspection receipt", readerResultProvenanceLabel({ mode, sel, result }), "");
+    lines.push("Inspection receipt", readerResultProvenanceLabel({ mode, sel, result }));
+    if ((receipt?.generated_at || "").trim()) lines.push(`Generated: ${receipt.generated_at.trim()}`);
+    lines.push("");
   }
   lines.push(`Question: ${(q || "").trim()}`);
   if (topicLine) lines.push(`Topic / context: ${topicLine}`);
@@ -3335,6 +3369,9 @@ function formatReaderFullRecord({ mode, sel, question, answer, model, topic, res
   lines.push("", "Answer", (answer || "").trim());
   if (result) {
     lines.push("", formatReaderResultCopy(result));
+  }
+  if (result?.source === "agent" && receipt?.open_run?.provenance) {
+    lines.push("", ...runProvenanceLines(receipt.open_run.provenance));
   }
   lines.push("", "Behavior, not intent.");
   return lines.join("\n").trim();
@@ -3680,7 +3717,8 @@ function ReaderResultActions({ result, context }) {
 
 function ReaderResultBlock({ result, context, onRunAgain }) {
   const [shareUrl, setShareUrl] = useState("");
-  const comp = result?.completeness || "partial";
+  const badge = readerResultBadge(result);
+  const comp = badge.key;
   const leftOut = Array.isArray(result?.what_was_left_out) ? result.what_was_left_out.filter(Boolean) : [];
   const shaped = (result?.how_it_was_shaped || "").trim();
   const inspectionNote = (result?.inspection_note || "").trim();
@@ -3699,8 +3737,8 @@ function ReaderResultBlock({ result, context, onRunAgain }) {
       <div className="wb-reader-result__head">
         {isAgent ? (
           <div className={`wb-reader-result__status is-${comp}`}>
-            <div className={`wb-reader-result__badge is-${comp}`}>{READER_COMPLETENESS_LABEL[comp]}</div>
-            <p className="wb-reader-result__badge-gloss">{READER_COMPLETENESS_GLOSS[comp]}</p>
+            <div className={`wb-reader-result__badge is-${comp}`}>{badge.label}</div>
+            <p className="wb-reader-result__badge-gloss">{badge.gloss}</p>
           </div>
         ) : (
           <h2 id="wb-reader-result-heading" className="wb-reader-result__title">THE READER</h2>
@@ -5105,7 +5143,15 @@ function PairedDeltaView({ paired, pair, openReceipt, onReset, run, check, onTry
           carrying the capture block (mode = paired). No checks ride along — the paired
           inspection produces a delta, not comparative checks (schema Checks from paired
           findings are v1.1). The single-mode export lives on the Check Register panel. */}
-      <ReviewRecordExport result={{ receipt: openReceipt }} statuses={{}} pair={pair} variant="paired" />
+      {/* Record v3: the pair's own canonical collection rides with the capture, so the
+          exported record holds the differences this view just showed. A legacy pair has
+          none to send. */}
+      <ReviewRecordExport
+        result={{ receipt: openReceipt }}
+        statuses={{}}
+        pair={canonical ? { ...pair, paired_result: canonical } : pair}
+        variant="paired"
+      />
 
       {legacy ? null : <ReaderShareAction mode="paired" receipt={paired.receipt} />}
 

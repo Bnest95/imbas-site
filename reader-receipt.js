@@ -452,6 +452,16 @@ function openRunBodyLines(run) {
     L.push("No measurement layer was produced for this run.");
   }
   L.push("");
+  for (const line of runProvenanceLines(prov)) L.push(line);
+  return L;
+}
+
+// The run settings of one open run, as the .txt receipt prints them. Exported so the
+// Reader's "Copy Full Receipt" prints this block from the same function rather than a
+// second rendering of it: the copy and the download describe one run, in one wording.
+export function runProvenanceLines(provenance) {
+  const prov = provenance || {};
+  const L = [];
   L.push("—— PROVENANCE ——");
   L.push(`Reader model: ${prov.reader_model_version || ""}`);
   L.push(`Inspector prompt version: ${prov.inspector_prompt_version || ""}`);
@@ -640,6 +650,15 @@ export function formatChipPairedReceiptText(envelope) {
   L.push("");
   L.push("Instruction you sent:");
   L.push((pa.targeted_prompt || "").trim());
+  L.push("");
+  // The answer that came back, in full. The envelope has carried it since the chip
+  // lane shipped (paired_analysis.targeted_answer), so Copy JSON always held it and this
+  // rendering left it out: the person kept a record of what changed in an answer the
+  // record did not contain. Printing it adds no field to the envelope, so the schema
+  // version and the content_hash it is taken over are unchanged.
+  L.push("—— THE SECOND ANSWER ——");
+  L.push("");
+  L.push((pa.targeted_answer || "").trim());
   L.push("");
   L.push("What changed in the second answer:");
   const deltas = Array.isArray(pa.delta_items) ? pa.delta_items : [];

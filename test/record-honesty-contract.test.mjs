@@ -251,10 +251,12 @@ test("both Review Record controls render, and each declares which variant it is"
     /<ReviewRecordExport result=\{result\} statuses=\{statuses\} variant="single" \/>/,
     "the Check Register panel keeps the export that carries the marks",
   );
+  // AMENDED 2026-11-04 (record v3): the paired export also hands the record the pair's
+  // own canonical collection, so the file carries the differences the delta shows.
   assert.match(
     JSX,
-    /<ReviewRecordExport result=\{\{ receipt: openReceipt \}\} statuses=\{\{\}\} pair=\{pair\} variant="paired" \/>/,
-    "the delta keeps the export that carries the second answer",
+    /<ReviewRecordExport\s+result=\{\{ receipt: openReceipt \}\}\s+statuses=\{\{\}\}\s+pair=\{canonical \? \{ \.\.\.pair, paired_result: canonical \} : pair\}\s+variant="paired"\s+\/>/,
+    "the delta keeps the export that carries the second answer and the pair's differences",
   );
 });
 
