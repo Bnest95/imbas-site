@@ -106,7 +106,7 @@
     menu.hidden = true;
 
     [
-      { href: '/field-notes/', label: 'Field Notes', fieldNotes: true, desktopOnly: true },
+      { href: '/field-notes/', label: 'Updates', fieldNotes: true, desktopOnly: true },
       { href: '/volunteer-gap.html', label: 'The Volunteer Gap' },
       { href: '/how-it-works.html', label: 'How It Works' },
       { href: '/reader.html', label: 'The Reader' },
@@ -242,7 +242,7 @@
     var link = document.createElement('a');
     link.href = '/field-notes/';
     link.className = 'nav__link--mobile-field-notes';
-    link.textContent = 'Field Notes';
+    link.textContent = 'Updates';
     if (isFieldNotesPath(path)) {
       link.setAttribute('aria-current', 'page');
     }

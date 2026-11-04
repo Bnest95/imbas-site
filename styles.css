@@ -9430,12 +9430,15 @@ main > .close::before {
   main > .hero .hero__subhead {
     max-width: min(30ch, 90vw);
   }
+  /* The H1 is four words now ("Making AI work for you."), so on a phone it takes a
+     headline size in full ink rather than the small, dimmed size the old long subhead
+     needed. It stays on one line from 320px to 430px. */
   main > .hero .hero__subhead-line {
-    font-size: clamp(0.88rem, 3.25vw, 1.05rem);
+    font-size: clamp(1.25rem, 5.6vw, 1.375rem);
     line-height: 1.32;
     margin-bottom: 0.45em;
     padding-inline: 0;
-    color: rgba(242, 232, 220, 0.92);
+    color: var(--ink-primary);
   }
   main > .hero .hero__capture-block {
     margin-top: 0.28rem;
@@ -9803,10 +9806,10 @@ main > .close::before {
   }
 
   main > .hero .hero__subhead-line {
-    font-size: clamp(0.84rem, 3.1vw, 1rem);
+    font-size: clamp(1.25rem, 5.6vw, 1.375rem);
     line-height: 1.3;
     margin-bottom: 0.38em;
-    color: rgba(220, 212, 198, 0.82);
+    color: var(--ink-primary);
   }
 
   main > .hero .hero__capture-block {

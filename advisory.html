@@ -14,15 +14,15 @@
   <meta property="og:site_name" content="Imbas">
   <meta property="og:title" content="AI Advisory | Imbas">
   <meta property="og:description" content="Brendan Nestor works with businesses to research the options, build what’s needed, put it in place and train the people who’ll use it.">
-  <meta property="og:image" content="https://www.imbaslabs.com/og-image.png">
+  <meta property="og:image" content="https://www.imbaslabs.com/og-home.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta property="og:image:alt" content="Imbas: Making AI work for you.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="AI Advisory | Imbas">
   <meta name="twitter:description" content="Brendan Nestor works with businesses to research the options, build what’s needed, put it in place and train the people who’ll use it.">
-  <meta name="twitter:image" content="https://www.imbaslabs.com/og-image.png">
-  <meta name="twitter:image:alt" content="Imbas — AI answer inspection and public evidence records.">
+  <meta name="twitter:image" content="https://www.imbaslabs.com/og-home.png">
+  <meta name="twitter:image:alt" content="Imbas: Making AI work for you.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&family=Inter:wght@400..500&family=JetBrains+Mono:wght@400..500&display=swap">
@@ -83,6 +83,8 @@
 
     /* Who you'd work with */
     .adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
+    .adv-person { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-4); align-items: start; }
+    .adv-person__photo { display: block; width: 140px; height: 140px; object-fit: cover; border-radius: 4px; }
     .adv-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.1rem; margin: 0 0 var(--space-3); }
     .adv-name-row h2 { margin: 0; }
     .adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
@@ -134,6 +136,8 @@
       .adv-btn { width: 100%; justify-content: center; }
       .adv-band { padding: var(--space-5) 0; }
       .adv-close { padding: var(--space-6) 0 var(--space-5); }
+      .adv-person { grid-template-columns: 1fr; gap: var(--space-3); }
+      .adv-person__photo { width: 112px; height: 112px; }
     }
   </style>
   <script type="application/ld+json">
@@ -249,11 +253,16 @@
       <div class="adv-who">
         <div>
           <span class="section-label section-label--named adv-label"><span>Who you&rsquo;d work with</span></span>
-          <div class="adv-name-row">
-            <h2 id="adv-proof-h2">Brendan Nestor</h2>
-            <a class="adv-textlink" href="https://www.linkedin.com/in/brendannestor" rel="me">LinkedIn</a>
+          <div class="adv-person">
+            <img class="adv-person__photo" src="/advisory-assets/brendan-nestor.jpg" width="140" height="140" alt="Brendan Nestor">
+            <div>
+              <div class="adv-name-row">
+                <h2 id="adv-proof-h2">Brendan Nestor</h2>
+                <a class="adv-textlink" href="https://www.linkedin.com/in/brendannestor" rel="me">LinkedIn</a>
+              </div>
+              <p class="adv-founder-p">I&rsquo;ve led growth at an early-stage company, managed a team across LA, New York and Europe, and built and run my own service business. At Imbas I also measure what AI answers leave out. That&rsquo;s how I know where AI is worth using in your business, and where a person still needs to check its work.</p>
+            </div>
           </div>
-          <p class="adv-founder-p">I&rsquo;ve led growth at an early-stage company, managed a team across LA, New York and Europe, and built and run my own service business. At Imbas I also measure what AI answers leave out. That&rsquo;s how I know where AI is worth using in your business, and where a person still needs to check its work.</p>
         </div>
         <ul class="adv-stats" role="list">
           <li><b>Head of Growth</b><span>Employee four at a startup backed by tier-1 VCs</span></li>
@@ -355,7 +364,7 @@
       <a href="/privacy.html">Privacy Policy</a>
       <a href="/terms.html">Terms of Use</a>
       <a href="/accessibility.html">Accessibility</a>
-      <a href="/field-notes/">Field Notes</a>
+      <a href="/field-notes/">Updates</a>
     </nav>
     <div class="site-footer__meta">
       <span>brendan@imbaslabs.com</span>

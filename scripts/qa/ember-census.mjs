@@ -1260,6 +1260,53 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-11-04",
+    reason:
+      "authorized source edit on branch claude/updates-hero-share (founder brief of 2026-11-04, " +
+      "item 2): the homepage H1 is sized for its four words on phones. One governed source moved: " +
+      "styles.css. workbench.css and workbench-app.jsx were not touched, so the chain carries them " +
+      "through by silence.",
+    fingerprint_before: "039fc2fc641620481cb3c8cca92d740ba6354485413c75c033d3b5bec7c6147b",
+    fingerprint_after: "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+        sha256_after: "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+        edit:
+          "in the two @media (max-width: 699px) rules for main > .hero .hero__subhead-line, font-size " +
+          "becomes clamp(1.25rem, 5.6vw, 1.375rem) and color becomes var(--ink-primary), replacing " +
+          "rgba(242, 232, 220, 0.92) and rgba(220, 212, 198, 0.82), with a comment. --ink-primary is " +
+          "an ink token, not an ember token, and neither replaced value was on the ember ramp, so no " +
+          "declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is " +
+          "byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────

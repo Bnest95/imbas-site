@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 3731
+scroll_offset: 3787
 timezone: UTC
 url: /advisory.html
 viewport: 1440x900
@@ -62,7 +62,7 @@ a "Contact" href="/contact.html"
 a "Privacy Policy" href="/privacy.html"
 a "Terms of Use" href="/terms.html"
 a "Accessibility" href="/accessibility.html"
-a "Field Notes" href="/field-notes/"
+a "Updates" href="/field-notes/"
 span "brendan@imbaslabs.com"
 span "© 2026 Imbas"
 a "Public record licensed CC BY 4.0" href="https://creativecommons.org/licenses/by/4.0/"
