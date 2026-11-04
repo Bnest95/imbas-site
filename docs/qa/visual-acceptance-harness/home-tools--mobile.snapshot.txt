@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 316
+scroll_offset: 332
 timezone: UTC
 url: /index.html
 viewport: 375x812
