@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 532
+scroll_offset: 494
 timezone: UTC
 url: /index.html
 viewport: 1440x900
@@ -33,12 +33,13 @@ button "More" disabled=false expanded=false
 span "▾"
 button "Try the Reader" disabled=false
 a "Work with me" href="/advisory.html"
+span "→"
 span "Tools"
 h2 "Free to use."
 p "The Reader"
 h3 "Check your AI’s answer and steer what comes next."
 p "See what surfaced, what may be missing, and how it was shaped. Then pick what you want done differently, paste the instruction back into your AI and compare what changed."
+p "Keep a dated receipt of the answer and what the Reader found."
 a "Open the Reader" href="/reader.html?reader=1"
 span "→"
 figcaption "Real run · what the first answer left out"
-p "Input Integrity"
