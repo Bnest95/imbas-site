@@ -63,14 +63,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `145f9d2b1bda8902e46a00185d851966fbfe18b6773163c39f64e7f53d3b7867` |
-| bytes | 746487 |
+| sha256 | `593d361914401958223be03f6e2d9488dc56118306c669726db14a72c69fcf5f` |
+| bytes | 748454 |
 | snapshot | `advisory-boundaries--desktop.snapshot.txt` |
-| snapshot sha256 | `35950e1a64e2eaa05d499c0e9d4a0f1d902a366eaf30dd607098f409059a028e` |
+| snapshot sha256 | `2e2d5f97642eb92c4b2fac1764de0a8ae5e4dd7ec70c0968b4b311f22e2fb570` |
 | snapshot bytes | 2477 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 3731 |
+| framed on | `.adv-terms` at scroll offset 3787 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -79,14 +79,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `46fc28def21d68af636eeeedfe427217128a522eb0855cef42c9ec92513406a1` |
-| bytes | 605931 |
+| sha256 | `27b5cee3fa727ad318692b1b01ad20c683028b7ca2b7ed15e6158fa8b7bb4713` |
+| bytes | 606972 |
 | snapshot | `advisory-boundaries--mobile.snapshot.txt` |
-| snapshot sha256 | `be2eb90d034242601d35b552c8c945997d0ad029d5d5b733eb6a11f8717236f7` |
+| snapshot sha256 | `c20b79d54d229350876e6c95a478714c18e7f3c64b8d5afdfa898406140d5d83` |
 | snapshot bytes | 1586 |
 | viewport | 375x812@3x (mobile) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 6073 |
+| framed on | `.adv-terms` at scroll offset 6209 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
