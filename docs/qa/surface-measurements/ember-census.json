@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "da388968cde1ebb72b87eca2d10bfe84b33451b0",
+  "measured_at_master": "1d82d64997ddc728c5c012a2615ec31c61329031",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -67,7 +67,7 @@
     "sources": [
       {
         "path": "styles.css",
-        "sha256": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012"
+        "sha256": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c"
       },
       {
         "path": "workbench-app.jsx",
@@ -78,7 +78,7 @@
         "sha256": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00"
       }
     ],
-    "sha256": "039fc2fc641620481cb3c8cca92d740ba6354485413c75c033d3b5bec7c6147b"
+    "sha256": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c"
   },
   "provenance": {
     "reseal_rule": {
@@ -483,6 +483,72 @@
             "extraction": "CSS template literals only",
             "sha256_unchanged": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
             "edit": "the privacy line links \"kept in Imbas's records\" to /retention.html, and the late chip door stands down on the compose stage by founder ruling. No CSS template literal changed."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "is_terminal_source_record": false,
+        "authorized_edits_hold_live": null,
+        "sources_recorded_unmoved_hold_live": null,
+        "carries_population_evidence": []
+      },
+      {
+        "date": "2026-11-04",
+        "reason": "authorized source edit on branch claude/updates-hero-share (founder brief of 2026-11-04, item 2): the homepage H1 is sized for its four words on phones. One governed source moved: styles.css. workbench.css and workbench-app.jsx were not touched, so the chain carries them through by silence.",
+        "fingerprint_before": "039fc2fc641620481cb3c8cca92d740ba6354485413c75c033d3b5bec7c6147b",
+        "fingerprint_after": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c",
+        "authorized_edits": [
+          {
+            "source": "styles.css",
+            "extraction": "whole file",
+            "sha256_before": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+            "sha256_after": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+            "edit": "in the two @media (max-width: 699px) rules for main > .hero .hero__subhead-line, font-size becomes clamp(1.25rem, 5.6vw, 1.375rem) and color becomes var(--ink-primary), replacing rgba(242, 232, 220, 0.92) and rgba(220, 212, 198, 0.82), with a comment. --ink-primary is an ink token, not an ember token, and neither replaced value was on the ember ramp, so no declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is byte-identical."
           }
         ],
         "counts_before": {
@@ -1636,8 +1702,8 @@
       ],
       "terminal": {
         "route": "source",
-        "date": "2026-11-03",
-        "fingerprint_after": "039fc2fc641620481cb3c8cca92d740ba6354485413c75c033d3b5bec7c6147b"
+        "date": "2026-11-04",
+        "fingerprint_after": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c"
       },
       "links": [
         {
@@ -1722,12 +1788,21 @@
           "holds": true
         },
         {
-          "link": "2026-11-03/source → live",
+          "link": "2026-11-03/source → 2026-11-04/source",
+          "path": "styles.css",
+          "route": "source",
+          "kind": "moved",
+          "started_from": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "produced": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+          "holds": true
+        },
+        {
+          "link": "2026-11-04/source → live",
           "path": "styles.css",
           "route": "source",
           "kind": "terminal",
-          "produced": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
-          "live": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
+          "produced": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+          "live": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
           "holds": true
         },
         {
@@ -1812,7 +1887,16 @@
           "holds": true
         },
         {
-          "link": "2026-11-03/source → live",
+          "link": "2026-11-03/source → 2026-11-04/source",
+          "path": "workbench-app.jsx",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-11-04/source → live",
           "path": "workbench-app.jsx",
           "route": "source",
           "kind": "terminal",
@@ -1902,7 +1986,16 @@
           "holds": true
         },
         {
-          "link": "2026-11-03/source → live",
+          "link": "2026-11-03/source → 2026-11-04/source",
+          "path": "workbench.css",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00",
+          "produced": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00",
+          "holds": true
+        },
+        {
+          "link": "2026-11-04/source → live",
           "path": "workbench.css",
           "route": "source",
           "kind": "terminal",
@@ -1919,7 +2012,7 @@
     {
       "path": "styles.css",
       "extraction": "whole file",
-      "sha256": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012"
+      "sha256": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c"
     },
     {
       "path": "workbench.css",
