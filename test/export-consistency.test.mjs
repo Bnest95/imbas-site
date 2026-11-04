@@ -12,6 +12,8 @@
 //      receipt for the same run does.
 //   4. The steering (user-directed follow-up) text receipt left out the second answer,
 //      which its own Copy JSON carries in full.
+//   5. The two-question test's text receipt left out the second answer the same way
+//      (added 2026-11-04, after #220's first review).
 //
 // The JSX functions are lifted out of workbench-app.jsx by name and compiled with the
 // bundle's JSX settings, so what runs here is what ships. The receipt and review-record
@@ -294,4 +296,37 @@ test("4. the steering text receipt carries the second answer in full, as its Cop
   assert.ok(text.includes(STEERED), "the text receipt does not carry the second answer in full");
   // It sits with the first answer and the instruction, before the list of changes.
   assert.ok(text.indexOf(STEERED) < text.indexOf("What changed in the second answer:"));
+});
+
+// ── 5. The two-question test's text receipt ─────────────────────────────────────
+
+test("5. the two-question text receipt carries the second answer in full, as its Copy JSON does", () => {
+  const open = singleResult({ completeness: "full", findings: [OMISSION] });
+  const envelope = RECEIPT.buildPairedReceipt({
+    generatedAt: "2026-11-04T19:25:19.463Z",
+    openRun: open.receipt.open_run,
+    pairedAnalysis: {
+      open_run_id: "02d5ceef6832606d",
+      targeted_prompt: TARGETED_PROMPT,
+      targeted_answer: SECOND_ANSWER,
+      delta_items: [
+        {
+          point: "The second answer ties watering frequency to light level.",
+          open_side: "",
+          targeted_side: "adjust for light, because a snake plant in low light needs water less often than one in bright light",
+          signal_pattern: "Omission",
+        },
+      ],
+      canonical: pairedCanonical(),
+    },
+    declarations: [],
+  });
+  assert.equal(JSON.parse(JSON.stringify(envelope)).paired_analysis.targeted_answer, SECOND_ANSWER, "fixture: Copy JSON carries the second answer");
+
+  const text = RECEIPT.formatPairedReceiptText(envelope);
+  assert.ok(text.includes("—— THE SECOND ANSWER ——"), "the text receipt has no second-answer section");
+  assert.ok(text.includes(SECOND_ANSWER), "the text receipt does not carry the second answer in full");
+  // It sits with the direct question it answered, before the differences drawn from it.
+  assert.ok(text.indexOf(SECOND_ANSWER) > text.indexOf(TARGETED_PROMPT));
+  assert.ok(text.indexOf(SECOND_ANSWER) < text.indexOf("Delta — what the second answer surfaced that the first did not:"));
 });
