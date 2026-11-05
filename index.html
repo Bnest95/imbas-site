@@ -71,8 +71,11 @@
   <script defer src="/_vercel/insights/script.js"></script>
 <style>
   .hero2-actions { display: flex !important; max-width: 640px !important; flex-wrap: wrap; justify-content: center; align-items: center; gap: 1rem 1.25rem; }
-  .hero2-adv { display: inline-flex; align-items: center; gap: .6rem; border: 1px solid var(--ember); color: var(--ember-bright); background: rgba(var(--ember-rgb), .08); font-family: var(--font-mono); font-size: max(.875rem, var(--mono-min)); letter-spacing: .16em; text-transform: uppercase; padding: 1.1rem 2rem; text-decoration: none; border-radius: 2px; }
-  .hero2-adv:hover { background: rgba(var(--ember-rgb), .18); color: var(--ink-luminous); }
+  .hero2-adv { display: inline-flex; align-items: center; gap: .6rem; border: 1px solid var(--ember); color: var(--bg-deep); background: var(--ember); box-shadow: 0 4px 22px rgba(var(--ember-rgb), .34); font-family: var(--font-mono); font-size: max(.875rem, var(--mono-min)); letter-spacing: .16em; text-transform: uppercase; padding: 1.1rem 2rem; text-decoration: none; border-radius: 2px; }
+  .hero2-adv:hover { background: var(--ember-soft); border-color: var(--ember-soft); color: var(--bg-deep); box-shadow: 0 6px 26px rgba(var(--ember-rgb), .42); }
+  /* "Work with me" is the hero's primary action, so "Try the Reader" takes the outlined treatment .hero2-adv had. */
+  .hero2-actions .hero__capture button { background: rgba(var(--ember-rgb), .08); color: var(--ember-bright); border-color: var(--ember); box-shadow: none; }
+  .hero2-actions .hero__capture button:hover { background: rgba(var(--ember-rgb), .18); border-color: var(--ember); color: var(--ink-luminous); box-shadow: none; }
   @media (max-width: 600px) { .hero2-actions > * { width: 100%; } .hero2-actions .hero__capture button, .hero2-adv { width: 100%; justify-content: center; } .hero2-actions .hero__capture { display: flex; } }
   /* The eyebrow needs 356px on one line at the 13px mono floor, so phones get two balanced, centred lines without the side rules. */
   @media (max-width: 519px) {
@@ -81,7 +84,7 @@
   }
 
   /* Home bands. The original homepage already had two cool grounds: the Thesis slate
-     (.compounding) and the Case Archive navy (.archive--home-preview). The new Tools and
+     (.compounding) and the Case Archive navy (.archive--home-preview). The Advisory and
      Research bands reuse them exactly, so the sections below the hero alternate cool and warm.
      Scoped to this page. */
   .band-cool {
@@ -127,7 +130,7 @@
     .tool-card .home-band__btn { width: 100%; justify-content: center; }
   }
 
-  /* Advisory: the warm ground of the original advisory band, copy beside a plain list. */
+  /* Advisory: copy beside a plain list. Its ground is the Thesis slate (band-cool--slate) since it moved above Tools. */
   .adv-band .home-band__inner { display: grid; grid-template-columns: 7fr 5fr; gap: var(--space-5); align-items: center; }
   .adv-band .home-band__inner h2 { margin-bottom: var(--space-3); max-width: 18ch; }
   .adv-band p { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: var(--ink-soft); max-width: 48ch; margin: 0 0 var(--space-4); }
@@ -184,7 +187,7 @@
 
 <main id="main-content">
 
-  <!-- HERO — Reader primary CTA; archive via nav, proof strip, Case Archive -->
+  <!-- HERO — Work with me is the primary CTA, the Reader the secondary; archive via nav, proof strip, Case Archive -->
   <section class="hero section-scene" aria-labelledby="hero-h1">
 
     <div class="hero__fog" aria-hidden="true"></div>
@@ -229,8 +232,30 @@
     </div>
   </section>
 
-  <!-- TOOLS — cool, the Thesis slate -->
-  <section class="stakes section-scene band-cool band-cool--slate tools-band" aria-labelledby="tools-h2">
+  <!-- AI ADVISORY — cool, the Thesis slate (first after the hero, so it takes the cool ground) -->
+  <section class="stakes section-scene band-cool band-cool--slate adv-band" aria-labelledby="advisory-h2">
+    <div class="home-band__inner">
+      <div>
+        <span class="section-label section-label--named"><span>AI advisory</span></span>
+        <h2 id="advisory-h2">Work out what&rsquo;s worth changing.</h2>
+        <p>You may have a process that takes too long, a question about your customers, or an idea you haven&rsquo;t had time to test. I learn how the work gets done, help you decide what to change first, then put it in place and make sure it works. AI is part of what I bring, alongside research and experience running a business.</p>
+        <a href="/advisory.html" class="home-band__btn">Work with me <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      <div class="adv-band__examples">
+        <p class="adv-band__examples-label">For example</p>
+        <ul role="list">
+          <li>A quoting tool built around your services</li>
+          <li>A searchable reference from your own documents</li>
+          <li>Reports prepared from the records you already keep</li>
+          <li>Positioning and customer research</li>
+          <li>A straight answer on which AI tools are worth paying for</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS — warm, the ground the advisory band had before it moved above this one -->
+  <section class="stakes section-scene tools-band" aria-labelledby="tools-h2">
     <div class="home-band__inner">
       <span class="section-label section-label--named"><span>Tools</span></span>
       <h2 id="tools-h2">Free to use.</h2>
@@ -256,27 +281,6 @@
           </div>
           <figure class="tool-card__shot"><picture><source media="(max-width: 600px)" srcset="/advisory-assets/tool-ii-mobile.png" width="900" height="828"><img src="/advisory-assets/tool-ii.png" width="1200" height="806" alt="Input Integrity result on a constructed supplier proposal: the file&rsquo;s structure carries an instruction to AI assistants, set in white text." loading="lazy"></picture><figcaption>Constructed sample &middot; an instruction to AI set in white text</figcaption></figure>
         </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- AI ADVISORY — warm, the original advisory band's ground -->
-  <section class="stakes section-scene adv-band" aria-labelledby="advisory-h2">
-    <div class="home-band__inner">
-      <div>
-        <span class="section-label section-label--named"><span>AI advisory</span></span>
-        <h2 id="advisory-h2">Work out what&rsquo;s worth changing.</h2>
-        <p>You may have a process that takes too long, a question about your customers, or an idea you haven&rsquo;t had time to test. I investigate it with you, weigh the options and help put the decision into practice. AI is part of what I bring, alongside research and experience running a business.</p>
-        <a href="/advisory.html" class="home-band__btn">Work with me <span aria-hidden="true">&rarr;</span></a>
-      </div>
-      <div class="adv-band__examples">
-        <p class="adv-band__examples-label">For example</p>
-        <ul role="list">
-          <li>A quoting tool built around your services</li>
-          <li>A searchable reference from your own documents</li>
-          <li>Reports prepared from the records you already keep</li>
-          <li>Positioning and customer research</li>
-        </ul>
       </div>
     </div>
   </section>
