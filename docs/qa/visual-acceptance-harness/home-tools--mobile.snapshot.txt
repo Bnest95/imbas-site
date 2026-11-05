@@ -13,7 +13,7 @@ mobile_emulation: true
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 332
+scroll_offset: 1203
 timezone: UTC
 url: /index.html
 viewport: 375x812
@@ -25,9 +25,9 @@ viewport: 375x812
 a href="/"
 span "Imbas"
 button "Menu" disabled=false expanded=false
-button "Try the Reader" disabled=false
-a "Work with me" href="/advisory.html"
-span "→"
+li "Reports prepared from the records you already keep"
+li "Positioning and customer research"
+li "A straight answer on which AI tools are worth paying for"
 span "Tools"
 h2 "Free to use."
 p "The Reader"

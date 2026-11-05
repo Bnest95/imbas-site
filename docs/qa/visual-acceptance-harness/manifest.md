@@ -575,14 +575,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `12dc6f8c981f18f6cf573b00510828fb6e7625939e08499ed72f4841d5e290b6` |
-| bytes | 859893 |
+| sha256 | `02e1c95aa3cf8b1f3bf7c9c0c681f35b340058c49aa8b122923cbcb108bb44c2` |
+| bytes | 396895 |
 | snapshot | `home-tools--desktop.snapshot.txt` |
-| snapshot sha256 | `d3b6d8065fbe41a68f0f45d46a7211479d3452d4a88ffd1220bd4b789088e6d6` |
-| snapshot bytes | 1331 |
+| snapshot sha256 | `c5bb2cc1bb78ce4368c2d0a877e4537cbe088e492a78a82a83b109695de6d82e` |
+| snapshot bytes | 1282 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.tool-card--reader h3` at scroll offset 494 |
+| framed on | `.tool-card--reader h3` at scroll offset 1132 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's Tools section — the Reader card, with both of the Reader's uses described |
 | expected behaviour | The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the one paragraph that carries both uses (see what surfaced; pick what should change and compare), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here. |
@@ -591,14 +591,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `791b678c005da6d0e62910d403cb4bc90ff150a9d540c911bb3373731c8bfed5` |
-| bytes | 716715 |
+| sha256 | `9c5788bdf0ee6ead3535c081895fc6edf6699d57bf66780c639d5db94655dafc` |
+| bytes | 393283 |
 | snapshot | `home-tools--mobile.snapshot.txt` |
-| snapshot sha256 | `653ffb731dae2df8aa209afe2c16fa610051cb1c4dd39af9466b8356aabc5149` |
-| snapshot bytes | 853 |
+| snapshot sha256 | `b77c46c512790d6b9d6c33ee3720f1fb13f02d388180732aa8d9b636fca6c944` |
+| snapshot bytes | 922 |
 | viewport | 375x812@3x (mobile) |
 | url | `/index.html`, query `(none)` |
-| framed on | `.tool-card--reader h3` at scroll offset 332 |
+| framed on | `.tool-card--reader h3` at scroll offset 1203 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | The homepage's Tools section — the Reader card, with both of the Reader's uses described |
 | expected behaviour | The section the v4.4 refresh put directly under the hero. Framed on the Reader card's headline, so the frame holds the tool name, the headline, the one paragraph that carries both uses (see what surfaced; pick what should change and compare), the Open the Reader action and the real inspection example beside them. The steering capture sits below this frame on desktop and is held by its own markup, not photographed here. |
