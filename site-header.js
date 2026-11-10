@@ -1,9 +1,9 @@
 (function () {
   var FALLBACK = 77;
-  var MORE_PAGES = ['/field-notes', '/volunteer-gap.html', '/how-it-works.html', '/reader.html', '/whitepaper.html', '/institutions.html', '/for-readers.html', '/methodology.html', '/public-interest.html', '/faq.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html', '/exploration-pack.html', '/input-integrity.html'];
+  var MORE_PAGES = ['/updates', '/volunteer-gap.html', '/how-it-works.html', '/reader.html', '/whitepaper.html', '/institutions.html', '/for-readers.html', '/methodology.html', '/public-interest.html', '/faq.html', '/glossary.html', '/independence.html', '/challenge.html', '/challenge-log.html', '/calibration.html', '/exploration-pack.html', '/input-integrity.html'];
 
   function isFieldNotesPath(path) {
-    return path === '/field-notes' || path.indexOf('/field-notes/') === 0;
+    return path === '/updates' || path.indexOf('/updates/') === 0;
   }
 
   function isMoreSectionPath(path) {
@@ -106,7 +106,7 @@
     menu.hidden = true;
 
     [
-      { href: '/field-notes/', label: 'Updates', fieldNotes: true, desktopOnly: true },
+      { href: '/updates/', label: 'Updates', fieldNotes: true, desktopOnly: true },
       { href: '/volunteer-gap.html', label: 'The Volunteer Gap' },
       { href: '/how-it-works.html', label: 'How It Works' },
       { href: '/reader.html', label: 'The Reader' },
@@ -240,7 +240,7 @@
 
     var path = normalizePath(window.location.pathname);
     var link = document.createElement('a');
-    link.href = '/field-notes/';
+    link.href = '/updates/';
     link.className = 'nav__link--mobile-field-notes';
     link.textContent = 'Updates';
     if (isFieldNotesPath(path)) {
