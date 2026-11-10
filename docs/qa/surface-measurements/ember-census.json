@@ -9,7 +9,7 @@
     "withdrawn_claim": "The historical claim that every surviving result-region free alpha also painted outside the region is WITHDRAWN as inaccurate, by the founder ruling of 2026-08-22. This census measures the opposite: most free-alpha spends in the region are region-only. The scope field on every row of free_alpha_inventory carries the measured answer per declaration.",
     "what_the_free_alpha_count_is_not": "The free-alpha count is NOT a pass/fail R14 compliance threshold. Per the founder ruling of 2026-08-22 it is a governed measurement and a technical-debt and reconciliation signal. A rising count is a thing to look at, never on its own a thing to fix. See r14_adjudication for the ruling in full."
   },
-  "measured_at_master": "1d82d64997ddc728c5c012a2615ec31c61329031",
+  "measured_at_master": "3051c0e3e0d405f791bde2abceaebc16a0e2d9a8",
   "renderer": "HeadlessChrome/148.0.7778.96",
   "coverage_fingerprint": {
     "region_selector": ".wb-reader-v2__result",
@@ -67,7 +67,7 @@
     "sources": [
       {
         "path": "styles.css",
-        "sha256": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c"
+        "sha256": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453"
       },
       {
         "path": "workbench-app.jsx",
@@ -78,7 +78,7 @@
         "sha256": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00"
       }
     ],
-    "sha256": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c"
+    "sha256": "e7e2acea64120dc49de49e72954d0db9adfccb63b19800fc07f2a14ab94baa9f"
   },
   "provenance": {
     "reseal_rule": {
@@ -549,6 +549,72 @@
             "sha256_before": "41e58ff1f5d7a2b8f508d52cdcd01cac7aace3616f5b3ddfb27f7cf1a0248012",
             "sha256_after": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
             "edit": "in the two @media (max-width: 699px) rules for main > .hero .hero__subhead-line, font-size becomes clamp(1.25rem, 5.6vw, 1.375rem) and color becomes var(--ink-primary), replacing rgba(242, 232, 220, 0.92) and rgba(220, 212, 198, 0.82), with a comment. --ink-primary is an ink token, not an ember token, and neither replaced value was on the ember ramp, so no declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is byte-identical."
+          }
+        ],
+        "counts_before": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "free_alpha_inventory_before": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "counts_after": {
+          "declared_token_spends": 33,
+          "free_alpha_spends": 13,
+          "distinct_free_alphas": 9,
+          "free_alpha_spends_resting": 7,
+          "free_alpha_spends_pseudo_state_only": 6
+        },
+        "counts_identical": true,
+        "free_alpha_inventory_after": [
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+          "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+          "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+          "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+          "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+          "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+          "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+          "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+          "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+          "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)"
+        ],
+        "free_alpha_inventory_identical": true,
+        "measured_state_moved": false,
+        "is_terminal_source_record": false,
+        "authorized_edits_hold_live": null,
+        "sources_recorded_unmoved_hold_live": null,
+        "carries_population_evidence": []
+      },
+      {
+        "date": "2026-11-10",
+        "reason": "authorized source edit on branch claude/homepage-outreach (founder brief \"Homepage: ready for outreach\", item 1, the reply block): the rules the reply block uses move out of advisory.html's inline style into styles.css, and the block's own three rules are added. One governed source moved: styles.css. workbench.css and workbench-app.jsx were not touched, so the chain carries them through by silence.",
+        "fingerprint_before": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c",
+        "fingerprint_after": "e7e2acea64120dc49de49e72954d0db9adfccb63b19800fc07f2a14ab94baa9f",
+        "authorized_edits": [
+          {
+            "source": "styles.css",
+            "extraction": "whole file",
+            "sha256_before": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+            "sha256_after": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453",
+            "edit": "a block appended at the end of the file: .adv-actions, .adv-btn, .adv-btn:hover, .adv-textlink, .adv-textlink:hover and .adv-close__addr, moved verbatim from advisory.html, with .adv-btn's 600px full-width rule; and .reply-block .adv-close__addr, its adjacent-sibling margin and .reply-block__select, which set user-select and one margin. The moved .adv-btn carries var(--ember) and rgba(var(--ember-rgb), 0.34), and .adv-textlink:hover carries var(--ember); none of those selectors reaches the governed region, so no declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is byte-identical."
           }
         ],
         "counts_before": {
@@ -1702,8 +1768,8 @@
       ],
       "terminal": {
         "route": "source",
-        "date": "2026-11-04",
-        "fingerprint_after": "2d41558dc772457adf4b85c5eaabe6468425b86872a2a9e50aafadeb9d92740c"
+        "date": "2026-11-10",
+        "fingerprint_after": "e7e2acea64120dc49de49e72954d0db9adfccb63b19800fc07f2a14ab94baa9f"
       },
       "links": [
         {
@@ -1797,12 +1863,21 @@
           "holds": true
         },
         {
-          "link": "2026-11-04/source → live",
+          "link": "2026-11-04/source → 2026-11-10/source",
+          "path": "styles.css",
+          "route": "source",
+          "kind": "moved",
+          "started_from": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+          "produced": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453",
+          "holds": true
+        },
+        {
+          "link": "2026-11-10/source → live",
           "path": "styles.css",
           "route": "source",
           "kind": "terminal",
-          "produced": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
-          "live": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c",
+          "produced": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453",
+          "live": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453",
           "holds": true
         },
         {
@@ -1896,7 +1971,16 @@
           "holds": true
         },
         {
-          "link": "2026-11-04/source → live",
+          "link": "2026-11-04/source → 2026-11-10/source",
+          "path": "workbench-app.jsx",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "produced": "2a50618370aa4b9e93ffa976970d9e373ce3ae04ebde1748e3b1dff7cb2b0146",
+          "holds": true
+        },
+        {
+          "link": "2026-11-10/source → live",
           "path": "workbench-app.jsx",
           "route": "source",
           "kind": "terminal",
@@ -1995,7 +2079,16 @@
           "holds": true
         },
         {
-          "link": "2026-11-04/source → live",
+          "link": "2026-11-04/source → 2026-11-10/source",
+          "path": "workbench.css",
+          "route": "source",
+          "kind": "carried",
+          "started_from": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00",
+          "produced": "572179e40b64b5ec4c1f16f7d5df87123dfb5fdebc4ac184dfaf64f962cbab00",
+          "holds": true
+        },
+        {
+          "link": "2026-11-10/source → live",
           "path": "workbench.css",
           "route": "source",
           "kind": "terminal",
@@ -2012,7 +2105,7 @@
     {
       "path": "styles.css",
       "extraction": "whole file",
-      "sha256": "b3da496085f7e7e0d966ac8445f8f7e506da7b8a862feebc7b76651f92e6556c"
+      "sha256": "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453"
     },
     {
       "path": "workbench.css",
@@ -2584,10 +2677,55 @@
     },
     {
       "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "background",
+      "hues": [
+        "196, 74, 40"
+      ],
+      "scope": "region-only"
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "border-color",
+      "hues": [
+        "196, 74, 40"
+      ],
+      "scope": "region-only"
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "box-shadow",
+      "hues": [
+        "196, 74, 40"
+      ],
+      "scope": "region-only"
+    },
+    {
+      "source": "workbench.css",
       "selector": ".wb-reader-result__list li::marker",
       "property": "color",
       "hues": [
         "224, 112, 80"
+      ],
+      "scope": "region-only"
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result.is-agent.is-thin",
+      "property": "border-color",
+      "hues": [
+        "196, 74, 40"
+      ],
+      "scope": "region-only"
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result.is-thin",
+      "property": "border-color",
+      "hues": [
+        "196, 74, 40"
       ],
       "scope": "region-only"
     }
@@ -5129,8 +5267,6 @@
         "claim-client-declaration@mobile",
         "claim-unrecognized-source@desktop",
         "claim-unrecognized-source@mobile",
-        "deposit-fixture@desktop",
-        "deposit-fixture@mobile",
         "export-paired@desktop",
         "export-paired@mobile",
         "export-single@desktop",
@@ -5151,10 +5287,6 @@
         "provenance-complete@mobile",
         "provenance-partial@desktop",
         "provenance-partial@mobile",
-        "register-overflow-expanded@desktop",
-        "register-overflow-expanded@mobile",
-        "register-overflow@desktop",
-        "register-overflow@mobile",
         "share-consent@desktop",
         "share-consent@mobile",
         "single-findings@desktop",
@@ -5189,8 +5321,6 @@
         "claim-client-declaration@mobile",
         "claim-unrecognized-source@desktop",
         "claim-unrecognized-source@mobile",
-        "deposit-fixture@desktop",
-        "deposit-fixture@mobile",
         "export-paired@desktop",
         "export-paired@mobile",
         "export-single@desktop",
@@ -5211,10 +5341,6 @@
         "provenance-complete@mobile",
         "provenance-partial@desktop",
         "provenance-partial@mobile",
-        "register-overflow-expanded@desktop",
-        "register-overflow-expanded@mobile",
-        "register-overflow@desktop",
-        "register-overflow@mobile",
         "share-consent@desktop",
         "share-consent@mobile",
         "single-findings@desktop",
@@ -5249,8 +5375,6 @@
         "claim-client-declaration@mobile",
         "claim-unrecognized-source@desktop",
         "claim-unrecognized-source@mobile",
-        "deposit-fixture@desktop",
-        "deposit-fixture@mobile",
         "export-paired@desktop",
         "export-paired@mobile",
         "export-single@desktop",
@@ -5271,10 +5395,6 @@
         "provenance-complete@mobile",
         "provenance-partial@desktop",
         "provenance-partial@mobile",
-        "register-overflow-expanded@desktop",
-        "register-overflow-expanded@mobile",
-        "register-overflow@desktop",
-        "register-overflow@mobile",
         "share-consent@desktop",
         "share-consent@mobile",
         "single-findings@desktop",
@@ -5309,8 +5429,6 @@
         "claim-client-declaration@mobile",
         "claim-unrecognized-source@desktop",
         "claim-unrecognized-source@mobile",
-        "deposit-fixture@desktop",
-        "deposit-fixture@mobile",
         "export-paired@desktop",
         "export-paired@mobile",
         "export-single@desktop",
@@ -5331,14 +5449,94 @@
         "provenance-complete@mobile",
         "provenance-partial@desktop",
         "provenance-partial@mobile",
-        "register-overflow-expanded@desktop",
-        "register-overflow-expanded@mobile",
-        "register-overflow@desktop",
-        "register-overflow@mobile",
         "share-consent@desktop",
         "share-consent@mobile",
         "single-findings@desktop",
         "single-findings@mobile"
+      ]
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "background",
+      "value": "rgba(196, 74, 40, 0.12)",
+      "media": [],
+      "pseudo_state_only": false,
+      "resting": true,
+      "scope": "region-only",
+      "declared_tokens": [],
+      "free_alphas": [],
+      "literal_hues": [],
+      "adjacent_hues": [
+        {
+          "hue": "196, 74, 40",
+          "alpha": "0.12",
+          "text": "rgba(196, 74, 40, 0.12)"
+        }
+      ],
+      "states": [
+        "deposit-fixture@desktop",
+        "deposit-fixture@mobile",
+        "register-overflow-expanded@desktop",
+        "register-overflow-expanded@mobile",
+        "register-overflow@desktop",
+        "register-overflow@mobile"
+      ]
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "border-color",
+      "value": "rgba(196, 74, 40, 0.5)",
+      "media": [],
+      "pseudo_state_only": false,
+      "resting": true,
+      "scope": "region-only",
+      "declared_tokens": [],
+      "free_alphas": [],
+      "literal_hues": [],
+      "adjacent_hues": [
+        {
+          "hue": "196, 74, 40",
+          "alpha": "0.5",
+          "text": "rgba(196, 74, 40, 0.5)"
+        }
+      ],
+      "states": [
+        "deposit-fixture@desktop",
+        "deposit-fixture@mobile",
+        "register-overflow-expanded@desktop",
+        "register-overflow-expanded@mobile",
+        "register-overflow@desktop",
+        "register-overflow@mobile"
+      ]
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result__badge.is-thin",
+      "property": "box-shadow",
+      "value": "0 0 16px rgba(196, 74, 40, 0.1)",
+      "media": [],
+      "pseudo_state_only": false,
+      "resting": true,
+      "scope": "region-only",
+      "declared_tokens": [],
+      "free_alphas": [],
+      "literal_hues": [],
+      "adjacent_hues": [
+        {
+          "hue": "196, 74, 40",
+          "alpha": "0.1",
+          "text": "rgba(196, 74, 40, 0.1)"
+        }
+      ],
+      "states": [
+        "deposit-fixture@desktop",
+        "deposit-fixture@mobile",
+        "register-overflow-expanded@desktop",
+        "register-overflow-expanded@mobile",
+        "register-overflow@desktop",
+        "register-overflow@mobile"
       ]
     },
     {
@@ -5535,6 +5733,62 @@
         "single-empty@mobile",
         "single-findings@desktop",
         "single-findings@mobile"
+      ]
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result.is-agent.is-thin",
+      "property": "border-color",
+      "value": "rgba(196, 74, 40, 0.38)",
+      "media": [],
+      "pseudo_state_only": false,
+      "resting": true,
+      "scope": "region-only",
+      "declared_tokens": [],
+      "free_alphas": [],
+      "literal_hues": [],
+      "adjacent_hues": [
+        {
+          "hue": "196, 74, 40",
+          "alpha": "0.38",
+          "text": "rgba(196, 74, 40, 0.38)"
+        }
+      ],
+      "states": [
+        "deposit-fixture@desktop",
+        "deposit-fixture@mobile",
+        "register-overflow-expanded@desktop",
+        "register-overflow-expanded@mobile",
+        "register-overflow@desktop",
+        "register-overflow@mobile"
+      ]
+    },
+    {
+      "source": "workbench.css",
+      "selector": ".wb-reader-result.is-thin",
+      "property": "border-color",
+      "value": "rgba(196, 74, 40, 0.35)",
+      "media": [],
+      "pseudo_state_only": false,
+      "resting": true,
+      "scope": "region-only",
+      "declared_tokens": [],
+      "free_alphas": [],
+      "literal_hues": [],
+      "adjacent_hues": [
+        {
+          "hue": "196, 74, 40",
+          "alpha": "0.35",
+          "text": "rgba(196, 74, 40, 0.35)"
+        }
+      ],
+      "states": [
+        "deposit-fixture@desktop",
+        "deposit-fixture@mobile",
+        "register-overflow-expanded@desktop",
+        "register-overflow-expanded@mobile",
+        "register-overflow@desktop",
+        "register-overflow@mobile"
       ]
     },
     {
