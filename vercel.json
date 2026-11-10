@@ -28,14 +28,17 @@
     { "source": "/contact", "destination": "/contact.html", "permanent": true },
     { "source": "/challenge-log", "destination": "/challenge-log.html", "permanent": true },
     { "source": "/calibration", "destination": "/calibration.html", "permanent": true },
-    { "source": "/briefing", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-1", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-1/", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-2", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-2/", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-3", "destination": "/field-notes/", "permanent": true },
-    { "source": "/briefing/post-3/", "destination": "/field-notes/", "permanent": true }
+    { "source": "/field-notes", "destination": "/updates/", "permanent": true },
+    { "source": "/field-notes/", "destination": "/updates/", "permanent": true },
+    { "source": "/field-notes/:path*", "destination": "/updates/:path*", "permanent": true },
+    { "source": "/briefing", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-1", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-1/", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-2", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-2/", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-3", "destination": "/updates/", "permanent": true },
+    { "source": "/briefing/post-3/", "destination": "/updates/", "permanent": true }
   ],
   "headers": [
     {

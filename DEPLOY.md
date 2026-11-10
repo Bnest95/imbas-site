@@ -1022,7 +1022,7 @@ persistence) with a human watching.
 
 ## Field Notes signup
 
-Homepage, For Readers, and `/field-notes/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
+Homepage, For Readers, and `/updates/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
 
 Required Vercel env vars:
 
