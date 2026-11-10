@@ -1357,6 +1357,57 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-11-10",
+    reason:
+      "authorized source edit on branch claude/homepage-outreach (founder brief \"Homepage: ready " +
+      "for outreach\", item 2, the homepage): the person, reviews and closing blocks the homepage " +
+      "reuses move out of advisory.html's inline style into styles.css, as the brief directs, " +
+      "with two new rules. One governed source moved: styles.css. workbench.css and " +
+      "workbench-app.jsx were not touched, so the chain carries them through by silence.",
+    fingerprint_before: "e7e2acea64120dc49de49e72954d0db9adfccb63b19800fc07f2a14ab94baa9f",
+    fingerprint_after: "65c017bba3edcb6af0c96d26037019dee2d0eeba73f7c19b47b29b41a28f13fb",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "2b56b705eff7794fa951d2bc263cbce508415ceda826e75c54c9747173c57453",
+        sha256_after: "c9b698c3a879c5167b420c07cbb36a0d0d23710d07172a521ec12e5719d53e65",
+        edit:
+          "a second block appended at the end of the file: .adv-wrap, .adv-label, .adv-intro, the " +
+          "person rules (.adv-who through .adv-stats span), the review rules (.adv-quotes and its " +
+          "children), the closing rules (.adv-close h2, __note, __free, .adv-close .adv-actions) " +
+          "and their 860px and 600px rules, moved from advisory.html. Two selectors changed in the " +
+          "move: .adv-band h2 became .adv-wrap h2, and .adv-close became section.adv-close. Two " +
+          "rules are new: .adv-place and .adv-actions + .adv-free, set in mono and display type " +
+          "with ink tokens only. No rule in the block names an ember token or an ember hue, and " +
+          "none reaches the governed region, so no declared-token spend, free alpha or adjacent " +
+          "hue moved. The :root ember ramp is byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────

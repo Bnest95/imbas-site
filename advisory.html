@@ -32,8 +32,6 @@
   <style>
     /* Advisory page. Tokens only, no new colours. */
     .adv { background: var(--bg-base); }
-    .adv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
-    .adv-label { margin-bottom: var(--space-3); }
 
     /* Masthead (unchanged) */
     .adv-hero { position: relative; overflow: hidden; padding: var(--space-6) 0 var(--space-5); border-bottom: 1px solid var(--line-faint); }
@@ -65,25 +63,13 @@
     .band-cool--navy { background: radial-gradient(ellipse 70% 42% at 50% 100%, var(--slate-bloom), transparent 68%), var(--bg-base); }
     .band-cool--navy::before { background: radial-gradient(ellipse 82% 46% at 50% 108%, var(--slate-bloom), transparent 66%), radial-gradient(ellipse 48% 32% at 18% 18%, var(--slate-deeper), transparent 74%); opacity: 0.68; }
 
-    .adv-band h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }
-    .adv-intro { font-family: var(--font-display); font-size: clamp(1.1rem, 1.7vw, 1.3rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-5); }
-
     /* What I take on */
     .adv-work { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-5); max-width: 1040px; }
     .adv-work li { display: grid; grid-template-columns: 10.5rem 1fr; gap: var(--space-2); }
     .adv-work span { font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ember-bright); padding-top: 0.3rem; }
     .adv-work p { margin: 0; font-size: 1.0625rem; line-height: 1.55; color: var(--ink-primary); }
 
-    /* Who you'd work with */
-    .adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
-    .adv-person { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-4); align-items: start; }
-    .adv-person__photo { display: block; width: 140px; height: 140px; object-fit: cover; border-radius: 4px; }
-    .adv-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.1rem; margin: 0 0 var(--space-3); }
-    .adv-name-row h2 { margin: 0; }
-    .adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
-    .adv-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
-    .adv-stats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.1; color: var(--ink-luminous); margin-bottom: 0.35rem; }
-    .adv-stats span { display: block; font-size: 0.95rem; line-height: 1.4; color: var(--ink-secondary); }
+    /* Who you'd work with: the person and stats rules are in styles.css, shared with the homepage. */
     .adv-built { margin: var(--space-6) 0 0; display: grid; grid-template-columns: 5fr 7fr; gap: var(--space-5); align-items: center; }
     .adv-built__label { display: block; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ember-soft); margin: 0 0 var(--space-3); }
     .adv-built ul { list-style: none; margin: 0 0 var(--space-3); padding: 0; }
@@ -94,41 +80,26 @@
     .adv-built__shot img { display: block; width: 100%; height: auto; border: 1px solid var(--line-soft); border-radius: 4px; box-shadow: 0 20px 50px rgba(0,0,0,0.35); }
     .adv-built__cap { margin: var(--space-2) 0 0; font-family: var(--font-mono); font-size: max(0.6875rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
 
-    /* Reviews */
-    .adv-quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); max-width: 1040px; }
-    .adv-quotes blockquote { margin: 0; }
-    .adv-quotes p { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 1.2rem; line-height: 1.5; color: var(--ink-luminous); }
-    .adv-quotes cite { font-style: normal; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
-
     /* How I work */
     .adv-engage { display: grid; grid-template-columns: 5fr 7fr; gap: var(--space-5); align-items: start; }
     .adv-engage h3 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.4rem, 2.2vw, 1.75rem); line-height: 1.2; color: var(--ink-luminous); margin: 0; }
     .adv-engage p { margin: 0 0 var(--space-2); font-size: 1.0625rem; line-height: 1.6; color: var(--ink-soft); max-width: 60ch; }
 
-    /* Close */
-    .adv-close { padding: var(--space-7) 0 var(--space-6); text-align: center; }
-    .adv-close h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
-    .adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
-    .adv-close__free { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-3)) auto var(--space-4); }
-    .adv-close .adv-actions { justify-content: center; }
+    /* Close: the reviews and closing rules are in styles.css, shared with the homepage. */
     .adv-terms { max-width: 64ch; margin: var(--space-5) auto 0; font-size: 0.875rem; line-height: 1.6; color: var(--ink-soft); }
     .adv-terms a { color: var(--ink-primary); }
 
     @media (max-width: 860px) {
-      .adv-work, .adv-quotes { grid-template-columns: 1fr; }
+      .adv-work { grid-template-columns: 1fr; }
       .adv-work li { grid-template-columns: 1fr; gap: 0.4rem; }
-      .adv-who, .adv-engage, .adv-built { grid-template-columns: 1fr; gap: var(--space-4); }
+      .adv-engage, .adv-built { grid-template-columns: 1fr; gap: var(--space-4); }
       .adv-built { margin-top: var(--space-5); }
     }
     @media (max-width: 600px) {
-      .adv-wrap { padding: 0 var(--space-3); }
       .adv-hero { padding: var(--space-5) 0 var(--space-5); }
       .adv-hero h1 { font-size: 2.35rem; }
       .adv-hero__lede { font-size: 1.1rem; margin-bottom: var(--space-3); }
       .adv-band { padding: var(--space-5) 0; }
-      .adv-close { padding: var(--space-6) 0 var(--space-5); }
-      .adv-person { grid-template-columns: 1fr; gap: var(--space-3); }
-      .adv-person__photo { width: 112px; height: 112px; }
     }
   </style>
   <script type="application/ld+json">

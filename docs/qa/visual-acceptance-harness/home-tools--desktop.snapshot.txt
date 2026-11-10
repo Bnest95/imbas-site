@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 1132
+scroll_offset: 2748
 timezone: UTC
 url: /index.html
 viewport: 1440x900
@@ -31,7 +31,7 @@ a "About" href="/about.html"
 a "Contact" href="/contact.html"
 button "More" disabled=false expanded=false
 span "▾"
-a "Work with me" href="/advisory.html"
+span "brendan@imbaslabs.com"
 span "Tools"
 h2 "Free to use."
 p "The Reader"

@@ -10060,3 +10060,50 @@ main > .close::before {
 @media (max-width: 600px) {
   .adv-btn { width: 100%; justify-content: center; }
 }
+
+/* The person, reviews and closing blocks. Advisory carries them and the homepage reuses
+   them, so their rules moved here from advisory.html. Two selectors changed in the move
+   and resolve the same on Advisory: .adv-band h2 became .adv-wrap h2, because the
+   homepage's copies sit in .adv-wrap but not in an .adv-band; and the close's padding is
+   keyed to section.adv-close, so it still outranks Advisory's inline .adv-band padding
+   now that this file loads before that style. .adv-place and .adv-actions + .adv-free
+   are new: the location line under the name, and the free-conversation line under a
+   pair of actions. */
+.adv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
+.adv-label { margin-bottom: var(--space-3); }
+.adv-wrap h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }
+.adv-intro { font-family: var(--font-display); font-size: clamp(1.1rem, 1.7vw, 1.3rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-5); }
+
+.adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
+.adv-person { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-4); align-items: start; }
+.adv-person__photo { display: block; width: 140px; height: 140px; object-fit: cover; border-radius: 4px; }
+.adv-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.1rem; margin: 0 0 var(--space-3); }
+.adv-name-row h2 { margin: 0; }
+.adv-place { margin: calc(-1 * var(--space-2)) 0 var(--space-3); font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+.adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
+.adv-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
+.adv-stats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.1; color: var(--ink-luminous); margin-bottom: 0.35rem; }
+.adv-stats span { display: block; font-size: 0.95rem; line-height: 1.4; color: var(--ink-secondary); }
+
+.adv-quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); max-width: 1040px; }
+.adv-quotes blockquote { margin: 0; }
+.adv-quotes p { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 1.2rem; line-height: 1.5; color: var(--ink-luminous); }
+.adv-quotes cite { font-style: normal; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+
+section.adv-close { padding: var(--space-7) 0 var(--space-6); text-align: center; }
+.adv-close h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
+.adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
+.adv-close__free { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-3)) auto var(--space-4); }
+.adv-close .adv-actions { justify-content: center; }
+.adv-actions + .adv-free { margin: var(--space-3) 0 0; font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); }
+
+@media (max-width: 860px) {
+  .adv-quotes { grid-template-columns: 1fr; }
+  .adv-who { grid-template-columns: 1fr; gap: var(--space-4); }
+}
+@media (max-width: 600px) {
+  .adv-wrap { padding: 0 var(--space-3); }
+  section.adv-close { padding: var(--space-6) 0 var(--space-5); }
+  .adv-person { grid-template-columns: 1fr; gap: var(--space-3); }
+  .adv-person__photo { width: 112px; height: 112px; }
+}
