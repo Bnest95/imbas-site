@@ -43,7 +43,7 @@ Then open [http://localhost:8765/](http://localhost:8765/).
 
 ## Field Notes signup
 
-Field Notes signup posts to **`/api/field-notes-signup`** (Vercel serverless → Airtable). Legacy **`/briefing`** and **`/field-notes/`** URLs redirect to **`/updates/`**.
+Field Notes signup posts to **`/api/signup`** (Vercel serverless → Airtable); `/api/field-notes-signup` re-exports the same handler for anything that still posts to the old address. Legacy **`/briefing`** and **`/field-notes/`** URLs redirect to **`/updates/`**.
 
 ## Missing launch assets
 
