@@ -357,7 +357,7 @@ concern, since those are the ones that spend:
 | `POST /api/read-paired` | ✅ | ✅ |
 
 **Not rate-limited (pre-existing, unchanged this pass — founder decision):** the Airtable
-POST endpoints `api/repository.js`, `api/experience.js`, `api/field-notes-signup.js`,
+POST endpoints `api/repository.js`, `api/experience.js`, `api/signup.js` (re-exported by `api/field-notes-signup.js`),
 `api/inspection-share.js`, and the content-free `api/reader-perception.js` tap (scope-locked
 to touch no rate/spend control). They make no model call, so they carry no inference spend;
 extending durable limiting to them would reuse the **same** Upstash infra (so it is **not**
@@ -1022,7 +1022,7 @@ persistence) with a human watching.
 
 ## Field Notes signup
 
-Homepage, For Readers, and `/updates/` collect email via **`POST /api/field-notes-signup`**. The route writes to Airtable using the same token pattern as `/api/repository`.
+Homepage, For Readers, and `/updates/` collect email via **`POST /api/signup`** (the old `/api/field-notes-signup` re-exports the same handler). The route writes to Airtable using the same token pattern as `/api/repository`.
 
 Required Vercel env vars:
 

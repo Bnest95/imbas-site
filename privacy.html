@@ -36,7 +36,9 @@
         "@type": "Organization",
         "@id": "https://www.imbaslabs.com/#organization",
         "name": "Imbas",
-        "url": "https://www.imbaslabs.com"
+        "url": "https://www.imbaslabs.com",
+        "address": { "@type": "PostalAddress", "addressRegion": "PA", "addressCountry": "US" },
+        "areaServed": "Central Pennsylvania"
       },
       {
         "@type": "WebPage",
@@ -179,7 +181,7 @@
 
     <section class="page__section">
       <h2>Email updates signup</h2>
-      <p>When you subscribe to email updates through signup forms on the site, your email address is sent to Imbas through a server-side route at <code>/api/field-notes-signup</code>. Imbas may store your email address, the page where you signed up, a created timestamp, and your browser user agent (if provided by your browser) in Airtable, a third-party database service. Access credentials for Airtable are kept in server-side environment variables and are not exposed in the site&rsquo;s public code.</p>
+      <p>When you subscribe to email updates through signup forms on the site, your email address is sent to Imbas through a server-side route at <code>/api/signup</code>. Imbas may store your email address, the page where you signed up, a created timestamp, and your browser user agent (if provided by your browser) in Airtable, a third-party database service. Access credentials for Airtable are kept in server-side environment variables and are not exposed in the site&rsquo;s public code.</p>
       <p>You can unsubscribe from emails using the unsubscribe link in any message or by contacting Imbas at <a href="mailto:brendan@imbaslabs.com">brendan@imbaslabs.com</a>.</p>
     </section>
 

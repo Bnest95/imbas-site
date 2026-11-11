@@ -63,14 +63,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5e072bbc27201bb68e11bf3ae1a22a60acc14efae7c82104113671b84da7f9c3` |
-| bytes | 744129 |
+| sha256 | `579289e59a5355e933ed7a3f7945cdb7e5a1f9121d70d6d58da6bd0c88fa4b7c` |
+| bytes | 752795 |
 | snapshot | `advisory-boundaries--desktop.snapshot.txt` |
-| snapshot sha256 | `b0423a7bdb06517401f2a21ebf2f4894cf211e2d953d9b939ad19957f5428044` |
-| snapshot bytes | 2473 |
+| snapshot sha256 | `c6092424545c1fe996c3a1011bef14da2b70f3e3f306310e65c200b41a2d8c76` |
+| snapshot bytes | 2611 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 3814 |
+| framed on | `.adv-terms` at scroll offset 3927 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -79,14 +79,14 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `ae1b7cf6888f4895b30b58da78d085d2635132fccac023a3d9f53ab2f4c4cb2e` |
-| bytes | 591880 |
+| sha256 | `bda01e42bf0ca41e478acfebaa838519ebb556a1180e4caeed2ef7874a56f752` |
+| bytes | 574352 |
 | snapshot | `advisory-boundaries--mobile.snapshot.txt` |
-| snapshot sha256 | `7315b46d86c10c4c4cb6eda6c60d09dbe4f69886c0cf122f4f3ee89574ea0f88` |
-| snapshot bytes | 1586 |
+| snapshot sha256 | `8e3c48cbdd96d8e6a617020953072e62cced08897a6e1a9e0b70dca08b37dfcd` |
+| snapshot bytes | 1684 |
 | viewport | 375x812@3x (mobile) |
 | url | `/advisory.html`, query `(none)` |
-| framed on | `.adv-terms` at scroll offset 6290 |
+| framed on | `.adv-terms` at scroll offset 6448 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the terms line in the close — the wall between advisory work and Imbas's public measurement |
 | expected behaviour | The close of the page and the one line of terms under it. The v4.4 rewrite folded the three practice commitments this frame used to hold into that line, so the frame follows it. The line still carries the boundary the rest of the tree depends on: client material stays confidential, and advisory clients do not influence Imbas's public methods, measurements, or findings, with the independence policy one link away. This boundary is the reason the commercial page can sit beside the measurement work at all, so it is photographed rather than left to prose. |
@@ -95,33 +95,33 @@ A board that lists only what it covers reads as complete. These are the result s
 
 | field | value |
 | --- | --- |
-| sha256 | `5a6e2d616862267485f67f6403f990a808bb7123e7dbd4edb3a270595312e946` |
-| bytes | 1011530 |
+| sha256 | `57ee6d3c83ad3000c180feaedbe787db84ca56c41d99a530827f7a64c726e854` |
+| bytes | 995105 |
 | snapshot | `advisory-masthead--desktop.snapshot.txt` |
-| snapshot sha256 | `302a7f89ed1c427f6921555d0d6af9c1d66ab1ff3a1ed3959afbb074f55bdbf8` |
-| snapshot bytes | 1615 |
+| snapshot sha256 | `5cee97861424d7a1f16b029b681241e5e6ce1e8cd8727d6708439a43d6c259cf` |
+| snapshot bytes | 1308 |
 | viewport | 1440x900@2x (desktop) |
 | url | `/advisory.html`, query `(none)` |
 | framed on | `.adv-hero` at scroll offset 0 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the hero — the heading, the lede, and the two ways to act under it |
-| expected behaviour | The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Email me and the link down to what the work covers. A later Advisory restructure changes this first, so it is framed on its own. |
+| expected behaviour | The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Work with me (down to the reply section) and the link down to what the work covers, and the free-conversation line under them. A later Advisory restructure changes this first, so it is framed on its own. |
 
 ### `advisory-masthead--mobile.png`
 
 | field | value |
 | --- | --- |
-| sha256 | `c85cccbf4c956ffa26ded2364e1c7598a0ffc7fe51df497f7b4da2a8d25a40be` |
-| bytes | 788306 |
+| sha256 | `72c25622f8c0fc9f9905e6d70abb4d9e97a61127c350d54d44f66e491bc0a364` |
+| bytes | 797586 |
 | snapshot | `advisory-masthead--mobile.snapshot.txt` |
-| snapshot sha256 | `7b1f7f2442a5de1a4184582394dc0a15cad276a683b4b82eff9a12b7e5a6259b` |
-| snapshot bytes | 1131 |
+| snapshot sha256 | `a687373f0a1321b9a2de792f87732f6f97eb2001b54b92ee3d665617b6a91216` |
+| snapshot bytes | 1026 |
 | viewport | 375x812@3x (mobile) |
 | url | `/advisory.html`, query `(none)` |
 | framed on | `.adv-hero` at scroll offset 0 |
 | browser | `HeadlessChrome/148.0.7778.96` |
 | state captured | Advisory, the hero — the heading, the lede, and the two ways to act under it |
-| expected behaviour | The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Email me and the link down to what the work covers. A later Advisory restructure changes this first, so it is framed on its own. |
+| expected behaviour | The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Work with me (down to the reply section) and the link down to what the work covers, and the free-conversation line under them. A later Advisory restructure changes this first, so it is framed on its own. |
 
 ### `chip-arrival--desktop.png`
 

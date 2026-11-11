@@ -43,6 +43,9 @@
         "@id": "https://www.imbaslabs.com/#organization",
         "name": "Imbas",
         "url": "https://www.imbaslabs.com",
+        "founder": { "@id": "https://www.imbaslabs.com/about.html#founder" },
+        "address": { "@type": "PostalAddress", "addressRegion": "PA", "addressCountry": "US" },
+        "areaServed": "Central Pennsylvania",
         "logo": {
           "@type": "ImageObject",
           "url": "https://www.imbaslabs.com/brand-mark.png",
@@ -60,6 +63,13 @@
         "url": "https://www.imbaslabs.com",
         "publisher": { "@id": "https://www.imbaslabs.com/#organization" },
         "about": { "@id": "https://www.imbaslabs.com/#organization" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://www.imbaslabs.com/about.html#founder",
+        "name": "Brendan Nestor",
+        "jobTitle": "Founder",
+        "sameAs": ["https://www.linkedin.com/in/brendannestor"]
       }
     ]
   }
@@ -408,7 +418,7 @@
             data-stagger="support"
             id="field-notes-form"
             data-msg-id="field-notes-msg"
-            action="/api/field-notes-signup"
+            action="/api/signup"
             method="POST"
             novalidate
           >

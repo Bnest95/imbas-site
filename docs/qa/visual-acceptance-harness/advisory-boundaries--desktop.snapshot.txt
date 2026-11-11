@@ -13,7 +13,7 @@ mobile_emulation: false
 query_parameters: (none)
 reduced_motion: reduce
 screenshot_format: png
-scroll_offset: 3814
+scroll_offset: 3927
 timezone: UTC
 url: /advisory.html
 viewport: 1440x900
@@ -34,9 +34,12 @@ span "▾"
 h2 "Tell me what’s slowing you down."
 p "A few lines about what you want to improve and how you handle it now are enough to start."
 p "The first conversation is free."
-a "Email me" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me"
+a "Text me" href="sms:+17179827168?&body=Hi%20Brendan%2C%20I%20found%20you%20through%20imbaslabs.com.%20"
 span "→"
-p "brendan@imbaslabs.com"
+a "Email me" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me"
+p "Text"
+span "717-982-7168"
+span "brendan@imbaslabs.com"
 p "Your material stays confidential. Nothing from client work enters the Imbas public record without your written consent and separate governance. Advisory clients don’t influence Imbas’s public methods, measurements, or findings. ."
 a "Independence policy" href="/independence.html"
 p "Imbas builds practical AI tools, studies how AI behaves, and helps businesses put it to work."

@@ -10033,3 +10033,76 @@ main > .close::before {
 
 /* Reader styles live in /workbench.css, which reader.html AND inspection.html both load.
    The filename is historical and stays: retiring it would break the share page too. */
+
+/* =============================================================
+   ADVISORY BLOCKS SHARED WITH CONTACT
+   Moved out of advisory.html's inline style so every page that carries these blocks
+   uses one set of rules. Tokens only, no new colours.
+   ============================================================= */
+.adv-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.adv-btn { display: inline-flex; align-items: center; gap: 0.6rem; background: var(--ember); color: var(--bg-deep); border: 1px solid var(--ember);
+  border-radius: 2px; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.16em; text-transform: uppercase;
+  font-weight: 500; padding: 1rem 2.2rem; min-height: 48px; text-decoration: none; box-shadow: 0 4px 22px rgba(var(--ember-rgb), 0.34); }
+.adv-btn:hover { background: var(--ember-deep); border-color: var(--ember-deep); }
+.adv-textlink { font-family: var(--font-mono); font-size: max(0.8125rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-primary); text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 3px; }
+.adv-textlink:hover { color: var(--ember-soft); border-bottom-color: var(--ember); }
+.adv-close__addr { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.06em; color: var(--ink-primary); user-select: all; }
+
+/* The reply block: Text me, Email me, and the number and address printed as text.
+   One markup on Advisory and Contact. The number is for texts, so nothing links it with
+   tel:, and both pages set format-detection so iOS doesn't either. Only the number itself
+   selects as a unit, so a copy carries no "Text" in front of it. */
+.reply-block .adv-close__addr { user-select: text; }
+.reply-block .adv-close__addr + .adv-close__addr { margin-top: var(--space-1); }
+.reply-block__select { user-select: all; }
+
+@media (max-width: 600px) {
+  .adv-btn { width: 100%; justify-content: center; }
+}
+
+/* Advisory's person, reviews and closing blocks, moved here from advisory.html. Two
+   selectors changed in the move and resolve the same on Advisory: .adv-band h2 became
+   .adv-wrap h2, which also keeps it off the homepage's own .adv-band heading; and the
+   close's padding is keyed to section.adv-close, so it still outranks Advisory's inline
+   .adv-band padding now that this file loads before that style. .adv-place and
+   .adv-actions + .adv-free are new: the location line under the name, and the
+   free-conversation line under a pair of actions. */
+.adv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
+.adv-label { margin-bottom: var(--space-3); }
+.adv-wrap h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }
+.adv-intro { font-family: var(--font-display); font-size: clamp(1.1rem, 1.7vw, 1.3rem); line-height: 1.5; color: var(--ink-soft); max-width: 52ch; margin: 0 0 var(--space-5); }
+
+.adv-who { display: grid; grid-template-columns: 6fr 5fr; gap: var(--space-5); align-items: start; }
+.adv-person { display: grid; grid-template-columns: 140px 1fr; gap: var(--space-4); align-items: start; }
+.adv-person__photo { display: block; width: 140px; height: 140px; object-fit: cover; border-radius: 4px; }
+.adv-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 1.1rem; margin: 0 0 var(--space-3); }
+.adv-name-row h2 { margin: 0; }
+.adv-place { margin: calc(-1 * var(--space-2)) 0 var(--space-3); font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+.adv-founder-p { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-soft); margin: 0 0 var(--space-3); max-width: 60ch; }
+.adv-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-3); }
+.adv-stats b { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.1; color: var(--ink-luminous); margin-bottom: 0.35rem; }
+.adv-stats span { display: block; font-size: 0.95rem; line-height: 1.4; color: var(--ink-secondary); }
+
+.adv-quotes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5) var(--space-6); max-width: 1040px; }
+.adv-quotes blockquote { margin: 0; }
+.adv-quotes p { margin: 0 0 var(--space-2); font-family: var(--font-display); font-size: 1.2rem; line-height: 1.5; color: var(--ink-luminous); }
+.adv-quotes cite { font-style: normal; font-family: var(--font-mono); font-size: max(0.75rem, var(--mono-min)); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary); }
+
+section.adv-close { padding: var(--space-7) 0 var(--space-6); text-align: center; }
+.adv-close h2 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.1; margin: 0 0 var(--space-4); }
+.adv-close__note { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-2)) auto var(--space-4); }
+.adv-close__free { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); max-width: 44ch; margin: calc(-1 * var(--space-3)) auto var(--space-4); }
+.adv-close .adv-actions { justify-content: center; }
+.adv-actions + .adv-free { margin: var(--space-3) 0 0; font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.5; color: var(--ink-soft); }
+
+@media (max-width: 860px) {
+  .adv-quotes { grid-template-columns: 1fr; }
+  .adv-who { grid-template-columns: 1fr; gap: var(--space-4); }
+}
+@media (max-width: 600px) {
+  .adv-wrap { padding: 0 var(--space-3); }
+  section.adv-close { padding: var(--space-6) 0 var(--space-5); }
+  .adv-person { grid-template-columns: 1fr; gap: var(--space-3); }
+  .adv-person__photo { width: 112px; height: 112px; }
+}

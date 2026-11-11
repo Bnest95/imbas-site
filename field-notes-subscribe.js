@@ -2,7 +2,7 @@
   var SUCCESS = "You're on the list.";
   var INVALID = "Enter a valid email address.";
   var UNAVAILABLE = "Signup is not available right now. Email brendan@imbaslabs.com.";
-  var ENDPOINT = "/api/field-notes-signup";
+  var ENDPOINT = "/api/signup";
 
   function showMsg(el, text) {
     el.textContent = text;
