@@ -2490,13 +2490,13 @@ export const SCENARIOS = {
     canned: true,
     state: "Advisory, the hero — the heading, the lede, and the two ways to act under it",
     expected:
-      "The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Email me and the link down to what the work covers. A later Advisory restructure changes this first, so it is framed on its own.",
+      "The proposition the page opens with since the v4.4 rewrite: the heading, the lede that says how the work starts, and the two actions under it, Work with me (down to the reply section) and the link down to what the work covers, and the free-conversation line under them. A later Advisory restructure changes this first, so it is framed on its own.",
     routes: {},
     steps: [{ waitFor: ".adv-hero" }],
     assertText: [
       "make a difference in your business.",
       "I start by understanding what you",
-      "Email me",
+      "Work with me",
       "What I take on",
     ],
     assertSelector: ".adv-hero",
