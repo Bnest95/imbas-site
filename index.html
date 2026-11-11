@@ -4,7 +4,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="format-detection" content="telephone=no">
   <title>Imbas — AI tools, research and implementation</title>
   <meta name="description" content="Making AI work for you. Imbas builds tools for checking AI answers and inspecting PDFs, studies how AI behaves, and helps businesses put it to practical use.">
   <link rel="canonical" href="https://www.imbaslabs.com/">
@@ -151,11 +150,6 @@
   .adv-band__examples li::before { content: ""; position: absolute; left: 0.2rem; top: 1.1rem; width: 7px; height: 7px; border-radius: 50%; background: var(--ember); }
   @media (max-width: 860px) { .adv-band .home-band__inner { grid-template-columns: 1fr; gap: var(--space-4); } .adv-band .home-band__btn { width: 100%; justify-content: center; } }
 
-  /* Who you'd work with, and Work with me: Advisory's blocks, styled from styles.css. Here
-     they take the homepage's gutter and sit above the cool band's overlays. */
-  main > .stakes > .adv-wrap { position: relative; z-index: 2; padding: 0 clamp(1.25rem, 4vw, 3rem); }
-  .adv-who + .adv-reviews { margin-top: var(--space-6); }
-
   /* Research: where each section that moved now lives. */
   .res-teaser p { font-family: var(--font-display); font-size: clamp(1.05rem, 1.6vw, 1.25rem); line-height: 1.55; color: var(--ink-soft); margin: 0 0 var(--space-4); max-width: 52ch; }
   .res-teaser__map { list-style: none; margin: 0 0 var(--space-5); padding: 0; max-width: 52rem; columns: 2; column-gap: var(--space-5); }
@@ -236,7 +230,7 @@
         </h1>
 
         <div class="hero__capture-block hero2-actions">
-          <a class="hero2-adv" href="#work-with-me">Work with me <span aria-hidden="true">&rarr;</span></a>
+          <a class="hero2-adv" href="/advisory.html">Work with me <span aria-hidden="true">&rarr;</span></a>
           <form class="hero__capture" action="/reader.html" method="get">
             <input type="hidden" name="reader" value="1">
             <button type="submit">Try the Reader</button>
@@ -255,11 +249,7 @@
         <span class="section-label section-label--named"><span>AI advisory</span></span>
         <h2 id="advisory-h2">Work out what&rsquo;s worth changing.</h2>
         <p>You may have a process that takes too long, a question about your customers, or an idea you haven&rsquo;t had time to test. I learn how the work gets done, help you decide what to change first, then put it in place and make sure it works. AI is part of what I bring, alongside research and experience running a business.</p>
-        <div class="adv-actions">
-          <a href="#work-with-me" class="home-band__btn">Work with me <span aria-hidden="true">&rarr;</span></a>
-          <a class="adv-textlink" href="/advisory.html">What I take on</a>
-        </div>
-        <p class="adv-free">The first conversation is free.</p>
+        <a href="/advisory.html" class="home-band__btn">Work with me <span aria-hidden="true">&rarr;</span></a>
       </div>
       <div class="adv-band__examples">
         <p class="adv-band__examples-label">For example</p>
@@ -270,59 +260,6 @@
           <li>Positioning and customer research</li>
           <li>A straight answer on which AI tools are worth paying for</li>
         </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- WHO YOU'D WORK WITH — warm. Advisory's person block, its review tile and its first
-       three reviews, word for word; the rules are shared from styles.css. -->
-  <section class="stakes section-scene" aria-labelledby="adv-proof-h2">
-    <div class="adv-wrap">
-      <div class="adv-who">
-        <div>
-          <span class="section-label section-label--named adv-label"><span>Who you&rsquo;d work with</span></span>
-          <div class="adv-person">
-            <img class="adv-person__photo" src="/advisory-assets/brendan-nestor.jpg" width="140" height="140" alt="Brendan Nestor">
-            <div>
-              <div class="adv-name-row">
-                <h2 id="adv-proof-h2">Brendan Nestor</h2>
-                <a class="adv-textlink" href="https://www.linkedin.com/in/brendannestor" rel="me">LinkedIn</a>
-              </div>
-              <p class="adv-place">Lykens, Pennsylvania</p>
-              <p class="adv-founder-p">I&rsquo;ve led growth at an early-stage company, managed a team across LA, New York and Europe, and built and run my own service business. At Imbas I also measure what AI answers leave out. That&rsquo;s how I know where AI is worth using in your business, and where a person still needs to check its work.</p>
-            </div>
-          </div>
-        </div>
-        <ul class="adv-stats" role="list">
-          <li><b>101</b><span>Five-star client reviews from my earlier service business</span></li>
-        </ul>
-      </div>
-      <div class="adv-reviews">
-        <h2 id="adv-rev-h2">What clients say about working with me</h2>
-        <p class="adv-intro">Reviews from my earlier service work.</p>
-        <div class="adv-quotes">
-          <blockquote><p>&ldquo;Total professional. No problems. Just solutions.&rdquo;</p><cite>Client review, Nov 2024</cite></blockquote>
-          <blockquote><p>&ldquo;Super helpful, super resourceful and a great problem solver!&rdquo;</p><cite>Client review, Aug 2024</cite></blockquote>
-          <blockquote><p>&ldquo;&hellip;clear, professional, and checked in every step to make sure it was done right. He followed every instruction to the letter, took initiative where it made sense&hellip; Totally reliable.&rdquo;</p><cite>Client review, Apr 2025</cite></blockquote>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- WORK WITH ME — cool, the Case Archive navy. Advisory's closing section, word for word,
-       with the reply block. The confidentiality note stays on the Advisory page. -->
-  <section class="stakes section-scene band-cool band-cool--navy adv-close" id="work-with-me" aria-labelledby="adv-close-h2">
-    <div class="adv-wrap">
-      <h2 id="adv-close-h2">Tell me what&rsquo;s slowing you down.</h2>
-      <p class="adv-close__note">A few lines about what you want to improve and how you handle it now are enough to start.</p>
-      <p class="adv-close__free">The first conversation is free.</p>
-      <div class="reply-block">
-        <div class="adv-actions">
-          <a class="adv-btn" href="sms:+17179827168?&amp;body=Hi%20Brendan%2C%20I%20found%20you%20through%20imbaslabs.com.%20">Text me <span aria-hidden="true">&rarr;</span></a>
-          <a class="adv-textlink" href="mailto:brendan@imbaslabs.com?subject=Work%20with%20me">Email me</a>
-        </div>
-        <p class="adv-close__addr">Text <span class="reply-block__select">717-982-7168</span></p>
-        <p class="adv-close__addr"><span class="reply-block__select">brendan@imbaslabs.com</span></p>
       </div>
     </div>
   </section>

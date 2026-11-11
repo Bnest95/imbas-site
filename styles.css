@@ -10035,7 +10035,7 @@ main > .close::before {
    The filename is historical and stays: retiring it would break the share page too. */
 
 /* =============================================================
-   ADVISORY BLOCKS SHARED WITH THE HOMEPAGE AND CONTACT
+   ADVISORY BLOCKS SHARED WITH CONTACT
    Moved out of advisory.html's inline style so every page that carries these blocks
    uses one set of rules. Tokens only, no new colours.
    ============================================================= */
@@ -10050,9 +10050,9 @@ main > .close::before {
 .adv-close__addr { margin: var(--space-3) 0 0; font-family: var(--font-mono); font-size: max(0.875rem, var(--mono-min)); letter-spacing: 0.06em; color: var(--ink-primary); user-select: all; }
 
 /* The reply block: Text me, Email me, and the number and address printed as text.
-   One markup on the homepage, Advisory and Contact. The number is for texts, so nothing
-   links it with tel:, and those pages set format-detection so iOS doesn't either. Only the
-   number itself selects as a unit, so a copy carries no "Text" in front of it. */
+   One markup on Advisory and Contact. The number is for texts, so nothing links it with
+   tel:, and both pages set format-detection so iOS doesn't either. Only the number itself
+   selects as a unit, so a copy carries no "Text" in front of it. */
 .reply-block .adv-close__addr { user-select: text; }
 .reply-block .adv-close__addr + .adv-close__addr { margin-top: var(--space-1); }
 .reply-block__select { user-select: all; }
@@ -10061,14 +10061,13 @@ main > .close::before {
   .adv-btn { width: 100%; justify-content: center; }
 }
 
-/* The person, reviews and closing blocks. Advisory carries them and the homepage reuses
-   them, so their rules moved here from advisory.html. Two selectors changed in the move
-   and resolve the same on Advisory: .adv-band h2 became .adv-wrap h2, because the
-   homepage's copies sit in .adv-wrap but not in an .adv-band; and the close's padding is
-   keyed to section.adv-close, so it still outranks Advisory's inline .adv-band padding
-   now that this file loads before that style. .adv-place and .adv-actions + .adv-free
-   are new: the location line under the name, and the free-conversation line under a
-   pair of actions. */
+/* Advisory's person, reviews and closing blocks, moved here from advisory.html. Two
+   selectors changed in the move and resolve the same on Advisory: .adv-band h2 became
+   .adv-wrap h2, which also keeps it off the homepage's own .adv-band heading; and the
+   close's padding is keyed to section.adv-close, so it still outranks Advisory's inline
+   .adv-band padding now that this file loads before that style. .adv-place and
+   .adv-actions + .adv-free are new: the location line under the name, and the
+   free-conversation line under a pair of actions. */
 .adv-wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--space-4); }
 .adv-label { margin-bottom: var(--space-3); }
 .adv-wrap h2 { font-family: var(--font-display); font-weight: 400; color: var(--ink-luminous); font-size: clamp(1.6rem, 2.6vw, 2.1rem); line-height: 1.15; margin: 0 0 var(--space-3); }

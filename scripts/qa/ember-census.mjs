@@ -1408,6 +1408,54 @@ export const PROVENANCE_RESEALS = [
       "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
     ],
   },
+  {
+    date: "2026-11-10",
+    reason:
+      "authorized source edit on branch claude/homepage-outreach (founder ruling of 2026-11-10 " +
+      "withdrawing item 2 of \"Homepage: ready for outreach\" and restoring the homepage to " +
+      "master): no rule in the shared Advisory blocks was used by the homepage alone, so none is " +
+      "removed; the three comments that described homepage reuse now describe Advisory and " +
+      "Contact. One governed source moved: styles.css. workbench.css and workbench-app.jsx were " +
+      "not touched, so the chain carries them through by silence.",
+    fingerprint_before: "65c017bba3edcb6af0c96d26037019dee2d0eeba73f7c19b47b29b41a28f13fb",
+    fingerprint_after: "e1369eb4221f03783998d9d4d1cf8429aa22ee0f27ac2e8bc702d075fe05c151",
+    authorized_edits: [
+      {
+        source: "styles.css",
+        extraction: "whole file",
+        sha256_before: "c9b698c3a879c5167b420c07cbb36a0d0d23710d07172a521ec12e5719d53e65",
+        sha256_after: "0ec4220cee481686883c590494670b3f51b4dae88add98921a85bd70363643b4",
+        edit:
+          "comment text only, in three comments of the two blocks appended earlier on this branch: " +
+          "the section heading, the reply-block comment and the person/reviews/close comment no " +
+          "longer say the homepage reuses these rules. No selector, property or value changed, so " +
+          "no declared-token spend, free alpha or adjacent hue moved. The :root ember ramp is " +
+          "byte-identical.",
+      },
+    ],
+    counts_before: {
+      declared_token_spends: 33,
+      free_alpha_spends: 13,
+      distinct_free_alphas: 9,
+      free_alpha_spends_resting: 7,
+      free_alpha_spends_pseudo_state_only: 6,
+    },
+    free_alpha_inventory_before: [
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|background|rgba(var(--ember-rgb), 0.06) !important",
+      "workbench.css|.wb-btn--ghost:not(:disabled):hover|border-color|rgba(var(--ember-rgb), 0.42) !important",
+      "workbench.css|.wb-btn--primary:disabled|background|rgba(var(--ember-rgb), 0.12) !important",
+      "workbench.css|.wb-btn--primary:disabled|border-color|rgba(248, 168, 102, 0.22) !important",
+      "workbench.css|.wb-demo-trigger:hover|border-color|rgba(var(--ember-rgb), 0.7)",
+      "workbench.css|.wb-demo-trigger|border|1px solid rgba(var(--ember-rgb), 0.34)",
+      "workbench.css|.wb-loop__panel--second|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__tag|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-loop__unmatched|border-left|2px solid rgba(var(--ember-rgb), 0.55)",
+      "workbench.css|.wb-perception__option:hover|border-color|rgba(222, 111, 56, 0.5)",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|background|rgba(var(--ember-rgb), 0.16) !important",
+      "workbench.css|.wb-share-consent__confirm.wb-btn--ghost:not(:disabled)|border-color|rgba(248, 168, 102, 0.55) !important",
+      "workbench.css|.wb-share-consent__panel|border|1px solid rgba(248, 168, 102, 0.22)",
+    ],
+  },
 ];
 
 // ── The population-reseal rule ───────────────────────────────────────────────
